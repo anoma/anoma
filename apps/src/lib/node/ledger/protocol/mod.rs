@@ -12,6 +12,7 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::ibc::IbcEvent;
+use anoma::types::key::ed25519::pk_key;
 use anoma::types::storage::Key;
 use anoma::types::transaction::{DecryptedTx, TxType};
 use anoma::vm::wasm::{TxCache, VpCache};
@@ -222,7 +223,16 @@ where
                         .map_err(Error::GasError)?;
                     Vp::Wasm(vp)
                 }
-                Address::Implicit(_) => unreachable!(),
+                Address::Implicit(_) => {
+                    let pk_storage_key = pk_key(addr);
+                    let (vp, gas) = storage
+                        .read(&pk_storage_key)
+                        .map_err(Error::StorageError)?;
+                    gas_meter.add(gas).map_err(Error::GasError)?;
+                    let vp =
+                        vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
+                    Vp::Wasm(vp)
+                }
             };
 
             Ok((addr.clone(), keys.clone(), vp))
