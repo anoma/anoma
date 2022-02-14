@@ -4,6 +4,7 @@ pub use anoma::ledger::ibc::handler::IbcActions;
 use anoma::types::address::Address;
 use anoma::types::ibc::IbcEvent;
 use anoma::types::storage::{BlockHeight, Epoch, Key};
+use anoma::types::time::Rfc3339String;
 use anoma::types::token::Amount;
 
 use crate::imports::tx;
@@ -41,5 +42,9 @@ impl IbcActions for Ibc {
 
     fn get_height(&self) -> (Epoch, BlockHeight) {
         (tx::get_block_epoch(), tx::get_block_height())
+    }
+
+    fn get_header_time(&self) -> Rfc3339String {
+        Rfc3339String(tx::get_block_time())
     }
 }

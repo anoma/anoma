@@ -1409,6 +1409,31 @@ where
     Ok(height.0)
 }
 
+/// Getting the block time function exposed to the wasm VM Tx
+/// environment. The time is that of the block header to which the current
+/// transaction is being applied.
+pub fn tx_get_block_time<MEM, DB, H, CA>(
+    env: &TxEnv<MEM, DB, H, CA>,
+    result_ptr: u64,
+) -> TxResult<()>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
+    let storage = unsafe { env.ctx.storage.get() };
+    let (header, gas) = storage.get_block_header();
+    tx_add_gas(env, gas)?;
+    // the header should exist after a transaction starts
+    let time_str = header.unwrap().time.to_rfc3339();
+    let gas = env
+        .memory
+        .write_string(result_ptr, time_str)
+        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
+    tx_add_gas(env, gas)
+}
+
 /// Getting the block hash function exposed to the wasm VM VP environment. The
 /// hash is that of the block to which the current transaction is being applied.
 pub fn vp_get_block_hash<MEM, DB, H, EVAL, CA>(

@@ -532,7 +532,7 @@ mod tests {
             .expect("write failed");
         // insert update time and height
         let client_update_time_key = client_update_timestamp_key(&client_id);
-        let bytes = Timestamp::now().nanoseconds().to_be_bytes().to_vec();
+        let bytes = TmTime::now().encode_vec().expect("encoding failed");
         write_log
             .write(&client_update_time_key, bytes)
             .expect("write failed");
@@ -556,8 +556,7 @@ mod tests {
                 .expect("Creating an TmChainId shouldn't fail"),
             height: TmHeight::try_from(10_u64)
                 .expect("Creating a height shouldn't fail"),
-            time: TmTime::from_str("2021-11-01T18:14:32.024837Z")
-                .expect("Setting the time shouldn't fail"),
+            time: TmTime::now(),
             last_block_id: None,
             last_commit_hash: None,
             data_hash: None,
@@ -782,7 +781,7 @@ mod tests {
         // update time and height for this updating
         let key = client_update_timestamp_key(&client_id);
         write_log
-            .write(&key, Timestamp::now().nanoseconds().to_be_bytes().to_vec())
+            .write(&key, TmTime::now().encode_vec().expect("encoding failed"))
             .expect("write failed");
         let key = client_update_height_key(&client_id);
         write_log

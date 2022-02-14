@@ -14,6 +14,9 @@ use tendermint_stable::time::Time;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::Error as TendermintError;
 
+/// The length of the block's time as RFC 3339 string
+pub const BLOCK_TIME_LENGTH: usize = 27;
+
 /// Check if the given `duration` has passed since the given `start.
 pub fn duration_passed(
     current: DateTimeUtc,

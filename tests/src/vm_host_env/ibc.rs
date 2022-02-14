@@ -23,6 +23,7 @@ use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
 use anoma::types::ibc::IbcEvent;
 use anoma::types::storage::{BlockHeight, Epoch, Key};
+use anoma::types::time::Rfc3339String;
 use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
 #[cfg(not(feature = "ABCI"))]
@@ -298,6 +299,10 @@ impl IbcActions for TestIbcActions {
             tx_host_env::get_block_height(),
         )
     }
+
+    fn get_header_time(&self) -> Rfc3339String {
+        Rfc3339String(tx_host_env::get_block_time())
+    }
 }
 
 /// Initialize IBC VP by running a transaction.
@@ -384,8 +389,7 @@ pub fn tm_dummy_header() -> TmHeader {
             .expect("Creating an TmChainId shouldn't fail"),
         height: TmHeight::try_from(10_u64)
             .expect("Creating a height shouldn't fail"),
-        time: TmTime::from_str("2021-11-01T18:14:32.024837Z")
-            .expect("Setting the time shouldn't fail"),
+        time: TmTime::now(),
         last_block_id: None,
         last_commit_hash: None,
         data_hash: None,

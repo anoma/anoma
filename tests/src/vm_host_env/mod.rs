@@ -559,6 +559,7 @@ mod tests {
         env.storage
             .begin_block(BlockHash::default(), BlockHeight(1))
             .unwrap();
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
 
         // Start an invalid transaction
         let msg = ibc::msg_update_client(client_id);
@@ -633,6 +634,7 @@ mod tests {
         env.storage
             .begin_block(BlockHash::default(), BlockHeight(2))
             .unwrap();
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
 
         // Start a transaction to upgrade the client
         let msg = ibc::msg_upgrade_client(client_id);

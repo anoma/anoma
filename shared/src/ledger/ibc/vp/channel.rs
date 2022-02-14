@@ -96,9 +96,13 @@ use ibc_abci::proofs::Proofs;
 use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
+use tendermint::Time;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::Time;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -666,20 +670,13 @@ where
         let key = client_update_timestamp_key(client_id);
         match self.ctx.read_pre(&key)? {
             Some(value) => {
-                // As ibc-go, u64 like a counter is encoded with big-endian
-                let ns: [u8; 8] = value.try_into().map_err(|_| {
-                    Error::InvalidTimestamp(format!(
-                        "Encoding the timestamp failed: ID {}",
-                        client_id
-                    ))
-                })?;
-                let ns = u64::from_be_bytes(ns);
-                Timestamp::from_nanoseconds(ns).map_err(|_| {
+                let time = Time::decode_vec(&value).map_err(|_| {
                     Error::InvalidTimestamp(format!(
                         "Timestamp conversion failed: ID {}",
                         client_id
                     ))
-                })
+                })?;
+                Ok(time.into())
             }
             None => Err(Error::InvalidTimestamp(format!(
                 "Timestamp doesn't exist: ID {}",
@@ -934,13 +931,9 @@ where
         let key = client_update_timestamp_key(client_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
-                // As ibc-go, u64 like a counter is encoded with big-endian
-                let ns: [u8; 8] = value
-                    .try_into()
+                let time = Time::decode_vec(&value)
                     .map_err(|_| Ics04Error::implementation_specific())?;
-                let ns = u64::from_be_bytes(ns);
-                Timestamp::from_nanoseconds(ns)
-                    .map_err(|_| Ics04Error::implementation_specific())
+                Ok(time.into())
             }
             Ok(None) => Err(Ics04Error::processed_time_not_found(
                 client_id.clone(),

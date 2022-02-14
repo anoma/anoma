@@ -204,6 +204,8 @@ use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
 use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
+use tendermint::Time;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Error as ProtoError;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Protobuf;
@@ -211,6 +213,8 @@ use tendermint_proto::Protobuf;
 use tendermint_proto_abci::Error as ProtoError;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::Time;
 use thiserror::Error;
 
 use crate::ledger::ibc::storage;
@@ -221,6 +225,7 @@ use crate::types::ibc::data::{
 };
 use crate::types::ibc::IbcEvent as AnomaIbcEvent;
 use crate::types::storage::{BlockHeight, Epoch, Key};
+use crate::types::time::Rfc3339String;
 use crate::types::token::{self, Amount};
 
 const COMMITMENT_PREFIX: &[u8] = b"ibc";
@@ -248,6 +253,8 @@ pub enum Error {
     Counter(String),
     #[error("Sequence error: {0}")]
     Sequence(String),
+    #[error("Time error: {0}")]
+    Time(String),
     #[error("Invalid transfer message: {0}")]
     TransferMessage(token::TransferError),
     #[error("Sending a token error: {0}")]
@@ -284,6 +291,9 @@ pub trait IbcActions {
 
     /// Get the current height of this chain
     fn get_height(&self) -> (Epoch, BlockHeight);
+
+    /// Get the current time of the tendermint header of this chain
+    fn get_header_time(&self) -> Rfc3339String;
 
     /// dispatch according to ICS26 routing
     fn dispatch(&self, tx_data: &[u8]) -> Result<()> {
@@ -869,10 +879,15 @@ pub trait IbcActions {
 
     /// Set the timestamp and the height for the client update
     fn set_client_update_time(&self, client_id: &ClientId) -> Result<()> {
-        let timestamp = Timestamp::now();
+        let time = Time::parse_from_rfc3339(&self.get_header_time().0)
+            .map_err(|e| {
+                Error::Time(format!("The time of the header is invalid: {}", e))
+            })?;
         let key = storage::client_update_timestamp_key(client_id);
-        // write the current timestamp as u64
-        self.write_ibc_data(&key, timestamp.nanoseconds().to_be_bytes());
+        self.write_ibc_data(
+            &key,
+            time.encode_vec().expect("encoding shouldn't fail"),
+        );
 
         let (epoch, height) = self.get_height();
         let height = Height::new(epoch.0, height.0);
