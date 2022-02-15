@@ -301,7 +301,7 @@ impl IbcActions for TestIbcActions {
     }
 
     fn get_header_time(&self) -> Rfc3339String {
-        Rfc3339String(tx_host_env::get_block_time())
+        tx_host_env::get_block_time()
     }
 }
 

@@ -62,7 +62,7 @@ pub mod tx {
     use anoma::types::storage::{
         BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
     };
-    use anoma::types::time::BLOCK_TIME_LENGTH;
+    use anoma::types::time::Rfc3339String;
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
     #[derive(Debug)]
@@ -217,17 +217,16 @@ pub mod tx {
         BlockHeight(unsafe { anoma_tx_get_block_height() })
     }
 
-    /// Get time of the current block header as rfc3339
-    pub fn get_block_time() -> String {
-        let result = Vec::with_capacity(BLOCK_TIME_LENGTH);
-        unsafe {
-            anoma_tx_get_block_time(result.as_ptr() as _);
-        }
-        let slice = unsafe {
-            slice::from_raw_parts(result.as_ptr(), BLOCK_TIME_LENGTH)
-        };
-        String::from_utf8(slice.to_vec())
-            .expect("Cannot convert the time string")
+    /// Get time of the current block header as rfc 3339 string
+    pub fn get_block_time() -> Rfc3339String {
+        let read_result = unsafe { anoma_tx_get_block_time() };
+        let time_value =
+            super::read_from_buffer(read_result, anoma_tx_result_buffer)
+                .expect("The block time should exist");
+        Rfc3339String(
+            String::try_from_slice(&time_value[..])
+                .expect("The conversion shouldn't fail"),
+        )
     }
 
     /// Get hash of the current block
@@ -315,7 +314,7 @@ pub mod tx {
         fn anoma_tx_get_block_height() -> u64;
 
         // Get the time of the current block header
-        fn anoma_tx_get_block_time(result_ptr: u64);
+        fn anoma_tx_get_block_time() -> i64;
 
         // Get the current block hash
         fn anoma_tx_get_block_hash(result_ptr: u64);

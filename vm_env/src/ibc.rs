@@ -45,6 +45,6 @@ impl IbcActions for Ibc {
     }
 
     fn get_header_time(&self) -> Rfc3339String {
-        Rfc3339String(tx::get_block_time())
+        tx::get_block_time()
     }
 }

@@ -1414,8 +1414,7 @@ where
 /// transaction is being applied.
 pub fn tx_get_block_time<MEM, DB, H, CA>(
     env: &TxEnv<MEM, DB, H, CA>,
-    result_ptr: u64,
-) -> TxResult<()>
+) -> TxResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1424,14 +1423,24 @@ where
 {
     let storage = unsafe { env.ctx.storage.get() };
     let (header, gas) = storage.get_block_header();
-    tx_add_gas(env, gas)?;
-    // the header should exist after a transaction starts
-    let time_str = header.unwrap().time.to_rfc3339();
-    let gas = env
-        .memory
-        .write_string(result_ptr, time_str)
-        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
-    tx_add_gas(env, gas)
+    Ok(match header {
+        Some(h) => {
+            let time = h
+                .time
+                .to_rfc3339()
+                .try_to_vec()
+                .map_err(TxRuntimeError::EncodingError)?;
+            let len: i64 = time
+                .len()
+                .try_into()
+                .map_err(TxRuntimeError::NumConversionError)?;
+            let result_buffer = unsafe { env.ctx.result_buffer.get() };
+            result_buffer.replace(time);
+            tx_add_gas(env, gas)?;
+            len
+        }
+        None => HostEnvResult::Fail.to_i64(),
+    })
 }
 
 /// Getting the block hash function exposed to the wasm VM VP environment. The
