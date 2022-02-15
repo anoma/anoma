@@ -80,6 +80,10 @@ fn validate_tx(
         _ => false,
     });
 
+    if !is_tx_whitelisted() {
+        return false;
+    }
+
     for key in keys_changed.iter() {
         let key_type: KeyType = key.into();
         let is_valid = match key_type {
@@ -164,15 +168,22 @@ fn validate_tx(
                 }
             }
             KeyType::Vp(owner) => {
+                let key = key.to_string();
+                let has_post: bool = has_key_post(&key);
                 if owner == &addr {
-                    *valid_sig
+                    if has_post {
+                        let vp: Vec<u8> = read_post(&key).unwrap();
+                        return *valid_sig && is_vp_whitelisted(&vp);
+                    } else {
+                        return false;
+                    }
                 } else {
-                    true
+                    let vp: Vec<u8> = read_post(&key).unwrap();
+                    return is_vp_whitelisted(&vp);
                 }
             }
             KeyType::Unknown => *valid_sig,
         };
-
         if !is_valid {
             debug_log!("key {} modification failed vp", key);
             return false;
@@ -193,6 +204,22 @@ fn check_intent_transfers(
         return check_intent(addr, exchange, intent, raw_intent_transfers);
     }
     false
+}
+
+fn is_tx_whitelisted() -> bool {
+    let tx_hash = get_tx_hash();
+    let key = parameters::tx_whitelist_storage_key();
+    let whitelist: Vec<String> = read_pre(&key.to_string()).unwrap_or_default();
+    // if whitelist is empty, allow any transaction
+    return whitelist.contains(&tx_hash.to_string()) || whitelist.len() == 0;
+}
+
+fn is_vp_whitelisted(vp_bytes: &[u8]) -> bool {
+    let vp_hash = sha256(vp_bytes);
+    let key = parameters::vp_whitelist_storage_key();
+    let whitelist: Vec<String> = read_pre(&key.to_string()).unwrap_or_default();
+    // if whitelist is empty, allow any transaction
+    return whitelist.contains(&vp_hash.to_string()) || whitelist.len() == 0;
 }
 
 fn try_decode_intent(

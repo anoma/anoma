@@ -19,3 +19,4 @@ ABCI-plus-plus = [
 
 [dependencies]
 anoma_vm_env = {path = "../vm_env", default-features = false}
+sha2 = "0.10.1"

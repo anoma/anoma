@@ -11,6 +11,8 @@ use crate::ledger::storage::write_log::WriteLog;
 use crate::ledger::storage::{self, write_log, Storage, StorageHasher};
 use crate::proto::Tx;
 use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
+use crate::types::hash::{Hash, HASH_LENGTH};
+use super::gas::MIN_STORAGE_GAS;
 
 /// These runtime errors will abort VP execution immediately
 #[allow(missing_docs)]
@@ -221,13 +223,12 @@ where
 pub fn get_tx_hash(
     gas_meter: &mut VpGasMeter,
     tx: &Tx,
-) -> Result<Vec<u8>>
+) -> Result<Hash>
 {
-    let hash = tx.hash();
-    add_gas(gas_meter, 32)?;
-    Ok(hash.to_vec())
+    let hash = Hash(tx.hash());
+    add_gas(gas_meter, MIN_STORAGE_GAS)?;
+    Ok(hash)
 }
-
 
 /// Getting the block epoch. The epoch is that of the block to which the
 /// current transaction is being applied.

@@ -31,6 +31,7 @@ pub mod vp_prelude {
 
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
+    pub use anoma::ledger::parameters;
     pub use anoma_macros::validity_predicate;
 
     pub use crate::imports::vp::*;

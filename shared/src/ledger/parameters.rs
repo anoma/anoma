@@ -15,6 +15,10 @@ use crate::types::time::DurationSecs;
 use crate::vm::WasmCacheAccess;
 
 const ADDR: InternalAddress = InternalAddress::Parameters;
+const EPOCH_KEY: &str = "epoch";
+const WHITELIST_KEY: &str = "whitelist";
+const VP_KEY: &str = "vp";
+const TX_KEY: &str = "tx";
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -54,6 +58,10 @@ pub struct Parameters {
     pub epoch_duration: EpochDuration,
     /// Maximum expected time per block
     pub max_expected_time_per_block: DurationSecs,
+    /// Whitelisted validity predicate hashes
+    pub vp_whitelist: Vec<String>,
+    /// Whitelisted tx hashes
+    pub tx_whitelist: Vec<String>
 }
 
 /// Epoch duration. A new epoch begins as soon as both the `min_num_of_blocks`
@@ -84,11 +92,26 @@ pub fn init_genesis_storage<DB, H>(
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: storage::StorageHasher,
 {
-    let params_key = storage_key();
-    let params_value = encode(parameters);
+    // write epoch parameters
+    let epoch_key = epoch_storage_key();
+    let epoch_value = encode(&parameters.epoch_duration);
     storage
-        .write(&params_key, params_value)
-        .expect("Protocol parameters must be initialized in the genesis block");
+        .write(&epoch_key, epoch_value)
+        .expect("Epoch parameters must be initialized in the genesis block");
+
+    // write vp whitelist parameter
+    let vp_whitelist_key = vp_whitelist_storage_key();
+    let vp_whitelist_value = encode(&parameters.vp_whitelist);
+    storage
+        .write(&vp_whitelist_key, vp_whitelist_value)
+        .expect("Vp whitelist parameters must be initialized in the genesis block");
+
+    // write tx whitelist parameter
+    let tx_whitelist_key = tx_whitelist_storage_key();
+    let tx_whitelist_value = encode(&parameters.tx_whitelist);
+    storage
+        .write(&tx_whitelist_key, tx_whitelist_value)
+        .expect("Tx whitelist parameters must be initialized in the genesis block");
 }
 
 #[allow(missing_docs)]
@@ -102,20 +125,38 @@ pub enum ReadError {
     ParametersMissing,
 }
 
-/// Read the current parameters from storage. Returns the parameters and gas
+// Read the all the parameters from storage. Returns the parameters and gas
 /// cost.
-pub fn read<DB, H>(
+pub fn read_parameters<DB, H>(
     storage: &Storage<DB, H>,
 ) -> std::result::Result<(Parameters, u64), ReadError>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: storage::StorageHasher,
 {
-    let key = storage_key();
-    let (value, gas) = storage.read(&key).map_err(ReadError::StorageError)?;
-    let parameters = decode(value.ok_or(ReadError::ParametersMissing)?)
+    // read epoch
+    let epoch_key = epoch_storage_key();
+    let (value, gas_epoch) = storage.read(&epoch_key).map_err(ReadError::StorageError)?;
+    let epoch_duration: EpochDuration = decode(value.ok_or(ReadError::ParametersMissing)?)
         .map_err(ReadError::StorageTypeError)?;
-    Ok((parameters, gas))
+
+    // read vp whitelist
+    let vp_whitelist_key = vp_whitelist_storage_key();
+    let (value, gas_vp) = storage.read(&vp_whitelist_key).map_err(ReadError::StorageError)?;
+    let vp_whitelist: Vec<String> = decode(value.ok_or(ReadError::ParametersMissing)?)
+        .map_err(ReadError::StorageTypeError)?;
+
+    // read tx whitelist
+    let tx_whitelist_key = tx_whitelist_storage_key();
+    let (value, gas_tx) = storage.read(&tx_whitelist_key).map_err(ReadError::StorageError)?;
+    let tx_whitelist: Vec<String> = decode(value.ok_or(ReadError::ParametersMissing)?)
+        .map_err(ReadError::StorageTypeError)?;
+    
+    Ok((Parameters {
+        epoch_duration,
+        vp_whitelist: vp_whitelist,
+        tx_whitelist: tx_whitelist,
+    }, gas_epoch + gas_tx + gas_vp))
 }
 
 #[allow(missing_docs)]
@@ -123,25 +164,69 @@ where
 pub enum WriteError {
     #[error("Storage error: {0}")]
     StorageError(storage::Error),
+    #[error("Serialize error: {0}")]
+    SerializeError(String),
 }
 
-/// Update the current parameters in storage. Returns the parameters and gas
+/// Update the  parameters in storage. Returns the parameters and gas
 /// cost.
-pub fn update<DB, H>(
+pub fn update<DB, H, T>(
     storage: &mut Storage<DB, H>,
-    parameters: &Parameters,
+    value: &T,
+    key: Key,
 ) -> std::result::Result<u64, WriteError>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: storage::StorageHasher,
+    H: storage::StorageHasher, 
+    T: BorshSerialize
 {
-    let key = storage_key();
-    let value = encode(parameters);
-    // TODO charge storage size diff
+    let serialized_value = value.try_to_vec().map_err(|e|WriteError::SerializeError(e.to_string()))?;
     let (gas, _size_diff) = storage
-        .write(&key, value)
+        .write(&key, serialized_value)
         .map_err(WriteError::StorageError)?;
     Ok(gas)
+}
+
+/// Update the epoch parameter in storage. Returns the parameters and gas
+/// cost.
+pub fn update_epoch_parameter<DB, H>(
+    storage: &mut Storage<DB, H>,
+    value: &EpochDuration
+) -> std::result::Result<u64, WriteError>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: storage::StorageHasher, 
+{   
+    let key = epoch_storage_key();
+    update(storage, value, key)
+}
+
+/// Update the tx whitelist parameter in storage. Returns the parameters and gas
+/// cost.
+pub fn update_tx_whitelist_parameter<DB, H>(
+    storage: &mut Storage<DB, H>,
+    value: Vec<String>
+) -> std::result::Result<u64, WriteError>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: storage::StorageHasher, 
+{   
+    let key = tx_whitelist_storage_key();
+    update(storage, &value, key)
+}
+
+/// Update the vp whitelist parameter in storage. Returns the parameters and gas
+/// cost.
+pub fn update_vp_whitelist_parameter<DB, H>(
+    storage: &mut Storage<DB, H>,
+    value: Vec<String>
+) -> std::result::Result<u64, WriteError>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: storage::StorageHasher, 
+{   
+    let key = vp_whitelist_storage_key();
+    update(storage, &value, key)
 }
 
 impl<'a, DB, H, CA> NativeVp for ParametersVp<'a, DB, H, CA>
@@ -166,10 +251,24 @@ where
     }
 }
 
-/// Storage key used for parameters.
-fn storage_key() -> Key {
+/// Storage key used for epoch parameter.
+pub fn epoch_storage_key() -> Key {
     Key {
-        segments: vec![DbKeySeg::AddressSeg(Address::Internal(ADDR))],
+        segments: vec![DbKeySeg::AddressSeg(Address::Internal(ADDR)), DbKeySeg::StringSeg(EPOCH_KEY.to_string())],
+    }
+}
+
+/// Storage key used for vp whitelist parameter.
+pub fn vp_whitelist_storage_key() -> Key {
+    Key {
+        segments: vec![DbKeySeg::AddressSeg(Address::Internal(ADDR)), DbKeySeg::StringSeg(WHITELIST_KEY.to_string()), DbKeySeg::StringSeg(VP_KEY.to_string())],
+    }
+}
+
+/// Storage key used for tx whitelist parameter.
+pub fn tx_whitelist_storage_key() -> Key {
+    Key {
+        segments: vec![DbKeySeg::AddressSeg(Address::Internal(ADDR)), DbKeySeg::StringSeg(WHITELIST_KEY.to_string()), DbKeySeg::StringSeg(TX_KEY.to_string())],
     }
 }
 

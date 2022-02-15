@@ -1610,7 +1610,7 @@ where
     let hash = vp_env::get_tx_hash(gas_meter, tx)?;
     let gas = env
         .memory
-        .write_bytes(result_ptr, hash)
+        .write_bytes(result_ptr, hash.0)
         .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
     vp_env::add_gas(gas_meter, gas)
 }

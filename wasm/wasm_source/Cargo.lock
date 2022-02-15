@@ -129,6 +129,7 @@ name = "anoma_tx_prelude"
 version = "0.4.0"
 dependencies = [
  "anoma_vm_env",
+ "sha2 0.10.1",
 ]
 
 [[package]]
@@ -138,6 +139,7 @@ dependencies = [
  "anoma",
  "anoma_macros",
  "borsh",
+ "hex",
 ]
 
 [[package]]
@@ -145,6 +147,7 @@ name = "anoma_vp_prelude"
 version = "0.4.0"
 dependencies = [
  "anoma_vm_env",
+ "sha2 0.10.1",
 ]
 
 [[package]]
@@ -1080,7 +1083,11 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+<<<<<<< HEAD
  "sha2 0.10.1",
+=======
+ "sha2 0.9.9",
+>>>>>>> [feat]: added vp/tx whitelist genesis, added vp/tx whitelist user_vp
  "subtle-encoding",
  "tendermint",
  "tendermint-light-client-verifier",

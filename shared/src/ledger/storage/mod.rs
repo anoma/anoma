@@ -515,7 +515,7 @@ where
         time: DateTimeUtc,
     ) -> Result<bool> {
         let (parameters, _gas) =
-            parameters::read(self).expect("Couldn't read protocol parameters");
+            parameters::read_parameters(self).expect("Couldn't read protocol parameters");
 
         // Check if the current epoch is over
         let new_epoch = height >= self.next_epoch_min_start_height
@@ -730,6 +730,8 @@ mod tests {
             let mut parameters = Parameters {
                 epoch_duration: epoch_duration.clone(),
                 max_expected_time_per_block: Duration::seconds(max_expected_time_per_block).into(),
+                vp_whitelist: vec![],
+                tx_whitelist: vec![]
             };
             parameters::init_genesis_storage(&mut storage, &parameters);
 
@@ -770,6 +772,7 @@ mod tests {
             parameters.max_expected_time_per_block =
                 Duration::seconds(max_expected_time_per_block + max_time_per_block_delta).into();
             parameters::update(&mut storage, &parameters).unwrap();
+            parameters::update_epoch_parameter(&mut storage, &parameters.epoch_duration).unwrap();
 
             // Test for 2.
             let epoch_before = storage.last_epoch;

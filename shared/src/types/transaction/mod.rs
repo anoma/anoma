@@ -10,56 +10,20 @@ pub mod pos;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
-use std::fmt::{self, Display};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use decrypted::*;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-#[cfg(not(feature = "ABCI"))]
-use tendermint::abci::transaction;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::abci::transaction;
 pub use wrapper::*;
-
 use crate::types::address::Address;
 use crate::types::key::ed25519::PublicKey;
-
-#[derive(
-    Clone,
-    Debug,
-    Hash,
-    PartialEq,
-    Eq,
-    BorshSerialize,
-    BorshDeserialize,
-    Serialize,
-    Deserialize,
-)]
-/// A hash, typically a sha-2 hash of a tx
-pub struct Hash(pub [u8; 32]);
-
-impl Display for Hash {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in &self.0 {
-            write!(f, "{:02X}", byte)?;
-        }
-        Ok(())
-    }
-}
-
-impl From<Hash> for transaction::Hash {
-    fn from(hash: Hash) -> Self {
-        Self::new(hash.0)
-    }
-}
+use crate::types::hash::Hash;
 
 /// Get the hash of a transaction
 pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     let digest = Sha256::digest(tx_bytes);
-    let mut hash_bytes = [0u8; 32];
-    hash_bytes.copy_from_slice(&digest);
-    Hash(hash_bytes)
+    Hash(*digest.as_ref())
 }
 
 /// A tx data type to update an account's validity predicate

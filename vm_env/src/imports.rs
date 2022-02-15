@@ -360,8 +360,9 @@ pub mod vp {
     use core::slice;
     use std::convert::TryFrom;
     use std::marker::PhantomData;
-
+    
     use anoma::types::chain::CHAIN_ID_LENGTH;
+    use anoma::types::hash::{HASH_LENGTH, Hash};
     use anoma::types::internal::HostEnvResult;
     use anoma::types::key::ed25519::{PublicKey, Signature};
     use anoma::types::storage::{
@@ -516,16 +517,16 @@ pub mod vp {
         BlockHash::try_from(slice).expect("Cannot convert the hash")
     }
 
-    /// Get a block hash
-    pub fn get_tx_hash() -> String {
-        let result = Vec::with_capacity(32);
+    /// Get a tx hash
+    pub fn get_tx_hash() -> Hash {
+        let result = Vec::with_capacity(HASH_LENGTH);
         unsafe {
             anoma_vp_get_tx_hash(result.as_ptr() as _);
         }
         let slice = unsafe {
-            slice::from_raw_parts(result.as_ptr(), 32)
+            slice::from_raw_parts(result.as_ptr(), HASH_LENGTH)
         };
-        hex::encode(slice)
+        Hash::try_from(slice).expect("Cannot convert the hash")
     }
 
     /// Get epoch of the current block

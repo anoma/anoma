@@ -316,7 +316,7 @@ where
         });
 
         // Update evidence parameters
-        let (parameters, _gas) = parameters::read(&self.storage)
+        let (parameters, _gas) = parameters::read_parameters(&self.storage)
             .expect("Couldn't read protocol parameters");
         let pos_params = self.storage.read_pos_params();
         let evidence_params =
