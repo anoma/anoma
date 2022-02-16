@@ -1,4 +1,4 @@
-//! Internal VP for storing special VPs
+//! Internal VP for storing special validity predicates.
 
 use std::collections::HashSet;
 
@@ -19,10 +19,10 @@ pub enum Error {
     NativeVpError(native_vp::Error),
 }
 
-/// Function result type
+/// Function result type.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// This internal address's VP
+/// This internal address' VP.
 pub struct SpecialVp<'a, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -33,13 +33,13 @@ where
     pub ctx: Ctx<'a, DB, H, CA>,
 }
 
-/// Special VPs
+/// Special validity predicates.
 pub struct Special {
-    /// The VP for implicit addresses
+    /// The VP for implicit addresses.
     pub implicit_vp: Vec<u8>,
 }
 
-/// The storage key for the implicit VP
+/// The storage key for the implicit VP.
 pub fn implicit_vp_key() -> Key {
     Key {
         segments: vec![
@@ -89,7 +89,7 @@ where
         _keys_changed: &HashSet<Key>,
         _verifiers: &HashSet<Address>,
     ) -> Result<bool> {
-        // todo: update the implicit vp on a 2/3 majority
+        // TODO: update the implicit vp on a 2/3 majority
         Ok(false)
     }
 }

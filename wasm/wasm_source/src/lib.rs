@@ -239,8 +239,8 @@ pub mod tx_ibc {
 /// future.
 #[cfg(feature = "vp_implicit")]
 pub mod vp_implicit {
+    use anoma_vm_env::vp_prelude::key::ed25519::SignedTxData;
     use anoma_vm_env::vp_prelude::*;
-    use anoma_vm_env::vp_prelude::key::ed25519::{SignedTxData};
 
     enum KeyType<'a> {
         Token(&'a Address),
@@ -262,7 +262,7 @@ pub mod vp_implicit {
         tx_data: Vec<u8>,
         addr: Address,
         keys_changed: HashSet<storage::Key>,
-        verifiers: HashSet<Address>
+        verifiers: HashSet<Address>,
     ) -> bool {
         log_string(format!(
             "validate_tx called with user addr: {}, key_changed: {:#?}, \
@@ -283,24 +283,29 @@ pub mod vp_implicit {
 
         for key in keys_changed.iter() {
             let accept_change = match KeyType::from(key) {
-                KeyType::Token(owner) => if owner == &addr {
-                    let key = key.to_string();
-                    let pre: token::Amount = read_pre(&key).unwrap_or_default();
-                    let post: token::Amount =
-                        read_post(&key).unwrap_or_default();
-                    let change = post.change() - pre.change();
-                    log_string(format!(
-                        "token key: {}, change: {}, valid_sig: {}, \
-                         valid modification: {}",
-                        key,
-                        change,
-                        valid_sig,
+                KeyType::Token(owner) => {
+                    if owner == &addr {
+                        let key = key.to_string();
+                        let pre: token::Amount =
+                            read_pre(&key).unwrap_or_default();
+                        let post: token::Amount =
+                            read_post(&key).unwrap_or_default();
+                        let change = post.change() - pre.change();
+                        log_string(format!(
+                            "token key: {}, change: {}, valid_sig: {}, valid \
+                             modification: {}",
+                            key,
+                            change,
+                            valid_sig,
+                            (change < 0 && valid_sig) || change > 0
+                        ));
+                        // debit has to be signed, credit doesn't
                         (change < 0 && valid_sig) || change > 0
-                    ));
-                    // debit has to be signed, credit doesn't
-                    (change < 0 && valid_sig) || change > 0
-                } else { false }
-                KeyType::Other => false
+                    } else {
+                        false
+                    }
+                }
+                KeyType::Other => false,
             };
 
             if !accept_change {
