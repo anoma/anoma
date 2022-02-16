@@ -313,7 +313,7 @@ pub mod vp_implicit {
                 return false;
             }
         }
-        return true;
+        true
     }
 }
 
