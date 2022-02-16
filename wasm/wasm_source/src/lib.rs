@@ -232,6 +232,86 @@ pub mod tx_ibc {
     }
 }
 
+/// Default VP for implicit transparent addresses.
+/// Can receive tokens, and spend tokens with a valid signature.
+/// For more complex storage usage, a user must deploy their own VP.
+/// However, the network may elect to upgrade the implicit VP in the
+/// future.
+#[cfg(feature = "vp_implicit")]
+pub mod vp_implicit {
+    use anoma_vm_env::vp_prelude::*;
+    use anoma_vm_env::vp_prelude::key::ed25519::{SignedTxData};
+
+    enum KeyType<'a> {
+        Token(&'a Address),
+        Other,
+    }
+
+    impl<'a> From<&'a storage::Key> for KeyType<'a> {
+        fn from(key: &'a storage::Key) -> KeyType<'a> {
+            if let Some(address) = token::is_any_token_balance_key(key) {
+                Self::Token(address)
+            } else {
+                Self::Other
+            }
+        }
+    }
+
+    #[validity_predicate]
+    fn validate_tx(
+        tx_data: Vec<u8>,
+        addr: Address,
+        keys_changed: HashSet<storage::Key>,
+        verifiers: HashSet<Address>
+    ) -> bool {
+        log_string(format!(
+            "validate_tx called with user addr: {}, key_changed: {:#?}, \
+             verifiers: {:?}",
+            addr, keys_changed, verifiers
+        ));
+
+        let valid_sig = match SignedTxData::try_from_slice(&tx_data[..]) {
+            Ok(tx) => {
+                let pk = key::ed25519::get(&addr);
+                match pk {
+                    None => false,
+                    Some(pk) => verify_tx_signature(&pk, &tx.sig),
+                }
+            }
+            _ => false,
+        };
+
+        for key in keys_changed.iter() {
+            let accept_change = match KeyType::from(key) {
+                KeyType::Token(owner) => if owner == &addr {
+                    let key = key.to_string();
+                    let pre: token::Amount = read_pre(&key).unwrap_or_default();
+                    let post: token::Amount =
+                        read_post(&key).unwrap_or_default();
+                    let change = post.change() - pre.change();
+                    log_string(format!(
+                        "token key: {}, change: {}, valid_sig: {}, \
+                         valid modification: {}",
+                        key,
+                        change,
+                        valid_sig,
+                        (change < 0 && valid_sig) || change > 0
+                    ));
+                    // debit has to be signed, credit doesn't
+                    (change < 0 && valid_sig) || change > 0
+                } else { false }
+                KeyType::Other => false
+            };
+
+            if !accept_change {
+                log_string(format!("key {} modification failed vp", key));
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 /// A VP for a token.
 #[cfg(feature = "vp_token")]
 pub mod vp_token {
