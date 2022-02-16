@@ -29,9 +29,9 @@ pub mod vp_prelude {
     // used in the VP input
     pub use std::collections::HashSet;
 
+    pub use anoma::ledger::parameters;
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
-    pub use anoma::ledger::parameters;
     pub use anoma_macros::validity_predicate;
 
     pub use crate::imports::vp::*;

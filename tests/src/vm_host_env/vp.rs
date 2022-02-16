@@ -278,7 +278,7 @@ mod native_vp_host_env {
     native_host_fn!(vp_get_chain_id(result_ptr: u64));
     native_host_fn!(vp_get_block_height() -> u64);
     native_host_fn!(vp_get_block_hash(result_ptr: u64));
-    native_host_fn!(vp_get_tx_hash(result_ptr: u64));
+    native_host_fn!(vp_get_tx_code_hash(result_ptr: u64));
     native_host_fn!(vp_get_block_epoch() -> u64);
     native_host_fn!(vp_verify_tx_signature(
             pk_ptr: u64,

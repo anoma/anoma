@@ -467,8 +467,11 @@ fn pos_bonds() -> Result<()> {
 =======
                 vp_whitelist: Some(vec![]),
                 tx_whitelist: Some(vec![]),
+<<<<<<< HEAD
                 
 >>>>>>> [feat]: added vp/tx whitelist genesis, added vp/tx whitelist user_vp
+=======
+>>>>>>> [feat]: added test vp/tx whitelist
             };
             let pos_params = PosParamsConfig {
                 pipeline_len: 1,

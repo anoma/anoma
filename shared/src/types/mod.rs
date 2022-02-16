@@ -3,6 +3,7 @@
 pub mod address;
 pub mod chain;
 pub mod dylib;
+pub mod hash;
 pub mod ibc;
 pub mod intent;
 pub mod internal;
@@ -14,4 +15,3 @@ pub mod time;
 pub mod token;
 pub mod transaction;
 pub mod validity_predicate;
-pub mod hash;

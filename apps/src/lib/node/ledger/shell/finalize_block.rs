@@ -316,11 +316,12 @@ where
         });
 
         // Update evidence parameters
-        let (parameters, _gas) = parameters::read_parameters(&self.storage)
-            .expect("Couldn't read protocol parameters");
+        let (epoch_duration, _gas) =
+            parameters::read_epoch_parameter(&self.storage)
+                .expect("Couldn't read epoch duration parameters");
         let pos_params = self.storage.read_pos_params();
         let evidence_params =
-            self.get_evidence_params(&parameters, &pos_params);
+            self.get_evidence_params(&epoch_duration, &pos_params);
         response.consensus_param_updates = Some(ConsensusParams {
             evidence: Some(evidence_params),
             ..response.consensus_param_updates.take().unwrap_or_default()

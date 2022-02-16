@@ -88,6 +88,10 @@ impl Tx {
         hash_tx(&self.to_bytes()).0
     }
 
+    pub fn code_hash(&self) -> [u8; 32] {
+        hash_tx(&self.code).0
+    }
+
     pub fn sign(self, keypair: &Keypair) -> Tx {
         ed25519::sign_tx(keypair, self)
     }

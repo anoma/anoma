@@ -2,11 +2,16 @@ use std::borrow::Borrow;
 use std::collections::HashSet;
 
 use anoma::ledger::gas::BlockGasMeter;
+use anoma::ledger::parameters::{
+    update_epoch_parameter, update_tx_whitelist_parameter,
+    update_vp_whitelist_parameter, EpochDuration,
+};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::types::address::Address;
 use anoma::types::storage::Key;
+use anoma::types::time::DurationSecs;
 use anoma::types::{key, token};
 use anoma::vm::prefix_iter::PrefixIterators;
 use anoma::vm::wasm::{self, TxCache, VpCache};
@@ -62,6 +67,29 @@ impl Default for TestTxEnv {
 impl TestTxEnv {
     pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
         self.write_log.get_keys()
+    }
+
+    pub fn init_parameters(
+        &mut self,
+        epoch_duration: Option<EpochDuration>,
+        vp_whitelist: Option<Vec<String>>,
+        tx_whitelist: Option<Vec<String>>,
+    ) {
+        let _ = update_epoch_parameter(
+            &mut self.storage,
+            &epoch_duration.unwrap_or(EpochDuration {
+                min_num_of_blocks: 1,
+                min_duration: DurationSecs(5),
+            }),
+        );
+        let _ = update_tx_whitelist_parameter(
+            &mut self.storage,
+            tx_whitelist.unwrap_or_default(),
+        );
+        let _ = update_vp_whitelist_parameter(
+            &mut self.storage,
+            vp_whitelist.unwrap_or_default(),
+        );
     }
 
     /// Fake accounts existence by initializating their VP storage.

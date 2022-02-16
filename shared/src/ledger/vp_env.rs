@@ -5,14 +5,14 @@ use std::num::TryFromIntError;
 
 use thiserror::Error;
 
+use super::gas::MIN_STORAGE_GAS;
 use crate::ledger::gas;
 use crate::ledger::gas::VpGasMeter;
 use crate::ledger::storage::write_log::WriteLog;
 use crate::ledger::storage::{self, write_log, Storage, StorageHasher};
 use crate::proto::Tx;
+use crate::types::hash::Hash;
 use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
-use crate::types::hash::{Hash, HASH_LENGTH};
-use super::gas::MIN_STORAGE_GAS;
 
 /// These runtime errors will abort VP execution immediately
 #[allow(missing_docs)]
@@ -220,12 +220,8 @@ where
 
 /// Getting the block hash. The height is that of the block to which the
 /// current transaction is being applied.
-pub fn get_tx_hash(
-    gas_meter: &mut VpGasMeter,
-    tx: &Tx,
-) -> Result<Hash>
-{
-    let hash = Hash(tx.hash());
+pub fn get_tx_code_hash(gas_meter: &mut VpGasMeter, tx: &Tx) -> Result<Hash> {
+    let hash = Hash(tx.code_hash());
     add_gas(gas_meter, MIN_STORAGE_GAS)?;
     Ok(hash)
 }

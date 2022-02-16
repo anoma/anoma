@@ -1594,7 +1594,7 @@ where
 }
 
 /// Getting the transaction hash function exposed to the wasm VM VP environment.
-pub fn vp_get_tx_hash<MEM, DB, H, EVAL, CA>(
+pub fn vp_get_tx_code_hash<MEM, DB, H, EVAL, CA>(
     env: &VpEnv<MEM, DB, H, EVAL, CA>,
     result_ptr: u64,
 ) -> vp_env::Result<()>
@@ -1607,7 +1607,7 @@ where
 {
     let gas_meter = unsafe { env.ctx.gas_meter.get() };
     let tx = unsafe { env.ctx.tx.get() };
-    let hash = vp_env::get_tx_hash(gas_meter, tx)?;
+    let hash = vp_env::get_tx_code_hash(gas_meter, tx)?;
     let gas = env
         .memory
         .write_bytes(result_ptr, hash.0)

@@ -514,8 +514,8 @@ where
         height: BlockHeight,
         time: DateTimeUtc,
     ) -> Result<bool> {
-        let (parameters, _gas) =
-            parameters::read_parameters(self).expect("Couldn't read protocol parameters");
+        let (parameters, _gas) = parameters::read_parameters(self)
+            .expect("Couldn't read protocol parameters");
 
         // Check if the current epoch is over
         let new_epoch = height >= self.next_epoch_min_start_height

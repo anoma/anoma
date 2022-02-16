@@ -1,3 +1,5 @@
+//! Types for working with 32 bytes hashes.
+
 use std::fmt::{self, Display};
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -10,7 +12,6 @@ use thiserror::Error;
 
 /// The length of the transaction hash string
 pub const HASH_LENGTH: usize = 32;
-
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]

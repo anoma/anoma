@@ -360,9 +360,9 @@ pub mod vp {
     use core::slice;
     use std::convert::TryFrom;
     use std::marker::PhantomData;
-    
+
     use anoma::types::chain::CHAIN_ID_LENGTH;
-    use anoma::types::hash::{HASH_LENGTH, Hash};
+    use anoma::types::hash::{Hash, HASH_LENGTH};
     use anoma::types::internal::HostEnvResult;
     use anoma::types::key::ed25519::{PublicKey, Signature};
     use anoma::types::storage::{
@@ -518,14 +518,13 @@ pub mod vp {
     }
 
     /// Get a tx hash
-    pub fn get_tx_hash() -> Hash {
+    pub fn get_tx_code_hash() -> Hash {
         let result = Vec::with_capacity(HASH_LENGTH);
         unsafe {
-            anoma_vp_get_tx_hash(result.as_ptr() as _);
+            anoma_vp_get_tx_code_hash(result.as_ptr() as _);
         }
-        let slice = unsafe {
-            slice::from_raw_parts(result.as_ptr(), HASH_LENGTH)
-        };
+        let slice =
+            unsafe { slice::from_raw_parts(result.as_ptr(), HASH_LENGTH) };
         Hash::try_from(slice).expect("Cannot convert the hash")
     }
 
@@ -637,7 +636,7 @@ pub mod vp {
         fn anoma_vp_get_block_hash(result_ptr: u64);
 
         // Get the current tx hash
-        fn anoma_vp_get_tx_hash(result_ptr: u64);
+        fn anoma_vp_get_tx_code_hash(result_ptr: u64);
 
         // Get the current block epoch
         fn anoma_vp_get_block_epoch() -> u64;

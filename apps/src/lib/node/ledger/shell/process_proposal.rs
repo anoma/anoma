@@ -232,10 +232,11 @@ where
 #[cfg(test)]
 mod test_process_proposal {
     use anoma::types::address::xan;
+    use anoma::types::hash::Hash;
     use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
-    use anoma::types::transaction::{Fee, Hash};
+    use anoma::types::transaction::Fee;
     use borsh::BorshDeserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::RequestInitChain;
