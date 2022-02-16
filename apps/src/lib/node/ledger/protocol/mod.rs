@@ -7,12 +7,12 @@ use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
 use anoma::ledger::pos::{self, PosVP};
+use anoma::ledger::special::{self, SpecialVp};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::ibc::IbcEvent;
-use anoma::types::key::ed25519::pk_key;
 use anoma::types::storage::Key;
 use anoma::types::transaction::{DecryptedTx, TxType};
 use anoma::vm::wasm::{TxCache, VpCache};
@@ -48,6 +48,8 @@ pub enum Error {
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
+    #[error("Special native VP: {0}")]
+    SpecialNativeVpError(special::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -224,14 +226,17 @@ where
                     Vp::Wasm(vp)
                 }
                 Address::Implicit(_) => {
-                    let pk_storage_key = pk_key(addr);
-                    let (vp, gas) = storage
-                        .read(&pk_storage_key)
+                    let (implicit_vp, gas) = storage
+                        .implicit_vp()
                         .map_err(Error::StorageError)?;
                     gas_meter.add(gas).map_err(Error::GasError)?;
-                    let vp =
-                        vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
-                    Vp::Wasm(vp)
+                    let implicit_vp =
+                        // TODO: figure out the apposite error type (SpecialNativeVpError?)
+                        implicit_vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
+                    gas_meter
+                        .add_compiling_fee(implicit_vp.len())
+                        .map_err(Error::GasError)?;
+                    Vp::Wasm(implicit_vp)
                 }
             };
 
@@ -373,6 +378,14 @@ where
                                 .validate_tx(tx_data, keys, &verifiers_addr)
                                 .map_err(Error::IbcTokenNativeVpError);
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::Special => {
+                            let implicit = SpecialVp { ctx };
+                            let result = implicit
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::SpecialNativeVpError);
+                            gas_meter = implicit.ctx.gas_meter.into_inner();
                             result
                         }
                     };

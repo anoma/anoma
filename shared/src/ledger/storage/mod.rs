@@ -21,6 +21,7 @@ use thiserror::Error;
 use super::parameters::Parameters;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
+use crate::ledger::special::implicit_vp_key;
 use crate::ledger::storage::merkle_tree::{
     Error as MerkleTreeError, MerkleRoot,
 };
@@ -437,6 +438,12 @@ where
         addr: &Address,
     ) -> Result<(Option<Vec<u8>>, u64)> {
         let key = Key::validity_predicate(addr);
+        self.read(&key)
+    }
+
+    /// Get the implicit VP from the internal address which stores it.
+    pub fn implicit_vp(&self) -> Result<(Option<Vec<u8>>, u64)> {
+        let key = implicit_vp_key();
         self.read(&key)
     }
 
