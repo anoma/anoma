@@ -215,7 +215,7 @@ pub mod genesis_config {
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct WasmConfig {
         filename: String,
-        pub sha256: HexString,
+        pub sha256: Option<HexString>,
     }
 
     fn load_validator(
@@ -259,11 +259,18 @@ pub mod genesis_config {
             validator_vp_code_path: validator_vp_config.filename.to_owned(),
             validator_vp_sha256: validator_vp_config
                 .sha256
+                .clone()
+                .unwrap()
                 .to_sha256_bytes()
                 .unwrap(),
             reward_vp_code_path: reward_vp_config.filename.to_owned(),
             reward_vp_sha256: reward_vp_config
                 .sha256
+                .clone()
+                .unwrap_or_else(|| {
+                    eprintln!("Unknown validator VP WASM sha256");
+                    cli::safe_exit(1);
+                })
                 .to_sha256_bytes()
                 .unwrap(),
         }
@@ -283,7 +290,15 @@ pub mod genesis_config {
             address: Address::decode(&config.address.as_ref().unwrap())
                 .unwrap(),
             vp_code_path: token_vp_config.filename.to_owned(),
-            vp_sha256: token_vp_config.sha256.to_sha256_bytes().unwrap(),
+            vp_sha256: token_vp_config
+                .sha256
+                .clone()
+                .unwrap_or_else(|| {
+                    eprintln!("Unknown token VP WASM sha256");
+                    cli::safe_exit(1);
+                })
+                .to_sha256_bytes()
+                .unwrap(),
             balances: config
                 .balances
                 .as_ref()
@@ -357,7 +372,15 @@ pub mod genesis_config {
             address: Address::decode(&config.address.as_ref().unwrap())
                 .unwrap(),
             vp_code_path: account_vp_config.filename.to_owned(),
-            vp_sha256: account_vp_config.sha256.to_sha256_bytes().unwrap(),
+            vp_sha256: account_vp_config
+                .sha256
+                .clone()
+                .unwrap_or_else(|| {
+                    eprintln!("Unknown user VP WASM sha256");
+                    cli::safe_exit(1);
+                })
+                .to_sha256_bytes()
+                .unwrap(),
             public_key: config
                 .public_key
                 .as_ref()
