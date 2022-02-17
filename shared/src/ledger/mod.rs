@@ -5,6 +5,6 @@ pub mod ibc;
 pub mod native_vp;
 pub mod parameters;
 pub mod pos;
-pub mod special;
+pub mod protocol_vps;
 pub mod storage;
 pub mod vp_env;

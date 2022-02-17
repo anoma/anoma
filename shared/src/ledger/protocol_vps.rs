@@ -1,4 +1,4 @@
-//! Internal VP for storing special validity predicates.
+//! For storing validity predicates used by the ledger protocol.
 
 use std::collections::HashSet;
 
@@ -10,7 +10,7 @@ use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::{DbKeySeg, Key};
 use crate::vm::WasmCacheAccess;
 
-const ADDR: InternalAddress = InternalAddress::Special;
+const ADDR: InternalAddress = InternalAddress::Protocol;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -23,7 +23,7 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// This internal address' VP.
-pub struct SpecialVp<'a, DB, H, CA>
+pub struct ProtocolVp<'a, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -33,8 +33,8 @@ where
     pub ctx: Ctx<'a, DB, H, CA>,
 }
 
-/// Special validity predicates.
-pub struct Special {
+/// Validity predicates used by the ledger protocol.
+pub struct Protocol {
     /// The VP for implicit addresses.
     pub implicit_vp: Vec<u8>,
 }
@@ -73,7 +73,7 @@ where
     Ok((value, gas))
 }
 
-impl<'a, DB, H, CA> NativeVp for SpecialVp<'a, DB, H, CA>
+impl<'a, DB, H, CA> NativeVp for ProtocolVp<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
