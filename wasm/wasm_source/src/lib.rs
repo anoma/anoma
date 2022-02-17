@@ -235,8 +235,7 @@ pub mod tx_ibc {
 /// Default VP for implicit transparent addresses.
 /// Can receive tokens, and spend tokens with a valid signature.
 /// For more complex storage usage, a user must deploy their own VP.
-/// However, the network may elect to upgrade the implicit VP in the
-/// future.
+/// However, the network may elect to upgrade the implicit VP in the future.
 #[cfg(feature = "vp_implicit")]
 pub mod vp_implicit {
     use anoma_vm_env::vp_prelude::key::ed25519::SignedTxData;
