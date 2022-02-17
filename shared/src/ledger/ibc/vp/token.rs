@@ -137,28 +137,31 @@ where
             msg.source_port.clone(),
             msg.source_channel.clone()
         );
-        let target = if data.denomination.starts_with(&prefix) {
+        let change = if data.denomination.starts_with(&prefix) {
             // sink zone
-            Address::Internal(InternalAddress::IbcBurn)
+            let target = Address::Internal(InternalAddress::IbcBurn);
+            let target_key = token::balance_key(&token, &target);
+            let post =
+                try_decode_token_amount(self.ctx.read_temp(&target_key)?)?
+                    .unwrap_or_default();
+            // the previous balance of the burn address should be zero
+            post.change()
         } else {
             // source zone
-            Address::Internal(InternalAddress::ibc_escrow_address(
-                msg.source_port.to_string(),
-                msg.source_channel.to_string(),
-            ))
+            let target =
+                Address::Internal(InternalAddress::ibc_escrow_address(
+                    msg.source_port.to_string(),
+                    msg.source_channel.to_string(),
+                ));
+            let target_key = token::balance_key(&token, &target);
+            let pre = try_decode_token_amount(self.ctx.read_pre(&target_key)?)?
+                .unwrap_or_default();
+            let post =
+                try_decode_token_amount(self.ctx.read_post(&target_key)?)?
+                    .unwrap_or_default();
+            post.change() - pre.change()
         };
 
-        let target_key = token::balance_key(&token, &target);
-        let pre = match self.ctx.read_pre(&target_key)? {
-            Some(v) => Amount::try_from_slice(&v).map_err(Error::Decoding)?,
-            None => Amount::default(),
-        };
-        let post = match self.ctx.read_post(&target_key)? {
-            Some(v) => Amount::try_from_slice(&v).map_err(Error::Decoding)?,
-            None => Amount::default(),
-        };
-
-        let change = post.change() - pre.change();
         if change == amount.change() {
             Ok(true)
         } else {
@@ -183,31 +186,31 @@ where
             packet.source_port.clone(),
             packet.source_channel.clone()
         );
-        let source = if data.denomination.starts_with(&prefix) {
+        let change = if data.denomination.starts_with(&prefix) {
             // this chain is the source
-            Address::Internal(InternalAddress::ibc_escrow_address(
-                packet.destination_port.to_string(),
-                packet.destination_channel.to_string(),
-            ))
+            let source =
+                Address::Internal(InternalAddress::ibc_escrow_address(
+                    packet.destination_port.to_string(),
+                    packet.destination_channel.to_string(),
+                ));
+            let source_key = token::balance_key(&token, &source);
+            let pre = try_decode_token_amount(self.ctx.read_pre(&source_key)?)?
+                .unwrap_or_default();
+            let post =
+                try_decode_token_amount(self.ctx.read_post(&source_key)?)?
+                    .unwrap_or_default();
+            pre.change() - post.change()
         } else {
             // the sender is the source
-            Address::Internal(InternalAddress::IbcMint)
+            let source = Address::Internal(InternalAddress::IbcMint);
+            let source_key = token::balance_key(&token, &source);
+            let post =
+                try_decode_token_amount(self.ctx.read_temp(&source_key)?)?
+                    .unwrap_or_default();
+            // the previous balance of the mint address should be the maximum
+            Amount::max().change() - post.change()
         };
 
-        let source_key = token::balance_key(&token, &source);
-        let pre = match self.ctx.read_pre(&source_key)? {
-            Some(v) => Amount::try_from_slice(&v).map_err(Error::Decoding)?,
-            None => match source {
-                Address::Internal(InternalAddress::IbcMint) => Amount::max(),
-                _ => Amount::default(),
-            },
-        };
-        let post = match self.ctx.read_post(&source_key)? {
-            Some(v) => Amount::try_from_slice(&v).map_err(Error::Decoding)?,
-            None => Amount::default(),
-        };
-
-        let change = pre.change() - post.change();
         if change == amount.change() {
             Ok(true)
         } else {
@@ -233,31 +236,31 @@ where
             packet.source_port.clone(),
             packet.source_channel.clone()
         );
-        let source = if data.denomination.starts_with(&prefix) {
+        let change = if data.denomination.starts_with(&prefix) {
             // sink zone: mint the token for the refund
-            Address::Internal(InternalAddress::IbcMint)
+            let source = Address::Internal(InternalAddress::IbcMint);
+            let source_key = token::balance_key(&token, &source);
+            let post =
+                try_decode_token_amount(self.ctx.read_temp(&source_key)?)?
+                    .unwrap_or_default();
+            // the previous balance of the mint address should be the maximum
+            Amount::max().change() - post.change()
         } else {
             // source zone: unescrow the token for the refund
-            Address::Internal(InternalAddress::ibc_escrow_address(
-                packet.source_port.to_string(),
-                packet.source_channel.to_string(),
-            ))
+            let source =
+                Address::Internal(InternalAddress::ibc_escrow_address(
+                    packet.source_port.to_string(),
+                    packet.source_channel.to_string(),
+                ));
+            let source_key = token::balance_key(&token, &source);
+            let pre = try_decode_token_amount(self.ctx.read_pre(&source_key)?)?
+                .unwrap_or_default();
+            let post =
+                try_decode_token_amount(self.ctx.read_post(&source_key)?)?
+                    .unwrap_or_default();
+            pre.change() - post.change()
         };
 
-        let source_key = token::balance_key(&token, &source);
-        let pre = match self.ctx.read_pre(&source_key)? {
-            Some(v) => Amount::try_from_slice(&v).map_err(Error::Decoding)?,
-            None => match source {
-                Address::Internal(InternalAddress::IbcMint) => Amount::max(),
-                _ => Amount::default(),
-            },
-        };
-        let post = match self.ctx.read_post(&source_key)? {
-            Some(v) => Amount::try_from_slice(&v).map_err(Error::Decoding)?,
-            None => Amount::default(),
-        };
-
-        let change = pre.change() - post.change();
         if change == amount.change() {
             Ok(true)
         } else {
@@ -273,4 +276,14 @@ impl From<native_vp::Error> for Error {
     fn from(err: native_vp::Error) -> Self {
         Self::NativeVpError(err)
     }
+}
+
+fn try_decode_token_amount(
+    bytes: Option<Vec<u8>>,
+) -> Result<Option<token::Amount>> {
+    if let Some(bytes) = bytes {
+        let tokens = Amount::try_from_slice(&bytes).map_err(Error::Decoding)?;
+        return Ok(Some(tokens));
+    }
+    Ok(None)
 }

@@ -27,6 +27,10 @@ pub enum RuntimeError {
     NumConversionError(TryFromIntError),
     #[error("Memory error: {0}")]
     MemoryError(Box<dyn std::error::Error + Sync + Send + 'static>),
+    #[error("Trying to read a temporary value with read_post")]
+    ReadTemporaryValueError,
+    #[error("Trying to read a permament value with read_temp")]
+    ReadPermanentValueError,
 }
 
 /// VP environment function result
@@ -86,6 +90,9 @@ where
             // Read the VP of a new account
             Ok(Some(vp.clone()))
         }
+        Some(&write_log::StorageModification::Temp { .. }) => {
+            Err(RuntimeError::ReadTemporaryValueError)
+        }
         None => {
             // When not found in write log, try to read from the storage
             let (value, gas) =
@@ -93,6 +100,24 @@ where
             add_gas(gas_meter, gas)?;
             Ok(value)
         }
+    }
+}
+
+/// Storage read temporary state (after tx execution). It will try to read from
+/// only the write log.
+pub fn read_temp(
+    gas_meter: &mut VpGasMeter,
+    write_log: &WriteLog,
+    key: &Key,
+) -> Result<Option<Vec<u8>>> {
+    // Try to read from the write log first
+    let (log_val, gas) = write_log.read(key);
+    add_gas(gas_meter, gas)?;
+    match log_val {
+        Some(&write_log::StorageModification::Temp { ref value }) => {
+            Ok(Some(value.clone()))
+        }
+        _ => Err(RuntimeError::ReadPermanentValueError),
     }
 }
 
@@ -135,6 +160,7 @@ where
             Ok(false)
         }
         Some(&write_log::StorageModification::InitAccount { .. }) => Ok(true),
+        Some(&write_log::StorageModification::Temp { .. }) => Ok(true),
         None => {
             // When not found in write log, try to check the storage
             let (present, gas) =
@@ -262,6 +288,9 @@ where
             Some(&write_log::StorageModification::InitAccount { .. }) => {
                 // a VP of a new account doesn't need to be iterated
                 continue;
+            }
+            Some(&write_log::StorageModification::Temp { .. }) => {
+                return Err(RuntimeError::ReadTemporaryValueError);
             }
             None => return Ok(Some((key, val))),
         }
