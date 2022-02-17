@@ -248,7 +248,7 @@ mod tests {
 
         // We can add some data to the environment
         let key_raw = "key";
-        let key = Key::parse(key_raw.to_string()).unwrap();
+        let key = Key::parse(key_raw).unwrap();
         let value = "test".to_string();
         let value_raw = value.try_to_vec().unwrap();
         env.write_log.write(&key, value_raw).unwrap();

@@ -316,10 +316,10 @@ impl TryFrom<FungibleTokenPacketData> for Transfer {
     type Error = TransferError;
 
     fn try_from(data: FungibleTokenPacketData) -> Result<Self, Self::Error> {
-        let source = Address::decode(data.sender.to_string())
-            .map_err(TransferError::Address)?;
-        let target = Address::decode(data.receiver.to_string())
-            .map_err(TransferError::Address)?;
+        let source =
+            Address::decode(&data.sender).map_err(TransferError::Address)?;
+        let target =
+            Address::decode(&data.receiver).map_err(TransferError::Address)?;
         let token_str = data
             .denomination
             .split('/')

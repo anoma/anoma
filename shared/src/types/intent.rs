@@ -234,7 +234,6 @@ pub fn is_invalid_intent_key(key: &Key) -> Option<&Address> {
 
 #[cfg(test)]
 mod tests {
-    use std::array::IntoIter;
     use std::env;
     use std::iter::FromIterator;
 
@@ -275,46 +274,59 @@ mod tests {
         let signed_exchange_two = Signed::new(&bertha_keypair, exchange_two);
 
         let mut it = MatchedExchanges::empty();
-        it.exchanges = HashMap::<_, _>::from_iter(IntoIter::new([
-            (bertha_addr.clone(), signed_exchange_one.clone()),
-            (albert_addr.clone(), signed_exchange_two.clone()),
-        ]));
+        it.exchanges = HashMap::<_, _>::from_iter(
+            vec![
+                (bertha_addr.clone(), signed_exchange_one.clone()),
+                (albert_addr.clone(), signed_exchange_two.clone()),
+            ]
+            .into_iter(),
+        );
 
-        it.intents = HashMap::<_, _>::from_iter(IntoIter::new([
-            (
-                bertha_addr.clone(),
-                Signed::new(
-                    &bertha_keypair,
-                    FungibleTokenIntent {
-                        exchange: HashSet::from_iter(vec![signed_exchange_one]),
-                    },
+        it.intents = HashMap::<_, _>::from_iter(
+            vec![
+                (
+                    bertha_addr.clone(),
+                    Signed::new(
+                        &bertha_keypair,
+                        FungibleTokenIntent {
+                            exchange: HashSet::from_iter(vec![
+                                signed_exchange_one,
+                            ]),
+                        },
+                    ),
                 ),
-            ),
-            (
-                albert_addr.clone(),
-                Signed::new(
-                    &albert_keypair,
-                    FungibleTokenIntent {
-                        exchange: HashSet::from_iter(vec![signed_exchange_two]),
-                    },
+                (
+                    albert_addr.clone(),
+                    Signed::new(
+                        &albert_keypair,
+                        FungibleTokenIntent {
+                            exchange: HashSet::from_iter(vec![
+                                signed_exchange_two,
+                            ]),
+                        },
+                    ),
                 ),
-            ),
-        ]));
+            ]
+            .into_iter(),
+        );
 
-        it.transfers = HashSet::<_>::from_iter(IntoIter::new([
-            token::Transfer {
-                source: bertha_addr.clone(),
-                target: albert_addr.clone(),
-                token: Address::from_str(BTC).unwrap(),
-                amount: token::Amount::from(100),
-            },
-            token::Transfer {
-                source: albert_addr,
-                target: bertha_addr,
-                token: Address::from_str(XAN).unwrap(),
-                amount: token::Amount::from(1),
-            },
-        ]));
+        it.transfers = HashSet::<_>::from_iter(
+            vec![
+                token::Transfer {
+                    source: bertha_addr.clone(),
+                    target: albert_addr.clone(),
+                    token: Address::from_str(BTC).unwrap(),
+                    amount: token::Amount::from(100),
+                },
+                token::Transfer {
+                    source: albert_addr,
+                    target: bertha_addr,
+                    token: Address::from_str(XAN).unwrap(),
+                    amount: token::Amount::from(1),
+                },
+            ]
+            .into_iter(),
+        );
 
         let encoded_intent_transfer = encode(&it);
         let decoded_intent_transfer: MatchedExchanges =
@@ -370,46 +382,59 @@ mod tests {
         let signed_exchange_two = Signed::new(&bertha_keypair, exchange_two);
 
         let mut it = MatchedExchanges::empty();
-        it.exchanges = HashMap::<_, _>::from_iter(IntoIter::new([
-            (bertha_addr.clone(), signed_exchange_one.clone()),
-            (albert_addr.clone(), signed_exchange_two.clone()),
-        ]));
+        it.exchanges = HashMap::<_, _>::from_iter(
+            vec![
+                (bertha_addr.clone(), signed_exchange_one.clone()),
+                (albert_addr.clone(), signed_exchange_two.clone()),
+            ]
+            .into_iter(),
+        );
 
-        it.intents = HashMap::<_, _>::from_iter(IntoIter::new([
-            (
-                bertha_addr.clone(),
-                Signed::new(
-                    &bertha_keypair,
-                    FungibleTokenIntent {
-                        exchange: HashSet::from_iter(vec![signed_exchange_one]),
-                    },
+        it.intents = HashMap::<_, _>::from_iter(
+            vec![
+                (
+                    bertha_addr.clone(),
+                    Signed::new(
+                        &bertha_keypair,
+                        FungibleTokenIntent {
+                            exchange: HashSet::from_iter(vec![
+                                signed_exchange_one,
+                            ]),
+                        },
+                    ),
                 ),
-            ),
-            (
-                albert_addr.clone(),
-                Signed::new(
-                    &albert_keypair,
-                    FungibleTokenIntent {
-                        exchange: HashSet::from_iter(vec![signed_exchange_two]),
-                    },
+                (
+                    albert_addr.clone(),
+                    Signed::new(
+                        &albert_keypair,
+                        FungibleTokenIntent {
+                            exchange: HashSet::from_iter(vec![
+                                signed_exchange_two,
+                            ]),
+                        },
+                    ),
                 ),
-            ),
-        ]));
+            ]
+            .into_iter(),
+        );
 
-        it.transfers = HashSet::<_>::from_iter(IntoIter::new([
-            token::Transfer {
-                source: bertha_addr.clone(),
-                target: albert_addr.clone(),
-                token: Address::from_str(BTC).unwrap(),
-                amount: token::Amount::from(100),
-            },
-            token::Transfer {
-                source: albert_addr,
-                target: bertha_addr,
-                token: Address::from_str(XAN).unwrap(),
-                amount: token::Amount::from(1),
-            },
-        ]));
+        it.transfers = HashSet::<_>::from_iter(
+            vec![
+                token::Transfer {
+                    source: bertha_addr.clone(),
+                    target: albert_addr.clone(),
+                    token: Address::from_str(BTC).unwrap(),
+                    amount: token::Amount::from(100),
+                },
+                token::Transfer {
+                    source: albert_addr,
+                    target: bertha_addr,
+                    token: Address::from_str(XAN).unwrap(),
+                    amount: token::Amount::from(1),
+                },
+            ]
+            .into_iter(),
+        );
 
         let encoded_intent_transfer = encode(&it);
         let decoded_intent_transfer: MatchedExchanges =

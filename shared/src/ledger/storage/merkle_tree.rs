@@ -525,11 +525,11 @@ mod test {
         assert!(!tree.has_key(&pos_key).unwrap());
 
         // update IBC tree
-        tree.update(&ibc_key, [1u8; 8].to_vec()).unwrap();
+        tree.update(&ibc_key, [1u8; 8]).unwrap();
         assert!(tree.has_key(&ibc_key).unwrap());
         assert!(!tree.has_key(&pos_key).unwrap());
         // update another tree
-        tree.update(&pos_key, [2u8; 8].to_vec()).unwrap();
+        tree.update(&pos_key, [2u8; 8]).unwrap();
         assert!(tree.has_key(&pos_key).unwrap());
 
         // delete a value on IBC tree
@@ -549,8 +549,8 @@ mod test {
             Address::Internal(InternalAddress::PoS).to_db_key().into();
         let pos_key = key_prefix.push(&"test".to_string()).unwrap();
 
-        tree.update(&ibc_key, [1u8; 8].to_vec()).unwrap();
-        tree.update(&pos_key, [2u8; 8].to_vec()).unwrap();
+        tree.update(&ibc_key, [1u8; 8]).unwrap();
+        tree.update(&pos_key, [2u8; 8]).unwrap();
 
         let stores_write = tree.stores();
         let mut stores_read = MerkleTreeStoresRead::default();

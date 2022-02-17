@@ -142,7 +142,7 @@ fn check_intent_transfers(
     if let Some((raw_intent_transfers, exchange, intent)) =
         try_decode_intent(addr, signed_tx_data)
     {
-        log_string("check intent".to_string());
+        log_string("check intent");
         return check_intent(addr, exchange, intent, raw_intent_transfers);
     }
     false
@@ -166,7 +166,7 @@ fn try_decode_intent(
     ) {
         return Some((raw_intent_transfers, exchange, intent));
     } else {
-        log_string("no intent with a matching address".to_string());
+        log_string("no intent with a matching address");
     }
     None
 }
@@ -181,7 +181,7 @@ fn check_intent(
     let pk = key::ed25519::get(addr);
     if let Some(pk) = pk {
         if intent.verify(&pk).is_err() {
-            log_string("invalid sig".to_string());
+            log_string("invalid sig");
             return false;
         }
     } else {

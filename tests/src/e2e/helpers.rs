@@ -22,7 +22,7 @@ pub fn find_address(test: &Test, alias: impl AsRef<str>) -> Result<Address> {
         Some(1)
     )?;
     let (unread, matched) = find.exp_regex("Found address .*\n")?;
-    let address_str = matched.trim().rsplit_once(" ").unwrap().1;
+    let address_str = matched.trim().rsplit_once(' ').unwrap().1;
     let address = Address::from_str(address_str).map_err(|e| {
         eyre!(format!(
             "Address: {} parsed from {}, Error: {}\n\nOutput: {}",
@@ -71,9 +71,9 @@ pub fn find_keypair(test: &Test, alias: impl AsRef<str>) -> Result<Keypair> {
         Some(1)
     )?;
     let (_unread, matched) = find.exp_regex("Public key: .*\n")?;
-    let pk = matched.trim().rsplit_once(" ").unwrap().1;
+    let pk = matched.trim().rsplit_once(' ').unwrap().1;
     let (unread, matched) = find.exp_regex("Secret key: .*\n")?;
-    let sk = matched.trim().rsplit_once(" ").unwrap().1;
+    let sk = matched.trim().rsplit_once(' ').unwrap().1;
     let key = format!("{}{}", sk, pk);
     Keypair::from_str(&key).map_err(|e| {
         eyre!(format!(
@@ -102,7 +102,7 @@ pub fn find_voting_power(
         Some(1)
     )?;
     let (unread, matched) = find.exp_regex("voting power: .*\n")?;
-    let voting_power_str = matched.trim().rsplit_once(" ").unwrap().1;
+    let voting_power_str = matched.trim().rsplit_once(' ').unwrap().1;
     u64::from_str(voting_power_str).map_err(|e| {
         eyre!(format!(
             "Voting power: {} parsed from {}, Error: {}\n\nOutput: {}",
@@ -120,7 +120,7 @@ pub fn get_epoch(test: &Test, ledger_address: &str) -> Result<Epoch> {
         Some(5)
     )?;
     let (unread, matched) = find.exp_regex("Last committed epoch: .*\n")?;
-    let epoch_str = matched.trim().rsplit_once(" ").unwrap().1;
+    let epoch_str = matched.trim().rsplit_once(' ').unwrap().1;
     let epoch = u64::from_str(epoch_str).map_err(|e| {
         eyre!(format!(
             "Epoch: {} parsed from {}, Error: {}\n\nOutput: {}",

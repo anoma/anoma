@@ -363,8 +363,7 @@ mod tests {
     #[test]
     fn test_crud_value() {
         let mut write_log = WriteLog::default();
-        let key =
-            Key::parse("key".to_owned()).expect("cannot parse the key string");
+        let key = Key::parse("key").expect("cannot parse the key string");
 
         // read a non-existing key
         let (value, gas) = write_log.read(&key);
@@ -495,12 +494,9 @@ mod tests {
         let mut write_log = WriteLog::default();
         let address_gen = EstablishedAddressGen::new("test");
 
-        let key1 =
-            Key::parse("key1".to_owned()).expect("cannot parse the key string");
-        let key2 =
-            Key::parse("key2".to_owned()).expect("cannot parse the key string");
-        let key3 =
-            Key::parse("key3".to_owned()).expect("cannot parse the key string");
+        let key1 = Key::parse("key1").expect("cannot parse the key string");
+        let key2 = Key::parse("key2").expect("cannot parse the key string");
+        let key3 = Key::parse("key3").expect("cannot parse the key string");
 
         // initialize an account
         let vp1 = "vp1".as_bytes().to_vec();
