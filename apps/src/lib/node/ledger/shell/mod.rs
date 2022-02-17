@@ -77,7 +77,7 @@ pub enum Error {
     GasOverflow,
     #[error("{0}")]
     Tendermint(tendermint_node::Error),
-    #[error("Error encountered in the ABCI App server: {0}")]
+    #[error("Server error: {0}")]
     TowerServer(String),
 }
 
