@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;vp&#x2F;packet.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>packet.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;vp&#x2F;packet.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>packet.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -870,13 +871,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">port_channel_sequence_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="self">self</span>
             .<span class="ident">get_state_change</span>(<span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
         {
-            <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Created</span> =&gt; {
                 <span class="comment">// sending a packet</span>
                 <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_transfer</span>()<span class="question-mark">?</span>;
@@ -912,7 +913,7 @@
                 <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
             }
-            <span class="ident">StateChange::Deleted</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Deleted</span> =&gt; {
                 <span class="comment">// check the channel state</span>
                 <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="self">self</span>
                     .<span class="ident">channel_end</span>(<span class="kw-2">&amp;</span>(
@@ -926,7 +927,7 @@
                         ))
                     })<span class="question-mark">?</span>;
                 <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
-                    <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">State::Open</span> =&gt; {
                         <span class="comment">// &quot;PacketAcknowledgement&quot;</span>
                         <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_acknowledgement</span>()<span class="question-mark">?</span>;
@@ -950,16 +951,16 @@
                             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
                         )
                     }
-                    <span class="ident">State::Closed</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">State::Closed</span> =&gt; {
                         <span class="self">self</span>.<span class="ident">validate_timeout</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">tx_data</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;The channel state is invalid: Port {}, Channel {}&quot;</span>,
                         <span class="ident">commitment_key</span>.<span class="number">0</span>, <span class="ident">commitment_key</span>.<span class="number">1</span>
                     ))),
                 }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The state change of the commitment is invalid: Key {}&quot;</span>,
                 <span class="ident">key</span>
             ))),
@@ -970,12 +971,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>
             .<span class="ident">get_state_change</span>(<span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
         {
-            <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Created</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">port_channel_sequence_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_recv_packet</span>()<span class="question-mark">?</span>;
@@ -987,18 +988,18 @@
                 };
                 <span class="self">self</span>.<span class="ident">verify_recv_proof</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>, <span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(
                 <span class="string">&quot;The state change of the receipt is invalid&quot;</span>.<span class="ident">to_owned</span>(),
             )),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_ack</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_ack</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>
             .<span class="ident">get_state_change</span>(<span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
         {
-            <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Created</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">port_channel_sequence_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
                 <span class="comment">// The receipt should have been stored</span>
                 <span class="self">self</span>.<span class="ident">get_packet_receipt</span>(<span class="kw-2">&amp;</span>(
@@ -1016,7 +1017,7 @@
                 <span class="comment">// The packet is validated in the receipt validation</span>
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(
                 <span class="string">&quot;The state change of the acknowledgment is invalid&quot;</span>.<span class="ident">to_owned</span>(),
             )),
         }
@@ -1026,7 +1027,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_seq_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">validate_packet</span>(<span class="ident">port_channel_seq_id</span>, <span class="ident">packet</span>, <span class="ident">Phase::Send</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.<span class="ident">get_packet_commitment</span>(<span class="ident">port_channel_seq_id</span>)
@@ -1047,7 +1048,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_seq_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">validate_packet</span>(<span class="ident">port_channel_seq_id</span>, <span class="ident">packet</span>, <span class="ident">Phase::Recv</span>)<span class="question-mark">?</span>;
 
         <span class="self">self</span>.<span class="ident">get_packet_receipt</span>(<span class="ident">port_channel_seq_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1076,7 +1077,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_seq_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">validate_packet</span>(<span class="ident">port_channel_seq_id</span>, <span class="ident">packet</span>, <span class="ident">Phase::Ack</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">prev_commitment</span> <span class="op">=</span> <span class="self">self</span>
@@ -1098,10 +1099,10 @@
         <span class="ident">port_channel_seq_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
         <span class="ident">phase</span>: <span class="ident">Phase</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">sequence</span>) <span class="op">=</span> <span class="ident">port_channel_seq_id</span>;
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">phase</span> {
-            <span class="ident">Phase::Send</span> <span class="op">|</span> <span class="ident">Phase::Ack</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Phase::Send</span> <span class="op">|</span> <span class="ident">Phase::Ack</span> =&gt; {
                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">port_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>
                     <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">channel_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>
                     <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">sequence</span> <span class="op">!</span><span class="op">=</span> <span class="ident">packet</span>.<span class="ident">sequence</span>
@@ -1115,7 +1116,7 @@
                     <span class="ident">channel_id</span>: <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>(),
                 }
             }
-            <span class="ident">Phase::Recv</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Phase::Recv</span> =&gt; {
                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">port_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">packet</span>.<span class="ident">destination_port</span>
                     <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">channel_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">packet</span>.<span class="ident">destination_channel</span>
                     <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">sequence</span> <span class="op">!</span><span class="op">=</span> <span class="ident">packet</span>.<span class="ident">sequence</span>
@@ -1169,11 +1170,11 @@
 
         <span class="comment">// counterparty consistency</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">phase</span> {
-            <span class="ident">Phase::Send</span> <span class="op">|</span> <span class="ident">Phase::Ack</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Counterparty::new</span>(
+            <span class="ident">Phase::Send</span> <span class="op">|</span> <span class="ident">Phase::Ack</span> =&gt; <span class="ident">Counterparty::new</span>(
                 <span class="ident">packet</span>.<span class="ident">destination_port</span>.<span class="ident">clone</span>(),
                 <span class="prelude-val">Some</span>(<span class="ident">packet</span>.<span class="ident">destination_channel</span>.<span class="ident">clone</span>()),
             ),
-            <span class="ident">Phase::Recv</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Counterparty::new</span>(
+            <span class="ident">Phase::Recv</span> =&gt; <span class="ident">Counterparty::new</span>(
                 <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
                 <span class="prelude-val">Some</span>(<span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>()),
             ),
@@ -1186,11 +1187,11 @@
 
         <span class="comment">// check timeout</span>
         <span class="kw">match</span> <span class="ident">phase</span> {
-            <span class="ident">Phase::Send</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Phase::Send</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">connection</span>.<span class="ident">client_id</span>();
                 <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">client_state</span>(<span class="ident">client_id</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">latest_height</span>(),
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">s</span>) =&gt; <span class="ident">s</span>.<span class="ident">latest_height</span>(),
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                             <span class="string">&quot;The client state doesn&#39;t exist: ID {}&quot;</span>,
                             <span class="ident">client_id</span>
@@ -1200,7 +1201,7 @@
                 <span class="self">self</span>.<span class="ident">check_timeout</span>(<span class="ident">client_id</span>, <span class="ident">height</span>, <span class="ident">packet</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidPacket</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
             }
-            <span class="ident">Phase::Recv</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Phase::Recv</span> =&gt; {
                 <span class="comment">// check timeout height</span>
                 <span class="kw">if</span> <span class="ident">packet</span>.<span class="ident">timeout_height</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">host_height</span>() {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
@@ -1218,7 +1219,7 @@
                     ));
                 }
             }
-            <span class="ident">Phase::Ack</span> <span class="op">=</span><span class="op">&gt;</span> (),
+            <span class="ident">Phase::Ack</span> =&gt; (),
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1228,12 +1229,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
         <span class="ident">commitment</span>: <span class="ident">String</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">format!</span>(
             <span class="string">&quot;{:?},{:?},{:?}&quot;</span>,
             <span class="ident">packet</span>.<span class="ident">timeout_timestamp</span>, <span class="ident">packet</span>.<span class="ident">timeout_height</span>, <span class="ident">packet</span>.<span class="ident">data</span>,
         );
-        <span class="kw">if</span> <span class="ident">commitment</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">hash</span>(<span class="ident">input</span>) {
+        <span class="kw">if</span> <span class="ident">commitment</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">hash</span>(<span class="ident">input</span>) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
@@ -1247,7 +1248,7 @@
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
         <span class="ident">proofs</span>: <span class="kw-2">&amp;</span><span class="ident">Proofs</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">channel_end</span>(<span class="kw-2">&amp;</span>(
                 <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
@@ -1274,7 +1275,7 @@
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
         <span class="ident">ack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">proofs</span>: <span class="kw-2">&amp;</span><span class="ident">Proofs</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">channel_end</span>(<span class="kw-2">&amp;</span>(
                 <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
@@ -1301,16 +1302,16 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">commitment_key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">packet</span>, <span class="ident">proofs</span>, <span class="ident">next_sequence_recv</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ibc_msg</span>.<span class="number">0</span> {
-            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>)) =&gt; {
                 (<span class="ident">msg</span>.<span class="ident">packet</span>, <span class="ident">msg</span>.<span class="ident">proofs</span>, <span class="ident">msg</span>.<span class="ident">next_sequence_recv</span>)
             }
-            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToClosePacket</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToClosePacket</span>(<span class="ident">msg</span>)) =&gt; {
                 (<span class="ident">msg</span>.<span class="ident">packet</span>, <span class="ident">msg</span>.<span class="ident">proofs</span>, <span class="ident">msg</span>.<span class="ident">next_sequence_recv</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">_</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;Unexpected message was given for timeout: Port/Channel \
                      {}/{}&quot;</span>,
@@ -1363,7 +1364,7 @@
 
         <span class="comment">// check if the packet actually timed out</span>
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">check_timeout</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">proofs</span>.<span class="ident">height</span>(), <span class="kw-2">&amp;</span><span class="ident">packet</span>) {
-            <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(()) =&gt; {
                 <span class="comment">// &quot;TimedoutOnClose&quot; because the packet didn&#39;t time out</span>
                 <span class="comment">// check that the counterpart channel has been closed</span>
                 <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span> <span class="ident">Counterparty::new</span>(
@@ -1396,7 +1397,7 @@
                 )
                 .<span class="ident">map_err</span>(<span class="ident">Error::ProofVerificationFailure</span>)<span class="question-mark">?</span>;
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
                 <span class="comment">// the packet timed out</span>
                 <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_timeout_event</span>(<span class="ident">packet</span>.<span class="ident">clone</span>());
                 <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
@@ -1425,15 +1426,15 @@
                 <span class="ident">next_sequence_recv</span>,
                 <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
             ) {
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
             }
         } <span class="kw">else</span> {
             <span class="kw">match</span> <span class="ident">verify_packet_receipt_absence</span>(
                 <span class="self">self</span>, <span class="ident">client_id</span>, <span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
             ) {
-                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
+                <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
             }
         }
     }
@@ -1443,7 +1444,7 @@
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
         <span class="ident">current_height</span>: <span class="ident">Height</span>,
         <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// timeout height</span>
         <span class="kw">if</span> <span class="op">!</span><span class="ident">packet</span>.<span class="ident">timeout_height</span>.<span class="ident">is_zero</span>()
             <span class="op">&amp;&amp;</span> <span class="ident">packet</span>.<span class="ident">timeout_height</span> <span class="op">&lt;</span> <span class="ident">current_height</span>
@@ -1457,8 +1458,8 @@
         <span class="comment">// timeout timestamp</span>
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span>
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">client_consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">current_height</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">c</span>) =&gt; <span class="ident">c</span>,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;The client consensus state doesn&#39;t exist: ID {}, \
                          Height {}&quot;</span>,
@@ -1468,13 +1469,13 @@
             };
         <span class="kw">let</span> <span class="ident">current_timestamp</span> <span class="op">=</span> <span class="ident">consensus_state</span>.<span class="ident">timestamp</span>();
         <span class="kw">match</span> <span class="ident">current_timestamp</span>.<span class="ident">check_expiry</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>.<span class="ident">timeout_timestamp</span>) {
-            <span class="ident">Expiry::NotExpired</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-            <span class="ident">Expiry::Expired</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(<span class="macro">format!</span>(
+            <span class="ident">Expiry::NotExpired</span> =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="ident">Expiry::Expired</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The packet has timed out: Timeout timestamp {}, Current \
                  timestamp {}&quot;</span>,
                 <span class="ident">packet</span>.<span class="ident">timeout_timestamp</span>, <span class="ident">current_timestamp</span>
             ))),
-            <span class="ident">Expiry::InvalidTimestamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
+            <span class="ident">Expiry::InvalidTimestamp</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
                 <span class="string">&quot;The timestamp of the packet is invalid&quot;</span>.<span class="ident">to_owned</span>(),
             )),
         }
@@ -1482,23 +1483,22 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcStorageError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcStorageError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcStorageError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::IbcStorage</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std::io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::DecodingTxData</span>(<span class="ident">err</span>)
     }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Collection types."><meta name="keywords" content="rust, rustlang, rust-lang, collections"><title>anoma_apps::std::collections - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module collections</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><div id="sidebar-vars" data-name="collections" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">collections</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/std/lib.rs.html#491" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Collection types.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Collection types."><meta name="keywords" content="rust, rustlang, rust-lang, collections"><title>anoma_apps::std::collections - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module collections</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><div id="sidebar-vars" data-name="collections" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">collections</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.58.1/src/std/lib.rs.html#505" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Collection types.</p>
 <p>Rust’s standard collection library provides efficient implementations of the
 most common general purpose programming data structures. By using the
 standard implementations, it should be possible for two libraries to
@@ -17,11 +18,11 @@ good enough choice to get started.</p>
 <li>Sets: <a href="struct.HashSet.html" title="HashSet"><code>HashSet</code></a>, <a href="struct.BTreeSet.html" title="BTreeSet"><code>BTreeSet</code></a></li>
 <li>Misc: <a href="struct.BinaryHeap.html" title="BinaryHeap"><code>BinaryHeap</code></a></li>
 </ul>
-<h1 id="when-should-you-use-which-collection" class="section-header"><a href="#when-should-you-use-which-collection">When Should You Use Which Collection?</a></h1>
+<h2 id="when-should-you-use-which-collection" class="section-header"><a href="#when-should-you-use-which-collection">When Should You Use Which Collection?</a></h2>
 <p>These are fairly high-level and quick break-downs of when each collection
 should be considered. Detailed discussions of strengths and weaknesses of
 individual collections can be found on their own documentation pages.</p>
-<h3 id="use-a-vec-when" class="section-header"><a href="#use-a-vec-when">Use a <code>Vec</code> when:</a></h3>
+<h4 id="use-a-vec-when" class="section-header"><a href="#use-a-vec-when">Use a <code>Vec</code> when:</a></h4>
 <ul>
 <li>You want to collect items up to be processed or sent elsewhere later, and
 don’t care about any properties of the actual values being stored.</li>
@@ -31,14 +32,14 @@ appending to (or near) the end.</li>
 <li>You want a resizable array.</li>
 <li>You want a heap-allocated array.</li>
 </ul>
-<h3 id="use-a-vecdeque-when" class="section-header"><a href="#use-a-vecdeque-when">Use a <code>VecDeque</code> when:</a></h3>
+<h4 id="use-a-vecdeque-when" class="section-header"><a href="#use-a-vecdeque-when">Use a <code>VecDeque</code> when:</a></h4>
 <ul>
 <li>You want a <a href="../vec/struct.Vec.html" title="Vec"><code>Vec</code></a> that supports efficient insertion at both ends of the
 sequence.</li>
 <li>You want a queue.</li>
 <li>You want a double-ended queue (deque).</li>
 </ul>
-<h3 id="use-a-linkedlist-when" class="section-header"><a href="#use-a-linkedlist-when">Use a <code>LinkedList</code> when:</a></h3>
+<h4 id="use-a-linkedlist-when" class="section-header"><a href="#use-a-linkedlist-when">Use a <code>LinkedList</code> when:</a></h4>
 <ul>
 <li>You want a <a href="../vec/struct.Vec.html" title="Vec"><code>Vec</code></a> or <a href="struct.VecDeque.html" title="VecDeque"><code>VecDeque</code></a> of unknown size, and can’t tolerate
 amortization.</li>
@@ -46,13 +47,13 @@ amortization.</li>
 <li>You are <em>absolutely</em> certain you <em>really</em>, <em>truly</em>, want a doubly linked
 list.</li>
 </ul>
-<h3 id="use-a-hashmap-when" class="section-header"><a href="#use-a-hashmap-when">Use a <code>HashMap</code> when:</a></h3>
+<h4 id="use-a-hashmap-when" class="section-header"><a href="#use-a-hashmap-when">Use a <code>HashMap</code> when:</a></h4>
 <ul>
 <li>You want to associate arbitrary keys with an arbitrary value.</li>
 <li>You want a cache.</li>
 <li>You want a map, with no extra functionality.</li>
 </ul>
-<h3 id="use-a-btreemap-when" class="section-header"><a href="#use-a-btreemap-when">Use a <code>BTreeMap</code> when:</a></h3>
+<h4 id="use-a-btreemap-when" class="section-header"><a href="#use-a-btreemap-when">Use a <code>BTreeMap</code> when:</a></h4>
 <ul>
 <li>You want a map sorted by its keys.</li>
 <li>You want to be able to get a range of entries on-demand.</li>
@@ -60,19 +61,19 @@ list.</li>
 <li>You want to find the largest or smallest key that is smaller or larger
 than something.</li>
 </ul>
-<h3 id="use-the-set-variant-of-any-of-these-maps-when" class="section-header"><a href="#use-the-set-variant-of-any-of-these-maps-when">Use the <code>Set</code> variant of any of these <code>Map</code>s when:</a></h3>
+<h4 id="use-the-set-variant-of-any-of-these-maps-when" class="section-header"><a href="#use-the-set-variant-of-any-of-these-maps-when">Use the <code>Set</code> variant of any of these <code>Map</code>s when:</a></h4>
 <ul>
 <li>You just want to remember which keys you’ve seen.</li>
 <li>There is no meaningful value to associate with your keys.</li>
 <li>You just want a set.</li>
 </ul>
-<h3 id="use-a-binaryheap-when" class="section-header"><a href="#use-a-binaryheap-when">Use a <code>BinaryHeap</code> when:</a></h3>
+<h4 id="use-a-binaryheap-when" class="section-header"><a href="#use-a-binaryheap-when">Use a <code>BinaryHeap</code> when:</a></h4>
 <ul>
 <li>You want to store a bunch of elements, but only ever want to process the
 “biggest” or “most important” one at any given time.</li>
 <li>You want a priority queue.</li>
 </ul>
-<h1 id="performance" class="section-header"><a href="#performance">Performance</a></h1>
+<h2 id="performance" class="section-header"><a href="#performance">Performance</a></h2>
 <p>Choosing the right collection for the job requires an understanding of what
 each collection is good at. Here we briefly summarize the performance of
 different collections for certain important operations. For further details,
@@ -91,26 +92,27 @@ deterministically equal the given cost.</p>
 <p>Only <a href="struct.HashMap.html" title="HashMap"><code>HashMap</code></a> has expected costs, due to the probabilistic nature of hashing.
 It is theoretically possible, though very unlikely, for <a href="struct.HashMap.html" title="HashMap"><code>HashMap</code></a> to
 experience worse performance.</p>
-<h2 id="sequences" class="section-header"><a href="#sequences">Sequences</a></h2><table><thead><tr><th></th><th>get(i)</th><th>insert(i)</th><th>remove(i)</th><th>append</th><th>split_off(i)</th></tr></thead><tbody>
-<tr><td><a href="../vec/struct.Vec.html" title="Vec"><code>Vec</code></a></td><td>O(1)</td><td>O(n-i)*</td><td>O(n-i)</td><td>O(m)*</td><td>O(n-i)</td></tr>
-<tr><td><a href="struct.VecDeque.html" title="VecDeque"><code>VecDeque</code></a></td><td>O(1)</td><td>O(min(i, n-i))*</td><td>O(min(i, n-i))</td><td>O(m)*</td><td>O(min(i, n-i))</td></tr>
-<tr><td><a href="struct.LinkedList.html" title="LinkedList"><code>LinkedList</code></a></td><td>O(min(i, n-i))</td><td>O(min(i, n-i))</td><td>O(min(i, n-i))</td><td>O(1)</td><td>O(min(i, n-i))</td></tr>
+<h3 id="sequences" class="section-header"><a href="#sequences">Sequences</a></h3><div><table><thead><tr><th></th><th>get(i)</th><th>insert(i)</th><th>remove(i)</th><th>append</th><th>split_off(i)</th></tr></thead><tbody>
+<tr><td><a href="../vec/struct.Vec.html" title="Vec"><code>Vec</code></a></td><td><em>O</em>(1)</td><td><em>O</em>(<em>n</em>-<em>i</em>)*</td><td><em>O</em>(<em>n</em>-<em>i</em>)</td><td><em>O</em>(<em>m</em>)*</td><td><em>O</em>(<em>n</em>-<em>i</em>)</td></tr>
+<tr><td><a href="struct.VecDeque.html" title="VecDeque"><code>VecDeque</code></a></td><td><em>O</em>(1)</td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))*</td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))</td><td><em>O</em>(<em>m</em>)*</td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))</td></tr>
+<tr><td><a href="struct.LinkedList.html" title="LinkedList"><code>LinkedList</code></a></td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))</td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))</td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))</td><td><em>O</em>(1)</td><td><em>O</em>(min(<em>i</em>, <em>n</em>-<em>i</em>))</td></tr>
 </tbody></table>
+</div>
 <p>Note that where ties occur, <a href="../vec/struct.Vec.html" title="Vec"><code>Vec</code></a> is generally going to be faster than <a href="struct.VecDeque.html" title="VecDeque"><code>VecDeque</code></a>, and
 <a href="struct.VecDeque.html" title="VecDeque"><code>VecDeque</code></a> is generally going to be faster than <a href="struct.LinkedList.html" title="LinkedList"><code>LinkedList</code></a>.</p>
-<h2 id="maps" class="section-header"><a href="#maps">Maps</a></h2>
+<h3 id="maps" class="section-header"><a href="#maps">Maps</a></h3>
 <p>For Sets, all operations have the cost of the equivalent Map operation.</p>
-<table><thead><tr><th></th><th>get</th><th>insert</th><th>remove</th><th>range</th><th>append</th></tr></thead><tbody>
-<tr><td><a href="struct.HashMap.html" title="HashMap"><code>HashMap</code></a></td><td>O(1)~</td><td>O(1)~*</td><td>O(1)~</td><td>N/A</td><td>N/A</td></tr>
-<tr><td><a href="struct.BTreeMap.html" title="BTreeMap"><code>BTreeMap</code></a></td><td>O(log(n))</td><td>O(log(n))</td><td>O(log(n))</td><td>O(log(n))</td><td>O(n+m)</td></tr>
+<div><table><thead><tr><th></th><th>get</th><th>insert</th><th>remove</th><th>range</th><th>append</th></tr></thead><tbody>
+<tr><td><a href="struct.HashMap.html" title="HashMap"><code>HashMap</code></a></td><td><em>O</em>(1)~</td><td><em>O</em>(1)~*</td><td><em>O</em>(1)~</td><td>N/A</td><td>N/A</td></tr>
+<tr><td><a href="struct.BTreeMap.html" title="BTreeMap"><code>BTreeMap</code></a></td><td><em>O</em>(log(<em>n</em>))</td><td><em>O</em>(log(<em>n</em>))</td><td><em>O</em>(log(<em>n</em>))</td><td><em>O</em>(log(<em>n</em>))</td><td><em>O</em>(<em>n</em>+<em>m</em>)</td></tr>
 </tbody></table>
-<h1 id="correct-and-efficient-usage-of-collections" class="section-header"><a href="#correct-and-efficient-usage-of-collections">Correct and Efficient Usage of Collections</a></h1>
+</div><h2 id="correct-and-efficient-usage-of-collections" class="section-header"><a href="#correct-and-efficient-usage-of-collections">Correct and Efficient Usage of Collections</a></h2>
 <p>Of course, knowing which collection is the right one for the job doesn’t
 instantly permit you to use it correctly. Here are some quick tips for
 efficient and correct usage of the standard collections in general. If
 you’re interested in how to use a specific collection in particular, consult
 its documentation for detailed discussion and code examples.</p>
-<h2 id="capacity-management" class="section-header"><a href="#capacity-management">Capacity Management</a></h2>
+<h3 id="capacity-management" class="section-header"><a href="#capacity-management">Capacity Management</a></h3>
 <p>Many collections provide several constructors and methods that refer to
 “capacity”. These collections are generally built on top of an array.
 Optimally, this array would be exactly the right size to fit only the
@@ -150,7 +152,7 @@ holding its elements.</p>
 collection is, most collections provide a <code>capacity</code> method to query this
 information on demand. This can be useful for debugging purposes, or for
 use with the <code>reserve</code> methods.</p>
-<h2 id="iterators" class="section-header"><a href="#iterators">Iterators</a></h2>
+<h3 id="iterators" class="section-header"><a href="#iterators">Iterators</a></h3>
 <p>Iterators are a powerful and robust mechanism used throughout Rust’s
 standard libraries. Iterators provide a sequence of values in a generic,
 safe, efficient and convenient way. The contents of an iterator are usually
@@ -188,7 +190,7 @@ collection.</p>
 contents by-value. This is great when the collection itself is no longer
 needed, and the values are needed elsewhere. Using <code>extend</code> with <code>into_iter</code>
 is the main way that contents of one collection are moved into another.
-<code>extend</code> automatically calls <code>into_iter</code>, and takes any <code>T: </code><a href="../iter/trait.IntoIterator.html"><code>IntoIterator</code></a>.
+<code>extend</code> automatically calls <code>into_iter</code>, and takes any <code>T: <a href="../iter/trait.IntoIterator.html" title="iter::IntoIterator">IntoIterator</a></code>.
 Calling <code>collect</code> on an iterator itself is also a great way to convert one
 collection into another. Both of these methods should internally use the
 capacity management tools discussed in the previous section to do this as
@@ -205,7 +207,7 @@ efficiently as possible.</p>
 <p>Iterators also provide a series of <em>adapter</em> methods for performing common
 threads to sequences. Among the adapters are functional favorites like <code>map</code>,
 <code>fold</code>, <code>skip</code> and <code>take</code>. Of particular interest to collections is the
-<code>rev</code> adapter, that reverses any iterator that supports this operation. Most
+<code>rev</code> adapter, which reverses any iterator that supports this operation. Most
 collections provide reversible iterators as the way to iterate over them in
 reverse order.</p>
 
@@ -219,7 +221,7 @@ This provides maximum flexibility as <code>collect</code> or <code>extend</code>
 “pipe” the sequence into any collection if desired. Otherwise, the sequence
 can be looped over with a <code>for</code> loop. The iterator can also be discarded
 after partial use, preventing the computation of the unused items.</p>
-<h2 id="entries" class="section-header"><a href="#entries">Entries</a></h2>
+<h3 id="entries" class="section-header"><a href="#entries">Entries</a></h3>
 <p>The <code>entry</code> API is intended to provide an efficient mechanism for
 manipulating the contents of a map conditionally on the presence of a key or
 not. The primary motivating use case for this is to provide efficient
@@ -228,7 +230,7 @@ number of times each key has been seen, they will have to perform some
 conditional logic on whether this is the first time the key has been seen or
 not. Normally, this would require a <code>find</code> followed by an <code>insert</code>,
 effectively duplicating the search effort on each insertion.</p>
-<p>When a user calls <code>map.entry(&amp;key)</code>, the map will search for the key and
+<p>When a user calls <code>map.entry(key)</code>, the map will search for the key and
 then yield a variant of the <code>Entry</code> enum.</p>
 <p>If a <code>Vacant(entry)</code> is yielded, then the key <em>was not</em> found. In this case
 the only valid operation is to <code>insert</code> a value into the entry. When this is
@@ -242,10 +244,10 @@ the user has several options: they can <code>get</code>, <code>insert</code> or 
 value of the occupied entry. Additionally, they can convert the occupied
 entry into a mutable reference to its value, providing symmetry to the
 vacant <code>insert</code> case.</p>
-<h3 id="examples" class="section-header"><a href="#examples">Examples</a></h3>
+<h4 id="examples" class="section-header"><a href="#examples">Examples</a></h4>
 <p>Here are the two primary ways in which <code>entry</code> is used. First, a simple
 example where the logic performed on the values is trivial.</p>
-<h4 id="counting-the-number-of-times-each-character-in-a-string-occurs" class="section-header"><a href="#counting-the-number-of-times-each-character-in-a-string-occurs">Counting the number of times each character in a string occurs</a></h4>
+<h5 id="counting-the-number-of-times-each-character-in-a-string-occurs" class="section-header"><a href="#counting-the-number-of-times-each-character-in-a-string-occurs">Counting the number of times each character in a string occurs</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::collections::btree_map::BTreeMap</span>;
 
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">BTreeMap::new</span>();
@@ -264,7 +266,7 @@ example where the logic performed on the values is trivial.</p>
 <p>When the logic to be performed on the value is more complex, we may simply
 use the <code>entry</code> API to ensure that the value is initialized and perform the
 logic afterwards.</p>
-<h4 id="tracking-the-inebriation-of-customers-at-a-bar" class="section-header"><a href="#tracking-the-inebriation-of-customers-at-a-bar">Tracking the inebriation of customers at a bar</a></h4>
+<h5 id="tracking-the-inebriation-of-customers-at-a-bar" class="section-header"><a href="#tracking-the-inebriation-of-customers-at-a-bar">Tracking the inebriation of customers at a bar</a></h5>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::collections::btree_map::BTreeMap</span>;
 
 <span class="comment">// A client of the bar. They have a blood alcohol level.</span>
@@ -293,7 +295,7 @@ logic afterwards.</p>
         <span class="ident">person</span>.<span class="ident">blood_alcohol</span> <span class="op">+</span><span class="op">=</span> <span class="number">0.1</span>;
     }
 }</code></pre></div>
-<h1 id="insert-and-complex-keys" class="section-header"><a href="#insert-and-complex-keys">Insert and complex keys</a></h1>
+<h2 id="insert-and-complex-keys" class="section-header"><a href="#insert-and-complex-keys">Insert and complex keys</a></h2>
 <p>If we have a more complex key, calls to <code>insert</code> will
 not update the value of the key. For example:</p>
 
@@ -309,22 +311,22 @@ not update the value of the key. For example:</p>
 
 <span class="comment">// we will compare `Foo`s by their `a` value only.</span>
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> { <span class="self">self</span>.<span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">a</span> }
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> { <span class="self">self</span>.<span class="ident">a</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">a</span> }
 }
 
 <span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Foo</span> {}
 
 <span class="comment">// we will hash `Foo`s by their `a` value only.</span>
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">h</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) { <span class="self">self</span>.<span class="ident">a</span>.<span class="ident">hash</span>(<span class="ident">h</span>); }
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">h</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) { <span class="self">self</span>.<span class="ident">a</span>.<span class="ident">hash</span>(<span class="ident">h</span>); }
 }
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> { <span class="self">self</span>.<span class="ident">a</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">a</span>) }
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> { <span class="self">self</span>.<span class="ident">a</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">a</span>) }
 }
 
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Foo</span> {
-    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> { <span class="self">self</span>.<span class="ident">a</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">a</span>) }
+    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">Ordering</span> { <span class="self">self</span>.<span class="ident">a</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">a</span>) }
 }
 
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">BTreeMap::new</span>();
@@ -338,26 +340,25 @@ not update the value of the key. For example:</p>
 
 <span class="comment">// ...but the key hasn&#39;t changed. b is still &quot;baz&quot;, not &quot;xyz&quot;.</span>
 <span class="macro">assert_eq!</span>(<span class="ident">map</span>.<span class="ident">keys</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>().<span class="ident">b</span>, <span class="string">&quot;baz&quot;</span>);</code></pre></div>
-</div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="mod" href="binary_heap/index.html" title="anoma_apps::std::collections::binary_heap mod">binary_heap</a></div><div class="item-right docblock-short"><p>A priority queue implemented with a binary heap.</p>
-</div><div class="item-left module-item"><a class="mod" href="btree_map/index.html" title="anoma_apps::std::collections::btree_map mod">btree_map</a></div><div class="item-right docblock-short"><p>A map based on a B-Tree.</p>
-</div><div class="item-left module-item"><a class="mod" href="btree_set/index.html" title="anoma_apps::std::collections::btree_set mod">btree_set</a></div><div class="item-right docblock-short"><p>A set based on a B-Tree.</p>
-</div><div class="item-left module-item"><a class="mod" href="hash_map/index.html" title="anoma_apps::std::collections::hash_map mod">hash_map</a></div><div class="item-right docblock-short"><p>A hash map implemented with quadratic probing and SIMD lookup.</p>
-</div><div class="item-left module-item"><a class="mod" href="hash_set/index.html" title="anoma_apps::std::collections::hash_set mod">hash_set</a></div><div class="item-right docblock-short"><p>A hash set implemented as a <code>HashMap</code> where the value is <code>()</code>.</p>
-</div><div class="item-left module-item"><a class="mod" href="linked_list/index.html" title="anoma_apps::std::collections::linked_list mod">linked_list</a></div><div class="item-right docblock-short"><p>A doubly-linked list with owned nodes.</p>
-</div><div class="item-left module-item"><a class="mod" href="vec_deque/index.html" title="anoma_apps::std::collections::vec_deque mod">vec_deque</a></div><div class="item-right docblock-short"><p>A double-ended queue implemented with a growable ring buffer.</p>
-</div></div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left unstable module-item"><a class="struct" href="struct.TryReserveError.html" title="anoma_apps::std::collections::TryReserveError struct">TryReserveError</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>The error type for <code>try_reserve</code> methods.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.BTreeMap.html" title="anoma_apps::std::collections::BTreeMap struct">BTreeMap</a></div><div class="item-right docblock-short"><p>A map based on a <a href="https://en.wikipedia.org/wiki/B-tree">B-Tree</a>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.BTreeSet.html" title="anoma_apps::std::collections::BTreeSet struct">BTreeSet</a></div><div class="item-right docblock-short"><p>A set based on a B-Tree.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.BinaryHeap.html" title="anoma_apps::std::collections::BinaryHeap struct">BinaryHeap</a></div><div class="item-right docblock-short"><p>A priority queue implemented with a binary heap.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.HashMap.html" title="anoma_apps::std::collections::HashMap struct">HashMap</a></div><div class="item-right docblock-short"><p>A <a href="index.html#use-a-hashmap-when">hash map</a> implemented with quadratic probing and SIMD lookup.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.HashSet.html" title="anoma_apps::std::collections::HashSet struct">HashSet</a></div><div class="item-right docblock-short"><p>A <a href="index.html#use-the-set-variant-of-any-of-these-maps-when">hash set</a> implemented as a <code>HashMap</code> where the value is <code>()</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.LinkedList.html" title="anoma_apps::std::collections::LinkedList struct">LinkedList</a></div><div class="item-right docblock-short"><p>A doubly-linked list with owned nodes.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.VecDeque.html" title="anoma_apps::std::collections::VecDeque struct">VecDeque</a></div><div class="item-right docblock-short"><p>A double-ended queue implemented with a growable ring buffer.</p>
-</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-left unstable module-item"><a class="enum" href="enum.TryReserveErrorKind.html" title="anoma_apps::std::collections::TryReserveErrorKind enum">TryReserveErrorKind</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Details of the allocation that caused a <code>TryReserveError</code></p>
-</div><div class="item-left module-item"><a class="enum" href="enum.Bound.html" title="anoma_apps::std::collections::Bound enum">Bound</a></div><div class="item-right docblock-short"><p>An endpoint of a range of keys.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="binary_heap/index.html" title="anoma_apps::std::collections::binary_heap mod">binary_heap</a></div><div class="item-right docblock-short"><p>A priority queue implemented with a binary heap.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="btree_map/index.html" title="anoma_apps::std::collections::btree_map mod">btree_map</a></div><div class="item-right docblock-short"><p>A map based on a B-Tree.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="btree_set/index.html" title="anoma_apps::std::collections::btree_set mod">btree_set</a></div><div class="item-right docblock-short"><p>A set based on a B-Tree.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="hash_map/index.html" title="anoma_apps::std::collections::hash_map mod">hash_map</a></div><div class="item-right docblock-short"><p>A hash map implemented with quadratic probing and SIMD lookup.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="hash_set/index.html" title="anoma_apps::std::collections::hash_set mod">hash_set</a></div><div class="item-right docblock-short"><p>A hash set implemented as a <code>HashMap</code> where the value is <code>()</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="linked_list/index.html" title="anoma_apps::std::collections::linked_list mod">linked_list</a></div><div class="item-right docblock-short"><p>A doubly-linked list with owned nodes.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="vec_deque/index.html" title="anoma_apps::std::collections::vec_deque mod">vec_deque</a></div><div class="item-right docblock-short"><p>A double-ended queue implemented with a growable ring buffer.</p>
+</div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BTreeMap.html" title="anoma_apps::std::collections::BTreeMap struct">BTreeMap</a></div><div class="item-right docblock-short"><p>A map based on a <a href="https://en.wikipedia.org/wiki/B-tree">B-Tree</a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BTreeSet.html" title="anoma_apps::std::collections::BTreeSet struct">BTreeSet</a></div><div class="item-right docblock-short"><p>A set based on a B-Tree.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BinaryHeap.html" title="anoma_apps::std::collections::BinaryHeap struct">BinaryHeap</a></div><div class="item-right docblock-short"><p>A priority queue implemented with a binary heap.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.HashMap.html" title="anoma_apps::std::collections::HashMap struct">HashMap</a></div><div class="item-right docblock-short"><p>A <a href="index.html#use-a-hashmap-when">hash map</a> implemented with quadratic probing and SIMD lookup.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.HashSet.html" title="anoma_apps::std::collections::HashSet struct">HashSet</a></div><div class="item-right docblock-short"><p>A <a href="index.html#use-the-set-variant-of-any-of-these-maps-when">hash set</a> implemented as a <code>HashMap</code> where the value is <code>()</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.LinkedList.html" title="anoma_apps::std::collections::LinkedList struct">LinkedList</a></div><div class="item-right docblock-short"><p>A doubly-linked list with owned nodes.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.TryReserveError.html" title="anoma_apps::std::collections::TryReserveError struct">TryReserveError</a></div><div class="item-right docblock-short"><p>The error type for <code>try_reserve</code> methods.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.VecDeque.html" title="anoma_apps::std::collections::VecDeque struct">VecDeque</a></div><div class="item-right docblock-short"><p>A double-ended queue implemented with a growable ring buffer.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left unstable module-item"><a class="enum" href="enum.TryReserveErrorKind.html" title="anoma_apps::std::collections::TryReserveErrorKind enum">TryReserveErrorKind</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Details of the allocation that caused a <code>TryReserveError</code></p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Bound.html" title="anoma_apps::std::collections::Bound enum">Bound</a></div><div class="item-right docblock-short"><p>An endpoint of a range of keys.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
 </body></html>

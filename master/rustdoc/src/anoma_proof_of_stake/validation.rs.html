@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake&#x2F;src&#x2F;validation.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validation.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake&#x2F;src&#x2F;validation.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validation.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1856,7 +1857,7 @@
     <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>,
     <span class="ident">changes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataUpdate</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">TokenAmount</span>, <span class="ident">TokenChange</span>, <span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span>
+) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Address</span>: <span class="ident">Display</span>
         <span class="op">+</span> <span class="ident">Debug</span>
@@ -1956,9 +1957,9 @@
 
     <span class="kw">for</span> <span class="ident">change</span> <span class="kw">in</span> <span class="ident">changes</span> {
         <span class="kw">match</span> <span class="ident">change</span> {
-            <span class="ident">Validator</span> { <span class="ident">address</span>, <span class="ident">update</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">update</span> {
-                <span class="ident">State</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Validator</span> { <span class="ident">address</span>, <span class="ident">update</span> } =&gt; <span class="kw">match</span> <span class="ident">update</span> {
+                <span class="ident">State</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
@@ -1967,8 +1968,8 @@
                             <span class="ident">Epoch::iter_range</span>(<span class="ident">current_epoch</span>, <span class="ident">pipeline_offset</span>)
                         {
                             <span class="kw">match</span> <span class="ident">post</span>.<span class="ident">get</span>(<span class="ident">epoch</span>) {
-                                <span class="prelude-val">Some</span>(<span class="ident">ValidatorState::Pending</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                                <span class="prelude-val">Some</span>(<span class="ident">ValidatorState::Pending</span>) =&gt; {}
+                                <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                     <span class="ident">Error::InvalidNewValidatorState</span>(
                                         <span class="ident">epoch</span>.<span class="ident">into</span>(),
                                     ),
@@ -1977,8 +1978,8 @@
                         }
                         <span class="comment">// At pipeline epoch, the state must be `Candidate`</span>
                         <span class="kw">match</span> <span class="ident">post</span>.<span class="ident">get</span>(<span class="ident">pipeline_epoch</span>) {
-                            <span class="prelude-val">Some</span>(<span class="ident">ValidatorState::Candidate</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidNewValidatorState</span>(
+                            <span class="prelude-val">Some</span>(<span class="ident">ValidatorState::Candidate</span>) =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidNewValidatorState</span>(
                                 <span class="ident">pipeline_epoch</span>.<span class="ident">into</span>(),
                             )),
                         }
@@ -1986,7 +1987,7 @@
                             <span class="ident">new_validators</span>.<span class="ident">entry</span>(<span class="ident">address</span>.<span class="ident">clone</span>()).<span class="ident">or_default</span>();
                         <span class="ident">validator</span>.<span class="ident">has_state</span> <span class="op">=</span> <span class="bool-val">true</span>;
                     }
-                    (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
@@ -1997,10 +1998,10 @@
                             <span class="ident">Epoch::iter_range</span>(<span class="ident">current_epoch</span>, <span class="ident">pipeline_offset</span>)
                         {
                             <span class="kw">match</span> (<span class="ident">pre</span>.<span class="ident">get</span>(<span class="ident">epoch</span>), <span class="ident">post</span>.<span class="ident">get</span>(<span class="ident">epoch</span>)) {
-                                (<span class="prelude-val">Some</span>(<span class="ident">Inactive</span>), <span class="prelude-val">Some</span>(<span class="ident">Pending</span>)) <span class="op">=</span><span class="op">&gt;</span> {}
+                                (<span class="prelude-val">Some</span>(<span class="ident">Inactive</span>), <span class="prelude-val">Some</span>(<span class="ident">Pending</span>)) =&gt; {}
                                 (<span class="prelude-val">Some</span>(<span class="ident">state_pre</span>), <span class="prelude-val">Some</span>(<span class="ident">state_post</span>))
-                                    <span class="kw">if</span> <span class="ident">state_pre</span> <span class="op">=</span><span class="op">=</span> <span class="ident">state_post</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                                    <span class="kw">if</span> <span class="ident">state_pre</span> <span class="op">==</span> <span class="ident">state_post</span> =&gt; {}
+                                <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                     <span class="ident">Error::InvalidValidatorStateUpdate</span>(
                                         <span class="ident">epoch</span>.<span class="ident">into</span>(),
                                     ),
@@ -2020,25 +2021,25 @@
                             <span class="op">|</span> (
                                 <span class="prelude-val">Some</span>(<span class="ident">Inactive</span>),
                                 <span class="prelude-val">Some</span>(<span class="ident">Candidate</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Pending</span>),
-                            ) <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidNewValidatorState</span>(
+                            ) =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidNewValidatorState</span>(
                                 <span class="ident">pipeline_epoch</span>.<span class="ident">into</span>(),
                             )),
                         }
                     }
-                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>
+                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="ident">errors</span>
                         .<span class="ident">push</span>(<span class="ident">Error::ValidatorStateIsRequired</span>(<span class="ident">address</span>.<span class="ident">clone</span>())),
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
                 },
-                <span class="ident">ConsensusKey</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ConsensusKey</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
                         <span class="comment">// The value must be known at pipeline epoch</span>
                         <span class="kw">match</span> <span class="ident">post</span>.<span class="ident">get</span>(<span class="ident">pipeline_epoch</span>) {
-                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                 <span class="ident">Error::MissingNewValidatorConsensusKey</span>(
                                     <span class="ident">pipeline_epoch</span>.<span class="ident">into</span>(),
                                 ),
@@ -2048,7 +2049,7 @@
                             <span class="ident">new_validators</span>.<span class="ident">entry</span>(<span class="ident">address</span>.<span class="ident">clone</span>()).<span class="ident">or_default</span>();
                         <span class="ident">validator</span>.<span class="ident">has_consensus_key</span> <span class="op">=</span> <span class="bool-val">true</span>;
                     }
-                    (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
@@ -2058,11 +2059,11 @@
                         {
                             <span class="kw">match</span> (<span class="ident">pre</span>.<span class="ident">get</span>(<span class="ident">epoch</span>), <span class="ident">post</span>.<span class="ident">get</span>(<span class="ident">epoch</span>)) {
                                 (<span class="prelude-val">Some</span>(<span class="ident">key_pre</span>), <span class="prelude-val">Some</span>(<span class="ident">key_post</span>))
-                                    <span class="kw">if</span> <span class="ident">key_pre</span> <span class="op">=</span><span class="op">=</span> <span class="ident">key_post</span> <span class="op">=</span><span class="op">&gt;</span>
+                                    <span class="kw">if</span> <span class="ident">key_pre</span> <span class="op">==</span> <span class="ident">key_post</span> =&gt;
                                 {
                                     <span class="kw">continue</span>;
                                 }
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                                <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                     <span class="ident">Error::InvalidValidatorConsensusKeyUpdate</span>(
                                         <span class="ident">epoch</span>.<span class="ident">into</span>(),
                                     ),
@@ -2070,13 +2071,13 @@
                             }
                         }
                     }
-                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>
+                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="ident">errors</span>
                         .<span class="ident">push</span>(<span class="ident">Error::ValidatorStateIsRequired</span>(<span class="ident">address</span>.<span class="ident">clone</span>())),
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
                 },
-                <span class="ident">StakingRewardAddress</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="ident">post</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span> {
+                <span class="ident">StakingRewardAddress</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
+                        <span class="kw">if</span> <span class="ident">post</span> <span class="op">==</span> <span class="ident">address</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(
                                 <span class="ident">Error::StakingRewardAddressEqValidator</span>(
                                     <span class="ident">address</span>.<span class="ident">clone</span>(),
@@ -2084,8 +2085,8 @@
                             );
                         }
                     }
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="ident">post</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span> {
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
+                        <span class="kw">if</span> <span class="ident">post</span> <span class="op">==</span> <span class="ident">address</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(
                                 <span class="ident">Error::StakingRewardAddressEqValidator</span>(
                                     <span class="ident">address</span>.<span class="ident">clone</span>(),
@@ -2096,12 +2097,12 @@
                             <span class="ident">new_validators</span>.<span class="ident">entry</span>(<span class="ident">address</span>.<span class="ident">clone</span>()).<span class="ident">or_default</span>();
                         <span class="ident">validator</span>.<span class="ident">has_staking_reward_address</span> <span class="op">=</span> <span class="bool-val">true</span>;
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::StakingRewardAddressIsRequired</span>(
+                    <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::StakingRewardAddressIsRequired</span>(
                         <span class="ident">address</span>.<span class="ident">clone</span>(),
                     )),
                 },
-                <span class="ident">TotalDeltas</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                    (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TotalDeltas</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                    (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
@@ -2125,7 +2126,7 @@
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">TokenChange::default</span>();
                             <span class="comment">// Find the delta in `pre`</span>
                             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">change</span>) <span class="op">=</span> {
-                                <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">=</span><span class="op">=</span> <span class="ident">post</span>.<span class="ident">last_update</span>() {
+                                <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">==</span> <span class="ident">post</span>.<span class="ident">last_update</span>() {
                                     <span class="comment">// On the first epoch, we have to get the</span>
                                     <span class="comment">// sum of all deltas at and before that</span>
                                     <span class="comment">// epoch as the `pre` could have been set in</span>
@@ -2151,7 +2152,7 @@
                                     <span class="ident">u64::try_from</span>(<span class="ident">stake_pre</span>),
                                     <span class="ident">u64::try_from</span>(<span class="ident">stake_post</span>),
                                 ) {
-                                    (<span class="prelude-val">Ok</span>(<span class="ident">stake_pre</span>), <span class="prelude-val">Ok</span>(<span class="ident">stake_post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                                    (<span class="prelude-val">Ok</span>(<span class="ident">stake_pre</span>), <span class="prelude-val">Ok</span>(<span class="ident">stake_post</span>)) =&gt; {
                                         <span class="kw">let</span> <span class="ident">stake_post</span> <span class="op">=</span>
                                             <span class="ident">TokenAmount::from</span>(<span class="ident">stake_post</span>);
                                         <span class="ident">total_stake_by_epoch</span>
@@ -2202,7 +2203,7 @@
                                                 <span class="ident">delta_post</span> <span class="op">-</span> <span class="ident">delta_pre</span>;
                                         }
                                     }
-                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                                    <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                         <span class="ident">Error::InvalidValidatorTotalDeltas</span>(
                                             <span class="ident">address</span>.<span class="ident">clone</span>(),
                                             <span class="ident">stake_post</span>,
@@ -2240,7 +2241,7 @@
                             <span class="ident">total_deltas</span>.<span class="ident">insert</span>(<span class="ident">address</span>.<span class="ident">clone</span>(), <span class="ident">deltas</span>);
                         }
                     }
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
@@ -2266,7 +2267,7 @@
                                 <span class="ident">deltas</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">change</span>;
                                 <span class="kw">let</span> <span class="ident">stake</span>: <span class="ident">i128</span> <span class="op">=</span> <span class="ident">Into::into</span>(<span class="ident">deltas</span>);
                                 <span class="kw">match</span> <span class="ident">u64::try_from</span>(<span class="ident">stake</span>) {
-                                    <span class="prelude-val">Ok</span>(<span class="ident">stake</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="prelude-val">Ok</span>(<span class="ident">stake</span>) =&gt; {
                                         <span class="kw">let</span> <span class="ident">stake</span> <span class="op">=</span> <span class="ident">TokenAmount::from</span>(<span class="ident">stake</span>);
                                         <span class="ident">total_stake_by_epoch</span>
                                             .<span class="ident">entry</span>(<span class="ident">epoch</span>)
@@ -2291,7 +2292,7 @@
                                                 .<span class="ident">or_insert_with</span>(<span class="ident">Default::default</span>);
                                         <span class="kw-2">*</span><span class="ident">current_delta</span> <span class="op">+</span><span class="op">=</span> <span class="ident">voting_power_delta</span>;
                                     }
-                                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                         <span class="ident">Error::InvalidValidatorTotalDeltas</span>(
                                             <span class="ident">address</span>.<span class="ident">clone</span>(),
                                             <span class="ident">stake</span>,
@@ -2312,13 +2313,13 @@
                             <span class="ident">new_validators</span>.<span class="ident">entry</span>(<span class="ident">address</span>.<span class="ident">clone</span>()).<span class="ident">or_default</span>();
                         <span class="ident">validator</span>.<span class="ident">has_total_deltas</span> <span class="op">=</span> <span class="bool-val">true</span>;
                     }
-                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorTotalDeltas</span>(<span class="ident">address</span>))
                     }
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
                 },
-                <span class="ident">VotingPowerUpdate</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">|</span> (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">VotingPowerUpdate</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">|</span> (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                         <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                         }
@@ -2334,14 +2335,14 @@
                                 <span class="ident">voting_power</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">delta</span>;
                                 <span class="kw">let</span> <span class="ident">vp</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">Into::into</span>(<span class="ident">voting_power</span>);
                                 <span class="kw">match</span> <span class="ident">u64::try_from</span>(<span class="ident">vp</span>) {
-                                    <span class="prelude-val">Ok</span>(<span class="ident">vp</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="prelude-val">Ok</span>(<span class="ident">vp</span>) =&gt; {
                                         <span class="kw">let</span> <span class="ident">vp</span> <span class="op">=</span> <span class="ident">VotingPower::from</span>(<span class="ident">vp</span>);
                                         <span class="ident">voting_power_by_epoch</span>
                                             .<span class="ident">entry</span>(<span class="ident">epoch</span>)
                                             .<span class="ident">or_insert_with</span>(<span class="ident">HashMap::default</span>)
                                             .<span class="ident">insert</span>(<span class="ident">address</span>.<span class="ident">clone</span>(), <span class="ident">vp</span>);
                                     }
-                                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                                         <span class="ident">Error::InvalidValidatorVotingPower</span>(
                                             <span class="ident">address</span>.<span class="ident">clone</span>(),
                                             <span class="ident">vp</span>,
@@ -2357,24 +2358,24 @@
                             <span class="ident">validator</span>.<span class="ident">has_voting_power</span> <span class="op">=</span> <span class="bool-val">true</span>;
                         }
                     }
-                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                    (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                         <span class="ident">Error::MissingValidatorVotingPower</span>(<span class="ident">address</span>.<span class="ident">clone</span>()),
                     ),
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
                 },
             },
-            <span class="ident">Balance</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">balance_delta</span> <span class="op">+</span><span class="op">=</span> <span class="ident">TokenChange::from</span>(<span class="ident">post</span>),
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Balance</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; <span class="ident">balance_delta</span> <span class="op">+</span><span class="op">=</span> <span class="ident">TokenChange::from</span>(<span class="ident">post</span>),
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="ident">balance_delta</span> <span class="op">-</span><span class="op">=</span> <span class="ident">TokenChange::from</span>(<span class="ident">pre</span>);
                     <span class="ident">balance_delta</span> <span class="op">+</span><span class="op">=</span> <span class="ident">TokenChange::from</span>(<span class="ident">post</span>);
                 }
-                (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingBalance</span>),
-                (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>) =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingBalance</span>),
+                (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
             },
-            <span class="ident">Bond</span> { <span class="ident">id</span>, <span class="ident">data</span>, <span class="ident">slashes</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+            <span class="ident">Bond</span> { <span class="ident">id</span>, <span class="ident">data</span>, <span class="ident">slashes</span> } =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
                 <span class="comment">// Bond may be updated from newly bonded tokens and unbonding</span>
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                     }
@@ -2403,7 +2404,7 @@
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bond</span>) <span class="op">=</span> <span class="ident">post</span>.<span class="ident">get_delta_at_epoch</span>(<span class="ident">epoch</span>) {
                             <span class="kw">for</span> (<span class="ident">start_epoch</span>, <span class="ident">delta</span>) <span class="kw">in</span> <span class="ident">bond</span>.<span class="ident">deltas</span>.<span class="ident">iter</span>() {
                                 <span class="comment">// An empty bond must be deleted</span>
-                                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">delta</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TokenAmount::default</span>() {
+                                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">delta</span> <span class="op">==</span> <span class="ident">TokenAmount::default</span>() {
                                     <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::EmptyBond</span>(<span class="ident">id</span>.<span class="ident">clone</span>()))
                                 }
                                 <span class="comment">// On the current epoch, all bond&#39;s</span>
@@ -2411,7 +2412,7 @@
                                 <span class="comment">// `current_epoch`. For all others, the</span>
                                 <span class="comment">// `start_epoch` must be equal</span>
                                 <span class="comment">// to the `epoch` at which it&#39;s set.</span>
-                                <span class="kw">if</span> (<span class="ident">epoch</span> <span class="op">=</span><span class="op">=</span> <span class="ident">current_epoch</span>
+                                <span class="kw">if</span> (<span class="ident">epoch</span> <span class="op">==</span> <span class="ident">current_epoch</span>
                                     <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">start_epoch</span> <span class="op">&gt;</span> <span class="ident">current_epoch</span>)
                                     <span class="op">|</span><span class="op">|</span> (<span class="ident">epoch</span> <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span>
                                         <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">start_epoch</span> <span class="op">!</span><span class="op">=</span> <span class="ident">epoch</span>)
@@ -2424,14 +2425,14 @@
                                 }
                                 <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">TokenChange::from</span>(<span class="kw-2">*</span><span class="ident">delta</span>);
                                 <span class="kw">match</span> <span class="ident">slashed_deltas</span>.<span class="ident">get_mut</span>(<span class="ident">start_epoch</span>) {
-                                    <span class="prelude-val">Some</span>(<span class="ident">pre_delta</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">pre_delta</span> <span class="op">+</span> <span class="ident">delta</span> <span class="op">=</span><span class="op">=</span> <span class="number">0_i128</span>.<span class="ident">into</span>() {
+                                    <span class="prelude-val">Some</span>(<span class="ident">pre_delta</span>) =&gt; {
+                                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">pre_delta</span> <span class="op">+</span> <span class="ident">delta</span> <span class="op">==</span> <span class="number">0_i128</span>.<span class="ident">into</span>() {
                                             <span class="ident">slashed_deltas</span>.<span class="ident">remove</span>(<span class="ident">start_epoch</span>);
                                         } <span class="kw">else</span> {
                                             <span class="kw-2">*</span><span class="ident">pre_delta</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
                                         }
                                     }
-                                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="prelude-val">None</span> =&gt; {
                                         <span class="ident">slashed_deltas</span>
                                             .<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">start_epoch</span>, <span class="ident">delta</span>);
                                     }
@@ -2446,7 +2447,7 @@
                                 <span class="comment">// unbonded, even if they are not yet active.</span>
                                 <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">!</span><span class="op">=</span> <span class="ident">pipeline_epoch</span> {
                                     <span class="kw">match</span> <span class="ident">pre_bonds</span>.<span class="ident">get</span>(<span class="ident">start_epoch</span>) {
-                                        <span class="prelude-val">Some</span>(<span class="ident">pre_delta</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="prelude-val">Some</span>(<span class="ident">pre_delta</span>) =&gt; {
                                             <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">delta</span> <span class="op">&gt;</span> <span class="ident">pre_delta</span> {
                                                 <span class="ident">errors</span>.<span class="ident">push</span>(
                                                 <span class="ident">Error::InvalidNewBondEpoch</span> {
@@ -2457,7 +2458,7 @@
                                                 });
                                             }
                                         }
-                                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="prelude-val">None</span> =&gt; {
                                             <span class="ident">errors</span>.<span class="ident">push</span>(
                                                 <span class="ident">Error::InvalidNewBondEpoch</span> {
                                                     <span class="ident">id</span>: <span class="ident">id</span>.<span class="ident">clone</span>(),
@@ -2494,7 +2495,7 @@
                     }
                 }
                 <span class="comment">// Bond may be created from newly bonded tokens only</span>
-                (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                     }
@@ -2536,13 +2537,13 @@
                         }
                     }
                     <span class="comment">// An empty bond must be deleted</span>
-                    <span class="kw">if</span> <span class="ident">total_delta</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TokenChange::default</span>() {
+                    <span class="kw">if</span> <span class="ident">total_delta</span> <span class="op">==</span> <span class="ident">TokenChange::default</span>() {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::EmptyBond</span>(<span class="ident">id</span>.<span class="ident">clone</span>()))
                     }
                     <span class="ident">bond_delta</span>.<span class="ident">insert</span>(<span class="ident">id</span>.<span class="ident">validator</span>, <span class="ident">total_delta</span>);
                 }
                 <span class="comment">// Bond may be deleted when all the tokens are unbonded</span>
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">None</span>) =&gt; {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_delta</span> <span class="op">=</span> <span class="ident">TokenChange::default</span>();
                     <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">pipeline_offset</span> <span class="op">+</span> <span class="number">1</span> {
                         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>;
@@ -2567,11 +2568,11 @@
                     }
                     <span class="ident">bond_delta</span>.<span class="ident">insert</span>(<span class="ident">id</span>.<span class="ident">validator</span>, <span class="ident">total_delta</span>);
                 }
-                (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
             },
-            <span class="ident">Unbond</span> { <span class="ident">id</span>, <span class="ident">data</span>, <span class="ident">slashes</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+            <span class="ident">Unbond</span> { <span class="ident">id</span>, <span class="ident">data</span>, <span class="ident">slashes</span> } =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
                 <span class="comment">// Unbond may be updated from newly unbonded tokens</span>
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                     }
@@ -2606,14 +2607,14 @@
                                 <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">TokenChange::from</span>(<span class="kw-2">*</span><span class="ident">delta</span>);
                                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">start_epoch</span>, <span class="kw-2">*</span><span class="ident">end_epoch</span>);
                                 <span class="kw">match</span> <span class="ident">slashed_deltas</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-                                    <span class="prelude-val">Some</span>(<span class="ident">pre_delta</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">pre_delta</span> <span class="op">+</span> <span class="ident">delta</span> <span class="op">=</span><span class="op">=</span> <span class="number">0_i128</span>.<span class="ident">into</span>() {
+                                    <span class="prelude-val">Some</span>(<span class="ident">pre_delta</span>) =&gt; {
+                                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">pre_delta</span> <span class="op">+</span> <span class="ident">delta</span> <span class="op">==</span> <span class="number">0_i128</span>.<span class="ident">into</span>() {
                                             <span class="ident">slashed_deltas</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
                                         } <span class="kw">else</span> {
                                             <span class="kw-2">*</span><span class="ident">pre_delta</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
                                         }
                                     }
-                                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="prelude-val">None</span> =&gt; {
                                         <span class="ident">slashed_deltas</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">delta</span>);
                                     }
                                 }
@@ -2645,7 +2646,7 @@
                     }
                 }
                 <span class="comment">// Unbond may be created from a bond</span>
-                (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                     }
@@ -2679,7 +2680,7 @@
                     <span class="ident">unbond_delta</span>.<span class="ident">insert</span>(<span class="ident">id</span>.<span class="ident">validator</span>, <span class="ident">total_delta</span>);
                 }
                 <span class="comment">// Unbond may be deleted when all the tokens are withdrawn</span>
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">None</span>) =&gt; {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_delta</span> <span class="op">=</span> <span class="ident">TokenChange::default</span>();
                     <span class="kw">for</span> <span class="ident">epoch</span> <span class="kw">in</span> <span class="ident">Epoch::iter_range</span>(
                         <span class="ident">pre</span>.<span class="ident">last_update</span>(),
@@ -2709,20 +2710,20 @@
                     }
                     <span class="ident">unbond_delta</span>.<span class="ident">insert</span>(<span class="ident">id</span>.<span class="ident">validator</span>, <span class="ident">total_delta</span>);
                 }
-                (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
             },
-            <span class="ident">ValidatorSet</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">ValidatorSet</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                     }
                     <span class="ident">validator_set_pre</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">pre</span>);
                     <span class="ident">validator_set_post</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">post</span>);
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSet</span>),
+                <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSet</span>),
             },
-            <span class="ident">TotalVotingPower</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">TotalVotingPower</span>(<span class="ident">data</span>) =&gt; <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
+                (<span class="prelude-val">Some</span>(<span class="ident">pre</span>), <span class="prelude-val">Some</span>(<span class="ident">post</span>)) =&gt; {
                     <span class="kw">if</span> <span class="ident">post</span>.<span class="ident">last_update</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">current_epoch</span> {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidLastUpdate</span>)
                     }
@@ -2732,7 +2733,7 @@
                         <span class="ident">unbonding_offset</span> <span class="op">+</span> <span class="number">1</span>,
                     ) {
                         <span class="comment">// Find the delta in `pre`</span>
-                        <span class="kw">let</span> <span class="ident">delta_pre</span> <span class="op">=</span> (<span class="kw">if</span> <span class="ident">epoch</span> <span class="op">=</span><span class="op">=</span> <span class="ident">post</span>.<span class="ident">last_update</span>() {
+                        <span class="kw">let</span> <span class="ident">delta_pre</span> <span class="op">=</span> (<span class="kw">if</span> <span class="ident">epoch</span> <span class="op">==</span> <span class="ident">post</span>.<span class="ident">last_update</span>() {
                             <span class="comment">// On the first epoch, we have to get the</span>
                             <span class="comment">// sum of all deltas at and before that</span>
                             <span class="comment">// epoch as the `pre` could have been set in</span>
@@ -2753,11 +2754,11 @@
                         }
                     }
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingTotalVotingPower</span>),
+                <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingTotalVotingPower</span>),
             },
-            <span class="ident">ValidatorAddressRawHash</span> { <span class="ident">raw_hash</span>, <span class="ident">data</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">ValidatorAddressRawHash</span> { <span class="ident">raw_hash</span>, <span class="ident">data</span> } =&gt; {
                 <span class="kw">match</span> (<span class="ident">data</span>.<span class="ident">pre</span>, <span class="ident">data</span>.<span class="ident">post</span>) {
-                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((<span class="ident">address</span>, <span class="ident">expected_raw_hash</span>))) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>((<span class="ident">address</span>, <span class="ident">expected_raw_hash</span>))) =&gt; {
                         <span class="kw">if</span> <span class="ident">raw_hash</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected_raw_hash</span> {
                             <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidAddressRawHash</span>(
                                 <span class="ident">raw_hash</span>,
@@ -2768,10 +2769,10 @@
                             <span class="ident">new_validators</span>.<span class="ident">entry</span>(<span class="ident">address</span>.<span class="ident">clone</span>()).<span class="ident">or_default</span>();
                         <span class="ident">validator</span>.<span class="ident">has_address_raw_hash</span> <span class="op">=</span> <span class="bool-val">true</span>;
                     }
-                    (<span class="ident">pre</span>, <span class="ident">post</span>) <span class="kw">if</span> <span class="ident">pre</span> <span class="op">!</span><span class="op">=</span> <span class="ident">post</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="ident">pre</span>, <span class="ident">post</span>) <span class="kw">if</span> <span class="ident">pre</span> <span class="op">!</span><span class="op">=</span> <span class="ident">post</span> =&gt; {
                         <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidRawHashUpdate</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">continue</span>,
                 }
             }
         }
@@ -2833,7 +2834,7 @@
 
                 <span class="kw">match</span> <span class="ident">validator_set_pre</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">pre</span><span class="op">|</span> <span class="ident">pre</span>.<span class="ident">get</span>(<span class="ident">epoch</span>))
                 {
-                    <span class="prelude-val">Some</span>(<span class="ident">pre</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">pre</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">total_stakes</span> <span class="op">=</span> <span class="ident">total_stake_by_epoch</span>
                             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">epoch</span>)
                             .<span class="ident">map</span>(<span class="ident">Cow::Borrowed</span>)
@@ -2841,7 +2842,7 @@
                         <span class="comment">// Check active validators</span>
                         <span class="kw">for</span> <span class="ident">validator</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">post</span>.<span class="ident">active</span> {
                             <span class="kw">match</span> <span class="ident">total_stakes</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">address</span>) {
-                                <span class="prelude-val">Some</span>(<span class="ident">stake</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="prelude-val">Some</span>(<span class="ident">stake</span>) =&gt; {
                                     <span class="kw">let</span> <span class="ident">voting_power</span> <span class="op">=</span> <span class="ident">VotingPower::from_tokens</span>(
                                         <span class="kw-2">*</span><span class="ident">stake</span>, <span class="ident">params</span>,
                                     );
@@ -2856,7 +2857,7 @@
                                         )
                                     }
                                 }
-                                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="prelude-val">None</span> =&gt; {
                                     <span class="comment">// Others must be the same as in pre</span>
                                     <span class="kw">if</span> <span class="op">!</span><span class="ident">pre</span>.<span class="ident">active</span>.<span class="ident">contains</span>(<span class="ident">validator</span>) {
                                         <span class="ident">errors</span>.<span class="ident">push</span>(
@@ -2873,7 +2874,7 @@
                             <span class="comment">// Any validator who&#39;s total deltas changed, should</span>
                             <span class="comment">// be up-to-date</span>
                             <span class="kw">match</span> <span class="ident">total_stakes</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">address</span>) {
-                                <span class="prelude-val">Some</span>(<span class="ident">stake</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="prelude-val">Some</span>(<span class="ident">stake</span>) =&gt; {
                                     <span class="kw">let</span> <span class="ident">voting_power</span> <span class="op">=</span> <span class="ident">VotingPower::from_tokens</span>(
                                         <span class="kw-2">*</span><span class="ident">stake</span>, <span class="ident">params</span>,
                                     );
@@ -2885,7 +2886,7 @@
                                         )
                                     }
                                 }
-                                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="prelude-val">None</span> =&gt; {
                                     <span class="comment">// Others must be the same as in pre</span>
                                     <span class="kw">if</span> <span class="op">!</span><span class="ident">pre</span>.<span class="ident">active</span>.<span class="ident">contains</span>(<span class="ident">validator</span>) {
                                         <span class="ident">errors</span>.<span class="ident">push</span>(
@@ -2898,14 +2899,14 @@
                             }
                         }
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSet</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSet</span>),
                 }
             } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">total_stake</span>) <span class="op">=</span> <span class="ident">total_stake_by_epoch</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">epoch</span>) {
                 <span class="comment">// When there&#39;s some total delta change for this epoch,</span>
                 <span class="comment">// check that it wouldn&#39;t have affected the validator set</span>
                 <span class="comment">// (i.e. the validator&#39;s voting power is unchanged).</span>
                 <span class="kw">match</span> <span class="ident">post</span>.<span class="ident">get</span>(<span class="ident">epoch</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">post</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">post</span>) =&gt; {
                         <span class="kw">for</span> (<span class="ident">validator</span>, <span class="ident">tokens_at_epoch</span>) <span class="kw">in</span> <span class="ident">total_stake</span> {
                             <span class="kw">let</span> <span class="ident">voting_power</span> <span class="op">=</span> <span class="ident">VotingPower::from_tokens</span>(
                                 <span class="kw-2">*</span><span class="ident">tokens_at_epoch</span>,
@@ -2937,7 +2938,7 @@
                             }
                         }
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSet</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSet</span>),
                 }
             }
         }
@@ -2981,9 +2982,9 @@
     <span class="kw">for</span> (<span class="ident">epoch</span>, <span class="ident">expected_voting_powers</span>) <span class="kw">in</span> <span class="ident">expected_voting_power_by_epoch</span> {
         <span class="kw">for</span> (<span class="ident">validator</span>, <span class="ident">expected_voting_power</span>) <span class="kw">in</span> <span class="ident">expected_voting_powers</span> {
             <span class="kw">match</span> <span class="ident">voting_power_by_epoch</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">epoch</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">actual_voting_powers</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">actual_voting_powers</span>) =&gt; {
                     <span class="kw">match</span> <span class="ident">actual_voting_powers</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">actual_voting_power</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">actual_voting_power</span>) =&gt; {
                             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">actual_voting_power</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected_voting_power</span> {
                                 <span class="ident">errors</span>.<span class="ident">push</span>(
                                     <span class="ident">Error::InvalidValidatorVotingPowerChange</span>(
@@ -2994,7 +2995,7 @@
                                 );
                             }
                         }
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                        <span class="prelude-val">None</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                             <span class="ident">Error::InvalidValidatorVotingPowerChange</span>(
                                 <span class="ident">validator</span>,
                                 <span class="ident">expected_voting_power</span>,
@@ -3003,7 +3004,7 @@
                         ),
                     }
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidValidatorVotingPowerChange</span>(
+                <span class="prelude-val">None</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidValidatorVotingPowerChange</span>(
                     <span class="ident">validator</span>,
                     <span class="ident">expected_voting_power</span>,
                     <span class="prelude-val">None</span>,
@@ -3015,7 +3016,7 @@
     <span class="comment">// Check expected total voting power change</span>
     <span class="kw">for</span> (<span class="ident">epoch</span>, <span class="ident">expected_delta</span>) <span class="kw">in</span> <span class="ident">expected_total_voting_power_delta_by_epoch</span> {
         <span class="kw">match</span> <span class="ident">total_voting_power_delta_by_epoch</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">epoch</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">actual_delta</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">actual_delta</span>) =&gt; {
                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">actual_delta</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected_delta</span> {
                     <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::InvalidTotalVotingPowerChange</span>(
                         <span class="ident">epoch</span>.<span class="ident">into</span>(),
@@ -3024,7 +3025,7 @@
                     ));
                 }
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">if</span> <span class="ident">expected_delta</span> <span class="op">!</span><span class="op">=</span> <span class="ident">VotingPowerDelta::default</span>() {
                     <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::TotalVotingPowerNotUpdated</span>)
                 }
@@ -3035,8 +3036,8 @@
     <span class="comment">// Check new validators are initialized with all the required fields</span>
     <span class="kw">if</span> <span class="op">!</span><span class="ident">new_validators</span>.<span class="ident">is_empty</span>() {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">validator_set_post</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSetUpdate</span>),
-            <span class="prelude-val">Some</span>(<span class="ident">sets</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(<span class="ident">Error::MissingValidatorSetUpdate</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">sets</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">validator_sets</span> <span class="op">=</span> <span class="ident">sets</span>.<span class="ident">get</span>(<span class="ident">pipeline_epoch</span>);
                 <span class="kw">for</span> (<span class="ident">address</span>, <span class="ident">new_validator</span>) <span class="kw">in</span> <span class="ident">new_validators</span> {
                     <span class="kw">let</span> <span class="ident">NewValidator</span> {
@@ -3070,11 +3071,11 @@
                             <span class="kw">if</span> <span class="ident">set</span>.<span class="ident">active</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted_validator</span>)
                                 <span class="op">|</span><span class="op">|</span> <span class="ident">set</span>
                                     .<span class="ident">inactive</span>
-                                    .<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted_validator</span>) <span class="op">=</span><span class="op">&gt;</span>
+                                    .<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted_validator</span>) =&gt;
                         {
                             <span class="kw">continue</span>;
                         }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">errors</span>.<span class="ident">push</span>(
+                        <span class="kw">_</span> =&gt; <span class="ident">errors</span>.<span class="ident">push</span>(
                             <span class="ident">Error::NewValidatorMissingInValidatorSet</span>(<span class="ident">address</span>),
                         ),
                     }
@@ -3106,5 +3107,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_proof_of_stake" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

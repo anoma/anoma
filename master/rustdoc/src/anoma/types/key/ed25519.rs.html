@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;key&#x2F;ed25519.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ed25519.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;key&#x2F;ed25519.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ed25519.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -822,26 +823,26 @@
 <span class="kw">const</span> <span class="ident">PK_STORAGE_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ed25519_pk&quot;</span>;
 
 <span class="doccomment">/// Obtain a storage key for user&#39;s public key.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pk_key</span>(<span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pk_key</span>(<span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">owner</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">PK_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Check if the given storage key is a public key. If it is, returns the owner.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_pk_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_pk_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">owner</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>)]
-            <span class="kw">if</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">PK_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+            <span class="kw">if</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">PK_STORAGE_KEY</span> =&gt;
         {
             <span class="prelude-val">Some</span>(<span class="ident">owner</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Sign the data with a key.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Signature</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) -&gt; <span class="ident">Signature</span> {
     <span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>())
 }
 
@@ -861,7 +862,7 @@
     <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
     <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>,
     <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">VerifySigError::EncodingError</span>)<span class="question-mark">?</span>;
     <span class="ident">pk</span>.<span class="number">0</span>.<span class="ident">verify_strict</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="number">0</span>)
         .<span class="ident">map_err</span>(<span class="ident">VerifySigError::SigError</span>)
@@ -872,7 +873,7 @@
     <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
     <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
     <span class="ident">pk</span>.<span class="number">0</span>.<span class="ident">verify_strict</span>(<span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="number">0</span>)
         .<span class="ident">map_err</span>(<span class="ident">VerifySigError::SigError</span>)
 }
@@ -894,7 +895,7 @@
 }
 
 <span class="doccomment">/// Sign a transaction using [`SignedTxData`].</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign_tx</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">tx</span>: <span class="ident">Tx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Tx</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign_tx</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">tx</span>: <span class="ident">Tx</span>) -&gt; <span class="ident">Tx</span> {
     <span class="kw">let</span> <span class="ident">to_sign</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
     <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">sign</span>(<span class="ident">keypair</span>, <span class="kw-2">&amp;</span><span class="ident">to_sign</span>);
     <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">SignedTxData</span> { <span class="ident">data</span>: <span class="ident">tx</span>.<span class="ident">data</span>, <span class="ident">sig</span> }
@@ -913,7 +914,7 @@
     <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
     <span class="comment">// Try to get the transaction data from decoded `SignedTxData`</span>
     <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">clone</span>().<span class="ident">ok_or</span>(<span class="ident">VerifySigError::MissingData</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..])
@@ -941,7 +942,7 @@
 
 <span class="kw">impl</span> <span class="ident">Keypair</span> {
     <span class="doccomment">/// Convert this keypair to bytes.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">64</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">64</span>] {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">ed25519_dalek::KEYPAIR_LENGTH</span>] <span class="op">=</span>
             [<span class="number">0u8</span>; <span class="ident">ed25519_dalek::KEYPAIR_LENGTH</span>];
 
@@ -955,7 +956,7 @@
     <span class="doccomment">/// Generate an ed25519 keypair.</span>
     <span class="doccomment">/// Wrapper for [`ed25519_dalek::Keypair::generate`].</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rand&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">csprng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">csprng</span>: <span class="kw-2">&amp;mut</span> <span class="ident">R</span>) -&gt; <span class="ident">Keypair</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="ident">CryptoRng</span> <span class="op">+</span> <span class="ident">RngCore</span>,
     {
@@ -964,7 +965,7 @@
 
     <span class="doccomment">/// Construct a `Keypair` from the bytes of a `PublicKey` and `SecretKey`.</span>
     <span class="doccomment">/// Wrapper for [`ed25519_dalek::Keypair::from_bytes`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Keypair</span>, <span class="ident">SignatureError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Keypair</span>, <span class="ident">SignatureError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">ed25519_dalek::Keypair::from_bytes</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">keypair</span>.<span class="ident">into</span>())
     }
@@ -972,7 +973,7 @@
 
 <span class="kw">impl</span> <span class="ident">PublicKey</span> {
     <span class="doccomment">/// Construct a PublicKey from bytes</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PublicKey</span>, <span class="ident">SignatureError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PublicKey</span>, <span class="ident">SignatureError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">ed25519_dalek::PublicKey::from_bytes</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">pk</span>.<span class="ident">into</span>())
     }
@@ -982,8 +983,8 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">PartialEq</span>,
 {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">data</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">data</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">sig</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">sig</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">data</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">data</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">sig</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">sig</span>
     }
 }
 
@@ -996,7 +997,7 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">Hash</span>,
 {
-    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) {
         <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
         <span class="self">self</span>.<span class="ident">sig</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
     }
@@ -1006,7 +1007,7 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">PartialOrd</span>,
 {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::cmp::Ordering</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::cmp::Ordering</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">data</span>)
     }
 }
@@ -1016,7 +1017,7 @@
     <span class="ident">T</span>: <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span>,
 {
     <span class="doccomment">/// Initialize a new signed data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">data</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">data</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">to_sign</span> <span class="op">=</span> <span class="ident">data</span>
             .<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding data for signing shouldn&#39;t fail&quot;</span>);
@@ -1026,7 +1027,7 @@
 
     <span class="doccomment">/// Verify that the data has been signed by the secret key</span>
     <span class="doccomment">/// counterpart of the given public key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">data</span>
             .<span class="ident">try_to_vec</span>()
@@ -1036,7 +1037,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BorshDeserialize</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// deserialize the bytes first</span>
         <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1057,7 +1058,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BorshSerialize</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;mut</span> <span class="ident">W</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// We need to turn the key to bytes first..</span>
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
         <span class="comment">// .. and then encode them with Borsh</span>
@@ -1069,7 +1070,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BorshDeserialize</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// deserialize the bytes first</span>
         <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1090,7 +1091,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BorshSerialize</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;mut</span> <span class="ident">W</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// We need to turn the key to bytes first..</span>
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
         <span class="comment">// .. and then encode them with Borsh</span>
@@ -1102,7 +1103,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BorshDeserialize</span> <span class="kw">for</span> <span class="ident">Signature</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// deserialize the bytes first</span>
         <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1132,7 +1133,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BorshSerialize</span> <span class="kw">for</span> <span class="ident">Signature</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;mut</span> <span class="ident">W</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// We need to turn the signature to bytes first..</span>
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_bytes</span>().<span class="ident">to_vec</span>();
         <span class="comment">// .. and then encode them with Borsh</span>
@@ -1145,7 +1146,7 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::derive_hash_xor_eq</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) {
         <span class="self">self</span>.<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding public key shouldn&#39;t fail&quot;</span>)
             .<span class="ident">hash</span>(<span class="ident">state</span>);
@@ -1153,7 +1154,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::cmp::Ordering</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::cmp::Ordering</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding public key shouldn&#39;t fail&quot;</span>)
             .<span class="ident">partial_cmp</span>(
@@ -1165,7 +1166,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::cmp::Ordering</span> {
+    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">std::cmp::Ordering</span> {
         <span class="self">self</span>.<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding public key shouldn&#39;t fail&quot;</span>)
             .<span class="ident">cmp</span>(
@@ -1177,7 +1178,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding public key shouldn&#39;t fail&quot;</span>);
@@ -1188,7 +1189,7 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">ParsePublicKeyError</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="ident">s</span>).<span class="ident">map_err</span>(<span class="ident">ParsePublicKeyError::InvalidHex</span>)<span class="question-mark">?</span>;
         <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">vec</span>)
             .<span class="ident">map_err</span>(<span class="ident">ParsePublicKeyError::InvalidEncoding</span>)
@@ -1205,7 +1206,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding secret key shouldn&#39;t fail&quot;</span>);
@@ -1216,7 +1217,7 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">ParseSecretKeyError</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="ident">s</span>).<span class="ident">map_err</span>(<span class="ident">ParseSecretKeyError::InvalidHex</span>)<span class="question-mark">?</span>;
         <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">vec</span>)
             .<span class="ident">map_err</span>(<span class="ident">ParseSecretKeyError::InvalidEncoding</span>)
@@ -1233,7 +1234,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Keypair</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding keypair shouldn&#39;t fail&quot;</span>);
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">hex::encode</span>(<span class="kw-2">&amp;</span><span class="ident">vec</span>))
     }
@@ -1242,7 +1243,7 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">Keypair</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">ParseKeypairError</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="ident">s</span>).<span class="ident">map_err</span>(<span class="ident">ParseKeypairError::InvalidHex</span>)<span class="question-mark">?</span>;
         <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">vec</span>)
             .<span class="ident">map_err</span>(<span class="ident">ParseKeypairError::InvalidEncoding</span>)
@@ -1260,7 +1261,7 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::derive_hash_xor_eq</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Signature</span> {
-    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) {
         <span class="self">self</span>.<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding signature for hash shouldn&#39;t fail&quot;</span>)
             .<span class="ident">hash</span>(<span class="ident">state</span>);
@@ -1268,7 +1269,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Signature</span> {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::cmp::Ordering</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::cmp::Ordering</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding signature shouldn&#39;t fail&quot;</span>)
             .<span class="ident">partial_cmp</span>(
@@ -1280,19 +1281,19 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="ident">ed25519_dalek::PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="ident">ed25519_dalek::PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">pk</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ed25519_dalek::PublicKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="ident">PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">pk</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">PublicKeyHash</span> {
-    <span class="kw">fn</span> <span class="ident">from_public_key</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from_public_key</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">pk_bytes</span> <span class="op">=</span>
             <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Public key encoding shouldn&#39;t fail&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
@@ -1307,13 +1308,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PublicKeyHash</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">pkh</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">PublicKeyHash</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
@@ -1321,7 +1322,7 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">PublicKeyHash</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">PkhFromStringError</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">PKH_HASH_LEN</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="self">Self</span>::Err::UnexpectedLen</span>(<span class="ident">s</span>.<span class="ident">len</span>()));
         }
@@ -1337,43 +1338,43 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PublicKeyHash</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="ident">PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::from_public_key</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PublicKeyHash</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::from_public_key</span>(<span class="ident">pk</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::SecretKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sk</span>: <span class="ident">ed25519_dalek::SecretKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sk</span>: <span class="ident">ed25519_dalek::SecretKey</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">sk</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SecretKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ed25519_dalek::SecretKey</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sk</span>: <span class="ident">SecretKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sk</span>: <span class="ident">SecretKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">sk</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::Signature</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Signature</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sig</span>: <span class="ident">ed25519_dalek::Signature</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sig</span>: <span class="ident">ed25519_dalek::Signature</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">sig</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Signature</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ed25519_dalek::Signature</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sig</span>: <span class="ident">Signature</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">sig</span>: <span class="ident">Signature</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">sig</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::Keypair</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Keypair</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">keypair</span>: <span class="ident">ed25519_dalek::Keypair</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">keypair</span>: <span class="ident">ed25519_dalek::Keypair</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">secret</span>: <span class="ident">keypair</span>.<span class="ident">secret</span>.<span class="ident">into</span>(),
             <span class="ident">public</span>: <span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">into</span>(),
@@ -1382,7 +1383,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ed25519_dalek::Keypair</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">keypair</span>: <span class="ident">Keypair</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">keypair</span>: <span class="ident">Keypair</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">secret</span>: <span class="ident">keypair</span>.<span class="ident">secret</span>.<span class="ident">into</span>(),
             <span class="ident">public</span>: <span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">into</span>(),
@@ -1392,7 +1393,7 @@
 
 <span class="kw">impl</span> <span class="ident">Signer</span><span class="op">&lt;</span><span class="ident">Signature</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Keypair</span> {
     <span class="doccomment">/// Sign a message with this keypair&#39;s secret key.</span>
-    <span class="kw">fn</span> <span class="ident">try_sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">SignatureError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">SignatureError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">expanded</span>: <span class="ident">ExpandedSecretKey</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">secret</span>.<span class="number">0</span>).<span class="ident">into</span>();
         <span class="prelude-val">Ok</span>(<span class="ident">expanded</span>.<span class="ident">sign</span>(<span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public</span>.<span class="number">0</span>).<span class="ident">into</span>())
     }
@@ -1404,7 +1405,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">signature</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SignatureError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SignatureError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">public</span>.<span class="number">0</span>.<span class="ident">verify</span>(<span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="ident">signature</span>.<span class="number">0</span>)
     }
 }
@@ -1419,13 +1420,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">signature</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SignatureError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SignatureError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">verify</span>(<span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="ident">signature</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Signature</span> {
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>()
     }
 }
@@ -1433,7 +1434,7 @@
 <span class="kw">impl</span> <span class="ident">ed25519_dalek::ed25519::signature::Signature</span> <span class="kw">for</span> <span class="ident">Signature</span> {
     <span class="kw">fn</span> <span class="ident">from_bytes</span>(
         <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ed25519_dalek::ed25519::signature::Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ed25519_dalek::ed25519::signature::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sig</span>: <span class="ident">ed25519_dalek::Signature</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">try_into</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">sig</span>.<span class="ident">into</span>())
     }
@@ -1447,7 +1448,7 @@
     <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
     <span class="macro">println!</span>(<span class="string">&quot;keypair {:?}&quot;</span>, <span class="ident">keypair</span>.<span class="ident">to_bytes</span>());
 }
 
@@ -1461,7 +1462,7 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// A keypair for tests</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keypair_1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keypair_1</span>() -&gt; <span class="ident">Keypair</span> {
         <span class="comment">// generated from `cargo test gen_keypair -- --nocapture`</span>
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> [
             <span class="number">33</span>, <span class="number">82</span>, <span class="number">91</span>, <span class="number">186</span>, <span class="number">100</span>, <span class="number">168</span>, <span class="number">220</span>, <span class="number">158</span>, <span class="number">185</span>, <span class="number">140</span>, <span class="number">63</span>, <span class="number">172</span>, <span class="number">3</span>, <span class="number">88</span>, <span class="number">52</span>,
@@ -1474,7 +1475,7 @@
     }
 
     <span class="doccomment">/// A keypair for tests</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keypair_2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keypair_2</span>() -&gt; <span class="ident">Keypair</span> {
         <span class="comment">// generated from `cargo test gen_keypair -- --nocapture`</span>
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> [
             <span class="number">27</span>, <span class="number">238</span>, <span class="number">157</span>, <span class="number">32</span>, <span class="number">131</span>, <span class="number">242</span>, <span class="number">184</span>, <span class="number">142</span>, <span class="number">146</span>, <span class="number">189</span>, <span class="number">24</span>, <span class="number">249</span>, <span class="number">68</span>, <span class="number">165</span>,
@@ -1487,17 +1488,17 @@
     }
 
     <span class="doccomment">/// Generate an arbitrary [`Keypair`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_keypair</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Keypair</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_keypair</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Keypair</span><span class="op">&gt;</span> {
         <span class="ident">any</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">seed</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">StdRng::from_seed</span>(<span class="ident">seed</span>);
-            <span class="ident">ed25519_dalek::Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>).<span class="ident">into</span>()
+            <span class="ident">ed25519_dalek::Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">into</span>()
         })
     }
 
     <span class="doccomment">/// Generate a new random [`Keypair`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_keypair</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">Keypair</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>)
+        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)
     }
 }
 
@@ -1518,5 +1519,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

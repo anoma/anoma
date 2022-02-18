@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;vp&#x2F;channel.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>channel.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;vp&#x2F;channel.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>channel.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -1054,7 +1055,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">is_channel_counter_key</span>(<span class="ident">key</span>) {
             <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel_counter</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidChannel</span>(
@@ -1101,8 +1102,8 @@
         <span class="self">self</span>.<span class="ident">validate_version</span>(<span class="kw-2">&amp;</span><span class="ident">channel</span>)<span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_channel_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>)<span class="question-mark">?</span> {
-            <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
-                <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Created</span> =&gt; <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
+                <span class="ident">State::Init</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_channel_open_init</span>()<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_open_init_channel_event</span>(
@@ -1112,7 +1113,7 @@
                     <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
                 }
-                <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">State::TryOpen</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_channel_open_try</span>()<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">verify_channel_try_proof</span>(
@@ -1127,18 +1128,18 @@
                     <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The channel state is invalid: Port/Channel {}, State {}&quot;</span>,
                     <span class="ident">port_channel_id</span>,
                     <span class="ident">channel</span>.<span class="ident">state</span>()
                 ))),
             },
-            <span class="ident">StateChange::Updated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_updated_channel</span>(
+            <span class="ident">StateChange::Updated</span> =&gt; <span class="self">self</span>.<span class="ident">validate_updated_channel</span>(
                 <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>,
                 <span class="kw-2">&amp;</span><span class="ident">channel</span>,
                 <span class="ident">tx_data</span>,
             ),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The state change of the channel: Port/Channel {}&quot;</span>,
                 <span class="ident">port_channel_id</span>
             ))),
@@ -1148,18 +1149,18 @@
     <span class="kw">fn</span> <span class="ident">get_channel_state_change</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="ident">port_channel_id</span>);
         <span class="self">self</span>.<span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
 
-    <span class="kw">fn</span> <span class="ident">validate_version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">validate_version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_from_channel</span>(<span class="ident">channel</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">versions</span> <span class="op">=</span> <span class="ident">connection</span>.<span class="ident">versions</span>();
         <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">versions</span>.<span class="ident">as_slice</span>() {
-            [<span class="ident">version</span>] <span class="op">=</span><span class="op">&gt;</span> <span class="ident">version</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            [<span class="ident">version</span>] =&gt; <span class="ident">version</span>,
+            <span class="kw">_</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidVersion</span>(
                     <span class="string">&quot;Multiple versions are specified or no version&quot;</span>.<span class="ident">to_owned</span>(),
                 ));
@@ -1182,11 +1183,11 @@
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prev_channel</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel_end_pre</span>(<span class="ident">port_channel_id</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
-            <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">prev_channel</span>.<span class="ident">state</span>() {
-                <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">State::Open</span> =&gt; <span class="kw">match</span> <span class="ident">prev_channel</span>.<span class="ident">state</span>() {
+                <span class="ident">State::Init</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_channel_open_ack</span>()<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">verify_channel_ack_proof</span>(
@@ -1198,7 +1199,7 @@
                     <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
                 }
-                <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">State::TryOpen</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_channel_open_confirm</span>()<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">verify_channel_confirm_proof</span>(
@@ -1210,13 +1211,13 @@
                     <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The state change of the channel is invalid: Port/Channel \
                      {}&quot;</span>,
                     <span class="ident">port_channel_id</span>,
                 ))),
             },
-            <span class="ident">State::Closed</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">State::Closed</span> =&gt; {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">prev_channel</span>.<span class="ident">state_matches</span>(<span class="kw-2">&amp;</span><span class="ident">State::Open</span>) {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;The state change of the channel is invalid: \
@@ -1228,7 +1229,7 @@
                 <span class="kw">match</span> <span class="ident">ibc_msg</span>.<span class="number">0</span> {
                     <span class="comment">// The timeout event will be checked in the commitment</span>
                     <span class="comment">// validation</span>
-                    <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>)) =&gt; {
                         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> (
                             <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_port</span>,
                             <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_channel</span>,
@@ -1238,7 +1239,7 @@
                     }
                     <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToClosePacket</span>(
                         <span class="ident">msg</span>,
-                    )) <span class="op">=</span><span class="op">&gt;</span> {
+                    )) =&gt; {
                         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> (
                             <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_port</span>,
                             <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_channel</span>,
@@ -1248,14 +1249,14 @@
                     }
                     <span class="ident">Ics26Envelope::Ics4ChannelMsg</span>(
                         <span class="ident">ChannelMsg::ChannelCloseInit</span>(<span class="ident">msg</span>),
-                    ) <span class="op">=</span><span class="op">&gt;</span> {
+                    ) =&gt; {
                         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_close_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
                         <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
                     }
                     <span class="ident">Ics26Envelope::Ics4ChannelMsg</span>(
                         <span class="ident">ChannelMsg::ChannelCloseConfirm</span>(<span class="ident">msg</span>),
-                    ) <span class="op">=</span><span class="op">&gt;</span> {
+                    ) =&gt; {
                         <span class="self">self</span>.<span class="ident">verify_channel_close_proof</span>(
                             <span class="ident">port_channel_id</span>,
                             <span class="ident">channel</span>,
@@ -1265,14 +1266,14 @@
                         <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;The state change of the channel is invalid: \
                          Port/Channel {}&quot;</span>,
                         <span class="ident">port_channel_id</span>,
                     ))),
                 }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The state change of the channel is invalid: Port/Channel {}&quot;</span>,
                 <span class="ident">port_channel_id</span>,
             ))),
@@ -1282,7 +1283,7 @@
     <span class="kw">fn</span> <span class="ident">validate_commitment_absence</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_sequence_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// check if the commitment has been deleted</span>
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(
             <span class="kw-2">&amp;</span><span class="ident">port_channel_sequence_id</span>.<span class="number">0</span>,
@@ -1294,8 +1295,8 @@
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">state_change</span> {
             <span class="comment">// the deleted commitment is validated in validate_commitment()</span>
-            <span class="ident">StateChange::Deleted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+            <span class="ident">StateChange::Deleted</span> =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The commitment hasn&#39;t been deleted yet: Port {}, Channel {}, \
                  Sequence {}&quot;</span>,
                 <span class="ident">port_channel_sequence_id</span>.<span class="number">0</span>,
@@ -1310,7 +1311,7 @@
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenTry</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span>
             <span class="ident">Counterparty::new</span>(<span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>);
         <span class="self">self</span>.<span class="ident">verify_proofs</span>(
@@ -1326,7 +1327,7 @@
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span> <span class="ident">Counterparty::new</span>(
             <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
             <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -1344,7 +1345,7 @@
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenConfirm</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span> <span class="ident">Counterparty::new</span>(
             <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
             <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -1362,7 +1363,7 @@
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseConfirm</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span> <span class="ident">Counterparty::new</span>(
             <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
             <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -1381,12 +1382,12 @@
         <span class="ident">expected_my_side</span>: <span class="ident">Counterparty</span>,
         <span class="ident">expected_state</span>: <span class="ident">State</span>,
         <span class="ident">proofs</span>: <span class="ident">Proofs</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_from_channel</span>(<span class="ident">channel</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">counterpart_conn_id</span> <span class="op">=</span>
             <span class="kw">match</span> <span class="ident">connection</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id</span>.<span class="ident">clone</span>(),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>.<span class="ident">clone</span>(),
+                <span class="prelude-val">None</span> =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(
                         <span class="string">&quot;The counterpart connection ID doesn&#39;t exist&quot;</span>
                             .<span class="ident">to_owned</span>(),
@@ -1409,14 +1410,14 @@
             <span class="kw-2">&amp;</span><span class="ident">expected_channel</span>,
             <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
         ) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_sequence_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_sequence_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; {
                 <span class="comment">// As ibc-go, u64 like a counter is encoded with big-endian</span>
                 <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidSequence</span>(
@@ -1428,13 +1429,13 @@
             }
             <span class="comment">// The sequence is updated for the first time. The previous sequence</span>
             <span class="comment">// is the initial number.</span>
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="number">1</span>)),
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="number">1</span>)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_sequence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_sequence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; {
                 <span class="comment">// As ibc-go, u64 like a counter is encoded with big-endian</span>
                 <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidSequence</span>(
@@ -1445,23 +1446,23 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="ident">index</span>))
             }
             <span class="comment">// The sequence has not been used yet</span>
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="number">1</span>)),
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="number">1</span>)),
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">connection_from_channel</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelReader::connection_end</span>(<span class="self">self</span>, <span class="ident">conn_id</span>)
+            <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>) =&gt; <span class="ident">ChannelReader::connection_end</span>(<span class="self">self</span>, <span class="ident">conn_id</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;The connection doesn&#39;t exist: ID {}&quot;</span>,
                         <span class="ident">conn_id</span>
                     ))
                 }),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(
                 <span class="string">&quot;the corresponding connection ID doesn&#39;t exist&quot;</span>.<span class="ident">to_owned</span>(),
             )),
         }
@@ -1470,20 +1471,20 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">channel_end_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ChannelEnd</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ChannelEnd</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="ident">port_channel_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;Decoding the channel failed: Port/Channel {}, {}&quot;</span>,
                     <span class="ident">port_channel_id</span>, <span class="ident">e</span>
                 ))
             }),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The prior channel doesn&#39;t exist: Port/Channel {}&quot;</span>,
                 <span class="ident">port_channel_id</span>
             ))),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Reading the prior channel failed: {}&quot;</span>,
                 <span class="ident">e</span>
             ))),
@@ -1493,7 +1494,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_next_sequence_send_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">next_sequence_send_key</span>(<span class="ident">port_channel_id</span>);
         <span class="self">self</span>.<span class="ident">get_sequence_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
@@ -1501,7 +1502,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_next_sequence_recv_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">next_sequence_recv_key</span>(<span class="ident">port_channel_id</span>);
         <span class="self">self</span>.<span class="ident">get_sequence_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
@@ -1509,7 +1510,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_next_sequence_ack_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">next_sequence_ack_key</span>(<span class="ident">port_channel_id</span>);
         <span class="self">self</span>.<span class="ident">get_sequence_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
@@ -1517,10 +1518,10 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_packet_commitment_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;Decoding the prior packet info failed: {}&quot;</span>,
@@ -1528,14 +1529,14 @@
                     ))
                 })
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The prior packet info doesn&#39;t exist: Key {}&quot;</span>,
                 <span class="ident">key</span>
             ))),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">channel_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">channel_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_counter_key</span>();
         <span class="self">self</span>.<span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidChannel</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
@@ -1551,27 +1552,27 @@
     <span class="kw">fn</span> <span class="ident">channel_end</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">ChannelEnd</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">ChannelEnd</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">PortChannelId</span> {
             <span class="ident">port_id</span>: <span class="ident">port_channel_id</span>.<span class="number">0</span>.<span class="ident">clone</span>(),
             <span class="ident">channel_id</span>: <span class="ident">port_channel_id</span>.<span class="number">1</span>.<span class="ident">clone</span>(),
         };
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>()),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::channel_not_found</span>(
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::channel_not_found</span>(
                 <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>,
                 <span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>,
             )),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">connection_end</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
         <span class="ident">ConnectionReader::connection_end</span>(<span class="self">self</span>, <span class="ident">conn_id</span>)
             .<span class="ident">map_err</span>(<span class="ident">Ics04Error::ics03_connection</span>)
     }
@@ -1579,7 +1580,7 @@
     <span class="kw">fn</span> <span class="ident">connection_channels</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channels</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="string">&quot;channelEnds/ports&quot;</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the prefix shouldn&#39;t fail&quot;</span>);
@@ -1590,13 +1591,13 @@
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">ctx</span>
-                .<span class="ident">iter_post_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">iter</span>)
+                .<span class="ident">iter_post_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">iter</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">value</span>)) <span class="op">=</span> <span class="ident">next</span> {
                 <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
-                    <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">conn_id</span> {
+                    <span class="kw">if</span> <span class="ident">id</span> <span class="op">==</span> <span class="ident">conn_id</span> {
                         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                             <span class="ident">Ics04Error::implementation_specific</span>()
                         })<span class="question-mark">?</span>;
@@ -1620,7 +1621,7 @@
     <span class="kw">fn</span> <span class="ident">client_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">AnyClientState</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">AnyClientState</span><span class="op">&gt;</span> {
         <span class="ident">ConnectionReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
             .<span class="ident">map_err</span>(<span class="ident">Ics04Error::ics03_connection</span>)
     }
@@ -1629,7 +1630,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
         <span class="ident">height</span>: <span class="ident">Height</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
         <span class="ident">ConnectionReader::client_consensus_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>, <span class="ident">height</span>)
             .<span class="ident">map_err</span>(<span class="ident">Ics04Error::ics03_connection</span>)
     }
@@ -1637,7 +1638,7 @@
     <span class="kw">fn</span> <span class="ident">authenticated_capability</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">lookup_module_by_port</span>(<span class="ident">port_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::no_port_capability</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>()))<span class="question-mark">?</span>;
@@ -1651,7 +1652,7 @@
     <span class="kw">fn</span> <span class="ident">get_next_sequence_send</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">PortChannelId</span> {
             <span class="ident">port_id</span>: <span class="ident">port_channel_id</span>.<span class="number">0</span>.<span class="ident">clone</span>(),
             <span class="ident">channel_id</span>: <span class="ident">port_channel_id</span>.<span class="number">1</span>.<span class="ident">clone</span>(),
@@ -1668,7 +1669,7 @@
     <span class="kw">fn</span> <span class="ident">get_next_sequence_recv</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">PortChannelId</span> {
             <span class="ident">port_id</span>: <span class="ident">port_channel_id</span>.<span class="number">0</span>.<span class="ident">clone</span>(),
             <span class="ident">channel_id</span>: <span class="ident">port_channel_id</span>.<span class="number">1</span>.<span class="ident">clone</span>(),
@@ -1685,7 +1686,7 @@
     <span class="kw">fn</span> <span class="ident">get_next_sequence_ack</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">PortChannelId</span> {
             <span class="ident">port_id</span>: <span class="ident">port_channel_id</span>.<span class="number">0</span>.<span class="ident">clone</span>(),
             <span class="ident">channel_id</span>: <span class="ident">port_channel_id</span>.<span class="number">1</span>.<span class="ident">clone</span>(),
@@ -1702,26 +1703,26 @@
     <span class="kw">fn</span> <span class="ident">get_packet_commitment</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">get_packet_receipt</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Receipt</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Receipt</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
         <span class="kw">let</span> <span class="ident">expect</span> <span class="op">=</span> <span class="ident">PacketReceipt::default</span>().<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>)) <span class="kw">if</span> <span class="ident">v</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Receipt::Ok</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_receipt_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>)) <span class="kw">if</span> <span class="ident">v</span> <span class="op">==</span> <span class="ident">expect</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Receipt::Ok</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_receipt_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
         }
     }
 
@@ -1729,32 +1730,32 @@
     <span class="kw">fn</span> <span class="ident">get_packet_acknowledgement</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">PacketAck::default</span>().<span class="ident">to_string</span>()),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">PacketAck::default</span>().<span class="ident">to_string</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">String</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">sha2::Sha256::digest</span>(<span class="ident">value</span>.<span class="ident">as_bytes</span>());
         <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, <span class="ident">r</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">host_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Height</span> {
+    <span class="kw">fn</span> <span class="ident">host_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Height</span> {
         <span class="self">self</span>.<span class="ident">host_current_height</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">host_timestamp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Timestamp</span> {
+    <span class="kw">fn</span> <span class="ident">host_timestamp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Timestamp</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_header</span>().<span class="number">0</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">h</span>.<span class="ident">time</span>.<span class="ident">into</span>()),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Timestamp::none</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="ident">Timestamp::from_datetime</span>(<span class="ident">h</span>.<span class="ident">time</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">Timestamp::none</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">channel_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">channel_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_counter_key</span>();
         <span class="self">self</span>.<span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())
@@ -1762,29 +1763,28 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">NativeVpError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">NativeVpError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">NativeVpError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::NativeVp</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcStorageError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcStorageError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcStorageError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::IbcStorage</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std::io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::DecodingTxData</span>(<span class="ident">err</span>)
     }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

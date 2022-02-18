@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -584,21 +585,21 @@
 <span class="comment">//```</span>
 
 <span class="kw">impl</span> <span class="ident">Shell</span> {
-    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Request</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Request</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">req</span> {
-            <span class="ident">Request::InitChain</span>(<span class="ident">init</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::InitChain</span>(<span class="ident">init</span>) =&gt; {
                 <span class="self">self</span>.<span class="ident">init_chain</span>(<span class="ident">init</span>).<span class="ident">map</span>(<span class="ident">Response::InitChain</span>)
             }
-            <span class="ident">Request::Info</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Response::Info</span>(<span class="self">self</span>.<span class="ident">last_state</span>())),
-            <span class="ident">Request::Query</span>(<span class="ident">query</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Response::Query</span>(<span class="self">self</span>.<span class="ident">query</span>(<span class="ident">query</span>))),
+            <span class="ident">Request::Info</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Response::Info</span>(<span class="self">self</span>.<span class="ident">last_state</span>())),
+            <span class="ident">Request::Query</span>(<span class="ident">query</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Response::Query</span>(<span class="self">self</span>.<span class="ident">query</span>(<span class="ident">query</span>))),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-            <span class="ident">Request::PrepareProposal</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::PrepareProposal</span>(<span class="ident">block</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::PrepareProposal</span>(<span class="self">self</span>.<span class="ident">prepare_proposal</span>(<span class="ident">block</span>)))
             }
-            <span class="ident">Request::VerifyHeader</span>(<span class="ident">_req</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::VerifyHeader</span>(<span class="ident">_req</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::VerifyHeader</span>(<span class="self">self</span>.<span class="ident">verify_header</span>(<span class="ident">_req</span>)))
             }
-            <span class="ident">Request::ProcessProposal</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::ProcessProposal</span>(<span class="ident">block</span>) =&gt; {
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
                 {
                     <span class="prelude-val">Ok</span>(<span class="ident">Response::ProcessProposal</span>(<span class="self">self</span>.<span class="ident">process_proposal</span>(<span class="ident">block</span>)))
@@ -611,44 +612,44 @@
                 }
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-            <span class="ident">Request::RevertProposal</span>(<span class="ident">_req</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::RevertProposal</span>(<span class="ident">_req</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::RevertProposal</span>(<span class="self">self</span>.<span class="ident">revert_proposal</span>(<span class="ident">_req</span>)))
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-            <span class="ident">Request::ExtendVote</span>(<span class="ident">_req</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::ExtendVote</span>(<span class="ident">_req</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::ExtendVote</span>(<span class="self">self</span>.<span class="ident">extend_vote</span>(<span class="ident">_req</span>)))
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-            <span class="ident">Request::VerifyVoteExtension</span>(<span class="ident">_req</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(
+            <span class="ident">Request::VerifyVoteExtension</span>(<span class="ident">_req</span>) =&gt; <span class="prelude-val">Ok</span>(
                 <span class="ident">Response::VerifyVoteExtension</span>(<span class="self">self</span>.<span class="ident">verify_vote_extension</span>(<span class="ident">_req</span>)),
             ),
-            <span class="ident">Request::FinalizeBlock</span>(<span class="ident">finalize</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::FinalizeBlock</span>(<span class="ident">finalize</span>) =&gt; {
                 <span class="self">self</span>.<span class="ident">finalize_block</span>(<span class="ident">finalize</span>).<span class="ident">map</span>(<span class="ident">Response::FinalizeBlock</span>)
             }
-            <span class="ident">Request::Commit</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Response::Commit</span>(<span class="self">self</span>.<span class="ident">commit</span>())),
-            <span class="ident">Request::Flush</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Response::Flush</span>(<span class="ident">Default::default</span>())),
-            <span class="ident">Request::Echo</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Response::Echo</span>(<span class="ident">response::Echo</span> {
+            <span class="ident">Request::Commit</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Response::Commit</span>(<span class="self">self</span>.<span class="ident">commit</span>())),
+            <span class="ident">Request::Flush</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Response::Flush</span>(<span class="ident">Default::default</span>())),
+            <span class="ident">Request::Echo</span>(<span class="ident">msg</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Response::Echo</span>(<span class="ident">response::Echo</span> {
                 <span class="ident">message</span>: <span class="ident">msg</span>.<span class="ident">message</span>,
             })),
-            <span class="ident">Request::CheckTx</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::CheckTx</span>(<span class="ident">tx</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">r#type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">CheckTxType::from_i32</span>(<span class="ident">tx</span>.<span class="ident">r#type</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;received unexpected CheckTxType from ABCI&quot;</span>)
                 {
-                    <span class="ident">CheckTxType::New</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MempoolTxType::NewTransaction</span>,
-                    <span class="ident">CheckTxType::Recheck</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MempoolTxType::RecheckTransaction</span>,
+                    <span class="ident">CheckTxType::New</span> =&gt; <span class="ident">MempoolTxType::NewTransaction</span>,
+                    <span class="ident">CheckTxType::Recheck</span> =&gt; <span class="ident">MempoolTxType::RecheckTransaction</span>,
                 };
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::CheckTx</span>(<span class="self">self</span>.<span class="ident">mempool_validate</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">tx</span>.<span class="ident">tx</span>, <span class="ident">r#type</span>)))
             }
-            <span class="ident">Request::ListSnapshots</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::ListSnapshots</span>(<span class="kw">_</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::ListSnapshots</span>(<span class="ident">Default::default</span>()))
             }
-            <span class="ident">Request::OfferSnapshot</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::OfferSnapshot</span>(<span class="kw">_</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::OfferSnapshot</span>(<span class="ident">Default::default</span>()))
             }
-            <span class="ident">Request::LoadSnapshotChunk</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::LoadSnapshotChunk</span>(<span class="kw">_</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::LoadSnapshotChunk</span>(<span class="ident">Default::default</span>()))
             }
-            <span class="ident">Request::ApplySnapshotChunk</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Request::ApplySnapshotChunk</span>(<span class="kw">_</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">Response::ApplySnapshotChunk</span>(<span class="ident">Default::default</span>()))
             }
         }
@@ -694,7 +695,7 @@
 }
 
 <span class="doccomment">/// Resets the tendermint_node state and removes database files</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">shell::Error</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">shell::Error</span><span class="op">&gt;</span> {
     <span class="ident">shell::reset</span>(<span class="ident">config</span>)
 }
 
@@ -720,13 +721,13 @@
     <span class="comment">// Find the VP WASM compilation cache size</span>
     <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span>
         <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">vp_wasm_compilation_cache_bytes</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">vp_wasm_compilation_cache</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">vp_wasm_compilation_cache</span>) =&gt; {
                 <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;VP WASM compilation cache size set from the configuration&quot;</span>
                 );
                 <span class="ident">vp_wasm_compilation_cache</span>
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;VP WASM compilation cache size not configured, using 1/6 \
                      of available memory.&quot;</span>
@@ -743,13 +744,13 @@
     <span class="comment">// Find the tx WASM compilation cache size</span>
     <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span>
         <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">tx_wasm_compilation_cache_bytes</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">tx_wasm_compilation_cache</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">tx_wasm_compilation_cache</span>) =&gt; {
                 <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;Tx WASM compilation cache size set from the configuration&quot;</span>
                 );
                 <span class="ident">tx_wasm_compilation_cache</span>
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;Tx WASM compilation cache size not configured, using 1/6 \
                      of available memory.&quot;</span>
@@ -765,11 +766,11 @@
 
     <span class="comment">// Setup DB cache, it must outlive the DB instance that&#39;s in the shell</span>
     <span class="kw">let</span> <span class="ident">block_cache_size_bytes</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">block_cache_bytes</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">block_cache_bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">block_cache_bytes</span>) =&gt; {
             <span class="macro">tracing::info!</span>(<span class="string">&quot;Block cache set from the configuration.&quot;</span>,);
             <span class="ident">block_cache_bytes</span>
         }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span> =&gt; {
             <span class="macro">tracing::info!</span>(
                 <span class="string">&quot;Block cache size not configured, using 1/3 of available \
                  memory.&quot;</span>
@@ -880,8 +881,8 @@
     <span class="comment">// if the tendermint_node task has already finished.</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(()) <span class="op">=</span> <span class="ident">tm_abort_send</span>.<span class="ident">send</span>(<span class="ident">tm_abort_resp_send</span>) {
         <span class="kw">match</span> <span class="ident">tm_abort_resp_recv</span>.<span class="kw">await</span> {
-            <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(()) =&gt; {}
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                 <span class="macro">tracing::error!</span>(
                     <span class="string">&quot;Failed to receive a response from tendermint: {}&quot;</span>,
                     <span class="ident">err</span>
@@ -892,7 +893,7 @@
 
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">tokio::try_join!</span>(<span class="ident">tendermint_node</span>, <span class="ident">abci</span>);
     <span class="kw">match</span> <span class="ident">res</span> {
-        <span class="prelude-val">Ok</span>((<span class="ident">tendermint_res</span>, <span class="ident">abci_res</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>((<span class="ident">tendermint_res</span>, <span class="ident">abci_res</span>)) =&gt; {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_res</span> {
                 <span class="macro">tracing::error!</span>(<span class="string">&quot;Tendermint error: {}&quot;</span>, <span class="ident">err</span>);
             }
@@ -900,7 +901,7 @@
                 <span class="macro">tracing::error!</span>(<span class="string">&quot;ABCI error: {}&quot;</span>, <span class="ident">err</span>);
             }
         }
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
             <span class="comment">// Ignore cancellation errors</span>
             <span class="kw">if</span> <span class="op">!</span><span class="ident">err</span>.<span class="ident">is_cancelled</span>() {
                 <span class="macro">tracing::error!</span>(<span class="string">&quot;Ledger error: {}&quot;</span>, <span class="ident">err</span>);
@@ -919,7 +920,7 @@
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_abci</span>(
     <span class="ident">abci_service</span>: <span class="ident">AbciService</span>,
     <span class="ident">ledger_address</span>: <span class="ident">SocketAddr</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shell::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident">shell::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// Split it into components.</span>
     <span class="kw">let</span> (<span class="ident">consensus</span>, <span class="ident">mempool</span>, <span class="ident">snapshot</span>, <span class="ident">info</span>) <span class="op">=</span> <span class="ident">split::service</span>(<span class="ident">abci_service</span>, <span class="number">5</span>);
 
@@ -959,7 +960,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Aborter</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="comment">// Send abort message, ignore result</span>
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sender</span>.<span class="ident">send</span>(<span class="self">self</span>.<span class="ident">who</span>);
     }
@@ -974,31 +975,31 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sighup</span> <span class="op">=</span> <span class="ident">signal</span>(<span class="ident">SignalKind::hangup</span>()).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sigpipe</span> <span class="op">=</span> <span class="ident">signal</span>(<span class="ident">SignalKind::pipe</span>()).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">tokio::select!</span> {
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received interrupt signal, exiting...&quot;</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to listen for CTRL+C signal: {}&quot;</span>, <span class="ident">err</span>),
+                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received interrupt signal, exiting...&quot;</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to listen for CTRL+C signal: {}&quot;</span>, <span class="ident">err</span>),
             }
         },
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sigterm</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sigterm</span>.<span class="ident">recv</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Some</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received termination signal, exiting...&quot;</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Termination signal cannot be caught anymore, exiting...&quot;</span>),
+                <span class="prelude-val">Some</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received termination signal, exiting...&quot;</span>),
+                <span class="prelude-val">None</span> =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Termination signal cannot be caught anymore, exiting...&quot;</span>),
             }
         },
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sighup</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sighup</span>.<span class="ident">recv</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Some</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received hangup signal, exiting...&quot;</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Hangup signal cannot be caught anymore, exiting...&quot;</span>),
+                <span class="prelude-val">Some</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received hangup signal, exiting...&quot;</span>),
+                <span class="prelude-val">None</span> =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Hangup signal cannot be caught anymore, exiting...&quot;</span>),
             }
         },
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sigpipe</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sigpipe</span>.<span class="ident">recv</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Some</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received pipe signal, exiting...&quot;</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Pipe signal cannot be caught anymore, exiting...&quot;</span>),
+                <span class="prelude-val">Some</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received pipe signal, exiting...&quot;</span>),
+                <span class="prelude-val">None</span> =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Pipe signal cannot be caught anymore, exiting...&quot;</span>),
             }
         },
-        <span class="ident">msg</span> <span class="op">=</span> <span class="ident">abort_recv</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">msg</span> <span class="op">=</span> <span class="ident">abort_recv</span>.<span class="ident">recv</span>() =&gt; {
             <span class="comment">// When the msg is `None`, there are no more abort senders, so both</span>
             <span class="comment">// Tendermint and the shell must have already exited</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">who</span>) <span class="op">=</span> <span class="ident">msg</span> {
@@ -1014,19 +1015,19 @@
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sigbreak</span> <span class="op">=</span> <span class="ident">tokio::signal::windows::ctrl_break</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">tokio::select!</span> {
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received interrupt signal, exiting...&quot;</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to listen for CTRL+C signal: {}&quot;</span>, <span class="ident">err</span>),
+                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received interrupt signal, exiting...&quot;</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to listen for CTRL+C signal: {}&quot;</span>, <span class="ident">err</span>),
             }
         },
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sigbreak</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">sigbreak</span>.<span class="ident">recv</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Some</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received break signal, exiting...&quot;</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Break signal cannot be caught anymore, exiting...&quot;</span>),
+                <span class="prelude-val">Some</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received break signal, exiting...&quot;</span>),
+                <span class="prelude-val">None</span> =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Break signal cannot be caught anymore, exiting...&quot;</span>),
             }
         },
-        <span class="ident">msg</span> <span class="op">=</span> <span class="ident">abort_recv</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">msg</span> <span class="op">=</span> <span class="ident">abort_recv</span>.<span class="ident">recv</span>() =&gt; {
             <span class="comment">// When the msg is `None`, there are no more abort senders, so both</span>
             <span class="comment">// Tendermint and the shell must have already exited</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">who</span>) <span class="op">=</span> <span class="ident">msg</span> {
@@ -1041,13 +1042,13 @@
     <span class="kw-2">mut</span> <span class="ident">abort_recv</span>: <span class="ident">tokio::sync::mpsc::UnboundedReceiver</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">tokio::select!</span> {
-        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
-                <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::info!</span>(<span class="string">&quot;Received interrupt signal, exiting...&quot;</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to listen for CTRL+C signal: {}&quot;</span>, <span class="ident">err</span>),
+                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">tracing::info!</span>(<span class="string">&quot;Received interrupt signal, exiting...&quot;</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to listen for CTRL+C signal: {}&quot;</span>, <span class="ident">err</span>),
             }
         },
-        <span class="ident">msg</span> <span class="op">=</span> <span class="ident">abort_recv</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">msg</span> <span class="op">=</span> <span class="ident">abort_recv</span>.<span class="ident">recv</span>() =&gt; {
             <span class="comment">// When the msg is `None`, there are no more abort senders, so both</span>
             <span class="comment">// Tendermint and the shell must have already exited</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">who</span>) <span class="op">=</span> <span class="ident">msg</span> {
@@ -1058,5 +1059,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;pos&#x2F;storage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>storage.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;pos&#x2F;storage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>storage.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -631,34 +632,34 @@
 <span class="kw">const</span> <span class="ident">TOTAL_VOTING_POWER_STORAGE_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;total_voting_power&quot;</span>;
 
 <span class="doccomment">/// Is the given key a PoS storage key?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_pos_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_pos_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">0</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>,
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="prelude-val">Some</span>(<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>)) =&gt; <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for PoS parameters.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">params_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">params_key</span>() -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">PARAMS_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for PoS parameters?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_params_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_params_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>)]
-            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">PARAMS_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">PARAMS_STORAGE_KEY</span> =&gt;
         {
             <span class="bool-val">true</span>
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
 <span class="doccomment">/// Storage key prefix for validator data.</span>
-<span class="kw">fn</span> <span class="ident">validator_prefix</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">fn</span> <span class="ident">validator_prefix</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_STORAGE_PREFIX</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
@@ -668,7 +669,7 @@
 
 <span class="doccomment">/// Storage key for validator&#39;s address raw hash for look-up from raw hash of an</span>
 <span class="doccomment">/// address to address.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_address_raw_hash_key</span>(<span class="ident">raw_hash</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_address_raw_hash_key</span>(<span class="ident">raw_hash</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="ident">Key</span> {
     <span class="kw">let</span> <span class="ident">raw_hash</span> <span class="op">=</span> <span class="ident">raw_hash</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>();
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_ADDRESS_RAW_HASH</span>.<span class="ident">to_owned</span>())
@@ -678,279 +679,279 @@
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s address raw hash?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_address_raw_hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_address_raw_hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">raw_hash</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_ADDRESS_RAW_HASH</span> <span class="op">=</span><span class="op">&gt;</span> {
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">VALIDATOR_ADDRESS_RAW_HASH</span> =&gt; {
             <span class="prelude-val">Some</span>(<span class="ident">raw_hash</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s staking reward address.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_staking_reward_address_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_staking_reward_address_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">validator_prefix</span>(<span class="ident">validator</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s staking reward address?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_staking_reward_address_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_staking_reward_address_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY</span> =&gt;
         {
             <span class="prelude-val">Some</span>(<span class="ident">validator</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s consensus key.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_consensus_key_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_consensus_key_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">validator_prefix</span>(<span class="ident">validator</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_CONSENSUS_KEY_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s consensus key?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_consensus_key_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_consensus_key_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_CONSENSUS_KEY_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">VALIDATOR_CONSENSUS_KEY_STORAGE_KEY</span> =&gt;
         {
             <span class="prelude-val">Some</span>(<span class="ident">validator</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s state.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_state_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_state_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">validator_prefix</span>(<span class="ident">validator</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_STATE_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s state?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_state_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_state_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STATE_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">VALIDATOR_STATE_STORAGE_KEY</span> =&gt;
         {
             <span class="prelude-val">Some</span>(<span class="ident">validator</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s total deltas.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_total_deltas_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_total_deltas_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">validator_prefix</span>(<span class="ident">validator</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_TOTAL_DELTAS_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s total deltas?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_total_deltas_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_total_deltas_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_TOTAL_DELTAS_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">VALIDATOR_TOTAL_DELTAS_STORAGE_KEY</span> =&gt;
         {
             <span class="prelude-val">Some</span>(<span class="ident">validator</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s voting power.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_voting_power_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_voting_power_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">validator_prefix</span>(<span class="ident">validator</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_VOTING_POWER_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s voting power?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_voting_power_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_voting_power_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_VOTING_POWER_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">VALIDATOR_STORAGE_PREFIX</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">VALIDATOR_VOTING_POWER_STORAGE_KEY</span> =&gt;
         {
             <span class="prelude-val">Some</span>(<span class="ident">validator</span>)
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage prefix for slashes.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slashes_prefix</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slashes_prefix</span>() -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">SLASHES_PREFIX</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s slashes.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_slashes_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_slashes_key</span>(<span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">slashes_prefix</span>()
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for validator&#39;s slashes?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_slashes_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_slashes_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">SLASHES_PREFIX</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">validator</span>),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">SLASHES_PREFIX</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">validator</span>),
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key prefix for all bonds.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bonds_prefix</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bonds_prefix</span>() -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">BOND_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Storage key prefix for all bonds of the given source address.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bonds_for_source_prefix</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bonds_for_source_prefix</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">bonds_prefix</span>()
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Storage key for a bond with the given ID (source and validator).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bond_key</span>(<span class="ident">bond_id</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bond_key</span>(<span class="ident">bond_id</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">bonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">source</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for a bond?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_bond_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BondId</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_bond_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BondId</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">source</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">BOND_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">BondId</span> {
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">BOND_STORAGE_KEY</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">BondId</span> {
             <span class="ident">source</span>: <span class="ident">source</span>.<span class="ident">clone</span>(),
             <span class="ident">validator</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
         }),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key prefix for all unbonds.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbonds_prefix</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbonds_prefix</span>() -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">UNBOND_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Storage key prefix for all unbonds of the given source address.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbonds_for_source_prefix</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbonds_for_source_prefix</span>(<span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">unbonds_prefix</span>()
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Storage key for an unbond with the given ID (source and validator).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbond_key</span>(<span class="ident">bond_id</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbond_key</span>(<span class="ident">bond_id</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span>) -&gt; <span class="ident">Key</span> {
     <span class="ident">unbonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">source</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for a unbond?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_unbond_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BondId</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_unbond_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BondId</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
             <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">source</span>),
             <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">validator</span>),
-        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">UNBOND_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">BondId</span> {
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="ident">UNBOND_STORAGE_KEY</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">BondId</span> {
             <span class="ident">source</span>: <span class="ident">source</span>.<span class="ident">clone</span>(),
             <span class="ident">validator</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
         }),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for validator set (active and inactive).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_set_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_set_key</span>() -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">VALIDATOR_SET_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for a validator set?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_set_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_set_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>)]
-            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_SET_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">VALIDATOR_SET_STORAGE_KEY</span> =&gt;
         {
             <span class="bool-val">true</span>
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
 <span class="doccomment">/// Storage key for total voting power.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">total_voting_power_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">total_voting_power_key</span>() -&gt; <span class="ident">Key</span> {
     <span class="ident">Key::from</span>(<span class="ident">ADDRESS</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">TOTAL_VOTING_POWER_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 
 <span class="doccomment">/// Is storage key for total voting power?</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_total_voting_power_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_total_voting_power_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
         [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>)]
-            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TOTAL_VOTING_POWER_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">key</span> <span class="op">==</span> <span class="ident">TOTAL_VOTING_POWER_STORAGE_KEY</span> =&gt;
         {
             <span class="bool-val">true</span>
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
 
@@ -967,11 +968,11 @@
     <span class="kw">const</span> <span class="ident">POS_ADDRESS</span>: <span class="ident"><span class="self">Self</span>::Address</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::ADDRESS</span>;
     <span class="kw">const</span> <span class="ident">POS_SLASH_POOL_ADDRESS</span>: <span class="ident"><span class="self">Self</span>::Address</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::SLASH_POOL_ADDRESS</span>;
 
-    <span class="kw">fn</span> <span class="ident">staking_token_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Address</span> {
+    <span class="kw">fn</span> <span class="ident">staking_token_address</span>() -&gt; <span class="ident"><span class="self">Self</span>::Address</span> {
         <span class="ident"><span class="kw">super</span>::staking_token_address</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">read_pos_params</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PosParams</span> {
+    <span class="kw">fn</span> <span class="ident">read_pos_params</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PosParams</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">params_key</span>()).<span class="ident">unwrap</span>();
         <span class="ident">decode</span>(<span class="ident">value</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>()
     }
@@ -979,7 +980,7 @@
     <span class="kw">fn</span> <span class="ident">read_validator_address_raw_hash</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">raw_hash</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_address_raw_hash_key</span>(<span class="ident">raw_hash</span>))
             .<span class="ident">unwrap</span>();
@@ -989,7 +990,7 @@
     <span class="kw">fn</span> <span class="ident">read_validator_consensus_key</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_consensus_key_key</span>(<span class="ident">key</span>)).<span class="ident">unwrap</span>();
         <span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">decode</span>(<span class="ident">value</span>).<span class="ident">unwrap</span>())
@@ -998,7 +999,7 @@
     <span class="kw">fn</span> <span class="ident">read_validator_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorStates</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorStates</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_state_key</span>(<span class="ident">key</span>)).<span class="ident">unwrap</span>();
         <span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">decode</span>(<span class="ident">value</span>).<span class="ident">unwrap</span>())
     }
@@ -1006,7 +1007,7 @@
     <span class="kw">fn</span> <span class="ident">read_validator_total_deltas</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">types::ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">types::ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_total_deltas_key</span>(<span class="ident">key</span>)).<span class="ident">unwrap</span>();
         <span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">decode</span>(<span class="ident">value</span>).<span class="ident">unwrap</span>())
@@ -1015,41 +1016,41 @@
     <span class="kw">fn</span> <span class="ident">read_validator_voting_power</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorVotingPowers</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorVotingPowers</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_voting_power_key</span>(<span class="ident">key</span>)).<span class="ident">unwrap</span>();
         <span class="ident">value</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">decode</span>(<span class="ident">value</span>).<span class="ident">unwrap</span>())
     }
 
-    <span class="kw">fn</span> <span class="ident">read_validator_slashes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">types::Slashes</span> {
+    <span class="kw">fn</span> <span class="ident">read_validator_slashes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) -&gt; <span class="ident">types::Slashes</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_slashes_key</span>(<span class="ident">key</span>)).<span class="ident">unwrap</span>();
         <span class="ident">value</span>
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">decode</span>(<span class="ident">value</span>).<span class="ident">unwrap</span>())
             .<span class="ident">unwrap_or_default</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">read_validator_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ValidatorSets</span> {
+    <span class="kw">fn</span> <span class="ident">read_validator_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ValidatorSets</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">validator_set_key</span>()).<span class="ident">unwrap</span>();
         <span class="ident">decode</span>(<span class="ident">value</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">read_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TotalVotingPowers</span> {
+    <span class="kw">fn</span> <span class="ident">read_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TotalVotingPowers</span> {
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">total_voting_power_key</span>()).<span class="ident">unwrap</span>();
         <span class="ident">decode</span>(<span class="ident">value</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">write_pos_params</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) {
+    <span class="kw">fn</span> <span class="ident">write_pos_params</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) {
         <span class="self">self</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">params_key</span>(), <span class="ident">encode</span>(<span class="ident">params</span>)).<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">write_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) {
+    <span class="kw">fn</span> <span class="ident">write_validator_address_raw_hash</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) {
         <span class="kw">let</span> <span class="ident">raw_hash</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">raw_hash</span>().<span class="ident">unwrap</span>();
         <span class="self">self</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">validator_address_raw_hash_key</span>(<span class="ident">raw_hash</span>), <span class="ident">encode</span>(<span class="ident">address</span>))
             .<span class="ident">unwrap</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">write_validator_staking_reward_address</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     ) {
@@ -1058,7 +1059,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">write_validator_consensus_key</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorConsensusKeys</span>,
     ) {
@@ -1067,7 +1068,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">write_validator_state</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorStates</span>,
     ) {
@@ -1076,7 +1077,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">write_validator_total_deltas</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorTotalDeltas</span>,
     ) {
@@ -1085,7 +1086,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">write_validator_voting_power</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorVotingPowers</span>,
     ) {
@@ -1094,7 +1095,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">write_validator_slash</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="ident">types::Slash</span>,
     ) {
@@ -1104,21 +1105,21 @@
             .<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">write_bond</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Bonds</span>) {
+    <span class="kw">fn</span> <span class="ident">write_bond</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Bonds</span>) {
         <span class="self">self</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">bond_key</span>(<span class="ident">key</span>), <span class="ident">encode</span>(<span class="ident">value</span>)).<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">write_validator_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorSets</span>) {
+    <span class="kw">fn</span> <span class="ident">write_validator_set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorSets</span>) {
         <span class="self">self</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">validator_set_key</span>(), <span class="ident">encode</span>(<span class="ident">value</span>)).<span class="ident">unwrap</span>();
     }
 
-    <span class="kw">fn</span> <span class="ident">write_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">TotalVotingPowers</span>) {
+    <span class="kw">fn</span> <span class="ident">write_total_voting_power</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">TotalVotingPowers</span>) {
         <span class="self">self</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">total_voting_power_key</span>(), <span class="ident">encode</span>(<span class="ident">value</span>))
             .<span class="ident">unwrap</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">init_staking_reward_account</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicKey</span>,
     ) {
@@ -1134,7 +1135,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">credit_tokens</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
@@ -1144,19 +1145,19 @@
             .<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Unable to read token balance for PoS system&quot;</span>)
         {
-            (<span class="prelude-val">Some</span>(<span class="ident">balance</span>), <span class="ident">_gas</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="prelude-val">Some</span>(<span class="ident">balance</span>), <span class="ident">_gas</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">balance</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span> <span class="op">=</span>
                     <span class="ident">decode</span>(<span class="ident">balance</span>).<span class="ident">unwrap_or_default</span>();
                 <span class="ident">balance</span> <span class="op">+</span> <span class="ident">amount</span>
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">amount</span>,
+            <span class="kw">_</span> =&gt; <span class="ident">amount</span>,
         };
         <span class="self">self</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">new_balance</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;Unable to write token balance for PoS system&quot;</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">transfer</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
         <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
@@ -1198,5 +1199,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;storage&#x2F;write_log.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>write_log.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;storage&#x2F;write_log.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>write_log.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -726,7 +727,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">WriteLog</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">address_gen</span>: <span class="prelude-val">None</span>,
             <span class="ident">block_write_log</span>: <span class="ident">HashMap::with_capacity</span>(<span class="number">100_000</span>),
@@ -739,50 +740,50 @@
 <span class="kw">impl</span> <span class="ident">WriteLog</span> {
     <span class="doccomment">/// Read a value at the given key and return the value and the gas cost,</span>
     <span class="doccomment">/// returns [`None`] if the key is not present in the write log</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StorageModification</span><span class="op">&gt;</span>, <span class="ident">u64</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StorageModification</span><span class="op">&gt;</span>, <span class="ident">u64</span>) {
         <span class="comment">// try to read from tx write log first</span>
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="comment">// if not found, then try to read from block write log</span>
             <span class="self">self</span>.<span class="ident">block_write_log</span>.<span class="ident">get</span>(<span class="ident">key</span>)
         }) {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">v</span> {
-                    <span class="ident">StorageModification::Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">StorageModification::Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> } =&gt; {
                         <span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">value</span>.<span class="ident">len</span>()
                     }
-                    <span class="ident">StorageModification::Delete</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">key</span>.<span class="ident">len</span>(),
-                    <span class="ident">StorageModification::InitAccount</span> { <span class="kw-2">ref</span> <span class="ident">vp</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">StorageModification::Delete</span> =&gt; <span class="ident">key</span>.<span class="ident">len</span>(),
+                    <span class="ident">StorageModification::InitAccount</span> { <span class="kw-2">ref</span> <span class="ident">vp</span> } =&gt; {
                         <span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">vp</span>.<span class="ident">len</span>()
                     }
                 };
                 (<span class="prelude-val">Some</span>(<span class="ident">v</span>), <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>)
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>),
+            <span class="prelude-val">None</span> =&gt; (<span class="prelude-val">None</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>),
         }
     }
 
     <span class="doccomment">/// Write a key and a value and return the gas cost and the size difference</span>
     <span class="doccomment">/// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a</span>
     <span class="doccomment">/// validity predicate of a new account that&#39;s not yet committed to storage.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>;
         <span class="kw">let</span> <span class="ident">size_diff</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
             .<span class="ident">tx_write_log</span>
             .<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>(), <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> })
         {
-            <span class="prelude-val">Some</span>(<span class="ident">prev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">prev</span> {
-                <span class="ident">StorageModification::Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">prev</span>) =&gt; <span class="kw">match</span> <span class="ident">prev</span> {
+                <span class="ident">StorageModification::Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> } =&gt; {
                     <span class="ident">len</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i64</span>
                 }
-                <span class="ident">StorageModification::Delete</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">len</span> <span class="kw">as</span> <span class="ident">i64</span>,
-                <span class="ident">StorageModification::InitAccount</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">StorageModification::Delete</span> =&gt; <span class="ident">len</span> <span class="kw">as</span> <span class="ident">i64</span>,
+                <span class="ident">StorageModification::InitAccount</span> { .. } =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UpdateVpOfNewAccount</span>);
                 }
             },
             <span class="comment">// set just the length of the value because we don&#39;t know if</span>
             <span class="comment">// the previous value exists on the storage</span>
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">len</span> <span class="kw">as</span> <span class="ident">i64</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="ident">len</span> <span class="kw">as</span> <span class="ident">i64</span>,
         };
         <span class="prelude-val">Ok</span>((<span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">size_diff</span>))
     }
@@ -791,7 +792,7 @@
     <span class="doccomment">/// difference.</span>
     <span class="doccomment">/// Fails with [`Error::DeleteVp`] for a validity predicate key, which are</span>
     <span class="doccomment">/// not possible to delete.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_validity_predicate</span>().<span class="ident">is_some</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DeleteVp</span>);
         }
@@ -799,16 +800,16 @@
             .<span class="ident">tx_write_log</span>
             .<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>(), <span class="ident">StorageModification::Delete</span>)
         {
-            <span class="prelude-val">Some</span>(<span class="ident">prev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">prev</span> {
-                <span class="ident">StorageModification::Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i64</span>,
-                <span class="ident">StorageModification::Delete</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-                <span class="ident">StorageModification::InitAccount</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">prev</span>) =&gt; <span class="kw">match</span> <span class="ident">prev</span> {
+                <span class="ident">StorageModification::Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> } =&gt; <span class="ident">value</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i64</span>,
+                <span class="ident">StorageModification::Delete</span> =&gt; <span class="number">0</span>,
+                <span class="ident">StorageModification::InitAccount</span> { .. } =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DeleteVp</span>);
                 }
             },
             <span class="comment">// set 0 because we don&#39;t know if the previous value exists on the</span>
             <span class="comment">// storage</span>
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
         };
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">size_diff</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="prelude-val">Ok</span>((<span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="op">-</span><span class="ident">size_diff</span>))
@@ -816,10 +817,10 @@
 
     <span class="doccomment">/// Initialize a new account and return the gas cost.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_account</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">storage_address_gen</span>: <span class="kw-2">&amp;</span><span class="ident">EstablishedAddressGen</span>,
         <span class="ident">vp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Address</span>, <span class="ident">u64</span>) {
+    ) -&gt; (<span class="ident">Address</span>, <span class="ident">u64</span>) {
         <span class="comment">// If we&#39;ve previously generated a new account, we use the local copy of</span>
         <span class="comment">// the generator. Otherwise, we create a new copy from the storage</span>
         <span class="kw">let</span> <span class="ident">address_gen</span> <span class="op">=</span>
@@ -834,7 +835,7 @@
     }
 
     <span class="doccomment">/// Set an IBC event and return the gas cost.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_ibc_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">IbcEvent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_ibc_event</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">IbcEvent</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">event</span>
             .<span class="ident">attributes</span>
             .<span class="ident">iter</span>()
@@ -846,7 +847,7 @@
     <span class="doccomment">/// Get the storage keys changed and accounts keys initialized in the</span>
     <span class="doccomment">/// current transaction. The account keys point to the validity predicates</span>
     <span class="doccomment">/// of the newly created accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()
     }
 
@@ -855,20 +856,20 @@
     <span class="doccomment">/// (right). The first vector excludes keys of validity predicates of</span>
     <span class="doccomment">/// newly initialized accounts, but may include keys of other data</span>
     <span class="doccomment">/// written into newly initialized accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
         <span class="kw">use</span> <span class="ident">itertools</span>::{<span class="ident">Either</span>, <span class="ident">Itertools</span>};
         <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">iter</span>().<span class="ident">partition_map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
             <span class="kw">match</span> (<span class="ident">key</span>.<span class="ident">is_validity_predicate</span>(), <span class="ident">value</span>) {
-                (<span class="prelude-val">Some</span>(<span class="ident">address</span>), <span class="ident">StorageModification::InitAccount</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="prelude-val">Some</span>(<span class="ident">address</span>), <span class="ident">StorageModification::InitAccount</span> { .. }) =&gt; {
                     <span class="ident">Either::Right</span>(<span class="ident">address</span>)
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Either::Left</span>(<span class="ident">key</span>),
+                <span class="kw">_</span> =&gt; <span class="ident">Either::Left</span>(<span class="ident">key</span>),
             }
         })
     }
 
     <span class="doccomment">/// Get the addresses of accounts initialized in the current transaction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_initialized_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_initialized_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">tx_write_log</span>
             .<span class="ident">iter</span>()
             .<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
@@ -876,29 +877,29 @@
                     (
                         <span class="prelude-val">Some</span>(<span class="ident">address</span>),
                         <span class="ident">StorageModification::InitAccount</span> { .. },
-                    ) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>.<span class="ident">clone</span>()),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                    ) =&gt; <span class="prelude-val">Some</span>(<span class="ident">address</span>.<span class="ident">clone</span>()),
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
                 }
             })
             .<span class="ident">collect</span>()
     }
 
     <span class="doccomment">/// Take the IBC event of the current transaction</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_ibc_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IbcEvent</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_ibc_event</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IbcEvent</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ibc_event</span>.<span class="ident">take</span>()
     }
 
     <span class="doccomment">/// Get the IBC event of the current transaction</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_ibc_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IbcEvent</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_ibc_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IbcEvent</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ibc_event</span>.<span class="ident">as_ref</span>()
     }
 
     <span class="doccomment">/// Commit the current transaction&#39;s write log to the block when it&#39;s</span>
     <span class="doccomment">/// accepted by all the triggered validity predicates. Starts a new</span>
     <span class="doccomment">/// transaction write log.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit_tx</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="ident">tx_write_log</span> <span class="op">=</span> <span class="ident">std::mem::replace</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">tx_write_log</span>,
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">tx_write_log</span>,
             <span class="ident">HashMap::with_capacity</span>(<span class="number">100</span>),
         );
         <span class="self">self</span>.<span class="ident">block_write_log</span>.<span class="ident">extend</span>(<span class="ident">tx_write_log</span>);
@@ -906,40 +907,44 @@
 
     <span class="doccomment">/// Drop the current transaction&#39;s write log when it&#39;s declined by any of</span>
     <span class="doccomment">/// the triggered validity predicates. Starts a new transaction write log.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">drop_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">drop_tx</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">clear</span>();
     }
 
     <span class="doccomment">/// Commit the current block&#39;s write log to the storage. Starts a new block</span>
     <span class="doccomment">/// write log.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit_block</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">storage</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
         <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">batch</span> <span class="op">=</span> <span class="ident">Storage</span>::<span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span><span class="ident">::batch</span>();
-        <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">entry</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">block_write_log</span>.<span class="ident">iter</span>() {
+        <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">entry</span>) <span class="kw">in</span> <span class="self">self</span>
+            .<span class="ident">block_write_log</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">filter</span>(<span class="op">|</span>(<span class="ident">k</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">k</span>.<span class="ident">is_updatable</span>())
+        {
             <span class="kw">match</span> <span class="ident">entry</span> {
-                <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> } =&gt; {
                     <span class="ident">storage</span>
                         .<span class="ident">batch_write_subspace_val</span>(
-                            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">batch</span>,
+                            <span class="kw-2">&amp;mut</span> <span class="ident">batch</span>,
                             <span class="ident">key</span>,
                             <span class="ident">value</span>.<span class="ident">clone</span>(),
                         )
                         .<span class="ident">map_err</span>(<span class="ident">Error::StorageError</span>)<span class="question-mark">?</span>;
                 }
-                <span class="ident">StorageModification::Delete</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">StorageModification::Delete</span> =&gt; {
                     <span class="ident">storage</span>
-                        .<span class="ident">batch_delete_subspace_val</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">batch</span>, <span class="ident">key</span>)
+                        .<span class="ident">batch_delete_subspace_val</span>(<span class="kw-2">&amp;mut</span> <span class="ident">batch</span>, <span class="ident">key</span>)
                         .<span class="ident">map_err</span>(<span class="ident">Error::StorageError</span>)<span class="question-mark">?</span>;
                 }
-                <span class="ident">StorageModification::InitAccount</span> { <span class="ident">vp</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">StorageModification::InitAccount</span> { <span class="ident">vp</span> } =&gt; {
                     <span class="ident">storage</span>
-                        .<span class="ident">batch_write_subspace_val</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">batch</span>, <span class="ident">key</span>, <span class="ident">vp</span>.<span class="ident">clone</span>())
+                        .<span class="ident">batch_write_subspace_val</span>(<span class="kw-2">&amp;mut</span> <span class="ident">batch</span>, <span class="ident">key</span>, <span class="ident">vp</span>.<span class="ident">clone</span>())
                         .<span class="ident">map_err</span>(<span class="ident">Error::StorageError</span>)<span class="question-mark">?</span>;
                 }
             }
@@ -960,7 +965,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verifiers_changed_keys</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_partitioned_keys</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span>
             <span class="ident">verifiers_from_tx</span>
@@ -990,10 +995,10 @@
                 }
                 <span class="comment">// Add the address as a verifier</span>
                 <span class="kw">match</span> <span class="ident">verifiers</span>.<span class="ident">get_mut</span>(<span class="ident">addr</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">keys</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">keys</span>) =&gt; {
                         <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">None</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
                             <span class="macro">vec!</span>[<span class="ident">key</span>.<span class="ident">clone</span>()].<span class="ident">into_iter</span>().<span class="ident">collect</span>();
                         <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">keys</span>);
@@ -1024,8 +1029,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_crud_value</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
-            <span class="ident">Key::parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="string">&quot;key&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
 
         <span class="comment">// read a non-existing key</span>
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
@@ -1046,10 +1050,10 @@
         <span class="comment">// read the value</span>
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
         <span class="kw">match</span> <span class="ident">value</span>.<span class="ident">expect</span>(<span class="string">&quot;no read value&quot;</span>) {
-            <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> } =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">value</span>, <span class="ident">inserted</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected read result&quot;</span>),
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected read result&quot;</span>),
         }
         <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, (<span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">inserted</span>.<span class="ident">len</span>()) <span class="kw">as</span> <span class="ident">u64</span>);
 
@@ -1072,8 +1076,8 @@
         <span class="comment">// read the deleted key</span>
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">value</span>.<span class="ident">expect</span>(<span class="string">&quot;no read value&quot;</span>) {
-            <span class="ident">StorageModification::Delete</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected result&quot;</span>),
+            <span class="ident">StorageModification::Delete</span> =&gt; {}
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected result&quot;</span>),
         }
         <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
 
@@ -1098,8 +1102,8 @@
         <span class="comment">// read</span>
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>);
         <span class="kw">match</span> <span class="ident">value</span>.<span class="ident">expect</span>(<span class="string">&quot;no read value&quot;</span>) {
-            <span class="ident">StorageModification::InitAccount</span> { <span class="ident">vp</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">vp</span>, <span class="ident">init_vp</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected result&quot;</span>),
+            <span class="ident">StorageModification::InitAccount</span> { <span class="ident">vp</span> } =&gt; <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">vp</span>, <span class="ident">init_vp</span>),
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected result&quot;</span>),
         }
         <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, (<span class="ident">vp_key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">init_vp</span>.<span class="ident">len</span>()) <span class="kw">as</span> <span class="ident">u64</span>);
 
@@ -1156,12 +1160,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="string">&quot;test&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">key1</span> <span class="op">=</span>
-            <span class="ident">Key::parse</span>(<span class="string">&quot;key1&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
-        <span class="kw">let</span> <span class="ident">key2</span> <span class="op">=</span>
-            <span class="ident">Key::parse</span>(<span class="string">&quot;key2&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
-        <span class="kw">let</span> <span class="ident">key3</span> <span class="op">=</span>
-            <span class="ident">Key::parse</span>(<span class="string">&quot;key3&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key1</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="string">&quot;key1&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key2</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="string">&quot;key2&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key3</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="string">&quot;key3&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
 
         <span class="comment">// initialize an account</span>
         <span class="kw">let</span> <span class="ident">vp1</span> <span class="op">=</span> <span class="string">&quot;vp1&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
@@ -1189,7 +1190,7 @@
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
         <span class="comment">// commit a block</span>
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="kw">let</span> (<span class="ident">vp</span>, <span class="ident">_gas</span>) <span class="op">=</span>
             <span class="ident">storage</span>.<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr1</span>).<span class="ident">expect</span>(<span class="string">&quot;vp read failed&quot;</span>);
@@ -1207,7 +1208,7 @@
             (<span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">testing::arb_verifiers_from_tx</span>())
             (<span class="ident">tx_write_log</span> <span class="kw">in</span> <span class="ident">testing::arb_tx_write_log</span>(<span class="ident">verifiers_from_tx</span>.<span class="ident">clone</span>()),
                 <span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">Just</span>(<span class="ident">verifiers_from_tx</span>))
-        <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span>) {
+        -&gt; (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span>) {
             (<span class="ident">verifiers_from_tx</span>, <span class="ident">tx_write_log</span>)
         }
     }
@@ -1283,7 +1284,7 @@
     <span class="doccomment">/// StorageModification&gt;`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_tx_write_log</span>(
         <span class="ident">verifiers_from_tx</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>
+    ) -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>
     {
         <span class="ident">arb_key</span>().<span class="ident">prop_flat_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">key</span><span class="op">|</span> {
             <span class="comment">// If the key is a validity predicate key and its owner is in the</span>
@@ -1301,14 +1302,14 @@
     }
 
     <span class="doccomment">/// Generate arbitrary verifiers from tx of [`HashSet&lt;Address&gt;`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_verifiers_from_tx</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_verifiers_from_tx</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">collection::hash_set</span>(<span class="ident">arb_address</span>(), <span class="number">0</span>..<span class="number">10</span>)
     }
 
     <span class="doccomment">/// Generate an arbitrary [`StorageModification`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_storage_modification</span>(
         <span class="ident">can_init_account</span>: <span class="ident">bool</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">StorageModification</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">StorageModification</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">can_init_account</span> {
             <span class="macro">prop_oneof!</span>[
                 <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
@@ -1330,5 +1331,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

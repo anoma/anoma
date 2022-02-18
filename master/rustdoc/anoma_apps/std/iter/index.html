@@ -1,10 +1,11 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Composable external iteration."><meta name="keywords" content="rust, rustlang, rust-lang, iter"><title>anoma_apps::std::iter - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module iter</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><div id="sidebar-vars" data-name="iter" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">iter</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/core/lib.rs.html#272" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Composable external iteration.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Composable external iteration."><meta name="keywords" content="rust, rustlang, rust-lang, iter"><title>anoma_apps::std::iter - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module iter</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><div id="sidebar-vars" data-name="iter" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">iter</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.58.1/src/core/lib.rs.html#311" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Composable external iteration.</p>
 <p>If you’ve found yourself with a collection of some kind, and needed to
 perform an operation on the elements of said collection, you’ll quickly run
 into ‘iterators’. Iterators are heavily used in idiomatic Rust code, so
 it’s worth becoming familiar with them.</p>
 <p>Before explaining more, let’s talk about how this module is structured:</p>
-<h1 id="organization" class="section-header"><a href="#organization">Organization</a></h1>
+<h2 id="organization" class="section-header"><a href="#organization">Organization</a></h2>
 <p>This module is largely organized by type:</p>
 <ul>
 <li><a href="#traits">Traits</a> are the core portion: these traits define what kind of iterators
@@ -17,16 +18,16 @@ the <code>struct</code>, rather than the <code>struct</code> itself. For more de
 see ‘<a href="#implementing-iterator">Implementing Iterator</a>’.</li>
 </ul>
 <p>That’s it! Let’s dig into iterators.</p>
-<h1 id="iterator" class="section-header"><a href="#iterator">Iterator</a></h1>
+<h2 id="iterator" class="section-header"><a href="#iterator">Iterator</a></h2>
 <p>The heart and soul of this module is the <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a> trait. The core of
 <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a> looks like this:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">trait</span> <span class="ident">Iterator</span> {
     <span class="kw">type</span> <span class="ident">Item</span>;
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span>;
 }</code></pre></div>
 <p>An iterator has a method, <a href="trait.Iterator.html#tymethod.next"><code>next</code></a>, which when called, returns an
-<a href="../option/enum.Option.html" title="Option"><code>Option</code></a><code>&lt;Item&gt;</code>. <a href="trait.Iterator.html#tymethod.next"><code>next</code></a> will return <a href="../option/enum.Option.html#variant.Some"><code>Some(Item)</code></a> as long as there
+<code><a href="../option/enum.Option.html" title="Option">Option</a>&lt;Item&gt;</code>. Calling <a href="trait.Iterator.html#tymethod.next"><code>next</code></a> will return <a href="../option/enum.Option.html#variant.Some"><code>Some(Item)</code></a> as long as there
 are elements, and once they’ve all been exhausted, will return <code>None</code> to
 indicate that iteration is finished. Individual iterators may choose to
 resume iteration, and so calling <a href="trait.Iterator.html#tymethod.next"><code>next</code></a> again may or may not eventually
@@ -37,7 +38,7 @@ them for free.</p>
 <p>Iterators are also composable, and it’s common to chain them together to do
 more complex forms of processing. See the <a href="#adapters">Adapters</a> section
 below for more details.</p>
-<h1 id="the-three-forms-of-iteration" class="section-header"><a href="#the-three-forms-of-iteration">The three forms of iteration</a></h1>
+<h2 id="the-three-forms-of-iteration" class="section-header"><a href="#the-three-forms-of-iteration">The three forms of iteration</a></h2>
 <p>There are three common methods which can create iterators from a collection:</p>
 <ul>
 <li><code>iter()</code>, which iterates over <code>&amp;T</code>.</li>
@@ -46,7 +47,7 @@ below for more details.</p>
 </ul>
 <p>Various things in the standard library may implement one or more of the
 three, where appropriate.</p>
-<h1 id="implementing-iterator" class="section-header"><a href="#implementing-iterator">Implementing Iterator</a></h1>
+<h2 id="implementing-iterator" class="section-header"><a href="#implementing-iterator">Implementing Iterator</a></h2>
 <p>Creating an iterator of your own involves two steps: creating a <code>struct</code> to
 hold the iterator’s state, and then implementing <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a> for that <code>struct</code>.
 This is why there are so many <code>struct</code>s in this module: there is one for
@@ -64,7 +65,7 @@ each iterator and iterator adapter.</p>
 <span class="comment">// This isn&#39;t strictly necessary, but is convenient. Note that we start</span>
 <span class="comment">// `count` at zero, we&#39;ll see why in `next()`&#39;s implementation below.</span>
 <span class="kw">impl</span> <span class="ident">Counter</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Counter</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Counter</span> {
         <span class="ident">Counter</span> { <span class="ident">count</span>: <span class="number">0</span> }
     }
 }
@@ -76,7 +77,7 @@ each iterator and iterator adapter.</p>
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">usize</span>;
 
     <span class="comment">// next() is the only required method</span>
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
         <span class="comment">// Increment our count. This is why we started at zero.</span>
         <span class="self">self</span>.<span class="ident">count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 
@@ -106,7 +107,7 @@ next.</p>
 which call <code>next</code> internally. However, it is also possible to write a custom implementation of
 methods like <code>nth</code> and <code>fold</code> if an iterator can compute them more efficiently without calling
 <code>next</code>.</p>
-<h1 id="for-loops-and-intoiterator" class="section-header"><a href="#for-loops-and-intoiterator"><code>for</code> loops and <code>IntoIterator</code></a></h1>
+<h2 id="for-loops-and-intoiterator" class="section-header"><a href="#for-loops-and-intoiterator"><code>for</code> loops and <code>IntoIterator</code></a></h2>
 <p>Rust’s <code>for</code> loop syntax is actually sugar for iterators. Here’s a basic
 example of <code>for</code>:</p>
 
@@ -134,11 +135,11 @@ it into:</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];
 {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">IntoIterator::into_iter</span>(<span class="ident">values</span>) {
-        <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">loop</span> {
+        <span class="kw-2">mut</span> <span class="ident">iter</span> =&gt; <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">next</span>;
             <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">next</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">val</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">val</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+                <span class="prelude-val">Some</span>(<span class="ident">val</span>) =&gt; <span class="ident">next</span> <span class="op">=</span> <span class="ident">val</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
             };
             <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">next</span>;
             <span class="kw">let</span> () <span class="op">=</span> { <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">x</span>); };
@@ -160,7 +161,7 @@ returning themselves. This means two things:</p>
 <li>If you’re creating a collection, implementing <a href="trait.IntoIterator.html" title="IntoIterator"><code>IntoIterator</code></a> for it
 will allow your collection to be used with the <code>for</code> loop.</li>
 </ol>
-<h1 id="iterating-by-reference" class="section-header"><a href="#iterating-by-reference">Iterating by reference</a></h1>
+<h2 id="iterating-by-reference" class="section-header"><a href="#iterating-by-reference">Iterating by reference</a></h2>
 <p>Since <a href="trait.IntoIterator.html#tymethod.into_iter"><code>into_iter()</code></a> takes <code>self</code> by value, using a <code>for</code> loop to iterate
 over a collection consumes that collection. Often, you may want to iterate
 over a collection without consuming it. Many collections offer methods that
@@ -182,7 +183,7 @@ Likewise, a collection <code>C</code> that provides <code>iter_mut()</code> gene
 convenient shorthand:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">41</span>];
-<span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">values</span> { <span class="comment">// same as `values.iter_mut()`</span>
+<span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">values</span> { <span class="comment">// same as `values.iter_mut()`</span>
     <span class="kw-2">*</span><span class="ident">x</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 }
 <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">values</span> { <span class="comment">// same as `values.iter()`</span>
@@ -193,7 +194,7 @@ convenient shorthand:</p>
 example, mutating the keys of a <a href="../../std/collections/struct.HashSet.html"><code>HashSet&lt;T&gt;</code></a> or <a href="../../std/collections/struct.HashMap.html"><code>HashMap&lt;K, V&gt;</code></a> could
 put the collection into an inconsistent state if the key hashes change, so
 these collections only offer <code>iter()</code>.</p>
-<h1 id="adapters" class="section-header"><a href="#adapters">Adapters</a></h1>
+<h2 id="adapters" class="section-header"><a href="#adapters">Adapters</a></h2>
 <p>Functions which take an <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a> and return another <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a> are
 often called ‘iterator adapters’, as they’re a form of the ‘adapter
 pattern’.</p>
@@ -203,7 +204,7 @@ For more, see their documentation.</p>
 memory safe) state.  This state is also not guaranteed to stay the same
 across versions of Rust, so you should avoid relying on the exact values
 returned by an iterator which panicked.</p>
-<h1 id="laziness" class="section-header"><a href="#laziness">Laziness</a></h1>
+<h2 id="laziness" class="section-header"><a href="#laziness">Laziness</a></h2>
 <p>Iterators (and iterator <a href="#adapters">adapters</a>) are <em>lazy</em>. This means that
 just creating an iterator doesn’t <em>do</em> a whole lot. Nothing really happens
 until you call <a href="trait.Iterator.html#tymethod.next"><code>next</code></a>. This is sometimes a source of confusion when
@@ -228,7 +229,7 @@ do nothing unless consumed</code></pre></div>
 }</code></pre></div>
 <p>Another common way to evaluate an iterator is to use the <a href="trait.Iterator.html#method.collect"><code>collect</code></a>
 method to produce a new collection.</p>
-<h1 id="infinity" class="section-header"><a href="#infinity">Infinity</a></h1>
+<h2 id="infinity" class="section-header"><a href="#infinity">Infinity</a></h2>
 <p>Iterators do not have to be finite. As an example, an open-ended range is
 an infinite iterator:</p>
 
@@ -253,71 +254,70 @@ successfully for any infinite iterators.</p>
 <span class="kw">let</span> <span class="ident">least</span> <span class="op">=</span> <span class="ident">ones</span>.<span class="ident">min</span>().<span class="ident">unwrap</span>(); <span class="comment">// Oh no! An infinite loop!</span>
 <span class="comment">// `ones.min()` causes an infinite loop, so we won&#39;t reach this point!</span>
 <span class="macro">println!</span>(<span class="string">&quot;The smallest number one is {}.&quot;</span>, <span class="ident">least</span>);</code></pre></div>
-</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left unstable module-item"><a class="struct" href="struct.Intersperse.html" title="anoma_apps::std::iter::Intersperse struct">Intersperse</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator adapter that places a separator between all elements.</p>
-</div><div class="item-left unstable module-item"><a class="struct" href="struct.IntersperseWith.html" title="anoma_apps::std::iter::IntersperseWith struct">IntersperseWith</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator adapter that places a separator between all elements.</p>
-</div><div class="item-left unstable module-item"><a class="struct" href="struct.MapWhile.html" title="anoma_apps::std::iter::MapWhile struct">MapWhile</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator that only accepts elements while <code>predicate</code> returns <code>Some(_)</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Chain.html" title="anoma_apps::std::iter::Chain struct">Chain</a></div><div class="item-right docblock-short"><p>An iterator that links two iterators together, in a chain.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Cloned.html" title="anoma_apps::std::iter::Cloned struct">Cloned</a></div><div class="item-right docblock-short"><p>An iterator that clones the elements of an underlying iterator.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Copied.html" title="anoma_apps::std::iter::Copied struct">Copied</a></div><div class="item-right docblock-short"><p>An iterator that copies the elements of an underlying iterator.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Cycle.html" title="anoma_apps::std::iter::Cycle struct">Cycle</a></div><div class="item-right docblock-short"><p>An iterator that repeats endlessly.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Empty.html" title="anoma_apps::std::iter::Empty struct">Empty</a></div><div class="item-right docblock-short"><p>An iterator that yields nothing.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Enumerate.html" title="anoma_apps::std::iter::Enumerate struct">Enumerate</a></div><div class="item-right docblock-short"><p>An iterator that yields the current count and the element during iteration.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Filter.html" title="anoma_apps::std::iter::Filter struct">Filter</a></div><div class="item-right docblock-short"><p>An iterator that filters the elements of <code>iter</code> with <code>predicate</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.FilterMap.html" title="anoma_apps::std::iter::FilterMap struct">FilterMap</a></div><div class="item-right docblock-short"><p>An iterator that uses <code>f</code> to both filter and map elements from <code>iter</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.FlatMap.html" title="anoma_apps::std::iter::FlatMap struct">FlatMap</a></div><div class="item-right docblock-short"><p>An iterator that maps each element to an iterator, and yields the elements
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left unstable module-item"><a class="struct" href="struct.Intersperse.html" title="anoma_apps::std::iter::Intersperse struct">Intersperse</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator adapter that places a separator between all elements.</p>
+</div></div><div class="item-row"><div class="item-left unstable module-item"><a class="struct" href="struct.IntersperseWith.html" title="anoma_apps::std::iter::IntersperseWith struct">IntersperseWith</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator adapter that places a separator between all elements.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Chain.html" title="anoma_apps::std::iter::Chain struct">Chain</a></div><div class="item-right docblock-short"><p>An iterator that links two iterators together, in a chain.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Cloned.html" title="anoma_apps::std::iter::Cloned struct">Cloned</a></div><div class="item-right docblock-short"><p>An iterator that clones the elements of an underlying iterator.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Copied.html" title="anoma_apps::std::iter::Copied struct">Copied</a></div><div class="item-right docblock-short"><p>An iterator that copies the elements of an underlying iterator.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Cycle.html" title="anoma_apps::std::iter::Cycle struct">Cycle</a></div><div class="item-right docblock-short"><p>An iterator that repeats endlessly.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Empty.html" title="anoma_apps::std::iter::Empty struct">Empty</a></div><div class="item-right docblock-short"><p>An iterator that yields nothing.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Enumerate.html" title="anoma_apps::std::iter::Enumerate struct">Enumerate</a></div><div class="item-right docblock-short"><p>An iterator that yields the current count and the element during iteration.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Filter.html" title="anoma_apps::std::iter::Filter struct">Filter</a></div><div class="item-right docblock-short"><p>An iterator that filters the elements of <code>iter</code> with <code>predicate</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FilterMap.html" title="anoma_apps::std::iter::FilterMap struct">FilterMap</a></div><div class="item-right docblock-short"><p>An iterator that uses <code>f</code> to both filter and map elements from <code>iter</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FlatMap.html" title="anoma_apps::std::iter::FlatMap struct">FlatMap</a></div><div class="item-right docblock-short"><p>An iterator that maps each element to an iterator, and yields the elements
 of the produced iterators.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Flatten.html" title="anoma_apps::std::iter::Flatten struct">Flatten</a></div><div class="item-right docblock-short"><p>An iterator that flattens one level of nesting in an iterator of things
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Flatten.html" title="anoma_apps::std::iter::Flatten struct">Flatten</a></div><div class="item-right docblock-short"><p>An iterator that flattens one level of nesting in an iterator of things
 that can be turned into iterators.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.FromFn.html" title="anoma_apps::std::iter::FromFn struct">FromFn</a></div><div class="item-right docblock-short"><p>An iterator where each iteration calls the provided closure <code>F: FnMut() -&gt; Option&lt;T&gt;</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Fuse.html" title="anoma_apps::std::iter::Fuse struct">Fuse</a></div><div class="item-right docblock-short"><p>An iterator that yields <code>None</code> forever after the underlying iterator
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FromFn.html" title="anoma_apps::std::iter::FromFn struct">FromFn</a></div><div class="item-right docblock-short"><p>An iterator where each iteration calls the provided closure <code>F: FnMut() -&gt; Option&lt;T&gt;</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Fuse.html" title="anoma_apps::std::iter::Fuse struct">Fuse</a></div><div class="item-right docblock-short"><p>An iterator that yields <code>None</code> forever after the underlying iterator
 yields <code>None</code> once.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Inspect.html" title="anoma_apps::std::iter::Inspect struct">Inspect</a></div><div class="item-right docblock-short"><p>An iterator that calls a function with a reference to each element before
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Inspect.html" title="anoma_apps::std::iter::Inspect struct">Inspect</a></div><div class="item-right docblock-short"><p>An iterator that calls a function with a reference to each element before
 yielding it.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Map.html" title="anoma_apps::std::iter::Map struct">Map</a></div><div class="item-right docblock-short"><p>An iterator that maps the values of <code>iter</code> with <code>f</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Once.html" title="anoma_apps::std::iter::Once struct">Once</a></div><div class="item-right docblock-short"><p>An iterator that yields an element exactly once.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.OnceWith.html" title="anoma_apps::std::iter::OnceWith struct">OnceWith</a></div><div class="item-right docblock-short"><p>An iterator that yields a single element of type <code>A</code> by
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Map.html" title="anoma_apps::std::iter::Map struct">Map</a></div><div class="item-right docblock-short"><p>An iterator that maps the values of <code>iter</code> with <code>f</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.MapWhile.html" title="anoma_apps::std::iter::MapWhile struct">MapWhile</a></div><div class="item-right docblock-short"><p>An iterator that only accepts elements while <code>predicate</code> returns <code>Some(_)</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Once.html" title="anoma_apps::std::iter::Once struct">Once</a></div><div class="item-right docblock-short"><p>An iterator that yields an element exactly once.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.OnceWith.html" title="anoma_apps::std::iter::OnceWith struct">OnceWith</a></div><div class="item-right docblock-short"><p>An iterator that yields a single element of type <code>A</code> by
 applying the provided closure <code>F: FnOnce() -&gt; A</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Peekable.html" title="anoma_apps::std::iter::Peekable struct">Peekable</a></div><div class="item-right docblock-short"><p>An iterator with a <code>peek()</code> that returns an optional reference to the next
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Peekable.html" title="anoma_apps::std::iter::Peekable struct">Peekable</a></div><div class="item-right docblock-short"><p>An iterator with a <code>peek()</code> that returns an optional reference to the next
 element.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Repeat.html" title="anoma_apps::std::iter::Repeat struct">Repeat</a></div><div class="item-right docblock-short"><p>An iterator that repeats an element endlessly.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.RepeatWith.html" title="anoma_apps::std::iter::RepeatWith struct">RepeatWith</a></div><div class="item-right docblock-short"><p>An iterator that repeats elements of type <code>A</code> endlessly by
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Repeat.html" title="anoma_apps::std::iter::Repeat struct">Repeat</a></div><div class="item-right docblock-short"><p>An iterator that repeats an element endlessly.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.RepeatWith.html" title="anoma_apps::std::iter::RepeatWith struct">RepeatWith</a></div><div class="item-right docblock-short"><p>An iterator that repeats elements of type <code>A</code> endlessly by
 applying the provided closure <code>F: FnMut() -&gt; A</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Rev.html" title="anoma_apps::std::iter::Rev struct">Rev</a></div><div class="item-right docblock-short"><p>A double-ended iterator with the direction inverted.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Scan.html" title="anoma_apps::std::iter::Scan struct">Scan</a></div><div class="item-right docblock-short"><p>An iterator to maintain state while iterating another iterator.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Skip.html" title="anoma_apps::std::iter::Skip struct">Skip</a></div><div class="item-right docblock-short"><p>An iterator that skips over <code>n</code> elements of <code>iter</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.SkipWhile.html" title="anoma_apps::std::iter::SkipWhile struct">SkipWhile</a></div><div class="item-right docblock-short"><p>An iterator that rejects elements while <code>predicate</code> returns <code>true</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.StepBy.html" title="anoma_apps::std::iter::StepBy struct">StepBy</a></div><div class="item-right docblock-short"><p>An iterator for stepping iterators by a custom amount.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Successors.html" title="anoma_apps::std::iter::Successors struct">Successors</a></div><div class="item-right docblock-short"><p>An new iterator where each successive item is computed based on the preceding one.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Take.html" title="anoma_apps::std::iter::Take struct">Take</a></div><div class="item-right docblock-short"><p>An iterator that only iterates over the first <code>n</code> iterations of <code>iter</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.TakeWhile.html" title="anoma_apps::std::iter::TakeWhile struct">TakeWhile</a></div><div class="item-right docblock-short"><p>An iterator that only accepts elements while <code>predicate</code> returns <code>true</code>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Zip.html" title="anoma_apps::std::iter::Zip struct">Zip</a></div><div class="item-right docblock-short"><p>An iterator that iterates two other iterators simultaneously.</p>
-</div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
-<div class="item-table"><div class="item-left unstable module-item"><a class="trait" href="trait.Step.html" title="anoma_apps::std::iter::Step trait">Step</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Objects that have a notion of <em>successor</em> and <em>predecessor</em> operations.</p>
-</div><div class="item-left unstable module-item"><a class="trait" href="trait.TrustedLen.html" title="anoma_apps::std::iter::TrustedLen trait">TrustedLen</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator that reports an accurate length using size_hint.</p>
-</div><div class="item-left unstable module-item"><a class="trait" href="trait.TrustedStep.html" title="anoma_apps::std::iter::TrustedStep trait">TrustedStep</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>A type that upholds all invariants of <a href="trait.Step.html" title="Step"><code>Step</code></a>.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.DoubleEndedIterator.html" title="anoma_apps::std::iter::DoubleEndedIterator trait">DoubleEndedIterator</a></div><div class="item-right docblock-short"><p>An iterator able to yield elements from both ends.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.ExactSizeIterator.html" title="anoma_apps::std::iter::ExactSizeIterator trait">ExactSizeIterator</a></div><div class="item-right docblock-short"><p>An iterator that knows its exact length.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.Extend.html" title="anoma_apps::std::iter::Extend trait">Extend</a></div><div class="item-right docblock-short"><p>Extend a collection with the contents of an iterator.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.FromIterator.html" title="anoma_apps::std::iter::FromIterator trait">FromIterator</a></div><div class="item-right docblock-short"><p>Conversion from an <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a>.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.FusedIterator.html" title="anoma_apps::std::iter::FusedIterator trait">FusedIterator</a></div><div class="item-right docblock-short"><p>An iterator that always continues to yield <code>None</code> when exhausted.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.IntoIterator.html" title="anoma_apps::std::iter::IntoIterator trait">IntoIterator</a></div><div class="item-right docblock-short"><p>Conversion into an <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a>.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.Iterator.html" title="anoma_apps::std::iter::Iterator trait">Iterator</a></div><div class="item-right docblock-short"><p>An interface for dealing with iterators.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.Product.html" title="anoma_apps::std::iter::Product trait">Product</a></div><div class="item-right docblock-short"><p>Trait to represent types that can be created by multiplying elements of an
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Rev.html" title="anoma_apps::std::iter::Rev struct">Rev</a></div><div class="item-right docblock-short"><p>A double-ended iterator with the direction inverted.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Scan.html" title="anoma_apps::std::iter::Scan struct">Scan</a></div><div class="item-right docblock-short"><p>An iterator to maintain state while iterating another iterator.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Skip.html" title="anoma_apps::std::iter::Skip struct">Skip</a></div><div class="item-right docblock-short"><p>An iterator that skips over <code>n</code> elements of <code>iter</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SkipWhile.html" title="anoma_apps::std::iter::SkipWhile struct">SkipWhile</a></div><div class="item-right docblock-short"><p>An iterator that rejects elements while <code>predicate</code> returns <code>true</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.StepBy.html" title="anoma_apps::std::iter::StepBy struct">StepBy</a></div><div class="item-right docblock-short"><p>An iterator for stepping iterators by a custom amount.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Successors.html" title="anoma_apps::std::iter::Successors struct">Successors</a></div><div class="item-right docblock-short"><p>An new iterator where each successive item is computed based on the preceding one.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Take.html" title="anoma_apps::std::iter::Take struct">Take</a></div><div class="item-right docblock-short"><p>An iterator that only iterates over the first <code>n</code> iterations of <code>iter</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.TakeWhile.html" title="anoma_apps::std::iter::TakeWhile struct">TakeWhile</a></div><div class="item-right docblock-short"><p>An iterator that only accepts elements while <code>predicate</code> returns <code>true</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Zip.html" title="anoma_apps::std::iter::Zip struct">Zip</a></div><div class="item-right docblock-short"><p>An iterator that iterates two other iterators simultaneously.</p>
+</div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left unstable module-item"><a class="trait" href="trait.Step.html" title="anoma_apps::std::iter::Step trait">Step</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Objects that have a notion of <em>successor</em> and <em>predecessor</em> operations.</p>
+</div></div><div class="item-row"><div class="item-left unstable module-item"><a class="trait" href="trait.TrustedLen.html" title="anoma_apps::std::iter::TrustedLen trait">TrustedLen</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator that reports an accurate length using size_hint.</p>
+</div></div><div class="item-row"><div class="item-left unstable module-item"><a class="trait" href="trait.TrustedStep.html" title="anoma_apps::std::iter::TrustedStep trait">TrustedStep</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>A type that upholds all invariants of <a href="trait.Step.html" title="Step"><code>Step</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.DoubleEndedIterator.html" title="anoma_apps::std::iter::DoubleEndedIterator trait">DoubleEndedIterator</a></div><div class="item-right docblock-short"><p>An iterator able to yield elements from both ends.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ExactSizeIterator.html" title="anoma_apps::std::iter::ExactSizeIterator trait">ExactSizeIterator</a></div><div class="item-right docblock-short"><p>An iterator that knows its exact length.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Extend.html" title="anoma_apps::std::iter::Extend trait">Extend</a></div><div class="item-right docblock-short"><p>Extend a collection with the contents of an iterator.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.FromIterator.html" title="anoma_apps::std::iter::FromIterator trait">FromIterator</a></div><div class="item-right docblock-short"><p>Conversion from an <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.FusedIterator.html" title="anoma_apps::std::iter::FusedIterator trait">FusedIterator</a></div><div class="item-right docblock-short"><p>An iterator that always continues to yield <code>None</code> when exhausted.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IntoIterator.html" title="anoma_apps::std::iter::IntoIterator trait">IntoIterator</a></div><div class="item-right docblock-short"><p>Conversion into an <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Iterator.html" title="anoma_apps::std::iter::Iterator trait">Iterator</a></div><div class="item-right docblock-short"><p>An interface for dealing with iterators.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Product.html" title="anoma_apps::std::iter::Product trait">Product</a></div><div class="item-right docblock-short"><p>Trait to represent types that can be created by multiplying elements of an
 iterator.</p>
-</div><div class="item-left module-item"><a class="trait" href="trait.Sum.html" title="anoma_apps::std::iter::Sum trait">Sum</a></div><div class="item-right docblock-short"><p>Trait to represent types that can be created by summing up an iterator.</p>
-</div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
-<div class="item-table"><div class="item-left unstable module-item"><a class="fn" href="fn.zip.html" title="anoma_apps::std::iter::zip fn">zip</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Converts the arguments to iterators and zips them.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.empty.html" title="anoma_apps::std::iter::empty fn">empty</a></div><div class="item-right docblock-short"><p>Creates an iterator that yields nothing.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.from_fn.html" title="anoma_apps::std::iter::from_fn fn">from_fn</a></div><div class="item-right docblock-short"><p>Creates a new iterator where each iteration calls the provided closure
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Sum.html" title="anoma_apps::std::iter::Sum trait">Sum</a></div><div class="item-right docblock-short"><p>Trait to represent types that can be created by summing up an iterator.</p>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left unstable module-item"><a class="fn" href="fn.zip.html" title="anoma_apps::std::iter::zip fn">zip</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Converts the arguments to iterators and zips them.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.empty.html" title="anoma_apps::std::iter::empty fn">empty</a></div><div class="item-right docblock-short"><p>Creates an iterator that yields nothing.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.from_fn.html" title="anoma_apps::std::iter::from_fn fn">from_fn</a></div><div class="item-right docblock-short"><p>Creates a new iterator where each iteration calls the provided closure
 <code>F: FnMut() -&gt; Option&lt;T&gt;</code>.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.once.html" title="anoma_apps::std::iter::once fn">once</a></div><div class="item-right docblock-short"><p>Creates an iterator that yields an element exactly once.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.once_with.html" title="anoma_apps::std::iter::once_with fn">once_with</a></div><div class="item-right docblock-short"><p>Creates an iterator that lazily generates a value exactly once by invoking
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.once.html" title="anoma_apps::std::iter::once fn">once</a></div><div class="item-right docblock-short"><p>Creates an iterator that yields an element exactly once.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.once_with.html" title="anoma_apps::std::iter::once_with fn">once_with</a></div><div class="item-right docblock-short"><p>Creates an iterator that lazily generates a value exactly once by invoking
 the provided closure.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.repeat.html" title="anoma_apps::std::iter::repeat fn">repeat</a></div><div class="item-right docblock-short"><p>Creates a new iterator that endlessly repeats a single element.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.repeat_with.html" title="anoma_apps::std::iter::repeat_with fn">repeat_with</a></div><div class="item-right docblock-short"><p>Creates a new iterator that repeats elements of type <code>A</code> endlessly by
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.repeat.html" title="anoma_apps::std::iter::repeat fn">repeat</a></div><div class="item-right docblock-short"><p>Creates a new iterator that endlessly repeats a single element.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.repeat_with.html" title="anoma_apps::std::iter::repeat_with fn">repeat_with</a></div><div class="item-right docblock-short"><p>Creates a new iterator that repeats elements of type <code>A</code> endlessly by
 applying the provided closure, the repeater, <code>F: FnMut() -&gt; A</code>.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.successors.html" title="anoma_apps::std::iter::successors fn">successors</a></div><div class="item-right docblock-short"><p>Creates a new iterator where each successive item is computed based on the preceding one.</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.successors.html" title="anoma_apps::std::iter::successors fn">successors</a></div><div class="item-right docblock-short"><p>Creates a new iterator where each successive item is computed based on the preceding one.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
 </body></html>

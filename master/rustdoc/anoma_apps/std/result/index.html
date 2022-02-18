@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Error handling with the `Result` type."><meta name="keywords" content="rust, rustlang, rust-lang, result"><title>anoma_apps::std::result - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module result</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><div id="sidebar-vars" data-name="result" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">result</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/core/lib.rs.html#279" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Error handling with the <code>Result</code> type.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Error handling with the `Result` type."><meta name="keywords" content="rust, rustlang, rust-lang, result"><title>anoma_apps::std::result - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module result</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><div id="sidebar-vars" data-name="result" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">result</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.58.1/src/core/lib.rs.html#318" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Error handling with the <code>Result</code> type.</p>
 <p><a href="enum.Result.html" title="Result"><code>Result&lt;T, E&gt;</code></a> is the type used for returning and propagating
 errors. It is an enum with the variants, <a href="enum.Result.html#variant.Ok"><code>Ok(T)</code></a>, representing
 success and containing a value, and <a href="enum.Result.html#variant.Err"><code>Err(E)</code></a>, representing error
@@ -17,19 +18,19 @@ defined and used like so:</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Version</span> { <span class="ident">Version1</span>, <span class="ident">Version2</span> }
 
-<span class="kw">fn</span> <span class="ident">parse_version</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">parse_version</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Version</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">header</span>.<span class="ident">get</span>(<span class="number">0</span>) {
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;invalid header length&quot;</span>),
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">1</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Version::Version1</span>),
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">2</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Version::Version2</span>),
-        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;invalid version&quot;</span>),
+        <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;invalid header length&quot;</span>),
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">1</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Version::Version1</span>),
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">2</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Version::Version2</span>),
+        <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="string">&quot;invalid version&quot;</span>),
     }
 }
 
 <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">parse_version</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
 <span class="kw">match</span> <span class="ident">version</span> {
-    <span class="prelude-val">Ok</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">println!</span>(<span class="string">&quot;working with version: {:?}&quot;</span>, <span class="ident">v</span>),
-    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">println!</span>(<span class="string">&quot;error parsing header: {:?}&quot;</span>, <span class="ident">e</span>),
+    <span class="prelude-val">Ok</span>(<span class="ident">v</span>) =&gt; <span class="macro">println!</span>(<span class="string">&quot;working with version: {:?}&quot;</span>, <span class="ident">v</span>),
+    <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="macro">println!</span>(<span class="string">&quot;error parsing header: {:?}&quot;</span>, <span class="ident">e</span>),
 }</code></pre></div>
 <p>Pattern matching on <a href="enum.Result.html" title="Result"><code>Result</code></a>s is clear and straightforward for
 simple cases, but <a href="enum.Result.html" title="Result"><code>Result</code></a> comes with some convenience methods
@@ -47,14 +48,14 @@ that make working with it more succinct.</p>
 <span class="kw">let</span> <span class="ident">bad_result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bad_result</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>);
 
 <span class="comment">// Use `and_then` to continue the computation.</span>
-<span class="kw">let</span> <span class="ident">good_result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">good_result</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">11</span>));
+<span class="kw">let</span> <span class="ident">good_result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">good_result</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">i</span> <span class="op">==</span> <span class="number">11</span>));
 
 <span class="comment">// Use `or_else` to handle the error.</span>
 <span class="kw">let</span> <span class="ident">bad_result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bad_result</span>.<span class="ident">or_else</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">20</span>));
 
 <span class="comment">// Consume the result and return the contents with `unwrap`.</span>
 <span class="kw">let</span> <span class="ident">final_awesome_result</span> <span class="op">=</span> <span class="ident">good_result</span>.<span class="ident">unwrap</span>();</code></pre></div>
-<h1 id="results-must-be-used" class="section-header"><a href="#results-must-be-used">Results must be used</a></h1>
+<h2 id="results-must-be-used" class="section-header"><a href="#results-must-be-used">Results must be used</a></h2>
 <p>A common problem with using return values to indicate errors is
 that it is easy to ignore the return value, thus failing to handle
 the error. <a href="enum.Result.html" title="Result"><code>Result</code></a> is annotated with the <code>#[must_use]</code> attribute,
@@ -62,16 +63,16 @@ which will cause the compiler to issue a warning when a Result
 value is ignored. This makes <a href="enum.Result.html" title="Result"><code>Result</code></a> especially useful with
 functions that may encounter errors but don’t otherwise return a
 useful value.</p>
-<p>Consider the <a href="../../std/io/trait.Write.html#method.write_all"><code>write_all</code></a> method defined for I/O types
-by the <a href="../../std/io/trait.Write.html"><code>Write</code></a> trait:</p>
+<p>Consider the <a href="../../std/io/trait.Write.html#method.write_all" title="io::Write::write_all"><code>write_all</code></a> method defined for I/O types
+by the <a href="../../std/io/trait.Write.html" title="io::Write"><code>Write</code></a> trait:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 
 <span class="kw">trait</span> <span class="ident">Write</span> {
-    <span class="kw">fn</span> <span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">io::Error</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">write_all</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">io::Error</span><span class="op">&gt;</span>;
 }</code></pre></div>
-<p><em>Note: The actual definition of <a href="../../std/io/trait.Write.html"><code>Write</code></a> uses <a href="../../std/io/type.Result.html"><code>io::Result</code></a>, which
-is just a synonym for <a href="enum.Result.html" title="Result"><code>Result</code></a><code>&lt;T, </code><a href="../../std/io/struct.Error.html"><code>io::Error</code></a><code>&gt;</code>.</em></p>
+<p><em>Note: The actual definition of <a href="../../std/io/trait.Write.html" title="io::Write"><code>Write</code></a> uses <a href="../../std/io/type.Result.html" title="io::Result"><code>io::Result</code></a>, which
+is just a synonym for <code><a href="enum.Result.html" title="Result">Result</a>&lt;T, <a href="../../std/io/struct.Error.html" title="io::Error">io::Error</a>&gt;</code>.</em></p>
 <p>This method doesn’t produce a value, but the write may
 fail. It’s crucial to handle the error case, and <em>not</em> write
 something like this:</p>
@@ -99,12 +100,12 @@ write fails, providing a marginally useful message indicating why:</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="macro">assert!</span>(<span class="ident">file</span>.<span class="ident">write_all</span>(<span class="string">b&quot;important message&quot;</span>).<span class="ident">is_ok</span>());</code></pre></div>
 <p>Or propagate the error up the call stack with <a href="../ops/trait.Try.html"><code>?</code></a>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn</span> <span class="ident">write_message</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn</span> <span class="ident">write_message</span>() -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="string">&quot;valuable_data.txt&quot;</span>)<span class="question-mark">?</span>;
     <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="string">b&quot;important message&quot;</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div>
-<h1 id="the-question-mark-operator-" class="section-header"><a href="#the-question-mark-operator-">The question mark operator, <code>?</code></a></h1>
+<h2 id="the-question-mark-operator-" class="section-header"><a href="#the-question-mark-operator-">The question mark operator, <code>?</code></a></h2>
 <p>When writing code that calls many functions that return the
 <a href="enum.Result.html" title="Result"><code>Result</code></a> type, the error handling can be tedious. The question mark
 operator, <a href="../ops/trait.Try.html"><code>?</code></a>, hides some of the boilerplate of propagating errors
@@ -121,11 +122,11 @@ up the call stack.</p>
     <span class="ident">rating</span>: <span class="ident">i32</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">write_info</span>(<span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">Info</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">write_info</span>(<span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">Info</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// Early return on error</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">File::create</span>(<span class="string">&quot;my_best_friends.txt&quot;</span>) {
-           <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
-           <span class="prelude-val">Ok</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>,
+           <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+           <span class="prelude-val">Ok</span>(<span class="ident">f</span>) =&gt; <span class="ident">f</span>,
     };
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;name: {}\n&quot;</span>, <span class="ident">info</span>.<span class="ident">name</span>).<span class="ident">as_bytes</span>()) {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>)
@@ -150,7 +151,7 @@ up the call stack.</p>
     <span class="ident">rating</span>: <span class="ident">i32</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">write_info</span>(<span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">Info</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">write_info</span>(<span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">Info</span>) -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="string">&quot;my_best_friends.txt&quot;</span>)<span class="question-mark">?</span>;
     <span class="comment">// Early return on error</span>
     <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;name: {}\n&quot;</span>, <span class="ident">info</span>.<span class="ident">name</span>).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
@@ -164,13 +165,13 @@ success (<a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>) v
 <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a> is returned early from the enclosing function.</p>
 <p><a href="../ops/trait.Try.html"><code>?</code></a> can only be used in functions that return <a href="enum.Result.html" title="Result"><code>Result</code></a> because of the
 early return of <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a> that it provides.</p>
-<h1 id="method-overview" class="section-header"><a href="#method-overview">Method overview</a></h1>
+<h2 id="method-overview" class="section-header"><a href="#method-overview">Method overview</a></h2>
 <p>In addition to working with pattern matching, <a href="enum.Result.html" title="Result"><code>Result</code></a> provides a
 wide variety of different methods.</p>
-<h2 id="querying-the-variant" class="section-header"><a href="#querying-the-variant">Querying the variant</a></h2>
-<p>The <a href="enum.Result.html#method.is_ok"><code>is_ok</code></a> and <a href="enum.Result.html#method.is_err"><code>is_err</code></a> methods return <a href="https://doc.rust-lang.org/1.56.1/std/primitive.bool.html" title="true"><code>true</code></a> if the <a href="enum.Result.html" title="Result"><code>Result</code></a>
+<h3 id="querying-the-variant" class="section-header"><a href="#querying-the-variant">Querying the variant</a></h3>
+<p>The <a href="enum.Result.html#method.is_ok"><code>is_ok</code></a> and <a href="enum.Result.html#method.is_err"><code>is_err</code></a> methods return <a href="https://doc.rust-lang.org/1.58.1/std/primitive.bool.html" title="true"><code>true</code></a> if the <a href="enum.Result.html" title="Result"><code>Result</code></a>
 is <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> or <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a>, respectively.</p>
-<h2 id="adapters-for-working-with-references" class="section-header"><a href="#adapters-for-working-with-references">Adapters for working with references</a></h2>
+<h3 id="adapters-for-working-with-references" class="section-header"><a href="#adapters-for-working-with-references">Adapters for working with references</a></h3>
 <ul>
 <li><a href="enum.Result.html#method.as_ref"><code>as_ref</code></a> converts from <code>&amp;Result&lt;T, E&gt;</code> to <code>Result&lt;&amp;T, &amp;E&gt;</code></li>
 <li><a href="enum.Result.html#method.as_mut"><code>as_mut</code></a> converts from <code>&amp;mut Result&lt;T, E&gt;</code> to <code>Result&lt;&amp;mut T, &amp;mut E&gt;</code></li>
@@ -178,7 +179,7 @@ is <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> or <a hr
 <li><a href="enum.Result.html#method.as_deref_mut"><code>as_deref_mut</code></a> converts from <code>&amp;mut Result&lt;T, E&gt;</code> to
 <code>Result&lt;&amp;mut T::Target, &amp;mut E&gt;</code></li>
 </ul>
-<h2 id="extracting-contained-values" class="section-header"><a href="#extracting-contained-values">Extracting contained values</a></h2>
+<h3 id="extracting-contained-values" class="section-header"><a href="#extracting-contained-values">Extracting contained values</a></h3>
 <p>These methods extract the contained value in a <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a> when it
 is the <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant. If the <a href="enum.Result.html" title="Result"><code>Result</code></a> is <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a>:</p>
 <ul>
@@ -199,7 +200,7 @@ trait. If the <a href="enum.Result.html" title="Result"><code>Result</code></a> 
 <li><a href="enum.Result.html#method.expect_err"><code>expect_err</code></a> panics with a provided custom message</li>
 <li><a href="enum.Result.html#method.unwrap_err"><code>unwrap_err</code></a> panics with a generic message</li>
 </ul>
-<h2 id="transforming-contained-values" class="section-header"><a href="#transforming-contained-values">Transforming contained values</a></h2>
+<h3 id="transforming-contained-values" class="section-header"><a href="#transforming-contained-values">Transforming contained values</a></h3>
 <p>These methods transform <a href="enum.Result.html" title="Result"><code>Result</code></a> to <a href="../option/enum.Option.html" title="Option"><code>Option</code></a>:</p>
 <ul>
 <li><a href="enum.Result.html#method.err" title="Result::err"><code>err</code></a> transforms <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a> into <a href="../option/enum.Option.html" title="Option&lt;E&gt;"><code>Option&lt;E&gt;</code></a>,
@@ -228,12 +229,12 @@ different type <code>U</code>:</p>
 <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>, or returns the provided default value if the <a href="enum.Result.html" title="Result"><code>Result</code></a> is
 <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a></li>
 <li><a href="enum.Result.html#method.map_or_else"><code>map_or_else</code></a> applies the provided function to the contained value
-of <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>, or applies the provided fallback function to the contained
-value of <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a></li>
+of <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>, or applies the provided default fallback function to the
+contained value of <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a></li>
 </ul>
-<h2 id="boolean-operators" class="section-header"><a href="#boolean-operators">Boolean operators</a></h2>
+<h3 id="boolean-operators" class="section-header"><a href="#boolean-operators">Boolean operators</a></h3>
 <p>These methods treat the <a href="enum.Result.html" title="Result"><code>Result</code></a> as a boolean value, where <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>
-acts like <a href="https://doc.rust-lang.org/1.56.1/std/primitive.bool.html" title="true"><code>true</code></a> and <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a> acts like <a href="https://doc.rust-lang.org/1.56.1/std/primitive.bool.html" title="false"><code>false</code></a>. There are two
+acts like <a href="https://doc.rust-lang.org/1.58.1/std/primitive.bool.html" title="true"><code>true</code></a> and <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a> acts like <a href="https://doc.rust-lang.org/1.58.1/std/primitive.bool.html" title="false"><code>false</code></a>. There are two
 categories of these methods: ones that take a <a href="enum.Result.html" title="Result"><code>Result</code></a> as input, and
 ones that take a function as input (to be lazily evaluated).</p>
 <p>The <a href="enum.Result.html#method.and"><code>and</code></a> and <a href="enum.Result.html#method.or"><code>or</code></a> methods take another <a href="enum.Result.html" title="Result"><code>Result</code></a> as input, and
@@ -241,7 +242,7 @@ produce a <a href="enum.Result.html" title="Result"><code>Result</code></a> as o
 <a href="enum.Result.html" title="Result&lt;U, E&gt;"><code>Result&lt;U, E&gt;</code></a> value having a different inner type <code>U</code> than
 <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a>. The <a href="enum.Result.html#method.or"><code>or</code></a> method can produce a <a href="enum.Result.html" title="Result&lt;T, F&gt;"><code>Result&lt;T, F&gt;</code></a>
 value having a different error type <code>F</code> than <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a>.</p>
-<table><thead><tr><th>method</th><th>self</th><th>input</th><th>output</th></tr></thead><tbody>
+<div><table><thead><tr><th>method</th><th>self</th><th>input</th><th>output</th></tr></thead><tbody>
 <tr><td><a href="enum.Result.html#method.and"><code>and</code></a></td><td><code>Err(e)</code></td><td>(ignored)</td><td><code>Err(e)</code></td></tr>
 <tr><td><a href="enum.Result.html#method.and"><code>and</code></a></td><td><code>Ok(x)</code></td><td><code>Err(d)</code></td><td><code>Err(d)</code></td></tr>
 <tr><td><a href="enum.Result.html#method.and"><code>and</code></a></td><td><code>Ok(x)</code></td><td><code>Ok(y)</code></td><td><code>Ok(y)</code></td></tr>
@@ -249,13 +250,14 @@ value having a different error type <code>F</code> than <a href="enum.Result.htm
 <tr><td><a href="enum.Result.html#method.or"><code>or</code></a></td><td><code>Err(e)</code></td><td><code>Ok(y)</code></td><td><code>Ok(y)</code></td></tr>
 <tr><td><a href="enum.Result.html#method.or"><code>or</code></a></td><td><code>Ok(x)</code></td><td>(ignored)</td><td><code>Ok(x)</code></td></tr>
 </tbody></table>
+</div>
 <p>The <a href="enum.Result.html#method.and_then"><code>and_then</code></a> and <a href="enum.Result.html#method.or_else"><code>or_else</code></a> methods take a function as input, and
 only evaluate the function when they need to produce a new value. The
 <a href="enum.Result.html#method.and_then"><code>and_then</code></a> method can produce a <a href="enum.Result.html" title="Result&lt;U, E&gt;"><code>Result&lt;U, E&gt;</code></a> value having a
 different inner type <code>U</code> than <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a>. The <a href="enum.Result.html#method.or_else"><code>or_else</code></a> method
 can produce a <a href="enum.Result.html" title="Result&lt;T, F&gt;"><code>Result&lt;T, F&gt;</code></a> value having a different error type <code>F</code>
 than <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a>.</p>
-<table><thead><tr><th>method</th><th>self</th><th>function input</th><th>function result</th><th>output</th></tr></thead><tbody>
+<div><table><thead><tr><th>method</th><th>self</th><th>function input</th><th>function result</th><th>output</th></tr></thead><tbody>
 <tr><td><a href="enum.Result.html#method.and_then"><code>and_then</code></a></td><td><code>Err(e)</code></td><td>(not provided)</td><td>(not evaluated)</td><td><code>Err(e)</code></td></tr>
 <tr><td><a href="enum.Result.html#method.and_then"><code>and_then</code></a></td><td><code>Ok(x)</code></td><td><code>x</code></td><td><code>Err(d)</code></td><td><code>Err(d)</code></td></tr>
 <tr><td><a href="enum.Result.html#method.and_then"><code>and_then</code></a></td><td><code>Ok(x)</code></td><td><code>x</code></td><td><code>Ok(y)</code></td><td><code>Ok(y)</code></td></tr>
@@ -263,7 +265,7 @@ than <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&
 <tr><td><a href="enum.Result.html#method.or_else"><code>or_else</code></a></td><td><code>Err(e)</code></td><td><code>e</code></td><td><code>Ok(y)</code></td><td><code>Ok(y)</code></td></tr>
 <tr><td><a href="enum.Result.html#method.or_else"><code>or_else</code></a></td><td><code>Ok(x)</code></td><td>(not provided)</td><td>(not evaluated)</td><td><code>Ok(x)</code></td></tr>
 </tbody></table>
-<h2 id="comparison-operators" class="section-header"><a href="#comparison-operators">Comparison operators</a></h2>
+</div><h3 id="comparison-operators" class="section-header"><a href="#comparison-operators">Comparison operators</a></h3>
 <p>If <code>T</code> and <code>E</code> both implement <a href="../cmp/trait.PartialOrd.html" title="PartialOrd"><code>PartialOrd</code></a> then <a href="enum.Result.html" title="Result&lt;T, E&gt;"><code>Result&lt;T, E&gt;</code></a> will
 derive its <a href="../cmp/trait.PartialOrd.html" title="PartialOrd"><code>PartialOrd</code></a> implementation.  With this order, an <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>
 compares as less than any <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a>, while two <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> or two <a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a>
@@ -277,7 +279,7 @@ and <code>E</code> both also implement <a href="../cmp/trait.Ord.html" title="Or
 <span class="kw">let</span> <span class="ident">x</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">Err</span>(<span class="number">0</span>);
 <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="prelude-val">Err</span>(<span class="number">1</span>);
 <span class="macro">assert!</span>(<span class="ident">x</span> <span class="op">&lt;</span> <span class="ident">y</span>);</code></pre></div>
-<h2 id="iterating-over-result" class="section-header"><a href="#iterating-over-result">Iterating over <code>Result</code></a></h2>
+<h3 id="iterating-over-result" class="section-header"><a href="#iterating-over-result">Iterating over <code>Result</code></a></h3>
 <p>A <a href="enum.Result.html" title="Result"><code>Result</code></a> can be iterated over. This can be helpful if you need an
 iterator that is conditionally empty. The iterator will either produce
 a single value (when the <a href="enum.Result.html" title="Result"><code>Result</code></a> is <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>), or produce no values
@@ -316,7 +318,7 @@ advantage of the iterable nature of <a href="enum.Result.html" title="Result"><c
 <span class="macro">println!</span>(<span class="string">&quot;results {:?}&quot;</span>, <span class="ident">results</span>);
 <span class="macro">println!</span>(<span class="string">&quot;errs {:?}&quot;</span>, <span class="ident">errs</span>);
 <span class="macro">println!</span>(<span class="string">&quot;nums {:?}&quot;</span>, <span class="ident">nums</span>);</code></pre></div>
-<h2 id="collecting-into-result" class="section-header"><a href="#collecting-into-result">Collecting into <code>Result</code></a></h2>
+<h3 id="collecting-into-result" class="section-header"><a href="#collecting-into-result">Collecting into <code>Result</code></a></h3>
 <p><a href="enum.Result.html" title="Result"><code>Result</code></a> implements the <a href="enum.Result.html#impl-FromIterator%3CResult%3CA%2C%20E%3E%3E"><code>FromIterator</code></a> trait,
 which allows an iterator over <a href="enum.Result.html" title="Result"><code>Result</code></a> values to be collected into a
 <a href="enum.Result.html" title="Result"><code>Result</code></a> of a collection of each contained value of the original
@@ -339,12 +341,11 @@ to provide the <a href="../iter/trait.Iterator.html#method.product" title="Itera
 <span class="kw">let</span> <span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="prelude-val">Ok</span>(<span class="number">1</span>), <span class="prelude-val">Ok</span>(<span class="number">2</span>), <span class="prelude-val">Ok</span>(<span class="number">21</span>)];
 <span class="kw">let</span> <span class="ident">res</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">into_iter</span>().<span class="ident">product</span>();
 <span class="macro">assert_eq!</span>(<span class="ident">res</span>, <span class="prelude-val">Ok</span>(<span class="number">42</span>));</code></pre></div>
-</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.IntoIter.html" title="anoma_apps::std::result::IntoIter struct">IntoIter</a></div><div class="item-right docblock-short"><p>An iterator over the value in a <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant of a <a href="enum.Result.html" title="Result"><code>Result</code></a>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.Iter.html" title="anoma_apps::std::result::Iter struct">Iter</a></div><div class="item-right docblock-short"><p>An iterator over a reference to the <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant of a <a href="enum.Result.html" title="Result"><code>Result</code></a>.</p>
-</div><div class="item-left module-item"><a class="struct" href="struct.IterMut.html" title="anoma_apps::std::result::IterMut struct">IterMut</a></div><div class="item-right docblock-short"><p>An iterator over a mutable reference to the <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant of a <a href="enum.Result.html" title="Result"><code>Result</code></a>.</p>
-</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.Result.html" title="anoma_apps::std::result::Result enum">Result</a></div><div class="item-right docblock-short"><p><code>Result</code> is a type that represents either success (<a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>) or failure (<a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a>).</p>
-</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IntoIter.html" title="anoma_apps::std::result::IntoIter struct">IntoIter</a></div><div class="item-right docblock-short"><p>An iterator over the value in a <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant of a <a href="enum.Result.html" title="Result"><code>Result</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Iter.html" title="anoma_apps::std::result::Iter struct">Iter</a></div><div class="item-right docblock-short"><p>An iterator over a reference to the <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant of a <a href="enum.Result.html" title="Result"><code>Result</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.IterMut.html" title="anoma_apps::std::result::IterMut struct">IterMut</a></div><div class="item-right docblock-short"><p>An iterator over a mutable reference to the <a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a> variant of a <a href="enum.Result.html" title="Result"><code>Result</code></a>.</p>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Result.html" title="anoma_apps::std::result::Result enum">Result</a></div><div class="item-right docblock-short"><p><code>Result</code> is a type that represents either success (<a href="enum.Result.html#variant.Ok" title="Ok"><code>Ok</code></a>) or failure (<a href="enum.Result.html#variant.Err" title="Err"><code>Err</code></a>).</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
 </body></html>

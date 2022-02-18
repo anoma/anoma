@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;address.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>address.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;address.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>address.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -633,6 +634,59 @@
 <span id="633">633</span>
 <span id="634">634</span>
 <span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
 
@@ -678,6 +732,10 @@
         <span class="string">&quot;ano::Inter-Blockchain Communication          &quot;</span>;
     <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PARAMETERS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
         <span class="string">&quot;ano::Protocol Parameters                     &quot;</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC_BURN</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+        <span class="string">&quot;ano::IBC Burn Address                        &quot;</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC_MINT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+        <span class="string">&quot;ano::IBC Mint Address                        &quot;</span>;
 }
 
 <span class="doccomment">/// Fixed-length address strings prefix for established addresses.</span>
@@ -735,7 +793,7 @@
 
 <span class="kw">impl</span> <span class="ident">Address</span> {
     <span class="doccomment">/// Encode an address with Bech32m encoding</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_fixed_len_string</span>();
         <span class="ident">bech32::encode</span>(<span class="ident">ADDRESS_HRP</span>, <span class="ident">bytes</span>.<span class="ident">to_base32</span>(), <span class="ident">ADDRESS_BECH32_VARIANT</span>)
             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -747,51 +805,59 @@
     }
 
     <span class="doccomment">/// Decode an address from Bech32m encoding</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decode</span>(<span class="ident">string</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decode</span>(<span class="ident">string</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">hash_base32</span>, <span class="ident">variant</span>) <span class="op">=</span>
             <span class="ident">bech32::decode</span>(<span class="ident">string</span>.<span class="ident">as_ref</span>()).<span class="ident">map_err</span>(<span class="ident">Error::DecodeBech32</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">prefix</span> <span class="op">!</span><span class="op">=</span> <span class="ident">ADDRESS_HRP</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnexpectedBech32Prefix</span>(<span class="ident">prefix</span>));
         }
         <span class="kw">match</span> <span class="ident">variant</span> {
-            <span class="ident">ADDRESS_BECH32_VARIANT</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnexpectedBech32Variant</span>(<span class="ident">variant</span>)),
+            <span class="ident">ADDRESS_BECH32_VARIANT</span> =&gt; {}
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnexpectedBech32Variant</span>(<span class="ident">variant</span>)),
         }
         <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FromBase32::from_base32</span>(<span class="kw-2">&amp;</span><span class="ident">hash_base32</span>)
             .<span class="ident">map_err</span>(<span class="ident">Error::DecodeBase32</span>)<span class="question-mark">?</span>;
-        <span class="ident"><span class="self">Self</span>::try_from_fixed_len_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[..])
+        <span class="ident"><span class="self">Self</span>::try_from_fixed_len_string</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[..])
             .<span class="ident">map_err</span>(<span class="ident">Error::InvalidAddressEncoding</span>)
     }
 
     <span class="doccomment">/// Try to get a raw hash of an address, only defined for established and</span>
     <span class="doccomment">/// implicit addresses.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">raw_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">raw_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Address::Established</span>(<span class="ident">established</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">established</span>.<span class="ident">hash</span>),
-            <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">implicit</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Established</span>(<span class="ident">established</span>) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">established</span>.<span class="ident">hash</span>),
+            <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">implicit</span>)) =&gt; {
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">implicit</span>.<span class="number">0</span>)
             }
-            <span class="ident">Address::Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">Address::Internal</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         }
     }
 
     <span class="doccomment">/// Convert an address to a fixed length 7-bit ascii string bytes</span>
-    <span class="kw">fn</span> <span class="ident">to_fixed_len_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">to_fixed_len_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">string</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Address::Established</span>(<span class="ident">EstablishedAddress</span> { <span class="ident">hash</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Established</span>(<span class="ident">EstablishedAddress</span> { <span class="ident">hash</span> }) =&gt; {
                 <span class="macro">format!</span>(<span class="string">&quot;{}::{}&quot;</span>, <span class="ident">PREFIX_ESTABLISHED</span>, <span class="ident">hash</span>)
             }
-            <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)) =&gt; {
                 <span class="macro">format!</span>(<span class="string">&quot;{}::{}&quot;</span>, <span class="ident">PREFIX_IMPLICIT</span>, <span class="ident">pkh</span>)
             }
-            <span class="ident">Address::Internal</span>(<span class="ident">internal</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Internal</span>(<span class="ident">internal</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">internal</span> {
-                    <span class="ident">InternalAddress::PoS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::POS</span>,
-                    <span class="ident">InternalAddress::PosSlashPool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::POS_SLASH_POOL</span>,
-                    <span class="ident">InternalAddress::Ibc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::IBC</span>,
-                    <span class="ident">InternalAddress::Parameters</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::PARAMETERS</span>,
-                }
-                .<span class="ident">to_string</span>();
+                    <span class="ident">InternalAddress::PoS</span> =&gt; <span class="ident">internal::POS</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">InternalAddress::PosSlashPool</span> =&gt; {
+                        <span class="ident">internal::POS_SLASH_POOL</span>.<span class="ident">to_string</span>()
+                    }
+                    <span class="ident">InternalAddress::Ibc</span> =&gt; <span class="ident">internal::IBC</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">InternalAddress::Parameters</span> =&gt; {
+                        <span class="ident">internal::PARAMETERS</span>.<span class="ident">to_string</span>()
+                    }
+                    <span class="ident">InternalAddress::IbcEscrow</span>(<span class="ident">hash</span>) =&gt; {
+                        <span class="macro">format!</span>(<span class="string">&quot;{}::{}&quot;</span>, <span class="ident">PREFIX_INTERNAL</span>, <span class="ident">hash</span>)
+                    }
+                    <span class="ident">InternalAddress::IbcBurn</span> =&gt; <span class="ident">internal::IBC_BURN</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">InternalAddress::IbcMint</span> =&gt; <span class="ident">internal::IBC_MINT</span>.<span class="ident">to_string</span>(),
+                };
                 <span class="macro">debug_assert_eq!</span>(<span class="ident">string</span>.<span class="ident">len</span>(), <span class="ident">FIXED_LEN_STRING_BYTES</span>);
                 <span class="ident">string</span>
             }
@@ -802,7 +868,7 @@
     }
 
     <span class="doccomment">/// Try to parse an address from fixed-length utf-8 encoded address string.</span>
-    <span class="kw">fn</span> <span class="ident">try_from_fixed_len_string</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from_fixed_len_string</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">Error</span>, <span class="ident">ErrorKind</span>};
         <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="ident">buf</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
@@ -810,8 +876,8 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="string">&quot;Invalid length&quot;</span>));
         }
         <span class="kw">match</span> <span class="ident">string</span>.<span class="ident">split_once</span>(<span class="string">&quot;::&quot;</span>) {
-            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_ESTABLISHED</span>, <span class="ident">hash</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">hash</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">HASH_LEN</span> {
+            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_ESTABLISHED</span>, <span class="ident">hash</span>)) =&gt; {
+                <span class="kw">if</span> <span class="ident">hash</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">HASH_LEN</span> {
                     <span class="prelude-val">Ok</span>(<span class="ident">Address::Established</span>(<span class="ident">EstablishedAddress</span> {
                         <span class="ident">hash</span>: <span class="ident">hash</span>.<span class="ident">to_string</span>(),
                     }))
@@ -822,46 +888,55 @@
                     ))
                 }
             }
-            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_IMPLICIT</span>, <span class="ident">pkh</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_IMPLICIT</span>, <span class="ident">pkh</span>)) =&gt; {
                 <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from_str</span>(<span class="ident">pkh</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)))
             }
-            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_INTERNAL</span>, <span class="ident">_raw</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">string</span> {
-                <span class="ident">internal::POS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PoS</span>)),
-                <span class="ident">internal::POS_SLASH_POOL</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_INTERNAL</span>, <span class="ident">raw</span>)) =&gt; <span class="kw">match</span> <span class="ident">string</span> {
+                <span class="ident">internal::POS</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PoS</span>)),
+                <span class="ident">internal::POS_SLASH_POOL</span> =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PosSlashPool</span>))
                 }
-                <span class="ident">internal::IBC</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)),
-                <span class="ident">internal::PARAMETERS</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">internal::IBC</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)),
+                <span class="ident">internal::PARAMETERS</span> =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Parameters</span>))
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
+                <span class="ident">internal::IBC_BURN</span> =&gt; {
+                    <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcBurn</span>))
+                }
+                <span class="ident">internal::IBC_MINT</span> =&gt; {
+                    <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcMint</span>))
+                }
+                <span class="kw">_</span> <span class="kw">if</span> <span class="ident">raw</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">HASH_LEN</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(
+                    <span class="ident">InternalAddress::IbcEscrow</span>(<span class="ident">raw</span>.<span class="ident">to_string</span>()),
+                )),
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
                     <span class="ident">ErrorKind::InvalidData</span>,
                     <span class="string">&quot;Invalid internal address&quot;</span>,
                 )),
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
                 <span class="ident">ErrorKind::InvalidData</span>,
                 <span class="string">&quot;Invalid address prefix&quot;</span>,
             )),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">pretty_fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">pretty_fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">to_pretty_string</span>())
     }
 
     <span class="doccomment">/// Print the type of the address and its bech32m encoded value</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_pretty_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_pretty_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Address::Established</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Established</span>(<span class="kw">_</span>) =&gt; {
                 <span class="macro">format!</span>(<span class="string">&quot;Established: {}&quot;</span>, <span class="self">self</span>.<span class="ident">encode</span>(),)
             }
-            <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) =&gt; {
                 <span class="macro">format!</span>(<span class="string">&quot;Implicit: {}&quot;</span>, <span class="self">self</span>.<span class="ident">encode</span>(),)
             }
-            <span class="ident">Address::Internal</span>(<span class="ident">kind</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Address::Internal</span>(<span class="ident">kind</span>) =&gt; {
                 <span class="macro">format!</span>(<span class="string">&quot;Internal {}: {}&quot;</span>, <span class="ident">kind</span>, <span class="self">self</span>.<span class="ident">encode</span>())
             }
         }
@@ -872,7 +947,7 @@
     <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">serializer</span>: <span class="ident">S</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
+    ) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
     {
@@ -882,7 +957,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">serde::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Address</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -893,13 +968,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Address</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">encode</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Address</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="self">self</span>.<span class="ident">pretty_fmt</span>(<span class="ident">f</span>)
     }
 }
@@ -907,7 +982,7 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">Address</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">Address::decode</span>(<span class="ident">s</span>)
     }
 }
@@ -938,7 +1013,7 @@
 
 <span class="kw">impl</span> <span class="ident">EstablishedAddressGen</span> {
     <span class="doccomment">/// Initialize a new address generator with a given randomness seed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">seed</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">seed</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">last_hash</span>: <span class="ident">seed</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>(),
         }
@@ -948,9 +1023,9 @@
     <span class="doccomment">/// arbitrary bytes. In the ledger, this could be some unpredictable value,</span>
     <span class="doccomment">/// such as hash of the transaction that has initialized the new address.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_address</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">rng_source</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    ) -&gt; <span class="ident">Address</span> {
         <span class="kw">let</span> <span class="ident">gen_bytes</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding established addresses generator shouldn&#39;t fail&quot;</span>);
@@ -984,13 +1059,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ImplicitAddress</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pk</span>.<span class="ident">into</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Address</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::Implicit</span>(<span class="ident">pk</span>.<span class="ident">into</span>())
     }
 }
@@ -1018,61 +1093,81 @@
     <span class="ident">Ibc</span>,
     <span class="doccomment">/// Protocol parameters</span>
     <span class="ident">Parameters</span>,
+    <span class="doccomment">/// Escrow for IBC token transfer</span>
+    <span class="ident">IbcEscrow</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Burn tokens with IBC token transfer</span>
+    <span class="ident">IbcBurn</span>,
+    <span class="doccomment">/// Mint tokens from this address with IBC token transfer</span>
+    <span class="ident">IbcMint</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">InternalAddress</span> {
+    <span class="doccomment">/// Get an escrow address from the port ID and channel ID</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_escrow_address</span>(<span class="ident">port_id</span>: <span class="ident">String</span>, <span class="ident">channel_id</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
+        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>);
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:.width$X}&quot;</span>, <span class="ident">hasher</span>.<span class="ident">finalize</span>(), <span class="ident">width</span> <span class="op">=</span> <span class="ident">HASH_LEN</span>);
+        <span class="ident">InternalAddress::IbcEscrow</span>(<span class="ident">hash</span>)
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">InternalAddress</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;{}&quot;</span>,
             <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident"><span class="self">Self</span>::PoS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;PoS&quot;</span>,
-                <span class="ident"><span class="self">Self</span>::PosSlashPool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;PosSlashPool&quot;</span>,
-                <span class="ident"><span class="self">Self</span>::Ibc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;IBC&quot;</span>,
-                <span class="ident"><span class="self">Self</span>::Parameters</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Parameters&quot;</span>,
+                <span class="ident"><span class="self">Self</span>::PoS</span> =&gt; <span class="string">&quot;PoS&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident"><span class="self">Self</span>::PosSlashPool</span> =&gt; <span class="string">&quot;PosSlashPool&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident"><span class="self">Self</span>::Ibc</span> =&gt; <span class="string">&quot;IBC&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident"><span class="self">Self</span>::Parameters</span> =&gt; <span class="string">&quot;Parameters&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident"><span class="self">Self</span>::IbcEscrow</span>(<span class="ident">hash</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;IbcEscrow: {}&quot;</span>, <span class="ident">hash</span>),
+                <span class="ident"><span class="self">Self</span>::IbcBurn</span> =&gt; <span class="string">&quot;IbcBurn&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident"><span class="self">Self</span>::IbcMint</span> =&gt; <span class="string">&quot;IbcMint&quot;</span>.<span class="ident">to_string</span>(),
             }
         )
     }
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">xan</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">xan</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">btc</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">btc</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xdzryve5gsc52veeg5cnsv2yx5eygvp38qcrvd29xy6rys6p8yc5xvp4xfpy2v694wgwcp&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eth</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eth</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xqmr2d3nx3ryvd2xxgmrq33j8qcns33sxezrgv6zxdzrydjrxveygd2yxumrsdpsf9jc2p&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gg6nvs2zgfpyxsfjgc65yv6pxy6nwwfsxgungdzrggeyzv35gveyxsjyxymyz335hur2jn&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schnitzel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schnitzel</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xue5xvf5xvuyzvpjx5un2v3k8qeyvd3cxdqns32p89rrxd6xx9zngvpegccnzs699rdnnt&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apfel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apfel</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gfryydj9g3p5zv3kg9znyd358ycnzsfcggc5gvecgc6ygs2rxv6ry3zpg4zrwdfeumqcz9&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kartoffel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kartoffel</span>() -&gt; <span class="ident">Address</span> {
     <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing, a hash map of tokens addresses with their</span>
 <span class="doccomment">/// informal currency codes.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tokens</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tokens</span>() -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="macro">vec!</span>[
         (<span class="ident">xan</span>(), <span class="string">&quot;XAN&quot;</span>),
         (<span class="ident">btc</span>(), <span class="string">&quot;BTC&quot;</span>),
@@ -1149,7 +1244,7 @@
 
 <span class="doccomment">/// Generate a new established address.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rand&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>(<span class="ident">seed</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>(<span class="ident">seed</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="ident">Address</span> {
     <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
     <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">thread_rng</span>, <span class="ident">RngCore</span>};
 
@@ -1157,7 +1252,7 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng_bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">32</span>];
-    <span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng_bytes</span>[..]);
+    <span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng_bytes</span>[..]);
     <span class="kw">let</span> <span class="ident">rng_source</span> <span class="op">=</span> <span class="ident">rng_bytes</span>
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{:02X}&quot;</span>, <span class="ident">b</span>))
@@ -1175,40 +1270,40 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>;
 
     <span class="doccomment">/// Generate a new established address.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>() -&gt; <span class="ident">Address</span> {
         <span class="kw">let</span> <span class="ident">seed</span> <span class="op">=</span> <span class="string">&quot;such randomness, much wow&quot;</span>;
         <span class="ident"><span class="kw">super</span>::gen_established_address</span>(<span class="ident">seed</span>)
     }
 
     <span class="doccomment">/// Generate a new implicit address.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_implicit_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_implicit_address</span>() -&gt; <span class="ident">Address</span> {
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">ed25519::testing::gen_keypair</span>();
         <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519::PublicKeyHash::from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
         <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>))
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_1</span>() -&gt; <span class="ident">Address</span> {
         <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_2</span>() -&gt; <span class="ident">Address</span> {
         <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xezyzv33x56rws6zxccnwwzzgycy23p3ggur2d3ex56yxdejxerrysejx3rrxdfs44s9wu&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_3</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_3</span>() -&gt; <span class="ident">Address</span> {
         <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xcerywfsgsu5vsfeg3zy2v3egcenx32pggcrswzxg4zns3p5xv6rsvf4gvenqwpkdnnqsy&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_4</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_4</span>() -&gt; <span class="ident">Address</span> {
         <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gscrw333g3z5zvjzg4rrq3psxu6rqd2xxqc5gs35gerrs3pjgfprvdejxqunxs29t6p5s9&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// Generate an arbitrary [`Address`] (established or implicit).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_non_internal_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_non_internal_address</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof!</span>[
             <span class="ident">arb_established_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Established</span>),
             <span class="ident">arb_implicit_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Implicit</span>),
@@ -1216,7 +1311,7 @@
     }
 
     <span class="doccomment">/// Generate an arbitrary [`Address`] (established, implicit or internal).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_address</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof!</span>[
             <span class="ident">arb_established_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Established</span>),
             <span class="ident">arb_implicit_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Implicit</span>),
@@ -1225,13 +1320,13 @@
     }
 
     <span class="doccomment">/// Generate an arbitrary [`EstablishedAddress`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_established_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">EstablishedAddress</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_established_address</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">EstablishedAddress</span><span class="op">&gt;</span>
     {
         <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">rng_source</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="string">&quot;seed&quot;</span>);
             <span class="kw">match</span> <span class="ident">key_gen</span>.<span class="ident">generate_address</span>(<span class="ident">rng_source</span>) {
-                <span class="ident">Address::Established</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">addr</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Address::Established</span>(<span class="ident">addr</span>) =&gt; <span class="ident">addr</span>,
+                <span class="kw">_</span> =&gt; {
                     <span class="macro">panic!</span>(
                         <span class="string">&quot;Assuming key gen to only generated established \
                          addresses&quot;</span>
@@ -1242,7 +1337,7 @@
     }
 
     <span class="doccomment">/// Generate an arbitrary [`ImplicitAddress`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_implicit_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">ImplicitAddress</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_implicit_address</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">ImplicitAddress</span><span class="op">&gt;</span> {
         <span class="ident">ed25519::testing::arb_keypair</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">keypair</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519::PublicKeyHash::from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
             <span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)
@@ -1250,25 +1345,36 @@
     }
 
     <span class="doccomment">/// Generate an arbitrary [`InternalAddress`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_internal_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">InternalAddress</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_internal_address</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">InternalAddress</span><span class="op">&gt;</span> {
         <span class="comment">// This is here for match exhaustion check to remind to add any new</span>
         <span class="comment">// internal addresses below.</span>
         <span class="kw">match</span> <span class="ident">InternalAddress::PoS</span> {
-            <span class="ident">InternalAddress::PoS</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">InternalAddress::PosSlashPool</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">InternalAddress::Ibc</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">InternalAddress::Parameters</span> <span class="op">=</span><span class="op">&gt;</span> {} <span class="comment">/* Add new addresses in the
-                                               * `prop_oneof` below. */</span>
+            <span class="ident">InternalAddress::PoS</span> =&gt; {}
+            <span class="ident">InternalAddress::PosSlashPool</span> =&gt; {}
+            <span class="ident">InternalAddress::Ibc</span> =&gt; {}
+            <span class="ident">InternalAddress::Parameters</span> =&gt; {}
+            <span class="ident">InternalAddress::IbcEscrow</span>(<span class="kw">_</span>) =&gt; {}
+            <span class="ident">InternalAddress::IbcBurn</span> =&gt; {}
+            <span class="ident">InternalAddress::IbcMint</span> =&gt; {} <span class="comment">/* Add new addresses in the
+                                            * `prop_oneof` below. */</span>
         };
         <span class="macro">prop_oneof!</span>[
             <span class="ident">Just</span>(<span class="ident">InternalAddress::PoS</span>),
             <span class="ident">Just</span>(<span class="ident">InternalAddress::PosSlashPool</span>),
             <span class="ident">Just</span>(<span class="ident">InternalAddress::Ibc</span>),
             <span class="ident">Just</span>(<span class="ident">InternalAddress::Parameters</span>),
+            <span class="ident">arb_port_channel_id</span>()
+                .<span class="ident">prop_map</span>(<span class="op">|</span>(<span class="ident">p</span>, <span class="ident">c</span>)<span class="op">|</span> <span class="ident">InternalAddress::ibc_escrow_address</span>(<span class="ident">p</span>, <span class="ident">c</span>)),
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::IbcBurn</span>),
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::IbcMint</span>),
         ]
+    }
+
+    <span class="kw">fn</span> <span class="ident">arb_port_channel_id</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span> {
+        (<span class="string">&quot;[a-zA-Z0-9_]{2,128}&quot;</span>, <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>())
+            .<span class="ident">prop_map</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">counter</span>)<span class="op">|</span> (<span class="ident">id</span>, <span class="macro">format!</span>(<span class="string">&quot;channel-{}&quot;</span>, <span class="ident">counter</span>)))
     }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

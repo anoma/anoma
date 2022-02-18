@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;vp&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;vp&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1780,6 +1781,16 @@
 <span id="1780">1780</span>
 <span id="1781">1781</span>
 <span id="1782">1782</span>
+<span id="1783">1783</span>
+<span id="1784">1784</span>
+<span id="1785">1785</span>
+<span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
+<span id="1789">1789</span>
+<span id="1790">1790</span>
+<span id="1791">1791</span>
+<span id="1792">1792</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC integration as a native validity predicate</span>
 
 <span class="kw">mod</span> <span class="ident">channel</span>;
@@ -1788,6 +1799,7 @@
 <span class="kw">mod</span> <span class="ident">packet</span>;
 <span class="kw">mod</span> <span class="ident">port</span>;
 <span class="kw">mod</span> <span class="ident">sequence</span>;
+<span class="kw">mod</span> <span class="ident">token</span>;
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
@@ -1800,6 +1812,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::events::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">token</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcTokenError</span>, <span class="ident">IbcToken</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::storage</span>::{<span class="ident">client_id</span>, <span class="ident">ibc_prefix</span>, <span class="ident">is_client_counter_key</span>, <span class="ident">IbcPrefix</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
@@ -1863,61 +1876,69 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">_verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">clients</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys_changed</span> {
-            <span class="kw">match</span> <span class="ident">ibc_prefix</span>(<span class="ident">key</span>) {
-                <span class="ident">IbcPrefix::Client</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="ident">is_client_counter_key</span>(<span class="ident">key</span>) {
-                        <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_counter</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                            <span class="ident">Error::CounterError</span>(
-                                <span class="string">&quot;The client counter doesn&#39;t exist&quot;</span>.<span class="ident">to_owned</span>(),
-                            )
-                        })<span class="question-mark">?</span>;
-                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">client_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">counter</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(
-                                <span class="string">&quot;The client counter is invalid&quot;</span>.<span class="ident">to_owned</span>(),
-                            ));
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ibc_prefix</span>) <span class="op">=</span> <span class="ident">ibc_prefix</span>(<span class="ident">key</span>) {
+                <span class="kw">match</span> <span class="ident">ibc_prefix</span> {
+                    <span class="ident">IbcPrefix::Client</span> =&gt; {
+                        <span class="kw">if</span> <span class="ident">is_client_counter_key</span>(<span class="ident">key</span>) {
+                            <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span>
+                                <span class="self">self</span>.<span class="ident">client_counter</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                                    <span class="ident">Error::CounterError</span>(
+                                        <span class="string">&quot;The client counter doesn&#39;t exist&quot;</span>
+                                            .<span class="ident">to_owned</span>(),
+                                    )
+                                })<span class="question-mark">?</span>;
+                            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">client_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">counter</span> {
+                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(
+                                    <span class="string">&quot;The client counter is invalid&quot;</span>.<span class="ident">to_owned</span>(),
+                                ));
+                            }
+                        } <span class="kw">else</span> {
+                            <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">client_id</span>(<span class="ident">key</span>)
+                                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::KeyError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+                            <span class="kw">if</span> <span class="op">!</span><span class="ident">clients</span>.<span class="ident">insert</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>()) {
+                                <span class="comment">// this client has been checked</span>
+                                <span class="kw">continue</span>;
+                            }
+                            <span class="self">self</span>.<span class="ident">validate_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
                         }
-                    } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">client_id</span>(<span class="ident">key</span>)
-                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::KeyError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">clients</span>.<span class="ident">insert</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>()) {
-                            <span class="comment">// this client has been checked</span>
-                            <span class="kw">continue</span>;
-                        }
-                        <span class="self">self</span>.<span class="ident">validate_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
                     }
-                }
-                <span class="ident">IbcPrefix::Connection</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">validate_connection</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
-                }
-                <span class="ident">IbcPrefix::Channel</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_channel</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>,
-                <span class="ident">IbcPrefix::Port</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_port</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
-                <span class="ident">IbcPrefix::Capability</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_capability</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
-                <span class="ident">IbcPrefix::SeqSend</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">validate_sequence_send</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
-                }
-                <span class="ident">IbcPrefix::SeqRecv</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">validate_sequence_recv</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
-                }
-                <span class="ident">IbcPrefix::SeqAck</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">validate_sequence_ack</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
-                }
-                <span class="ident">IbcPrefix::Commitment</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">validate_commitment</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
-                }
-                <span class="ident">IbcPrefix::Receipt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_receipt</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>,
-                <span class="ident">IbcPrefix::Ack</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_ack</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
-                <span class="ident">IbcPrefix::Event</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="ident">IbcPrefix::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::KeyError</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;Invalid IBC-related key: {}&quot;</span>,
-                        <span class="ident">key</span>
-                    )));
-                }
-            };
+                    <span class="ident">IbcPrefix::Connection</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_connection</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::Channel</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_channel</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::Port</span> =&gt; <span class="self">self</span>.<span class="ident">validate_port</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
+                    <span class="ident">IbcPrefix::Capability</span> =&gt; <span class="self">self</span>.<span class="ident">validate_capability</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
+                    <span class="ident">IbcPrefix::SeqSend</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_sequence_send</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::SeqRecv</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_sequence_recv</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::SeqAck</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_sequence_ack</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::Commitment</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_commitment</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::Receipt</span> =&gt; {
+                        <span class="self">self</span>.<span class="ident">validate_receipt</span>(<span class="ident">key</span>, <span class="ident">tx_data</span>)<span class="question-mark">?</span>
+                    }
+                    <span class="ident">IbcPrefix::Ack</span> =&gt; <span class="self">self</span>.<span class="ident">validate_ack</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
+                    <span class="ident">IbcPrefix::Event</span> =&gt; {}
+                    <span class="ident">IbcPrefix::Unknown</span> =&gt; {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::KeyError</span>(<span class="macro">format!</span>(
+                            <span class="string">&quot;Invalid IBC-related key: {}&quot;</span>,
+                            <span class="ident">key</span>
+                        )));
+                    }
+                };
+            }
         }
 
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
@@ -1937,7 +1958,7 @@
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
     <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
-    <span class="kw">fn</span> <span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">has_key_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">has_key_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">StateChange::Updated</span>)
@@ -1951,9 +1972,9 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; {
                 <span class="comment">// As ibc-go, u64 like a counter is encoded with big-endian</span>
                 <span class="kw">let</span> <span class="ident">counter</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                     <span class="ident">Error::CounterError</span>(
@@ -1962,19 +1983,19 @@
                 })<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">u64::from_be_bytes</span>(<span class="ident">counter</span>))
             }
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(<span class="string">&quot;The counter doesn&#39;t exist&quot;</span>.<span class="ident">to_owned</span>()))
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(<span class="macro">format!</span>(
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Reading the counter failed: {}&quot;</span>,
                 <span class="ident">e</span>
             ))),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; {
                 <span class="comment">// As ibc-go, u64 like a counter is encoded with big-endian</span>
                 <span class="kw">let</span> <span class="ident">counter</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                     <span class="ident">Error::CounterError</span>(
@@ -1983,22 +2004,22 @@
                 })<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">u64::from_be_bytes</span>(<span class="ident">counter</span>))
             }
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
                 <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(<span class="string">&quot;The counter doesn&#39;t exist&quot;</span>.<span class="ident">to_owned</span>()))
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(<span class="macro">format!</span>(
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Reading the counter failed: {}&quot;</span>,
                 <span class="ident">e</span>
             ))),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">check_emitted_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">expected_event</span>: <span class="ident">IbcEvent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">check_emitted_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">expected_event</span>: <span class="ident">IbcEvent</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get_ibc_event</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">event</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">event</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">WrappedIbcEvent::try_from</span>(<span class="ident">expected_event</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">event</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span> {
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">event</span> <span class="op">==</span> <span class="ident">expected</span> {
                     <span class="prelude-val">Ok</span>(())
                 } <span class="kw">else</span> {
                     <span class="prelude-val">Err</span>(<span class="ident">Error::IbcEvent</span>(<span class="macro">format!</span>(
@@ -2007,7 +2028,7 @@
                     )))
                 }
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="prelude-val">Err</span>(<span class="ident">Error::IbcEvent</span>(<span class="string">&quot;No event has been emitted&quot;</span>.<span class="ident">to_owned</span>()))
             }
         }
@@ -2015,43 +2036,43 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">native_vp::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">native_vp::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">native_vp::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::NativeVpError</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">client::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">client::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">client::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::ClientError</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">connection::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">connection::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">connection::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::ConnectionError</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">channel::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">channel::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">channel::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::ChannelError</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">port::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">port::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">port::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::PortError</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">packet::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">packet::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">packet::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::PacketError</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">sequence::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">sequence::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">sequence::Error</span>) -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::SequenceError</span>(<span class="ident">err</span>)
     }
 }
@@ -2256,16 +2277,16 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">DurationSecs</span>};
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm</span>;
 
-    <span class="kw">fn</span> <span class="ident">get_client_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ClientId</span> {
+    <span class="kw">fn</span> <span class="ident">get_client_id</span>() -&gt; <span class="ident">ClientId</span> {
         <span class="ident">ClientId::from_str</span>(<span class="string">&quot;test_client&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a client ID failed&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">insert_init_states</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">TestStorage</span>, <span class="ident">WriteLog</span>) {
+    <span class="kw">fn</span> <span class="ident">insert_init_states</span>() -&gt; (<span class="ident">TestStorage</span>, <span class="ident">WriteLog</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">TestStorage::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
 
         <span class="comment">// initialize the storage</span>
-        <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>);
+        <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::init_genesis_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>);
         <span class="comment">// set a dummy header</span>
         <span class="ident">storage</span>
             .<span class="ident">set_header</span>(<span class="ident">get_dummy_header</span>())
@@ -2302,7 +2323,7 @@
         (<span class="ident">storage</span>, <span class="ident">write_log</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_dummy_header</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TmHeader</span> {
+    <span class="kw">fn</span> <span class="ident">get_dummy_header</span>() -&gt; <span class="ident">TmHeader</span> {
         <span class="ident">TmHeader</span> {
             <span class="ident">version</span>: <span class="ident">TmVersion</span> { <span class="ident">block</span>: <span class="number">10</span>, <span class="ident">app</span>: <span class="number">0</span> },
             <span class="ident">chain_id</span>: <span class="ident">TmChainId::try_from</span>(<span class="string">&quot;test_chain&quot;</span>.<span class="ident">to_owned</span>())
@@ -2326,26 +2347,26 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_connection_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionId</span> {
+    <span class="kw">fn</span> <span class="ident">get_connection_id</span>() -&gt; <span class="ident">ConnectionId</span> {
         <span class="ident">ConnectionId::new</span>(<span class="number">0</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_port_channel_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PortChannelId</span> {
+    <span class="kw">fn</span> <span class="ident">get_port_channel_id</span>() -&gt; <span class="ident">PortChannelId</span> {
         <span class="ident">PortChannelId</span> {
             <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
             <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_port_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PortId</span> {
+    <span class="kw">fn</span> <span class="ident">get_port_id</span>() -&gt; <span class="ident">PortId</span> {
         <span class="ident">PortId::from_str</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_channel_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelId</span> {
+    <span class="kw">fn</span> <span class="ident">get_channel_id</span>() -&gt; <span class="ident">ChannelId</span> {
         <span class="ident">ChannelId::from_str</span>(<span class="string">&quot;test_channel&quot;</span>).<span class="ident">unwrap</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_connection</span>(<span class="ident">conn_state</span>: <span class="ident">ConnState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span> {
+    <span class="kw">fn</span> <span class="ident">get_connection</span>(<span class="ident">conn_state</span>: <span class="ident">ConnState</span>) -&gt; <span class="ident">ConnectionEnd</span> {
         <span class="ident">ConnectionEnd::new</span>(
             <span class="ident">conn_state</span>,
             <span class="ident">get_client_id</span>(),
@@ -2355,7 +2376,7 @@
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">get_conn_counterparty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnCounterparty</span> {
+    <span class="kw">fn</span> <span class="ident">get_conn_counterparty</span>() -&gt; <span class="ident">ConnCounterparty</span> {
         <span class="kw">let</span> <span class="ident">counterpart_client_id</span> <span class="op">=</span>
             <span class="ident">ClientId::from_str</span>(<span class="string">&quot;counterpart_test_client&quot;</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Creating a client ID failed&quot;</span>);
@@ -2369,7 +2390,7 @@
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">get_channel</span>(<span class="ident">channel_state</span>: <span class="ident">ChanState</span>, <span class="ident">order</span>: <span class="ident">Order</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelEnd</span> {
+    <span class="kw">fn</span> <span class="ident">get_channel</span>(<span class="ident">channel_state</span>: <span class="ident">ChanState</span>, <span class="ident">order</span>: <span class="ident">Order</span>) -&gt; <span class="ident">ChannelEnd</span> {
         <span class="ident">ChannelEnd::new</span>(
             <span class="ident">channel_state</span>,
             <span class="ident">order</span>,
@@ -2379,7 +2400,7 @@
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">get_channel_counterparty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChanCounterparty</span> {
+    <span class="kw">fn</span> <span class="ident">get_channel_counterparty</span>() -&gt; <span class="ident">ChanCounterparty</span> {
         <span class="kw">let</span> <span class="ident">counterpart_port_id</span> <span class="op">=</span> <span class="ident">PortId::from_str</span>(<span class="string">&quot;counterpart_test_port&quot;</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a port ID failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">counterpart_channel_id</span> <span class="op">=</span>
@@ -2388,7 +2409,7 @@
         <span class="ident">ChanCounterparty::new</span>(<span class="ident">counterpart_port_id</span>, <span class="prelude-val">Some</span>(<span class="ident">counterpart_channel_id</span>))
     }
 
-    <span class="kw">fn</span> <span class="ident">set_port</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>, <span class="ident">index</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">set_port</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;mut</span> <span class="ident">WriteLog</span>, <span class="ident">index</span>: <span class="ident">u64</span>) {
         <span class="kw">let</span> <span class="ident">port_key</span> <span class="op">=</span> <span class="ident">port_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>());
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">port_key</span>, <span class="ident">index</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>())
@@ -2400,28 +2421,28 @@
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">cap_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">get_next_seq</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">TestStorage</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Sequence</span> {
+    <span class="kw">fn</span> <span class="ident">get_next_seq</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">TestStorage</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="ident">Sequence</span> {
         <span class="kw">let</span> (<span class="ident">val</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
         <span class="kw">match</span> <span class="ident">val</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; {
                 <span class="comment">// IBC related data is encoded without borsh</span>
                 <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">v</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
                 <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::from_be_bytes</span>(<span class="ident">index</span>);
                 <span class="ident">Sequence::from</span>(<span class="ident">index</span>)
             }
             <span class="comment">// The sequence has not been used yet</span>
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sequence::from</span>(<span class="number">1</span>),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">Sequence::from</span>(<span class="number">1</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">increment_seq</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">seq</span>: <span class="ident">Sequence</span>) {
+    <span class="kw">fn</span> <span class="ident">increment_seq</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;mut</span> <span class="ident">WriteLog</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">seq</span>: <span class="ident">Sequence</span>) {
         <span class="kw">let</span> <span class="ident">seq_num</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="ident">seq</span>.<span class="ident">increment</span>());
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="ident">key</span>, <span class="ident">seq_num</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">format!</span>(
             <span class="string">&quot;{:?},{:?},{:?}&quot;</span>,
             <span class="ident">packet</span>.<span class="ident">timeout_timestamp</span>, <span class="ident">packet</span>.<span class="ident">timeout_height</span>, <span class="ident">packet</span>.<span class="ident">data</span>,
@@ -2451,7 +2472,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2504,7 +2525,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_update_client</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// update the client</span>
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">get_client_id</span>();
@@ -2535,7 +2556,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2558,7 +2579,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_init_connection</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare a message</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgConnectionOpenInit</span> {
@@ -2580,7 +2601,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2622,7 +2643,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2648,7 +2669,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_try_connection</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
@@ -2692,7 +2713,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2721,7 +2742,7 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
         <span class="comment">// update the connection to Open</span>
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
@@ -2764,7 +2785,7 @@
         <span class="ident">write_log</span>.<span class="ident">set_ibc_event</span>(<span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2792,7 +2813,7 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
         <span class="comment">// update the connection to Open</span>
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
@@ -2823,7 +2844,7 @@
         <span class="ident">write_log</span>.<span class="ident">set_ibc_event</span>(<span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2850,7 +2871,7 @@
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Init</span>, <span class="ident">Order::Ordered</span>);
@@ -2861,7 +2882,7 @@
         };
 
         <span class="comment">// insert an Init channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2870,7 +2891,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2897,7 +2918,7 @@
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
@@ -2925,7 +2946,7 @@
         };
 
         <span class="comment">// insert a TryOpen channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2934,7 +2955,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -2962,13 +2983,13 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an Init channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Init</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
@@ -3006,7 +3027,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3034,13 +3055,13 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert a TryOpen channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::TryOpen</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
@@ -3073,7 +3094,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3096,7 +3117,7 @@
     <span class="kw">fn</span> <span class="ident">test_validate_port</span>() {
         <span class="kw">let</span> (<span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert a port</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -3124,7 +3145,7 @@
         <span class="kw">let</span> (<span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert a port</span>
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="ident">index</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="ident">index</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -3157,13 +3178,13 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare a message</span>
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">DateTimeUtc::now</span>() <span class="op">+</span> <span class="ident">DurationSecs</span>(<span class="number">100</span>);
@@ -3184,7 +3205,7 @@
         <span class="comment">// get and increment the nextSequenceSend</span>
         <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">next_sequence_send_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
-        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
+        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// make a packet</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">packet_from_message</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">sequence</span>, <span class="kw-2">&amp;</span><span class="ident">counterparty</span>);
@@ -3198,7 +3219,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3226,18 +3247,18 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// get and increment the nextSequenceRecv</span>
         <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">next_sequence_recv_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
-        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
+        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// make a packet and data</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
@@ -3274,7 +3295,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3319,7 +3340,7 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
@@ -3332,7 +3353,7 @@
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">commitment</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">ack</span> <span class="op">=</span> <span class="ident">PacketAck::default</span>().<span class="ident">encode_to_vec</span>();
@@ -3348,14 +3369,14 @@
         };
 
         <span class="comment">// increment the nextSequenceAck</span>
-        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
+        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// delete the commitment</span>
         <span class="ident">write_log</span>.<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>).<span class="ident">expect</span>(<span class="string">&quot;delete failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3383,13 +3404,13 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare a message</span>
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">DateTimeUtc::now</span>() <span class="op">+</span> <span class="ident">DurationSecs</span>(<span class="number">100</span>);
@@ -3427,7 +3448,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3455,13 +3476,13 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
-        <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
+        <span class="ident">set_port</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
+        <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// make a packet and data</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
@@ -3507,7 +3528,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
@@ -3564,5 +3585,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

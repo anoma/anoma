@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;shell&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;shell&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -796,25 +797,25 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ErrorCodes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u32</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">ErrorCodes</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">ErrorCodes</span>) -&gt; <span class="ident">u32</span> {
         <span class="ident">code</span>.<span class="ident">to_u32</span>().<span class="ident">unwrap</span>()
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ErrorCodes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">ErrorCodes</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">ErrorCodes</span>) -&gt; <span class="ident">String</span> {
         <span class="ident">u32::from</span>(<span class="ident">code</span>).<span class="ident">to_string</span>()
     }
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// simply nuke the DB files</span>
     <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db_dir</span>();
     <span class="kw">match</span> <span class="ident">std::fs::remove_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">db_path</span>) {
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">std::io::ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> (),
-        <span class="ident">res</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Error::RemoveDB</span>)<span class="question-mark">?</span>,
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">==</span> <span class="ident">std::io::ErrorKind::NotFound</span> =&gt; (),
+        <span class="ident">res</span> =&gt; <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Error::RemoveDB</span>)<span class="question-mark">?</span>,
     };
     <span class="comment">// reset Tendermint state</span>
     <span class="ident">tendermint_node::reset</span>(<span class="ident">config</span>.<span class="ident">tendermint_dir</span>())
@@ -874,7 +875,7 @@
         <span class="ident">db_cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">D::Cache</span><span class="op">&gt;</span>,
         <span class="ident">vp_wasm_compilation_cache</span>: <span class="ident">u64</span>,
         <span class="ident">tx_wasm_compilation_cache</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    ) -&gt; <span class="self">Self</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">Path::new</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>).<span class="ident">is_dir</span>() {
             <span class="ident">std::fs::create_dir</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Creating directory for Anoma should not fail&quot;</span>);
@@ -911,30 +912,30 @@
 
     <span class="doccomment">/// Iterate lazily over the wrapper txs in order</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">lazy_next</span>()
     }
 
     <span class="doccomment">/// Iterate lazily over the wrapper txs in order</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">pop</span>()
     }
 
     <span class="doccomment">/// If we reject the decrypted txs because they were out of</span>
     <span class="doccomment">/// order, reset the iterator.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_tx_queue_iter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_tx_queue_iter</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">rewind</span>()
     }
 
     <span class="doccomment">/// Load the Merkle root hash and the height of the last committed block, if</span>
     <span class="doccomment">/// any. This is returned when ABCI sends an `info` request.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Info</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_state</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">response::Info</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Info::default</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_state</span>();
 
         <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">height</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">height</span>)) =&gt; {
                 <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;Last state root hash: {}, height: {}&quot;</span>,
                     <span class="ident">root</span>,
@@ -944,7 +945,7 @@
                 <span class="ident">response</span>.<span class="ident">last_block_height</span> <span class="op">=</span>
                     <span class="ident">height</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Invalid block height&quot;</span>);
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;No state could be found, chain is not initialized&quot;</span>
                 );
@@ -955,16 +956,16 @@
     }
 
     <span class="doccomment">/// Apply PoS slashes from the evidence</span>
-    <span class="kw">fn</span> <span class="ident">slash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">slash</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">byzantine_validators</span>.<span class="ident">is_empty</span>() {
             <span class="kw">let</span> <span class="ident">byzantine_validators</span> <span class="op">=</span>
-                <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">byzantine_validators</span>);
+                <span class="ident">mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">byzantine_validators</span>);
             <span class="kw">let</span> <span class="ident">pos_params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">read_pos_params</span>();
             <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">block</span>.<span class="ident">epoch</span>;
             <span class="kw">for</span> <span class="ident">evidence</span> <span class="kw">in</span> <span class="ident">byzantine_validators</span> {
                 <span class="kw">let</span> <span class="ident">evidence_height</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">u64::try_from</span>(<span class="ident">evidence</span>.<span class="ident">height</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">height</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">height</span>,
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">height</span>) =&gt; <span class="ident">height</span>,
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                         <span class="macro">tracing::error!</span>(
                             <span class="string">&quot;Unexpected evidence block height {}&quot;</span>,
                             <span class="ident">err</span>
@@ -978,8 +979,8 @@
                     .<span class="ident">pred_epochs</span>
                     .<span class="ident">get_epoch</span>(<span class="ident">BlockHeight</span>(<span class="ident">evidence_height</span>))
                 {
-                    <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">epoch</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) =&gt; <span class="ident">epoch</span>,
+                    <span class="prelude-val">None</span> =&gt; {
                         <span class="macro">tracing::error!</span>(
                             <span class="string">&quot;Couldn&#39;t find epoch for evidence block height {}&quot;</span>,
                             <span class="ident">evidence_height</span>
@@ -989,14 +990,14 @@
                 };
                 <span class="kw">let</span> <span class="ident">slash_type</span> <span class="op">=</span>
                     <span class="kw">match</span> <span class="ident">abci::EvidenceType::from_i32</span>(<span class="ident">evidence</span>.<span class="ident">r#type</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">r#type</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">r#type</span> {
-                            <span class="ident">abci::EvidenceType::DuplicateVote</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">r#type</span>) =&gt; <span class="kw">match</span> <span class="ident">r#type</span> {
+                            <span class="ident">abci::EvidenceType::DuplicateVote</span> =&gt; {
                                 <span class="ident">pos::types::SlashType::DuplicateVote</span>
                             }
-                            <span class="ident">abci::EvidenceType::LightClientAttack</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">abci::EvidenceType::LightClientAttack</span> =&gt; {
                                 <span class="ident">pos::types::SlashType::LightClientAttack</span>
                             }
-                            <span class="ident">abci::EvidenceType::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">abci::EvidenceType::Unknown</span> =&gt; {
                                 <span class="macro">tracing::error!</span>(
                                     <span class="string">&quot;Unknown evidence: {:#?}&quot;</span>,
                                     <span class="ident">evidence</span>
@@ -1004,7 +1005,7 @@
                                 <span class="kw">continue</span>;
                             }
                         },
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="prelude-val">None</span> =&gt; {
                             <span class="macro">tracing::error!</span>(
                                 <span class="string">&quot;Unexpected evidence type {}&quot;</span>,
                                 <span class="ident">evidence</span>.<span class="ident">r#type</span>
@@ -1013,10 +1014,10 @@
                         }
                     };
                 <span class="kw">let</span> <span class="ident">validator_raw_hash</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">evidence</span>.<span class="ident">validator</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">validator</span>) =&gt; {
                         <span class="kw">match</span> <span class="ident">String::from_utf8</span>(<span class="ident">validator</span>.<span class="ident">address</span>) {
-                            <span class="prelude-val">Ok</span>(<span class="ident">raw_hash</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">raw_hash</span>,
-                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">Ok</span>(<span class="ident">raw_hash</span>) =&gt; <span class="ident">raw_hash</span>,
+                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                                 <span class="macro">tracing::error!</span>(
                                     <span class="string">&quot;Evidence failed to decode validator \
                                      address from utf-8 with {}&quot;</span>,
@@ -1026,7 +1027,7 @@
                             }
                         }
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">None</span> =&gt; {
                         <span class="macro">tracing::error!</span>(
                             <span class="string">&quot;Evidence without a validator {:#?}&quot;</span>,
                             <span class="ident">evidence</span>
@@ -1038,8 +1039,8 @@
                     .<span class="ident">storage</span>
                     .<span class="ident">read_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="ident">validator_raw_hash</span>)
                 {
-                    <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">validator</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">validator</span>) =&gt; <span class="ident">validator</span>,
+                    <span class="prelude-val">None</span> =&gt; {
                         <span class="macro">tracing::error!</span>(
                             <span class="string">&quot;Cannot find validator&#39;s address from raw hash {}&quot;</span>,
                             <span class="ident">validator_raw_hash</span>
@@ -1073,7 +1074,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extend_vote</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_req</span>: <span class="ident">request::ExtendVote</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::ExtendVote</span> {
+    ) -&gt; <span class="ident">response::ExtendVote</span> {
         <span class="ident">Default::default</span>()
     }
 
@@ -1082,17 +1083,17 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_vote_extension</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_req</span>: <span class="ident">request::VerifyVoteExtension</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::VerifyVoteExtension</span> {
+    ) -&gt; <span class="ident">response::VerifyVoteExtension</span> {
         <span class="ident">Default::default</span>()
     }
 
     <span class="doccomment">/// Commit a block. Persist the application state and return the Merkle root</span>
     <span class="doccomment">/// hash.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Commit</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">response::Commit</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Commit::default</span>();
         <span class="comment">// commit changes from the write-log to storage</span>
         <span class="self">self</span>.<span class="ident">write_log</span>
-            .<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>)
+            .<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">storage</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Expected committing block write log success&quot;</span>);
         <span class="comment">// store the block&#39;s data in DB</span>
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">commit</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1119,11 +1120,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">r#_type</span>: <span class="ident">MempoolTxType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::CheckTx</span> {
+    ) -&gt; <span class="ident">response::CheckTx</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::CheckTx::default</span>();
         <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::TxDecoding</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">String::from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">String::from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">msg</span>) =&gt; {
                 <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
                 <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();
             }
@@ -1132,35 +1133,35 @@
     }
 
     <span class="doccomment">/// Simulate validation and application of a transaction.</span>
-    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
+    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">response::Query</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Query::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vp_wasm_cache</span>.<span class="ident">read_only</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_wasm_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx_wasm_cache</span>.<span class="ident">read_only</span>();
         <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">tx</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">TxType::Decrypted</span>(<span class="ident">DecryptedTx::Decrypted</span>(<span class="ident">tx</span>));
                 <span class="kw">match</span> <span class="ident">protocol::apply_tx</span>(
                     <span class="ident">tx</span>,
                     <span class="ident">tx_bytes</span>.<span class="ident">len</span>(),
-                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">gas_meter</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>,
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
-                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span>,
-                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_wasm_cache</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">vp_wasm_cache</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">tx_wasm_cache</span>,
                 )
                 .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>)
                 {
-                    <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>(),
-                    <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>(),
+                    <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
                         <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
                         <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">error</span>);
                     }
                 }
                 <span class="ident">response</span>
             }
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                 <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
                 <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Error::TxDecoding</span>(<span class="ident">err</span>));
                 <span class="ident">response</span>
@@ -1200,7 +1201,7 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::storage</span>::{<span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span>};
 
     <span class="doccomment">/// Gets the absolute path to root directory</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">top_level_directory</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">top_level_directory</span>() -&gt; <span class="ident">PathBuf</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_path</span> <span class="op">=</span> <span class="ident">std::env::current_dir</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Current directory should exist&quot;</span>)
             .<span class="ident">canonicalize</span>()
@@ -1213,12 +1214,12 @@
     }
 
     <span class="doccomment">/// Generate a random public/private keypair</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">gen_keypair</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">Keypair</span> {
         <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
         <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>)
+        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)
     }
 
     <span class="doccomment">/// A wrapper around the shell that implements</span>
@@ -1231,7 +1232,7 @@
 
     <span class="kw">impl</span> <span class="ident">TestShell</span> {
         <span class="doccomment">/// Create a new shell</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>().<span class="ident">canonicalize</span>().<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
             <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
@@ -1249,7 +1250,7 @@
         }
 
         <span class="doccomment">/// Forward a InitChain request and expect a success</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">RequestInitChain</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_chain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">RequestInitChain</span>) {
             <span class="self">self</span>.<span class="ident">shell</span>
                 .<span class="ident">init_chain</span>(<span class="ident">req</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Test shell failed to initialize&quot;</span>);
@@ -1258,18 +1259,18 @@
         <span class="doccomment">/// Forward the prepare proposal request and return the response</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_proposal</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
             <span class="ident">req</span>: <span class="ident">RequestPrepareProposal</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ResponsePrepareProposal</span> {
+        ) -&gt; <span class="ident">ResponsePrepareProposal</span> {
             <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">prepare_proposal</span>(<span class="ident">req</span>)
         }
 
         <span class="doccomment">/// Forward a ProcessProposal request and extract the relevant</span>
         <span class="doccomment">/// response data to return</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_proposal</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
             <span class="ident">req</span>: <span class="ident">ProcessProposal</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shim::response::ProcessProposal</span> {
+        ) -&gt; <span class="ident">shim::response::ProcessProposal</span> {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
             {
                 <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">process_proposal</span>(<span class="ident">req</span>)
@@ -1283,38 +1284,38 @@
         <span class="doccomment">/// Forward a FinalizeBlock request return a vector of</span>
         <span class="doccomment">/// the events created for each transaction</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize_block</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
             <span class="ident">req</span>: <span class="ident">FinalizeBlock</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TmEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TmEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">finalize_block</span>(<span class="ident">req</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">resp</span>.<span class="ident">events</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
+                <span class="prelude-val">Ok</span>(<span class="ident">resp</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">resp</span>.<span class="ident">events</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">err</span>),
             }
         }
 
         <span class="doccomment">/// Add a wrapper tx to the queue of txs to be decrypted</span>
         <span class="doccomment">/// in the current block proposal</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enqueue_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">wrapper</span>: <span class="ident">WrapperTx</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enqueue_tx</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">wrapper</span>: <span class="ident">WrapperTx</span>) {
             <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">wrapper</span>);
             <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">reset_tx_queue_iter</span>();
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
         <span class="doccomment">/// Get the next wrapper tx to be decoded</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
             <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">next_wrapper</span>()
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         <span class="doccomment">/// Get the next wrapper tx to be decoded</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
             <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">next_wrapper</span>()
         }
     }
 
     <span class="doccomment">/// Start a new test shell and initialize it</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">setup</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TestShell</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">setup</span>() -&gt; <span class="ident">TestShell</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">TestShell::new</span>();
         <span class="ident">test</span>.<span class="ident">init_chain</span>(<span class="ident">RequestInitChain</span> {
             <span class="ident">time</span>: <span class="prelude-val">Some</span>(<span class="ident">Timestamp</span> {
@@ -1402,5 +1403,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

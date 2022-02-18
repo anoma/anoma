@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["gossip",""],["ledger",""]]});
+initSidebarItems({"mod":[["gossip",""],["ledger",""],["matchmaker",""]]});

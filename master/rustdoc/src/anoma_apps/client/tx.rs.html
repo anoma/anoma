@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;client&#x2F;tx.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tx.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;client&#x2F;tx.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tx.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1135,7 +1136,7 @@
 
     <span class="comment">// Check that the address is established and exists on chain</span>
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">addr</span> {
-        <span class="ident">Address::Established</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Address::Established</span>(<span class="kw">_</span>) =&gt; {
             <span class="kw">let</span> <span class="ident">exists</span> <span class="op">=</span>
                 <span class="ident">rpc::known_address</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
             <span class="kw">if</span> <span class="op">!</span><span class="ident">exists</span> {
@@ -1145,7 +1146,7 @@
                 }
             }
         }
-        <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) =&gt; {
             <span class="macro">eprintln!</span>(
                 <span class="string">&quot;A validity predicate of an implicit address cannot be \
                  directly updated. You can use an established address for \
@@ -1155,7 +1156,7 @@
                 <span class="ident">safe_exit</span>(<span class="number">1</span>)
             }
         }
-        <span class="ident">Address::Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Address::Internal</span>(<span class="kw">_</span>) =&gt; {
             <span class="macro">eprintln!</span>(
                 <span class="string">&quot;A validity predicate of an internal address cannot be \
                  directly updated.&quot;</span>
@@ -1312,7 +1313,7 @@
             <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">initialized_accounts</span>[..] {
                 <span class="comment">// There should be 2 accounts, one for the validator itself, one</span>
                 <span class="comment">// for its staking reward address.</span>
-                [<span class="ident">account_1</span>, <span class="ident">account_2</span>] <span class="op">=</span><span class="op">&gt;</span> {
+                [<span class="ident">account_1</span>, <span class="ident">account_2</span>] =&gt; {
                     <span class="comment">// We need to find out which address is which</span>
                     <span class="kw">let</span> (<span class="ident">validator_address</span>, <span class="ident">rewards_address</span>) <span class="op">=</span>
                         <span class="kw">if</span> <span class="ident">rpc::is_validator</span>(<span class="ident">account_1</span>, <span class="ident">tx_args</span>.<span class="ident">ledger_address</span>)
@@ -1326,14 +1327,14 @@
                     <span class="kw">let</span> <span class="ident">validator_address_alias</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx_args</span>
                         .<span class="ident">initialized_account_alias</span>
                     {
-                        <span class="prelude-val">Some</span>(<span class="ident">alias</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">alias</span>,
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">alias</span>) =&gt; <span class="ident">alias</span>,
+                        <span class="prelude-val">None</span> =&gt; {
                             <span class="macro">print!</span>(
                                 <span class="string">&quot;Choose an alias for the validator address: &quot;</span>
                             );
                             <span class="ident">io::stdout</span>().<span class="ident">flush</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">String::new</span>();
-                            <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">alias</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+                            <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">alias</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
                             <span class="ident">alias</span>.<span class="ident">trim</span>().<span class="ident">to_owned</span>()
                         }
                     };
@@ -1375,7 +1376,7 @@
                         <span class="ident">rewards_address_alias</span>,
                     )
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">_</span> =&gt; {
                     <span class="macro">eprintln!</span>(<span class="string">&quot;Expected two accounts to be created&quot;</span>);
                     <span class="ident">safe_exit</span>(<span class="number">1</span>)
                 }
@@ -1444,7 +1445,7 @@
     <span class="kw">let</span> <span class="ident">balance_key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">source</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
     <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">balance_key</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">balance</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">balance</span>) =&gt; {
             <span class="kw">if</span> <span class="ident">balance</span> <span class="op">&lt;</span> <span class="ident">args</span>.<span class="ident">amount</span> {
                 <span class="macro">eprintln!</span>(
                     <span class="string">&quot;The balance of the source {} of token {} is lower than \
@@ -1457,7 +1458,7 @@
                 }
             }
         }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span> =&gt; {
             <span class="macro">eprintln!</span>(
                 <span class="string">&quot;No balance found for the source {} of token {}&quot;</span>,
                 <span class="ident">source</span>, <span class="ident">token</span>
@@ -1517,7 +1518,7 @@
     <span class="kw">let</span> <span class="ident">balance_key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">address::xan</span>(), <span class="ident">bond_source</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
     <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">balance_key</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">balance</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">balance</span>) =&gt; {
             <span class="kw">if</span> <span class="ident">balance</span> <span class="op">&lt;</span> <span class="ident">args</span>.<span class="ident">amount</span> {
                 <span class="macro">eprintln!</span>(
                     <span class="string">&quot;The balance of the source {} is lower than the amount to \
@@ -1530,7 +1531,7 @@
                 }
             }
         }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span> =&gt; {
             <span class="macro">eprintln!</span>(<span class="string">&quot;No balance found for the source {}&quot;</span>, <span class="ident">bond_source</span>);
             <span class="kw">if</span> <span class="op">!</span><span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">force</span> {
                 <span class="ident">safe_exit</span>(<span class="number">1</span>)
@@ -1581,7 +1582,7 @@
     <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
         <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>).<span class="kw">await</span>;
     <span class="kw">match</span> <span class="ident">bonds</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bond_amount</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
             <span class="kw">for</span> <span class="ident">bond</span> <span class="kw">in</span> <span class="ident">bonds</span>.<span class="ident">iter</span>() {
                 <span class="kw">for</span> <span class="ident">delta</span> <span class="kw">in</span> <span class="ident">bond</span>.<span class="ident">deltas</span>.<span class="ident">values</span>() {
@@ -1600,7 +1601,7 @@
                 }
             }
         }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span> =&gt; {
             <span class="macro">eprintln!</span>(<span class="string">&quot;No bonds found&quot;</span>);
             <span class="kw">if</span> <span class="op">!</span><span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">force</span> {
                 <span class="ident">safe_exit</span>(<span class="number">1</span>)
@@ -1656,14 +1657,14 @@
     <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span>
         <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Unbonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>).<span class="kw">await</span>;
     <span class="kw">match</span> <span class="ident">unbonds</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unbonded_amount</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbond</span>) <span class="op">=</span> <span class="ident">unbonds</span>.<span class="ident">get</span>(<span class="ident">epoch</span>) {
                 <span class="kw">for</span> <span class="ident">delta</span> <span class="kw">in</span> <span class="ident">unbond</span>.<span class="ident">deltas</span>.<span class="ident">values</span>() {
                     <span class="ident">unbonded_amount</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">delta</span>;
                 }
             }
-            <span class="kw">if</span> <span class="ident">unbonded_amount</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+            <span class="kw">if</span> <span class="ident">unbonded_amount</span> <span class="op">==</span> <span class="number">0</span>.<span class="ident">into</span>() {
                 <span class="macro">eprintln!</span>(
                     <span class="string">&quot;There are no unbonded bonds ready to withdraw in the \
                      current epoch {}.&quot;</span>,
@@ -1674,7 +1675,7 @@
                 }
             }
         }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span> =&gt; {
             <span class="macro">eprintln!</span>(<span class="string">&quot;No unbonded bonds found&quot;</span>);
             <span class="kw">if</span> <span class="op">!</span><span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">force</span> {
                 <span class="ident">safe_exit</span>(<span class="number">1</span>)
@@ -1700,14 +1701,14 @@
     <span class="ident">tx</span>: <span class="ident">Tx</span>,
     <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">args::Tx</span>,
     <span class="ident">default</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Context</span>, <span class="ident">Tx</span>, <span class="ident">std::rc::Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
+) -&gt; (<span class="ident">Context</span>, <span class="ident">Tx</span>, <span class="ident">std::rc::Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signing_key</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">signing_key</span> {
         <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_cached</span>(<span class="ident">signing_key</span>);
         (<span class="ident">tx</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">signing_key</span>), <span class="ident">signing_key</span>)
     } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signer</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">signer</span>.<span class="ident">as_ref</span>().<span class="ident">or</span>(<span class="ident">default</span>) {
         <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">signer</span>);
         <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
             <span class="kw-2">&amp;</span><span class="ident">signer</span>,
             <span class="ident">args</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
         )
@@ -1730,7 +1731,7 @@
     <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">args::Tx</span>,
     <span class="ident">tx</span>: <span class="ident">Tx</span>,
     <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Context</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
+) -&gt; (<span class="ident">Context</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
     <span class="comment">// NOTE: use this to print the request JSON body:</span>
 
     <span class="comment">// let request =</span>
@@ -1769,9 +1770,9 @@
         <span class="comment">// Return result based on executed operation, otherwise deal with</span>
         <span class="comment">// the encountered errors uniformly</span>
         <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="ident">Right</span>(<span class="prelude-val">Ok</span>(<span class="ident">result</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">result</span>.<span class="ident">initialized_accounts</span>),
-            <span class="ident">Left</span>(<span class="prelude-val">Ok</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">Vec::default</span>()),
-            <span class="ident">Right</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">|</span> <span class="ident">Left</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Right</span>(<span class="prelude-val">Ok</span>(<span class="ident">result</span>)) =&gt; (<span class="ident">ctx</span>, <span class="ident">result</span>.<span class="ident">initialized_accounts</span>),
+            <span class="ident">Left</span>(<span class="prelude-val">Ok</span>(<span class="kw">_</span>)) =&gt; (<span class="ident">ctx</span>, <span class="ident">Vec::default</span>()),
+            <span class="ident">Right</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">|</span> <span class="ident">Left</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)) =&gt; {
                 <span class="macro">eprintln!</span>(
                     <span class="string">&quot;Encountered error while broadcasting transaction: {}&quot;</span>,
                     <span class="ident">err</span>
@@ -1794,15 +1795,15 @@
         <span class="macro">println!</span>(
             <span class="string">&quot;The transaction initialized {} new account{}&quot;</span>,
             <span class="ident">len</span>,
-            <span class="kw">if</span> <span class="ident">len</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> { <span class="string">&quot;&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;s&quot;</span> }
+            <span class="kw">if</span> <span class="ident">len</span> <span class="op">==</span> <span class="number">1</span> { <span class="string">&quot;&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;s&quot;</span> }
         );
         <span class="comment">// Store newly initialized account addresses in the wallet</span>
-        <span class="kw">let</span> <span class="ident">wallet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>;
+        <span class="kw">let</span> <span class="ident">wallet</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>;
         <span class="kw">for</span> (<span class="ident">ix</span>, <span class="ident">address</span>) <span class="kw">in</span> <span class="ident">initialized_accounts</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="kw">let</span> <span class="ident">encoded</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">encode</span>();
             <span class="kw">let</span> <span class="ident">alias</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">initialized_account_alias</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">initialized_account_alias</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="ident">len</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">initialized_account_alias</span>) =&gt; {
+                    <span class="kw">if</span> <span class="ident">len</span> <span class="op">==</span> <span class="number">1</span> {
                         <span class="comment">// If there&#39;s only one account, use the</span>
                         <span class="comment">// alias as is</span>
                         <span class="ident">initialized_account_alias</span>.<span class="ident">into</span>()
@@ -1813,24 +1814,24 @@
                         <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">initialized_account_alias</span>, <span class="ident">ix</span>).<span class="ident">into</span>()
                     }
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">None</span> =&gt; {
                     <span class="macro">print!</span>(<span class="string">&quot;Choose an alias for {}: &quot;</span>, <span class="ident">encoded</span>);
                     <span class="ident">io::stdout</span>().<span class="ident">flush</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">String::new</span>();
-                    <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">alias</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+                    <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">alias</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
                     <span class="ident">alias</span>.<span class="ident">trim</span>().<span class="ident">to_owned</span>().<span class="ident">into</span>()
                 }
             };
             <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">alias</span>.<span class="ident">into_owned</span>();
             <span class="kw">let</span> <span class="ident">added</span> <span class="op">=</span> <span class="ident">wallet</span>.<span class="ident">add_address</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">address</span>.<span class="ident">clone</span>());
             <span class="kw">match</span> <span class="ident">added</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">new_alias</span>) <span class="kw">if</span> <span class="ident">new_alias</span> <span class="op">!</span><span class="op">=</span> <span class="ident">encoded</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">new_alias</span>) <span class="kw">if</span> <span class="ident">new_alias</span> <span class="op">!</span><span class="op">=</span> <span class="ident">encoded</span> =&gt; {
                     <span class="macro">println!</span>(
                         <span class="string">&quot;Added alias {} for address {}.&quot;</span>,
                         <span class="ident">new_alias</span>, <span class="ident">encoded</span>
                     );
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">println!</span>(<span class="string">&quot;No alias added for address {}.&quot;</span>, <span class="ident">encoded</span>),
+                <span class="kw">_</span> =&gt; <span class="macro">println!</span>(<span class="string">&quot;No alias added for address {}.&quot;</span>, <span class="ident">encoded</span>),
             };
         }
         <span class="kw">if</span> <span class="op">!</span><span class="ident">args</span>.<span class="ident">dry_run</span> {
@@ -1844,7 +1845,7 @@
 <span class="doccomment">/// Extract the wrapper transaction&#39;s hash and, if in ABCI++ mode, the inner</span>
 <span class="doccomment">/// transaction&#39;s hash. Useful for determining when parts of the given</span>
 <span class="doccomment">/// tranasaction make it on-chain.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_hashes</span>(<span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">WrapperTx</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">String</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_hashes</span>(<span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">WrapperTx</span>) -&gt; (<span class="ident">String</span>, <span class="ident">String</span>) {
     <span class="kw">let</span> <span class="ident">tx_hash</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">tx_hash</span>.<span class="ident">to_string</span>();
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">return</span> (<span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()).<span class="ident">to_string</span>(), <span class="ident">tx_hash</span>);
@@ -1862,7 +1863,7 @@
     <span class="ident">address</span>: <span class="ident">TendermintAddress</span>,
     <span class="ident">tx</span>: <span class="ident">WrapperTx</span>,
     <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="comment">// These can later be used to determine when parts of the tx make it</span>
     <span class="comment">// on-chain</span>
     <span class="kw">let</span> (<span class="ident">wrapper_tx_hash</span>, <span class="ident">_decrypted_tx_hash</span>) <span class="op">=</span> <span class="ident">tx_hashes</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>);
@@ -1885,7 +1886,7 @@
 
     <span class="ident">wrapper_tx_subscription</span>.<span class="ident">close</span>();
 
-    <span class="kw">if</span> <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+    <span class="kw">if</span> <span class="ident">response</span>.<span class="ident">code</span> <span class="op">==</span> <span class="number">0</span>.<span class="ident">into</span>() {
         <span class="macro">println!</span>(<span class="string">&quot;Transaction added to mempool: {:?}&quot;</span>, <span class="ident">response</span>);
         <span class="comment">// Print the transaction identifiers to enable the extraction of</span>
         <span class="comment">// acceptance/application results later</span>
@@ -1914,7 +1915,7 @@
     <span class="ident">address</span>: <span class="ident">TendermintAddress</span>,
     <span class="ident">tx</span>: <span class="ident">WrapperTx</span>,
     <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResponse</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResponse</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrapper_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
         <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
         <span class="prelude-val">None</span>,
@@ -1975,7 +1976,7 @@
         );
         <span class="comment">// The transaction is now on chain. We wait for it to be decrypted</span>
         <span class="comment">// and applied</span>
-        <span class="kw">if</span> <span class="ident">parsed</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">to_string</span>() {
+        <span class="kw">if</span> <span class="ident">parsed</span>.<span class="ident">code</span> <span class="op">==</span> <span class="number">0</span>.<span class="ident">to_string</span>() {
             <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">parse</span>(
                 <span class="ident">decrypted_tx_subscription</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
                 <span class="ident">TmEventType::Applied</span>,
@@ -2020,7 +2021,7 @@
     <span class="ident">json</span>: <span class="ident">serde_json::Value</span>,
     <span class="ident">event_type</span>: <span class="ident">TmEventType</span>,
     <span class="ident">tx_hash</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResponse</span> {
+) -&gt; <span class="ident">TxResponse</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selector</span> <span class="op">=</span> <span class="ident">jsonpath::selector</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event</span> <span class="op">=</span>
         <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[?(@.type==&#39;{}&#39;)]&quot;</span>, <span class="ident">event_type</span>))
@@ -2029,8 +2030,8 @@
             .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="ident">Attributes::from</span>(<span class="kw-2">*</span><span class="ident">event</span>);
                 <span class="kw">match</span> <span class="ident">attrs</span>.<span class="ident">get</span>(<span class="string">&quot;hash&quot;</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">hash</span>) <span class="kw">if</span> <span class="ident">hash</span> <span class="op">=</span><span class="op">=</span> <span class="ident">tx_hash</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">attrs</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">hash</span>) <span class="kw">if</span> <span class="ident">hash</span> <span class="op">==</span> <span class="ident">tx_hash</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">attrs</span>),
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
                 }
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attributes</span><span class="op">&gt;</span><span class="op">&gt;</span>()
@@ -2043,8 +2044,8 @@
     <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;gas_used&quot;</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">String::from</span>(<span class="string">&quot;0&quot;</span>));
     <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;initialized_accounts&quot;</span>);
     <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">initialized_accounts</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">values</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">values</span>).<span class="ident">unwrap</span>(),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
+        <span class="prelude-val">Some</span>(<span class="ident">values</span>) =&gt; <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">values</span>).<span class="ident">unwrap</span>(),
+        <span class="kw">_</span> =&gt; <span class="macro">vec!</span>[],
     };
     <span class="ident">TxResponse</span> {
         <span class="ident">info</span>,
@@ -2057,7 +2058,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TxResponse</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_tx</span>(<span class="ident">json</span>: <span class="ident">serde_json::Value</span>, <span class="ident">tx_hash</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_tx</span>(<span class="ident">json</span>: <span class="ident">serde_json::Value</span>, <span class="ident">tx_hash</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">tx_hash_json</span> <span class="op">=</span> <span class="ident">serde_json::Value::String</span>(<span class="ident">tx_hash</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selector</span> <span class="op">=</span> <span class="ident">jsonpath::selector</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
@@ -2071,7 +2072,7 @@
                 <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.hash&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
             {
                 <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>[<span class="number">0</span>].<span class="ident">clone</span>();
-                <span class="kw">if</span> <span class="ident">hash</span> <span class="op">=</span><span class="op">=</span> <span class="ident">tx_hash_json</span> {
+                <span class="kw">if</span> <span class="ident">hash</span> <span class="op">==</span> <span class="ident">tx_hash_json</span> {
                     <span class="kw">break</span> <span class="ident">hash</span>;
                 } <span class="kw">else</span> {
                     <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -2101,7 +2102,7 @@
             <span class="ident">evt_key</span>, <span class="ident">index</span>
         ));
         <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">initialized_accounts</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">values</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">values</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">values</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">values</span>.<span class="ident">is_empty</span>() =&gt; {
                 <span class="comment">// In a response, the initialized accounts are encoded as e.g.:</span>
                 <span class="comment">// ```</span>
                 <span class="comment">// &quot;applied.initialized_accounts&quot;: Array([</span>
@@ -2116,7 +2117,7 @@
                 <span class="comment">// ... and then decode the vec from the array inside the string</span>
                 <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">raw</span>).<span class="ident">unwrap</span>()
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
+            <span class="kw">_</span> =&gt; <span class="macro">vec!</span>[],
         };
         <span class="ident">TxResponse</span> {
             <span class="ident">info</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">info</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
@@ -2130,5 +2131,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

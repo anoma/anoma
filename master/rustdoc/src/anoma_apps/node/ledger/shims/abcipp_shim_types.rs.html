@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;shims&#x2F;abcipp_shim_types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>abcipp_shim_types.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;shims&#x2F;abcipp_shim_types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>abcipp_shim_types.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -413,7 +414,7 @@
 
     <span class="doccomment">/// Errors from the shell need to be propagated upward</span>
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">shell::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">shell::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">shell::Error</span>) -&gt; <span class="self">Self</span> {
             <span class="ident"><span class="self">Self</span>::Shell</span>(<span class="ident">err</span>)
         }
     }
@@ -457,34 +458,34 @@
     <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Req</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Request</span> {
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-        <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">req</span>: <span class="ident">Req</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">req</span>: <span class="ident">Req</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
             <span class="kw">match</span> <span class="ident">req</span> {
-                <span class="ident">Req::InitChain</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::InitChain</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::Info</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::Info</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::Query</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::Query</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::Commit</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::Commit</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::Flush</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::Flush</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::Echo</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::Echo</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::InitChain</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::InitChain</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::Info</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::Info</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::Query</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::Query</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::Commit</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::Commit</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::Flush</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::Flush</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::Echo</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::Echo</span>(<span class="ident">inner</span>)),
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                <span class="ident">Req::ExtendVote</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::ExtendVote</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::ExtendVote</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::ExtendVote</span>(<span class="ident">inner</span>)),
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                <span class="ident">Req::VerifyVoteExtension</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Req::VerifyVoteExtension</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Request::VerifyVoteExtension</span>(<span class="ident">inner</span>))
                 }
-                <span class="ident">Req::CheckTx</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::CheckTx</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::ListSnapshots</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::ListSnapshots</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::OfferSnapshot</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::OfferSnapshot</span>(<span class="ident">inner</span>)),
-                <span class="ident">Req::LoadSnapshotChunk</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Req::CheckTx</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::CheckTx</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::ListSnapshots</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::ListSnapshots</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::OfferSnapshot</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Request::OfferSnapshot</span>(<span class="ident">inner</span>)),
+                <span class="ident">Req::LoadSnapshotChunk</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Request::LoadSnapshotChunk</span>(<span class="ident">inner</span>))
                 }
-                <span class="ident">Req::ApplySnapshotChunk</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Req::ApplySnapshotChunk</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Request::ApplySnapshotChunk</span>(<span class="ident">inner</span>))
                 }
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                <span class="ident">Req::PrepareProposal</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Req::PrepareProposal</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Request::PrepareProposal</span>(<span class="ident">inner</span>))
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertReq</span>(<span class="ident">req</span>)),
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertReq</span>(<span class="ident">req</span>)),
             }
         }
     }
@@ -522,38 +523,38 @@
     <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Response</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Resp</span> {
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-        <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">resp</span>: <span class="ident">Response</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">resp</span>: <span class="ident">Response</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
             <span class="kw">match</span> <span class="ident">resp</span> {
-                <span class="ident">Response::InitChain</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::InitChain</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::Info</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::Info</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::Query</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::Query</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::Commit</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::Commit</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::Flush</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::Flush</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::Echo</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::Echo</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::CheckTx</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::CheckTx</span>(<span class="ident">inner</span>)),
-                <span class="ident">Response::ListSnapshots</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Response::InitChain</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::InitChain</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::Info</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::Info</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::Query</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::Query</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::Commit</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::Commit</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::Flush</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::Flush</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::Echo</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::Echo</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::CheckTx</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::CheckTx</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::ListSnapshots</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Resp::ListSnapshots</span>(<span class="ident">inner</span>))
                 }
-                <span class="ident">Response::OfferSnapshot</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Response::OfferSnapshot</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Resp::OfferSnapshot</span>(<span class="ident">inner</span>))
                 }
-                <span class="ident">Response::LoadSnapshotChunk</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Response::LoadSnapshotChunk</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Resp::LoadSnapshotChunk</span>(<span class="ident">inner</span>))
                 }
-                <span class="ident">Response::ApplySnapshotChunk</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Response::ApplySnapshotChunk</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Resp::ApplySnapshotChunk</span>(<span class="ident">inner</span>))
                 }
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                <span class="ident">Response::PrepareProposal</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Response::PrepareProposal</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Resp::PrepareProposal</span>(<span class="ident">inner</span>))
                 }
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                <span class="ident">Response::ExtendVote</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Resp::ExtendVote</span>(<span class="ident">inner</span>)),
+                <span class="ident">Response::ExtendVote</span>(<span class="ident">inner</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Resp::ExtendVote</span>(<span class="ident">inner</span>)),
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                <span class="ident">Response::VerifyVoteExtension</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Response::VerifyVoteExtension</span>(<span class="ident">inner</span>) =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Resp::VerifyVoteExtension</span>(<span class="ident">inner</span>))
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertResp</span>(<span class="ident">resp</span>)),
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertResp</span>(<span class="ident">resp</span>)),
             }
         }
     }
@@ -580,7 +581,7 @@
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::TxBytes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ProcessProposal</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tx</span>: <span class="ident"><span class="kw">super</span>::TxBytes</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tx</span>: <span class="ident"><span class="kw">super</span>::TxBytes</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> { <span class="ident">tx</span> }
             }
         }
@@ -605,7 +606,7 @@
         <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">RequestBeginBlock</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BeginBlock</span> {
             <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::Error</span>;
 
-            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">req</span>: <span class="ident">RequestBeginBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="kw">super</span>::Error</span><span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">req</span>: <span class="ident">RequestBeginBlock</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="kw">super</span>::Error</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> (
                     <span class="ident">BlockHash::try_from</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">hash</span>),
                     <span class="ident">req</span>.<span class="ident">header</span>
@@ -613,18 +614,18 @@
                         .<span class="ident">expect</span>(<span class="string">&quot;Missing block&#39;s header&quot;</span>)
                         .<span class="ident">try_into</span>(),
                 ) {
-                    (<span class="prelude-val">Ok</span>(<span class="ident">hash</span>), <span class="prelude-val">Ok</span>(<span class="ident">header</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">BeginBlock</span> {
+                    (<span class="prelude-val">Ok</span>(<span class="ident">hash</span>), <span class="prelude-val">Ok</span>(<span class="ident">header</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">BeginBlock</span> {
                         <span class="ident">hash</span>,
                         <span class="ident">header</span>,
                         <span class="ident">byzantine_validators</span>: <span class="ident">req</span>.<span class="ident">byzantine_validators</span>,
                     }),
-                    (<span class="prelude-val">Ok</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="prelude-val">Ok</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">msg</span>)) =&gt; {
                         <span class="macro">tracing::error!</span>(<span class="string">&quot;Unexpected block header {}&quot;</span>, <span class="ident">msg</span>);
                         <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::Error::ConvertReq</span>(<span class="ident"><span class="kw">super</span>::Req::BeginBlock</span>(
                             <span class="ident">req</span>,
                         )))
                     }
-                    (<span class="ident">err</span> @ <span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    (<span class="ident">err</span> @ <span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {
                         <span class="macro">tracing::error!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">err</span>);
                         <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::Error::ConvertReq</span>(<span class="ident"><span class="kw">super</span>::Req::BeginBlock</span>(
                             <span class="ident">req</span>,
@@ -674,7 +675,7 @@
         <span class="kw">where</span>
             <span class="ident">T</span>: <span class="ident">std::error::Error</span>,
         {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">TxResult</span> {
                     <span class="ident">code</span>: <span class="number">1</span>,
                     <span class="ident">info</span>: <span class="ident">err</span>.<span class="ident">to_string</span>(),
@@ -691,14 +692,14 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">TxResult</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ProcessProposal</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">result</span>: <span class="ident">TxResult</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">result</span>: <span class="ident">TxResult</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">ProcessProposal</span> { <span class="ident">result</span> }
             }
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">TxResult</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ProcessProposal</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">result</span>: <span class="ident">TxResult</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">result</span>: <span class="ident">TxResult</span>) -&gt; <span class="self">Self</span> {
                 <span class="ident">ProcessProposal</span> {
                     <span class="ident">result</span>,
                     ..<span class="ident">Default::default</span>()
@@ -718,7 +719,7 @@
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FinalizeBlock</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">response::EndBlock</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">resp</span>: <span class="ident">FinalizeBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">resp</span>: <span class="ident">FinalizeBlock</span>) -&gt; <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">events</span>: <span class="ident">resp</span>.<span class="ident">events</span>,
                     <span class="ident">validator_updates</span>: <span class="ident">resp</span>.<span class="ident">validator_updates</span>,
@@ -730,5 +731,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script>
 </body></html>

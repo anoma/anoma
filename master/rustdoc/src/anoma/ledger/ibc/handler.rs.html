@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;handler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>handler.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;handler.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>handler.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1226,6 +1227,228 @@
 <span id="1226">1226</span>
 <span id="1227">1227</span>
 <span id="1228">1228</span>
+<span id="1229">1229</span>
+<span id="1230">1230</span>
+<span id="1231">1231</span>
+<span id="1232">1232</span>
+<span id="1233">1233</span>
+<span id="1234">1234</span>
+<span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
+<span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
+<span id="1277">1277</span>
+<span id="1278">1278</span>
+<span id="1279">1279</span>
+<span id="1280">1280</span>
+<span id="1281">1281</span>
+<span id="1282">1282</span>
+<span id="1283">1283</span>
+<span id="1284">1284</span>
+<span id="1285">1285</span>
+<span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
+<span id="1292">1292</span>
+<span id="1293">1293</span>
+<span id="1294">1294</span>
+<span id="1295">1295</span>
+<span id="1296">1296</span>
+<span id="1297">1297</span>
+<span id="1298">1298</span>
+<span id="1299">1299</span>
+<span id="1300">1300</span>
+<span id="1301">1301</span>
+<span id="1302">1302</span>
+<span id="1303">1303</span>
+<span id="1304">1304</span>
+<span id="1305">1305</span>
+<span id="1306">1306</span>
+<span id="1307">1307</span>
+<span id="1308">1308</span>
+<span id="1309">1309</span>
+<span id="1310">1310</span>
+<span id="1311">1311</span>
+<span id="1312">1312</span>
+<span id="1313">1313</span>
+<span id="1314">1314</span>
+<span id="1315">1315</span>
+<span id="1316">1316</span>
+<span id="1317">1317</span>
+<span id="1318">1318</span>
+<span id="1319">1319</span>
+<span id="1320">1320</span>
+<span id="1321">1321</span>
+<span id="1322">1322</span>
+<span id="1323">1323</span>
+<span id="1324">1324</span>
+<span id="1325">1325</span>
+<span id="1326">1326</span>
+<span id="1327">1327</span>
+<span id="1328">1328</span>
+<span id="1329">1329</span>
+<span id="1330">1330</span>
+<span id="1331">1331</span>
+<span id="1332">1332</span>
+<span id="1333">1333</span>
+<span id="1334">1334</span>
+<span id="1335">1335</span>
+<span id="1336">1336</span>
+<span id="1337">1337</span>
+<span id="1338">1338</span>
+<span id="1339">1339</span>
+<span id="1340">1340</span>
+<span id="1341">1341</span>
+<span id="1342">1342</span>
+<span id="1343">1343</span>
+<span id="1344">1344</span>
+<span id="1345">1345</span>
+<span id="1346">1346</span>
+<span id="1347">1347</span>
+<span id="1348">1348</span>
+<span id="1349">1349</span>
+<span id="1350">1350</span>
+<span id="1351">1351</span>
+<span id="1352">1352</span>
+<span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
+<span id="1356">1356</span>
+<span id="1357">1357</span>
+<span id="1358">1358</span>
+<span id="1359">1359</span>
+<span id="1360">1360</span>
+<span id="1361">1361</span>
+<span id="1362">1362</span>
+<span id="1363">1363</span>
+<span id="1364">1364</span>
+<span id="1365">1365</span>
+<span id="1366">1366</span>
+<span id="1367">1367</span>
+<span id="1368">1368</span>
+<span id="1369">1369</span>
+<span id="1370">1370</span>
+<span id="1371">1371</span>
+<span id="1372">1372</span>
+<span id="1373">1373</span>
+<span id="1374">1374</span>
+<span id="1375">1375</span>
+<span id="1376">1376</span>
+<span id="1377">1377</span>
+<span id="1378">1378</span>
+<span id="1379">1379</span>
+<span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
+<span id="1387">1387</span>
+<span id="1388">1388</span>
+<span id="1389">1389</span>
+<span id="1390">1390</span>
+<span id="1391">1391</span>
+<span id="1392">1392</span>
+<span id="1393">1393</span>
+<span id="1394">1394</span>
+<span id="1395">1395</span>
+<span id="1396">1396</span>
+<span id="1397">1397</span>
+<span id="1398">1398</span>
+<span id="1399">1399</span>
+<span id="1400">1400</span>
+<span id="1401">1401</span>
+<span id="1402">1402</span>
+<span id="1403">1403</span>
+<span id="1404">1404</span>
+<span id="1405">1405</span>
+<span id="1406">1406</span>
+<span id="1407">1407</span>
+<span id="1408">1408</span>
+<span id="1409">1409</span>
+<span id="1410">1410</span>
+<span id="1411">1411</span>
+<span id="1412">1412</span>
+<span id="1413">1413</span>
+<span id="1414">1414</span>
+<span id="1415">1415</span>
+<span id="1416">1416</span>
+<span id="1417">1417</span>
+<span id="1418">1418</span>
+<span id="1419">1419</span>
+<span id="1420">1420</span>
+<span id="1421">1421</span>
+<span id="1422">1422</span>
+<span id="1423">1423</span>
+<span id="1424">1424</span>
+<span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Functions to handle IBC modules</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -1328,6 +1551,8 @@
 <span class="kw">use</span> <span class="ident">ibc::events::IbcEvent</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -1426,6 +1651,8 @@
 <span class="kw">use</span> <span class="ident">ibc_abci::events::IbcEvent</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Timestamp</span>;
 <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::Error</span> <span class="kw">as</span> <span class="ident">ProtoError</span>;
@@ -1438,12 +1665,14 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::ibc::storage</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{
     <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">FungibleTokenPacketData</span>, <span class="ident">IbcMessage</span>, <span class="ident">PacketAck</span>,
     <span class="ident">PacketReceipt</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::IbcEvent</span> <span class="kw">as</span> <span class="ident">AnomaIbcEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 
 <span class="kw">const</span> <span class="ident">COMMITMENT_PREFIX</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;ibc&quot;</span>;
 
@@ -1470,6 +1699,12 @@
     <span class="ident">Counter</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Sequence error: {0}&quot;</span>)]</span>
     <span class="ident">Sequence</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid transfer message: {0}&quot;</span>)]</span>
+    <span class="ident">TransferMessage</span>(<span class="ident">token::TransferError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Sending a token error: {0}&quot;</span>)]</span>
+    <span class="ident">SendingToken</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Receiving a token error: {0}&quot;</span>)]</span>
+    <span class="ident">ReceivingToken</span>(<span class="ident">String</span>),
 }
 
 <span class="doccomment">/// for handling IBC modules</span>
@@ -1478,7 +1713,7 @@
 <span class="doccomment">/// IBC trait to be implemented in integration that can read and write</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IbcActions</span> {
     <span class="doccomment">/// Read IBC-related data</span>
-    <span class="kw">fn</span> <span class="ident">read_ibc_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">read_ibc_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Write IBC-related data</span>
     <span class="kw">fn</span> <span class="ident">write_ibc_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>);
@@ -1489,58 +1724,67 @@
     <span class="doccomment">/// Emit an IBC event</span>
     <span class="kw">fn</span> <span class="ident">emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="ident">AnomaIbcEvent</span>);
 
+    <span class="doccomment">/// Transfer token</span>
+    <span class="kw">fn</span> <span class="ident">transfer_token</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">amount</span>: <span class="ident">Amount</span>,
+    );
+
     <span class="doccomment">/// dispatch according to ICS26 routing</span>
-    <span class="kw">fn</span> <span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>).<span class="ident">map_err</span>(<span class="ident">Error::IbcData</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">ibc_msg</span>.<span class="number">0</span> {
-            <span class="ident">Ics26Envelope::Ics2Msg</span>(<span class="ident">ics02_msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ics02_msg</span> {
-                <span class="ident">ClientMsg::CreateClient</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">create_client</span>(<span class="ident">msg</span>),
-                <span class="ident">ClientMsg::UpdateClient</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">update_client</span>(<span class="ident">msg</span>),
-                <span class="ident">ClientMsg::Misbehaviour</span>(<span class="ident">_msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">todo!</span>(),
-                <span class="ident">ClientMsg::UpgradeClient</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">upgrade_client</span>(<span class="ident">msg</span>),
+            <span class="ident">Ics26Envelope::Ics2Msg</span>(<span class="ident">ics02_msg</span>) =&gt; <span class="kw">match</span> <span class="ident">ics02_msg</span> {
+                <span class="ident">ClientMsg::CreateClient</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">create_client</span>(<span class="ident">msg</span>),
+                <span class="ident">ClientMsg::UpdateClient</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">update_client</span>(<span class="ident">msg</span>),
+                <span class="ident">ClientMsg::Misbehaviour</span>(<span class="ident">_msg</span>) =&gt; <span class="macro">todo!</span>(),
+                <span class="ident">ClientMsg::UpgradeClient</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">upgrade_client</span>(<span class="ident">msg</span>),
             },
-            <span class="ident">Ics26Envelope::Ics3Msg</span>(<span class="ident">ics03_msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ics03_msg</span> {
-                <span class="ident">ConnectionMsg::ConnectionOpenInit</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ics26Envelope::Ics3Msg</span>(<span class="ident">ics03_msg</span>) =&gt; <span class="kw">match</span> <span class="ident">ics03_msg</span> {
+                <span class="ident">ConnectionMsg::ConnectionOpenInit</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">init_connection</span>(<span class="ident">msg</span>)
                 }
-                <span class="ident">ConnectionMsg::ConnectionOpenTry</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ConnectionMsg::ConnectionOpenTry</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">try_connection</span>(<span class="ident">msg</span>)
                 }
-                <span class="ident">ConnectionMsg::ConnectionOpenAck</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ConnectionMsg::ConnectionOpenAck</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">ack_connection</span>(<span class="ident">msg</span>)
                 }
-                <span class="ident">ConnectionMsg::ConnectionOpenConfirm</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ConnectionMsg::ConnectionOpenConfirm</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">confirm_connection</span>(<span class="ident">msg</span>)
                 }
             },
-            <span class="ident">Ics26Envelope::Ics4ChannelMsg</span>(<span class="ident">ics04_msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ics04_msg</span> {
-                <span class="ident">ChannelMsg::ChannelOpenInit</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">init_channel</span>(<span class="ident">msg</span>),
-                <span class="ident">ChannelMsg::ChannelOpenTry</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">try_channel</span>(<span class="ident">msg</span>),
-                <span class="ident">ChannelMsg::ChannelOpenAck</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">ack_channel</span>(<span class="ident">msg</span>),
-                <span class="ident">ChannelMsg::ChannelOpenConfirm</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ics26Envelope::Ics4ChannelMsg</span>(<span class="ident">ics04_msg</span>) =&gt; <span class="kw">match</span> <span class="ident">ics04_msg</span> {
+                <span class="ident">ChannelMsg::ChannelOpenInit</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">init_channel</span>(<span class="ident">msg</span>),
+                <span class="ident">ChannelMsg::ChannelOpenTry</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">try_channel</span>(<span class="ident">msg</span>),
+                <span class="ident">ChannelMsg::ChannelOpenAck</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">ack_channel</span>(<span class="ident">msg</span>),
+                <span class="ident">ChannelMsg::ChannelOpenConfirm</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">confirm_channel</span>(<span class="ident">msg</span>)
                 }
-                <span class="ident">ChannelMsg::ChannelCloseInit</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ChannelMsg::ChannelCloseInit</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">close_init_channel</span>(<span class="ident">msg</span>)
                 }
-                <span class="ident">ChannelMsg::ChannelCloseConfirm</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ChannelMsg::ChannelCloseConfirm</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">close_confirm_channel</span>(<span class="ident">msg</span>)
                 }
             },
-            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">ics04_msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ics04_msg</span> {
-                <span class="ident">PacketMsg::AckPacket</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">acknowledge_packet</span>(<span class="ident">msg</span>),
-                <span class="ident">PacketMsg::RecvPacket</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">receive_packet</span>(<span class="ident">msg</span>),
-                <span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">timeout_packet</span>(<span class="ident">msg</span>),
-                <span class="ident">PacketMsg::ToClosePacket</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">ics04_msg</span>) =&gt; <span class="kw">match</span> <span class="ident">ics04_msg</span> {
+                <span class="ident">PacketMsg::AckPacket</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">acknowledge_packet</span>(<span class="ident">msg</span>),
+                <span class="ident">PacketMsg::RecvPacket</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">receive_packet</span>(<span class="ident">msg</span>),
+                <span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">timeout_packet</span>(<span class="ident">msg</span>),
+                <span class="ident">PacketMsg::ToClosePacket</span>(<span class="ident">msg</span>) =&gt; {
                     <span class="self">self</span>.<span class="ident">timeout_on_close_packet</span>(<span class="ident">msg</span>)
                 }
             },
-            <span class="ident">Ics26Envelope::Ics20Msg</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">send_packet</span>(<span class="ident">msg</span>),
+            <span class="ident">Ics26Envelope::Ics20Msg</span>(<span class="ident">msg</span>) =&gt; <span class="self">self</span>.<span class="ident">send_token</span>(<span class="ident">msg</span>),
         }
     }
 
     <span class="doccomment">/// Create a new client</span>
-    <span class="kw">fn</span> <span class="ident">create_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgCreateAnyClient</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">create_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgCreateAnyClient</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">storage::client_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>();
@@ -1576,7 +1820,7 @@
     }
 
     <span class="doccomment">/// Update a client</span>
-    <span class="kw">fn</span> <span class="ident">update_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpdateAnyClient</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">update_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpdateAnyClient</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// get and update the client</span>
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">storage::client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
@@ -1616,7 +1860,7 @@
     }
 
     <span class="doccomment">/// Upgrade a client</span>
-    <span class="kw">fn</span> <span class="ident">upgrade_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpgradeAnyClient</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">upgrade_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpgradeAnyClient</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">storage::client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">client_id</span>);
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
@@ -1643,7 +1887,7 @@
     }
 
     <span class="doccomment">/// Initialize a connection for ConnectionOpenInit</span>
-    <span class="kw">fn</span> <span class="ident">init_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">init_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">storage::connection_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>)<span class="question-mark">?</span>;
         <span class="comment">// new connection</span>
@@ -1664,7 +1908,7 @@
     }
 
     <span class="doccomment">/// Initialize a connection for ConnectionOpenTry</span>
-    <span class="kw">fn</span> <span class="ident">try_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">storage::connection_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>)<span class="question-mark">?</span>;
         <span class="comment">// new connection</span>
@@ -1685,7 +1929,7 @@
     }
 
     <span class="doccomment">/// Open the connection for ConnectionOpenAck</span>
-    <span class="kw">fn</span> <span class="ident">ack_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenAck</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">ack_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenAck</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">storage::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">connection_id</span>);
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_ibc_data</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="ident">Error::Connection</span>(<span class="macro">format!</span>(
@@ -1695,7 +1939,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">connection</span> <span class="op">=</span>
             <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
-        <span class="ident">open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">connection</span>);
+        <span class="ident">open_connection</span>(<span class="kw-2">&amp;mut</span> <span class="ident">connection</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">conn_key</span>,
             <span class="ident">connection</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -1708,7 +1952,7 @@
     }
 
     <span class="doccomment">/// Open the connection for ConnectionOpenConfirm</span>
-    <span class="kw">fn</span> <span class="ident">confirm_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenConfirm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">confirm_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenConfirm</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">storage::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">connection_id</span>);
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_ibc_data</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="ident">Error::Connection</span>(<span class="macro">format!</span>(
@@ -1718,7 +1962,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">connection</span> <span class="op">=</span>
             <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
-        <span class="ident">open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">connection</span>);
+        <span class="ident">open_connection</span>(<span class="kw-2">&amp;mut</span> <span class="ident">connection</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">conn_key</span>,
             <span class="ident">connection</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -1731,7 +1975,7 @@
     }
 
     <span class="doccomment">/// Initialize a channel for ChannelOpenInit</span>
-    <span class="kw">fn</span> <span class="ident">init_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">init_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenInit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">bind_port</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">port_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">storage::channel_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>)<span class="question-mark">?</span>;
@@ -1753,7 +1997,7 @@
     }
 
     <span class="doccomment">/// Initialize a channel for ChannelOpenTry</span>
-    <span class="kw">fn</span> <span class="ident">try_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenTry</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenTry</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">bind_port</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">port_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">storage::channel_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>)<span class="question-mark">?</span>;
@@ -1775,7 +2019,7 @@
     }
 
     <span class="doccomment">/// Open the channel for ChannelOpenAck</span>
-    <span class="kw">fn</span> <span class="ident">ack_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">ack_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">storage::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
@@ -1787,7 +2031,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
-        <span class="ident">open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+        <span class="ident">open_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,
             <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -1800,7 +2044,7 @@
     }
 
     <span class="doccomment">/// Open the channel for ChannelOpenConfirm</span>
-    <span class="kw">fn</span> <span class="ident">confirm_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenConfirm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">confirm_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenConfirm</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">storage::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
@@ -1812,7 +2056,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
-        <span class="ident">open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+        <span class="ident">open_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,
             <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -1825,7 +2069,7 @@
     }
 
     <span class="doccomment">/// Close the channel for ChannelCloseInit</span>
-    <span class="kw">fn</span> <span class="ident">close_init_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">close_init_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseInit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">storage::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
@@ -1837,7 +2081,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
-        <span class="ident">close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+        <span class="ident">close_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,
             <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -1853,7 +2097,7 @@
     <span class="kw">fn</span> <span class="ident">close_confirm_channel</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseConfirm</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">storage::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
@@ -1865,7 +2109,7 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
-        <span class="ident">close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+        <span class="ident">close_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,
             <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -1878,12 +2122,14 @@
     }
 
     <span class="doccomment">/// Send a packet</span>
-    <span class="kw">fn</span> <span class="ident">send_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTransfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">send_packet</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">port_channel_id</span>: <span class="ident">PortChannelId</span>,
+        <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+        <span class="ident">timeout_height</span>: <span class="ident">Height</span>,
+        <span class="ident">timeout_timestamp</span>: <span class="ident">Timestamp</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// get and increment the next sequence send</span>
-        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">port_channel_id</span>(
-            <span class="ident">msg</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
-            <span class="ident">msg</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>(),
-        );
         <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">storage::next_sequence_send_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
         <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_sequence</span>(<span class="kw-2">&amp;</span><span class="ident">seq_key</span>)<span class="question-mark">?</span>;
 
@@ -1894,12 +2140,26 @@
             .<span class="ident">expect</span>(<span class="string">&quot;cannot get the channel to be closed&quot;</span>);
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">channel</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot get the channel&quot;</span>);
+        <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">counterparty</span>();
 
+        <span class="comment">// make a packet</span>
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">Packet</span> {
+            <span class="ident">sequence</span>,
+            <span class="ident">source_port</span>: <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+            <span class="ident">source_channel</span>: <span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>(),
+            <span class="ident">destination_port</span>: <span class="ident">counterparty</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+            <span class="ident">destination_channel</span>: <span class="ident">counterparty</span>
+                .<span class="ident">channel_id</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;the counterparty channel should exist&quot;</span>)
+                .<span class="ident">clone</span>(),
+            <span class="ident">data</span>,
+            <span class="ident">timeout_height</span>,
+            <span class="ident">timeout_timestamp</span>,
+        };
         <span class="comment">// store the commitment of the packet</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">packet_from_message</span>(<span class="ident">msg</span>, <span class="ident">sequence</span>, <span class="ident">channel</span>.<span class="ident">counterparty</span>());
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">storage::commitment_key</span>(
-            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">source_port</span>,
-            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">source_channel</span>,
+            <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>.<span class="ident">port_id</span>,
+            <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>,
             <span class="ident">packet</span>.<span class="ident">sequence</span>,
         );
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">commitment</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
@@ -1912,7 +2172,12 @@
     }
 
     <span class="doccomment">/// Receive a packet</span>
-    <span class="kw">fn</span> <span class="ident">receive_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgRecvPacket</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">receive_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgRecvPacket</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="comment">// check the packet data</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">data</span>) {
+            <span class="self">self</span>.<span class="ident">receive_token</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>)<span class="question-mark">?</span>;
+        }
+
         <span class="comment">// store the receipt</span>
         <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">storage::receipt_key</span>(
             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>,
@@ -1947,7 +2212,7 @@
     }
 
     <span class="doccomment">/// Receive a acknowledgement</span>
-    <span class="kw">fn</span> <span class="ident">acknowledge_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAcknowledgement</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">acknowledge_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAcknowledgement</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">storage::commitment_key</span>(
             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_port</span>,
             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_channel</span>,
@@ -1962,7 +2227,12 @@
     }
 
     <span class="doccomment">/// Receive a timeout</span>
-    <span class="kw">fn</span> <span class="ident">timeout_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTimeout</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">timeout_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTimeout</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="comment">// check the packet data</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">data</span>) {
+            <span class="self">self</span>.<span class="ident">refund_token</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>)<span class="question-mark">?</span>;
+        }
+
         <span class="comment">// delete the commitment of the packet</span>
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">storage::commitment_key</span>(
             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_port</span>,
@@ -1986,7 +2256,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">channel</span>.<span class="ident">order_matches</span>(<span class="kw-2">&amp;</span><span class="ident">Order::Ordered</span>) {
-            <span class="ident">close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+            <span class="ident">close_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
             <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
                 <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,
                 <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -2000,7 +2270,12 @@
     }
 
     <span class="doccomment">/// Receive a timeout for TimeoutOnClose</span>
-    <span class="kw">fn</span> <span class="ident">timeout_on_close_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTimeoutOnClose</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">timeout_on_close_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTimeoutOnClose</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="comment">// check the packet data</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">data</span>) {
+            <span class="self">self</span>.<span class="ident">refund_token</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>)<span class="question-mark">?</span>;
+        }
+
         <span class="comment">// delete the commitment of the packet</span>
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">storage::commitment_key</span>(
             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">source_port</span>,
@@ -2024,7 +2299,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">channel</span>.<span class="ident">order_matches</span>(<span class="kw-2">&amp;</span><span class="ident">Order::Ordered</span>) {
-            <span class="ident">close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+            <span class="ident">close_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
             <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
                 <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,
                 <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
@@ -2035,7 +2310,7 @@
     }
 
     <span class="doccomment">/// Get and increment the counter</span>
-    <span class="kw">fn</span> <span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_ibc_data</span>(<span class="ident">key</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="ident">Error::Counter</span>(<span class="macro">format!</span>(<span class="string">&quot;The counter doesn&#39;t exist: {}&quot;</span>, <span class="ident">key</span>))
         })<span class="question-mark">?</span>;
@@ -2048,7 +2323,7 @@
     }
 
     <span class="doccomment">/// Get and increment the sequence</span>
-    <span class="kw">fn</span> <span class="ident">get_and_inc_sequence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_and_inc_sequence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_ibc_data</span>(<span class="ident">key</span>) {
             <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">v</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::Sequence</span>(<span class="macro">format!</span>(
@@ -2066,7 +2341,7 @@
     }
 
     <span class="doccomment">/// Bind a new port</span>
-    <span class="kw">fn</span> <span class="ident">bind_port</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">port_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">bind_port</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">port_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index_key</span> <span class="op">=</span> <span class="ident">storage::capability_index_key</span>();
         <span class="kw">let</span> <span class="ident">cap_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="ident">index_key</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">port_key</span> <span class="op">=</span> <span class="ident">storage::port_key</span>(<span class="ident">port_id</span>);
@@ -2075,30 +2350,200 @@
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(<span class="kw-2">&amp;</span><span class="ident">cap_key</span>, <span class="ident">port_id</span>.<span class="ident">as_bytes</span>());
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="doccomment">/// Send the specified token by escrowing or burning</span>
+    <span class="kw">fn</span> <span class="ident">send_token</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTransfer</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">FungibleTokenPacketData::from</span>(<span class="ident">msg</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="ident">data</span>.<span class="ident">sender</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::SendingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid sender address: sender {}, error {}&quot;</span>,
+                <span class="ident">data</span>.<span class="ident">sender</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">token_str</span> <span class="op">=</span>
+            <span class="ident">data</span>.<span class="ident">denomination</span>.<span class="ident">split</span>(<span class="string">&#39;/&#39;</span>).<span class="ident">last</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="ident">Error::SendingToken</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;No token was specified: {}&quot;</span>,
+                    <span class="ident">data</span>.<span class="ident">denomination</span>
+                ))
+            })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="ident">token_str</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::SendingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid token address: token {}, error {}&quot;</span>,
+                <span class="ident">token_str</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">amount</span> <span class="op">=</span> <span class="ident">Amount::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">amount</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::SendingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid amount: amount {}, error {}&quot;</span>,
+                <span class="ident">data</span>.<span class="ident">amount</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+
+        <span class="comment">// check the denomination field</span>
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="string">&quot;{}/{}/&quot;</span>,
+            <span class="ident">msg</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">msg</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>()
+        );
+        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">denomination</span>.<span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="ident">prefix</span>) {
+            <span class="comment">// sink zone</span>
+            <span class="kw">let</span> <span class="ident">burn</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcBurn</span>);
+            <span class="self">self</span>.<span class="ident">transfer_token</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>, <span class="kw-2">&amp;</span><span class="ident">burn</span>, <span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="ident">amount</span>);
+        } <span class="kw">else</span> {
+            <span class="comment">// source zone</span>
+            <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span>
+                <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::ibc_escrow_address</span>(
+                    <span class="ident">msg</span>.<span class="ident">source_port</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">msg</span>.<span class="ident">source_channel</span>.<span class="ident">to_string</span>(),
+                ));
+            <span class="self">self</span>.<span class="ident">transfer_token</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>, <span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="ident">amount</span>);
+        }
+
+        <span class="comment">// send a packet</span>
+        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">port_channel_id</span>(
+            <span class="ident">msg</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">msg</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>(),
+        );
+        <span class="kw">let</span> <span class="ident">packet_data</span> <span class="op">=</span> <span class="ident">serde_json::to_vec</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding the packet data shouldn&#39;t fail&quot;</span>);
+        <span class="self">self</span>.<span class="ident">send_packet</span>(
+            <span class="ident">port_channel_id</span>,
+            <span class="ident">packet_data</span>,
+            <span class="ident">msg</span>.<span class="ident">timeout_height</span>,
+            <span class="ident">msg</span>.<span class="ident">timeout_timestamp</span>,
+        )
+    }
+
+    <span class="doccomment">/// Receive the specified token by unescrowing or minting</span>
+    <span class="kw">fn</span> <span class="ident">receive_token</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
+        <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">FungibleTokenPacketData</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">dest</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="ident">data</span>.<span class="ident">receiver</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid receiver address: receiver {}, error {}&quot;</span>,
+                <span class="ident">data</span>.<span class="ident">receiver</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">token_str</span> <span class="op">=</span>
+            <span class="ident">data</span>.<span class="ident">denomination</span>.<span class="ident">split</span>(<span class="string">&#39;/&#39;</span>).<span class="ident">last</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;No token was specified: {}&quot;</span>,
+                    <span class="ident">data</span>.<span class="ident">denomination</span>
+                ))
+            })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="ident">token_str</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid token address: token {}, error {}&quot;</span>,
+                <span class="ident">token_str</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">amount</span> <span class="op">=</span> <span class="ident">Amount::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">amount</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid amount: amount {}, error {}&quot;</span>,
+                <span class="ident">data</span>.<span class="ident">amount</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="string">&quot;{}/{}/&quot;</span>,
+            <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>()
+        );
+        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">denomination</span>.<span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="ident">prefix</span>) {
+            <span class="comment">// unescrow the token because this chain is the source</span>
+            <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span>
+                <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::ibc_escrow_address</span>(
+                    <span class="ident">packet</span>.<span class="ident">destination_port</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">packet</span>.<span class="ident">destination_channel</span>.<span class="ident">to_string</span>(),
+                ));
+            <span class="self">self</span>.<span class="ident">transfer_token</span>(<span class="kw-2">&amp;</span><span class="ident">escrow</span>, <span class="kw-2">&amp;</span><span class="ident">dest</span>, <span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="ident">amount</span>);
+        } <span class="kw">else</span> {
+            <span class="comment">// mint the token because the sender chain is the source</span>
+            <span class="kw">let</span> <span class="ident">mint</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcMint</span>);
+            <span class="self">self</span>.<span class="ident">transfer_token</span>(<span class="kw-2">&amp;</span><span class="ident">mint</span>, <span class="kw-2">&amp;</span><span class="ident">dest</span>, <span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="ident">amount</span>);
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Refund the specified token by unescrowing or minting</span>
+    <span class="kw">fn</span> <span class="ident">refund_token</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>,
+        <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">FungibleTokenPacketData</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">dest</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="ident">data</span>.<span class="ident">sender</span>.<span class="ident">clone</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid sender address: sender {}, error {}&quot;</span>,
+                <span class="ident">data</span>.<span class="ident">sender</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">token_str</span> <span class="op">=</span>
+            <span class="ident">data</span>.<span class="ident">denomination</span>.<span class="ident">split</span>(<span class="string">&#39;/&#39;</span>).<span class="ident">last</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;No token was specified: {}&quot;</span>,
+                    <span class="ident">data</span>.<span class="ident">denomination</span>
+                ))
+            })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="ident">token_str</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid token address: token {}, error {}&quot;</span>,
+                <span class="ident">token_str</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">amount</span> <span class="op">=</span> <span class="ident">Amount::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">amount</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Error::ReceivingToken</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Invalid amount: amount {}, error {}&quot;</span>,
+                <span class="ident">data</span>.<span class="ident">amount</span>, <span class="ident">e</span>
+            ))
+        })<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="string">&quot;{}/{}/&quot;</span>,
+            <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>()
+        );
+        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">denomination</span>.<span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="ident">prefix</span>) {
+            <span class="comment">// mint the token because the sender chain is the sink zone</span>
+            <span class="kw">let</span> <span class="ident">mint</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcMint</span>);
+            <span class="self">self</span>.<span class="ident">transfer_token</span>(<span class="kw-2">&amp;</span><span class="ident">mint</span>, <span class="kw-2">&amp;</span><span class="ident">dest</span>, <span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="ident">amount</span>);
+        } <span class="kw">else</span> {
+            <span class="comment">// unescrow the token because the sender chain is the source zone</span>
+            <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span>
+                <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::ibc_escrow_address</span>(
+                    <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">to_string</span>(),
+                ));
+            <span class="self">self</span>.<span class="ident">transfer_token</span>(<span class="kw-2">&amp;</span><span class="ident">escrow</span>, <span class="kw-2">&amp;</span><span class="ident">dest</span>, <span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="ident">amount</span>);
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// Update a client with the given state and headers</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_client</span>(
     <span class="ident">client_state</span>: <span class="ident">AnyClientState</span>,
     <span class="ident">header</span>: <span class="ident">AnyHeader</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">AnyClientState</span>, <span class="ident">AnyConsensusState</span>)<span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">AnyClientState</span>, <span class="ident">AnyConsensusState</span>)<span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">client_state</span> {
-        <span class="ident">AnyClientState::Tendermint</span>(<span class="ident">cs</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">header</span> {
-            <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">AnyClientState::Tendermint</span>(<span class="ident">cs</span>) =&gt; <span class="kw">match</span> <span class="ident">header</span> {
+            <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">with_header</span>(<span class="ident">h</span>.<span class="ident">clone</span>()).<span class="ident">wrap_any</span>();
                 <span class="kw">let</span> <span class="ident">new_consensus_state</span> <span class="op">=</span> <span class="ident">TmConsensusState::from</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>();
                 <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>))
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
                 <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
             )),
         },
-        <span class="ident">AnyClientState::Mock</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">header</span> {
-            <span class="ident">AnyHeader::Mock</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((
+        <span class="ident">AnyClientState::Mock</span>(<span class="kw">_</span>) =&gt; <span class="kw">match</span> <span class="ident">header</span> {
+            <span class="ident">AnyHeader::Mock</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Ok</span>((
                 <span class="ident">MockClientState</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
                 <span class="ident">MockConsensusState::new</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
             )),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
                 <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
             )),
         },
@@ -2106,17 +2551,17 @@
 }
 
 <span class="doccomment">/// Returns a new client ID</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_id</span>(<span class="ident">client_type</span>: <span class="ident">ClientType</span>, <span class="ident">counter</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientId</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_id</span>(<span class="ident">client_type</span>: <span class="ident">ClientType</span>, <span class="ident">counter</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientId</span><span class="op">&gt;</span> {
     <span class="ident">ClientId::new</span>(<span class="ident">client_type</span>, <span class="ident">counter</span>).<span class="ident">map_err</span>(<span class="ident">Error::ClientId</span>)
 }
 
 <span class="doccomment">/// Returns a new connection ID</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_id</span>(<span class="ident">counter</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionId</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_id</span>(<span class="ident">counter</span>: <span class="ident">u64</span>) -&gt; <span class="ident">ConnectionId</span> {
     <span class="ident">ConnectionId::new</span>(<span class="ident">counter</span>)
 }
 
 <span class="doccomment">/// Make a connection end from the init message</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_connection</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_connection</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>) -&gt; <span class="ident">ConnectionEnd</span> {
     <span class="ident">ConnectionEnd::new</span>(
         <span class="ident">ConnState::Init</span>,
         <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
@@ -2127,7 +2572,7 @@
 }
 
 <span class="doccomment">/// Make a connection end from the try message</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_connection</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_connection</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>) -&gt; <span class="ident">ConnectionEnd</span> {
     <span class="ident">ConnectionEnd::new</span>(
         <span class="ident">ConnState::TryOpen</span>,
         <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
@@ -2138,27 +2583,27 @@
 }
 
 <span class="doccomment">/// Open the connection</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_connection</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ConnectionEnd</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_connection</span>(<span class="ident">conn</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ConnectionEnd</span>) {
     <span class="ident">conn</span>.<span class="ident">set_state</span>(<span class="ident">ConnState::Open</span>);
 }
 
 <span class="doccomment">/// Returns a new channel ID</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_id</span>(<span class="ident">counter</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelId</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_id</span>(<span class="ident">counter</span>: <span class="ident">u64</span>) -&gt; <span class="ident">ChannelId</span> {
     <span class="ident">ChannelId::new</span>(<span class="ident">counter</span>)
 }
 
 <span class="doccomment">/// Open the channel</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_channel</span>(<span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChannelEnd</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_channel</span>(<span class="ident">channel</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChannelEnd</span>) {
     <span class="ident">channel</span>.<span class="ident">set_state</span>(<span class="ident">ChanState::Open</span>);
 }
 
 <span class="doccomment">/// Close the channel</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close_channel</span>(<span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ChannelEnd</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close_channel</span>(<span class="ident">channel</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ChannelEnd</span>) {
     <span class="ident">channel</span>.<span class="ident">set_state</span>(<span class="ident">ChanState::Closed</span>);
 }
 
 <span class="doccomment">/// Returns a port ID</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">port_id</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PortId</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">port_id</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PortId</span><span class="op">&gt;</span> {
     <span class="ident">PortId::from_str</span>(<span class="ident">id</span>).<span class="ident">map_err</span>(<span class="ident">Error::PortId</span>)
 }
 
@@ -2166,7 +2611,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">port_channel_id</span>(
     <span class="ident">port_id</span>: <span class="ident">PortId</span>,
     <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PortChannelId</span> {
+) -&gt; <span class="ident">PortChannelId</span> {
     <span class="ident">PortChannelId</span> {
         <span class="ident">port_id</span>,
         <span class="ident">channel_id</span>,
@@ -2174,7 +2619,7 @@
 }
 
 <span class="doccomment">/// Returns a sequence</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence</span>(<span class="ident">index</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Sequence</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sequence</span>(<span class="ident">index</span>: <span class="ident">u64</span>) -&gt; <span class="ident">Sequence</span> {
     <span class="ident">Sequence::from</span>(<span class="ident">index</span>)
 }
 
@@ -2183,7 +2628,7 @@
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgTransfer</span>,
     <span class="ident">sequence</span>: <span class="ident">Sequence</span>,
     <span class="ident">counterparty</span>: <span class="kw-2">&amp;</span><span class="ident">ChanCounterparty</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Packet</span> {
+) -&gt; <span class="ident">Packet</span> {
     <span class="ident">Packet</span> {
         <span class="ident">sequence</span>,
         <span class="ident">source_port</span>: <span class="ident">msg</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
@@ -2201,7 +2646,7 @@
 }
 
 <span class="doccomment">/// Returns a commitment from the given packet</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment</span>(<span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment</span>(<span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>) -&gt; <span class="ident">String</span> {
     <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">format!</span>(
         <span class="string">&quot;{:?},{:?},{:?}&quot;</span>,
         <span class="ident">packet</span>.<span class="ident">timeout_timestamp</span>, <span class="ident">packet</span>.<span class="ident">timeout_height</span>, <span class="ident">packet</span>.<span class="ident">data</span>,
@@ -2214,7 +2659,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_counterparty</span>(
     <span class="ident">client_id</span>: <span class="ident">ClientId</span>,
     <span class="ident">conn_id</span>: <span class="ident">ConnectionId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnCounterparty</span> {
+) -&gt; <span class="ident">ConnCounterparty</span> {
     <span class="ident">ConnCounterparty::new</span>(<span class="ident">client_id</span>, <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>), <span class="ident">commitment_prefix</span>())
 }
 
@@ -2222,12 +2667,12 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_counterparty</span>(
     <span class="ident">port_id</span>: <span class="ident">PortId</span>,
     <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChanCounterparty</span> {
+) -&gt; <span class="ident">ChanCounterparty</span> {
     <span class="ident">ChanCounterparty::new</span>(<span class="ident">port_id</span>, <span class="prelude-val">Some</span>(<span class="ident">channel_id</span>))
 }
 
 <span class="doccomment">/// Returns Anoma commitment prefix</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment_prefix</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentPrefix</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment_prefix</span>() -&gt; <span class="ident">CommitmentPrefix</span> {
     <span class="ident">CommitmentPrefix::from</span>(<span class="ident">COMMITMENT_PREFIX</span>.<span class="ident">to_vec</span>())
 }
 
@@ -2235,7 +2680,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_create_client_event</span>(
     <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgCreateAnyClient</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ClientAttributes</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
         <span class="ident">client_type</span>: <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(),
@@ -2249,7 +2694,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_update_client_event</span>(
     <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpdateAnyClient</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ClientAttributes</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
         <span class="ident">client_type</span>: <span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">client_type</span>(),
@@ -2263,7 +2708,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_upgrade_client_event</span>(
     <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpgradeAnyClient</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ClientAttributes</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
         <span class="ident">client_type</span>: <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(),
@@ -2277,7 +2722,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_init_connection_event</span>(
     <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
         <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
         <span class="ident">client_id</span>: <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
@@ -2292,7 +2737,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_try_connection_event</span>(
     <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
         <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
         <span class="ident">client_id</span>: <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
@@ -2304,7 +2749,7 @@
 }
 
 <span class="doccomment">/// Makes OpenAckConnection event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_connection_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenAck</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_connection_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenAck</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
         <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">connection_id</span>.<span class="ident">clone</span>()),
         <span class="ident">counterparty_connection_id</span>: <span class="prelude-val">Some</span>(
@@ -2318,7 +2763,7 @@
 <span class="doccomment">/// Makes OpenConfirmConnection event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_confirm_connection_event</span>(
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenConfirm</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
         <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">connection_id</span>.<span class="ident">clone</span>()),
         ..<span class="ident">Default::default</span>()
@@ -2330,10 +2775,10 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_init_channel_event</span>(
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenInit</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">connection_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>.<span class="ident">clone</span>(),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId::default</span>(),
+        <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">c</span>.<span class="ident">clone</span>(),
+        <span class="prelude-val">None</span> =&gt; <span class="ident">ConnectionId::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
         <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
@@ -2354,10 +2799,10 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_try_channel_event</span>(
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenTry</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">connection_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>.<span class="ident">clone</span>(),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId::default</span>(),
+        <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">c</span>.<span class="ident">clone</span>(),
+        <span class="prelude-val">None</span> =&gt; <span class="ident">ConnectionId::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
         <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
@@ -2375,7 +2820,7 @@
 }
 
 <span class="doccomment">/// Makes OpenAckChannel event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_channel_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_channel_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
         <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -2388,7 +2833,7 @@
 <span class="doccomment">/// Makes OpenConfirmChannel event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_confirm_channel_event</span>(
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenConfirm</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
         <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -2398,7 +2843,7 @@
 }
 
 <span class="doccomment">/// Makes CloseInitChannel event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_close_init_channel_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_close_init_channel_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseInit</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
         <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -2410,7 +2855,7 @@
 <span class="doccomment">/// Makes CloseConfirmChannel event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_close_confirm_channel_event</span>(
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseConfirm</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+) -&gt; <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
         <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
@@ -2420,7 +2865,7 @@
 }
 
 <span class="doccomment">/// Makes SendPacket event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_send_packet_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_send_packet_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="ident">IbcEvent::SendPacket</span>(<span class="ident">SendPacket</span> {
         <span class="ident">height</span>: <span class="ident">packet</span>.<span class="ident">timeout_height</span>,
         <span class="ident">packet</span>,
@@ -2428,7 +2873,7 @@
 }
 
 <span class="doccomment">/// Makes WriteAcknowledgement event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_write_ack_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>, <span class="ident">ack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_write_ack_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>, <span class="ident">ack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="ident">IbcEvent::WriteAcknowledgement</span>(<span class="ident">WriteAcknowledgement</span> {
         <span class="comment">// this height is not used</span>
         <span class="ident">height</span>: <span class="ident">Height::default</span>(),
@@ -2438,7 +2883,7 @@
 }
 
 <span class="doccomment">/// Makes AcknowledgePacket event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_ack_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_ack_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="ident">IbcEvent::AcknowledgePacket</span>(<span class="ident">AcknowledgePacket</span> {
         <span class="comment">// this height is not used</span>
         <span class="ident">height</span>: <span class="ident">Height::default</span>(),
@@ -2447,7 +2892,7 @@
 }
 
 <span class="doccomment">/// Makes TimeoutPacket event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_timeout_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_timeout_event</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) -&gt; <span class="ident">IbcEvent</span> {
     <span class="ident">IbcEvent::TimeoutPacket</span>(<span class="ident">TimeoutPacket</span> {
         <span class="comment">// this height is not used</span>
         <span class="ident">height</span>: <span class="ident">Height::default</span>(),
@@ -2456,5 +2901,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

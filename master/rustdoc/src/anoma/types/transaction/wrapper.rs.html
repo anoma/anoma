@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;transaction&#x2F;wrapper.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>wrapper.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;transaction&#x2F;wrapper.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>wrapper.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -548,7 +549,7 @@
 
     <span class="kw">impl</span> <span class="ident">GasLimit</span> {
         <span class="doccomment">/// We refund unused gas up to GAS_LIMIT_RESOLUTION</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refund_amount</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">used_gas</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Amount</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refund_amount</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">used_gas</span>: <span class="ident">u64</span>) -&gt; <span class="ident">Amount</span> {
             <span class="kw">if</span> <span class="ident">used_gas</span> <span class="op">&lt;</span> (<span class="ident">u64::from</span>(<span class="self">self</span>) <span class="op">-</span> <span class="ident">GAS_LIMIT_RESOLUTION</span>) {
                 <span class="comment">// we refund only up to GAS_LIMIT_RESOLUTION</span>
                 <span class="ident">GAS_LIMIT_RESOLUTION</span>
@@ -566,7 +567,7 @@
     <span class="doccomment">/// Round the input number up to the next highest multiple</span>
     <span class="doccomment">/// of GAS_LIMIT_RESOLUTION</span>
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">GasLimit</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">amount</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">GasLimit</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">amount</span>: <span class="ident">u64</span>) -&gt; <span class="ident">GasLimit</span> {
             <span class="comment">// we could use the ceiling function but this way avoids casts to</span>
             <span class="comment">// floats</span>
             <span class="kw">if</span> <span class="ident">GAS_LIMIT_RESOLUTION</span> <span class="op">*</span> (<span class="ident">amount</span> <span class="op">/</span> <span class="ident">GAS_LIMIT_RESOLUTION</span>) <span class="op">&lt;</span> <span class="ident">amount</span> {
@@ -584,40 +585,40 @@
     <span class="doccomment">/// Round the input number up to the next highest multiple</span>
     <span class="doccomment">/// of GAS_LIMIT_RESOLUTION</span>
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Amount</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">GasLimit</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">amount</span>: <span class="ident">Amount</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">GasLimit</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">amount</span>: <span class="ident">Amount</span>) -&gt; <span class="ident">GasLimit</span> {
             <span class="ident">GasLimit::from</span>(<span class="ident">u64::from</span>(<span class="ident">amount</span>))
         }
     }
 
     <span class="doccomment">/// Get back the gas limit as a raw number</span>
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">GasLimit</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">limit</span>: <span class="kw-2">&amp;</span><span class="ident">GasLimit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">limit</span>: <span class="kw-2">&amp;</span><span class="ident">GasLimit</span>) -&gt; <span class="ident">u64</span> {
             <span class="ident">limit</span>.<span class="ident">multiplier</span> <span class="op">*</span> <span class="ident">GAS_LIMIT_RESOLUTION</span>
         }
     }
 
     <span class="doccomment">/// Get back the gas limit as a raw number</span>
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">GasLimit</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">limit</span>: <span class="ident">GasLimit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">limit</span>: <span class="ident">GasLimit</span>) -&gt; <span class="ident">u64</span> {
             <span class="ident">limit</span>.<span class="ident">multiplier</span> <span class="op">*</span> <span class="ident">GAS_LIMIT_RESOLUTION</span>
         }
     }
 
     <span class="doccomment">/// Get back the gas limit as a raw number, viewed as an Amount</span>
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">GasLimit</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Amount</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">limit</span>: <span class="ident">GasLimit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Amount</span> {
+        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">limit</span>: <span class="ident">GasLimit</span>) -&gt; <span class="ident">Amount</span> {
             <span class="ident">Amount::from</span>(<span class="ident">limit</span>.<span class="ident">multiplier</span> <span class="op">*</span> <span class="ident">GAS_LIMIT_RESOLUTION</span>)
         }
     }
 
     <span class="kw">impl</span> <span class="ident">borsh::ser::BorshSerialize</span> <span class="kw">for</span> <span class="ident">GasLimit</span> {
-        <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;mut</span> <span class="ident">W</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
             <span class="ident">BorshSerialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">u64::from</span>(<span class="self">self</span>), <span class="ident">writer</span>)
         }
     }
 
     <span class="kw">impl</span> <span class="ident">borsh::BorshDeserialize</span> <span class="kw">for</span> <span class="ident">GasLimit</span> {
-        <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">raw</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">GasLimit::from</span>(<span class="ident">raw</span>))
         }
@@ -657,7 +658,7 @@
             <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
             <span class="ident">gas_limit</span>: <span class="ident">GasLimit</span>,
             <span class="ident">tx</span>: <span class="ident">Tx</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">WrapperTx</span> {
+        ) -&gt; <span class="ident">WrapperTx</span> {
             <span class="comment">// TODO: Look up current public key from storage</span>
             <span class="kw">let</span> <span class="ident">pubkey</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::prime_subgroup_generator</span>();
             <span class="kw">let</span> <span class="ident">inner_tx</span> <span class="op">=</span> <span class="ident">EncryptedTx::encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">to_bytes</span>(), <span class="ident">pubkey</span>);
@@ -673,12 +674,12 @@
 
         <span class="doccomment">/// Get the address of the implicit account associated</span>
         <span class="doccomment">/// with the public key</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fee_payer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fee_payer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Address</span> {
             <span class="ident">Address::from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">pk</span>)
         }
 
         <span class="doccomment">/// A validity check on the ciphertext.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_ciphertext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_ciphertext</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
             <span class="self">self</span>.<span class="ident">inner_tx</span>.<span class="number">0</span>.<span class="ident">check</span>(<span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Prepared::from</span>(
                 <span class="op">-</span><span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::prime_subgroup_generator</span>(),
             ))
@@ -692,7 +693,7 @@
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decrypt</span>(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
             <span class="ident">privkey</span>: <span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G2Affine</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Tx</span>, <span class="ident">WrapperTxErr</span><span class="op">&gt;</span> {
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Tx</span>, <span class="ident">WrapperTxErr</span><span class="op">&gt;</span> {
             <span class="comment">// decrypt the inner tx</span>
             <span class="kw">let</span> <span class="ident">decrypted</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner_tx</span>.<span class="ident">decrypt</span>(<span class="ident">privkey</span>);
             <span class="comment">// check that the hash equals commitment</span>
@@ -706,7 +707,7 @@
         }
 
         <span class="doccomment">/// Sign the wrapper transaction and convert to a normal Tx type</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Tx</span>, <span class="ident">WrapperTxErr</span><span class="op">&gt;</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Tx</span>, <span class="ident">WrapperTxErr</span><span class="op">&gt;</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pk</span> <span class="op">!</span><span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">public</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WrapperTxErr::InvalidKeyPair</span>);
             }
@@ -742,7 +743,7 @@
             <span class="kw">let</span> <span class="ident">borsh</span> <span class="op">=</span> <span class="ident">limit</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>);
             <span class="macro">assert_eq!</span>(
                 <span class="ident">limit</span>,
-                <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">borsh</span>.<span class="ident">as_ref</span>())
+                <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">borsh</span>.<span class="ident">as_ref</span>())
                     .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>)
             );
         }
@@ -790,12 +791,12 @@
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::xan</span>;
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>::{<span class="ident">verify_tx_sig</span>, <span class="ident">SignedTxData</span>};
 
-        <span class="kw">fn</span> <span class="ident">gen_keypair</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+        <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">Keypair</span> {
             <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
             <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-            <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>)
+            <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)
         }
 
         <span class="doccomment">/// We test that when we feed in a Tx and then decrypt it again</span>
@@ -932,5 +933,4 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wrapper_tx</span>::<span class="kw-2">*</span>;
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
 </body></html>

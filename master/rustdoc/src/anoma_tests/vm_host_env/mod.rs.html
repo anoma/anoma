@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tests&#x2F;src&#x2F;vm_host_env&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_tests/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tests&#x2F;src&#x2F;vm_host_env&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_tests/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1490,6 +1491,180 @@
 <span id="1490">1490</span>
 <span id="1491">1491</span>
 <span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
+<span id="1567">1567</span>
+<span id="1568">1568</span>
+<span id="1569">1569</span>
+<span id="1570">1570</span>
+<span id="1571">1571</span>
+<span id="1572">1572</span>
+<span id="1573">1573</span>
+<span id="1574">1574</span>
+<span id="1575">1575</span>
+<span id="1576">1576</span>
+<span id="1577">1577</span>
+<span id="1578">1578</span>
+<span id="1579">1579</span>
+<span id="1580">1580</span>
+<span id="1581">1581</span>
+<span id="1582">1582</span>
+<span id="1583">1583</span>
+<span id="1584">1584</span>
+<span id="1585">1585</span>
+<span id="1586">1586</span>
+<span id="1587">1587</span>
+<span id="1588">1588</span>
+<span id="1589">1589</span>
+<span id="1590">1590</span>
+<span id="1591">1591</span>
+<span id="1592">1592</span>
+<span id="1593">1593</span>
+<span id="1594">1594</span>
+<span id="1595">1595</span>
+<span id="1596">1596</span>
+<span id="1597">1597</span>
+<span id="1598">1598</span>
+<span id="1599">1599</span>
+<span id="1600">1600</span>
+<span id="1601">1601</span>
+<span id="1602">1602</span>
+<span id="1603">1603</span>
+<span id="1604">1604</span>
+<span id="1605">1605</span>
+<span id="1606">1606</span>
+<span id="1607">1607</span>
+<span id="1608">1608</span>
+<span id="1609">1609</span>
+<span id="1610">1610</span>
+<span id="1611">1611</span>
+<span id="1612">1612</span>
+<span id="1613">1613</span>
+<span id="1614">1614</span>
+<span id="1615">1615</span>
+<span id="1616">1616</span>
+<span id="1617">1617</span>
+<span id="1618">1618</span>
+<span id="1619">1619</span>
+<span id="1620">1620</span>
+<span id="1621">1621</span>
+<span id="1622">1622</span>
+<span id="1623">1623</span>
+<span id="1624">1624</span>
+<span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+<span id="1633">1633</span>
+<span id="1634">1634</span>
+<span id="1635">1635</span>
+<span id="1636">1636</span>
+<span id="1637">1637</span>
+<span id="1638">1638</span>
+<span id="1639">1639</span>
+<span id="1640">1640</span>
+<span id="1641">1641</span>
+<span id="1642">1642</span>
+<span id="1643">1643</span>
+<span id="1644">1644</span>
+<span id="1645">1645</span>
+<span id="1646">1646</span>
+<span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
+<span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
+<span id="1658">1658</span>
+<span id="1659">1659</span>
+<span id="1660">1660</span>
+<span id="1661">1661</span>
+<span id="1662">1662</span>
+<span id="1663">1663</span>
+<span id="1664">1664</span>
+<span id="1665">1665</span>
+<span id="1666">1666</span>
 </pre><pre class="rust"><code><span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! You can enable logging with the `RUST_LOG` environment variable, e.g.:</span>
@@ -1514,12 +1689,12 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">::ibc::tx_msg::Msg</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::handler::IbcActions</span>;
-    <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::init_genesis_storage</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>;
     <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
     <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>};
     <span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude</span>::{
         <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">KeyValIterator</span>,
@@ -1547,7 +1722,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_read_write</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="string">&quot;key&quot;</span>;
         <span class="kw">let</span> <span class="ident">read_value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="ident">key</span>);
@@ -1582,7 +1757,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_has_key</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="string">&quot;key&quot;</span>;
         <span class="macro">assert!</span>(
@@ -1606,7 +1781,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
         <span class="kw">let</span> <span class="ident">test_account</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
         <span class="ident">env</span>.<span class="ident">spawn_accounts</span>([<span class="kw-2">&amp;</span><span class="ident">test_account</span>]);
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Trying to delete a key that doesn&#39;t exists should be a no-op</span>
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="string">&quot;key&quot;</span>;
@@ -1642,7 +1817,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_iter_prefix</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="kw">let</span> <span class="ident">iter</span>: <span class="ident">KeyValIterator</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tx_host_env::iter_prefix</span>(<span class="string">&quot;empty&quot;</span>);
         <span class="macro">assert_eq!</span>(
@@ -1672,7 +1847,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_insert_verifier</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="macro">assert!</span>(<span class="ident">env</span>.<span class="ident">verifiers</span>.<span class="ident">is_empty</span>(), <span class="string">&quot;pre-condition&quot;</span>);
         <span class="kw">let</span> <span class="ident">verifier</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
@@ -1693,7 +1868,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_init_account_with_invalid_vp</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">tx_host_env::init_account</span>(<span class="ident">code</span>);
@@ -1703,7 +1878,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_init_account_with_valid_vp</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span>
             <span class="ident">std::fs::read</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
@@ -1714,7 +1889,7 @@
     <span class="kw">fn</span> <span class="ident">test_tx_get_metadata</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">tx_host_env::get_chain_id</span>(), <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_chain_id</span>().<span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
@@ -1736,11 +1911,11 @@
     <span class="kw">fn</span> <span class="ident">test_vp_host_env</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestVpEnv::default</span>();
-        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// We can add some data to the environment</span>
         <span class="kw">let</span> <span class="ident">key_raw</span> <span class="op">=</span> <span class="string">&quot;key&quot;</span>;
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">key_raw</span>.<span class="ident">to_string</span>()).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">key_raw</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>.<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">value_raw</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value_raw</span>).<span class="ident">unwrap</span>();
@@ -1878,7 +2053,7 @@
         <span class="kw">let</span> <span class="ident">iter_post</span>: <span class="ident">PostKeyValIterator</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">vp_host_env::iter_prefix_post</span>(<span class="ident">prefix</span>.<span class="ident">to_string</span>());
         <span class="kw">let</span> <span class="ident">expected_post</span> <span class="op">=</span> (<span class="number">0</span>..<span class="number">10</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">5</span> { <span class="number">100</span> } <span class="kw">else</span> { <span class="ident">i</span> };
+            <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">==</span> <span class="number">5</span> { <span class="number">100</span> } <span class="kw">else</span> { <span class="ident">i</span> };
             (<span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">prefix</span>, <span class="ident">i</span>), <span class="ident">val</span>)
         });
         <span class="ident">itertools::assert_equal</span>(<span class="ident">iter_post</span>.<span class="ident">sorted</span>(), <span class="ident">expected_post</span>.<span class="ident">sorted</span>());
@@ -1908,13 +2083,13 @@
         ] {
             <span class="ident">env</span>.<span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">code</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">clone</span>()).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
             <span class="comment">// Initialize the environment</span>
-            <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+            <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
             <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;data should exist&quot;</span>);
             <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span>
                 <span class="kw">match</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..]) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">data</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;decoding failed&quot;</span>),
+                    <span class="prelude-val">Ok</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>,
+                    <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;decoding failed&quot;</span>),
                 };
             <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">data</span>, <span class="ident">data</span>);
             <span class="macro">assert!</span>(<span class="ident">vp_host_env::verify_tx_signature</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>));
@@ -1931,7 +2106,7 @@
     <span class="kw">fn</span> <span class="ident">test_vp_get_metadata</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestVpEnv::default</span>();
-        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">vp_host_env::get_chain_id</span>(), <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_chain_id</span>().<span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
@@ -1952,7 +2127,7 @@
     <span class="kw">fn</span> <span class="ident">test_vp_eval</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestVpEnv::default</span>();
-        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// evaluating without any code should fail</span>
         <span class="kw">let</span> <span class="ident">empty_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -1980,17 +2155,16 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_client</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
-        <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
 
         <span class="comment">// Start an invalid transaction</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_create_client</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
@@ -2022,7 +2196,7 @@
         <span class="comment">// Start a transaction to create a new client</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_create_client</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2044,14 +2218,14 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start an invalid transaction</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_update_client</span>(<span class="ident">client_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
@@ -2093,7 +2267,7 @@
         <span class="comment">// Start a transaction to update the client</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_update_client</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2114,12 +2288,12 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to upgrade the client</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_upgrade_client</span>(<span class="ident">client_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2143,12 +2317,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_connection_init_and_open</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
-        <span class="comment">// block header</span>
-        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">client_state</span>, <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="ident">writes</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">val</span>)<span class="op">|</span> {
             <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">val</span>).<span class="ident">expect</span>(<span class="string">&quot;write error&quot;</span>);
@@ -2159,7 +2331,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
@@ -2175,7 +2347,7 @@
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">connection</span> <span class="op">=</span> <span class="ident">ibc::init_connection</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
-        <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">connection</span>);
+        <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;mut</span> <span class="ident">connection</span>);
         <span class="ident">tx_host_env::write_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">connection</span>.<span class="ident">encode_vec</span>().<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
@@ -2194,7 +2366,7 @@
         <span class="comment">// Start a transaction for ConnectionOpenInit</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_init</span>(<span class="ident">client_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2215,14 +2387,14 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
         <span class="comment">// set a block header again</span>
         <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start the next transaction for ConnectionOpenAck</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_ack</span>(<span class="ident">conn_id</span>, <span class="ident">client_state</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2246,12 +2418,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_connection_try_and_open</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
-        <span class="comment">// block header</span>
-        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">client_state</span>, <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="ident">writes</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">val</span>)<span class="op">|</span> {
             <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">val</span>).<span class="ident">expect</span>(<span class="string">&quot;write error&quot;</span>);
@@ -2260,7 +2430,7 @@
         <span class="comment">// Start a transaction for ConnectionOpenTry</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_try</span>(<span class="ident">client_id</span>, <span class="ident">client_state</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2281,7 +2451,7 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
         <span class="comment">// set a block header again</span>
         <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
 
@@ -2289,7 +2459,7 @@
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_confirm</span>(<span class="ident">conn_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2313,10 +2483,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_channel_init_and_open</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2330,7 +2500,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
@@ -2371,7 +2541,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
@@ -2392,7 +2562,7 @@
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">clone</span>();
-        <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
+        <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">unwrap</span>());
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
@@ -2412,7 +2582,7 @@
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">ibc::port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_init</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2433,12 +2603,12 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start the next transaction for ChannelOpenAck</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_ack</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2462,10 +2632,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_channel_try_and_open</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2477,7 +2647,7 @@
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">ibc::port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_try</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2498,13 +2668,13 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start the next transaction for ChannelOpenConfirm</span>
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">ibc::channel_id</span>(<span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_confirm</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2528,10 +2698,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_channel_close_init</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2545,7 +2715,7 @@
         <span class="comment">// Start a transaction to close the channel</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_close_init</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2569,10 +2739,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_channel_close_confirm</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2586,7 +2756,7 @@
         <span class="comment">// Start a transaction to close the channel</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_close_confirm</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2608,13 +2778,13 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_ibc_send_packet</span>() {
+    <span class="kw">fn</span> <span class="ident">test_ibc_send_token</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">sender</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2626,23 +2796,22 @@
         });
 
         <span class="comment">// Start a transaction to send a packet</span>
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+            <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">token</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">sender</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
-        <span class="comment">// send a packet with the data</span>
+        <span class="comment">// send the token and a packet with the data</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;sending a packet failed&quot;</span>);
-
-        <span class="comment">// the transaction does something before senging a packet</span>
 
         <span class="comment">// Check</span>
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
@@ -2651,10 +2820,23 @@
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
+        <span class="comment">// Check if the token was escrowed</span>
+        <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span> <span class="ident">address::Address::Internal</span>(
+            <span class="ident">address::InternalAddress::ibc_escrow_address</span>(
+                <span class="ident">msg</span>.<span class="ident">source_port</span>.<span class="ident">to_string</span>(),
+                <span class="ident">msg</span>.<span class="ident">source_channel</span>.<span class="ident">to_string</span>(),
+            ),
+        );
+        <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">token_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
+        );
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start the next transaction for receiving an ack</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">ibc::dummy_channel_counterparty</span>();
@@ -2662,7 +2844,7 @@
             <span class="ident">ibc::packet_from_message</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>), <span class="kw-2">&amp;</span><span class="ident">counterparty</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_ack</span>(<span class="ident">packet</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2672,8 +2854,6 @@
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;the packet ack failed&quot;</span>);
-
-        <span class="comment">// the transaction does something after the ack</span>
 
         <span class="comment">// Check</span>
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
@@ -2685,15 +2865,65 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_ibc_receive_packet</span>() {
+    <span class="kw">fn</span> <span class="ident">test_ibc_burn_token</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
-        <span class="comment">// block header to check timeout timestamp</span>
-        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">sender</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
+        <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
+        <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
+        <span class="kw">let</span> (<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">channel_writes</span>) <span class="op">=</span>
+            <span class="ident">ibc::prepare_opened_channel</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>);
+        <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">channel_writes</span>);
+        <span class="ident">writes</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">val</span>)<span class="op">|</span> {
+            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">val</span>).<span class="ident">expect</span>(<span class="string">&quot;write error&quot;</span>);
+        });
+
+        <span class="comment">// Start a transaction to send a packet</span>
+        <span class="comment">// Set this chain is the sink zone</span>
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}/{}&quot;</span>, <span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">sender</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
+            <span class="ident">code</span>: <span class="macro">vec!</span>[],
+            <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
+            <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
+        };
+        <span class="comment">// send the token and a packet with the data</span>
+        <span class="ident">ibc::TestIbcActions</span>
+            .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;sending a packet failed&quot;</span>);
+
+        <span class="comment">// Check</span>
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">ibc_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
+        );
+        <span class="comment">// Check if the token was burned</span>
+        <span class="kw">let</span> <span class="ident">burn</span> <span class="op">=</span>
+            <span class="ident">address::Address::Internal</span>(<span class="ident">address::InternalAddress::IbcBurn</span>);
+        <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">burn</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">token_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
+        );
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_ibc_receive_token</span>() {
+        <span class="comment">// The environment must be initialized first</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
+
+        <span class="comment">// Set the initial state before starting transactions</span>
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2705,13 +2935,18 @@
         });
 
         <span class="comment">// packet</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span>
-            <span class="ident">ibc::received_packet</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">ibc::received_packet</span>(
+            <span class="ident">port_id</span>,
+            <span class="ident">channel_id</span>,
+            <span class="ident">ibc::sequence</span>(<span class="number">1</span>),
+            <span class="ident">token</span>.<span class="ident">to_string</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">receiver</span>,
+        );
 
         <span class="comment">// Start a transaction to receive a packet</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_recv</span>(<span class="ident">packet</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2722,7 +2957,82 @@
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;receiving a packet failed&quot;</span>);
 
-        <span class="comment">// the transaction does something according to the packet</span>
+        <span class="comment">// Check</span>
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">ibc_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
+        );
+        <span class="comment">// Check if the token was minted</span>
+        <span class="kw">let</span> <span class="ident">mint</span> <span class="op">=</span>
+            <span class="ident">address::Address::Internal</span>(<span class="ident">address::InternalAddress::IbcMint</span>);
+        <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">mint</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">token_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
+        );
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_ibc_unescrow_token</span>() {
+        <span class="comment">// The environment must be initialized first</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
+
+        <span class="comment">// Set the initial state before starting transactions</span>
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
+        <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
+        <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
+        <span class="kw">let</span> (<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">channel_writes</span>) <span class="op">=</span>
+            <span class="ident">ibc::prepare_opened_channel</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>);
+        <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">channel_writes</span>);
+        <span class="ident">writes</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">val</span>)<span class="op">|</span> {
+            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">val</span>).<span class="ident">expect</span>(<span class="string">&quot;write error&quot;</span>);
+        });
+        <span class="comment">// escrow in advance</span>
+        <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">ibc::dummy_channel_counterparty</span>();
+        <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span> <span class="ident">address::Address::Internal</span>(
+            <span class="ident">address::InternalAddress::ibc_escrow_address</span>(
+                <span class="ident">port_id</span>.<span class="ident">to_string</span>(),
+                <span class="ident">channel_id</span>.<span class="ident">to_string</span>(),
+            ),
+        );
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
+        <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">Amount::from</span>(<span class="number">1_000_000_000u64</span>).<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">val</span>).<span class="ident">expect</span>(<span class="string">&quot;write error&quot;</span>);
+
+        <span class="comment">// Set this chain as the source zone</span>
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="macro">format!</span>(
+            <span class="string">&quot;{}/{}/{}&quot;</span>,
+            <span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
+            <span class="ident">counterparty</span>.<span class="ident">channel_id</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>(),
+            <span class="ident">token</span>
+        );
+        <span class="comment">// packet</span>
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">ibc::received_packet</span>(
+            <span class="ident">port_id</span>,
+            <span class="ident">channel_id</span>,
+            <span class="ident">ibc::sequence</span>(<span class="number">1</span>),
+            <span class="ident">token</span>,
+            <span class="kw-2">&amp;</span><span class="ident">receiver</span>,
+        );
+
+        <span class="comment">// Start a transaction to receive a packet</span>
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_recv</span>(<span class="ident">packet</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
+            <span class="ident">code</span>: <span class="macro">vec!</span>[],
+            <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
+            <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
+        };
+        <span class="comment">// receive a packet with the message</span>
+        <span class="ident">ibc::TestIbcActions</span>
+            .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;receiving a packet failed&quot;</span>);
 
         <span class="comment">// Check</span>
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
@@ -2731,16 +3041,23 @@
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
+        <span class="comment">// Check if the token was unescrowed</span>
+        <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">token_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_ibc_send_packet_unordered</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">sender</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2752,11 +3069,12 @@
         });
 
         <span class="comment">// Start a transaction to send a packet</span>
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+            <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">token</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">sender</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
@@ -2780,7 +3098,7 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start the next transaction for receiving an ack</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">ibc::dummy_channel_counterparty</span>();
@@ -2788,7 +3106,7 @@
             <span class="ident">ibc::packet_from_message</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>), <span class="kw-2">&amp;</span><span class="ident">counterparty</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_ack</span>(<span class="ident">packet</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2814,12 +3132,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_receive_packet_unordered</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
-        <span class="comment">// block header to check timeout timestamp</span>
-        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2831,13 +3147,18 @@
         });
 
         <span class="comment">// packet (sequence number isn&#39;t checked for the unordered channel)</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span>
-            <span class="ident">ibc::received_packet</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">ibc::sequence</span>(<span class="number">100</span>));
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">ibc::received_packet</span>(
+            <span class="ident">port_id</span>,
+            <span class="ident">channel_id</span>,
+            <span class="ident">ibc::sequence</span>(<span class="number">100</span>),
+            <span class="ident">token</span>.<span class="ident">to_string</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">receiver</span>,
+        );
 
         <span class="comment">// Start a transaction to receive a packet</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_recv</span>(<span class="ident">packet</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2863,10 +3184,10 @@
     <span class="kw">fn</span> <span class="ident">test_ibc_packet_timeout</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">sender</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2878,12 +3199,13 @@
         });
 
         <span class="comment">// Start a transaction to send a packet</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
-        <span class="ident">ibc::set_timeout_height</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">msg</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span>
+            <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">token</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">sender</span>);
+        <span class="ident">ibc::set_timeout_height</span>(<span class="kw-2">&amp;mut</span> <span class="ident">msg</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="comment">// send a packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
@@ -2892,15 +3214,15 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to notify the timeout</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">ibc::dummy_channel_counterparty</span>();
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span>
             <span class="ident">ibc::packet_from_message</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>), <span class="kw-2">&amp;</span><span class="ident">counterparty</span>);
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_timeout</span>(<span class="ident">packet</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_timeout</span>(<span class="ident">packet</span>.<span class="ident">clone</span>(), <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2919,16 +3241,29 @@
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
+        <span class="comment">// Check if the token was refunded</span>
+        <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span> <span class="ident">address::Address::Internal</span>(
+            <span class="ident">address::InternalAddress::ibc_escrow_address</span>(
+                <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">to_string</span>(),
+                <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">to_string</span>(),
+            ),
+        );
+        <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">token_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_ibc_timeout_on_close</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
-        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+        <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Set the initial state before starting transactions</span>
-        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">sender</span>) <span class="op">=</span> <span class="ident">ibc::init_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
         <span class="kw">let</span> (<span class="ident">client_id</span>, <span class="ident">_client_state</span>, <span class="kw-2">mut</span> <span class="ident">writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_client</span>();
         <span class="kw">let</span> (<span class="ident">conn_id</span>, <span class="ident">conn_writes</span>) <span class="op">=</span> <span class="ident">ibc::prepare_opened_connection</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="ident">writes</span>.<span class="ident">extend</span>(<span class="ident">conn_writes</span>);
@@ -2940,11 +3275,12 @@
         });
 
         <span class="comment">// Start a transaction to send a packet</span>
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span>
+            <span class="ident">ibc::msg_transfer</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">token</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">sender</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">clone</span>()
             .<span class="ident">to_any</span>()
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="comment">// send a packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
@@ -2953,15 +3289,15 @@
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to notify the timing-out on closed</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">ibc::dummy_channel_counterparty</span>();
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span>
             <span class="ident">ibc::packet_from_message</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>), <span class="kw-2">&amp;</span><span class="ident">counterparty</span>);
-        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_timeout_on_close</span>(<span class="ident">packet</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_timeout_on_close</span>(<span class="ident">packet</span>.<span class="ident">clone</span>(), <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2980,9 +3316,21 @@
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
+        <span class="comment">// Check if the token was refunded</span>
+        <span class="kw">let</span> <span class="ident">escrow</span> <span class="op">=</span> <span class="ident">address::Address::Internal</span>(
+            <span class="ident">address::InternalAddress::ibc_escrow_address</span>(
+                <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">to_string</span>(),
+                <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">to_string</span>(),
+            ),
+        );
+        <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
+        <span class="macro">assert!</span>(
+            <span class="ident">token_vp</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
+        );
     }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_tests" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

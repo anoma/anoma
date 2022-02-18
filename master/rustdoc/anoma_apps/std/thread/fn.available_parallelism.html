@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Returns an estimate of the default amount of parallelism a program should use."><meta name="keywords" content="rust, rustlang, rust-lang, available_parallelism"><title>available_parallelism in anoma_apps::std::thread - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><div class="sidebar-elems"><h2 class="location">Other items in<br><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">thread</a></h2><div id="sidebar-vars" data-name="available_parallelism" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">thread</a>::<wbr><a class="fn" href="#">available_parallelism</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.58.1/src/std/thread/mod.rs.html#1521" title="goto source code">[src]</a></span></h1><div class="docblock item-decl"><pre class="rust fn"><code>pub fn available_parallelism() -&gt; <a class="enum" href="../result/enum.Result.html" title="enum anoma_apps::std::result::Result">Result</a>&lt;<a class="struct" href="../num/struct.NonZeroUsize.html" title="struct anoma_apps::std::num::NonZeroUsize">NonZeroUsize</a>, <a class="struct" href="../io/struct.Error.html" title="struct anoma_apps::std::io::Error">Error</a>&gt;</code></pre></div><div class="item-info"><div class="stab unstable"><span class="emoji">🔬</span> This is a nightly-only experimental API. (<code>available_parallelism</code>)</div></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Returns an estimate of the default amount of parallelism a program should use.</p>
+<p>Parallelism is a resource. A given machine provides a certain capacity for
+parallelism, i.e., a bound on the number of computations it can perform
+simultaneously. This number often corresponds to the amount of CPUs or
+computer has, but it may diverge in various cases.</p>
+<p>Host environments such as VMs or container orchestrators may want to
+restrict the amount of parallelism made available to programs in them. This
+is often done to limit the potential impact of (unintentionally)
+resource-intensive programs on other programs running on the same machine.</p>
+<h2 id="limitations" class="section-header"><a href="#limitations">Limitations</a></h2>
+<p>The purpose of this API is to provide an easy and portable way to query
+the default amount of parallelism the program should use. Among other things it
+does not expose information on NUMA regions, does not account for
+differences in (co)processor capabilities, and will not modify the program’s
+global state in order to more accurately query the amount of available
+parallelism.</p>
+<p>Resource limits can be changed during the runtime of a program, therefore the value is
+not cached and instead recomputed every time this function is called. It should not be
+called from hot code.</p>
+<p>The value returned by this function should be considered a simplified
+approximation of the actual amount of parallelism available at any given
+time. To get a more detailed or precise overview of the amount of
+parallelism available to the program, you may wish to use
+platform-specific APIs as well. The following platform limitations currently
+apply to <code>available_parallelism</code>:</p>
+<p>On Windows:</p>
+<ul>
+<li>It may undercount the amount of parallelism available on systems with more
+than 64 logical CPUs. However, programs typically need specific support to
+take advantage of more than 64 logical CPUs, and in the absence of such
+support, the number returned by this function accurately reflects the
+number of logical CPUs the program can use by default.</li>
+<li>It may overcount the amount of parallelism available on systems limited by
+process-wide affinity masks, or job object limitations.</li>
+</ul>
+<p>On Linux:</p>
+<ul>
+<li>It may overcount the amount of parallelism available when limited by a
+process-wide affinity mask, or when affected by cgroup limits.</li>
+</ul>
+<p>On all targets:</p>
+<ul>
+<li>It may overcount the amount of parallelism available when running in a VM
+with CPU usage limits (e.g. an overcommitted host).</li>
+</ul>
+<h2 id="errors" class="section-header"><a href="#errors">Errors</a></h2>
+<p>This function will, but is not limited to, return errors in the following
+cases:</p>
+<ul>
+<li>If the amount of parallelism is not known for the target platform.</li>
+<li>If the program lacks permission to query the amount of parallelism made
+available to it.</li>
+</ul>
+<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#![<span class="ident">feature</span>(<span class="ident">available_parallelism</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">io</span>, <span class="ident">thread</span>};
+
+<span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">thread::available_parallelism</span>()<span class="question-mark">?</span>.<span class="ident">get</span>();
+    <span class="macro">assert!</span>(<span class="ident">count</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">1_usize</span>);
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+</div></details></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+</body></html>

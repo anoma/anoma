@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake&#x2F;src&#x2F;types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake&#x2F;src&#x2F;types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -900,7 +901,7 @@
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;{} with voting power {}&quot;</span>,
@@ -1012,7 +1013,7 @@
 
 <span class="kw">impl</span> <span class="ident">VotingPower</span> {
     <span class="doccomment">/// Convert token amount into a voting power.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_tokens</span>(<span class="ident">tokens</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_tokens</span>(<span class="ident">tokens</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">params</span>.<span class="ident">votes_per_token</span> <span class="op">*</span> <span class="ident">tokens</span>.<span class="ident">into</span>() <span class="op">/</span> <span class="number">1_000_000</span>)
     }
 }
@@ -1022,7 +1023,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_token_change</span>(
         <span class="ident">change</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span>,
         <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">TryFromIntError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">TryFromIntError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">delta</span>: <span class="ident">i128</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">votes_per_token</span> <span class="op">*</span> <span class="ident">change</span>.<span class="ident">into</span>() <span class="op">/</span> <span class="number">1_000_000</span>;
         <span class="kw">let</span> <span class="ident">delta</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">TryFrom::try_from</span>(<span class="ident">delta</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">delta</span>))
@@ -1032,7 +1033,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_tokens</span>(
         <span class="ident">tokens</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
         <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">TryFromIntError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">TryFromIntError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">delta</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">TryFrom::try_from</span>(
             <span class="ident">params</span>.<span class="ident">votes_per_token</span> <span class="op">*</span> <span class="ident">tokens</span>.<span class="ident">into</span>() <span class="op">/</span> <span class="number">1_000_000</span>,
         )<span class="question-mark">?</span>;
@@ -1043,7 +1044,7 @@
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">VotingPower</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">TryFromIntError</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">VotingPower</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">VotingPower</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">delta</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">TryFrom::try_from</span>(<span class="ident">value</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">delta</span>))
     }
@@ -1052,20 +1053,20 @@
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">VotingPowerDelta</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VotingPower</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">TryFromIntError</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">VotingPowerDelta</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">VotingPowerDelta</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vp</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">TryFrom::try_from</span>(<span class="ident">value</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">vp</span>))
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">VotingPower</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
@@ -1073,7 +1074,7 @@
 <span class="kw">impl</span> <span class="ident">Epoch</span> {
     <span class="doccomment">/// Iterate a range of consecutive epochs starting from `self` of a given</span>
     <span class="doccomment">/// length. Work-around for `Step` implementation pending on stabilization of &lt;https://github.com/rust-lang/rust/issues/42168&gt;.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_range</span>(<span class="self">self</span>, <span class="ident">len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_range</span>(<span class="self">self</span>, <span class="ident">len</span>: <span class="ident">u64</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span> {
         <span class="kw">let</span> <span class="ident">start_ix</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">end_ix</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">start_ix</span> <span class="op">+</span> <span class="ident">len</span>;
         (<span class="ident">start_ix</span>..<span class="ident">end_ix</span>).<span class="ident">map</span>(<span class="ident">Epoch::from</span>)
@@ -1083,7 +1084,7 @@
     <span class="doccomment">/// overflow occurred.</span>
     <span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;this returns the result of the operation, without modifying \
                   the original&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">checked_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Epoch</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">checked_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Epoch</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">rhs</span>.<span class="number">0</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="number">0</span> {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
@@ -1095,25 +1096,25 @@
     <span class="doccomment">/// `Epoch(0)` if overflow occurred.</span>
     <span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;this returns the result of the operation, without modifying \
                   the original&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub_or_default</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Epoch</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub_or_default</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Epoch</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">checked_sub</span>(<span class="ident">rhs</span>).<span class="ident">unwrap_or_default</span>()
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">epoch</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">epoch</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">Epoch</span>(<span class="ident">epoch</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">epoch</span>: <span class="ident">Epoch</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">epoch</span>: <span class="ident">Epoch</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">epoch</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">usize</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">epoch</span>: <span class="ident">Epoch</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">epoch</span>: <span class="ident">Epoch</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">epoch</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">usize</span>
     }
 }
@@ -1121,7 +1122,7 @@
 <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="ident">Epoch</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>)
     }
 }
@@ -1129,7 +1130,7 @@
 <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">usize</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="ident">Epoch</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span> <span class="kw">as</span> <span class="ident">u64</span>)
     }
 }
@@ -1137,7 +1138,7 @@
 <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Epoch</span>;
 
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="ident">Epoch</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">rhs</span>)
     }
 }
@@ -1145,13 +1146,13 @@
 <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Epoch</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Epoch</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="ident">Epoch</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
@@ -1160,7 +1161,7 @@
 <span class="kw">where</span>
     <span class="ident">Address</span>: <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Hash</span>,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;{{source: {}, validator: {}}}&quot;</span>,
@@ -1174,7 +1175,7 @@
     <span class="ident">Token</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Token</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Default</span>,
 {
     <span class="doccomment">/// Find the sum of all the bonds amounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sum</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Token</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sum</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Token</span> {
         <span class="self">self</span>.<span class="ident">deltas</span>
             .<span class="ident">iter</span>()
             .<span class="ident">fold</span>(<span class="ident">Default::default</span>(), <span class="op">|</span><span class="ident">acc</span>, (<span class="ident">_epoch</span>, <span class="ident">amount</span>)<span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">amount</span>)
@@ -1187,7 +1188,7 @@
 {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="comment">// This is almost the same as `self.delta.extend(rhs.delta);`, except</span>
         <span class="comment">// that we add values where a key is present on both sides.</span>
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">deltas</span>.<span class="ident">into_iter</span>();
@@ -1200,8 +1201,8 @@
         <span class="ident">iter</span>.<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">k</span>, <span class="ident">v</span>)<span class="op">|</span> {
             <span class="comment">// Add or insert</span>
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">deltas</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">v</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="kw-2">*</span><span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">v</span>,
+                <span class="prelude-val">None</span> =&gt; {
                     <span class="self">self</span>.<span class="ident">deltas</span>.<span class="ident">insert</span>(<span class="ident">k</span>, <span class="ident">v</span>);
                 }
             }
@@ -1215,7 +1216,7 @@
     <span class="ident">Token</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Token</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Default</span>,
 {
     <span class="doccomment">/// Find the sum of all the unbonds amounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sum</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Token</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sum</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Token</span> {
         <span class="self">self</span>.<span class="ident">deltas</span>
             .<span class="ident">iter</span>()
             .<span class="ident">fold</span>(<span class="ident">Default::default</span>(), <span class="op">|</span><span class="ident">acc</span>, (<span class="ident">_epoch</span>, <span class="ident">amount</span>)<span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">amount</span>)
@@ -1228,7 +1229,7 @@
 {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="comment">// This is almost the same as `self.deltas.extend(rhs.deltas);`, except</span>
         <span class="comment">// that we add values where a key is present on both sides.</span>
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">deltas</span>.<span class="ident">into_iter</span>();
@@ -1241,8 +1242,8 @@
         <span class="ident">iter</span>.<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">k</span>, <span class="ident">v</span>)<span class="op">|</span> {
             <span class="comment">// Add or insert</span>
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">deltas</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">v</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="kw-2">*</span><span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">v</span>,
+                <span class="prelude-val">None</span> =&gt; {
                     <span class="self">self</span>.<span class="ident">deltas</span>.<span class="ident">insert</span>(<span class="ident">k</span>, <span class="ident">v</span>);
                 }
             }
@@ -1252,13 +1253,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VotingPower</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">voting_power</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">voting_power</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">voting_power</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">VotingPower</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vp</span>: <span class="ident">VotingPower</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vp</span>: <span class="ident">VotingPower</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">vp</span>.<span class="number">0</span>
     }
 }
@@ -1266,25 +1267,25 @@
 <span class="kw">impl</span> <span class="ident">Add</span> <span class="kw">for</span> <span class="ident">VotingPower</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">AddAssign</span> <span class="kw">for</span> <span class="ident">VotingPower</span> {
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) {
+    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">delta</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">delta</span>: <span class="ident">i64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">delta</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">VotingPowerDelta</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">i64</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vp</span>: <span class="ident">VotingPowerDelta</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">vp</span>: <span class="ident">VotingPowerDelta</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">vp</span>.<span class="number">0</span>
     }
 }
@@ -1292,13 +1293,13 @@
 <span class="kw">impl</span> <span class="ident">Add</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">AddAssign</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) {
+    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="number">0</span>
     }
 }
@@ -1306,7 +1307,7 @@
 <span class="kw">impl</span> <span class="ident">Sub</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="number">0</span>)
     }
 }
@@ -1314,7 +1315,7 @@
 <span class="kw">impl</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VotingPowerDelta</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">i64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">rhs</span>)
     }
 }
@@ -1324,7 +1325,7 @@
     <span class="ident">Token</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 {
     <span class="doccomment">/// Calculate validator&#39;s voting power</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">voting_power</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VotingPower</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">voting_power</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) -&gt; <span class="ident">VotingPower</span> {
         <span class="ident">VotingPower::from_tokens</span>(<span class="self">self</span>.<span class="ident">tokens</span>, <span class="ident">params</span>)
     }
 }
@@ -1332,10 +1333,10 @@
 <span class="kw">impl</span> <span class="ident">SlashType</span> {
     <span class="doccomment">/// Get the slash rate applicable to the given slash type from the PoS</span>
     <span class="doccomment">/// parameters.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_slash_rate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BasisPoints</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_slash_rate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) -&gt; <span class="ident">BasisPoints</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">SlashType::DuplicateVote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">params</span>.<span class="ident">duplicate_vote_slash_rate</span>,
-            <span class="ident">SlashType::LightClientAttack</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">SlashType::DuplicateVote</span> =&gt; <span class="ident">params</span>.<span class="ident">duplicate_vote_slash_rate</span>,
+            <span class="ident">SlashType::LightClientAttack</span> =&gt; {
                 <span class="ident">params</span>.<span class="ident">light_client_attack_slash_rate</span>
             }
         }
@@ -1343,23 +1344,23 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">SlashType</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">SlashType::DuplicateVote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Duplicate vote&quot;</span>),
-            <span class="ident">SlashType::LightClientAttack</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Light client attack&quot;</span>),
+            <span class="ident">SlashType::DuplicateVote</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Duplicate vote&quot;</span>),
+            <span class="ident">SlashType::LightClientAttack</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Light client attack&quot;</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">BasisPoints</span> {
     <span class="doccomment">/// Initialize basis points from an integer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">value</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BasisPoints</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}‱&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
@@ -1367,7 +1368,7 @@
 <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BasisPoints</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">u64</span>;
 
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="comment">// TODO checked arithmetics</span>
         <span class="ident">rhs</span> <span class="op">*</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">/</span> <span class="number">10_000</span>
     }
@@ -1376,7 +1377,7 @@
 <span class="kw">impl</span> <span class="ident">Mul</span><span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BasisPoints</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">i128</span>;
 
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">i128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">i128</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="comment">// TODO checked arithmetics</span>
         <span class="ident">rhs</span> <span class="op">*</span> <span class="self">self</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i128</span> <span class="op">/</span> <span class="number">10_000</span>
     }
@@ -1392,11 +1393,10 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// Generate arbitrary epoch in given range</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_epoch</span>(<span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Epoch</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_epoch</span>(<span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>) -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Epoch</span><span class="op">&gt;</span> {
         <span class="ident">range</span>.<span class="ident">prop_map</span>(<span class="ident">Epoch</span>)
     }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_proof_of_stake" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;wallet&#x2F;store.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>store.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;wallet&#x2F;store.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>store.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -422,14 +423,14 @@
 
 <span class="kw">impl</span> <span class="ident">Store</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">genesis</span>: <span class="ident">GenesisConfig</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">genesis</span>: <span class="ident">GenesisConfig</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::default</span>();
         <span class="ident">store</span>.<span class="ident">add_genesis_addresses</span>(<span class="ident">genesis</span>);
         <span class="ident">store</span>
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::default</span>();
         <span class="comment">// Pre-load the default keys without encryption</span>
         <span class="kw">let</span> <span class="ident">no_password</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -448,14 +449,14 @@
     }
 
     <span class="doccomment">/// Add addresses from a genesis configuration.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_genesis_addresses</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">genesis</span>: <span class="ident">GenesisConfig</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_genesis_addresses</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">genesis</span>: <span class="ident">GenesisConfig</span>) {
         <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">extend</span>(
             <span class="ident"><span class="kw">super</span>::defaults::addresses_from_genesis</span>(<span class="ident">genesis</span>).<span class="ident">into_iter</span>(),
         );
     }
 
     <span class="doccomment">/// Save the wallet store to a file.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">encode</span>();
         <span class="kw">let</span> <span class="ident">wallet_path</span> <span class="op">=</span> <span class="ident">wallet_file</span>(<span class="ident">store_dir</span>);
         <span class="comment">// Make sure the dir exists</span>
@@ -471,7 +472,7 @@
     }
 
     <span class="doccomment">/// Load the store file or create a new one without any keys or addresses.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_or_new</span>(<span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_or_new</span>(<span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span> {
         <span class="ident"><span class="self">Self</span>::load_or_new_aux</span>(<span class="ident">store_dir</span>, <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::default</span>();
             <span class="ident">store</span>.<span class="ident">save</span>(<span class="ident">store_dir</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
@@ -485,8 +486,8 @@
     <span class="doccomment">/// the genesis file, if not found.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_or_new_from_genesis</span>(
         <span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-        <span class="ident">load_genesis</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">GenesisConfig</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span> {
+        <span class="ident">load_genesis</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() -&gt; <span class="ident">GenesisConfig</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span> {
         <span class="ident"><span class="self">Self</span>::load_or_new_aux</span>(<span class="ident">store_dir</span>, <span class="op">|</span><span class="op">|</span> {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
             <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">load_genesis</span>());
@@ -506,23 +507,23 @@
     <span class="doccomment">/// Load the store file or create a new with the provided function.</span>
     <span class="kw">fn</span> <span class="ident">load_or_new_aux</span>(
         <span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
-        <span class="ident">new_store</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span> {
+        <span class="ident">new_store</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">LoadStoreError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">wallet_file</span> <span class="op">=</span> <span class="ident">wallet_file</span>(<span class="ident">store_dir</span>);
         <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">wallet_file</span>);
         <span class="kw">match</span> <span class="ident">store</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">store_data</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">store_data</span>) =&gt; {
                 <span class="ident">Store::decode</span>(<span class="ident">store_data</span>).<span class="ident">map_err</span>(<span class="ident">LoadStoreError::Decode</span>)
             }
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">kind</span>() {
-                <span class="ident">ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">kind</span>() {
+                <span class="ident">ErrorKind::NotFound</span> =&gt; {
                     <span class="macro">println!</span>(
                         <span class="string">&quot;No wallet found at {:?}. Creating a new one.&quot;</span>,
                         <span class="ident">wallet_file</span>
                     );
                     <span class="ident">new_store</span>()
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">LoadStoreError::ReadWallet</span>(
+                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">LoadStoreError::ReadWallet</span>(
                     <span class="ident">wallet_file</span>.<span class="ident">to_string_lossy</span>().<span class="ident">into_owned</span>(),
                     <span class="ident">err</span>.<span class="ident">to_string</span>(),
                 )),
@@ -534,7 +535,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">alias_pkh_or_pk</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">alias_pkh_or_pk</span> <span class="op">=</span> <span class="ident">alias_pkh_or_pk</span>.<span class="ident">as_ref</span>();
         <span class="comment">// Try to find by alias</span>
         <span class="self">self</span>.<span class="ident">keys</span>
@@ -552,7 +553,7 @@
     }
 
     <span class="doccomment">/// Find the stored key by a public key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from</span>(<span class="ident">pk</span>);
         <span class="self">self</span>.<span class="ident">find_key_by_pkh</span>(<span class="kw-2">&amp;</span><span class="ident">pkh</span>)
     }
@@ -561,25 +562,25 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pkh</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">pkh</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pkhs</span>.<span class="ident">get</span>(<span class="ident">pkh</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">get</span>(<span class="ident">alias</span>)
     }
 
     <span class="doccomment">/// Find the stored alias for a public key hash.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_alias_by_pkh</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pkh</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_alias_by_pkh</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pkh</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">pkhs</span>.<span class="ident">get</span>(<span class="ident">pkh</span>).<span class="ident">cloned</span>()
     }
 
     <span class="doccomment">/// Find the stored address by an alias.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">get</span>(<span class="ident">alias</span>.<span class="ident">as_ref</span>())
     }
 
     <span class="doccomment">/// Get all known keys by their alias, paired with PKH, if known.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, (<span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, (<span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, (<span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">pkhs</span>
                 .<span class="ident">iter</span>()
@@ -597,14 +598,14 @@
     }
 
     <span class="doccomment">/// Get all known addresses by their alias, paired with PKH, if known.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, <span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, <span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">addresses</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">generate_keypair</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+    <span class="kw">fn</span> <span class="ident">generate_keypair</span>() -&gt; <span class="ident">Keypair</span> {
         <span class="kw">use</span> <span class="ident">rand::rngs::OsRng</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">csprng</span> <span class="op">=</span> <span class="ident">OsRng</span> {};
-        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">csprng</span>)
+        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">csprng</span>)
     }
 
     <span class="doccomment">/// Generate a new keypair and insert it into the store with the provided</span>
@@ -613,10 +614,10 @@
     <span class="doccomment">/// encryption. Returns the alias of the key and a reference-counting</span>
     <span class="doccomment">/// pointer to the key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_key</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::generate_keypair</span>();
         <span class="kw">let</span> <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">public</span>);
         <span class="kw">let</span> (<span class="ident">keypair_to_store</span>, <span class="ident">raw_keypair</span>) <span class="op">=</span>
@@ -642,11 +643,11 @@
     <span class="doccomment">/// keypair is not inserted and nothing is returned, otherwise selected</span>
     <span class="doccomment">/// alias is returned.</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">insert_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="ident">Alias</span>,
         <span class="ident">keypair</span>: <span class="ident">StoredKeypair</span>,
         <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">alias</span>.<span class="ident">is_empty</span>() {
             <span class="macro">println!</span>(
                 <span class="string">&quot;Empty alias given, defaulting to {}.&quot;</span>,
@@ -655,11 +656,11 @@
         }
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">alias</span>) {
             <span class="kw">match</span> <span class="ident">show_overwrite_confirmation</span>(<span class="kw-2">&amp;</span><span class="ident">alias</span>, <span class="string">&quot;a key&quot;</span>) {
-                <span class="ident">ConfirmationResponse::Replace</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="ident">ConfirmationResponse::Reselect</span>(<span class="ident">new_alias</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ConfirmationResponse::Replace</span> =&gt; {}
+                <span class="ident">ConfirmationResponse::Reselect</span>(<span class="ident">new_alias</span>) =&gt; {
                     <span class="kw">return</span> <span class="self">self</span>.<span class="ident">insert_keypair</span>(<span class="ident">new_alias</span>, <span class="ident">keypair</span>, <span class="ident">pkh</span>);
                 }
-                <span class="ident">ConfirmationResponse::Skip</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+                <span class="ident">ConfirmationResponse::Skip</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
             }
         }
         <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">keypair</span>);
@@ -672,10 +673,10 @@
     <span class="doccomment">/// the address won&#39;t be added. Return the selected alias if the address has</span>
     <span class="doccomment">/// been added.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_address</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="ident">Alias</span>,
         <span class="ident">address</span>: <span class="ident">Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">alias</span>.<span class="ident">is_empty</span>() {
             <span class="macro">println!</span>(
                 <span class="string">&quot;Empty alias given, defaulting to {}.&quot;</span>,
@@ -684,22 +685,22 @@
         }
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">alias</span>) {
             <span class="kw">match</span> <span class="ident">show_overwrite_confirmation</span>(<span class="kw-2">&amp;</span><span class="ident">alias</span>, <span class="string">&quot;an address&quot;</span>) {
-                <span class="ident">ConfirmationResponse::Replace</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                <span class="ident">ConfirmationResponse::Reselect</span>(<span class="ident">new_alias</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ConfirmationResponse::Replace</span> =&gt; {}
+                <span class="ident">ConfirmationResponse::Reselect</span>(<span class="ident">new_alias</span>) =&gt; {
                     <span class="kw">return</span> <span class="self">self</span>.<span class="ident">insert_address</span>(<span class="ident">new_alias</span>, <span class="ident">address</span>);
                 }
-                <span class="ident">ConfirmationResponse::Skip</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
+                <span class="ident">ConfirmationResponse::Skip</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
             }
         }
         <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">insert</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">address</span>);
         <span class="prelude-val">Some</span>(<span class="ident">alias</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">decode</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">toml::de::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">decode</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">toml::de::Error</span><span class="op">&gt;</span> {
         <span class="ident">toml::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
         <span class="ident">toml::to_vec</span>(<span class="self">self</span>).<span class="ident">expect</span>(<span class="string">&quot;Serializing of store shouldn&#39;t fail&quot;</span>)
     }
 }
@@ -717,7 +718,7 @@
 <span class="kw">fn</span> <span class="ident">show_overwrite_confirmation</span>(
     <span class="ident">alias</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     <span class="ident">alias_for</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConfirmationResponse</span> {
+) -&gt; <span class="ident">ConfirmationResponse</span> {
     <span class="macro">print!</span>(
         <span class="string">&quot;You&#39;re trying to create an alias \&quot;{}\&quot; that already exists for {} \
          in your store.\nWould you like to replace it? \
@@ -728,29 +729,29 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">String::new</span>();
     <span class="comment">// Get the user to select between 3 choices</span>
-    <span class="kw">match</span> <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buffer</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">size</span>) <span class="kw">if</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>) {
+        <span class="prelude-val">Ok</span>(<span class="ident">size</span>) <span class="kw">if</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="number">0</span> =&gt; {
             <span class="comment">// Isolate the single character representing the choice</span>
             <span class="kw">let</span> <span class="ident">byte</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>();
             <span class="ident">buffer</span>.<span class="ident">clear</span>();
             <span class="kw">match</span> <span class="ident">byte</span> {
-                <span class="string">&#39;p&#39;</span> <span class="op">|</span> <span class="string">&#39;P&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">ConfirmationResponse::Replace</span>,
-                <span class="string">&#39;s&#39;</span> <span class="op">|</span> <span class="string">&#39;S&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="string">&#39;p&#39;</span> <span class="op">|</span> <span class="string">&#39;P&#39;</span> =&gt; <span class="kw">return</span> <span class="ident">ConfirmationResponse::Replace</span>,
+                <span class="string">&#39;s&#39;</span> <span class="op">|</span> <span class="string">&#39;S&#39;</span> =&gt; {
                     <span class="comment">// In the case of reselection, elicit new alias</span>
                     <span class="macro">print!</span>(<span class="string">&quot;Please enter a different alias: &quot;</span>);
                     <span class="ident">io::stdout</span>().<span class="ident">flush</span>().<span class="ident">unwrap</span>();
-                    <span class="kw">if</span> <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buffer</span>).<span class="ident">is_ok</span>() {
+                    <span class="kw">if</span> <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>).<span class="ident">is_ok</span>() {
                         <span class="kw">return</span> <span class="ident">ConfirmationResponse::Reselect</span>(
                             <span class="ident">buffer</span>.<span class="ident">trim</span>().<span class="ident">to_string</span>(),
                         );
                     }
                 }
-                <span class="string">&#39;k&#39;</span> <span class="op">|</span> <span class="string">&#39;K&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">ConfirmationResponse::Skip</span>,
+                <span class="string">&#39;k&#39;</span> <span class="op">|</span> <span class="string">&#39;K&#39;</span> =&gt; <span class="kw">return</span> <span class="ident">ConfirmationResponse::Skip</span>,
                 <span class="comment">// Input is senseless fall through to repeat prompt</span>
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                <span class="kw">_</span> =&gt; {}
             };
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="kw">_</span> =&gt; {}
     }
     <span class="comment">// Input is senseless fall through to repeat prompt</span>
     <span class="macro">println!</span>(<span class="string">&quot;Invalid option, try again.&quot;</span>);
@@ -761,10 +762,9 @@
 <span class="kw">const</span> <span class="ident">FILE_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wallet.toml&quot;</span>;
 
 <span class="doccomment">/// Get the path to the wallet store.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wallet_file</span>(<span class="ident">store_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wallet_file</span>(<span class="ident">store_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) -&gt; <span class="ident">PathBuf</span> {
     <span class="ident">store_dir</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="ident">FILE_NAME</span>)
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `matchmaker&#x2F;mm_token_exch&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../mm_token_exch/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `matchmaker&#x2F;mm_token_exch&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../mm_token_exch/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -394,25 +395,25 @@
 
 <span class="kw">impl</span> <span class="ident">AddIntent</span> <span class="kw">for</span> <span class="ident">TokenExchange</span> {
     <span class="kw">fn</span> <span class="ident">add_intent</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">intent_id</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">intent_data</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddIntentResult</span> {
+    ) -&gt; <span class="ident">AddIntentResult</span> {
         <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">decode_intent_data</span>(<span class="kw-2">&amp;</span><span class="ident">intent_data</span>[..]);
         <span class="kw">let</span> <span class="ident">exchanges</span> <span class="op">=</span> <span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">exchange</span>.<span class="ident">clone</span>();
 
         <span class="macro">println!</span>(<span class="string">&quot;trying to match new intent&quot;</span>);
         <span class="ident">exchanges</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exchange</span><span class="op">|</span> {
             <span class="ident">add_intent_node</span>(
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">graph</span>,
+                <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">graph</span>,
                 <span class="ident">intent_id</span>.<span class="ident">to_vec</span>(),
                 <span class="ident">exchange</span>,
                 <span class="ident">intent</span>.<span class="ident">clone</span>(),
             )
         });
-        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">matched_intents</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">try_match</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">graph</span>) {
-            <span class="prelude-val">Some</span>((<span class="ident">tx</span>, <span class="ident">matched_intents</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Some</span>(<span class="ident">tx</span>), <span class="prelude-val">Some</span>(<span class="ident">matched_intents</span>)),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">matched_intents</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">try_match</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">graph</span>) {
+            <span class="prelude-val">Some</span>((<span class="ident">tx</span>, <span class="ident">matched_intents</span>)) =&gt; (<span class="prelude-val">Some</span>(<span class="ident">tx</span>), <span class="prelude-val">Some</span>(<span class="ident">matched_intents</span>)),
+            <span class="prelude-val">None</span> =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
         };
         <span class="ident">AddIntentResult</span> {
             <span class="ident">tx</span>,
@@ -429,14 +430,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">ExchangeNode</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">id</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">id</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">id</span>
     }
 }
 
 <span class="doccomment">/// Add a new node to the graph for the intent</span>
 <span class="kw">fn</span> <span class="ident">add_intent_node</span>(
-    <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">graph</span>: <span class="kw-2">&amp;mut</span> <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="ident">exchange</span>: <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
     <span class="ident">intent</span>: <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span>,
@@ -462,7 +463,7 @@
 <span class="kw">fn</span> <span class="ident">find_nodes_to_update</span>(
     <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">new_node</span>: <span class="kw-2">&amp;</span><span class="ident">ExchangeNode</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>) {
+) -&gt; (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">node_index</span>(<span class="number">0</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">connect_sell</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">connect_buy</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -470,14 +471,14 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">DfsEvent::Discover</span>(<span class="ident">index</span>, <span class="ident">_time</span>) <span class="op">=</span> <span class="ident">event</span> {
             <span class="kw">let</span> <span class="ident">current_node</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">graph</span>[<span class="ident">index</span>];
             <span class="kw">if</span> <span class="ident">new_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">token_sell</span>
-                <span class="op">=</span><span class="op">=</span> <span class="ident">current_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">token_buy</span>
+                <span class="op">==</span> <span class="ident">current_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">token_buy</span>
             <span class="comment">// &amp;&amp; new_node.exchange.data.max_sell</span>
             <span class="comment">//     &gt;= current_node.exchange.data.min_buy</span>
             {
                 <span class="ident">connect_sell</span>.<span class="ident">push</span>(<span class="ident">index</span>);
             }
             <span class="kw">if</span> <span class="ident">new_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">token_buy</span>
-                <span class="op">=</span><span class="op">=</span> <span class="ident">current_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">token_sell</span>
+                <span class="op">==</span> <span class="ident">current_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">token_sell</span>
             <span class="comment">// &amp;&amp; current_node.exchange.data.max_sell</span>
             <span class="comment">//     &gt;= new_node.exchange.data.min_buy</span>
             {
@@ -494,7 +495,7 @@
 <span class="kw">fn</span> <span class="ident">sort_intents</span>(
     <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">matched_intents_indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">NodeIndex</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NodeIndex</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cycle_ordered</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cycle_intents</span> <span class="op">=</span> <span class="ident">VecDeque::from</span>(<span class="ident">matched_intents_indices</span>.<span class="ident">to_vec</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">to_connect_node</span> <span class="op">=</span> <span class="ident">cycle_intents</span>.<span class="ident">pop_front</span>().<span class="ident">unwrap</span>();
@@ -515,8 +516,8 @@
 <span class="doccomment">/// Try to find matching intents in the graph. If found, returns the tx bytes</span>
 <span class="doccomment">/// and a hash set of the matched intent IDs.</span>
 <span class="kw">fn</span> <span class="ident">try_match</span>(
-    <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+    <span class="ident">graph</span>: <span class="kw-2">&amp;mut</span> <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
+) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="comment">// We only use the first found cycle, because an intent cannot be matched</span>
     <span class="comment">// into more than one tx</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">matchned_intents_indices</span>) <span class="op">=</span>
@@ -552,7 +553,7 @@
 <span class="kw">fn</span> <span class="ident">prepare_tx_data</span>(
     <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">matched_intent_indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">NodeIndex</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="macro">println!</span>(
         <span class="string">&quot;found match; creating tx with {:?} nodes&quot;</span>,
         <span class="ident">matched_intent_indices</span>.<span class="ident">len</span>()
@@ -561,7 +562,7 @@
     <span class="kw">let</span> <span class="ident">amounts</span> <span class="op">=</span> <span class="ident">compute_amounts</span>(<span class="ident">graph</span>, <span class="kw-2">&amp;</span><span class="ident">matched_intents</span>);
 
     <span class="kw">match</span> <span class="ident">amounts</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">res</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">res</span>) =&gt; {
             <span class="macro">println!</span>(
                 <span class="string">&quot;amounts: {}&quot;</span>,
                 <span class="ident">res</span>.<span class="ident">values</span>()
@@ -623,7 +624,7 @@
             <span class="macro">println!</span>(<span class="string">&quot;tx data: {:?}&quot;</span>, <span class="ident">tx_data</span>.<span class="ident">transfers</span>);
             <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
         }
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
             <span class="macro">println!</span>(<span class="string">&quot;Invalid exchange: {}.&quot;</span>, <span class="ident">err</span>);
             <span class="prelude-val">None</span>
         }
@@ -633,7 +634,7 @@
 <span class="kw">fn</span> <span class="ident">compute_amounts</span>(
     <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">cycle_intents</span>: <span class="kw-2">&amp;</span>[<span class="ident">NodeIndex</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Exchange</span>, <span class="ident">token::Amount</span><span class="op">&gt;</span>, <span class="ident">ResolutionError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Exchange</span>, <span class="ident">token::Amount</span><span class="op">&gt;</span>, <span class="ident">ResolutionError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">graph</span>
         .<span class="ident">raw_nodes</span>()
         .<span class="ident">iter</span>()
@@ -708,7 +709,7 @@
     }
 
     <span class="kw">match</span> <span class="ident">model</span>.<span class="ident">solve</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">solution</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">solution</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">amount_map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
             <span class="kw">let</span> <span class="ident">amounts</span> <span class="op">=</span> <span class="ident">solution</span>
                 .<span class="ident">into_inner</span>()
@@ -720,7 +721,7 @@
             });
             <span class="prelude-val">Ok</span>(<span class="ident">amount_map</span>)
         }
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>),
+        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">error</span>),
     }
 }
 
@@ -728,7 +729,7 @@
     <span class="ident">from_node</span>: <span class="kw-2">&amp;</span><span class="ident">ExchangeNode</span>,
     <span class="ident">to_node</span>: <span class="kw-2">&amp;</span><span class="ident">ExchangeNode</span>,
     <span class="ident">amount</span>: <span class="ident">token::Amount</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">token::Transfer</span> {
+) -&gt; <span class="ident">token::Transfer</span> {
     <span class="ident">token::Transfer</span> {
         <span class="ident">source</span>: <span class="ident">from_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">addr</span>.<span class="ident">clone</span>(),
         <span class="ident">target</span>: <span class="ident">to_node</span>.<span class="ident">exchange</span>.<span class="ident">data</span>.<span class="ident">addr</span>.<span class="ident">clone</span>(),
@@ -737,10 +738,9 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">decode_intent_data</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">decode_intent_data</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span> {
     <span class="ident">Signed</span>::<span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span><span class="ident">::try_from_slice</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>()
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="mm_token_exch" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>

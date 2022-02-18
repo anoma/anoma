@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_apps"] = [{"text":"impl TopicSubscriptionFilter for <a class=\"enum\" href=\"anoma_apps/node/gossip/p2p/behaviour/enum.IntentGossipSubscriptionFilter.html\" title=\"enum anoma_apps::node::gossip::p2p::behaviour::IntentGossipSubscriptionFilter\">IntentGossipSubscriptionFilter</a>","synthetic":false,"types":["anoma_apps::node::gossip::p2p::behaviour::IntentGossipSubscriptionFilter"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
