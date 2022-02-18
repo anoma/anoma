@@ -6,7 +6,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 #[cfg(not(feature = "ABCI"))]
-use anoma::types::transaction::{hash_tx as hash_tx_bytes, Hash};
+use anoma::types::hash::Hash;
+#[cfg(not(feature = "ABCI"))]
+use anoma::types::transaction::hash_tx as hash_tx_bytes;
 use async_trait::async_trait;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::transaction;

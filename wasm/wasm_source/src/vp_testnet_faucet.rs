@@ -41,6 +41,10 @@ fn validate_tx(
         _ => false,
     });
 
+    if !is_tx_whitelisted() {
+        return false;
+    }
+
     for key in keys_changed.iter() {
         let is_valid = if let Some(owner) = token::is_any_token_balance_key(key)
         {

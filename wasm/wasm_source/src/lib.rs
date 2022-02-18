@@ -236,6 +236,10 @@ pub mod vp_token {
             verifiers
         );
 
+        if !is_tx_whitelisted() {
+            return false;
+        }
+
         token::vp(&addr, &keys_changed, &verifiers)
     }
 }
