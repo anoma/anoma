@@ -7,7 +7,7 @@ use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
 use anoma::ledger::pos::{self, PosVP};
-use anoma::ledger::protocol_vps::{self, ProtocolVp};
+use anoma::ledger::protocol_vps::{self, ProtocolVp, read_implicit_vp};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
@@ -226,13 +226,11 @@ where
                     Vp::Wasm(vp)
                 }
                 Address::Implicit(_) => {
-                    let (implicit_vp, gas) = storage
-                        .implicit_vp()
-                        .map_err(Error::StorageError)?;
+                    let (implicit_vp, gas) = read_implicit_vp(&storage).unwrap();
                     gas_meter.add(gas).map_err(Error::GasError)?;
-                    let implicit_vp =
-                        // TODO: figure out the apposite error type (ProtocolNativeVpError?)
-                        implicit_vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
+                    //let implicit_vp =
+                    //    // TODO: figure out the apposite error type (ProtocolNativeVpError?)
+                    //    implicit_vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
                     gas_meter
                         .add_compiling_fee(implicit_vp.len())
                         .map_err(Error::GasError)?;
