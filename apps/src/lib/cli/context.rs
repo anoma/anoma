@@ -2,7 +2,7 @@
 
 use std::env;
 use std::marker::PhantomData;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -72,11 +72,27 @@ impl Context {
         // If the WASM dir specified, put it in the config
         match global_args.wasm_dir.as_ref() {
             Some(wasm_dir) => {
+                if wasm_dir.is_absolute() {
+                    eprintln!(
+                        "The arg `--wasm-dir` cannot be an absolute path. It \
+                         is nested inside the chain directory."
+                    );
+                    safe_exit(1);
+                }
                 config.wasm_dir = wasm_dir.clone();
             }
             None => {
                 if let Ok(wasm_dir) = env::var(ENV_VAR_WASM_DIR) {
-                    config.wasm_dir = wasm_dir.into();
+                    let wasm_dir: PathBuf = wasm_dir.into();
+                    if wasm_dir.is_absolute() {
+                        eprintln!(
+                            "The env var `{}` cannot be an absolute path. It \
+                             is nested inside the chain directory.",
+                            ENV_VAR_WASM_DIR
+                        );
+                        safe_exit(1);
+                    }
+                    config.wasm_dir = wasm_dir;
                 }
             }
         }
@@ -130,7 +146,10 @@ impl Context {
 
     /// Read the given WASM file from the WASM directory or an absolute path.
     pub fn read_wasm(&self, file_name: impl AsRef<Path>) -> Vec<u8> {
-        wasm_loader::read_wasm(&self.config.wasm_dir, file_name)
+        wasm_loader::read_wasm(
+            self.config.ledger.chain_dir().join(&self.config.wasm_dir),
+            file_name,
+        )
     }
 }
 

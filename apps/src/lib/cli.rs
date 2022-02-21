@@ -1283,10 +1283,11 @@ pub mod args {
                 ))
                 .arg(WASM_DIR.def().about(
                     "Directory with built WASM validity predicates, \
-                     transactions and matchmaker files. This value can also \
-                     be set via `ANOMA_WASM_DIR` environment variable, but \
-                     the argument takes precedence, if specified. Defaults to \
-                     `wasm` path, relative to current working directory.",
+                     transactions and matchmaker files. This must not be an \
+                     absolute path as the directory is nested inside the \
+                     chain directory. This value can also be set via \
+                     `ANOMA_WASM_DIR` environment variable, but the argument \
+                     takes precedence, if specified.",
                 ))
                 .arg(MODE.def().about(
                     "The mode in which to run Anoma. Options are \n\t * \
