@@ -59,6 +59,20 @@ fn validate_tx(
                 // If this is not the owner, allow any change
                 true
             }
+        } else if let Some(owner) = key.is_validity_predicate() {
+            let key = key.to_string();
+            let has_post: bool = has_key_post(&key);
+            if owner == &addr {
+                if has_post {
+                    let vp: Vec<u8> = read_bytes_post(&key).unwrap();
+                    return *valid_sig && is_vp_whitelisted(&vp);
+                } else {
+                    return false;
+                }
+            } else {
+                let vp: Vec<u8> = read_bytes_post(&key).unwrap();
+                return is_vp_whitelisted(&vp);
+            }
         } else {
             // Allow any other key change if authorized by a signature
             *valid_sig

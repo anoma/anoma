@@ -172,13 +172,13 @@ fn validate_tx(
                 let has_post: bool = has_key_post(&key);
                 if owner == &addr {
                     if has_post {
-                        let vp: Vec<u8> = read_post(&key).unwrap();
+                        let vp: Vec<u8> = read_bytes_post(&key).unwrap();
                         return *valid_sig && is_vp_whitelisted(&vp);
                     } else {
                         return false;
                     }
                 } else {
-                    let vp: Vec<u8> = read_post(&key).unwrap();
+                    let vp: Vec<u8> = read_bytes_post(&key).unwrap();
                     return is_vp_whitelisted(&vp);
                 }
             }
