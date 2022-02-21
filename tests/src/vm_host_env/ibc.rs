@@ -285,8 +285,20 @@ impl IbcActions for TestIbcActions {
         let mut dest_bal: Amount =
             tx_host_env::read(&dest_key.to_string()).unwrap_or_default();
         dest_bal.receive(&amount);
-        tx_host_env::write(src_key.to_string(), src_bal);
-        tx_host_env::write(dest_key.to_string(), dest_bal);
+        match src {
+            Address::Internal(InternalAddress::IbcMint) => {
+                tx_host_env::write_temp(&src_key.to_string(), src_bal)
+            }
+            Address::Internal(InternalAddress::IbcBurn) => unreachable!(),
+            _ => tx_host_env::write(&src_key.to_string(), src_bal),
+        }
+        match dest {
+            Address::Internal(InternalAddress::IbcMint) => unreachable!(),
+            Address::Internal(InternalAddress::IbcBurn) => {
+                tx_host_env::write_temp(&dest_key.to_string(), dest_bal)
+            }
+            _ => tx_host_env::write(&dest_key.to_string(), dest_bal),
+        }
     }
 }
 

@@ -208,6 +208,12 @@ mod native_tx_host_env {
         val_ptr: u64,
         val_len: u64
     ));
+    native_host_fn!(tx_write_temp(
+        key_ptr: u64,
+        key_len: u64,
+        val_ptr: u64,
+        val_len: u64
+    ));
     native_host_fn!(tx_delete(key_ptr: u64, key_len: u64));
     native_host_fn!(tx_iter_prefix(prefix_ptr: u64, prefix_len: u64) -> u64);
     native_host_fn!(tx_iter_next(iter_id: u64) -> i64);
