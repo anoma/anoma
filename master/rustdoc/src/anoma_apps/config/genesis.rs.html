@@ -742,6 +742,29 @@
 <span id="741">741</span>
 <span id="742">742</span>
 <span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
@@ -959,7 +982,7 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WasmConfig</span> {
         <span class="ident">filename</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">sha256</span>: <span class="ident">HexString</span>,
+        <span class="kw">pub</span> <span class="ident">sha256</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HexString</span><span class="op">&gt;</span>,
     }
 
     <span class="kw">fn</span> <span class="ident">load_validator</span>(
@@ -1003,11 +1026,18 @@
             <span class="ident">validator_vp_code_path</span>: <span class="ident">validator_vp_config</span>.<span class="ident">filename</span>.<span class="ident">to_owned</span>(),
             <span class="ident">validator_vp_sha256</span>: <span class="ident">validator_vp_config</span>
                 .<span class="ident">sha256</span>
+                .<span class="ident">clone</span>()
+                .<span class="ident">unwrap</span>()
                 .<span class="ident">to_sha256_bytes</span>()
                 .<span class="ident">unwrap</span>(),
             <span class="ident">reward_vp_code_path</span>: <span class="ident">reward_vp_config</span>.<span class="ident">filename</span>.<span class="ident">to_owned</span>(),
             <span class="ident">reward_vp_sha256</span>: <span class="ident">reward_vp_config</span>
                 .<span class="ident">sha256</span>
+                .<span class="ident">clone</span>()
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">eprintln!</span>(<span class="string">&quot;Unknown validator VP WASM sha256&quot;</span>);
+                    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+                })
                 .<span class="ident">to_sha256_bytes</span>()
                 .<span class="ident">unwrap</span>(),
         }
@@ -1027,7 +1057,15 @@
             <span class="ident">address</span>: <span class="ident">Address::decode</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">unwrap</span>(),
             <span class="ident">vp_code_path</span>: <span class="ident">token_vp_config</span>.<span class="ident">filename</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">vp_sha256</span>: <span class="ident">token_vp_config</span>.<span class="ident">sha256</span>.<span class="ident">to_sha256_bytes</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">vp_sha256</span>: <span class="ident">token_vp_config</span>
+                .<span class="ident">sha256</span>
+                .<span class="ident">clone</span>()
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">eprintln!</span>(<span class="string">&quot;Unknown token VP WASM sha256&quot;</span>);
+                    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+                })
+                .<span class="ident">to_sha256_bytes</span>()
+                .<span class="ident">unwrap</span>(),
             <span class="ident">balances</span>: <span class="ident">config</span>
                 .<span class="ident">balances</span>
                 .<span class="ident">as_ref</span>()
@@ -1101,7 +1139,15 @@
             <span class="ident">address</span>: <span class="ident">Address::decode</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">unwrap</span>(),
             <span class="ident">vp_code_path</span>: <span class="ident">account_vp_config</span>.<span class="ident">filename</span>.<span class="ident">to_owned</span>(),
-            <span class="ident">vp_sha256</span>: <span class="ident">account_vp_config</span>.<span class="ident">sha256</span>.<span class="ident">to_sha256_bytes</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">vp_sha256</span>: <span class="ident">account_vp_config</span>
+                .<span class="ident">sha256</span>
+                .<span class="ident">clone</span>()
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">eprintln!</span>(<span class="string">&quot;Unknown user VP WASM sha256&quot;</span>);
+                    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+                })
+                .<span class="ident">to_sha256_bytes</span>()
+                .<span class="ident">unwrap</span>(),
             <span class="ident">public_key</span>: <span class="ident">config</span>
                 .<span class="ident">public_key</span>
                 .<span class="ident">as_ref</span>()

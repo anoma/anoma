@@ -1006,7 +1006,7 @@
             .<span class="ident">split_once</span>(<span class="string">&#39;.&#39;</span>)
             .<span class="ident">unwrap</span>()
             .<span class="number">0</span>;
-        <span class="ident">config</span>.<span class="ident">sha256</span> <span class="op">=</span> <span class="ident">genesis_config::HexString</span>(<span class="ident">hash</span>.<span class="ident">to_owned</span>());
+        <span class="ident">config</span>.<span class="ident">sha256</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">genesis_config::HexString</span>(<span class="ident">hash</span>.<span class="ident">to_owned</span>()));
     });
 
     <span class="kw">let</span> <span class="ident">temp_chain_id</span> <span class="op">=</span> <span class="ident">chain_id_prefix</span>.<span class="ident">temp_chain_id</span>();
