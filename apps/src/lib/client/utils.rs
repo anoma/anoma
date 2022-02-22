@@ -246,6 +246,23 @@ pub fn init_network(
                         }
                     })
                 })
+                .or_else(|_err| {
+                    secp256k1::SecretKey::try_from_sk(&node_seckey).map(|sk| {
+                        // Convert and write the keypair into Tendermint
+                        // node_key.json file
+                        let node_keypair = [
+                            sk.try_to_vec().unwrap(),
+                            sk.ref_to().try_to_vec().unwrap(),
+                        ]
+                        .concat();
+                        json!({
+                            "priv_key": {
+                                "type": "tendermint/PrivKeySecp256k1",
+                                "value": base64::encode(node_keypair),
+                            }
+                        })
+                    })
+                })
                 .unwrap();
         let chain_dir = validator_dir.join(&accounts_temp_dir);
         let tm_home_dir = chain_dir.join("tendermint");

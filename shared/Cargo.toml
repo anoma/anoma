@@ -68,6 +68,7 @@ chrono = "0.4.19"
 clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 derivative = "2.2.0"
 ed25519-consensus = "1.2.0"
+libsecp256k1 = {version = "0.7.0", default-features = false, features = ["std", "hmac", "lazy-static-context"]}
 hex = "0.4.3"
 tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/workspace-cleanup"}
 # TODO temp fork for borsh coding

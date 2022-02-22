@@ -73,6 +73,10 @@ fn key_to_tendermint<PK: key::PublicKey>(
 ) -> std::result::Result<public_key::Sum, key::ParsePublicKeyError> {
     key::ed25519::PublicKey::try_from_pk(pk)
         .map(|pk| public_key::Sum::Ed25519(pk.try_to_vec().unwrap()))
+        .or_else(|_err| {
+            key::secp256k1::PublicKey::try_from_pk(pk)
+                .map(|pk| public_key::Sum::Secp256k1(pk.try_to_vec().unwrap()))
+        })
 }
 
 #[derive(Error, Debug)]

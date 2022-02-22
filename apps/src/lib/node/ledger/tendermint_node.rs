@@ -215,7 +215,7 @@ pub fn reset(tendermint_dir: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
-/// Convert a common signing scheme validator key into JSON for
+/// Convert a Ed25519/Secp256k1 validator key into JSON for
 /// Tendermint
 fn validator_key_to_json<SK: SecretKey>(
     address: &Address,
@@ -236,6 +236,25 @@ fn validator_key_to_json<SK: SecretKey>(
                 "type": "tendermint/PrivKeyEd25519",
                 "value": base64::encode(ck_arr),
             }
+        })
+        .or_else(|_err| {
+            secp256k1::SecretKey::try_from_sk(sk).map(|sk| {
+                let pk: secp256k1::PublicKey = sk.ref_to();
+                let ck_arr =
+                    [sk.try_to_vec().unwrap(), pk.try_to_vec().unwrap()]
+                        .concat();
+                json!({
+                    "address": address,
+                    "pub_key": {
+                        "type": "tendermint/PubKeySecp256k1",
+                        "value": base64::encode(pk.try_to_vec().unwrap()),
+                    },
+                    "priv_key": {
+                        "type": "tendermint/PrivKeySecp256k1",
+                        "value": base64::encode(ck_arr),
+                    }
+                })
+            })
         })
     })
 }

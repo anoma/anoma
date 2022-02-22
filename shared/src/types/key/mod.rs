@@ -17,6 +17,7 @@ use crate::types::address;
 
 pub mod common;
 pub mod ed25519;
+pub mod secp256k1;
 
 const PK_STORAGE_KEY: &str = "public_key";
 
@@ -108,6 +109,8 @@ pub trait TryFromRef<T: ?Sized>: Sized {
 pub enum SchemeType {
     /// Type identifier for Ed25519-consensus
     Ed25519Consensus,
+    /// Type identifier for Secp256k1
+    Secp256k1,
     /// Type identifier for Common
     Common,
 }
@@ -398,3 +401,5 @@ macro_rules! sigscheme_test {
 
 #[cfg(test)]
 sigscheme_test! {ed25519_test, ed25519::SigScheme}
+#[cfg(test)]
+sigscheme_test! {secp256k1_test, secp256k1::SigScheme}
