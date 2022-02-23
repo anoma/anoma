@@ -280,6 +280,20 @@
 <span id="279">279</span>
 <span id="280">280</span>
 <span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
@@ -353,6 +367,17 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">get_keys</span>()
     }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_verifiers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">write_log</span>
+            .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">HashSet::default</span>())
+            .<span class="ident">keys</span>()
+            .<span class="ident">cloned</span>()
+            .<span class="ident">collect</span>();
+        <span class="ident">verifiers</span>.<span class="ident">extend</span>(<span class="self">self</span>.<span class="ident">verifiers</span>.<span class="ident">clone</span>());
+        <span class="ident">verifiers</span>
+    }
 }
 
 <span class="doccomment">/// Initialize the host environment inside the [`vp_host_env`] module by running</span>
@@ -378,10 +403,13 @@
     <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>
         .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
-        .<span class="ident">expect</span>(
-            <span class="string">&quot;The VP for the given address has not been triggered by the \
-             transaction&quot;</span>,
-        )
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="macro">panic!</span>(
+                <span class="string">&quot;The VP for the given address has not been triggered by the \
+                 transaction, {:#?}&quot;</span>,
+                <span class="ident">verifiers_changed_keys</span>
+            )
+        })
         .<span class="ident">to_owned</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vp_env</span> <span class="op">=</span> <span class="ident">TestVpEnv</span> {

@@ -1064,6 +1064,89 @@
 <span id="1063">1063</span>
 <span id="1064">1064</span>
 <span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
+<span id="1121">1121</span>
+<span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
+<span id="1125">1125</span>
+<span id="1126">1126</span>
+<span id="1127">1127</span>
+<span id="1128">1128</span>
+<span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -1071,6 +1154,8 @@
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::nft</span>::{<span class="self">self</span>, <span class="ident">Nft</span>, <span class="ident">NftToken</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::transaction::nft</span>::{<span class="ident">CreateNft</span>, <span class="ident">MintNft</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{
     <span class="ident">pos</span>, <span class="ident">Fee</span>, <span class="ident">InitAccount</span>, <span class="ident">InitValidator</span>, <span class="ident">UpdateVp</span>, <span class="ident">WrapperTx</span>,
 };
@@ -1109,15 +1194,19 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::events</span>::{<span class="ident">Attributes</span>, <span class="ident">EventType</span> <span class="kw">as</span> <span class="ident">TmEventType</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::tendermint_node</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::std::fs::File</span>;
 
 <span class="kw">const</span> <span class="ident">TX_INIT_ACCOUNT_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_account.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_INIT_VALIDATOR_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_validator.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_update_vp.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_transfer.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_CREATE_NFT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_create_nft.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_MINT_NFT_TOKEN</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_mint_nft_tokens.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;vp_user.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_BOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_bond.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_UNBOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_unbond.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_WITHDRAW_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_withdraw.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">VP_NFT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;vp_nft.wasm&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_custom</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxCustom</span>) {
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">args</span>.<span class="ident">code_path</span>);
@@ -1483,6 +1572,83 @@
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span>
         <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>)).<span class="kw">await</span>;
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_init_nft</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::NftCreate</span>) {
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_data</span>).<span class="ident">expect</span>(<span class="string">&quot;File must exist.&quot;</span>);
+    <span class="kw">let</span> <span class="ident">nft</span>: <span class="ident">Nft</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">file</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t deserialize nft data file&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">nft</span>.<span class="ident">vp_path</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">path</span>) =&gt; {
+            <span class="ident">std::fs::read</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
+        }
+        <span class="prelude-val">None</span> =&gt; <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">VP_NFT</span>),
+    };
+
+    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">WalletAddress::new</span>(<span class="ident">nft</span>.<span class="ident">creator</span>.<span class="ident">clone</span>().<span class="ident">to_string</span>()));
+
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">CreateNft</span> {
+        <span class="ident">tag</span>: <span class="ident">nft</span>.<span class="ident">tag</span>.<span class="ident">to_string</span>(),
+        <span class="ident">creator</span>: <span class="ident">nft</span>.<span class="ident">creator</span>,
+        <span class="ident">vp_code</span>,
+        <span class="ident">keys</span>: <span class="ident">nft</span>.<span class="ident">keys</span>,
+        <span class="ident">opt_keys</span>: <span class="ident">nft</span>.<span class="ident">opt_keys</span>,
+        <span class="ident">tokens</span>: <span class="ident">nft</span>.<span class="ident">tokens</span>,
+    };
+
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
+        <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
+    );
+
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_CREATE_NFT</span>);
+
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">signer</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span>;
+
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_mint_nft</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::NftMint</span>) {
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_data</span>).<span class="ident">expect</span>(<span class="string">&quot;File must exist.&quot;</span>);
+    <span class="kw">let</span> <span class="ident">nft_tokens</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">NftToken</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">serde_json::from_reader</span>(<span class="ident">file</span>).<span class="ident">expect</span>(<span class="string">&quot;JSON was not well-formatted&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">nft_creator_key</span> <span class="op">=</span> <span class="ident">nft::get_creator_key</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_address</span>);
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">nft_creator_address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>(
+        <span class="ident">client</span>,
+        <span class="ident">nft_creator_key</span>,
+    )
+    .<span class="kw">await</span>
+    {
+        <span class="prelude-val">Some</span>(<span class="ident">addr</span>) =&gt; <span class="ident">addr</span>,
+        <span class="prelude-val">None</span> =&gt; {
+            <span class="macro">eprintln!</span>(<span class="string">&quot;No creator key found for {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_address</span>);
+            <span class="ident">safe_exit</span>(<span class="number">1</span>);
+        }
+    };
+
+    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">WalletAddress::new</span>(<span class="ident">nft_creator_address</span>.<span class="ident">to_string</span>()));
+
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">MintNft</span> {
+        <span class="ident">address</span>: <span class="ident">args</span>.<span class="ident">nft_address</span>,
+        <span class="ident">creator</span>: <span class="ident">nft_creator_address</span>,
+        <span class="ident">tokens</span>: <span class="ident">nft_tokens</span>,
+    };
+
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
+        <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
+    );
+
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_MINT_NFT_TOKEN</span>);
+
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">signer</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span>;
+
     <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
 }
 

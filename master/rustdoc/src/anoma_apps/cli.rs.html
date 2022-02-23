@@ -2589,6 +2589,128 @@
 <span id="2588">2588</span>
 <span id="2589">2589</span>
 <span id="2590">2590</span>
+<span id="2591">2591</span>
+<span id="2592">2592</span>
+<span id="2593">2593</span>
+<span id="2594">2594</span>
+<span id="2595">2595</span>
+<span id="2596">2596</span>
+<span id="2597">2597</span>
+<span id="2598">2598</span>
+<span id="2599">2599</span>
+<span id="2600">2600</span>
+<span id="2601">2601</span>
+<span id="2602">2602</span>
+<span id="2603">2603</span>
+<span id="2604">2604</span>
+<span id="2605">2605</span>
+<span id="2606">2606</span>
+<span id="2607">2607</span>
+<span id="2608">2608</span>
+<span id="2609">2609</span>
+<span id="2610">2610</span>
+<span id="2611">2611</span>
+<span id="2612">2612</span>
+<span id="2613">2613</span>
+<span id="2614">2614</span>
+<span id="2615">2615</span>
+<span id="2616">2616</span>
+<span id="2617">2617</span>
+<span id="2618">2618</span>
+<span id="2619">2619</span>
+<span id="2620">2620</span>
+<span id="2621">2621</span>
+<span id="2622">2622</span>
+<span id="2623">2623</span>
+<span id="2624">2624</span>
+<span id="2625">2625</span>
+<span id="2626">2626</span>
+<span id="2627">2627</span>
+<span id="2628">2628</span>
+<span id="2629">2629</span>
+<span id="2630">2630</span>
+<span id="2631">2631</span>
+<span id="2632">2632</span>
+<span id="2633">2633</span>
+<span id="2634">2634</span>
+<span id="2635">2635</span>
+<span id="2636">2636</span>
+<span id="2637">2637</span>
+<span id="2638">2638</span>
+<span id="2639">2639</span>
+<span id="2640">2640</span>
+<span id="2641">2641</span>
+<span id="2642">2642</span>
+<span id="2643">2643</span>
+<span id="2644">2644</span>
+<span id="2645">2645</span>
+<span id="2646">2646</span>
+<span id="2647">2647</span>
+<span id="2648">2648</span>
+<span id="2649">2649</span>
+<span id="2650">2650</span>
+<span id="2651">2651</span>
+<span id="2652">2652</span>
+<span id="2653">2653</span>
+<span id="2654">2654</span>
+<span id="2655">2655</span>
+<span id="2656">2656</span>
+<span id="2657">2657</span>
+<span id="2658">2658</span>
+<span id="2659">2659</span>
+<span id="2660">2660</span>
+<span id="2661">2661</span>
+<span id="2662">2662</span>
+<span id="2663">2663</span>
+<span id="2664">2664</span>
+<span id="2665">2665</span>
+<span id="2666">2666</span>
+<span id="2667">2667</span>
+<span id="2668">2668</span>
+<span id="2669">2669</span>
+<span id="2670">2670</span>
+<span id="2671">2671</span>
+<span id="2672">2672</span>
+<span id="2673">2673</span>
+<span id="2674">2674</span>
+<span id="2675">2675</span>
+<span id="2676">2676</span>
+<span id="2677">2677</span>
+<span id="2678">2678</span>
+<span id="2679">2679</span>
+<span id="2680">2680</span>
+<span id="2681">2681</span>
+<span id="2682">2682</span>
+<span id="2683">2683</span>
+<span id="2684">2684</span>
+<span id="2685">2685</span>
+<span id="2686">2686</span>
+<span id="2687">2687</span>
+<span id="2688">2688</span>
+<span id="2689">2689</span>
+<span id="2690">2690</span>
+<span id="2691">2691</span>
+<span id="2692">2692</span>
+<span id="2693">2693</span>
+<span id="2694">2694</span>
+<span id="2695">2695</span>
+<span id="2696">2696</span>
+<span id="2697">2697</span>
+<span id="2698">2698</span>
+<span id="2699">2699</span>
+<span id="2700">2700</span>
+<span id="2701">2701</span>
+<span id="2702">2702</span>
+<span id="2703">2703</span>
+<span id="2704">2704</span>
+<span id="2705">2705</span>
+<span id="2706">2706</span>
+<span id="2707">2707</span>
+<span id="2708">2708</span>
+<span id="2709">2709</span>
+<span id="2710">2710</span>
+<span id="2711">2711</span>
+<span id="2712">2712</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -2639,6 +2761,8 @@
         <span class="ident">TxCustom</span>(<span class="ident">TxCustom</span>),
         <span class="ident">TxTransfer</span>(<span class="ident">TxTransfer</span>),
         <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
+        <span class="ident">TxInitNft</span>(<span class="ident">TxInitNft</span>),
+        <span class="ident">TxMintNft</span>(<span class="ident">TxMintNft</span>),
         <span class="ident">Intent</span>(<span class="ident">Intent</span>),
     }
 
@@ -2653,6 +2777,8 @@
                 .<span class="ident">subcommand</span>(<span class="ident">TxCustom::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">TxTransfer::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">TxUpdateVp::def</span>())
+                .<span class="ident">subcommand</span>(<span class="ident">TxInitNft::def</span>())
+                .<span class="ident">subcommand</span>(<span class="ident">TxMintNft::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">Intent::def</span>())
         }
 
@@ -2666,6 +2792,8 @@
             <span class="kw">let</span> <span class="ident">tx_custom</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::TxCustom</span>);
             <span class="kw">let</span> <span class="ident">tx_transfer</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::TxTransfer</span>);
             <span class="kw">let</span> <span class="ident">tx_update_vp</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::TxUpdateVp</span>);
+            <span class="kw">let</span> <span class="ident">tx_nft_create</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::TxInitNft</span>);
+            <span class="kw">let</span> <span class="ident">tx_nft_mint</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::TxMintNft</span>);
             <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::Intent</span>);
             <span class="ident">node</span>.<span class="ident">or</span>(<span class="ident">client</span>)
                 .<span class="ident">or</span>(<span class="ident">wallet</span>)
@@ -2675,6 +2803,8 @@
                 .<span class="ident">or</span>(<span class="ident">tx_custom</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_transfer</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_update_vp</span>)
+                .<span class="ident">or</span>(<span class="ident">tx_nft_create</span>)
+                .<span class="ident">or</span>(<span class="ident">tx_nft_mint</span>)
                 .<span class="ident">or</span>(<span class="ident">intent</span>)
         }
     }
@@ -2746,6 +2876,9 @@
                 .<span class="ident">subcommand</span>(<span class="ident">TxUpdateVp::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">TxInitAccount::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">TxInitValidator::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
+                <span class="comment">// Nft transactions</span>
+                .<span class="ident">subcommand</span>(<span class="ident">TxInitNft::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
+                .<span class="ident">subcommand</span>(<span class="ident">TxMintNft::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
                 <span class="comment">// PoS transactions</span>
                 .<span class="ident">subcommand</span>(<span class="ident">Bond::def</span>().<span class="ident">display_order</span>(<span class="number">2</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">Unbond::def</span>().<span class="ident">display_order</span>(<span class="number">2</span>))
@@ -2772,6 +2905,8 @@
             <span class="kw">let</span> <span class="ident">tx_init_account</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxInitAccount</span>);
             <span class="kw">let</span> <span class="ident">tx_init_validator</span> <span class="op">=</span>
                 <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxInitValidator</span>);
+            <span class="kw">let</span> <span class="ident">tx_nft_create</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxInitNft</span>);
+            <span class="kw">let</span> <span class="ident">tx_nft_mint</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxMintNft</span>);
             <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Bond</span>);
             <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Unbond</span>);
             <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Withdraw</span>);
@@ -2790,6 +2925,8 @@
                 .<span class="ident">or</span>(<span class="ident">tx_update_vp</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_init_account</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_init_validator</span>)
+                .<span class="ident">or</span>(<span class="ident">tx_nft_create</span>)
+                .<span class="ident">or</span>(<span class="ident">tx_nft_mint</span>)
                 .<span class="ident">or</span>(<span class="ident">bond</span>)
                 .<span class="ident">or</span>(<span class="ident">unbond</span>)
                 .<span class="ident">or</span>(<span class="ident">withdraw</span>)
@@ -2843,6 +2980,8 @@
         <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
         <span class="ident">TxInitAccount</span>(<span class="ident">TxInitAccount</span>),
         <span class="ident">TxInitValidator</span>(<span class="ident">TxInitValidator</span>),
+        <span class="ident">TxInitNft</span>(<span class="ident">TxInitNft</span>),
+        <span class="ident">TxMintNft</span>(<span class="ident">TxMintNft</span>),
         <span class="ident">Bond</span>(<span class="ident">Bond</span>),
         <span class="ident">Unbond</span>(<span class="ident">Unbond</span>),
         <span class="ident">Withdraw</span>(<span class="ident">Withdraw</span>),
@@ -3579,6 +3718,50 @@
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxInitNft</span>(<span class="kw">pub</span> <span class="ident">args::NftCreate</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">TxInitNft</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;init-nft&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+        <span class="kw">where</span>
+            <span class="self">Self</span>: <span class="ident">Sized</span>,
+        {
+            <span class="ident">matches</span>
+                .<span class="ident">subcommand_matches</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> <span class="ident">TxInitNft</span>(<span class="ident">args::NftCreate::parse</span>(<span class="ident">matches</span>)))
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() -&gt; <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Create a new NFT.&quot;</span>)
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::NftCreate</span><span class="op">&gt;</span>()
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxMintNft</span>(<span class="kw">pub</span> <span class="ident">args::NftMint</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">TxMintNft</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;mint-nft&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+        <span class="kw">where</span>
+            <span class="self">Self</span>: <span class="ident">Sized</span>,
+        {
+            <span class="ident">matches</span>
+                .<span class="ident">subcommand_matches</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> <span class="ident">TxMintNft</span>(<span class="ident">args::NftMint::parse</span>(<span class="ident">matches</span>)))
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() -&gt; <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Mint new NFT tokens.&quot;</span>)
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::NftMint</span><span class="op">&gt;</span>()
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Intent</span>(<span class="kw">pub</span> <span class="ident">args::Intent</span>);
 
     <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">Intent</span> {
@@ -3804,6 +3987,7 @@
     <span class="kw">const</span> <span class="ident">MULTIADDR_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">NODE_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;node&quot;</span>);
     <span class="kw">const</span> <span class="ident">NODE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;node&quot;</span>);
+    <span class="kw">const</span> <span class="ident">NFT_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;nft-address&quot;</span>);
     <span class="kw">const</span> <span class="ident">OWNER</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;owner&quot;</span>);
     <span class="kw">const</span> <span class="ident">PUBLIC_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;public-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">RAW_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;address&quot;</span>);
@@ -4257,6 +4441,66 @@
                      withdrawing from self-bonds, the validator is also the \
                      source.&quot;</span>,
                 ))
+        }
+    }
+
+    <span class="comment">// Transaction to create a new nft</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NftCreate</span> {
+        <span class="doccomment">/// Common tx argumentsips</span>
+        <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
+        <span class="doccomment">/// Path to the nft file description</span>
+        <span class="kw">pub</span> <span class="ident">nft_data</span>: <span class="ident">PathBuf</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">NftCreate</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) -&gt; <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">data_path</span> <span class="op">=</span> <span class="ident">DATA_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+
+            <span class="self">Self</span> {
+                <span class="ident">tx</span>,
+                <span class="ident">nft_data</span>: <span class="ident">data_path</span>,
+            }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) -&gt; <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span>()
+                .<span class="ident">arg</span>(<span class="ident">DATA_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The path nft description file.&quot;</span>))
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NftMint</span> {
+        <span class="doccomment">/// Common tx arguments</span>
+        <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
+        <span class="doccomment">/// The nft address</span>
+        <span class="kw">pub</span> <span class="ident">nft_address</span>: <span class="ident">Address</span>,
+        <span class="doccomment">/// The nft token description</span>
+        <span class="kw">pub</span> <span class="ident">nft_data</span>: <span class="ident">PathBuf</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">NftMint</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) -&gt; <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">nft_address</span> <span class="op">=</span> <span class="ident">NFT_ADDRESS</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">data_path</span> <span class="op">=</span> <span class="ident">DATA_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+
+            <span class="self">Self</span> {
+                <span class="ident">tx</span>,
+                <span class="ident">nft_address</span>,
+                <span class="ident">nft_data</span>: <span class="ident">data_path</span>,
+            }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) -&gt; <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span>()
+                .<span class="ident">arg</span>(<span class="ident">NFT_ADDRESS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The nft address.&quot;</span>))
+                .<span class="ident">arg</span>(
+                    <span class="ident">DATA_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                        <span class="string">&quot;The data path file that describes the nft tokens.&quot;</span>,
+                    ),
+                )
         }
     }
 
