@@ -1,3 +1,6 @@
+#[cfg(feature = "vp_implicit")]
+pub mod vp_implicit;
+
 #[cfg(feature = "vp_user")]
 pub mod vp_user;
 
