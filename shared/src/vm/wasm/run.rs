@@ -160,7 +160,11 @@ pub fn vp<DB, H, CA>(
     write_log: &WriteLog,
     gas_meter: &mut VpGasMeter,
     keys_changed: &BTreeSet<Key>,
+<<<<<<< HEAD
     verifiers: &BTreeSet<Address>,
+=======
+    verifiers: &HashSet<Address>,
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
     mut vp_wasm_cache: VpCache<CA>,
 ) -> Result<bool>
 where
@@ -224,7 +228,11 @@ fn run_vp(
     input_data: &[u8],
     address: &Address,
     keys_changed: &BTreeSet<Key>,
+<<<<<<< HEAD
     verifiers: &BTreeSet<Address>,
+=======
+    verifiers: &HashSet<Address>,
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
 ) -> Result<bool> {
     let input: VpInput = VpInput {
         addr: address,
@@ -518,7 +526,11 @@ mod tests {
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = BTreeSet::new();
+<<<<<<< HEAD
         let verifiers = BTreeSet::new();
+=======
+        let verifiers = HashSet::new();
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
 
         // This code will call `eval` with the other VP below
         let vp_eval = std::fs::read(VP_EVAL_WASM).expect("cannot load wasm");
@@ -592,7 +604,11 @@ mod tests {
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = BTreeSet::new();
+<<<<<<< HEAD
         let verifiers = BTreeSet::new();
+=======
+        let verifiers = HashSet::new();
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
 
         // This code will allocate memory of the given size
         let vp_code =
@@ -697,7 +713,11 @@ mod tests {
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = BTreeSet::new();
+<<<<<<< HEAD
         let verifiers = BTreeSet::new();
+=======
+        let verifiers = HashSet::new();
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
 
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
@@ -795,7 +815,11 @@ mod tests {
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = BTreeSet::new();
+<<<<<<< HEAD
         let verifiers = BTreeSet::new();
+=======
+        let verifiers = HashSet::new();
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
 
         let vp_read_key =
             std::fs::read(VP_READ_STORAGE_KEY_WASM).expect("cannot load wasm");
@@ -841,7 +865,11 @@ mod tests {
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = BTreeSet::new();
+<<<<<<< HEAD
         let verifiers = BTreeSet::new();
+=======
+        let verifiers = HashSet::new();
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
 
         // This code will call `eval` with the other VP below
         let vp_eval = std::fs::read(VP_EVAL_WASM).expect("cannot load wasm");
@@ -972,7 +1000,11 @@ mod tests {
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = BTreeSet::new();
+<<<<<<< HEAD
         let verifiers = BTreeSet::new();
+=======
+        let verifiers = HashSet::new();
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
         let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
         vp(
             vp_code,
