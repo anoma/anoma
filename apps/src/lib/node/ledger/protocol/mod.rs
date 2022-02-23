@@ -7,6 +7,7 @@ use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
 use anoma::ledger::pos::{self, PosVP};
+use anoma::ledger::protocol_vps::{self, read_implicit_vp, ProtocolVp};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
@@ -47,6 +48,8 @@ pub enum Error {
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
+    #[error("Protocol native VP: {0}")]
+    ProtocolNativeVpError(protocol_vps::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -222,7 +225,16 @@ where
                         .map_err(Error::GasError)?;
                     Vp::Wasm(vp)
                 }
-                Address::Implicit(_) => unreachable!(),
+                Address::Implicit(_) => {
+                    let (implicit_vp, gas) = read_implicit_vp(storage).unwrap();
+                    gas_meter.add(gas).map_err(Error::GasError)?;
+                    // TODO: figure out the apposite error type
+                    // (ProtocolNativeVpError?)
+                    gas_meter
+                        .add_compiling_fee(implicit_vp.len())
+                        .map_err(Error::GasError)?;
+                    Vp::Wasm(implicit_vp)
+                }
             };
 
             Ok((addr.clone(), keys.clone(), vp))
@@ -363,6 +375,14 @@ where
                                 .validate_tx(tx_data, keys, &verifiers_addr)
                                 .map_err(Error::IbcTokenNativeVpError);
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::Protocol => {
+                            let implicit = ProtocolVp { ctx };
+                            let result = implicit
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::ProtocolNativeVpError);
+                            gas_meter = implicit.ctx.gas_meter.into_inner();
                             result
                         }
                     };
