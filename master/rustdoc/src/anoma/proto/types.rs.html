@@ -353,6 +353,11 @@
 <span id="352">352</span>
 <span id="353">353</span>
 <span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -365,6 +370,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::generated::types</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>::{<span class="self">self</span>, <span class="ident">Keypair</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::DateTimeUtc</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction::hash_tx</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -436,6 +442,10 @@
         <span class="ident">tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding a transaction failed&quot;</span>);
         <span class="ident">bytes</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
+        <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">to_bytes</span>()).<span class="number">0</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="self">self</span>, <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>) -&gt; <span class="ident">Tx</span> {
