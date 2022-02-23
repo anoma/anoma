@@ -18,6 +18,7 @@ const ADDR: InternalAddress = InternalAddress::Parameters;
 const EPOCH_DURATION_KEY: &str = "epoch_duration";
 const VP_WHITELIST_KEY: &str = "vp_whitelist";
 const TX_WHITELIST_KEY: &str = "tx_whitelist";
+const MAX_EXPECTED_TIME_PER_BLOCK_KEY: &str = "max_expected_time_per_block";
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -111,6 +112,20 @@ pub fn init_genesis_storage<DB, H>(
     storage.write(&tx_whitelist_key, tx_whitelist_value).expect(
         "Tx whitelist parameters must be initialized in the genesis block",
     );
+
+    // write tx whitelist parameter
+    let max_expected_time_per_block_key = max_expected_time_per_block_key();
+    let max_expected_time_per_block_value =
+        encode(&parameters.max_expected_time_per_block);
+    storage
+        .write(
+            &max_expected_time_per_block_key,
+            max_expected_time_per_block_value,
+        )
+        .expect(
+            "Max expected time per block parameters must be initialized in \
+             the genesis block",
+        );
 }
 
 #[allow(missing_docs)]
@@ -159,13 +174,22 @@ where
         decode(value.ok_or(ReadError::ParametersMissing)?)
             .map_err(ReadError::StorageTypeError)?;
 
+    let max_expected_time_per_block_key = max_expected_time_per_block_key();
+    let (value, gas_time) = storage
+        .read(&max_expected_time_per_block_key)
+        .map_err(ReadError::StorageError)?;
+    let max_expected_time_per_block: DurationSecs =
+        decode(value.ok_or(ReadError::ParametersMissing)?)
+            .map_err(ReadError::StorageTypeError)?;
+
     Ok((
         Parameters {
             epoch_duration,
+            max_expected_time_per_block,
             vp_whitelist,
             tx_whitelist,
         },
-        gas_epoch + gas_tx + gas_vp,
+        gas_epoch + gas_tx + gas_vp + gas_time,
     ))
 }
 
@@ -260,6 +284,20 @@ where
     update(storage, &value, key)
 }
 
+/// Update the max_expected_time_per_block parameter in storage. Returns the
+/// parameters and gas cost.
+pub fn update_max_expected_time_per_block_parameter<DB, H>(
+    storage: &mut Storage<DB, H>,
+    value: &DurationSecs,
+) -> std::result::Result<u64, WriteError>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: storage::StorageHasher,
+{
+    let key = max_expected_time_per_block_key();
+    update(storage, value, key)
+}
+
 impl<'a, DB, H, CA> NativeVp for ParametersVp<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -308,6 +346,16 @@ pub fn tx_whitelist_storage_key() -> Key {
         segments: vec![
             DbKeySeg::AddressSeg(Address::Internal(ADDR)),
             DbKeySeg::StringSeg(TX_WHITELIST_KEY.to_string()),
+        ],
+    }
+}
+
+/// Storage key used for tx whitelist parameter.
+pub fn max_expected_time_per_block_key() -> Key {
+    Key {
+        segments: vec![
+            DbKeySeg::AddressSeg(Address::Internal(ADDR)),
+            DbKeySeg::StringSeg(MAX_EXPECTED_TIME_PER_BLOCK_KEY.to_string()),
         ],
     }
 }

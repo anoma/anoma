@@ -1083,11 +1083,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
-<<<<<<< HEAD
  "sha2 0.10.1",
-=======
- "sha2 0.9.9",
->>>>>>> [feat]: added vp/tx whitelist genesis, added vp/tx whitelist user_vp
  "subtle-encoding",
  "tendermint",
  "tendermint-light-client-verifier",

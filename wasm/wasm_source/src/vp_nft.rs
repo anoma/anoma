@@ -1,4 +1,5 @@
 use anoma_vm_env::vp_prelude::*;
+use anoma_vp_prelude::*;
 
 #[validity_predicate]
 fn validate_tx(
@@ -13,7 +14,22 @@ fn validate_tx(
         addr, keys_changed, verifiers
     ));
 
-    nft::vp(tx_data, &addr, &keys_changed, &verifiers)
+    if !is_tx_whitelisted() {
+        return false;
+    }
+
+    let vp_check =
+        keys_changed
+            .iter()
+            .all(|key| match key.is_validity_predicate() {
+                Some(_) => {
+                    let vp: Vec<u8> = read_bytes_post(key.to_string()).unwrap();
+                    is_vp_whitelisted(&vp)
+                }
+                None => true,
+            });
+
+    vp_check && nft::vp(tx_data, &addr, &keys_changed, &verifiers)
 }
 
 #[cfg(test)]

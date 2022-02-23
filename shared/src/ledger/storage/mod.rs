@@ -771,7 +771,7 @@ mod tests {
                 Duration::seconds(min_duration + min_duration_delta).into();
             parameters.max_expected_time_per_block =
                 Duration::seconds(max_expected_time_per_block + max_time_per_block_delta).into();
-            parameters::update(&mut storage, &parameters).unwrap();
+            parameters::update_max_expected_time_per_block_parameter(&mut storage, &parameters.max_expected_time_per_block).unwrap();
             parameters::update_epoch_parameter(&mut storage, &parameters.epoch_duration).unwrap();
 
             // Test for 2.

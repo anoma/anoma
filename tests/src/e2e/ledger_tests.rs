@@ -462,16 +462,9 @@ fn pos_bonds() -> Result<()> {
             let parameters = ParametersConfig {
                 min_num_of_blocks: 2,
                 min_duration: 1,
-<<<<<<< HEAD
                 max_expected_time_per_block: 1,
-=======
                 vp_whitelist: Some(vec![]),
                 tx_whitelist: Some(vec![]),
-<<<<<<< HEAD
-                
->>>>>>> [feat]: added vp/tx whitelist genesis, added vp/tx whitelist user_vp
-=======
->>>>>>> [feat]: added test vp/tx whitelist
             };
             let pos_params = PosParamsConfig {
                 pipeline_len: 1,
