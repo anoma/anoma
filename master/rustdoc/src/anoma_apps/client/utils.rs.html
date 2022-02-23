@@ -831,6 +831,107 @@
 <span id="830">830</span>
 <span id="831">831</span>
 <span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
@@ -882,21 +983,42 @@
     <span class="ident">global_args</span>: <span class="ident">args::Global</span>,
     <span class="ident">args::JoinNetwork</span> { <span class="ident">chain_id</span> }: <span class="ident">args::JoinNetwork</span>,
 ) {
+    <span class="kw">use</span> <span class="ident">tokio::fs</span>;
+
     <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>;
     <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>().<span class="ident">cloned</span>().<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="ident">ENV_VAR_WASM_DIR</span>) {
             <span class="kw">let</span> <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">into</span>();
-            <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>).<span class="ident">unwrap</span>();
             <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
         }
     });
-    <span class="ident">fs::create_dir_all</span>(<span class="ident">base_dir</span>).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">temp_dir</span> <span class="op">=</span> <span class="string">&quot;temp_unpack&quot;</span>;
-    <span class="kw">let</span> <span class="ident">base_dir_full</span> <span class="op">=</span> <span class="ident">fs::canonicalize</span>(<span class="ident">base_dir</span>).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">wasm_dir_full</span> <span class="op">=</span>
-        <span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">dir</span><span class="op">|</span> <span class="ident">fs::canonicalize</span>(<span class="ident">dir</span>).<span class="ident">ok</span>());
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>() {
+        <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">is_absolute</span>() {
+            <span class="macro">eprintln!</span>(
+                <span class="string">&quot;The arg `--wasm-dir` cannot be an absolute path. It is \
+                 nested inside the chain directory.&quot;</span>
+            );
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+        }
+    }
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">fs::canonicalize</span>(<span class="ident">base_dir</span>).<span class="kw">await</span> {
+        <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">kind</span>() <span class="op">==</span> <span class="ident">std::io::ErrorKind::NotFound</span> {
+            <span class="comment">// If the base-dir doesn&#39;t exist yet, create it</span>
+            <span class="ident">fs::create_dir_all</span>(<span class="ident">base_dir</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        }
+    } <span class="kw">else</span> {
+        <span class="comment">// If the base-dir exists, check if it&#39;s already got this chain ID</span>
+        <span class="kw">if</span> <span class="ident">fs::canonicalize</span>(<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()))
+            .<span class="kw">await</span>
+            .<span class="ident">is_ok</span>()
+        {
+            <span class="macro">eprintln!</span>(<span class="string">&quot;The chain directory for {} already exists.&quot;</span>, <span class="ident">chain_id</span>);
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+        }
+    }
+    <span class="kw">let</span> <span class="ident">base_dir_full</span> <span class="op">=</span> <span class="ident">fs::canonicalize</span>(<span class="ident">base_dir</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">release_filename</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.tar.gz&quot;</span>, <span class="ident">chain_id</span>);
     <span class="kw">let</span> <span class="ident">release_url</span> <span class="op">=</span>
@@ -913,63 +1035,100 @@
     <span class="ident">decoder</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tar</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">archive</span> <span class="op">=</span> <span class="ident">tar::Archive::new</span>(<span class="ident">tar</span>.<span class="ident">as_bytes</span>());
 
-    <span class="comment">// If the base-dir or wasm-dir is non-default, unpack the archive into a</span>
-    <span class="comment">// temp dir inside first.</span>
+    <span class="comment">// If the base-dir is non-default, unpack the archive into a temp dir inside</span>
+    <span class="comment">// first.</span>
     <span class="kw">let</span> (<span class="ident">unpack_dir</span>, <span class="ident">non_default_dir</span>) <span class="op">=</span>
         <span class="kw">if</span> <span class="ident">base_dir_full</span> <span class="op">!</span><span class="op">=</span> <span class="ident">cwd</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>) {
-            (<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">temp_dir</span>), <span class="bool-val">true</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">is_some</span>()
-            <span class="op">&amp;&amp;</span> <span class="ident">wasm_dir_full</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cwd</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_DIR</span>))
-        {
-            (<span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">join</span>(<span class="ident">temp_dir</span>), <span class="bool-val">true</span>)
+            (<span class="ident">base_dir</span>.<span class="ident">clone</span>(), <span class="bool-val">true</span>)
         } <span class="kw">else</span> {
             (<span class="ident">PathBuf::from_str</span>(<span class="string">&quot;.&quot;</span>).<span class="ident">unwrap</span>(), <span class="bool-val">false</span>)
         };
-    <span class="ident">archive</span>.<span class="ident">unpack</span>(<span class="macro">dbg!</span>(<span class="kw-2">&amp;</span><span class="ident">unpack_dir</span>)).<span class="ident">unwrap</span>();
+    <span class="ident">archive</span>.<span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="ident">unpack_dir</span>).<span class="ident">unwrap</span>();
 
     <span class="comment">// Rename the base-dir from the default and rename wasm-dir, if non-default.</span>
-    <span class="kw">if</span> <span class="macro">dbg!</span>(<span class="ident">non_default_dir</span>) {
-        <span class="comment">// Because we unpacked the archive into one of the non-default</span>
-        <span class="comment">// directories, we have to re-pack it to remove it from fs.</span>
-        <span class="comment">// Create an in-memory archive from renamed files</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">archive_build</span> <span class="op">=</span> <span class="ident">tar::Builder::new</span>(<span class="macro">vec!</span>[]);
-
-        <span class="comment">// Must `strip_prefix` because the path must be relative</span>
-        <span class="kw">let</span> <span class="ident">base_dir_rel</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">base_dir</span>.<span class="ident">is_absolute</span>() {
-            <span class="ident">pathdiff::diff_paths</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">cwd</span>).<span class="ident">unwrap</span>()
-        } <span class="kw">else</span> {
-            <span class="ident">base_dir</span>.<span class="ident">clone</span>()
-        };
-
-        <span class="ident">archive_build</span>
-            .<span class="ident">append_dir_all</span>(
-                <span class="macro">dbg!</span>(<span class="ident">base_dir_rel</span>),
-                <span class="macro">dbg!</span>(<span class="ident">unpack_dir</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)),
+    <span class="kw">if</span> <span class="ident">non_default_dir</span> {
+        <span class="comment">// For compatibility for networks released with Anoma &lt;= v0.4:</span>
+        <span class="comment">// The old releases include the WASM directory at root path of the</span>
+        <span class="comment">// archive. This has been moved into the chain directory, so if the</span>
+        <span class="comment">// WASM dir is found at the old path, we move it to the new path.</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span>
+            <span class="ident">fs::canonicalize</span>(<span class="ident">unpack_dir</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_DIR</span>)).<span class="kw">await</span>
+        {
+            <span class="ident">fs::rename</span>(
+                <span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>,
+                <span class="ident">unpack_dir</span>
+                    .<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)
+                    .<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>())
+                    .<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_DIR</span>),
             )
+            .<span class="kw">await</span>
             .<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>() {
-            <span class="comment">// Again, must be relative</span>
-            <span class="kw">let</span> <span class="ident">wasm_dir_rel</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">is_absolute</span>() {
-                <span class="ident">pathdiff::diff_paths</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>, <span class="kw-2">&amp;</span><span class="ident">cwd</span>).<span class="ident">unwrap</span>()
-            } <span class="kw">else</span> {
-                <span class="ident">wasm_dir</span>.<span class="ident">clone</span>()
-            };
-
-            <span class="ident">archive_build</span>
-                .<span class="ident">append_dir_all</span>(
-                    <span class="macro">dbg!</span>(<span class="ident">wasm_dir_rel</span>),
-                    <span class="macro">dbg!</span>(<span class="ident">unpack_dir</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_DIR</span>)),
-                )
-                .<span class="ident">unwrap</span>();
         }
-        <span class="kw">let</span> <span class="ident">archive_bytes</span> <span class="op">=</span> <span class="ident">archive_build</span>.<span class="ident">into_inner</span>().<span class="ident">unwrap</span>();
 
-        <span class="comment">// Delete the temp directory</span>
-        <span class="ident">tokio::fs::remove_dir_all</span>(<span class="ident">unpack_dir</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="comment">// Move the chain dir</span>
+        <span class="ident">fs::rename</span>(
+            <span class="ident">unpack_dir</span>
+                .<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)
+                .<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()),
+            <span class="ident">base_dir_full</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()),
+        )
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
 
-        <span class="comment">// Unarchive to get them dirs in the right place</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">archive</span> <span class="op">=</span> <span class="ident">tar::Archive::new</span>(<span class="kw-2">&amp;</span><span class="ident">archive_bytes</span>[..]);
-        <span class="ident">archive</span>.<span class="ident">unpack</span>(<span class="string">&quot;.&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// Move the genesis file</span>
+        <span class="ident">fs::rename</span>(
+            <span class="ident">unpack_dir</span>
+                .<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)
+                .<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>.<span class="ident">as_str</span>())),
+            <span class="ident">base_dir_full</span>.<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>.<span class="ident">as_str</span>())),
+        )
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+
+        <span class="comment">// Move the global config</span>
+        <span class="ident">fs::rename</span>(
+            <span class="ident">unpack_dir</span>
+                .<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)
+                .<span class="ident">join</span>(<span class="ident">config::global::FILENAME</span>),
+            <span class="ident">base_dir_full</span>.<span class="ident">join</span>(<span class="ident">config::global::FILENAME</span>),
+        )
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+
+        <span class="comment">// Remove the default dir</span>
+        <span class="ident">fs::remove_dir_all</span>(<span class="ident">unpack_dir</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>))
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+    }
+
+    <span class="comment">// Move wasm-dir and update config if it&#39;s non-default</span>
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>() {
+        <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">to_string_lossy</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">config::DEFAULT_WASM_DIR</span> {
+            <span class="ident">tokio::fs::rename</span>(
+                <span class="ident">base_dir_full</span>
+                    .<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>())
+                    .<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_DIR</span>),
+                <span class="ident">base_dir_full</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">join</span>(<span class="ident">wasm_dir</span>),
+            )
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+
+            <span class="comment">// Update the config</span>
+            <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">clone</span>();
+            <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">clone</span>();
+            <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">chain_id</span>.<span class="ident">clone</span>();
+            <span class="ident">tokio::task::spawn_blocking</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">base_dir</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">chain_id</span>,
+                    <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">clone</span>(),
+                );
+                <span class="ident">config</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>;
+                <span class="ident">config</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>, <span class="bool-val">true</span>).<span class="ident">unwrap</span>();
+            })
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap</span>();
+        }
     }
 
     <span class="macro">println!</span>(<span class="string">&quot;Successfully configured for chain ID {}&quot;</span>, <span class="ident">chain_id</span>);
@@ -1298,6 +1457,26 @@
     <span class="kw">let</span> <span class="ident">genesis_path</span> <span class="op">=</span> <span class="ident">global_args</span>
         .<span class="ident">base_dir</span>
         .<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>.<span class="ident">as_str</span>()));
+    <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">global_args</span>
+        .<span class="ident">wasm_dir</span>
+        .<span class="ident">as_ref</span>()
+        .<span class="ident">cloned</span>()
+        .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="ident">ENV_VAR_WASM_DIR</span>) {
+                <span class="kw">let</span> <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">into</span>();
+                <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>)
+            } <span class="kw">else</span> {
+                <span class="prelude-val">None</span>
+            }
+        })
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">config::DEFAULT_WASM_DIR</span>.<span class="ident">into</span>());
+    <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">is_absolute</span>() {
+        <span class="macro">eprintln!</span>(
+            <span class="string">&quot;The arg `--wasm-dir` cannot be an absolute path. It is nested \
+             inside the chain directory.&quot;</span>
+        );
+        <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+    }
 
     <span class="comment">// Write the genesis file</span>
     <span class="ident">genesis_config::write_genesis_config</span>(<span class="kw-2">&amp;</span><span class="ident">config_clean</span>, <span class="kw-2">&amp;</span><span class="ident">genesis_path</span>);
@@ -1311,7 +1490,16 @@
     <span class="ident">global_config</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>).<span class="ident">unwrap</span>();
 
     <span class="comment">// Rename the generate chain config dir from `temp_chain_id` to `chain_id`</span>
-    <span class="ident">std::fs::rename</span>(<span class="kw-2">&amp;</span><span class="ident">temp_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_dir</span>).<span class="ident">unwrap</span>();
+    <span class="ident">fs::rename</span>(<span class="kw-2">&amp;</span><span class="ident">temp_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_dir</span>).<span class="ident">unwrap</span>();
+
+    <span class="comment">// Copy the WASM checksums</span>
+    <span class="kw">let</span> <span class="ident">wasm_dir_full</span> <span class="op">=</span> <span class="ident">chain_dir</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>);
+    <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir_full</span>).<span class="ident">unwrap</span>();
+    <span class="ident">fs::copy</span>(
+        <span class="kw-2">&amp;</span><span class="ident">wasm_checksums_path</span>,
+        <span class="ident">wasm_dir_full</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_CHECKSUMS_FILE</span>),
+    )
+    .<span class="ident">unwrap</span>();
 
     <span class="ident">config</span>.<span class="ident">validator</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">_config</span>)<span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">validator_dir</span> <span class="op">=</span> <span class="ident">global_args</span>
@@ -1329,6 +1517,16 @@
         <span class="comment">// to `chain_id`</span>
         <span class="ident">std::fs::rename</span>(<span class="kw-2">&amp;</span><span class="ident">temp_validator_chain_dir</span>, <span class="kw-2">&amp;</span><span class="ident">validator_chain_dir</span>)
             .<span class="ident">unwrap</span>();
+
+        <span class="comment">// Copy the WASM checksums</span>
+        <span class="kw">let</span> <span class="ident">wasm_dir_full</span> <span class="op">=</span> <span class="ident">validator_chain_dir</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>);
+        <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir_full</span>).<span class="ident">unwrap</span>();
+        <span class="ident">fs::copy</span>(
+            <span class="kw-2">&amp;</span><span class="ident">wasm_checksums_path</span>,
+            <span class="ident">wasm_dir_full</span>.<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_CHECKSUMS_FILE</span>),
+        )
+        .<span class="ident">unwrap</span>();
+
         <span class="comment">// Write the genesis and global config into validator sub-dirs</span>
         <span class="ident">genesis_config::write_genesis_config</span>(
             <span class="kw-2">&amp;</span><span class="ident">config</span>,
@@ -1482,7 +1680,11 @@
         <span class="ident">release</span>
             .<span class="ident">append_path_with_name</span>(<span class="ident">chain_config_path</span>, <span class="ident">release_chain_config_path</span>)
             .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">release_wasm_checksums_path</span> <span class="op">=</span> <span class="string">&quot;wasm/checksums.json&quot;</span>;
+        <span class="kw">let</span> <span class="ident">release_wasm_checksums_path</span> <span class="op">=</span>
+            <span class="ident">PathBuf::from</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)
+                .<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>())
+                .<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_DIR</span>)
+                .<span class="ident">join</span>(<span class="ident">config::DEFAULT_WASM_CHECKSUMS_FILE</span>);
         <span class="ident">release</span>
             .<span class="ident">append_path_with_name</span>(
                 <span class="kw-2">&amp;</span><span class="ident">wasm_checksums_path</span>,

@@ -1679,6 +1679,133 @@
 <span id="1678">1678</span>
 <span id="1679">1679</span>
 <span id="1680">1680</span>
+<span id="1681">1681</span>
+<span id="1682">1682</span>
+<span id="1683">1683</span>
+<span id="1684">1684</span>
+<span id="1685">1685</span>
+<span id="1686">1686</span>
+<span id="1687">1687</span>
+<span id="1688">1688</span>
+<span id="1689">1689</span>
+<span id="1690">1690</span>
+<span id="1691">1691</span>
+<span id="1692">1692</span>
+<span id="1693">1693</span>
+<span id="1694">1694</span>
+<span id="1695">1695</span>
+<span id="1696">1696</span>
+<span id="1697">1697</span>
+<span id="1698">1698</span>
+<span id="1699">1699</span>
+<span id="1700">1700</span>
+<span id="1701">1701</span>
+<span id="1702">1702</span>
+<span id="1703">1703</span>
+<span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
+<span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
+<span id="1766">1766</span>
+<span id="1767">1767</span>
+<span id="1768">1768</span>
+<span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
+<span id="1776">1776</span>
+<span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
+<span id="1780">1780</span>
+<span id="1781">1781</span>
+<span id="1782">1782</span>
+<span id="1783">1783</span>
+<span id="1784">1784</span>
+<span id="1785">1785</span>
+<span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
+<span id="1789">1789</span>
+<span id="1790">1790</span>
+<span id="1791">1791</span>
+<span id="1792">1792</span>
+<span id="1793">1793</span>
+<span id="1794">1794</span>
+<span id="1795">1795</span>
+<span id="1796">1796</span>
+<span id="1797">1797</span>
+<span id="1798">1798</span>
+<span id="1799">1799</span>
+<span id="1800">1800</span>
+<span id="1801">1801</span>
+<span id="1802">1802</span>
+<span id="1803">1803</span>
+<span id="1804">1804</span>
+<span id="1805">1805</span>
+<span id="1806">1806</span>
+<span id="1807">1807</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -2215,6 +2342,9 @@
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log::StorageModification::InitAccount</span> { .. }) =&gt; {
             <span class="ident">HostEnvResult::Success</span>.<span class="ident">to_i64</span>()
         }
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log::StorageModification::Temp</span> { .. }) =&gt; {
+            <span class="ident">HostEnvResult::Success</span>.<span class="ident">to_i64</span>()
+        }
         <span class="prelude-val">None</span> =&gt; {
             <span class="comment">// when not found in write log, try to check the storage</span>
             <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
@@ -2281,6 +2411,15 @@
                 .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">vp</span>.<span class="ident">clone</span>());
+            <span class="ident">len</span>
+        }
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log::StorageModification::Temp</span> { <span class="kw-2">ref</span> <span class="ident">value</span> }) =&gt; {
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::NumConversionError</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
+            <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">value</span>.<span class="ident">clone</span>());
             <span class="ident">len</span>
         }
         <span class="prelude-val">None</span> =&gt; {
@@ -2415,6 +2554,21 @@
                 <span class="comment">// a VP of a new account doesn&#39;t need to be iterated</span>
                 <span class="kw">continue</span>;
             }
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log::StorageModification::Temp</span> { <span class="kw-2">ref</span> <span class="ident">value</span> }) =&gt; {
+                <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">KeyVal</span> {
+                    <span class="ident">key</span>,
+                    <span class="ident">val</span>: <span class="ident">value</span>.<span class="ident">clone</span>(),
+                }
+                .<span class="ident">try_to_vec</span>()
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::EncodingError</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">key_val</span>
+                    .<span class="ident">len</span>()
+                    .<span class="ident">try_into</span>()
+                    .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::NumConversionError</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
+                <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">key_val</span>);
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">len</span>);
+            }
             <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">KeyVal</span> { <span class="ident">key</span>, <span class="ident">val</span> }
                     .<span class="ident">try_to_vec</span>()
@@ -2462,7 +2616,67 @@
 
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageDataError</span>)<span class="question-mark">?</span>;
 
-    <span class="comment">// check address existence</span>
+    <span class="ident">check_address_existence</span>(<span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>
+        .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageModificationError</span>)<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
+    <span class="comment">// TODO: charge the size diff</span>
+}
+
+<span class="doccomment">/// Temporary storage write function exposed to the wasm VM Tx environment. The</span>
+<span class="doccomment">/// given key/value will be written only to the write log. It will be never</span>
+<span class="doccomment">/// written to the storage.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_write_temp</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
+    <span class="ident">key_len</span>: <span class="ident">u64</span>,
+    <span class="ident">val_ptr</span>: <span class="ident">u64</span>,
+    <span class="ident">val_len</span>: <span class="ident">u64</span>,
+) -&gt; <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
+{
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError::MemoryError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">val_ptr</span>, <span class="ident">val_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError::MemoryError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;tx_write_temp {}, {:?}&quot;</span>, <span class="ident">key</span>, <span class="ident">value</span>);
+
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageDataError</span>)<span class="question-mark">?</span>;
+
+    <span class="ident">check_address_existence</span>(<span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>
+        .<span class="ident">write_temp</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageModificationError</span>)<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
+    <span class="comment">// TODO: charge the size diff</span>
+}
+
+<span class="kw">fn</span> <span class="ident">check_address_existence</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
+) -&gt; <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
+{
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">for</span> <span class="ident">addr</span> <span class="kw">in</span> <span class="ident">key</span>.<span class="ident">find_addresses</span>() {
@@ -2492,12 +2706,7 @@
             }
         }
     }
-
-    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>
-        .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
-        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageModificationError</span>)<span class="question-mark">?</span>;
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
-    <span class="comment">// TODO: charge the size diff</span>
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Storage delete function exposed to the wasm VM Tx environment. The given</span>
@@ -2641,6 +2850,51 @@
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">vp_env::read_post</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">value</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; {
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">vp_env::RuntimeError::NumConversionError</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
+            <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">value</span>);
+            <span class="ident">len</span>
+        }
+        <span class="prelude-val">None</span> =&gt; <span class="ident">HostEnvResult::Fail</span>.<span class="ident">to_i64</span>(),
+    })
+}
+
+<span class="doccomment">/// Storage read temporary state (after tx execution) function exposed to the</span>
+<span class="doccomment">/// wasm VM VP environment. It will try to read from only the write log.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Returns `-1` when the key is not present, or the length of the data when</span>
+<span class="doccomment">/// the key is present (the length may be `0`).</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_read_temp</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
+    <span class="ident">key_len</span>: <span class="ident">u64</span>,
+) -&gt; <span class="ident">vp_env::Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
+{
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env::RuntimeError::MemoryError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
+    <span class="ident">vp_env::add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;vp_read_temp {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
+
+    <span class="comment">// try to read from the write log</span>
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+        <span class="ident">Key::parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">vp_env::RuntimeError::StorageDataError</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">vp_env::read_temp</span>(<span class="ident">gas_meter</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">value</span> {
         <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; {
             <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>

@@ -243,6 +243,12 @@
 <span id="242">242</span>
 <span id="243">243</span>
 <span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
@@ -459,6 +465,12 @@
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_result_buffer</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_has_key</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) -&gt; <span class="ident">i64</span>);
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_write</span>(
+        <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
+        <span class="ident">key_len</span>: <span class="ident">u64</span>,
+        <span class="ident">val_ptr</span>: <span class="ident">u64</span>,
+        <span class="ident">val_len</span>: <span class="ident">u64</span>
+    ));
+    <span class="macro">native_host_fn!</span>(<span class="ident">tx_write_temp</span>(
         <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
         <span class="ident">key_len</span>: <span class="ident">u64</span>,
         <span class="ident">val_ptr</span>: <span class="ident">u64</span>,

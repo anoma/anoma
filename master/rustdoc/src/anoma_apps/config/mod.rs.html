@@ -518,6 +518,19 @@
 <span id="517">517</span>
 <span id="518">518</span>
 <span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Node and client configuration</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">genesis</span>;
@@ -551,10 +564,18 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli</span>;
 
+<span class="doccomment">/// Base directory contains global config and chain directories.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_BASE_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;.anoma&quot;</span>;
+<span class="doccomment">/// Default WASM dir. Note that WASM dirs are nested in chain dirs.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_WASM_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm&quot;</span>;
+<span class="doccomment">/// The WASM checksums file contains the hashes of built WASMs. It is inside the</span>
+<span class="doccomment">/// WASM dir.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_WASM_CHECKSUMS_FILE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;checksums.json&quot;</span>;
+<span class="doccomment">/// Chain-specific Anoma configuration. Nested in chain dirs.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILENAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;config.toml&quot;</span>;
+<span class="doccomment">/// Chain-specific Tendermint configuration. Nested in chain dirs.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TENDERMINT_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tendermint&quot;</span>;
+<span class="doccomment">/// Chain-specific Anoma DB. Nested in chain dirs.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DB_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;db&quot;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
@@ -714,6 +735,11 @@
                 <span class="ident">instrumentation_namespace</span>: <span class="string">&quot;anoman_tm&quot;</span>.<span class="ident">to_string</span>(),
             },
         }
+    }
+
+    <span class="doccomment">/// Get the chain directory path</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chain_dir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PathBuf</span> {
+        <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="self">self</span>.<span class="ident">chain_id</span>.<span class="ident">as_str</span>())
     }
 
     <span class="doccomment">/// Get the directory path to the DB</span>

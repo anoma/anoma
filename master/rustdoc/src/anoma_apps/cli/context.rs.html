@@ -267,11 +267,30 @@
 <span id="266">266</span>
 <span id="267">267</span>
 <span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
 </pre><pre class="rust"><code><span class="doccomment">//! CLI input types can be used for command arguments</span>
 
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -341,11 +360,27 @@
         <span class="comment">// If the WASM dir specified, put it in the config</span>
         <span class="kw">match</span> <span class="ident">global_args</span>.<span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>) =&gt; {
+                <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">is_absolute</span>() {
+                    <span class="macro">eprintln!</span>(
+                        <span class="string">&quot;The arg `--wasm-dir` cannot be an absolute path. It \
+                         is nested inside the chain directory.&quot;</span>
+                    );
+                    <span class="ident">safe_exit</span>(<span class="number">1</span>);
+                }
                 <span class="ident">config</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">clone</span>();
             }
             <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="ident">ENV_VAR_WASM_DIR</span>) {
-                    <span class="ident">config</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">into</span>();
+                    <span class="kw">let</span> <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">into</span>();
+                    <span class="kw">if</span> <span class="ident">wasm_dir</span>.<span class="ident">is_absolute</span>() {
+                        <span class="macro">eprintln!</span>(
+                            <span class="string">&quot;The env var `{}` cannot be an absolute path. It \
+                             is nested inside the chain directory.&quot;</span>,
+                            <span class="ident">ENV_VAR_WASM_DIR</span>
+                        );
+                        <span class="ident">safe_exit</span>(<span class="number">1</span>);
+                    }
+                    <span class="ident">config</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>;
                 }
             }
         }
@@ -399,7 +434,10 @@
 
     <span class="doccomment">/// Read the given WASM file from the WASM directory or an absolute path.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_wasm</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">file_name</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="ident">wasm_loader::read_wasm</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">wasm_dir</span>, <span class="ident">file_name</span>)
+        <span class="ident">wasm_loader::read_wasm</span>(
+            <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">chain_dir</span>().<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">wasm_dir</span>),
+            <span class="ident">file_name</span>,
+        )
     }
 }
 

@@ -118,6 +118,8 @@
 <span id="117">117</span>
 <span id="118">118</span>
 <span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Here, we expose the host functions into wasm&#39;s</span>
@@ -184,6 +186,7 @@
             <span class="string">&quot;anoma_tx_result_buffer&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_result_buffer</span>),
             <span class="string">&quot;anoma_tx_has_key&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_has_key</span>),
             <span class="string">&quot;anoma_tx_write&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_write</span>),
+            <span class="string">&quot;anoma_tx_write_temp&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_write_temp</span>),
             <span class="string">&quot;anoma_tx_delete&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_delete</span>),
             <span class="string">&quot;anoma_tx_iter_prefix&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_iter_prefix</span>),
             <span class="string">&quot;anoma_tx_iter_next&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_iter_next</span>),
@@ -221,6 +224,7 @@
             <span class="string">&quot;gas&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_charge_gas</span>),
             <span class="string">&quot;anoma_vp_read_pre&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_read_pre</span>),
             <span class="string">&quot;anoma_vp_read_post&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_read_post</span>),
+            <span class="string">&quot;anoma_vp_read_temp&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_read_temp</span>),
             <span class="string">&quot;anoma_vp_result_buffer&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_result_buffer</span>),
             <span class="string">&quot;anoma_vp_has_key_pre&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_has_key_pre</span>),
             <span class="string">&quot;anoma_vp_has_key_post&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_has_key_post</span>),

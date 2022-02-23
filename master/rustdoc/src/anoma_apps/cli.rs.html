@@ -2711,6 +2711,7 @@
 <span id="2710">2710</span>
 <span id="2711">2711</span>
 <span id="2712">2712</span>
+<span id="2713">2713</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -4058,10 +4059,11 @@
                 ))
                 .<span class="ident">arg</span>(<span class="ident">WASM_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;Directory with built WASM validity predicates, \
-                     transactions and matchmaker files. This value can also \
-                     be set via `ANOMA_WASM_DIR` environment variable, but \
-                     the argument takes precedence, if specified. Defaults to \
-                     `wasm` path, relative to current working directory.&quot;</span>,
+                     transactions and matchmaker files. This must not be an \
+                     absolute path as the directory is nested inside the \
+                     chain directory. This value can also be set via \
+                     `ANOMA_WASM_DIR` environment variable, but the argument \
+                     takes precedence, if specified.&quot;</span>,
                 ))
                 .<span class="ident">arg</span>(<span class="ident">MODE</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;The mode in which to run Anoma. Options are \n\t * \

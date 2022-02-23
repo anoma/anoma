@@ -269,6 +269,81 @@
 <span id="268">268</span>
 <span id="269">269</span>
 <span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A module for loading WASM files and downloading pre-built WASMs.</span>
 <span class="kw">use</span> <span class="ident">core::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
@@ -283,6 +358,7 @@
 <span class="kw">use</span> <span class="ident">tokio::io::AsyncReadExt</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli::safe_exit</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config::DEFAULT_WASM_CHECKSUMS_FILE</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -329,34 +405,39 @@
 
     <span class="doccomment">/// Read WASM checksums from &quot;checksums.json&quot; in the given directory</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_checksums</span>(<span class="ident">wasm_directory</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="string">&quot;checksums.json&quot;</span>);
+        <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span>
+            <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="ident">DEFAULT_WASM_CHECKSUMS_FILE</span>);
         <span class="ident"><span class="self">Self</span>::read_checksums_file</span>(<span class="ident">checksums_path</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">read_checksums_async</span>(
         <span class="ident">wasm_directory</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     ) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="string">&quot;checksums.json&quot;</span>);
-        <span class="kw">match</span> <span class="ident">tokio::fs::File::open</span>(<span class="ident">checksums_path</span>).<span class="kw">await</span> {
+        <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span>
+            <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="ident">DEFAULT_WASM_CHECKSUMS_FILE</span>);
+        <span class="kw">match</span> <span class="ident">tokio::fs::File::open</span>(<span class="kw-2">&amp;</span><span class="ident">checksums_path</span>).<span class="kw">await</span> {
             <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">file</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">contents</span> <span class="op">=</span> <span class="macro">vec!</span>[];
                 <span class="comment">// Ignoring the result, next step will fail if not read</span>
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;mut</span> <span class="ident">contents</span>).<span class="kw">await</span>;
                 <span class="kw">match</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">contents</span>[..]) {
                     <span class="prelude-val">Ok</span>(<span class="ident">checksums</span>) =&gt; <span class="ident">checksums</span>,
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                         <span class="macro">eprintln!</span>(
-                            <span class="string">&quot;Can&#39;t read checksums.json in {}&quot;</span>,
-                            <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">to_string_lossy</span>()
+                            <span class="string">&quot;Failed decoding WASM checksums from {}. Failed \
+                             with {}&quot;</span>,
+                            <span class="ident">checksums_path</span>.<span class="ident">to_string_lossy</span>(),
+                            <span class="ident">err</span>
                         );
                         <span class="ident">safe_exit</span>(<span class="number">1</span>);
                     }
                 }
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
                 <span class="macro">eprintln!</span>(
-                    <span class="string">&quot;Can&#39;t find checksums.json in {}&quot;</span>,
-                    <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">to_string_lossy</span>()
+                    <span class="string">&quot;Unable to read WASM checksums from {}. Failed with {}&quot;</span>,
+                    <span class="ident">checksums_path</span>.<span class="ident">to_string_lossy</span>(),
+                    <span class="ident">err</span>
                 );
                 <span class="ident">safe_exit</span>(<span class="number">1</span>);
             }
@@ -368,15 +449,40 @@
 <span class="doccomment">/// their checksums. Download all the pre-build WASMs, or if they&#39;re already</span>
 <span class="doccomment">/// downloaded, verify their checksums.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">pre_fetch_wasm</span>(<span class="ident">wasm_directory</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) {
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+    {
+        <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>
+            .<span class="ident">as_ref</span>()
+            .<span class="ident">join</span>(<span class="ident"><span class="kw">crate</span>::config::DEFAULT_WASM_CHECKSUMS_FILE</span>);
+        <span class="comment">// If the checksums file doesn&#39;t exists ...</span>
+        <span class="kw">if</span> <span class="ident">tokio::fs::canonicalize</span>(<span class="kw-2">&amp;</span><span class="ident">checksums_path</span>).<span class="kw">await</span>.<span class="ident">is_err</span>() {
+            <span class="ident">tokio::fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_directory</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="comment">// ... try to copy checksums from the Anoma WASM root dir</span>
+            <span class="kw">if</span> <span class="ident">tokio::fs::copy</span>(
+                <span class="ident">std::env::current_dir</span>()
+                    .<span class="ident">unwrap</span>()
+                    .<span class="ident">join</span>(<span class="ident"><span class="kw">crate</span>::config::DEFAULT_WASM_DIR</span>)
+                    .<span class="ident">join</span>(<span class="ident"><span class="kw">crate</span>::config::DEFAULT_WASM_CHECKSUMS_FILE</span>),
+                <span class="kw-2">&amp;</span><span class="ident">checksums_path</span>,
+            )
+            .<span class="kw">await</span>
+            .<span class="ident">is_ok</span>()
+            {
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;WASM checksums copied from WASM root dir.&quot;</span>);
+                <span class="kw">return</span>;
+            }
+        }
+    }
+
     <span class="comment">// load json with wasm hashes</span>
     <span class="kw">let</span> <span class="ident">checksums</span> <span class="op">=</span> <span class="ident">Checksums::read_checksums_async</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_directory</span>).<span class="kw">await</span>;
 
-    <span class="ident">join_all</span>(<span class="ident">checksums</span>.<span class="number">0</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">hash</span>)<span class="op">|</span> {
+    <span class="ident">join_all</span>(<span class="ident">checksums</span>.<span class="number">0</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">full_name</span>)<span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">wasm_directory</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>();
 
         <span class="comment">// Async check and download (if needed) each file</span>
         <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="ident">wasm_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>);
+            <span class="kw">let</span> <span class="ident">wasm_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">full_name</span>);
             <span class="kw">match</span> <span class="ident">tokio::fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_path</span>).<span class="kw">await</span> {
                 <span class="comment">// if the file exist, first check the hash. If not matching</span>
                 <span class="comment">// download it again.</span>
@@ -384,20 +490,42 @@
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
                     <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
                     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">hex::encode</span>(<span class="ident">hasher</span>.<span class="ident">finalize</span>());
-                    <span class="kw">let</span> <span class="ident">checksum</span> <span class="op">=</span> <span class="macro">format!</span>(
+                    <span class="kw">let</span> <span class="ident">derived_name</span> <span class="op">=</span> <span class="macro">format!</span>(
                         <span class="string">&quot;{}.{}.wasm&quot;</span>,
                         <span class="kw-2">&amp;</span><span class="ident">name</span>.<span class="ident">split</span>(<span class="string">&#39;.&#39;</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>()[<span class="number">0</span>],
                         <span class="ident">result</span>
                     );
-                    <span class="kw">if</span> <span class="ident">hash</span> <span class="op">==</span> <span class="ident">checksum</span> {
+                    <span class="kw">if</span> <span class="ident">full_name</span> <span class="op">==</span> <span class="ident">derived_name</span> {
                         <span class="kw">return</span>;
                     }
                     <span class="macro">tracing::info!</span>(
-                        <span class="string">&quot;Wasm checksum mismatch for {}. Fetching new \
-                         version...&quot;</span>,
-                        <span class="kw-2">&amp;</span><span class="ident">name</span>,
+                        <span class="string">&quot;WASM checksum mismatch: Got {}, expected {}. \
+                         Fetching new version...&quot;</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">derived_name</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">full_name</span>
                     );
-                    <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">hash</span>);
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+                    {
+                        <span class="comment">// try to copy built file from the Anoma WASM root dir</span>
+                        <span class="kw">if</span> <span class="ident">tokio::fs::copy</span>(
+                            <span class="ident">std::env::current_dir</span>()
+                                .<span class="ident">unwrap</span>()
+                                .<span class="ident">join</span>(<span class="ident"><span class="kw">crate</span>::config::DEFAULT_WASM_DIR</span>)
+                                .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">full_name</span>),
+                            <span class="ident">wasm_directory</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">full_name</span>),
+                        )
+                        .<span class="kw">await</span>
+                        .<span class="ident">is_ok</span>()
+                        {
+                            <span class="macro">tracing::info!</span>(
+                                <span class="string">&quot;File {} copied from WASM root dir.&quot;</span>,
+                                <span class="ident">full_name</span>
+                            );
+                            <span class="kw">return</span>;
+                        }
+                    }
+
+                    <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">full_name</span>);
                     <span class="kw">match</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>).<span class="kw">await</span> {
                         <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) =&gt; {
                             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span>
@@ -419,7 +547,29 @@
                 <span class="comment">// if the doesn&#39;t file exist, download it.</span>
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">kind</span>() {
                     <span class="ident">std::io::ErrorKind::NotFound</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">hash</span>);
+                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+                        {
+                            <span class="comment">// try to copy built file from the Anoma WASM root</span>
+                            <span class="comment">// dir</span>
+                            <span class="kw">if</span> <span class="ident">tokio::fs::copy</span>(
+                                <span class="ident">std::env::current_dir</span>()
+                                    .<span class="ident">unwrap</span>()
+                                    .<span class="ident">join</span>(<span class="ident"><span class="kw">crate</span>::config::DEFAULT_WASM_DIR</span>)
+                                    .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">full_name</span>),
+                                <span class="ident">wasm_directory</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">full_name</span>),
+                            )
+                            .<span class="kw">await</span>
+                            .<span class="ident">is_ok</span>()
+                            {
+                                <span class="macro">tracing::info!</span>(
+                                    <span class="string">&quot;File {} copied from WASM root dir.&quot;</span>,
+                                    <span class="ident">full_name</span>
+                                );
+                                <span class="kw">return</span>;
+                            }
+                        }
+
+                        <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">full_name</span>);
                         <span class="kw">match</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>).<span class="kw">await</span> {
                             <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) =&gt; {
                                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span>

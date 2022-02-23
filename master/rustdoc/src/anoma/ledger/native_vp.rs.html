@@ -284,6 +284,17 @@
 <span id="283">283</span>
 <span id="284">284</span>
 <span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Native validity predicate interface associated with internal accounts such</span>
 <span class="doccomment">//! as the PoS and IBC modules.</span>
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
@@ -406,6 +417,17 @@
         <span class="ident">vp_env::read_post</span>(
             <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">borrow_mut</span>(),
             <span class="self">self</span>.<span class="ident">storage</span>,
+            <span class="self">self</span>.<span class="ident">write_log</span>,
+            <span class="ident">key</span>,
+        )
+        .<span class="ident">map_err</span>(<span class="ident">Error::ContextError</span>)
+    }
+
+    <span class="doccomment">/// Storage read temporary state (after tx execution). It will try to read</span>
+    <span class="doccomment">/// from only the write log.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_temp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">vp_env::read_temp</span>(
+            <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">borrow_mut</span>(),
             <span class="self">self</span>.<span class="ident">write_log</span>,
             <span class="ident">key</span>,
         )
