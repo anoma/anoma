@@ -1,6 +1,6 @@
 //! The ledger's protocol
-use std::collections::BTreeSet;
-use std::panic;
+use std::collections::{BTreeSet, HashSet};
+use std::{fmt, panic};
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter};
 use anoma::ledger::governance::GovernanceVp;
