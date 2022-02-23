@@ -58,7 +58,11 @@ impl Default for TestVpEnv {
             gas_meter: VpGasMeter::new(0),
             tx: Tx::new(vec![], None),
             keys_changed: BTreeSet::default(),
+<<<<<<< HEAD
             verifiers: BTreeSet::default(),
+=======
+            verifiers: HashSet::default(),
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
             eval_runner,
             result_buffer: None,
             vp_wasm_cache,
