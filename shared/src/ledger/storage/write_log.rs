@@ -1,7 +1,7 @@
 //! Write log is temporary storage for modifications performed by a transaction.
 //! before they are committed to the ledger's storage.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use thiserror::Error;
 
@@ -190,7 +190,7 @@ impl WriteLog {
     /// (right). The first vector excludes keys of validity predicates of
     /// newly initialized accounts, but may include keys of other data
     /// written into newly initialized accounts.
-    pub fn get_partitioned_keys(&self) -> (HashSet<&Key>, HashSet<&Address>) {
+    pub fn get_partitioned_keys(&self) -> (BTreeSet<&Key>, HashSet<&Address>) {
         use itertools::{Either, Itertools};
         self.tx_write_log.iter().partition_map(|(key, value)| {
             match (key.is_validity_predicate(), value) {
@@ -299,13 +299,13 @@ impl WriteLog {
     pub fn verifiers_changed_keys(
         &self,
         verifiers_from_tx: &HashSet<Address>,
-    ) -> HashMap<Address, HashSet<Key>> {
+    ) -> HashMap<Address, BTreeSet<Key>> {
         let (changed_keys, initialized_accounts) = self.get_partitioned_keys();
         let mut verifiers =
             verifiers_from_tx
                 .iter()
                 .fold(HashMap::new(), |mut acc, addr| {
-                    let changed_keys: HashSet<Key> =
+                    let changed_keys: BTreeSet<Key> =
                         changed_keys.iter().map(|&key| key.clone()).collect();
                     acc.insert(addr.clone(), changed_keys);
                     acc
@@ -333,7 +333,7 @@ impl WriteLog {
                         keys.insert(key.clone());
                     }
                     None => {
-                        let keys: HashSet<Key> =
+                        let keys: BTreeSet<Key> =
                             vec![key.clone()].into_iter().collect();
                         verifiers.insert(addr.clone(), keys);
                     }

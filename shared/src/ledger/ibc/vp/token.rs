@@ -1,6 +1,6 @@
 //! IBC token transfer validation as a native validity predicate
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::str::FromStr;
 
 use borsh::BorshDeserialize;
@@ -84,7 +84,7 @@ where
     fn validate_tx(
         &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         _verifiers: &HashSet<Address>,
     ) -> Result<bool> {
         // Check the non-onwer balance updates

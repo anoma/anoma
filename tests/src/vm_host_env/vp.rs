@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use anoma::ledger::gas::VpGasMeter;
 use anoma::ledger::storage::mockdb::MockDB;
@@ -32,7 +32,7 @@ pub struct TestVpEnv {
     pub iterators: PrefixIterators<'static, MockDB>,
     pub gas_meter: VpGasMeter,
     pub tx: Tx,
-    pub keys_changed: HashSet<storage::Key>,
+    pub keys_changed: BTreeSet<storage::Key>,
     pub verifiers: HashSet<Address>,
     pub eval_runner: native_vp_host_env::VpEval,
     pub result_buffer: Option<Vec<u8>>,
@@ -57,7 +57,7 @@ impl Default for TestVpEnv {
             iterators: PrefixIterators::default(),
             gas_meter: VpGasMeter::new(0),
             tx: Tx::new(vec![], None),
-            keys_changed: HashSet::default(),
+            keys_changed: BTreeSet::default(),
             verifiers: HashSet::default(),
             eval_runner,
             result_buffer: None,

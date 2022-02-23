@@ -1,6 +1,6 @@
 //! Proof-of-Stake native validity predicate.
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::panic::{RefUnwindSafe, UnwindSafe};
 
 pub use anoma_proof_of_stake;
@@ -96,7 +96,7 @@ where
     fn validate_tx(
         &self,
         _tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         verifiers: &HashSet<Address>,
     ) -> Result<bool> {
         use validation::Data;

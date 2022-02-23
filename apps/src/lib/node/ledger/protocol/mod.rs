@@ -1,5 +1,5 @@
 //! The ledger's protocol
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::{fmt, panic};
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
@@ -203,7 +203,7 @@ where
     let verifiers = write_log.verifiers_changed_keys(verifiers_from_tx);
 
     // collect the VPs for the verifiers
-    let verifiers: Vec<(Address, HashSet<Key>, Vp)> = verifiers
+    let verifiers: Vec<(Address, BTreeSet<Key>, Vp)> = verifiers
         .iter()
         .filter(|(addr, _)| !matches!(addr, Address::Implicit(_)))
         .map(|(addr, keys)| {
@@ -250,7 +250,7 @@ where
 
 /// Execute verifiers' validity predicates
 fn execute_vps<D, H, CA>(
-    verifiers: Vec<(Address, HashSet<Key>, Vp)>,
+    verifiers: Vec<(Address, BTreeSet<Key>, Vp)>,
     tx: &Tx,
     storage: &Storage<D, H>,
     write_log: &WriteLog,

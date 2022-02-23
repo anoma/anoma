@@ -8,7 +8,7 @@ mod port;
 mod sequence;
 mod token;
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::context::ClientReader;
@@ -81,7 +81,7 @@ where
     fn validate_tx(
         &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         _verifiers: &HashSet<Address>,
     ) -> Result<bool> {
         let mut clients = HashSet::new();

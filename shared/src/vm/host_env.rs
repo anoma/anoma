@@ -1,5 +1,6 @@
 //! Virtual machine's host environment exposes functions that may be called from
 //! within a virtual machine.
+use std::collections::BTreeSet;
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::num::TryFromIntError;
@@ -246,7 +247,7 @@ where
     /// Cache for 2-step reads from host environment.
     pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
     /// The storage keys that have been changed. Used for calls to `eval`.
-    pub keys_changed: HostRef<'a, &'a HashSet<Key>>,
+    pub keys_changed: HostRef<'a, &'a BTreeSet<Key>>,
     /// The verifiers whose validity predicates should be triggered. Used for
     /// calls to `eval`.
     pub verifiers: HostRef<'a, &'a HashSet<Address>>,
@@ -308,7 +309,7 @@ where
         iterators: &mut PrefixIterators<'a, DB>,
         verifiers: &HashSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
     ) -> Self {
@@ -371,7 +372,7 @@ where
         iterators: &mut PrefixIterators<'a, DB>,
         verifiers: &HashSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
     ) -> Self {
@@ -1570,6 +1571,8 @@ where
 /// A helper module for testing
 #[cfg(feature = "testing")]
 pub mod testing {
+    use std::collections::BTreeSet;
+
     use super::*;
     use crate::ledger::storage::{self, StorageHasher};
     use crate::vm::memory::testing::NativeMemory;
@@ -1617,7 +1620,7 @@ pub mod testing {
         tx: &Tx,
         verifiers: &HashSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
     ) -> VpEnv<'static, NativeMemory, DB, H, EVAL, CA>
