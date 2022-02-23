@@ -239,7 +239,11 @@ where
         &mut self,
         address: &Address,
         keys_changed: &BTreeSet<Key>,
+<<<<<<< HEAD
         verifiers: &BTreeSet<Address>,
+=======
+        verifiers: &HashSet<Address>,
+>>>>>>> [feat]: changed change_keys from hashset to btreeset to preserve order
         vp_code: Vec<u8>,
         input_data: Vec<u8>,
     ) -> bool {

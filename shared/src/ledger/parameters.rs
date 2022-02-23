@@ -1,7 +1,6 @@
 //! Protocol parameters
 
 use std::collections::BTreeSet;
-
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
