@@ -466,6 +466,32 @@
 <span id="465">465</span>
 <span id="466">466</span>
 <span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Functions for IBC-related data to access the storage</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
@@ -482,6 +508,12 @@
     <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::path</span>::{
+    <span class="ident">AcksPath</span>, <span class="ident">ChannelEndsPath</span>, <span class="ident">ClientConsensusStatePath</span>, <span class="ident">ClientStatePath</span>,
+    <span class="ident">ClientTypePath</span>, <span class="ident">CommitmentsPath</span>, <span class="ident">ConnectionsPath</span>, <span class="ident">PortsPath</span>, <span class="ident">ReceiptsPath</span>,
+    <span class="ident">SeqAcksPath</span>, <span class="ident">SeqRecvsPath</span>, <span class="ident">SeqSendsPath</span>,
+};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics24_host::Path</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
@@ -492,6 +524,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier</span>::{
     <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
+};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::path</span>::{
+    <span class="ident">AcksPath</span>, <span class="ident">ChannelEndsPath</span>, <span class="ident">ClientConsensusStatePath</span>, <span class="ident">ClientStatePath</span>,
+    <span class="ident">ClientTypePath</span>, <span class="ident">CommitmentsPath</span>, <span class="ident">ConnectionsPath</span>, <span class="ident">PortsPath</span>, <span class="ident">ReceiptsPath</span>,
+    <span class="ident">SeqAcksPath</span>, <span class="ident">SeqRecvsPath</span>, <span class="ident">SeqSendsPath</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::Path</span>;
@@ -623,7 +661,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for the client type</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_type_key</span>(<span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientType</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientType</span>(<span class="ident">ClientTypePath</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>()));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the client state shouldn&#39;t fail&quot;</span>)
 }
@@ -631,7 +669,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for the client state</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_state_key</span>(<span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientState</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientState</span>(<span class="ident">ClientStatePath</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>()));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the client state shouldn&#39;t fail&quot;</span>)
 }
@@ -639,11 +677,11 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for the consensus state</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">consensus_state_key</span>(<span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>, <span class="ident">height</span>: <span class="ident">Height</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientConsensusState</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientConsensusState</span>(<span class="ident">ClientConsensusStatePath</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
         <span class="ident">epoch</span>: <span class="ident">height</span>.<span class="ident">revision_number</span>,
         <span class="ident">height</span>: <span class="ident">height</span>.<span class="ident">revision_height</span>,
-    };
+    });
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the consensus state shouldn&#39;t fail&quot;</span>)
 }
@@ -651,7 +689,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for the connection end</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_key</span>(<span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">ConnectionsPath</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the connection shouldn&#39;t fail&quot;</span>)
 }
@@ -659,10 +697,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for the channel end</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_key</span>(<span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ChannelEnds</span>(
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ChannelEnds</span>(<span class="ident">ChannelEndsPath</span>(
         <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>(),
-    );
+    ));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the channel shouldn&#39;t fail&quot;</span>)
 }
@@ -670,7 +708,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for the port</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">port_key</span>(<span class="ident">port_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Ports</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Ports</span>(<span class="ident">PortsPath</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>()));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the port shouldn&#39;t fail&quot;</span>)
 }
@@ -685,10 +723,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for nextSequenceSend</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_sequence_send_key</span>(<span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::SeqSends</span>(
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::SeqSends</span>(<span class="ident">SeqSendsPath</span>(
         <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>(),
-    );
+    ));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for nextSequenceSend shouldn&#39;t fail&quot;</span>)
 }
@@ -696,10 +734,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for nextSequenceRecv</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_sequence_recv_key</span>(<span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::SeqRecvs</span>(
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::SeqRecvs</span>(<span class="ident">SeqRecvsPath</span>(
         <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>(),
-    );
+    ));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for nextSequenceRecv shouldn&#39;t fail&quot;</span>)
 }
@@ -707,10 +745,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="doccomment">/// Returns a key for nextSequenceAck</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_sequence_ack_key</span>(<span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortChannelId</span>) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::SeqAcks</span>(
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::SeqAcks</span>(<span class="ident">SeqAcksPath</span>(
         <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>(),
-    );
+    ));
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for nextSequenceAck shouldn&#39;t fail&quot;</span>)
 }
@@ -722,11 +760,11 @@
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
     <span class="ident">sequence</span>: <span class="ident">Sequence</span>,
 ) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Commitments</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Commitments</span>(<span class="ident">CommitmentsPath</span> {
         <span class="ident">port_id</span>: <span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="ident">channel_id</span>.<span class="ident">clone</span>(),
         <span class="ident">sequence</span>,
-    };
+    });
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the commitment shouldn&#39;t fail&quot;</span>)
 }
@@ -738,11 +776,11 @@
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
     <span class="ident">sequence</span>: <span class="ident">Sequence</span>,
 ) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Receipts</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Receipts</span>(<span class="ident">ReceiptsPath</span> {
         <span class="ident">port_id</span>: <span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="ident">channel_id</span>.<span class="ident">clone</span>(),
         <span class="ident">sequence</span>,
-    };
+    });
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the receipt shouldn&#39;t fail&quot;</span>)
 }
@@ -754,13 +792,27 @@
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
     <span class="ident">sequence</span>: <span class="ident">Sequence</span>,
 ) -&gt; <span class="ident">Key</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Acks</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Acks</span>(<span class="ident">AcksPath</span> {
         <span class="ident">port_id</span>: <span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="ident">channel_id</span>.<span class="ident">clone</span>(),
         <span class="ident">sequence</span>,
-    };
+    });
     <span class="ident">ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the ack shouldn&#39;t fail&quot;</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
+<span class="doccomment">/// Returns a key for the timestamp for the client update</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_update_timestamp_key</span>(<span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) -&gt; <span class="ident">Key</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;clients/{}/update_timestamp&quot;</span>, <span class="ident">client_id</span>);
+    <span class="ident">ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the ack shouldn&#39;t fail&quot;</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
+<span class="doccomment">/// Returns a key for the timestamp for the client update</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_update_height_key</span>(<span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) -&gt; <span class="ident">Key</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;clients/{}/update_height&quot;</span>, <span class="ident">client_id</span>);
+    <span class="ident">ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the ack shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>

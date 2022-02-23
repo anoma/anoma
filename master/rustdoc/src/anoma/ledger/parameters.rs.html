@@ -177,6 +177,8 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Protocol parameters</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -231,6 +233,8 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Parameters</span> {
     <span class="doccomment">/// Epoch duration</span>
     <span class="kw">pub</span> <span class="ident">epoch_duration</span>: <span class="ident">EpochDuration</span>,
+    <span class="doccomment">/// Maximum expected time per block</span>
+    <span class="kw">pub</span> <span class="ident">max_expected_time_per_block</span>: <span class="ident">DurationSecs</span>,
 }
 
 <span class="doccomment">/// Epoch duration. A new epoch begins as soon as both the `min_num_of_blocks`</span>

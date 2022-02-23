@@ -1791,6 +1791,48 @@
 <span id="1790">1790</span>
 <span id="1791">1791</span>
 <span id="1792">1792</span>
+<span id="1793">1793</span>
+<span id="1794">1794</span>
+<span id="1795">1795</span>
+<span id="1796">1796</span>
+<span id="1797">1797</span>
+<span id="1798">1798</span>
+<span id="1799">1799</span>
+<span id="1800">1800</span>
+<span id="1801">1801</span>
+<span id="1802">1802</span>
+<span id="1803">1803</span>
+<span id="1804">1804</span>
+<span id="1805">1805</span>
+<span id="1806">1806</span>
+<span id="1807">1807</span>
+<span id="1808">1808</span>
+<span id="1809">1809</span>
+<span id="1810">1810</span>
+<span id="1811">1811</span>
+<span id="1812">1812</span>
+<span id="1813">1813</span>
+<span id="1814">1814</span>
+<span id="1815">1815</span>
+<span id="1816">1816</span>
+<span id="1817">1817</span>
+<span id="1818">1818</span>
+<span id="1819">1819</span>
+<span id="1820">1820</span>
+<span id="1821">1821</span>
+<span id="1822">1822</span>
+<span id="1823">1823</span>
+<span id="1824">1824</span>
+<span id="1825">1825</span>
+<span id="1826">1826</span>
+<span id="1827">1827</span>
+<span id="1828">1828</span>
+<span id="1829">1829</span>
+<span id="1830">1830</span>
+<span id="1831">1831</span>
+<span id="1832">1832</span>
+<span id="1833">1833</span>
+<span id="1834">1834</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC integration as a native validity predicate</span>
 
 <span class="kw">mod</span> <span class="ident">channel</span>;
@@ -1945,6 +1987,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">enum</span> <span class="ident">StateChange</span> {
     <span class="ident">Created</span>,
     <span class="ident">Updated</span>,
@@ -2079,11 +2122,10 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">core::time::Duration</span>;
     <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
     <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-    <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
-    <span class="kw">use</span> <span class="ident">chrono::Utc</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -2093,7 +2135,7 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_type::ClientType</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-    <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::header</span>::{<span class="ident">AnyHeader</span>, <span class="ident">Header</span>};
+    <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::header::Header</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -2111,7 +2153,7 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-    <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::version::Version</span>;
+    <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::version::Version</span> <span class="kw">as</span> <span class="ident">ConnVersion</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel</span>::{
         <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
@@ -2130,6 +2172,8 @@
     <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::Version</span> <span class="kw">as</span> <span class="ident">ChanVersion</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::core::ics23_commitment::commitment::CommitmentProofBytes</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -2177,11 +2221,12 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::version::Version</span>;
+    <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::version::Version</span> <span class="kw">as</span> <span class="ident">ConnVersion</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel</span>::{
         <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
     };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -2196,6 +2241,8 @@
     <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::Version</span> <span class="kw">as</span> <span class="ident">ChanVersion</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">ibc_abci::core::ics23_commitment::commitment::CommitmentProofBytes</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -2264,7 +2311,8 @@
     };
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::storage</span>::{
         <span class="ident">ack_key</span>, <span class="ident">capability_key</span>, <span class="ident">channel_key</span>, <span class="ident">client_state_key</span>,
-        <span class="ident">client_type_key</span>, <span class="ident">commitment_key</span>, <span class="ident">connection_key</span>, <span class="ident">consensus_state_key</span>,
+        <span class="ident">client_type_key</span>, <span class="ident">client_update_height_key</span>, <span class="ident">client_update_timestamp_key</span>,
+        <span class="ident">commitment_key</span>, <span class="ident">connection_key</span>, <span class="ident">consensus_state_key</span>,
         <span class="ident">next_sequence_ack_key</span>, <span class="ident">next_sequence_recv_key</span>, <span class="ident">next_sequence_send_key</span>,
         <span class="ident">port_key</span>, <span class="ident">receipt_key</span>,
     };
@@ -2274,7 +2322,6 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::write_log::WriteLog</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">PacketAck</span>, <span class="ident">PacketReceipt</span>};
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">DurationSecs</span>};
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm</span>;
 
     <span class="kw">fn</span> <span class="ident">get_client_id</span>() -&gt; <span class="ident">ClientId</span> {
@@ -2306,7 +2353,7 @@
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
         };
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
+        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">bytes</span>)
@@ -2317,6 +2364,20 @@
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">consensus_state</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_key</span>, <span class="ident">bytes</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
+        <span class="comment">// insert update time and height</span>
+        <span class="kw">let</span> <span class="ident">client_update_time_key</span> <span class="op">=</span> <span class="ident">client_update_timestamp_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">TmTime::now</span>().<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="ident">write_log</span>
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">client_update_time_key</span>, <span class="ident">bytes</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">client_update_height_key</span> <span class="op">=</span> <span class="ident">client_update_height_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
+        <span class="kw">let</span> <span class="ident">host_height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">10</span>, <span class="number">100</span>);
+        <span class="ident">write_log</span>
+            .<span class="ident">write</span>(
+                <span class="kw-2">&amp;</span><span class="ident">client_update_height_key</span>,
+                <span class="ident">host_height</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>),
+            )
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
@@ -2330,8 +2391,7 @@
                 .<span class="ident">expect</span>(<span class="string">&quot;Creating an TmChainId shouldn&#39;t fail&quot;</span>),
             <span class="ident">height</span>: <span class="ident">TmHeight::try_from</span>(<span class="number">10_u64</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Creating a height shouldn&#39;t fail&quot;</span>),
-            <span class="ident">time</span>: <span class="ident">TmTime::from_str</span>(<span class="string">&quot;2021-11-01T18:14:32.024837Z&quot;</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;Setting the time shouldn&#39;t fail&quot;</span>),
+            <span class="ident">time</span>: <span class="ident">TmTime::now</span>(),
             <span class="ident">last_block_id</span>: <span class="prelude-val">None</span>,
             <span class="ident">last_commit_hash</span>: <span class="prelude-val">None</span>,
             <span class="ident">data_hash</span>: <span class="prelude-val">None</span>,
@@ -2371,7 +2431,7 @@
             <span class="ident">conn_state</span>,
             <span class="ident">get_client_id</span>(),
             <span class="ident">get_conn_counterparty</span>(),
-            <span class="macro">vec!</span>[<span class="ident">Version::default</span>()],
+            <span class="macro">vec!</span>[<span class="ident">ConnVersion::default</span>()],
             <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
         )
     }
@@ -2396,7 +2456,7 @@
             <span class="ident">order</span>,
             <span class="ident">get_channel_counterparty</span>(),
             <span class="macro">vec!</span>[<span class="ident">get_connection_id</span>()],
-            <span class="ident">order</span>.<span class="ident">to_string</span>(),
+            <span class="ident">ChanVersion::ics20</span>(),
         )
     }
 
@@ -2460,7 +2520,7 @@
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
         };
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
+        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">MockConsensusState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgCreateAnyClient</span> {
             <span class="ident">client_state</span>,
@@ -2540,7 +2600,7 @@
             <span class="ident">header</span>: <span class="ident">header</span>.<span class="ident">wrap_any</span>(),
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
         };
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
+        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">bytes</span>)
@@ -2553,6 +2613,18 @@
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">write_log</span>.<span class="ident">set_ibc_event</span>(<span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
+        <span class="comment">// update time and height for this updating</span>
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_update_timestamp_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
+        <span class="ident">write_log</span>
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">TmTime::now</span>().<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>))
+            .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_update_height_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
+        <span class="ident">write_log</span>
+            .<span class="ident">write</span>(
+                <span class="kw-2">&amp;</span><span class="ident">key</span>,
+                <span class="ident">Height::new</span>(<span class="number">10</span>, <span class="number">101</span>).<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>),
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -2585,7 +2657,7 @@
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgConnectionOpenInit</span> {
             <span class="ident">client_id</span>: <span class="ident">get_client_id</span>(),
             <span class="ident">counterparty</span>: <span class="ident">get_conn_counterparty</span>(),
-            <span class="ident">version</span>: <span class="ident">Version::default</span>(),
+            <span class="ident">version</span>: <span class="ident">ConnVersion::default</span>(),
             <span class="ident">delay_period</span>: <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
         };
@@ -2630,7 +2702,7 @@
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgConnectionOpenInit</span> {
             <span class="ident">client_id</span>: <span class="ident">get_client_id</span>(),
             <span class="ident">counterparty</span>: <span class="ident">get_conn_counterparty</span>(),
-            <span class="ident">version</span>: <span class="ident">Version::default</span>(),
+            <span class="ident">version</span>: <span class="ident">ConnVersion::default</span>(),
             <span class="ident">delay_period</span>: <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
         };
@@ -2677,12 +2749,14 @@
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
         };
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
-        <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span>
-            <span class="ident">ConsensusProof::new</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]), <span class="ident">height</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
+        <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
+            <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>(),
+            <span class="ident">height</span>,
+        )
+        .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Proofs::new</span>(
             <span class="ident">proof_conn</span>,
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
@@ -2696,7 +2770,7 @@
             <span class="ident">client_id</span>: <span class="ident">get_client_id</span>(),
             <span class="ident">client_state</span>: <span class="prelude-val">Some</span>(<span class="ident">client_state</span>),
             <span class="ident">counterparty</span>: <span class="ident">get_conn_counterparty</span>(),
-            <span class="ident">counterparty_versions</span>: <span class="macro">vec!</span>[<span class="ident">Version::default</span>()],
+            <span class="ident">counterparty_versions</span>: <span class="macro">vec!</span>[<span class="ident">ConnVersion::default</span>()],
             <span class="ident">proofs</span>,
             <span class="ident">delay_period</span>: <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
@@ -2754,13 +2828,15 @@
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
         };
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
+        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_conn_counterparty</span>();
-        <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span>
-            <span class="ident">ConsensusProof::new</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]), <span class="ident">height</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
+            <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>(),
+            <span class="ident">height</span>,
+        )
+        .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Proofs::new</span>(
             <span class="ident">proof_conn</span>,
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
@@ -2778,7 +2854,7 @@
                 .<span class="ident">clone</span>(),
             <span class="ident">client_state</span>: <span class="prelude-val">Some</span>(<span class="ident">client_state</span>),
             <span class="ident">proofs</span>,
-            <span class="ident">version</span>: <span class="ident">Version::default</span>(),
+            <span class="ident">version</span>: <span class="ident">ConnVersion::default</span>(),
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
         };
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_open_ack_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
@@ -2821,11 +2897,13 @@
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span>
-            <span class="ident">ConsensusProof::new</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]), <span class="ident">height</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
+            <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>(),
+            <span class="ident">height</span>,
+        )
+        .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Proofs::new</span>(
             <span class="ident">proof_conn</span>,
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
@@ -2922,11 +3000,13 @@
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span>
-            <span class="ident">ConsensusProof::new</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]), <span class="ident">height</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
+            <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>(),
+            <span class="ident">height</span>,
+        )
+        .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Proofs::new</span>(
             <span class="ident">proof_channel</span>,
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
@@ -2940,7 +3020,7 @@
             <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
             <span class="ident">previous_channel_id</span>: <span class="prelude-val">None</span>,
             <span class="ident">channel</span>: <span class="ident">channel</span>.<span class="ident">clone</span>(),
-            <span class="ident">counterparty_version</span>: <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
+            <span class="ident">counterparty_version</span>: <span class="ident">ChanVersion::ics20</span>(),
             <span class="ident">proofs</span>,
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
         };
@@ -2993,11 +3073,13 @@
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span>
-            <span class="ident">ConsensusProof::new</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]), <span class="ident">height</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
+            <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>(),
+            <span class="ident">height</span>,
+        )
+        .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Proofs::new</span>(
             <span class="ident">proof_channel</span>,
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
@@ -3013,7 +3095,7 @@
                 .<span class="ident">channel_id</span>()
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">clone</span>(),
-            <span class="ident">counterparty_version</span>: <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
+            <span class="ident">counterparty_version</span>: <span class="ident">ChanVersion::ics20</span>(),
             <span class="ident">proofs</span>,
             <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;account0&quot;</span>),
         };
@@ -3065,11 +3147,13 @@
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
-        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span>
-            <span class="ident">ConsensusProof::new</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]), <span class="ident">height</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
+            <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>(),
+            <span class="ident">height</span>,
+        )
+        .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">Proofs::new</span>(
             <span class="ident">proof_channel</span>,
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
@@ -3187,8 +3271,8 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare a message</span>
-        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">DateTimeUtc::now</span>() <span class="op">+</span> <span class="ident">DurationSecs</span>(<span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>.<span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span>
+            (<span class="ident">Timestamp::now</span>() <span class="op">+</span> <span class="ident">Duration::from_secs</span>(<span class="number">100</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgTransfer</span> {
             <span class="ident">source_port</span>: <span class="ident">get_port_id</span>(),
             <span class="ident">source_channel</span>: <span class="ident">get_channel_id</span>(),
@@ -3261,8 +3345,8 @@
         <span class="ident">increment_seq</span>(<span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// make a packet and data</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
-        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>);
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span>
+            (<span class="ident">Timestamp::now</span>() <span class="op">+</span> <span class="ident">Duration::from_secs</span>(<span class="number">100</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">Packet</span> {
             <span class="ident">sequence</span>,
             <span class="ident">source_port</span>: <span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
@@ -3273,7 +3357,7 @@
             <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
-        <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
+        <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span>
             <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>))
                 .<span class="ident">unwrap</span>();
@@ -3322,8 +3406,8 @@
         <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
         <span class="comment">// make a packet</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
-        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>);
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span>
+            (<span class="ident">Timestamp::now</span>() <span class="op">+</span> <span class="ident">core::time::Duration::from_secs</span>(<span class="number">100</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">Packet</span> {
             <span class="ident">sequence</span>,
             <span class="ident">source_port</span>: <span class="ident">get_port_id</span>(),
@@ -3357,7 +3441,7 @@
 
         <span class="comment">// prepare data</span>
         <span class="kw">let</span> <span class="ident">ack</span> <span class="op">=</span> <span class="ident">PacketAck::default</span>().<span class="ident">encode_to_vec</span>();
-        <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
+        <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span>
             <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>))
                 .<span class="ident">unwrap</span>();
@@ -3413,8 +3497,8 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare a message</span>
-        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">DateTimeUtc::now</span>() <span class="op">+</span> <span class="ident">DurationSecs</span>(<span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>.<span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span>
+            (<span class="ident">Timestamp::now</span>() <span class="op">+</span> <span class="ident">Duration::from_secs</span>(<span class="number">100</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgTransfer</span> {
             <span class="ident">source_port</span>: <span class="ident">get_port_id</span>(),
             <span class="ident">source_channel</span>: <span class="ident">get_channel_id</span>(),
@@ -3486,8 +3570,8 @@
 
         <span class="comment">// make a packet and data</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
-        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
-        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>);
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span>
+            (<span class="ident">Timestamp::now</span>() <span class="op">+</span> <span class="ident">Duration::from_secs</span>(<span class="number">100</span>)).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">Packet</span> {
             <span class="ident">sequence</span>: <span class="ident">Sequence::from</span>(<span class="number">1</span>),
             <span class="ident">source_port</span>: <span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
@@ -3498,7 +3582,7 @@
             <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
-        <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]);
+        <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span>
             <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>))
                 .<span class="ident">unwrap</span>();

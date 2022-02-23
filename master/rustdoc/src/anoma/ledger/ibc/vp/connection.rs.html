@@ -467,6 +467,13 @@
 <span id="466">466</span>
 <span id="467">467</span>
 <span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for connection module</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -740,9 +747,10 @@
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
             <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
-            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
+            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
@@ -788,9 +796,10 @@
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
             <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
-            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
+            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
@@ -816,7 +825,14 @@
             <span class="ident">conn</span>.<span class="ident">delay_period</span>(),
         );
 
-        <span class="kw">match</span> <span class="ident">verify_proofs</span>(<span class="self">self</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>) {
+        <span class="kw">match</span> <span class="ident">verify_proofs</span>(
+            <span class="self">self</span>,
+            <span class="prelude-val">None</span>,
+            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">conn</span>,
+            <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
+            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+        ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
         }
@@ -876,9 +892,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">host_current_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Height</span> {
-        <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_current_epoch</span>().<span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_height</span>().<span class="number">0.0</span>;
-        <span class="ident">Height::new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
+        <span class="self">self</span>.<span class="ident">host_height</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">host_oldest_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Height</span> {

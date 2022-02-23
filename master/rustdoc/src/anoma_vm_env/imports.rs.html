@@ -576,6 +576,22 @@
 <span id="575">575</span>
 <span id="576">576</span>
 <span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
@@ -640,6 +656,7 @@
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{
         <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
     };
+    <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -794,6 +811,18 @@
         <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_tx_get_block_height</span>() })
     }
 
+    <span class="doccomment">/// Get time of the current block header as rfc 3339 string</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_time</span>() -&gt; <span class="ident">Rfc3339String</span> {
+        <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">anoma_tx_get_block_time</span>() };
+        <span class="kw">let</span> <span class="ident">time_value</span> <span class="op">=</span>
+            <span class="ident"><span class="kw">super</span>::read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_tx_result_buffer</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;The block time should exist&quot;</span>);
+        <span class="ident">Rfc3339String</span>(
+            <span class="ident">String::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">time_value</span>[..])
+                .<span class="ident">expect</span>(<span class="string">&quot;The conversion shouldn&#39;t fail&quot;</span>),
+        )
+    }
+
     <span class="doccomment">/// Get hash of the current block</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_hash</span>() -&gt; <span class="ident">BlockHash</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">BLOCK_HASH_LENGTH</span>);
@@ -877,6 +906,9 @@
 
         <span class="comment">// Get the current block height</span>
         <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_height</span>() -&gt; <span class="ident">u64</span>;
+
+        <span class="comment">// Get the time of the current block header</span>
+        <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_time</span>() -&gt; <span class="ident">i64</span>;
 
         <span class="comment">// Get the current block hash</span>
         <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);

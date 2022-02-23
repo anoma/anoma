@@ -1665,6 +1665,19 @@
 <span id="1664">1664</span>
 <span id="1665">1665</span>
 <span id="1666">1666</span>
+<span id="1667">1667</span>
+<span id="1668">1668</span>
+<span id="1669">1669</span>
+<span id="1670">1670</span>
+<span id="1671">1671</span>
+<span id="1672">1672</span>
+<span id="1673">1673</span>
+<span id="1674">1674</span>
+<span id="1675">1675</span>
+<span id="1676">1676</span>
+<span id="1677">1677</span>
+<span id="1678">1678</span>
+<span id="1679">1679</span>
 </pre><pre class="rust"><code><span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! You can enable logging with the `RUST_LOG` environment variable, e.g.:</span>
@@ -1692,7 +1705,7 @@
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>;
     <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
     <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>};
@@ -2180,7 +2193,10 @@
             .<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
         <span class="comment">// only insert a client type</span>
         <span class="kw">let</span> <span class="ident">client_type_key</span> <span class="op">=</span> <span class="ident">ibc::client_type_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>());
+        <span class="ident">tx_host_env::write</span>(
+            <span class="kw-2">&amp;</span><span class="ident">client_type_key</span>,
+            <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>().<span class="ident">as_str</span>().<span class="ident">as_bytes</span>(),
+        );
 
         <span class="comment">// Check should fail due to no client state</span>
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
@@ -2219,6 +2235,11 @@
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// update the block height for the following client update</span>
+        <span class="ident">env</span>.<span class="ident">storage</span>
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">1</span>))
+            .<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start an invalid transaction</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_update_client</span>(<span class="ident">client_id</span>);
@@ -2289,6 +2310,11 @@
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// update the block height for the following client update</span>
+        <span class="ident">env</span>.<span class="ident">storage</span>
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">2</span>))
+            .<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to upgrade the client</span>
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_upgrade_client</span>(<span class="ident">client_id</span>);

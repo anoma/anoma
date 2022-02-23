@@ -117,6 +117,7 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
+<span id="119">119</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Here, we expose the host functions into wasm&#39;s</span>
@@ -192,6 +193,7 @@
             <span class="string">&quot;anoma_tx_emit_ibc_event&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_emit_ibc_event</span>),
             <span class="string">&quot;anoma_tx_get_chain_id&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_chain_id</span>),
             <span class="string">&quot;anoma_tx_get_block_height&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_block_height</span>),
+            <span class="string">&quot;anoma_tx_get_block_time&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_block_time</span>),
             <span class="string">&quot;anoma_tx_get_block_hash&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_block_hash</span>),
             <span class="string">&quot;anoma_tx_get_block_epoch&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_block_epoch</span>),
             <span class="string">&quot;anoma_tx_log_string&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_log_string</span>),

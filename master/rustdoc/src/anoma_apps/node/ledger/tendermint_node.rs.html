@@ -412,6 +412,8 @@
 <span id="411">411</span>
 <span id="412">412</span>
 <span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -806,7 +808,9 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t deserialize the genesis file&quot;</span>);
     <span class="ident">genesis</span>.<span class="ident">chain_id</span> <span class="op">=</span>
         <span class="ident">FromStr::from_str</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;Invalid chain ID&quot;</span>);
-    <span class="ident">genesis</span>.<span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">genesis_time</span>.<span class="ident">into</span>();
+    <span class="ident">genesis</span>.<span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">genesis_time</span>
+        .<span class="ident">try_into</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t convert DateTimeUtc to Tendermint Time&quot;</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
         .<span class="ident">write</span>(<span class="bool-val">true</span>)

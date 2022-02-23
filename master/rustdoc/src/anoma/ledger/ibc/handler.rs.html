@@ -1449,6 +1449,50 @@
 <span id="1448">1448</span>
 <span id="1449">1449</span>
 <span id="1450">1450</span>
+<span id="1451">1451</span>
+<span id="1452">1452</span>
+<span id="1453">1453</span>
+<span id="1454">1454</span>
+<span id="1455">1455</span>
+<span id="1456">1456</span>
+<span id="1457">1457</span>
+<span id="1458">1458</span>
+<span id="1459">1459</span>
+<span id="1460">1460</span>
+<span id="1461">1461</span>
+<span id="1462">1462</span>
+<span id="1463">1463</span>
+<span id="1464">1464</span>
+<span id="1465">1465</span>
+<span id="1466">1466</span>
+<span id="1467">1467</span>
+<span id="1468">1468</span>
+<span id="1469">1469</span>
+<span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Functions to handle IBC modules</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -1655,6 +1699,8 @@
 <span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Timestamp</span>;
 <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint::Time</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::Error</span> <span class="kw">as</span> <span class="ident">ProtoError</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
@@ -1662,6 +1708,8 @@
 <span class="kw">use</span> <span class="ident">tendermint_proto_abci::Error</span> <span class="kw">as</span> <span class="ident">ProtoError</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_stable::Time</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::ibc::storage</span>;
@@ -1671,7 +1719,8 @@
     <span class="ident">PacketReceipt</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::IbcEvent</span> <span class="kw">as</span> <span class="ident">AnomaIbcEvent</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::Rfc3339String</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 
 <span class="kw">const</span> <span class="ident">COMMITMENT_PREFIX</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;ibc&quot;</span>;
@@ -1699,6 +1748,8 @@
     <span class="ident">Counter</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Sequence error: {0}&quot;</span>)]</span>
     <span class="ident">Sequence</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Time error: {0}&quot;</span>)]</span>
+    <span class="ident">Time</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid transfer message: {0}&quot;</span>)]</span>
     <span class="ident">TransferMessage</span>(<span class="ident">token::TransferError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Sending a token error: {0}&quot;</span>)]</span>
@@ -1732,6 +1783,12 @@
         <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
         <span class="ident">amount</span>: <span class="ident">Amount</span>,
     );
+
+    <span class="doccomment">/// Get the current height of this chain</span>
+    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">Epoch</span>, <span class="ident">BlockHeight</span>);
+
+    <span class="doccomment">/// Get the current time of the tendermint header of this chain</span>
+    <span class="kw">fn</span> <span class="ident">get_header_time</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rfc3339String</span>;
 
     <span class="doccomment">/// dispatch according to ICS26 routing</span>
     <span class="kw">fn</span> <span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -1811,6 +1868,8 @@
                 .<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
         );
 
+        <span class="self">self</span>.<span class="ident">set_client_update_time</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>)<span class="question-mark">?</span>;
+
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_create_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">msg</span>)
             .<span class="ident">try_into</span>()
             .<span class="ident">unwrap</span>();
@@ -1851,6 +1910,8 @@
                 .<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
         );
 
+        <span class="self">self</span>.<span class="ident">set_client_update_time</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>)<span class="question-mark">?</span>;
+
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">msg</span>)
             .<span class="ident">try_into</span>()
             .<span class="ident">unwrap</span>();
@@ -1877,6 +1938,8 @@
                 .<span class="ident">encode_vec</span>()
                 .<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
         );
+
+        <span class="self">self</span>.<span class="ident">set_client_update_time</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">client_id</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_upgrade_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">client_id</span>, <span class="ident">msg</span>)
             .<span class="ident">try_into</span>()
@@ -2309,6 +2372,30 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Set the timestamp and the height for the client update</span>
+    <span class="kw">fn</span> <span class="ident">set_client_update_time</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="ident">Time::parse_from_rfc3339</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">get_header_time</span>().<span class="number">0</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::Time</span>(<span class="macro">format!</span>(<span class="string">&quot;The time of the header is invalid: {}&quot;</span>, <span class="ident">e</span>))
+            })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">storage::client_update_timestamp_key</span>(<span class="ident">client_id</span>);
+        <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
+            <span class="kw-2">&amp;</span><span class="ident">key</span>,
+            <span class="ident">time</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
+        );
+
+        <span class="kw">let</span> (<span class="ident">epoch</span>, <span class="ident">height</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_height</span>();
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="ident">epoch</span>.<span class="number">0</span>, <span class="ident">height</span>.<span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">height_key</span> <span class="op">=</span> <span class="ident">storage::client_update_height_key</span>(<span class="ident">client_id</span>);
+        <span class="comment">// write the current height as u64</span>
+        <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
+            <span class="kw-2">&amp;</span><span class="ident">height_key</span>,
+            <span class="ident">height</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding shouldn&#39;t fail&quot;</span>),
+        );
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="doccomment">/// Get and increment the counter</span>
     <span class="kw">fn</span> <span class="ident">get_and_inc_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_ibc_data</span>(<span class="ident">key</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
@@ -2540,7 +2627,7 @@
         },
         <span class="ident">AnyClientState::Mock</span>(<span class="kw">_</span>) =&gt; <span class="kw">match</span> <span class="ident">header</span> {
             <span class="ident">AnyHeader::Mock</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Ok</span>((
-                <span class="ident">MockClientState</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
+                <span class="ident">MockClientState::new</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
                 <span class="ident">MockConsensusState::new</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
             )),
             <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
@@ -2673,7 +2760,8 @@
 
 <span class="doccomment">/// Returns Anoma commitment prefix</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commitment_prefix</span>() -&gt; <span class="ident">CommitmentPrefix</span> {
-    <span class="ident">CommitmentPrefix::from</span>(<span class="ident">COMMITMENT_PREFIX</span>.<span class="ident">to_vec</span>())
+    <span class="ident">CommitmentPrefix::try_from</span>(<span class="ident">COMMITMENT_PREFIX</span>.<span class="ident">to_vec</span>())
+        .<span class="ident">expect</span>(<span class="string">&quot;the conversion shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Makes CreateClient event</span>

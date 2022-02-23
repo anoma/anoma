@@ -954,6 +954,7 @@
 <span id="953">953</span>
 <span id="954">954</span>
 <span id="955">955</span>
+<span id="956">956</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implementation of the `FinalizeBlock` ABCI++ method for the Shell</span>
 
 <span class="kw">use</span> <span class="ident">anoma::types::storage::BlockHash</span>;
@@ -1220,8 +1221,10 @@
             .<span class="ident">as_ref</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Header must have been set in prepare_proposal.&quot;</span>);
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">BlockHeight</span>(<span class="ident">header</span>.<span class="ident">height</span>.<span class="ident">into</span>());
-        <span class="kw">let</span> <span class="ident">time</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">time</span>.<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">time</span>: <span class="ident">DateTimeUtc</span> <span class="op">=</span> <span class="ident">time</span>.<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">time</span>: <span class="ident">DateTimeUtc</span> <span class="op">=</span> <span class="ident">header</span>
+            .<span class="ident">time</span>
+            .<span class="ident">try_into</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Time conversion shouldn&#39;t failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">new_epoch</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">storage</span>
             .<span class="ident">update_epoch</span>(<span class="ident">height</span>, <span class="ident">time</span>)
@@ -1288,7 +1291,6 @@
 <span class="kw">mod</span> <span class="ident">test_finalize_block</span> {
     <span class="kw">use</span> <span class="ident">anoma::types::address::xan</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::transaction::Fee</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::block::header::Version</span>;
@@ -1317,7 +1319,7 @@
                         .<span class="ident">try_into</span>()
                         .<span class="ident">expect</span>(<span class="string">&quot;Should not fail&quot;</span>),
                     <span class="ident">height</span>: <span class="number">0u64</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Should not fail&quot;</span>),
-                    <span class="ident">time</span>: <span class="ident">Time::from</span>(<span class="ident">DateTimeUtc::now</span>()),
+                    <span class="ident">time</span>: <span class="ident">Time::now</span>(),
                     <span class="ident">last_block_id</span>: <span class="prelude-val">None</span>,
                     <span class="ident">last_commit_hash</span>: <span class="prelude-val">None</span>,
                     <span class="ident">data_hash</span>: <span class="prelude-val">None</span>,

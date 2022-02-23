@@ -242,6 +242,7 @@
 <span id="241">241</span>
 <span id="242">242</span>
 <span id="243">243</span>
+<span id="244">244</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
@@ -481,6 +482,7 @@
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_emit_ibc_event</span>(<span class="ident">event_ptr</span>: <span class="ident">u64</span>, <span class="ident">event_len</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_block_height</span>() -&gt; <span class="ident">u64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_block_time</span>() -&gt; <span class="ident">i64</span>);
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_block_epoch</span>() -&gt; <span class="ident">u64</span>);
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>));
