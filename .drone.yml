@@ -701,7 +701,7 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
   commands:
-  - cd scripts/ci/ && audit.sh
+  - cd scripts/ci && sh audit.sh
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: aws_access_key_id
@@ -713,7 +713,7 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
   commands:
-  - cd scripts/ci && audit.sh
+  - cd scripts/ci && sh udeps.sh
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: aws_access_key_id
@@ -1101,6 +1101,6 @@ clone:
   disable: true
 ---
 kind: signature
-hmac: 4a16d30da21742c123b66e4141ae030b7087cfa43998364e3dc541c897d87453
+hmac: 57d229246df5759aa30c65dffb18197f3a764e5724862100a8dcf0e153b27dbb
 
 ...
