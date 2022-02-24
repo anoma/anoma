@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anoma::types::chain::ChainId;
-use anoma::types::key::ed25519::Keypair;
+use anoma::types::key::*;
 use anoma::types::{address, token};
 use borsh::BorshSerialize;
 use flate2::read::GzDecoder;
@@ -16,6 +16,7 @@ use flate2::Compression;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
 use serde_json::json;
+use sha2::{Digest, Sha256};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::node::Id as TendermintNodeId;
 #[cfg(not(feature = "ABCI"))]
@@ -200,6 +201,17 @@ pub async fn join_network(
     println!("Successfully configured for chain ID {}", chain_id);
 }
 
+/// Length of a Tendermint Node ID in bytes
+const TENDERMINT_NODE_ID_LENGTH: usize = 20;
+
+/// Derive node ID from public key
+fn id_from_pk<PK: PublicKey>(pk: PK) -> TendermintNodeId {
+    let digest = Sha256::digest(pk.try_to_vec().unwrap().as_slice());
+    let mut bytes = [0u8; TENDERMINT_NODE_ID_LENGTH];
+    bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
+    TendermintNodeId::new(bytes)
+}
+
 /// Initialize a new test network with the given validators and faucet accounts.
 pub fn init_network(
     global_args: args::Global,
@@ -268,22 +280,31 @@ pub fn init_network(
         let validator_dir = accounts_dir.join(name);
 
         // Generate a node key
-        let node_keypair = Keypair::generate(&mut rng);
-        let node_pk: ed25519_dalek::PublicKey =
-            node_keypair.public.clone().into();
+        let node_seckey: common::SecretKey =
+            ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap();
+        let node_pk: common::PublicKey = node_seckey.ref_to();
 
         // Derive the node ID from the node key
-        let node_id: TendermintNodeId = node_pk.into();
+        let node_id: TendermintNodeId = id_from_pk(node_pk);
 
-        // Convert and write the keypair into Tendermint node_key.json file
-        let node_key: ed25519_dalek::Keypair = node_keypair.into();
-        let tm_node_key = base64::encode(node_key.to_bytes());
-        let tm_node_keypair_json = json!({
-            "priv_key": {
-                "type": "tendermint/PrivKeyEd25519",
-                "value": tm_node_key,
-            }
-        });
+        let tm_node_keypair_json =
+            ed25519::SecretKey::try_from_sk(&node_seckey)
+                .map(|sk| {
+                    // Convert and write the keypair into Tendermint
+                    // node_key.json file
+                    let node_keypair = [
+                        sk.try_to_vec().unwrap(),
+                        sk.ref_to().try_to_vec().unwrap(),
+                    ]
+                    .concat();
+                    json!({
+                        "priv_key": {
+                            "type": "tendermint/PrivKeyEd25519",
+                            "value": base64::encode(node_keypair),
+                        }
+                    })
+                })
+                .unwrap();
         let chain_dir = validator_dir.join(&accounts_temp_dir);
         let tm_home_dir = chain_dir.join("tendermint");
         let tm_config_dir = tm_home_dir.join("config");
@@ -359,13 +380,14 @@ pub fn init_network(
             wallet.gen_key(Some(reward_key_alias), unsafe_dont_encrypt);
         // Add the validator public keys to genesis config
         config.consensus_public_key = Some(genesis_config::HexString(
-            consensus_keypair.public.to_string(),
+            consensus_keypair.ref_to().to_string(),
         ));
         config.account_public_key = Some(genesis_config::HexString(
-            account_keypair.public.to_string(),
+            account_keypair.ref_to().to_string(),
         ));
-        config.staking_reward_public_key =
-            Some(genesis_config::HexString(reward_keypair.public.to_string()));
+        config.staking_reward_public_key = Some(genesis_config::HexString(
+            reward_keypair.ref_to().to_string(),
+        ));
 
         // Generate account and reward addresses
         let address = address::gen_established_address("validator account");
@@ -498,7 +520,7 @@ pub fn init_network(
                 let (_alias, keypair) =
                     wallet.gen_key(Some(name.clone()), unsafe_dont_encrypt);
                 let public_key =
-                    genesis_config::HexString(keypair.public.to_string());
+                    genesis_config::HexString(keypair.ref_to().to_string());
                 config.public_key = Some(public_key);
             }
         })
@@ -786,7 +808,8 @@ fn init_established_account(
             Some(format!("{}-key", name.as_ref())),
             unsafe_dont_encrypt,
         );
-        let public_key = genesis_config::HexString(keypair.public.to_string());
+        let public_key =
+            genesis_config::HexString(keypair.ref_to().to_string());
         config.public_key = Some(public_key);
     }
     if config.vp.is_none() {
@@ -891,10 +914,10 @@ fn init_genesis_validator_aux(
             address: validator_address,
             staking_reward_address: rewards_address,
             tokens: token::Amount::whole(200_000),
-            consensus_key: consensus_key.public.clone(),
-            staking_reward_key: rewards_key.public.clone(),
+            consensus_key: consensus_key.ref_to(),
+            staking_reward_key: rewards_key.ref_to(),
         },
-        account_key: validator_key.public.clone(),
+        account_key: validator_key.ref_to(),
         non_staked_balance: token::Amount::whole(100_000),
         // TODO replace with https://github.com/anoma/anoma/issues/25)
         validator_vp_code_path: "wasm/vp_user.wasm".into(),
@@ -904,9 +927,9 @@ fn init_genesis_validator_aux(
         // TODO: very fake hash
         reward_vp_sha256: [0; 32],
     };
-    println!("Validator account key {}", validator_key.public);
-    println!("Consensus key {}", consensus_key.public);
-    println!("Staking reward key {}", rewards_key.public);
+    println!("Validator account key {}", validator_key.ref_to());
+    println!("Consensus key {}", consensus_key.ref_to());
+    println!("Staking reward key {}", rewards_key.ref_to());
     // TODO print in toml format after we have https://github.com/anoma/anoma/issues/425
     println!("Genesis validator config: {:#?}", genesis_validator);
     genesis_validator

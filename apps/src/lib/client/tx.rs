@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
+use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
@@ -182,8 +182,7 @@ pub async fn submit_init_validator(
         ctx.wallet
             .gen_key(Some(validator_key_alias.clone()), unsafe_dont_encrypt)
             .1
-            .public
-            .clone()
+            .ref_to()
     });
 
     let consensus_key =
@@ -200,8 +199,7 @@ pub async fn submit_init_validator(
             ctx.wallet
                 .gen_key(Some(rewards_key_alias.clone()), unsafe_dont_encrypt)
                 .1
-                .public
-                .clone()
+                .ref_to()
         });
 
     ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
@@ -237,7 +235,7 @@ pub async fn submit_init_validator(
 
     let data = InitValidator {
         account_key,
-        consensus_key: consensus_key.public.clone(),
+        consensus_key: consensus_key.ref_to(),
         rewards_account_key,
         validator_vp_code,
         rewards_vp_code,
@@ -718,7 +716,7 @@ async fn sign_tx(
     tx: Tx,
     args: &args::Tx,
     default: Option<&WalletAddress>,
-) -> (Context, Tx, std::rc::Rc<Keypair>) {
+) -> (Context, Tx, std::rc::Rc<common::SecretKey>) {
     let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
         let signing_key = ctx.get_cached(signing_key);
         (tx.sign(&signing_key), signing_key)
@@ -747,7 +745,7 @@ async fn process_tx(
     ctx: Context,
     args: &args::Tx,
     tx: Tx,
-    keypair: &Keypair,
+    keypair: &common::SecretKey,
 ) -> (Context, Vec<Address>) {
     // NOTE: use this to print the request JSON body:
 
@@ -879,7 +877,7 @@ pub fn tx_hashes(tx: &WrapperTx) -> (String, String) {
 pub async fn broadcast_tx(
     address: TendermintAddress,
     tx: WrapperTx,
-    keypair: &Keypair,
+    keypair: &common::SecretKey,
 ) -> Result<Response, Error> {
     // These can later be used to determine when parts of the tx make it
     // on-chain
@@ -931,7 +929,7 @@ pub async fn broadcast_tx(
 pub async fn submit_tx(
     address: TendermintAddress,
     tx: WrapperTx,
-    keypair: &Keypair,
+    keypair: &common::SecretKey,
 ) -> Result<TxResponse, Error> {
     let mut wrapper_tx_subscription = TendermintWebsocketClient::open(
         WebSocketAddress::try_from(address.clone())?,

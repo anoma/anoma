@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
+use anoma::types::key::*;
 pub use store::wallet_file;
 use thiserror::Error;
 
@@ -22,7 +22,7 @@ use crate::std::fs;
 pub struct Wallet {
     store_dir: PathBuf,
     store: Store,
-    decrypted_key_cache: HashMap<Alias, Rc<Keypair>>,
+    decrypted_key_cache: HashMap<Alias, Rc<common::SecretKey>>,
 }
 
 #[derive(Error, Debug)]
@@ -86,7 +86,7 @@ impl Wallet {
         &mut self,
         alias: Option<String>,
         unsafe_dont_encrypt: bool,
-    ) -> (String, Rc<Keypair>) {
+    ) -> (String, Rc<common::SecretKey>) {
         let password = if unsafe_dont_encrypt {
             println!("Warning: The keypair will NOT be encrypted.");
             None
@@ -119,7 +119,7 @@ impl Wallet {
     pub fn find_key(
         &mut self,
         alias_pkh_or_pk: impl AsRef<str>,
-    ) -> Result<Rc<Keypair>, FindKeyError> {
+    ) -> Result<Rc<common::SecretKey>, FindKeyError> {
         // Try cache first
         if let Some(cached_key) =
             self.decrypted_key_cache.get(alias_pkh_or_pk.as_ref())
@@ -144,8 +144,8 @@ impl Wallet {
     /// prompting for password multiple times.
     pub fn find_key_by_pk(
         &mut self,
-        pk: &PublicKey,
-    ) -> Result<Rc<Keypair>, FindKeyError> {
+        pk: &common::PublicKey,
+    ) -> Result<Rc<common::SecretKey>, FindKeyError> {
         // Try to look-up alias for the given pk. Otherwise, use the PKH string.
         let pkh: PublicKeyHash = pk.into();
         let alias = self
@@ -175,7 +175,7 @@ impl Wallet {
     pub fn find_key_by_pkh(
         &mut self,
         pkh: &PublicKeyHash,
-    ) -> Result<Rc<Keypair>, FindKeyError> {
+    ) -> Result<Rc<common::SecretKey>, FindKeyError> {
         // Try to look-up alias for the given pk. Otherwise, use the PKH string.
         let alias = self
             .store
@@ -201,10 +201,10 @@ impl Wallet {
     /// If a given storage key needs to be decrypted, prompt for password from
     /// stdin and if successfully decrypted, store it in a cache.
     fn decrypt_stored_key(
-        decrypted_key_cache: &mut HashMap<String, Rc<Keypair>>,
+        decrypted_key_cache: &mut HashMap<String, Rc<common::SecretKey>>,
         stored_key: &StoredKeypair,
         alias_pkh_or_pk: impl AsRef<str>,
-    ) -> Result<Rc<Keypair>, FindKeyError> {
+    ) -> Result<Rc<common::SecretKey>, FindKeyError> {
         match stored_key {
             StoredKeypair::Encrypted(encrypted) => {
                 let password = read_password("Enter decryption password: ");

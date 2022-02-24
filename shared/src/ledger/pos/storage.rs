@@ -361,7 +361,7 @@ where
     H: StorageHasher,
 {
     type Address = Address;
-    type PublicKey = key::ed25519::PublicKey;
+    type PublicKey = key::common::PublicKey;
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 
@@ -530,7 +530,7 @@ where
         //     .unwrap();
 
         // Write the public key
-        let pk_key = key::ed25519::pk_key(address);
+        let pk_key = key::pk_key(address);
         self.write(&pk_key, encode(pk)).unwrap();
     }
 

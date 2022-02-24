@@ -11,7 +11,7 @@ use anoma::ledger::pos::{
     self, is_validator_slashes_key, Bonds, Slash, Unbonds,
 };
 use anoma::types::address::Address;
-use anoma::types::key::ed25519;
+use anoma::types::key::*;
 use anoma::types::storage::Epoch;
 use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
@@ -713,9 +713,9 @@ pub async fn dry_run_tx(ledger_address: &TendermintAddress, tx_bytes: Vec<u8>) {
 pub async fn get_public_key(
     address: &Address,
     ledger_address: TendermintAddress,
-) -> Option<ed25519::PublicKey> {
+) -> Option<common::PublicKey> {
     let client = HttpClient::new(ledger_address).unwrap();
-    let key = ed25519::pk_key(address);
+    let key = pk_key(address);
     query_storage_value(client, key).await
 }
 

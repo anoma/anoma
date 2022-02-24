@@ -20,7 +20,7 @@ use crate::proto::Tx;
 use crate::types::address::{self, Address};
 use crate::types::ibc::IbcEvent;
 use crate::types::internal::HostEnvResult;
-use crate::types::key::ed25519::{verify_tx_sig, PublicKey, Signature};
+use crate::types::key::*;
 use crate::types::storage::Key;
 use crate::vm::memory::VmMemory;
 use crate::vm::prefix_iter::{PrefixIteratorId, PrefixIterators};
@@ -1633,7 +1633,7 @@ where
         .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
     let gas_meter = unsafe { env.ctx.gas_meter.get() };
     vp_env::add_gas(gas_meter, gas)?;
-    let pk: PublicKey = BorshDeserialize::try_from_slice(&pk)
+    let pk: common::PublicKey = BorshDeserialize::try_from_slice(&pk)
         .map_err(vp_env::RuntimeError::EncodingError)?;
 
     let (sig, gas) = env
@@ -1641,12 +1641,12 @@ where
         .read_bytes(sig_ptr, sig_len as _)
         .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
     vp_env::add_gas(gas_meter, gas)?;
-    let sig: Signature = BorshDeserialize::try_from_slice(&sig)
+    let sig: common::Signature = BorshDeserialize::try_from_slice(&sig)
         .map_err(vp_env::RuntimeError::EncodingError)?;
 
     vp_env::add_gas(gas_meter, VERIFY_TX_SIG_GAS_COST)?;
     let tx = unsafe { env.ctx.tx.get() };
-    Ok(HostEnvResult::from(verify_tx_sig(&pk, tx, &sig).is_ok()).to_i64())
+    Ok(HostEnvResult::from(tx.verify_sig(&pk, &sig).is_ok()).to_i64())
 }
 
 /// Log a string from exposed to the wasm VM Tx environment. The message will be

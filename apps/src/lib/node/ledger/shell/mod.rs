@@ -27,13 +27,14 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
 use anoma::types::chain::ChainId;
+use anoma::types::key::{self, PublicKey};
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTimeUtc, TimeZone, Utc};
 use anoma::types::transaction::{
     hash_tx, process_tx, verify_decrypted_correctly, AffineCurve, DecryptedTx,
     EllipticCurve, PairingEngine, TxType, WrapperTx,
 };
-use anoma::types::{address, key, token};
+use anoma::types::{address, token};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::WasmCacheRwAccess;
 use borsh::BorshSerialize;
@@ -44,11 +45,15 @@ use tendermint_proto::abci::{
     self, Evidence, RequestPrepareProposal, ValidatorUpdate,
 };
 #[cfg(not(feature = "ABCI"))]
+use tendermint_proto::crypto::public_key;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::types::ConsensusParams;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::ConsensusParams;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::{self, Evidence, ValidatorUpdate};
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::crypto::public_key;
 use thiserror::Error;
 #[cfg(not(feature = "ABCI"))]
 use tower_abci::{request, response};
@@ -62,6 +67,13 @@ use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
+
+fn key_to_tendermint<PK: key::PublicKey>(
+    pk: &PK,
+) -> std::result::Result<public_key::Sum, key::ParsePublicKeyError> {
+    key::ed25519::PublicKey::try_from_pk(pk)
+        .map(|pk| public_key::Sum::Ed25519(pk.try_to_vec().unwrap()))
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -477,7 +489,7 @@ mod test_utils {
     use anoma::ledger::storage::mockdb::MockDB;
     use anoma::ledger::storage::{BlockStateWrite, MerkleTree, Sha256Hasher};
     use anoma::types::address::{xan, EstablishedAddressGen};
-    use anoma::types::key::ed25519::Keypair;
+    use anoma::types::key::*;
     use anoma::types::storage::{BlockHash, Epoch};
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
@@ -512,12 +524,12 @@ mod test_utils {
     }
 
     /// Generate a random public/private keypair
-    pub(super) fn gen_keypair() -> Keypair {
+    pub(super) fn gen_keypair() -> common::SecretKey {
         use rand::prelude::ThreadRng;
         use rand::thread_rng;
 
         let mut rng: ThreadRng = thread_rng();
-        Keypair::generate(&mut rng)
+        ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap()
     }
 
     /// A wrapper around the shell that implements

@@ -301,7 +301,7 @@ where
     CA: 'static + WasmCacheAccess,
 {
     type Address = Address;
-    type PublicKey = key::ed25519::PublicKey;
+    type PublicKey = key::common::PublicKey;
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 

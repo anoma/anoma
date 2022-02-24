@@ -10,8 +10,8 @@ use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+use crate::proto::Signed;
 use crate::types::address::Address;
-use crate::types::key::ed25519::Signed;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 use crate::types::token;
 
@@ -241,15 +241,15 @@ mod tests {
 
     use super::*;
     use crate::ledger::storage::types::{decode, encode};
-    use crate::types::key::ed25519;
+    use crate::types::key;
 
     #[test]
     fn test_encode_decode_intent_transfer_without_vp() {
         let bertha_addr = Address::from_str(BERTHA).unwrap();
         let albert_addr = Address::from_str(ALBERT).unwrap();
 
-        let bertha_keypair = ed25519::testing::keypair_1();
-        let albert_keypair = ed25519::testing::keypair_2();
+        let bertha_keypair = key::testing::keypair_1();
+        let albert_keypair = key::testing::keypair_2();
 
         let exchange_one = Exchange {
             addr: Address::from_str(BERTHA).unwrap(),
@@ -340,8 +340,8 @@ mod tests {
         let bertha_addr = Address::from_str(BERTHA).unwrap();
         let albert_addr = Address::from_str(ALBERT).unwrap();
 
-        let bertha_keypair = ed25519::testing::keypair_1();
-        let albert_keypair = ed25519::testing::keypair_2();
+        let bertha_keypair = key::testing::keypair_1();
+        let albert_keypair = key::testing::keypair_2();
 
         let working_dir = env::current_dir().unwrap();
 
