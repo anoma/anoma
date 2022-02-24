@@ -293,7 +293,7 @@
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>, <span class="ident">PublicKeyHash</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">store::wallet_file</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -307,7 +307,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Wallet</span> {
     <span class="ident">store_dir</span>: <span class="ident">PathBuf</span>,
     <span class="ident">store</span>: <span class="ident">Store</span>,
-    <span class="ident">decrypted_key_cache</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">decrypted_key_cache</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Alias</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -371,7 +371,7 @@
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
-    ) -&gt; (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">unsafe_dont_encrypt</span> {
             <span class="macro">println!</span>(<span class="string">&quot;Warning: The keypair will NOT be encrypted.&quot;</span>);
             <span class="prelude-val">None</span>
@@ -404,7 +404,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias_pkh_or_pk</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
         <span class="comment">// Try cache first</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cached_key</span>) <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">decrypted_key_cache</span>.<span class="ident">get</span>(<span class="ident">alias_pkh_or_pk</span>.<span class="ident">as_ref</span>())
@@ -429,8 +429,8 @@
     <span class="doccomment">/// prompting for password multiple times.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pk</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
+        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">common::PublicKey</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
         <span class="comment">// Try to look-up alias for the given pk. Otherwise, use the PKH string.</span>
         <span class="kw">let</span> <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span> <span class="op">=</span> <span class="ident">pk</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="self">self</span>
@@ -460,7 +460,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pkh</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">pkh</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKeyHash</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
         <span class="comment">// Try to look-up alias for the given pk. Otherwise, use the PKH string.</span>
         <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">store</span>
@@ -486,10 +486,10 @@
     <span class="doccomment">/// If a given storage key needs to be decrypted, prompt for password from</span>
     <span class="doccomment">/// stdin and if successfully decrypted, store it in a cache.</span>
     <span class="kw">fn</span> <span class="ident">decrypt_stored_key</span>(
-        <span class="ident">decrypted_key_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">decrypted_key_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">stored_key</span>: <span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span>,
         <span class="ident">alias_pkh_or_pk</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>, <span class="ident">FindKeyError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">stored_key</span> {
             <span class="ident">StoredKeypair::Encrypted</span>(<span class="ident">encrypted</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">read_password</span>(<span class="string">&quot;Enter decryption password: &quot;</span>);

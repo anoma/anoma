@@ -28,12 +28,16 @@
 <span id="27">27</span>
 <span id="28">28</span>
 <span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">generated</span>;
 <span class="kw">mod</span> <span class="ident">types</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">types</span>::{<span class="ident">Dkg</span>, <span class="ident">Error</span>, <span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>, <span class="ident">IntentId</span>, <span class="ident">Tx</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">types</span>::{
+    <span class="ident">Dkg</span>, <span class="ident">Error</span>, <span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>, <span class="ident">IntentId</span>, <span class="ident">Signed</span>, <span class="ident">SignedTxData</span>, <span class="ident">Tx</span>,
+};
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {

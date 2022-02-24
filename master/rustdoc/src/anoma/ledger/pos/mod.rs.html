@@ -86,8 +86,6 @@
 <span id="85">85</span>
 <span id="86">86</span>
 <span id="87">87</span>
-<span id="88">88</span>
-<span id="89">89</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Proof-of-Stake integration as a native validity predicate</span>
 
 <span class="kw">mod</span> <span class="ident">storage</span>;
@@ -137,9 +135,7 @@
 
 <span class="doccomment">/// Alias for a PoS type with the same name with concrete type parameters</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ValidatorConsensusKeys</span> <span class="op">=</span>
-    <span class="ident">anoma_proof_of_stake::types::ValidatorConsensusKeys</span><span class="op">&lt;</span>
-        <span class="ident">key::ed25519::PublicKey</span>,
-    <span class="op">&gt;</span>;
+    <span class="ident">anoma_proof_of_stake::types::ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="ident">key::common::PublicKey</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Alias for a PoS type with the same name with concrete type parameters</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ValidatorTotalDeltas</span> <span class="op">=</span>
@@ -161,7 +157,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">GenesisValidator</span> <span class="op">=</span> <span class="ident">anoma_proof_of_stake::types::GenesisValidator</span><span class="op">&lt;</span>
     <span class="ident">Address</span>,
     <span class="ident">token::Amount</span>,
-    <span class="ident">key::ed25519::PublicKey</span>,
+    <span class="ident">key::common::PublicKey</span>,
 <span class="op">&gt;</span>;
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">anoma_proof_of_stake::types::Epoch</span> {

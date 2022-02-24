@@ -646,6 +646,9 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
@@ -1011,7 +1014,7 @@
 
     <span class="kw">use</span> <span class="ident">anoma::types::chain::CHAIN_ID_LENGTH</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519</span>::{<span class="ident">PublicKey</span>, <span class="ident">Signature</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{
         <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
     };
@@ -1171,8 +1174,11 @@
 
     <span class="doccomment">/// Verify a transaction signature. The signature is expected to have been</span>
     <span class="doccomment">/// produced on the encoded transaction [`anoma::proto::Tx`]</span>
-    <span class="doccomment">/// using [`anoma::types::key::ed25519::sign_tx`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_tx_signature</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>, <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>) -&gt; <span class="ident">bool</span> {
+    <span class="doccomment">/// using [`anoma::proto::Tx::sign`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_tx_signature</span>(
+        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">common::PublicKey</span>,
+        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">common::Signature</span>,
+    ) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">BorshSerialize::try_to_vec</span>(<span class="ident">pk</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">BorshSerialize::try_to_vec</span>(<span class="ident">sig</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">valid</span> <span class="op">=</span> <span class="kw">unsafe</span> {

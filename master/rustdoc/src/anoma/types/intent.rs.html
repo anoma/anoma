@@ -486,8 +486,8 @@
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::Signed</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::Address</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519::Signed</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::token</span>;
 
@@ -717,15 +717,15 @@
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::types</span>::{<span class="ident">decode</span>, <span class="ident">encode</span>};
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_encode_decode_intent_transfer_without_vp</span>() {
         <span class="kw">let</span> <span class="ident">bertha_addr</span> <span class="op">=</span> <span class="ident">Address::from_str</span>(<span class="ident">BERTHA</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">albert_addr</span> <span class="op">=</span> <span class="ident">Address::from_str</span>(<span class="ident">ALBERT</span>).<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">bertha_keypair</span> <span class="op">=</span> <span class="ident">ed25519::testing::keypair_1</span>();
-        <span class="kw">let</span> <span class="ident">albert_keypair</span> <span class="op">=</span> <span class="ident">ed25519::testing::keypair_2</span>();
+        <span class="kw">let</span> <span class="ident">bertha_keypair</span> <span class="op">=</span> <span class="ident">key::testing::keypair_1</span>();
+        <span class="kw">let</span> <span class="ident">albert_keypair</span> <span class="op">=</span> <span class="ident">key::testing::keypair_2</span>();
 
         <span class="kw">let</span> <span class="ident">exchange_one</span> <span class="op">=</span> <span class="ident">Exchange</span> {
             <span class="ident">addr</span>: <span class="ident">Address::from_str</span>(<span class="ident">BERTHA</span>).<span class="ident">unwrap</span>(),
@@ -816,8 +816,8 @@
         <span class="kw">let</span> <span class="ident">bertha_addr</span> <span class="op">=</span> <span class="ident">Address::from_str</span>(<span class="ident">BERTHA</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">albert_addr</span> <span class="op">=</span> <span class="ident">Address::from_str</span>(<span class="ident">ALBERT</span>).<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">bertha_keypair</span> <span class="op">=</span> <span class="ident">ed25519::testing::keypair_1</span>();
-        <span class="kw">let</span> <span class="ident">albert_keypair</span> <span class="op">=</span> <span class="ident">ed25519::testing::keypair_2</span>();
+        <span class="kw">let</span> <span class="ident">bertha_keypair</span> <span class="op">=</span> <span class="ident">key::testing::keypair_1</span>();
+        <span class="kw">let</span> <span class="ident">albert_keypair</span> <span class="op">=</span> <span class="ident">key::testing::keypair_2</span>();
 
         <span class="kw">let</span> <span class="ident">working_dir</span> <span class="op">=</span> <span class="ident">env::current_dir</span>().<span class="ident">unwrap</span>();
 

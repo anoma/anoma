@@ -465,6 +465,9 @@
 <span id="464">464</span>
 <span id="465">465</span>
 <span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
 <span class="doccomment">/// to enable encrypted txs inside of normal txs.</span>
 <span class="doccomment">/// *Not wasm compatible*</span>
@@ -481,7 +484,7 @@
 
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::Address</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>, <span class="ident">VerifySigError</span>};
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::token::Amount</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction::encrypted::EncryptedTx</span>;
@@ -634,7 +637,7 @@
         <span class="doccomment">/// The fee to be payed for including the tx</span>
         <span class="kw">pub</span> <span class="ident">fee</span>: <span class="ident">Fee</span>,
         <span class="doccomment">/// Used to determine an implicit account of the fee payer</span>
-        <span class="kw">pub</span> <span class="ident">pk</span>: <span class="ident">PublicKey</span>,
+        <span class="kw">pub</span> <span class="ident">pk</span>: <span class="ident">common::PublicKey</span>,
         <span class="doccomment">/// The epoch in which the tx is to be submitted. This determines</span>
         <span class="doccomment">/// which decryption key will be used</span>
         <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
@@ -654,7 +657,7 @@
         <span class="doccomment">/// transaction</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
             <span class="ident">fee</span>: <span class="ident">Fee</span>,
-            <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+            <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">common::SecretKey</span>,
             <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
             <span class="ident">gas_limit</span>: <span class="ident">GasLimit</span>,
             <span class="ident">tx</span>: <span class="ident">Tx</span>,
@@ -664,7 +667,7 @@
             <span class="kw">let</span> <span class="ident">inner_tx</span> <span class="op">=</span> <span class="ident">EncryptedTx::encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">to_bytes</span>(), <span class="ident">pubkey</span>);
             <span class="self">Self</span> {
                 <span class="ident">fee</span>,
-                <span class="ident">pk</span>: <span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+                <span class="ident">pk</span>: <span class="ident">keypair</span>.<span class="ident">ref_to</span>(),
                 <span class="ident">epoch</span>,
                 <span class="ident">gas_limit</span>,
                 <span class="ident">inner_tx</span>,
@@ -707,8 +710,11 @@
         }
 
         <span class="doccomment">/// Sign the wrapper transaction and convert to a normal Tx type</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Tx</span>, <span class="ident">WrapperTxErr</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pk</span> <span class="op">!</span><span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">public</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">common::SecretKey</span>,
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Tx</span>, <span class="ident">WrapperTxErr</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pk</span> <span class="op">!</span><span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">ref_to</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WrapperTxErr::InvalidKeyPair</span>);
             }
             <span class="prelude-val">Ok</span>(<span class="ident">Tx::new</span>(
@@ -788,15 +794,15 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
     <span class="kw">mod</span> <span class="ident">test_wrapper_tx</span> {
         <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::SignedTxData</span>;
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::xan</span>;
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>::{<span class="ident">verify_tx_sig</span>, <span class="ident">SignedTxData</span>};
 
-        <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">Keypair</span> {
+        <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">common::SecretKey</span> {
             <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
             <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-            <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)
+            <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">try_to_sk</span>().<span class="ident">unwrap</span>()
         }
 
         <span class="doccomment">/// We test that when we feed in a Tx and then decrypt it again</span>
@@ -919,7 +925,7 @@
             <span class="ident">tx</span>.<span class="ident">data</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">signed_tx_data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>));
 
             <span class="comment">// check that the signature is not valid</span>
-            <span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">public</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>)
+            <span class="ident">tx</span>.<span class="ident">verify_sig</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">ref_to</span>(), <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>)
                 .<span class="ident">expect_err</span>(<span class="string">&quot;Test failed&quot;</span>);
             <span class="comment">// check that the try from method also fails</span>
             <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::types::transaction::process_tx</span>(<span class="ident">tx</span>)

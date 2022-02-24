@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["ed25519",""]]});
+initSidebarItems({"mod":[["vp","Vp imports and functions."]]});

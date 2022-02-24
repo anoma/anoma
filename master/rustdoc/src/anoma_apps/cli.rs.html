@@ -3909,7 +3909,7 @@
     <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">ChainIdPrefix</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">DecimalWrapper</span>, <span class="ident">Exchange</span>};
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::PublicKey</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::transaction::GasLimit</span>;
@@ -3992,7 +3992,7 @@
     <span class="kw">const</span> <span class="ident">OWNER</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;owner&quot;</span>);
     <span class="kw">const</span> <span class="ident">PUBLIC_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;public-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">RAW_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;address&quot;</span>);
-    <span class="kw">const</span> <span class="ident">RAW_PUBLIC_KEY_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;public-key&quot;</span>);
+    <span class="kw">const</span> <span class="ident">RAW_PUBLIC_KEY_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;public-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">REWARDS_CODE_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rewards-code-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">REWARDS_KEY</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rewards-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">RPC_SOCKET_ADDR</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">SocketAddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rpc&quot;</span>);
@@ -5071,7 +5071,7 @@
     <span class="doccomment">/// Wallet key lookup arguments</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyFind</span> {
-        <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">unsafe_show_secret</span>: <span class="ident">bool</span>,

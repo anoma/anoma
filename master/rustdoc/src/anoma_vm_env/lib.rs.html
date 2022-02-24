@@ -43,7 +43,6 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
-<span id="45">45</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This crate contains library code for wasm. Some of the code is re-exported</span>
 <span class="doccomment">//! from the `shared` crate.</span>
 
@@ -60,6 +59,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">token</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx_prelude</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Signed</span>, <span class="ident">SignedTxData</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_macros::transaction</span>;
@@ -75,17 +75,15 @@
     <span class="comment">// used in the VP input</span>
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span> <span class="kw">as</span> <span class="ident">proof_of_stake</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Signed</span>, <span class="ident">SignedTxData</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_macros::validity_predicate</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::vp</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::intent::vp</span> <span class="kw">as</span> <span class="ident">intent</span>;
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">key</span> {
-        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::key::ed25519::vp</span> <span class="kw">as</span> <span class="ident">ed25519</span>;
-    }
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span> <span class="kw">as</span> <span class="ident">proof_of_stake</span>;
-
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::key::vp</span> <span class="kw">as</span> <span class="ident">key</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::nft::vp</span> <span class="kw">as</span> <span class="ident">nft</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::token::vp</span> <span class="kw">as</span> <span class="ident">token</span>;
 }

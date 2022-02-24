@@ -231,13 +231,16 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Cryptographic keys for digital signatures support for the wallet.</span>
 
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">orion</span>::{<span class="ident">aead</span>, <span class="ident">kdf</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -256,7 +259,7 @@
     <span class="doccomment">/// An raw (unencrypted) keypair</span>
     <span class="ident">Raw</span>(
         <span class="comment">// Wrapped in `Rc` to avoid reference lifetimes when we borrow the key</span>
-        <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>,
+        <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>,
     ),
 }
 
@@ -370,9 +373,9 @@
     <span class="doccomment">/// will be stored raw without encryption. Returns the key for storing and a</span>
     <span class="doccomment">/// reference-counting point to the raw key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">keypair</span>: <span class="ident">Keypair</span>,
+        <span class="ident">keypair</span>: <span class="ident">common::SecretKey</span>,
         <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; (<span class="self">Self</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="self">Self</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="ident">password</span> {
             <span class="prelude-val">Some</span>(<span class="ident">password</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">keypair</span>);
@@ -390,7 +393,10 @@
 
     <span class="doccomment">/// Get a raw keypair from a stored keypair. If the keypair is encrypted, a</span>
     <span class="doccomment">/// password will be prompted from stdin.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">decrypt</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>, <span class="ident">DecryptionError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">decrypt</span>: <span class="ident">bool</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>, <span class="ident">DecryptionError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">StoredKeypair::Encrypted</span>(<span class="ident">encrypted_keypair</span>) =&gt; {
                 <span class="kw">if</span> <span class="ident">decrypt</span> {
@@ -415,7 +421,7 @@
 
 <span class="kw">impl</span> <span class="ident">EncryptedKeypair</span> {
     <span class="doccomment">/// Encrypt a keypair and store it with its salt.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">password</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">common::SecretKey</span>, <span class="ident">password</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">salt</span> <span class="op">=</span> <span class="ident">encryption_salt</span>();
         <span class="kw">let</span> <span class="ident">encryption_key</span> <span class="op">=</span> <span class="ident">encryption_key</span>(<span class="kw-2">&amp;</span><span class="ident">salt</span>, <span class="ident">password</span>);
 
@@ -435,7 +441,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decrypt</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">password</span>: <span class="ident">String</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Keypair</span>, <span class="ident">DecryptionError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span>, <span class="ident">DecryptionError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">salt_len</span> <span class="op">=</span> <span class="ident">encryption_salt</span>().<span class="ident">len</span>();
         <span class="kw">let</span> (<span class="ident">raw_salt</span>, <span class="ident">cipher</span>) <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">split_at</span>(<span class="ident">salt_len</span>);
 
@@ -447,7 +453,7 @@
         <span class="kw">let</span> <span class="ident">decrypted_data</span> <span class="op">=</span> <span class="ident">aead::open</span>(<span class="kw-2">&amp;</span><span class="ident">encryption_key</span>, <span class="ident">cipher</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">DecryptionError::DecryptionError</span>)<span class="question-mark">?</span>;
 
-        <span class="ident">Keypair::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">decrypted_data</span>)
+        <span class="ident">common::SecretKey::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">decrypted_data</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">DecryptionError::DeserializingError</span>)
     }
 }

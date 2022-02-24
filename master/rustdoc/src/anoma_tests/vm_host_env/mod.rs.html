@@ -1703,8 +1703,8 @@
     <span class="kw">use</span> <span class="ident">::ibc::tx_msg::Msg</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::handler::IbcActions</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>;
-    <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
+    <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">SignedTxData</span>, <span class="ident">Tx</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
@@ -2079,9 +2079,9 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
 
         <span class="comment">// Write the public key to storage</span>
-        <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">key::ed25519::testing::keypair_1</span>();
-        <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
+        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">key::testing::keypair_1</span>();
+        <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">ref_to</span>();
         <span class="ident">env</span>.<span class="ident">storage</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">unwrap</span>();
@@ -2107,9 +2107,9 @@
             <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">data</span>, <span class="ident">data</span>);
             <span class="macro">assert!</span>(<span class="ident">vp_host_env::verify_tx_signature</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>));
 
-            <span class="kw">let</span> <span class="ident">other_keypair</span> <span class="op">=</span> <span class="ident">key::ed25519::testing::keypair_2</span>();
+            <span class="kw">let</span> <span class="ident">other_keypair</span> <span class="op">=</span> <span class="ident">key::testing::keypair_2</span>();
             <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">vp_host_env::verify_tx_signature</span>(
-                <span class="kw-2">&amp;</span><span class="ident">other_keypair</span>.<span class="ident">public</span>,
+                <span class="kw-2">&amp;</span><span class="ident">other_keypair</span>.<span class="ident">ref_to</span>(),
                 <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>
             ));
         }

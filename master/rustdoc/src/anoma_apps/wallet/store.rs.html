@@ -382,6 +382,11 @@
 <span id="381">381</span>
 <span id="382">382</span>
 <span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="self">self</span>, <span class="ident">ErrorKind</span>, <span class="ident">Write</span>};
@@ -390,7 +395,7 @@
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">ImplicitAddress</span>};
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>, <span class="ident">PublicKeyHash</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -435,7 +440,7 @@
         <span class="comment">// Pre-load the default keys without encryption</span>
         <span class="kw">let</span> <span class="ident">no_password</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">for</span> (<span class="ident">alias</span>, <span class="ident">keypair</span>) <span class="kw">in</span> <span class="ident"><span class="kw">super</span>::defaults::keys</span>() {
-            <span class="kw">let</span> <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">public</span>).<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">ref_to</span>()).<span class="ident">into</span>();
             <span class="ident">store</span>.<span class="ident">keys</span>.<span class="ident">insert</span>(
                 <span class="ident">alias</span>.<span class="ident">clone</span>(),
                 <span class="ident">StoredKeypair::new</span>(<span class="ident">keypair</span>, <span class="ident">no_password</span>.<span class="ident">clone</span>()).<span class="number">0</span>,
@@ -547,13 +552,16 @@
             })
             <span class="comment">// Try to find by PK</span>
             .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">PublicKey::from_str</span>(<span class="ident">alias_pkh_or_pk</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">common::PublicKey::from_str</span>(<span class="ident">alias_pkh_or_pk</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
                 <span class="self">self</span>.<span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)
             })
     }
 
     <span class="doccomment">/// Find the stored key by a public key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_key_by_pk</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">common::PublicKey</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">StoredKeypair</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from</span>(<span class="ident">pk</span>);
         <span class="self">self</span>.<span class="ident">find_key_by_pkh</span>(<span class="kw-2">&amp;</span><span class="ident">pkh</span>)
     }
@@ -602,10 +610,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">addresses</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">generate_keypair</span>() -&gt; <span class="ident">Keypair</span> {
+    <span class="kw">fn</span> <span class="ident">generate_keypair</span>() -&gt; <span class="ident">common::SecretKey</span> {
         <span class="kw">use</span> <span class="ident">rand::rngs::OsRng</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">csprng</span> <span class="op">=</span> <span class="ident">OsRng</span> {};
-        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">csprng</span>)
+        <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">csprng</span>)
+            .<span class="ident">try_to_sk</span>()
+            .<span class="ident">unwrap</span>()
     }
 
     <span class="doccomment">/// Generate a new keypair and insert it into the store with the provided</span>
@@ -617,12 +627,12 @@
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
+    ) -&gt; (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::generate_keypair</span>();
-        <span class="kw">let</span> <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">public</span>);
+        <span class="kw">let</span> <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">ref_to</span>());
         <span class="kw">let</span> (<span class="ident">keypair_to_store</span>, <span class="ident">raw_keypair</span>) <span class="op">=</span>
             <span class="ident">StoredKeypair::new</span>(<span class="ident">keypair</span>, <span class="ident">password</span>);
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress</span>(<span class="ident">pkh</span>.<span class="ident">clone</span>()));
         <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">alias</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">pkh</span>.<span class="ident">clone</span>().<span class="ident">into</span>());
         <span class="kw">if</span> <span class="self">self</span>
             .<span class="ident">insert_keypair</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">keypair_to_store</span>, <span class="ident">pkh</span>)

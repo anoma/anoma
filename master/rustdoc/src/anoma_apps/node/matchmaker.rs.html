@@ -364,7 +364,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::dylib</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">IntentTransfers</span>, <span class="ident">MatchedExchanges</span>};
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::matchmaker::AddIntentResult</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">Fee</span>, <span class="ident">WrapperTx</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
@@ -396,7 +396,7 @@
     }: <span class="ident">config::Matchmaker</span>,
     <span class="ident">intent_gossiper_addr</span>: <span class="ident">SocketAddr</span>,
     <span class="ident">ledger_addr</span>: <span class="ident">TendermintAddress</span>,
-    <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>,
+    <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>,
     <span class="ident">tx_source_address</span>: <span class="ident">Address</span>,
     <span class="ident">wasm_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
 ) {
@@ -459,7 +459,7 @@
     <span class="doccomment">/// A source address for transactions created from intents.</span>
     <span class="ident">tx_source_address</span>: <span class="ident">Address</span>,
     <span class="doccomment">/// A keypair that will be used to sign transactions.</span>
-    <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>,
+    <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// The loaded implementation&#39;s dylib and its state</span>
@@ -487,7 +487,7 @@
         <span class="ident">matchmaker_path</span>: <span class="ident">PathBuf</span>,
         <span class="ident">tx_code_path</span>: <span class="ident">PathBuf</span>,
         <span class="ident">ledger_address</span>: <span class="ident">TendermintAddress</span>,
-        <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>,
+        <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>,
         <span class="ident">tx_source_address</span>: <span class="ident">Address</span>,
         <span class="ident">wasm_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     ) -&gt; (<span class="self">Self</span>, <span class="ident">ResultHandler</span>) {

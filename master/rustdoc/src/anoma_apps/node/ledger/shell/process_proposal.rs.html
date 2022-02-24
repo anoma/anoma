@@ -893,8 +893,8 @@
 <span class="doccomment">/// are covered by the e2e tests.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test_process_proposal</span> {
+    <span class="kw">use</span> <span class="ident">anoma::proto::SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::address::xan</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">Fee</span>, <span class="ident">Hash</span>};
@@ -1016,7 +1016,7 @@
             <span class="ident">tx</span>: <span class="ident">new_tx</span>.<span class="ident">to_bytes</span>(),
         };
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">shell</span>.<span class="ident">process_proposal</span>(<span class="ident">request</span>);
-        <span class="kw">let</span> <span class="ident">expected_error</span> <span class="op">=</span> <span class="string">&quot;Signature verification failed: signature error&quot;</span>;
+        <span class="kw">let</span> <span class="ident">expected_error</span> <span class="op">=</span> <span class="string">&quot;Signature verification failed: Invalid signature&quot;</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">code</span>, <span class="ident">u32::from</span>(<span class="ident">ErrorCodes::InvalidSig</span>));
         <span class="macro">assert!</span>(
             <span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">info</span>.<span class="ident">contains</span>(<span class="ident">expected_error</span>),

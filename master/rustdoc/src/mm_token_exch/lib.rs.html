@@ -370,11 +370,11 @@
 <span id="369">369</span>
 <span id="370">370</span>
 <span id="371">371</span>
+<span id="372">372</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>, <span class="ident">VecDeque</span>};
 
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">Exchange</span>, <span class="ident">FungibleTokenIntent</span>, <span class="ident">MatchedExchanges</span>};
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Signed</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::matchmaker</span>::{<span class="ident">AddIntent</span>, <span class="ident">AddIntentResult</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
 <span class="kw">use</span> <span class="ident">anoma_macros::Matchmaker</span>;
@@ -425,8 +425,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">struct</span> <span class="ident">ExchangeNode</span> {
     <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">exchange</span>: <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
-    <span class="ident">intent</span>: <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span>,
+    <span class="ident">exchange</span>: <span class="ident">anoma::proto::Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
+    <span class="ident">intent</span>: <span class="ident">anoma::proto::Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">ExchangeNode</span> {
@@ -439,8 +439,8 @@
 <span class="kw">fn</span> <span class="ident">add_intent_node</span>(
     <span class="ident">graph</span>: <span class="kw-2">&amp;mut</span> <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">exchange</span>: <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
-    <span class="ident">intent</span>: <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span>,
+    <span class="ident">exchange</span>: <span class="ident">anoma::proto::Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
+    <span class="ident">intent</span>: <span class="ident">anoma::proto::Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span>,
 ) {
     <span class="kw">let</span> <span class="ident">new_node</span> <span class="op">=</span> <span class="ident">ExchangeNode</span> {
         <span class="ident">id</span>,
@@ -738,8 +738,10 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">decode_intent_data</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span> {
-    <span class="ident">Signed</span>::<span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span><span class="ident">::try_from_slice</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>()
+<span class="kw">fn</span> <span class="ident">decode_intent_data</span>(
+    <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
+) -&gt; <span class="ident">anoma::proto::Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span> {
+    <span class="ident">anoma::proto::Signed</span>::<span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span><span class="ident">::try_from_slice</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>()
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="mm_token_exch" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>

@@ -37,10 +37,12 @@
 <span id="36">36</span>
 <span id="37">37</span>
 <span id="38">38</span>
+<span id="39">39</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
+<span class="kw">use</span> <span class="ident">anoma::proto::Signed</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::intent</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519</span>::{<span class="ident">Signature</span>, <span class="ident">Signed</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Tx imports and functions.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx</span> {
@@ -50,7 +52,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalidate_exchange</span>(<span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>) {
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::tx</span>;
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">intent::invalid_intent_key</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">addr</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">invalid_intent</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Signature</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">invalid_intent</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">common::Signature</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">tx::read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">to_string</span>()).<span class="ident">unwrap_or_default</span>();
         <span class="ident">invalid_intent</span>.<span class="ident">insert</span>(<span class="ident">intent</span>.<span class="ident">sig</span>.<span class="ident">clone</span>());
         <span class="ident">tx::write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">invalid_intent</span>)
@@ -67,9 +69,9 @@
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::vp</span>;
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">intent::invalid_intent_key</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">addr</span>);
 
-        <span class="kw">let</span> <span class="ident">invalid_intent_pre</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Signature</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">invalid_intent_pre</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">common::Signature</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">vp::read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">to_string</span>()).<span class="ident">unwrap_or_default</span>();
-        <span class="kw">let</span> <span class="ident">invalid_intent_post</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Signature</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">invalid_intent_post</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">common::Signature</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">vp::read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">to_string</span>()).<span class="ident">unwrap_or_default</span>();
         <span class="op">!</span><span class="ident">invalid_intent_pre</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">sig</span>)
             <span class="op">&amp;&amp;</span> <span class="ident">invalid_intent_post</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">sig</span>)

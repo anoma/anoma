@@ -1828,7 +1828,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::internal::HostEnvResult</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::ed25519</span>::{<span class="ident">verify_tx_sig</span>, <span class="ident">PublicKey</span>, <span class="ident">Signature</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::memory::VmMemory</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::prefix_iter</span>::{<span class="ident">PrefixIteratorId</span>, <span class="ident">PrefixIterators</span>};
@@ -3441,7 +3441,7 @@
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env::RuntimeError::MemoryError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env::add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">PublicKey</span> <span class="op">=</span> <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)
+    <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">common::PublicKey</span> <span class="op">=</span> <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)
         .<span class="ident">map_err</span>(<span class="ident">vp_env::RuntimeError::EncodingError</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> (<span class="ident">sig</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
@@ -3449,12 +3449,12 @@
         .<span class="ident">read_bytes</span>(<span class="ident">sig_ptr</span>, <span class="ident">sig_len</span> <span class="kw">as</span> <span class="kw">_</span>)
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env::RuntimeError::MemoryError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">vp_env::add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">sig</span>: <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>)
+    <span class="kw">let</span> <span class="ident">sig</span>: <span class="ident">common::Signature</span> <span class="op">=</span> <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>)
         .<span class="ident">map_err</span>(<span class="ident">vp_env::RuntimeError::EncodingError</span>)<span class="question-mark">?</span>;
 
     <span class="ident">vp_env::add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">VERIFY_TX_SIG_GAS_COST</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">tx</span>.<span class="ident">get</span>() };
-    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult::from</span>(<span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>()).<span class="ident">to_i64</span>())
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult::from</span>(<span class="ident">tx</span>.<span class="ident">verify_sig</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>()).<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Log a string from exposed to the wasm VM Tx environment. The message will be</span>

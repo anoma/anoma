@@ -201,7 +201,7 @@
             <span class="ident">msg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
             <span class="ident">pubkey</span>: <span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine</span>,
         ) -&gt; <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rand_new::thread_rng</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rand::thread_rng</span>();
             <span class="self">Self</span>(<span class="ident">encrypt</span>(<span class="ident">msg</span>, <span class="ident">pubkey</span>, <span class="kw-2">&amp;mut</span> <span class="ident">rng</span>))
         }
 

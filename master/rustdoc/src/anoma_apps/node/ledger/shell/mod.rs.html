@@ -700,6 +700,18 @@
 <span id="699">699</span>
 <span id="700">700</span>
 <span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Any changes applied before [`Shell::finalize_block`] might have to be</span>
@@ -729,13 +741,14 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">ibc</span>, <span class="ident">parameters</span>, <span class="ident">pos</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::{<span class="self">self</span>, <span class="ident">PublicKey</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{
     <span class="ident">hash_tx</span>, <span class="ident">process_tx</span>, <span class="ident">verify_decrypted_correctly</span>, <span class="ident">AffineCurve</span>, <span class="ident">DecryptedTx</span>,
     <span class="ident">EllipticCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>,
 };
-<span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
+<span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="ident">TxCache</span>, <span class="ident">VpCache</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm::WasmCacheRwAccess</span>;
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
@@ -746,11 +759,15 @@
     <span class="self">self</span>, <span class="ident">Evidence</span>, <span class="ident">RequestPrepareProposal</span>, <span class="ident">ValidatorUpdate</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::crypto::public_key</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::types::ConsensusParams</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto_abci::abci::ConsensusParams</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto_abci::abci</span>::{<span class="self">self</span>, <span class="ident">Evidence</span>, <span class="ident">ValidatorUpdate</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::crypto::public_key</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
@@ -764,6 +781,13 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim::response::TxResult</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
+
+<span class="kw">fn</span> <span class="ident">key_to_tendermint</span><span class="op">&lt;</span><span class="ident">PK</span>: <span class="ident">key::PublicKey</span><span class="op">&gt;</span>(
+    <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PK</span>,
+) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">public_key::Sum</span>, <span class="ident">key::ParsePublicKeyError</span><span class="op">&gt;</span> {
+    <span class="ident">key::ed25519::PublicKey::try_from_pk</span>(<span class="ident">pk</span>)
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pk</span><span class="op">|</span> <span class="ident">public_key::Sum::Ed25519</span>(<span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()))
+}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -1179,7 +1203,7 @@
     <span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">BlockStateWrite</span>, <span class="ident">MerkleTree</span>, <span class="ident">Sha256Hasher</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">xan</span>, <span class="ident">EstablishedAddressGen</span>};
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">Epoch</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::transaction::Fee</span>;
     <span class="kw">use</span> <span class="ident">tempfile::tempdir</span>;
@@ -1214,12 +1238,12 @@
     }
 
     <span class="doccomment">/// Generate a random public/private keypair</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">Keypair</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">common::SecretKey</span> {
         <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
         <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-        <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>)
+        <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">try_to_sk</span>().<span class="ident">unwrap</span>()
     }
 
     <span class="doccomment">/// A wrapper around the shell that implements</span>

@@ -1145,15 +1145,13 @@
 <span id="1144">1144</span>
 <span id="1145">1145</span>
 <span id="1146">1146</span>
-<span id="1147">1147</span>
-<span id="1148">1148</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="ident">BondId</span>, <span class="ident">Bonds</span>, <span class="ident">Unbonds</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::nft</span>::{<span class="self">self</span>, <span class="ident">Nft</span>, <span class="ident">NftToken</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::transaction::nft</span>::{<span class="ident">CreateNft</span>, <span class="ident">MintNft</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{
@@ -1331,8 +1329,7 @@
         <span class="ident">ctx</span>.<span class="ident">wallet</span>
             .<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="ident">validator_key_alias</span>.<span class="ident">clone</span>()), <span class="ident">unsafe_dont_encrypt</span>)
             .<span class="number">1</span>
-            .<span class="ident">public</span>
-            .<span class="ident">clone</span>()
+            .<span class="ident">ref_to</span>()
     });
 
     <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span>
@@ -1349,8 +1346,7 @@
             <span class="ident">ctx</span>.<span class="ident">wallet</span>
                 .<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="ident">rewards_key_alias</span>.<span class="ident">clone</span>()), <span class="ident">unsafe_dont_encrypt</span>)
                 .<span class="number">1</span>
-                .<span class="ident">public</span>
-                .<span class="ident">clone</span>()
+                .<span class="ident">ref_to</span>()
         });
 
     <span class="ident">ctx</span>.<span class="ident">wallet</span>.<span class="ident">save</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>));
@@ -1386,7 +1382,7 @@
 
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">InitValidator</span> {
         <span class="ident">account_key</span>,
-        <span class="ident">consensus_key</span>: <span class="ident">consensus_key</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+        <span class="ident">consensus_key</span>: <span class="ident">consensus_key</span>.<span class="ident">ref_to</span>(),
         <span class="ident">rewards_account_key</span>,
         <span class="ident">validator_vp_code</span>,
         <span class="ident">rewards_vp_code</span>,
@@ -1867,7 +1863,7 @@
     <span class="ident">tx</span>: <span class="ident">Tx</span>,
     <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">args::Tx</span>,
     <span class="ident">default</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span>,
-) -&gt; (<span class="ident">Context</span>, <span class="ident">Tx</span>, <span class="ident">std::rc::Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
+) -&gt; (<span class="ident">Context</span>, <span class="ident">Tx</span>, <span class="ident">std::rc::Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signing_key</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">signing_key</span> {
         <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_cached</span>(<span class="ident">signing_key</span>);
         (<span class="ident">tx</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">signing_key</span>), <span class="ident">signing_key</span>)
@@ -1896,7 +1892,7 @@
     <span class="ident">ctx</span>: <span class="ident">Context</span>,
     <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">args::Tx</span>,
     <span class="ident">tx</span>: <span class="ident">Tx</span>,
-    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">common::SecretKey</span>,
 ) -&gt; (<span class="ident">Context</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
     <span class="comment">// NOTE: use this to print the request JSON body:</span>
 
@@ -2028,7 +2024,7 @@
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">broadcast_tx</span>(
     <span class="ident">address</span>: <span class="ident">TendermintAddress</span>,
     <span class="ident">tx</span>: <span class="ident">WrapperTx</span>,
-    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">common::SecretKey</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="comment">// These can later be used to determine when parts of the tx make it</span>
     <span class="comment">// on-chain</span>
@@ -2080,7 +2076,7 @@
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_tx</span>(
     <span class="ident">address</span>: <span class="ident">TendermintAddress</span>,
     <span class="ident">tx</span>: <span class="ident">WrapperTx</span>,
-    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">common::SecretKey</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResponse</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrapper_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
         <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,

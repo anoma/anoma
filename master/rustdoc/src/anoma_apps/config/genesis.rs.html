@@ -784,9 +784,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::PublicKey</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">storage</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
@@ -804,7 +802,7 @@
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos::types::BasisPoints</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="ident">GenesisValidator</span>, <span class="ident">PosParams</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519</span>::{<span class="ident">ParsePublicKeyError</span>, <span class="ident">PublicKey</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
     <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">storage</span>, <span class="ident">token</span>};
     <span class="kw">use</span> <span class="ident">hex</span>;
@@ -831,8 +829,8 @@
             <span class="prelude-val">Ok</span>(<span class="ident">array</span>)
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PublicKey</span>, <span class="ident">HexKeyError</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">PublicKey::from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span>, <span class="ident">HexKeyError</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">common::PublicKey::from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">key</span>)
         }
     }
@@ -1325,7 +1323,7 @@
     <span class="doccomment">/// VP will check authorization of transactions from this account against</span>
     <span class="doccomment">/// this key on a transaction signature.</span>
     <span class="doccomment">/// Note that this is distinct from consensus key used in the PoS system.</span>
-    <span class="kw">pub</span> <span class="ident">account_key</span>: <span class="ident">PublicKey</span>,
+    <span class="kw">pub</span> <span class="ident">account_key</span>: <span class="ident">common::PublicKey</span>,
     <span class="doccomment">/// These tokens are no staked and hence do not contribute to the</span>
     <span class="doccomment">/// validator&#39;s voting power</span>
     <span class="kw">pub</span> <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount</span>,
@@ -1351,7 +1349,7 @@
     <span class="doccomment">/// Expected SHA-256 hash of the validity predicate wasm</span>
     <span class="kw">pub</span> <span class="ident">vp_sha256</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
     <span class="doccomment">/// A public key to be stored in the account&#39;s storage, if any</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Account&#39;s sub-space storage. The values must be borsh encoded bytes.</span>
     <span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">PartialOrd</span> <span class="op">=</span> <span class="string">&quot;ignore&quot;</span>, <span class="ident">Ord</span> <span class="op">=</span> <span class="string">&quot;ignore&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">storage</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">storage::Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1386,7 +1384,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImplicitAccount</span> {
     <span class="doccomment">/// A public key from which the implicit account is derived. This will be</span>
     <span class="doccomment">/// stored on chain for the account.</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
+    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">common::PublicKey</span>,
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
@@ -1411,13 +1409,13 @@
     <span class="comment">// `tests::gen_genesis_validator` below.</span>
     <span class="kw">let</span> <span class="ident">consensus_keypair</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_keypair</span>();
     <span class="kw">let</span> <span class="ident">account_keypair</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_keypair</span>();
-    <span class="kw">let</span> <span class="ident">staking_reward_keypair</span> <span class="op">=</span> <span class="ident">Keypair::from_bytes</span>(<span class="kw-2">&amp;</span>[
+    <span class="kw">let</span> <span class="ident">ed_staking_reward_keypair</span> <span class="op">=</span> <span class="ident">ed25519::SecretKey::try_from_slice</span>(<span class="kw-2">&amp;</span>[
         <span class="number">61</span>, <span class="number">198</span>, <span class="number">87</span>, <span class="number">204</span>, <span class="number">44</span>, <span class="number">94</span>, <span class="number">234</span>, <span class="number">228</span>, <span class="number">217</span>, <span class="number">72</span>, <span class="number">245</span>, <span class="number">27</span>, <span class="number">40</span>, <span class="number">2</span>, <span class="number">151</span>, <span class="number">174</span>,
         <span class="number">24</span>, <span class="number">247</span>, <span class="number">69</span>, <span class="number">6</span>, <span class="number">9</span>, <span class="number">30</span>, <span class="number">44</span>, <span class="number">16</span>, <span class="number">88</span>, <span class="number">238</span>, <span class="number">77</span>, <span class="number">162</span>, <span class="number">243</span>, <span class="number">125</span>, <span class="number">240</span>, <span class="number">206</span>,
-        <span class="number">111</span>, <span class="number">92</span>, <span class="number">66</span>, <span class="number">23</span>, <span class="number">105</span>, <span class="number">211</span>, <span class="number">33</span>, <span class="number">236</span>, <span class="number">5</span>, <span class="number">208</span>, <span class="number">17</span>, <span class="number">88</span>, <span class="number">177</span>, <span class="number">112</span>, <span class="number">100</span>, <span class="number">154</span>,
-        <span class="number">1</span>, <span class="number">132</span>, <span class="number">143</span>, <span class="number">67</span>, <span class="number">162</span>, <span class="number">121</span>, <span class="number">136</span>, <span class="number">247</span>, <span class="number">20</span>, <span class="number">67</span>, <span class="number">4</span>, <span class="number">27</span>, <span class="number">226</span>, <span class="number">63</span>, <span class="number">47</span>, <span class="number">57</span>,
     ])
     .<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">staking_reward_keypair</span> <span class="op">=</span>
+        <span class="ident">common::SecretKey::try_from_sk</span>(<span class="kw-2">&amp;</span><span class="ident">ed_staking_reward_keypair</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_address</span>();
     <span class="kw">let</span> <span class="ident">staking_reward_address</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xcersvee8qerxd35x9prsw2xg5erxv6pxfpygd2x89z5xsf5xvmnysejgv6rwd2rnj2avt&quot;</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">Validator</span> {
@@ -1425,10 +1423,10 @@
             <span class="ident">address</span>,
             <span class="ident">staking_reward_address</span>,
             <span class="ident">tokens</span>: <span class="ident">token::Amount::whole</span>(<span class="number">200_000</span>),
-            <span class="ident">consensus_key</span>: <span class="ident">consensus_keypair</span>.<span class="ident">public</span>,
-            <span class="ident">staking_reward_key</span>: <span class="ident">staking_reward_keypair</span>.<span class="ident">public</span>,
+            <span class="ident">consensus_key</span>: <span class="ident">consensus_keypair</span>.<span class="ident">ref_to</span>(),
+            <span class="ident">staking_reward_key</span>: <span class="ident">staking_reward_keypair</span>.<span class="ident">ref_to</span>(),
         },
-        <span class="ident">account_key</span>: <span class="ident">account_keypair</span>.<span class="ident">public</span>,
+        <span class="ident">account_key</span>: <span class="ident">account_keypair</span>.<span class="ident">ref_to</span>(),
         <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount::whole</span>(<span class="number">100_000</span>),
         <span class="comment">// TODO replace with https://github.com/anoma/anoma/issues/25)</span>
         <span class="ident">validator_vp_code_path</span>: <span class="ident">vp_user_path</span>.<span class="ident">into</span>(),
@@ -1447,32 +1445,32 @@
         <span class="ident">address</span>: <span class="ident">wallet::defaults::albert_address</span>(),
         <span class="ident">vp_code_path</span>: <span class="ident">vp_user_path</span>.<span class="ident">into</span>(),
         <span class="ident">vp_sha256</span>: <span class="ident">Default::default</span>(),
-        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::albert_keypair</span>().<span class="ident">public</span>),
+        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::albert_keypair</span>().<span class="ident">ref_to</span>()),
         <span class="ident">storage</span>: <span class="ident">HashMap::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">bertha</span> <span class="op">=</span> <span class="ident">EstablishedAccount</span> {
         <span class="ident">address</span>: <span class="ident">wallet::defaults::bertha_address</span>(),
         <span class="ident">vp_code_path</span>: <span class="ident">vp_user_path</span>.<span class="ident">into</span>(),
         <span class="ident">vp_sha256</span>: <span class="ident">Default::default</span>(),
-        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::bertha_keypair</span>().<span class="ident">public</span>),
+        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::bertha_keypair</span>().<span class="ident">ref_to</span>()),
         <span class="ident">storage</span>: <span class="ident">HashMap::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">christel</span> <span class="op">=</span> <span class="ident">EstablishedAccount</span> {
         <span class="ident">address</span>: <span class="ident">wallet::defaults::christel_address</span>(),
         <span class="ident">vp_code_path</span>: <span class="ident">vp_user_path</span>.<span class="ident">into</span>(),
         <span class="ident">vp_sha256</span>: <span class="ident">Default::default</span>(),
-        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::christel_keypair</span>().<span class="ident">public</span>),
+        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::christel_keypair</span>().<span class="ident">ref_to</span>()),
         <span class="ident">storage</span>: <span class="ident">HashMap::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">EstablishedAccount</span> {
         <span class="ident">address</span>: <span class="ident">wallet::defaults::matchmaker_address</span>(),
         <span class="ident">vp_code_path</span>: <span class="ident">vp_user_path</span>.<span class="ident">into</span>(),
         <span class="ident">vp_sha256</span>: <span class="ident">Default::default</span>(),
-        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::matchmaker_keypair</span>().<span class="ident">public</span>),
+        <span class="ident">public_key</span>: <span class="prelude-val">Some</span>(<span class="ident">wallet::defaults::matchmaker_keypair</span>().<span class="ident">ref_to</span>()),
         <span class="ident">storage</span>: <span class="ident">HashMap::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">implicit_accounts</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">ImplicitAccount</span> {
-        <span class="ident">public_key</span>: <span class="ident">wallet::defaults::daewon_keypair</span>().<span class="ident">public</span>,
+        <span class="ident">public_key</span>: <span class="ident">wallet::defaults::daewon_keypair</span>().<span class="ident">ref_to</span>(),
     }];
     <span class="kw">let</span> <span class="ident">default_user_tokens</span> <span class="op">=</span> <span class="ident">token::Amount::whole</span>(<span class="number">1_000_000</span>);
     <span class="kw">let</span> <span class="ident">default_key_tokens</span> <span class="op">=</span> <span class="ident">token::Amount::whole</span>(<span class="number">1_000</span>);
@@ -1525,7 +1523,8 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident">anoma::types::address::testing::gen_established_address</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
     <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
     <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
@@ -1536,15 +1535,16 @@
         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">gen_established_address</span>();
         <span class="kw">let</span> <span class="ident">staking_reward_address</span> <span class="op">=</span> <span class="ident">gen_established_address</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
-        <span class="kw">let</span> <span class="ident">staking_reward_keypair</span> <span class="op">=</span> <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>);
+        <span class="kw">let</span> <span class="ident">keypair</span>: <span class="ident">common::SecretKey</span> <span class="op">=</span>
+            <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">try_to_sk</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">kp_arr</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">staking_reward_keypair</span>: <span class="ident">common::SecretKey</span> <span class="op">=</span>
+            <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">try_to_sk</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">srkp_arr</span> <span class="op">=</span> <span class="ident">staking_reward_keypair</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="macro">println!</span>(<span class="string">&quot;address: {}&quot;</span>, <span class="ident">address</span>);
         <span class="macro">println!</span>(<span class="string">&quot;staking_reward_address: {}&quot;</span>, <span class="ident">staking_reward_address</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;keypair: {:?}&quot;</span>, <span class="ident">keypair</span>.<span class="ident">to_bytes</span>());
-        <span class="macro">println!</span>(
-            <span class="string">&quot;staking_reward_keypair: {:?}&quot;</span>,
-            <span class="ident">staking_reward_keypair</span>.<span class="ident">to_bytes</span>()
-        );
+        <span class="macro">println!</span>(<span class="string">&quot;keypair: {:?}&quot;</span>, <span class="ident">kp_arr</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;staking_reward_keypair: {:?}&quot;</span>, <span class="ident">srkp_arr</span>);
     }
 }
 </code></pre></div>

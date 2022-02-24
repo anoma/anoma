@@ -72,7 +72,7 @@
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">ImplicitAddress</span>};
-<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_config::net::Address</span> <span class="kw">as</span> <span class="ident">TendermintAddress</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -88,7 +88,7 @@
     <span class="ident">wallet</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Wallet</span>,
     <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     <span class="ident">ledger_address</span>: <span class="ident">TendermintAddress</span>,
-) -&gt; <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">addr</span> {
         <span class="ident">Address::Established</span>(<span class="kw">_</span>) =&gt; {
             <span class="macro">println!</span>(
@@ -113,7 +113,7 @@
                 <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
             })
         }
-        <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)) =&gt; {
+        <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress</span>(<span class="ident">pkh</span>)) =&gt; {
             <span class="ident">wallet</span>.<span class="ident">find_key_by_pkh</span>(<span class="ident">pkh</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
                 <span class="macro">eprintln!</span>(
                     <span class="string">&quot;Unable to load the keypair from the wallet for the \
