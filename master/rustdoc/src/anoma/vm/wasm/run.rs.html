@@ -1013,6 +1013,8 @@
 <span id="1012">1012</span>
 <span id="1013">1013</span>
 <span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Wasm runners</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -1388,7 +1390,9 @@
     <span class="comment">// Use Singlepass compiler with the default settings</span>
     <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">wasmer_compiler_singlepass::Singlepass::default</span>();
     <span class="ident">wasmer::Store::new_with_tunables</span>(
-        <span class="kw-2">&amp;</span><span class="ident">wasmer_engine_universal::Universal::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>(),
+        <span class="comment">// TODO wasmer 2.x</span>
+        <span class="comment">// &amp;wasmer_engine_universal::Universal::new(compiler).engine(),</span>
+        <span class="kw-2">&amp;</span><span class="ident">wasmer_engine_jit::JIT::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>(),
         <span class="ident">limit</span>,
     )
 }
