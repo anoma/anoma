@@ -362,11 +362,11 @@
     }
 
     <span class="doccomment">/// Generate a new keypair and derive an implicit address from its public</span>
-    <span class="doccomment">/// and insert them into the store with the provided alias. If none</span>
-    <span class="doccomment">/// provided, the alias will be the public key hash. If the key is to be</span>
-    <span class="doccomment">/// encrypted, will prompt for password from stdin. Stores the key in</span>
-    <span class="doccomment">/// decrypted key cache and returns the alias of the key and a</span>
-    <span class="doccomment">/// reference-counting pointer to the key.</span>
+    <span class="doccomment">/// and insert them into the store with the provided alias, converter to </span>
+    <span class="doccomment">/// lower case. If none provided, the alias will be the public key hash. </span>
+    <span class="doccomment">/// If the key is to be encrypted, will prompt for password from stdin. </span>
+    <span class="doccomment">/// Stores the key in decrypted key cache and returns the alias of the key </span>
+    <span class="doccomment">/// and a reference-counting pointer to the key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_key</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -534,7 +534,7 @@
         <span class="ident">alias</span>: <span class="ident">Alias</span>,
         <span class="ident">address</span>: <span class="ident">Address</span>,
     ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">insert_address</span>(<span class="ident">alias</span>, <span class="ident">address</span>)
+        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">insert_address</span>(<span class="ident">alias</span>.<span class="ident">to_lowercase</span>(), <span class="ident">address</span>)
     }
 
     <span class="doccomment">/// Insert a new key with the given alias. If the alias is already used,</span>
@@ -545,7 +545,7 @@
         <span class="ident">keypair</span>: <span class="ident">StoredKeypair</span>,
         <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span>,
     ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">insert_keypair</span>(<span class="ident">alias</span>, <span class="ident">keypair</span>, <span class="ident">pkh</span>)
+        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">insert_keypair</span>(<span class="ident">alias</span>.<span class="ident">to_lowercase</span>(), <span class="ident">keypair</span>, <span class="ident">pkh</span>)
     }
 }
 

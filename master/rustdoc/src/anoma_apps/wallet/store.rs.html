@@ -633,7 +633,7 @@
         <span class="kw">let</span> (<span class="ident">keypair_to_store</span>, <span class="ident">raw_keypair</span>) <span class="op">=</span>
             <span class="ident">StoredKeypair::new</span>(<span class="ident">keypair</span>, <span class="ident">password</span>);
         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress</span>(<span class="ident">pkh</span>.<span class="ident">clone</span>()));
-        <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">alias</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">pkh</span>.<span class="ident">clone</span>().<span class="ident">into</span>());
+        <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">alias</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">pkh</span>.<span class="ident">clone</span>().<span class="ident">into</span>()).<span class="ident">to_lowercase</span>();
         <span class="kw">if</span> <span class="self">self</span>
             .<span class="ident">insert_keypair</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">keypair_to_store</span>, <span class="ident">pkh</span>)
             .<span class="ident">is_none</span>()
