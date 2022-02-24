@@ -687,6 +687,17 @@
 <span id="686">686</span>
 <span id="687">687</span>
 <span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
 
@@ -736,6 +747,8 @@
         <span class="string">&quot;ano::IBC Burn Address                        &quot;</span>;
     <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC_MINT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
         <span class="string">&quot;ano::IBC Mint Address                        &quot;</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PROTOCOL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+        <span class="string">&quot;ano::Implicit VP                             &quot;</span>;
 }
 
 <span class="doccomment">/// Fixed-length address strings prefix for established addresses.</span>
@@ -857,6 +870,7 @@
                     }
                     <span class="ident">InternalAddress::IbcBurn</span> =&gt; <span class="ident">internal::IBC_BURN</span>.<span class="ident">to_string</span>(),
                     <span class="ident">InternalAddress::IbcMint</span> =&gt; <span class="ident">internal::IBC_MINT</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">InternalAddress::Protocol</span> =&gt; <span class="ident">internal::PROTOCOL</span>.<span class="ident">to_string</span>(),
                 };
                 <span class="macro">debug_assert_eq!</span>(<span class="ident">string</span>.<span class="ident">len</span>(), <span class="ident">FIXED_LEN_STRING_BYTES</span>);
                 <span class="ident">string</span>
@@ -901,6 +915,9 @@
                 <span class="ident">internal::IBC</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)),
                 <span class="ident">internal::PARAMETERS</span> =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Parameters</span>))
+                }
+                <span class="ident">internal::PROTOCOL</span> =&gt; {
+                    <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Protocol</span>))
                 }
                 <span class="ident">internal::IBC_BURN</span> =&gt; {
                     <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcBurn</span>))
@@ -1099,6 +1116,8 @@
     <span class="ident">IbcBurn</span>,
     <span class="doccomment">/// Mint tokens from this address with IBC token transfer</span>
     <span class="ident">IbcMint</span>,
+    <span class="doccomment">/// Implicit VP</span>
+    <span class="ident">Protocol</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">InternalAddress</span> {
@@ -1125,6 +1144,7 @@
                 <span class="ident"><span class="self">Self</span>::IbcEscrow</span>(<span class="ident">hash</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;IbcEscrow: {}&quot;</span>, <span class="ident">hash</span>),
                 <span class="ident"><span class="self">Self</span>::IbcBurn</span> =&gt; <span class="string">&quot;IbcBurn&quot;</span>.<span class="ident">to_string</span>(),
                 <span class="ident"><span class="self">Self</span>::IbcMint</span> =&gt; <span class="string">&quot;IbcMint&quot;</span>.<span class="ident">to_string</span>(),
+                <span class="ident"><span class="self">Self</span>::Protocol</span> =&gt; <span class="string">&quot;Protocol&quot;</span>.<span class="ident">to_string</span>(),
             }
         )
     }
@@ -1355,6 +1375,7 @@
             <span class="ident">InternalAddress::Parameters</span> =&gt; {}
             <span class="ident">InternalAddress::IbcEscrow</span>(<span class="kw">_</span>) =&gt; {}
             <span class="ident">InternalAddress::IbcBurn</span> =&gt; {}
+            <span class="ident">InternalAddress::Protocol</span> =&gt; {}
             <span class="ident">InternalAddress::IbcMint</span> =&gt; {} <span class="comment">/* Add new addresses in the
                                             * `prop_oneof` below. */</span>
         };
@@ -1367,6 +1388,7 @@
                 .<span class="ident">prop_map</span>(<span class="op">|</span>(<span class="ident">p</span>, <span class="ident">c</span>)<span class="op">|</span> <span class="ident">InternalAddress::ibc_escrow_address</span>(<span class="ident">p</span>, <span class="ident">c</span>)),
             <span class="ident">Just</span>(<span class="ident">InternalAddress::IbcBurn</span>),
             <span class="ident">Just</span>(<span class="ident">InternalAddress::IbcMint</span>),
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::Protocol</span>),
         ]
     }
 

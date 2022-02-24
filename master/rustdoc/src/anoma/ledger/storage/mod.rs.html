@@ -804,6 +804,13 @@
 <span id="803">803</span>
 <span id="804">804</span>
 <span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
 <span class="kw">mod</span> <span class="ident">merkle_tree</span>;
@@ -827,6 +834,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::parameters::Parameters</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas::MIN_STORAGE_GAS</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::protocol_vps::implicit_vp_key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::merkle_tree</span>::{
     <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">MerkleTreeError</span>, <span class="ident">MerkleRoot</span>,
 };
@@ -1243,6 +1251,12 @@
         <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="ident">addr</span>);
+        <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+    }
+
+    <span class="doccomment">/// Get the implicit VP from the internal address which stores it.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">implicit_vp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">implicit_vp_key</span>();
         <span class="self">self</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
 
