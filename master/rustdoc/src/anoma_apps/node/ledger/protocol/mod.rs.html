@@ -479,26 +479,6 @@
 <span id="478">478</span>
 <span id="479">479</span>
 <span id="480">480</span>
-<span id="481">481</span>
-<span id="482">482</span>
-<span id="483">483</span>
-<span id="484">484</span>
-<span id="485">485</span>
-<span id="486">486</span>
-<span id="487">487</span>
-<span id="488">488</span>
-<span id="489">489</span>
-<span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
-<span id="494">494</span>
-<span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger&#39;s protocol</span>
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">panic</span>};
@@ -508,7 +488,6 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">ParametersVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="self">self</span>, <span class="ident">PosVP</span>};
-<span class="kw">use</span> <span class="ident">anoma::ledger::protocol_vps</span>::{<span class="self">self</span>, <span class="ident">read_implicit_vp</span>, <span class="ident">ProtocolVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">DBIter</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>, <span class="ident">DB</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
@@ -549,8 +528,6 @@
     <span class="ident">IbcTokenNativeVpError</span>(<span class="ident">anoma::ledger::ibc::vp::IbcTokenError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Access to an internal address {0} is forbidden&quot;</span>)]</span>
     <span class="ident">AccessForbidden</span>(<span class="ident">InternalAddress</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Protocol native VP: {0}&quot;</span>)]</span>
-    <span class="ident">ProtocolNativeVpError</span>(<span class="ident">protocol_vps::Error</span>),
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
@@ -726,16 +703,7 @@
                         .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
                     <span class="ident">Vp::Wasm</span>(<span class="ident">vp</span>)
                 }
-                <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">let</span> (<span class="ident">implicit_vp</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">read_implicit_vp</span>(<span class="ident">storage</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">gas_meter</span>.<span class="ident">add</span>(<span class="ident">gas</span>).<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
-                    <span class="comment">// TODO: figure out the apposite error type</span>
-                    <span class="comment">// (ProtocolNativeVpError?)</span>
-                    <span class="ident">gas_meter</span>
-                        .<span class="ident">add_compiling_fee</span>(<span class="ident">implicit_vp</span>.<span class="ident">len</span>())
-                        .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
-                    <span class="ident">Vp::Wasm</span>(<span class="ident">implicit_vp</span>)
-                }
+                <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
             };
 
             <span class="prelude-val">Ok</span>((<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">keys</span>.<span class="ident">clone</span>(), <span class="ident">vp</span>))
@@ -876,14 +844,6 @@
                                 .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
                                 .<span class="ident">map_err</span>(<span class="ident">Error::IbcTokenNativeVpError</span>);
                             <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">ibc_token</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
-                            <span class="ident">result</span>
-                        }
-                        <span class="ident">InternalAddress::Protocol</span> =&gt; {
-                            <span class="kw">let</span> <span class="ident">implicit</span> <span class="op">=</span> <span class="ident">ProtocolVp</span> { <span class="ident">ctx</span> };
-                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">implicit</span>
-                                .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
-                                .<span class="ident">map_err</span>(<span class="ident">Error::ProtocolNativeVpError</span>);
-                            <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">implicit</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
                             <span class="ident">result</span>
                         }
                     };

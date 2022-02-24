@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Error",""],["ReadError",""]],"fn":[["implicit_vp_key","The storage key for the implicit VP."],["read_implicit_vp","Read the VP for implicit addresses, with gas meter."]],"struct":[["Protocol","Validity predicates used by the ledger protocol."],["ProtocolVp","This internal address’ VP."]],"type":[["Result","Function result type."]]});
