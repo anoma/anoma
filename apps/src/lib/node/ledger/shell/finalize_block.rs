@@ -6,13 +6,11 @@ use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::Evidence;
 #[cfg(not(feature = "ABCI"))]
-use tendermint_proto::crypto::{public_key, PublicKey as TendermintPublicKey};
+use tendermint_proto::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::Evidence;
 #[cfg(feature = "ABCI")]
-use tendermint_proto_abci::crypto::{
-    public_key, PublicKey as TendermintPublicKey,
-};
+use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 
@@ -264,8 +262,10 @@ where
             .as_ref()
             .expect("Header must have been set in prepare_proposal.");
         let height = BlockHeight(header.height.into());
-        let time: DateTime<Utc> = header.time.into();
-        let time: DateTimeUtc = time.into();
+        let time: DateTimeUtc = header
+            .time
+            .try_into()
+            .expect("Time conversion shouldn't failed");
         let new_epoch = self
             .storage
             .update_epoch(height, time)
@@ -302,11 +302,8 @@ where
                     (consensus_key, power)
                 }
             };
-            let consensus_key: ed25519_dalek::PublicKey = consensus_key.into();
             let pub_key = TendermintPublicKey {
-                sum: Some(public_key::Sum::Ed25519(
-                    consensus_key.to_bytes().to_vec(),
-                )),
+                sum: Some(key_to_tendermint(&consensus_key).unwrap()),
             };
             let pub_key = Some(pub_key);
             let update = ValidatorUpdate { pub_key, power };
@@ -332,7 +329,6 @@ where
 mod test_finalize_block {
     use anoma::types::address::xan;
     use anoma::types::storage::Epoch;
-    use anoma::types::time::DateTimeUtc;
     use anoma::types::transaction::Fee;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::block::header::Version;
@@ -361,7 +357,7 @@ mod test_finalize_block {
                         .try_into()
                         .expect("Should not fail"),
                     height: 0u64.try_into().expect("Should not fail"),
-                    time: Time::from(DateTimeUtc::now()),
+                    time: Time::now(),
                     last_block_id: None,
                     last_commit_hash: None,
                     data_hash: None,

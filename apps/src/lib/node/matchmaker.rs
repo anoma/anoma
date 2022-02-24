@@ -8,7 +8,7 @@ use anoma::proto::Tx;
 use anoma::types::address::{self, Address};
 use anoma::types::dylib;
 use anoma::types::intent::{IntentTransfers, MatchedExchanges};
-use anoma::types::key::ed25519::Keypair;
+use anoma::types::key::*;
 use anoma::types::matchmaker::AddIntentResult;
 use anoma::types::transaction::{Fee, WrapperTx};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -40,7 +40,7 @@ pub async fn run(
     }: config::Matchmaker,
     intent_gossiper_addr: SocketAddr,
     ledger_addr: TendermintAddress,
-    tx_signing_key: Rc<Keypair>,
+    tx_signing_key: Rc<common::SecretKey>,
     tx_source_address: Address,
     wasm_dir: impl AsRef<Path>,
 ) {
@@ -103,7 +103,7 @@ pub struct ResultHandler {
     /// A source address for transactions created from intents.
     tx_source_address: Address,
     /// A keypair that will be used to sign transactions.
-    tx_signing_key: Rc<Keypair>,
+    tx_signing_key: Rc<common::SecretKey>,
 }
 
 /// The loaded implementation's dylib and its state
@@ -131,7 +131,7 @@ impl Runner {
         matchmaker_path: PathBuf,
         tx_code_path: PathBuf,
         ledger_address: TendermintAddress,
-        tx_signing_key: Rc<Keypair>,
+        tx_signing_key: Rc<common::SecretKey>,
         tx_source_address: Address,
         wasm_dir: impl AsRef<Path>,
     ) -> (Self, ResultHandler) {

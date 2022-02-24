@@ -23,9 +23,9 @@ mod tests {
     use ::ibc::tx_msg::Msg;
     use anoma::ledger::ibc::handler::IbcActions;
     use anoma::ledger::ibc::vp::Error as IbcError;
-    use anoma::proto::Tx;
-    use anoma::types::key::ed25519::SignedTxData;
-    use anoma::types::storage::{self, Key, KeySeg};
+    use anoma::proto::{SignedTxData, Tx};
+    use anoma::types::key::*;
+    use anoma::types::storage::{self, BlockHash, BlockHeight, Key, KeySeg};
     use anoma::types::time::DateTimeUtc;
     use anoma::types::token::{self, Amount};
     use anoma::types::{address, key};
@@ -399,9 +399,9 @@ mod tests {
         let addr = address::testing::established_address_1();
 
         // Write the public key to storage
-        let pk_key = key::ed25519::pk_key(&addr);
-        let keypair = key::ed25519::testing::keypair_1();
-        let pk = keypair.public.clone();
+        let pk_key = key::pk_key(&addr);
+        let keypair = key::testing::keypair_1();
+        let pk = keypair.ref_to();
         env.storage
             .write(&pk_key, pk.try_to_vec().unwrap())
             .unwrap();
@@ -427,9 +427,9 @@ mod tests {
             assert_eq!(&signed_tx_data.data, data);
             assert!(vp_host_env::verify_tx_signature(&pk, &signed_tx_data.sig));
 
-            let other_keypair = key::ed25519::testing::keypair_2();
+            let other_keypair = key::testing::keypair_2();
             assert!(!vp_host_env::verify_tx_signature(
-                &other_keypair.public,
+                &other_keypair.ref_to(),
                 &signed_tx_data.sig
             ));
         }
@@ -513,7 +513,10 @@ mod tests {
             .expect("invalid client ID");
         // only insert a client type
         let client_type_key = ibc::client_type_key(&client_id).to_string();
-        tx_host_env::write(&client_type_key, msg.client_state.client_type());
+        tx_host_env::write(
+            &client_type_key,
+            msg.client_state.client_type().as_str().as_bytes(),
+        );
 
         // Check should fail due to no client state
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
@@ -552,6 +555,11 @@ mod tests {
         // Commit
         env.write_log.commit_tx();
         env.write_log.commit_block(&mut env.storage).unwrap();
+        // update the block height for the following client update
+        env.storage
+            .begin_block(BlockHash::default(), BlockHeight(1))
+            .unwrap();
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
 
         // Start an invalid transaction
         let msg = ibc::msg_update_client(client_id);
@@ -622,6 +630,11 @@ mod tests {
         // Commit
         env.write_log.commit_tx();
         env.write_log.commit_block(&mut env.storage).unwrap();
+        // update the block height for the following client update
+        env.storage
+            .begin_block(BlockHash::default(), BlockHeight(2))
+            .unwrap();
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
 
         // Start a transaction to upgrade the client
         let msg = ibc::msg_upgrade_client(client_id);

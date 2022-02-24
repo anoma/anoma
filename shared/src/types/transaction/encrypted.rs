@@ -26,7 +26,7 @@ pub mod encrypted_tx {
             msg: &[u8],
             pubkey: <EllipticCurve as PairingEngine>::G1Affine,
         ) -> Self {
-            let mut rng = rand_new::thread_rng();
+            let mut rng = rand::thread_rng();
             Self(encrypt(msg, pubkey, &mut rng))
         }
 

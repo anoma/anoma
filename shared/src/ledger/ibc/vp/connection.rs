@@ -271,9 +271,10 @@ where
         match verify_proofs(
             self,
             msg.client_state.clone(),
+            msg.proofs().height(),
             &conn,
             &expected_conn,
-            &msg.proofs,
+            msg.proofs(),
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
@@ -319,9 +320,10 @@ where
         match verify_proofs(
             self,
             msg.client_state.clone(),
+            msg.proofs().height(),
             &conn,
             &expected_conn,
-            &msg.proofs,
+            msg.proofs(),
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
@@ -347,7 +349,14 @@ where
             conn.delay_period(),
         );
 
-        match verify_proofs(self, None, &conn, &expected_conn, &msg.proofs) {
+        match verify_proofs(
+            self,
+            None,
+            msg.proofs().height(),
+            &conn,
+            &expected_conn,
+            msg.proofs(),
+        ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
         }
@@ -407,9 +416,7 @@ where
     }
 
     fn host_current_height(&self) -> Height {
-        let epoch = self.ctx.storage.get_current_epoch().0.0;
-        let height = self.ctx.storage.get_block_height().0.0;
-        Height::new(epoch, height)
+        self.host_height()
     }
 
     fn host_oldest_height(&self) -> Height {

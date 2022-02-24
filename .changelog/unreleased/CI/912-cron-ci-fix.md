@@ -1,0 +1,1 @@
+- Fix cron scripts execution ([#912](https://github.com/anoma/anoma/pull/912))

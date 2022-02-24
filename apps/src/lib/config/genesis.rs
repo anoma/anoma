@@ -9,9 +9,7 @@ use anoma::ledger::pos::{GenesisValidator, PosParams};
 use anoma::types::address::Address;
 #[cfg(not(feature = "dev"))]
 use anoma::types::chain::ChainId;
-#[cfg(feature = "dev")]
-use anoma::types::key::ed25519::Keypair;
-use anoma::types::key::ed25519::PublicKey;
+use anoma::types::key::*;
 use anoma::types::time::DateTimeUtc;
 use anoma::types::{storage, token};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -29,7 +27,7 @@ pub mod genesis_config {
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
     use anoma::types::address::Address;
-    use anoma::types::key::ed25519::{ParsePublicKeyError, PublicKey};
+    use anoma::types::key::*;
     use anoma::types::time::Rfc3339String;
     use anoma::types::{storage, token};
     use hex;
@@ -56,8 +54,8 @@ pub mod genesis_config {
             Ok(array)
         }
 
-        pub fn to_public_key(&self) -> Result<PublicKey, HexKeyError> {
-            let key = PublicKey::from_str(&self.0)?;
+        pub fn to_public_key(&self) -> Result<common::PublicKey, HexKeyError> {
+            let key = common::PublicKey::from_str(&self.0)?;
             Ok(key)
         }
     }
@@ -180,6 +178,9 @@ pub mod genesis_config {
         // Minimum duration of an epoch (in seconds).
         // TODO: this is i64 because datetime wants it
         pub min_duration: i64,
+        // Maximum duration per block (in seconds).
+        // TODO: this is i64 because datetime wants it
+        pub max_expected_time_per_block: i64,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -215,7 +216,7 @@ pub mod genesis_config {
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct WasmConfig {
         filename: String,
-        pub sha256: HexString,
+        pub sha256: Option<HexString>,
     }
 
     fn load_validator(
@@ -259,11 +260,18 @@ pub mod genesis_config {
             validator_vp_code_path: validator_vp_config.filename.to_owned(),
             validator_vp_sha256: validator_vp_config
                 .sha256
+                .clone()
+                .unwrap()
                 .to_sha256_bytes()
                 .unwrap(),
             reward_vp_code_path: reward_vp_config.filename.to_owned(),
             reward_vp_sha256: reward_vp_config
                 .sha256
+                .clone()
+                .unwrap_or_else(|| {
+                    eprintln!("Unknown validator VP WASM sha256");
+                    cli::safe_exit(1);
+                })
                 .to_sha256_bytes()
                 .unwrap(),
         }
@@ -283,7 +291,15 @@ pub mod genesis_config {
             address: Address::decode(&config.address.as_ref().unwrap())
                 .unwrap(),
             vp_code_path: token_vp_config.filename.to_owned(),
-            vp_sha256: token_vp_config.sha256.to_sha256_bytes().unwrap(),
+            vp_sha256: token_vp_config
+                .sha256
+                .clone()
+                .unwrap_or_else(|| {
+                    eprintln!("Unknown token VP WASM sha256");
+                    cli::safe_exit(1);
+                })
+                .to_sha256_bytes()
+                .unwrap(),
             balances: config
                 .balances
                 .as_ref()
@@ -357,7 +373,15 @@ pub mod genesis_config {
             address: Address::decode(&config.address.as_ref().unwrap())
                 .unwrap(),
             vp_code_path: account_vp_config.filename.to_owned(),
-            vp_sha256: account_vp_config.sha256.to_sha256_bytes().unwrap(),
+            vp_sha256: account_vp_config
+                .sha256
+                .clone()
+                .unwrap_or_else(|| {
+                    eprintln!("Unknown user VP WASM sha256");
+                    cli::safe_exit(1);
+                })
+                .to_sha256_bytes()
+                .unwrap(),
             public_key: config
                 .public_key
                 .as_ref()
@@ -430,6 +454,10 @@ pub mod genesis_config {
                 )
                 .into(),
             },
+            max_expected_time_per_block: anoma::types::time::Duration::seconds(
+                config.parameters.max_expected_time_per_block,
+            )
+            .into(),
         };
 
         let pos_params = PosParams {
@@ -520,7 +548,7 @@ pub struct Validator {
     /// VP will check authorization of transactions from this account against
     /// this key on a transaction signature.
     /// Note that this is distinct from consensus key used in the PoS system.
-    pub account_key: PublicKey,
+    pub account_key: common::PublicKey,
     /// These tokens are no staked and hence do not contribute to the
     /// validator's voting power
     pub non_staked_balance: token::Amount,
@@ -546,7 +574,7 @@ pub struct EstablishedAccount {
     /// Expected SHA-256 hash of the validity predicate wasm
     pub vp_sha256: [u8; 32],
     /// A public key to be stored in the account's storage, if any
-    pub public_key: Option<PublicKey>,
+    pub public_key: Option<common::PublicKey>,
     /// Account's sub-space storage. The values must be borsh encoded bytes.
     #[derivative(PartialOrd = "ignore", Ord = "ignore")]
     pub storage: HashMap<storage::Key, Vec<u8>>,
@@ -581,7 +609,7 @@ pub struct TokenAccount {
 pub struct ImplicitAccount {
     /// A public key from which the implicit account is derived. This will be
     /// stored on chain for the account.
-    pub public_key: PublicKey,
+    pub public_key: common::PublicKey,
 }
 
 #[cfg(not(feature = "dev"))]
@@ -606,13 +634,13 @@ pub fn genesis() -> Genesis {
     // `tests::gen_genesis_validator` below.
     let consensus_keypair = wallet::defaults::validator_keypair();
     let account_keypair = wallet::defaults::validator_keypair();
-    let staking_reward_keypair = Keypair::from_bytes(&[
+    let ed_staking_reward_keypair = ed25519::SecretKey::try_from_slice(&[
         61, 198, 87, 204, 44, 94, 234, 228, 217, 72, 245, 27, 40, 2, 151, 174,
         24, 247, 69, 6, 9, 30, 44, 16, 88, 238, 77, 162, 243, 125, 240, 206,
-        111, 92, 66, 23, 105, 211, 33, 236, 5, 208, 17, 88, 177, 112, 100, 154,
-        1, 132, 143, 67, 162, 121, 136, 247, 20, 67, 4, 27, 226, 63, 47, 57,
     ])
     .unwrap();
+    let staking_reward_keypair =
+        common::SecretKey::try_from_sk(&ed_staking_reward_keypair).unwrap();
     let address = wallet::defaults::validator_address();
     let staking_reward_address = Address::decode("atest1v4ehgw36xcersvee8qerxd35x9prsw2xg5erxv6pxfpygd2x89z5xsf5xvmnysejgv6rwd2rnj2avt").unwrap();
     let validator = Validator {
@@ -620,10 +648,10 @@ pub fn genesis() -> Genesis {
             address,
             staking_reward_address,
             tokens: token::Amount::whole(200_000),
-            consensus_key: consensus_keypair.public,
-            staking_reward_key: staking_reward_keypair.public,
+            consensus_key: consensus_keypair.ref_to(),
+            staking_reward_key: staking_reward_keypair.ref_to(),
         },
-        account_key: account_keypair.public,
+        account_key: account_keypair.ref_to(),
         non_staked_balance: token::Amount::whole(100_000),
         // TODO replace with https://github.com/anoma/anoma/issues/25)
         validator_vp_code_path: vp_user_path.into(),
@@ -636,37 +664,38 @@ pub fn genesis() -> Genesis {
             min_num_of_blocks: 10,
             min_duration: anoma::types::time::Duration::minutes(1).into(),
         },
+        max_expected_time_per_block: anoma::types::time::DurationSecs(30),
     };
     let albert = EstablishedAccount {
         address: wallet::defaults::albert_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::albert_keypair().public),
+        public_key: Some(wallet::defaults::albert_keypair().ref_to()),
         storage: HashMap::default(),
     };
     let bertha = EstablishedAccount {
         address: wallet::defaults::bertha_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::bertha_keypair().public),
+        public_key: Some(wallet::defaults::bertha_keypair().ref_to()),
         storage: HashMap::default(),
     };
     let christel = EstablishedAccount {
         address: wallet::defaults::christel_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::christel_keypair().public),
+        public_key: Some(wallet::defaults::christel_keypair().ref_to()),
         storage: HashMap::default(),
     };
     let matchmaker = EstablishedAccount {
         address: wallet::defaults::matchmaker_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::matchmaker_keypair().public),
+        public_key: Some(wallet::defaults::matchmaker_keypair().ref_to()),
         storage: HashMap::default(),
     };
     let implicit_accounts = vec![ImplicitAccount {
-        public_key: wallet::defaults::daewon_keypair().public,
+        public_key: wallet::defaults::daewon_keypair().ref_to(),
     }];
     let default_user_tokens = token::Amount::whole(1_000_000);
     let default_key_tokens = token::Amount::whole(1_000);
@@ -719,7 +748,8 @@ pub fn genesis() -> Genesis {
 #[cfg(test)]
 pub mod tests {
     use anoma::types::address::testing::gen_established_address;
-    use anoma::types::key::ed25519::Keypair;
+    use anoma::types::key::*;
+    use borsh::BorshSerialize;
     use rand::prelude::ThreadRng;
     use rand::thread_rng;
 
@@ -730,14 +760,15 @@ pub mod tests {
         let address = gen_established_address();
         let staking_reward_address = gen_established_address();
         let mut rng: ThreadRng = thread_rng();
-        let keypair = Keypair::generate(&mut rng);
-        let staking_reward_keypair = Keypair::generate(&mut rng);
+        let keypair: common::SecretKey =
+            ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap();
+        let kp_arr = keypair.try_to_vec().unwrap();
+        let staking_reward_keypair: common::SecretKey =
+            ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap();
+        let srkp_arr = staking_reward_keypair.try_to_vec().unwrap();
         println!("address: {}", address);
         println!("staking_reward_address: {}", staking_reward_address);
-        println!("keypair: {:?}", keypair.to_bytes());
-        println!(
-            "staking_reward_keypair: {:?}",
-            staking_reward_keypair.to_bytes()
-        );
+        println!("keypair: {:?}", kp_arr);
+        println!("staking_reward_keypair: {:?}", srkp_arr);
     }
 }

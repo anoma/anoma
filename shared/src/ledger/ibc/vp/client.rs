@@ -22,6 +22,8 @@ use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::msgs::ClientMsg;
 #[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::context::ChannelReader;
+#[cfg(not(feature = "ABCI"))]
 use ibc::core::ics24_host::identifier::ClientId;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics26_routing::msgs::Ics26Envelope;
@@ -46,13 +48,19 @@ use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::msgs::ClientMsg;
 #[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::context::ChannelReader;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics24_host::identifier::ClientId;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
 #[cfg(not(feature = "ABCI"))]
+use tendermint::Time;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::Time;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -60,7 +68,8 @@ use super::super::handler::{
     make_upgrade_client_event,
 };
 use super::super::storage::{
-    client_counter_key, client_state_key, client_type_key, consensus_state_key,
+    client_counter_key, client_state_key, client_type_key,
+    client_update_height_key, client_update_timestamp_key, consensus_state_key,
 };
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
@@ -76,6 +85,10 @@ pub enum Error {
     InvalidClient(String),
     #[error("Header error: {0}")]
     InvalidHeader(String),
+    #[error("Client update time error: {0}")]
+    InvalidTimestamp(String),
+    #[error("Client update height error: {0}")]
+    InvalidHeight(String),
     #[error("Proof verification error: {0}")]
     ProofVerificationFailure(String),
     #[error("Decoding TX data error: {0}")]
@@ -127,6 +140,80 @@ where
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
 
+    fn get_client_update_time_change(
+        &self,
+        client_id: &ClientId,
+    ) -> Result<StateChange> {
+        let key = client_update_timestamp_key(client_id);
+        let timestamp_change = self
+            .get_state_change(&key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
+        let key = client_update_height_key(client_id);
+        let height_change = self
+            .get_state_change(&key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
+        // the time and height should be updated at once
+        match (timestamp_change, height_change) {
+            (StateChange::Created, StateChange::Created) => {
+                Ok(StateChange::Created)
+            }
+            (StateChange::Updated, StateChange::Updated) => {
+                let timestamp_pre =
+                    self.client_update_time_pre(client_id).map_err(|e| {
+                        Error::InvalidTimestamp(format!(
+                            "Reading the prior client update time failed: {}",
+                            e
+                        ))
+                    })?;
+                let timestamp_post = self
+                    .client_update_time(client_id, Height::default())
+                    .map_err(|e| {
+                        Error::InvalidTimestamp(format!(
+                            "Reading the posterior client update time failed: \
+                             {}",
+                            e
+                        ))
+                    })?;
+                if timestamp_post.nanoseconds() <= timestamp_pre.nanoseconds() {
+                    return Err(Error::InvalidTimestamp(format!(
+                        "The state change of the client update time is \
+                         invalid: ID {}",
+                        client_id
+                    )));
+                }
+                let height_pre =
+                    self.client_update_height_pre(client_id).map_err(|e| {
+                        Error::InvalidHeight(format!(
+                            "Reading the prior client update height failed: {}",
+                            e
+                        ))
+                    })?;
+                let height_post = self
+                    .client_update_height(client_id, Height::default())
+                    .map_err(|e| {
+                        Error::InvalidTimestamp(format!(
+                            "Reading the posterior client update height \
+                             failed: {}",
+                            e
+                        ))
+                    })?;
+                if height_post <= height_pre {
+                    return Err(Error::InvalidHeight(format!(
+                        "The state change of the client update height is \
+                         invalid: ID {}",
+                        client_id
+                    )));
+                }
+                Ok(StateChange::Updated)
+            }
+            _ => Err(Error::InvalidStateChange(format!(
+                "The state change of the client update time and height are \
+                 invalid: ID {}",
+                client_id
+            ))),
+        }
+    }
+
     fn validate_created_client(
         &self,
         client_id: &ClientId,
@@ -162,6 +249,14 @@ where
                 "The client type is mismatched".to_owned(),
             ));
         }
+        if self.get_client_update_time_change(client_id)?
+            != StateChange::Created
+        {
+            return Err(Error::InvalidClient(format!(
+                "The client update time or height are invalid: ID {}",
+                client_id,
+            )));
+        }
 
         let event = make_create_client_event(client_id, &msg);
         self.check_emitted_event(event)
@@ -173,6 +268,14 @@ where
         client_id: &ClientId,
         tx_data: &[u8],
     ) -> Result<()> {
+        if self.get_client_update_time_change(client_id)?
+            != StateChange::Updated
+        {
+            return Err(Error::InvalidClient(format!(
+                "The client update time and height are invalid: ID {}",
+                client_id,
+            )));
+        }
         // check the type of data in tx_data
         let ibc_msg = IbcMessage::decode(tx_data)?;
         match ibc_msg.0 {
@@ -223,6 +326,7 @@ where
         let client = AnyClient::from_client_type(client_state.client_type());
         let (new_client_state, new_consensus_state) = client
             .check_header_and_update_state(
+                Time::now(),
                 self,
                 client_id.clone(),
                 prev_client_state,
@@ -442,6 +546,12 @@ where
                 _ => return Err(Ics02Error::implementation_specific()),
             }
         }
+    }
+
+    fn host_height(&self) -> Height {
+        let epoch = self.ctx.storage.get_current_epoch().0.0;
+        let height = self.ctx.storage.get_block_height().0.0;
+        Height::new(epoch, height)
     }
 
     fn client_counter(&self) -> Ics02Result<u64> {

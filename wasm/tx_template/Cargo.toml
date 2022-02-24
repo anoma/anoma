@@ -13,13 +13,14 @@ crate-type = ["cdylib"]
 anoma_tx_prelude = {path = "../../tx_prelude"}
 borsh = "0.9.0"
 wee_alloc = "0.4.5"
+getrandom = { version = "0.2", features = ["custom"] }
 
 [dev-dependencies]
 anoma_tests = {path = "../../tests"}
 
 [patch.crates-io]
-tendermint              = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
-tendermint-proto        = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
 
 [profile.release]
 # smaller and faster wasm (https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto)

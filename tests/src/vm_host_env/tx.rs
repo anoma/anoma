@@ -80,6 +80,17 @@ impl TestTxEnv {
         }
     }
 
+    pub fn commit_tx_and_block(&mut self) {
+        self.write_log.commit_tx();
+        self.write_log
+            .commit_block(&mut self.storage)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
+        self.iterators = PrefixIterators::default();
+        self.verifiers = HashSet::default();
+        self.gas_meter = BlockGasMeter::default();
+    }
+
     /// Credit tokens to the target account.
     pub fn credit_tokens(
         &mut self,
@@ -97,9 +108,9 @@ impl TestTxEnv {
     pub fn write_public_key(
         &mut self,
         address: &Address,
-        public_key: &key::ed25519::PublicKey,
+        public_key: &key::common::PublicKey,
     ) {
-        let storage_key = key::ed25519::pk_key(address);
+        let storage_key = key::pk_key(address);
         self.storage
             .write(&storage_key, public_key.try_to_vec().unwrap())
             .unwrap();
@@ -208,6 +219,12 @@ mod native_tx_host_env {
         val_ptr: u64,
         val_len: u64
     ));
+    native_host_fn!(tx_write_temp(
+        key_ptr: u64,
+        key_len: u64,
+        val_ptr: u64,
+        val_len: u64
+    ));
     native_host_fn!(tx_delete(key_ptr: u64, key_len: u64));
     native_host_fn!(tx_iter_prefix(prefix_ptr: u64, prefix_len: u64) -> u64);
     native_host_fn!(tx_iter_next(iter_id: u64) -> i64);
@@ -226,6 +243,7 @@ mod native_tx_host_env {
     native_host_fn!(tx_emit_ibc_event(event_ptr: u64, event_len: u64));
     native_host_fn!(tx_get_chain_id(result_ptr: u64));
     native_host_fn!(tx_get_block_height() -> u64);
+    native_host_fn!(tx_get_block_time() -> i64);
     native_host_fn!(tx_get_block_hash(result_ptr: u64));
     native_host_fn!(tx_get_block_epoch() -> u64);
     native_host_fn!(tx_log_string(str_ptr: u64, str_len: u64));

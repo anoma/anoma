@@ -24,7 +24,7 @@ use crate::run;
 #[test]
 fn wallet_encrypted_key_cmds() -> Result<()> {
     let test = setup::single_node_net()?;
-    let key_alias = "test_key_1";
+    let key_alias = "Test_Key_1";
     let password = "VeRySeCuR3";
 
     // 1. key gen

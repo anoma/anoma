@@ -5,11 +5,13 @@ use std::hash::{Hash, Hasher};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use prost::Message;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::generated::types;
-use crate::types::key::ed25519::{self, Keypair};
+use crate::types::key::*;
 use crate::types::time::DateTimeUtc;
+use crate::types::transaction::hash_tx;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -30,6 +32,93 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+/// This can be used to sign an arbitrary tx. The signature is produced and
+/// verified on the tx data concatenated with the tx code, however the tx code
+/// itself is not part of this structure.
+///
+/// Because the signature is not checked by the ledger, we don't inline it into
+/// the `Tx` type directly. Instead, the signature is attached to the `tx.data`,
+/// which is can then be checked by a validity predicate wasm.
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+pub struct SignedTxData {
+    /// The original tx data bytes, if any
+    pub data: Option<Vec<u8>>,
+    /// The signature is produced on the tx data concatenated with the tx code
+    /// and the timestamp.
+    pub sig: common::Signature,
+}
+
+/// A generic signed data wrapper for Borsh encode-able data.
+#[derive(
+    Clone, Debug, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+)]
+pub struct Signed<T: BorshSerialize + BorshDeserialize> {
+    /// Arbitrary data to be signed
+    pub data: T,
+    /// The signature of the data
+    pub sig: common::Signature,
+}
+
+impl<T> PartialEq for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data && self.sig == other.sig
+    }
+}
+
+impl<T> Eq for Signed<T> where
+    T: BorshSerialize + BorshDeserialize + Eq + PartialEq
+{
+}
+
+impl<T> Hash for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + Hash,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+        self.sig.hash(state);
+    }
+}
+
+impl<T> PartialOrd for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.data.partial_cmp(&other.data)
+    }
+}
+
+impl<T> Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize,
+{
+    /// Initialize a new signed data.
+    pub fn new(keypair: &common::SecretKey, data: T) -> Self {
+        let to_sign = data
+            .try_to_vec()
+            .expect("Encoding data for signing shouldn't fail");
+        let sig = common::SigScheme::sign(keypair, &to_sign);
+        Self { data, sig }
+    }
+
+    /// Verify that the data has been signed by the secret key
+    /// counterpart of the given public key.
+    pub fn verify(
+        &self,
+        pk: &common::PublicKey,
+    ) -> std::result::Result<(), VerifySigError> {
+        let bytes = self
+            .data
+            .try_to_vec()
+            .expect("Encoding data for verifying signature shouldn't fail");
+        common::SigScheme::verify_signature_raw(pk, &bytes, &self.sig)
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, Hash)]
 pub struct Tx {
@@ -83,8 +172,46 @@ impl Tx {
         bytes
     }
 
-    pub fn sign(self, keypair: &Keypair) -> Tx {
-        ed25519::sign_tx(keypair, self)
+    pub fn hash(&self) -> [u8; 32] {
+        hash_tx(&self.to_bytes()).0
+    }
+
+    /// Sign a transaction using [`SignedTxData`].
+    pub fn sign(self, keypair: &common::SecretKey) -> Self {
+        let to_sign = self.hash();
+        let sig = common::SigScheme::sign(keypair, &to_sign);
+        let signed = SignedTxData {
+            data: self.data,
+            sig,
+        }
+        .try_to_vec()
+        .expect("Encoding transaction data shouldn't fail");
+        Tx {
+            code: self.code,
+            data: Some(signed),
+            timestamp: self.timestamp,
+        }
+    }
+
+    /// Verify that the transaction has been signed by the secret key
+    /// counterpart of the given public key.
+    pub fn verify_sig(
+        &self,
+        pk: &common::PublicKey,
+        sig: &common::Signature,
+    ) -> std::result::Result<(), VerifySigError> {
+        // Try to get the transaction data from decoded `SignedTxData`
+        let tx_data = self.data.clone().ok_or(VerifySigError::MissingData)?;
+        let signed_tx_data = SignedTxData::try_from_slice(&tx_data[..])
+            .expect("Decoding transaction data shouldn't fail");
+        let data = signed_tx_data.data;
+        let tx = Tx {
+            code: self.code.clone(),
+            data,
+            timestamp: self.timestamp,
+        };
+        let signed_data = tx.hash();
+        common::SigScheme::verify_signature_raw(pk, &signed_data, sig)
     }
 }
 

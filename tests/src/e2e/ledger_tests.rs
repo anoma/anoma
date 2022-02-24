@@ -252,11 +252,11 @@ fn ledger_txs_and_queries() -> Result<()> {
             BERTHA,
             "--public-key",
             // Value obtained from `anoma::types::key::ed25519::tests::gen_keypair`
-            "200000001be519a321e29020fa3cbfbfd01bd5e92db134305609270b71dace25b5a21168",
+            "001be519a321e29020fa3cbfbfd01bd5e92db134305609270b71dace25b5a21168",
             "--code-path",
             &vp_user,
             "--alias",
-            "test-account",
+            "Test-Account",
             "--fee-amount",
             "0",
             "--gas-limit",
@@ -462,6 +462,7 @@ fn pos_bonds() -> Result<()> {
             let parameters = ParametersConfig {
                 min_num_of_blocks: 2,
                 min_duration: 1,
+                max_expected_time_per_block: 1,
             };
             let pos_params = PosParamsConfig {
                 pipeline_len: 1,
@@ -657,6 +658,7 @@ fn pos_init_validator() -> Result<()> {
             let parameters = ParametersConfig {
                 min_num_of_blocks: 2,
                 min_duration: 1,
+                max_expected_time_per_block: 1,
             };
             let pos_params = PosParamsConfig {
                 pipeline_len,

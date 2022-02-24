@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::{Address, ImplicitAddress};
-use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
+use anoma::types::key::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -51,7 +51,7 @@ impl Store {
         // Pre-load the default keys without encryption
         let no_password = None;
         for (alias, keypair) in super::defaults::keys() {
-            let pkh: PublicKeyHash = (&keypair.public).into();
+            let pkh: PublicKeyHash = (&keypair.ref_to()).into();
             store.keys.insert(
                 alias.clone(),
                 StoredKeypair::new(keypair, no_password.clone()).0,
@@ -163,13 +163,16 @@ impl Store {
             })
             // Try to find by PK
             .or_else(|| {
-                let pk = PublicKey::from_str(alias_pkh_or_pk).ok()?;
+                let pk = common::PublicKey::from_str(alias_pkh_or_pk).ok()?;
                 self.find_key_by_pk(&pk)
             })
     }
 
     /// Find the stored key by a public key.
-    pub fn find_key_by_pk(&self, pk: &PublicKey) -> Option<&StoredKeypair> {
+    pub fn find_key_by_pk(
+        &self,
+        pk: &common::PublicKey,
+    ) -> Option<&StoredKeypair> {
         let pkh = PublicKeyHash::from(pk);
         self.find_key_by_pkh(&pkh)
     }
@@ -218,10 +221,12 @@ impl Store {
         &self.addresses
     }
 
-    fn generate_keypair() -> Keypair {
+    fn generate_keypair() -> common::SecretKey {
         use rand::rngs::OsRng;
         let mut csprng = OsRng {};
-        Keypair::generate(&mut csprng)
+        ed25519::SigScheme::generate(&mut csprng)
+            .try_to_sk()
+            .unwrap()
     }
 
     /// Generate a new keypair and insert it into the store with the provided
@@ -233,13 +238,13 @@ impl Store {
         &mut self,
         alias: Option<String>,
         password: Option<String>,
-    ) -> (String, Rc<Keypair>) {
+    ) -> (String, Rc<common::SecretKey>) {
         let keypair = Self::generate_keypair();
-        let pkh: PublicKeyHash = PublicKeyHash::from(&keypair.public);
+        let pkh: PublicKeyHash = PublicKeyHash::from(&keypair.ref_to());
         let (keypair_to_store, raw_keypair) =
             StoredKeypair::new(keypair, password);
-        let address = Address::Implicit(ImplicitAddress::Ed25519(pkh.clone()));
-        let alias = alias.unwrap_or_else(|| pkh.clone().into());
+        let address = Address::Implicit(ImplicitAddress(pkh.clone()));
+        let alias = alias.unwrap_or_else(|| pkh.clone().into()).to_lowercase();
         if self
             .insert_keypair(alias.clone(), keypair_to_store, pkh)
             .is_none()

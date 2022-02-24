@@ -12,6 +12,7 @@ use thiserror::Error;
 use tokio::io::AsyncReadExt;
 
 use crate::cli::safe_exit;
+use crate::config::DEFAULT_WASM_CHECKSUMS_FILE;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -58,34 +59,39 @@ impl Checksums {
 
     /// Read WASM checksums from "checksums.json" in the given directory
     pub fn read_checksums(wasm_directory: impl AsRef<Path>) -> Self {
-        let checksums_path = wasm_directory.as_ref().join("checksums.json");
+        let checksums_path =
+            wasm_directory.as_ref().join(DEFAULT_WASM_CHECKSUMS_FILE);
         Self::read_checksums_file(checksums_path)
     }
 
     pub async fn read_checksums_async(
         wasm_directory: impl AsRef<Path>,
     ) -> Self {
-        let checksums_path = wasm_directory.as_ref().join("checksums.json");
-        match tokio::fs::File::open(checksums_path).await {
+        let checksums_path =
+            wasm_directory.as_ref().join(DEFAULT_WASM_CHECKSUMS_FILE);
+        match tokio::fs::File::open(&checksums_path).await {
             Ok(mut file) => {
                 let mut contents = vec![];
                 // Ignoring the result, next step will fail if not read
                 let _ = file.read_to_end(&mut contents).await;
                 match serde_json::from_slice(&contents[..]) {
                     Ok(checksums) => checksums,
-                    Err(_) => {
+                    Err(err) => {
                         eprintln!(
-                            "Can't read checksums.json in {}",
-                            wasm_directory.as_ref().to_string_lossy()
+                            "Failed decoding WASM checksums from {}. Failed \
+                             with {}",
+                            checksums_path.to_string_lossy(),
+                            err
                         );
                         safe_exit(1);
                     }
                 }
             }
-            Err(_) => {
+            Err(err) => {
                 eprintln!(
-                    "Can't find checksums.json in {}",
-                    wasm_directory.as_ref().to_string_lossy()
+                    "Unable to read WASM checksums from {}. Failed with {}",
+                    checksums_path.to_string_lossy(),
+                    err
                 );
                 safe_exit(1);
             }
@@ -97,15 +103,40 @@ impl Checksums {
 /// their checksums. Download all the pre-build WASMs, or if they're already
 /// downloaded, verify their checksums.
 pub async fn pre_fetch_wasm(wasm_directory: impl AsRef<Path>) {
+    #[cfg(feature = "dev")]
+    {
+        let checksums_path = wasm_directory
+            .as_ref()
+            .join(crate::config::DEFAULT_WASM_CHECKSUMS_FILE);
+        // If the checksums file doesn't exists ...
+        if tokio::fs::canonicalize(&checksums_path).await.is_err() {
+            tokio::fs::create_dir_all(&wasm_directory).await.unwrap();
+            // ... try to copy checksums from the Anoma WASM root dir
+            if tokio::fs::copy(
+                std::env::current_dir()
+                    .unwrap()
+                    .join(crate::config::DEFAULT_WASM_DIR)
+                    .join(crate::config::DEFAULT_WASM_CHECKSUMS_FILE),
+                &checksums_path,
+            )
+            .await
+            .is_ok()
+            {
+                tracing::info!("WASM checksums copied from WASM root dir.");
+                return;
+            }
+        }
+    }
+
     // load json with wasm hashes
     let checksums = Checksums::read_checksums_async(&wasm_directory).await;
 
-    join_all(checksums.0.into_iter().map(|(name, hash)| {
+    join_all(checksums.0.into_iter().map(|(name, full_name)| {
         let wasm_directory = wasm_directory.as_ref().to_owned();
 
         // Async check and download (if needed) each file
         tokio::spawn(async move {
-            let wasm_path = wasm_directory.join(&hash);
+            let wasm_path = wasm_directory.join(&full_name);
             match tokio::fs::read(&wasm_path).await {
                 // if the file exist, first check the hash. If not matching
                 // download it again.
@@ -113,20 +144,42 @@ pub async fn pre_fetch_wasm(wasm_directory: impl AsRef<Path>) {
                     let mut hasher = Sha256::new();
                     hasher.update(bytes);
                     let result = hex::encode(hasher.finalize());
-                    let checksum = format!(
+                    let derived_name = format!(
                         "{}.{}.wasm",
                         &name.split('.').collect::<Vec<&str>>()[0],
                         result
                     );
-                    if hash == checksum {
+                    if full_name == derived_name {
                         return;
                     }
                     tracing::info!(
-                        "Wasm checksum mismatch for {}. Fetching new \
-                         version...",
-                        &name,
+                        "WASM checksum mismatch: Got {}, expected {}. \
+                         Fetching new version...",
+                        &derived_name,
+                        &full_name
                     );
-                    let url = format!("{}/{}", S3_URL, hash);
+                    #[cfg(feature = "dev")]
+                    {
+                        // try to copy built file from the Anoma WASM root dir
+                        if tokio::fs::copy(
+                            std::env::current_dir()
+                                .unwrap()
+                                .join(crate::config::DEFAULT_WASM_DIR)
+                                .join(&full_name),
+                            wasm_directory.join(&full_name),
+                        )
+                        .await
+                        .is_ok()
+                        {
+                            tracing::info!(
+                                "File {} copied from WASM root dir.",
+                                full_name
+                            );
+                            return;
+                        }
+                    }
+
+                    let url = format!("{}/{}", S3_URL, full_name);
                     match download_wasm(url).await {
                         Ok(bytes) => {
                             if let Err(e) =
@@ -148,7 +201,29 @@ pub async fn pre_fetch_wasm(wasm_directory: impl AsRef<Path>) {
                 // if the doesn't file exist, download it.
                 Err(err) => match err.kind() {
                     std::io::ErrorKind::NotFound => {
-                        let url = format!("{}/{}", S3_URL, hash);
+                        #[cfg(feature = "dev")]
+                        {
+                            // try to copy built file from the Anoma WASM root
+                            // dir
+                            if tokio::fs::copy(
+                                std::env::current_dir()
+                                    .unwrap()
+                                    .join(crate::config::DEFAULT_WASM_DIR)
+                                    .join(&full_name),
+                                wasm_directory.join(&full_name),
+                            )
+                            .await
+                            .is_ok()
+                            {
+                                tracing::info!(
+                                    "File {} copied from WASM root dir.",
+                                    full_name
+                                );
+                                return;
+                            }
+                        }
+
+                        let url = format!("{}/{}", S3_URL, full_name);
                         match download_wasm(url).await {
                             Ok(bytes) => {
                                 if let Err(e) =

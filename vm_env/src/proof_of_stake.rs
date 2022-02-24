@@ -70,12 +70,12 @@ pub fn init_validator(
     let current_epoch = tx::get_block_epoch();
     // Init validator account
     let validator_address = tx::init_account(&validator_vp_code);
-    let pk_key = key::ed25519::pk_key(&validator_address);
+    let pk_key = key::pk_key(&validator_address);
     tx::write(&pk_key.to_string(), &account_key);
 
     // Init staking reward account
     let rewards_address = tx::init_account(&rewards_vp_code);
-    let pk_key = key::ed25519::pk_key(&rewards_address);
+    let pk_key = key::pk_key(&rewards_address);
     tx::write(&pk_key.to_string(), &rewards_account_key);
 
     PoS.become_validator(
@@ -93,7 +93,7 @@ pub struct PoS;
 
 impl anoma_proof_of_stake::PosReadOnly for PoS {
     type Address = Address;
-    type PublicKey = key::ed25519::PublicKey;
+    type PublicKey = key::common::PublicKey;
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 

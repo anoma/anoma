@@ -4,7 +4,9 @@ use std::convert::TryFrom;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
+use anoma::types::key::*;
+use anoma::types::nft::{self, Nft, NftToken};
+use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
     pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
 };
@@ -43,15 +45,19 @@ use crate::client::tendermint_websocket_client::{
 #[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
+use crate::std::fs::File;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
 const TX_UPDATE_VP_WASM: &str = "tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "tx_transfer.wasm";
+const TX_CREATE_NFT: &str = "tx_create_nft.wasm";
+const TX_MINT_NFT_TOKEN: &str = "tx_mint_nft_tokens.wasm";
 const VP_USER_WASM: &str = "vp_user.wasm";
 const TX_BOND_WASM: &str = "tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "tx_unbond.wasm";
 const TX_WITHDRAW_WASM: &str = "tx_withdraw.wasm";
+const VP_NFT: &str = "vp_nft.wasm";
 
 pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
     let tx_code = ctx.read_wasm(args.code_path);
@@ -176,8 +182,7 @@ pub async fn submit_init_validator(
         ctx.wallet
             .gen_key(Some(validator_key_alias.clone()), unsafe_dont_encrypt)
             .1
-            .public
-            .clone()
+            .ref_to()
     });
 
     let consensus_key =
@@ -194,8 +199,7 @@ pub async fn submit_init_validator(
             ctx.wallet
                 .gen_key(Some(rewards_key_alias.clone()), unsafe_dont_encrypt)
                 .1
-                .public
-                .clone()
+                .ref_to()
         });
 
     ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
@@ -231,7 +235,7 @@ pub async fn submit_init_validator(
 
     let data = InitValidator {
         account_key,
-        consensus_key: consensus_key.public.clone(),
+        consensus_key: consensus_key.ref_to(),
         rewards_account_key,
         validator_vp_code,
         rewards_vp_code,
@@ -417,6 +421,83 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
+    process_tx(ctx, &args.tx, tx, &keypair).await;
+}
+
+pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {
+    let file = File::open(&args.nft_data).expect("File must exist.");
+    let nft: Nft = serde_json::from_reader(file)
+        .expect("Couldn't deserialize nft data file");
+
+    let vp_code = match &nft.vp_path {
+        Some(path) => {
+            std::fs::read(path).expect("Expected a file at given code path")
+        }
+        None => ctx.read_wasm(VP_NFT),
+    };
+
+    let signer = Some(WalletAddress::new(nft.creator.clone().to_string()));
+
+    let data = CreateNft {
+        tag: nft.tag.to_string(),
+        creator: nft.creator,
+        vp_code,
+        keys: nft.keys,
+        opt_keys: nft.opt_keys,
+        tokens: nft.tokens,
+    };
+
+    let data = data.try_to_vec().expect(
+        "Encoding transfer data to initialize a new account shouldn't fail",
+    );
+
+    let tx_code = ctx.read_wasm(TX_CREATE_NFT);
+
+    let tx = Tx::new(tx_code, Some(data));
+
+    let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, signer.as_ref()).await;
+
+    process_tx(ctx, &args.tx, tx, &keypair).await;
+}
+
+pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
+    let file = File::open(&args.nft_data).expect("File must exist.");
+    let nft_tokens: Vec<NftToken> =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    let nft_creator_key = nft::get_creator_key(&args.nft_address);
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let nft_creator_address = match rpc::query_storage_value::<Address>(
+        client,
+        nft_creator_key,
+    )
+    .await
+    {
+        Some(addr) => addr,
+        None => {
+            eprintln!("No creator key found for {}", &args.nft_address);
+            safe_exit(1);
+        }
+    };
+
+    let signer = Some(WalletAddress::new(nft_creator_address.to_string()));
+
+    let data = MintNft {
+        address: args.nft_address,
+        creator: nft_creator_address,
+        tokens: nft_tokens,
+    };
+
+    let data = data.try_to_vec().expect(
+        "Encoding transfer data to initialize a new account shouldn't fail",
+    );
+
+    let tx_code = ctx.read_wasm(TX_MINT_NFT_TOKEN);
+
+    let tx = Tx::new(tx_code, Some(data));
+
+    let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, signer.as_ref()).await;
+
     process_tx(ctx, &args.tx, tx, &keypair).await;
 }
 
@@ -635,7 +716,7 @@ async fn sign_tx(
     tx: Tx,
     args: &args::Tx,
     default: Option<&WalletAddress>,
-) -> (Context, Tx, std::rc::Rc<Keypair>) {
+) -> (Context, Tx, std::rc::Rc<common::SecretKey>) {
     let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
         let signing_key = ctx.get_cached(signing_key);
         (tx.sign(&signing_key), signing_key)
@@ -664,7 +745,7 @@ async fn process_tx(
     ctx: Context,
     args: &args::Tx,
     tx: Tx,
-    keypair: &Keypair,
+    keypair: &common::SecretKey,
 ) -> (Context, Vec<Address>) {
     // NOTE: use this to print the request JSON body:
 
@@ -796,7 +877,7 @@ pub fn tx_hashes(tx: &WrapperTx) -> (String, String) {
 pub async fn broadcast_tx(
     address: TendermintAddress,
     tx: WrapperTx,
-    keypair: &Keypair,
+    keypair: &common::SecretKey,
 ) -> Result<Response, Error> {
     // These can later be used to determine when parts of the tx make it
     // on-chain
@@ -848,7 +929,7 @@ pub async fn broadcast_tx(
 pub async fn submit_tx(
     address: TendermintAddress,
     tx: WrapperTx,
-    keypair: &Keypair,
+    keypair: &common::SecretKey,
 ) -> Result<TxResponse, Error> {
     let mut wrapper_tx_subscription = TendermintWebsocketClient::open(
         WebSocketAddress::try_from(address.clone())?,

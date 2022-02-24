@@ -3,7 +3,7 @@
 use std::fs::File;
 use std::io::{self, Write};
 
-use anoma::types::key::ed25519::PublicKeyHash;
+use anoma::types::key::*;
 use anoma_apps::cli;
 use anoma_apps::cli::{args, cmds, Context};
 use anoma_apps::wallet::DecryptionError;
@@ -81,17 +81,17 @@ fn key_find(
                     );
                     cli::safe_exit(1)
                 }
-                Some(alias) => wallet.find_key(alias),
+                Some(alias) => wallet.find_key(alias.to_lowercase()),
             }
         }
     };
     match found_keypair {
         Ok(keypair) => {
-            let pkh: PublicKeyHash = (&keypair.public).into();
+            let pkh: PublicKeyHash = (&keypair.ref_to()).into();
             println!("Public key hash: {}", pkh);
-            println!("Public key: {}", keypair.public);
+            println!("Public key: {}", keypair.ref_to());
             if unsafe_show_secret {
-                println!("Secret key: {}", keypair.secret);
+                println!("Secret key: {}", keypair);
             }
         }
         Err(err) => {
@@ -131,10 +131,10 @@ fn key_list(
             }
             match stored_keypair.get(decrypt) {
                 Ok(keypair) => {
-                    writeln!(w, "    Public key: {}", keypair.public).unwrap();
+                    writeln!(w, "    Public key: {}", keypair.ref_to())
+                        .unwrap();
                     if unsafe_show_secret {
-                        writeln!(w, "    Secret key: {}", keypair.secret)
-                            .unwrap();
+                        writeln!(w, "    Secret key: {}", keypair).unwrap();
                     }
                 }
                 Err(DecryptionError::NotDecrypting) if !decrypt => {
@@ -153,12 +153,12 @@ fn key_list(
 fn key_export(ctx: Context, args::KeyExport { alias }: args::KeyExport) {
     let mut wallet = ctx.wallet;
     wallet
-        .find_key(alias.clone())
+        .find_key(alias.clone().to_lowercase())
         .map(|keypair| {
             let file_data = keypair
                 .try_to_vec()
                 .expect("Encoding keypair shouldn't fail");
-            let file_name = format!("key_{}", alias);
+            let file_name = format!("key_{}", alias.to_lowercase());
             let mut file = File::create(&file_name).unwrap();
 
             file.write_all(file_data.as_ref()).unwrap();
@@ -199,7 +199,7 @@ fn address_find(ctx: Context, args: args::AddressFind) {
         println!(
             "No address with alias {} found. Use the command `address list` \
              to see all the known addresses.",
-            args.alias
+            args.alias.to_lowercase()
         );
     }
 }
@@ -208,7 +208,7 @@ fn address_find(ctx: Context, args: args::AddressFind) {
 fn address_add(ctx: Context, args: args::AddressAdd) {
     let mut wallet = ctx.wallet;
     if wallet
-        .add_address(args.alias.clone(), args.address)
+        .add_address(args.alias.clone().to_lowercase(), args.address)
         .is_none()
     {
         eprintln!("Address not added");
@@ -217,6 +217,6 @@ fn address_add(ctx: Context, args: args::AddressAdd) {
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully added a key and an address with alias: \"{}\"",
-        args.alias
+        args.alias.to_lowercase()
     );
 }

@@ -48,6 +48,8 @@ pub mod cmds {
         TxCustom(TxCustom),
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
+        TxInitNft(TxInitNft),
+        TxMintNft(TxMintNft),
         Intent(Intent),
     }
 
@@ -62,6 +64,8 @@ pub mod cmds {
                 .subcommand(TxCustom::def())
                 .subcommand(TxTransfer::def())
                 .subcommand(TxUpdateVp::def())
+                .subcommand(TxInitNft::def())
+                .subcommand(TxMintNft::def())
                 .subcommand(Intent::def())
         }
 
@@ -75,6 +79,8 @@ pub mod cmds {
             let tx_custom = SubCmd::parse(matches).map(Self::TxCustom);
             let tx_transfer = SubCmd::parse(matches).map(Self::TxTransfer);
             let tx_update_vp = SubCmd::parse(matches).map(Self::TxUpdateVp);
+            let tx_nft_create = SubCmd::parse(matches).map(Self::TxInitNft);
+            let tx_nft_mint = SubCmd::parse(matches).map(Self::TxMintNft);
             let intent = SubCmd::parse(matches).map(Self::Intent);
             node.or(client)
                 .or(wallet)
@@ -84,6 +90,8 @@ pub mod cmds {
                 .or(tx_custom)
                 .or(tx_transfer)
                 .or(tx_update_vp)
+                .or(tx_nft_create)
+                .or(tx_nft_mint)
                 .or(intent)
         }
     }
@@ -155,6 +163,9 @@ pub mod cmds {
                 .subcommand(TxUpdateVp::def().display_order(1))
                 .subcommand(TxInitAccount::def().display_order(1))
                 .subcommand(TxInitValidator::def().display_order(1))
+                // Nft transactions
+                .subcommand(TxInitNft::def().display_order(1))
+                .subcommand(TxMintNft::def().display_order(1))
                 // PoS transactions
                 .subcommand(Bond::def().display_order(2))
                 .subcommand(Unbond::def().display_order(2))
@@ -181,6 +192,8 @@ pub mod cmds {
             let tx_init_account = Self::parse_with_ctx(matches, TxInitAccount);
             let tx_init_validator =
                 Self::parse_with_ctx(matches, TxInitValidator);
+            let tx_nft_create = Self::parse_with_ctx(matches, TxInitNft);
+            let tx_nft_mint = Self::parse_with_ctx(matches, TxMintNft);
             let bond = Self::parse_with_ctx(matches, Bond);
             let unbond = Self::parse_with_ctx(matches, Unbond);
             let withdraw = Self::parse_with_ctx(matches, Withdraw);
@@ -199,6 +212,8 @@ pub mod cmds {
                 .or(tx_update_vp)
                 .or(tx_init_account)
                 .or(tx_init_validator)
+                .or(tx_nft_create)
+                .or(tx_nft_mint)
                 .or(bond)
                 .or(unbond)
                 .or(withdraw)
@@ -252,6 +267,8 @@ pub mod cmds {
         TxUpdateVp(TxUpdateVp),
         TxInitAccount(TxInitAccount),
         TxInitValidator(TxInitValidator),
+        TxInitNft(TxInitNft),
+        TxMintNft(TxMintNft),
         Bond(Bond),
         Unbond(Unbond),
         Withdraw(Withdraw),
@@ -988,6 +1005,50 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct TxInitNft(pub args::NftCreate);
+
+    impl SubCmd for TxInitNft {
+        const CMD: &'static str = "init-nft";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| TxInitNft(args::NftCreate::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Create a new NFT.")
+                .add_args::<args::NftCreate>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct TxMintNft(pub args::NftMint);
+
+    impl SubCmd for TxMintNft {
+        const CMD: &'static str = "mint-nft";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| TxMintNft(args::NftMint::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Mint new NFT tokens.")
+                .add_args::<args::NftMint>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct Intent(pub args::Intent);
 
     impl SubCmd for Intent {
@@ -1134,7 +1195,7 @@ pub mod args {
     use anoma::types::address::Address;
     use anoma::types::chain::{ChainId, ChainIdPrefix};
     use anoma::types::intent::{DecimalWrapper, Exchange};
-    use anoma::types::key::ed25519::PublicKey;
+    use anoma::types::key::*;
     use anoma::types::storage::Epoch;
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
@@ -1213,10 +1274,11 @@ pub mod args {
     const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
     const NODE_OPT: ArgOpt<String> = arg_opt("node");
     const NODE: Arg<String> = arg("node");
+    const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
-    const RAW_PUBLIC_KEY_OPT: ArgOpt<PublicKey> = arg_opt("public-key");
+    const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
@@ -1283,10 +1345,11 @@ pub mod args {
                 ))
                 .arg(WASM_DIR.def().about(
                     "Directory with built WASM validity predicates, \
-                     transactions and matchmaker files. This value can also \
-                     be set via `ANOMA_WASM_DIR` environment variable, but \
-                     the argument takes precedence, if specified. Defaults to \
-                     `wasm` path, relative to current working directory.",
+                     transactions and matchmaker files. This must not be an \
+                     absolute path as the directory is nested inside the \
+                     chain directory. This value can also be set via \
+                     `ANOMA_WASM_DIR` environment variable, but the argument \
+                     takes precedence, if specified.",
                 ))
                 .arg(MODE.def().about(
                     "The mode in which to run Anoma. Options are \n\t * \
@@ -1666,6 +1729,66 @@ pub mod args {
                      withdrawing from self-bonds, the validator is also the \
                      source.",
                 ))
+        }
+    }
+
+    // Transaction to create a new nft
+    #[derive(Clone, Debug)]
+    pub struct NftCreate {
+        /// Common tx argumentsips
+        pub tx: Tx,
+        /// Path to the nft file description
+        pub nft_data: PathBuf,
+    }
+
+    impl Args for NftCreate {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let data_path = DATA_PATH.parse(matches);
+
+            Self {
+                tx,
+                nft_data: data_path,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(DATA_PATH.def().about("The path nft description file."))
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct NftMint {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// The nft address
+        pub nft_address: Address,
+        /// The nft token description
+        pub nft_data: PathBuf,
+    }
+
+    impl Args for NftMint {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let nft_address = NFT_ADDRESS.parse(matches);
+            let data_path = DATA_PATH.parse(matches);
+
+            Self {
+                tx,
+                nft_address,
+                nft_data: data_path,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(NFT_ADDRESS.def().about("The nft address."))
+                .arg(
+                    DATA_PATH.def().about(
+                        "The data path file that describes the nft tokens.",
+                    ),
+                )
         }
     }
 
@@ -2234,7 +2357,7 @@ pub mod args {
     /// Wallet key lookup arguments
     #[derive(Clone, Debug)]
     pub struct KeyFind {
-        pub public_key: Option<PublicKey>,
+        pub public_key: Option<common::PublicKey>,
         pub alias: Option<String>,
         pub value: Option<String>,
         pub unsafe_show_secret: bool,

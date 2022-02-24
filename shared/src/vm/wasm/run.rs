@@ -373,7 +373,9 @@ pub fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
     // Use Singlepass compiler with the default settings
     let compiler = wasmer_compiler_singlepass::Singlepass::default();
     wasmer::Store::new_with_tunables(
-        &wasmer_engine_universal::Universal::new(compiler).engine(),
+        // TODO wasmer 2.x
+        // &wasmer_engine_universal::Universal::new(compiler).engine(),
+        &wasmer_engine_jit::JIT::new(compiler).engine(),
         limit,
     )
 }

@@ -4,6 +4,8 @@
 /// non-decryptability
 pub mod decrypted;
 mod encrypted;
+/// txs to manage nfts
+pub mod nft;
 pub mod pos;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
@@ -21,7 +23,7 @@ use tendermint_stable::abci::transaction;
 pub use wrapper::*;
 
 use crate::types::address::Address;
-use crate::types::key::ed25519::PublicKey;
+use crate::types::key::*;
 
 #[derive(
     Clone,
@@ -91,7 +93,7 @@ pub struct InitAccount {
     /// Public key to be written into the account's storage. This can be used
     /// for signature verification of transactions for the newly created
     /// account.
-    pub public_key: PublicKey,
+    pub public_key: common::PublicKey,
     /// The VP code
     pub vp_code: Vec<u8>,
 }
@@ -111,13 +113,13 @@ pub struct InitValidator {
     /// Public key to be written into the account's storage. This can be used
     /// for signature verification of transactions for the newly created
     /// account.
-    pub account_key: PublicKey,
+    pub account_key: common::PublicKey,
     /// A key to be used for signing blocks and votes on blocks.
-    pub consensus_key: PublicKey,
+    pub consensus_key: common::PublicKey,
     /// Public key to be written into the staking reward account's storage.
     /// This can be used for signature verification of transactions for the
     /// newly created account.
-    pub rewards_account_key: PublicKey,
+    pub rewards_account_key: common::PublicKey,
     /// The VP code for validator account
     pub validator_vp_code: Vec<u8>,
     /// The VP code for validator's staking reward account
@@ -133,8 +135,7 @@ pub mod tx_types {
     use std::convert::TryFrom;
 
     use super::*;
-    use crate::proto::Tx;
-    use crate::types::key::ed25519::{verify_tx_sig, SignedTxData};
+    use crate::proto::{SignedTxData, Tx};
 
     /// Struct that classifies that kind of Tx
     /// based on the contents of its data.
@@ -210,7 +211,7 @@ pub mod tx_types {
             {
                 // verify signature and extract signed data
                 TxType::Wrapper(wrapper) => {
-                    verify_tx_sig(&wrapper.pk, &tx, sig)
+                    tx.verify_sig(&wrapper.pk, sig)
                         .map_err(WrapperTxErr::SigError)?;
                     Ok(TxType::Wrapper(wrapper))
                 }
@@ -235,15 +236,14 @@ pub mod tx_types {
     mod test_process_tx {
         use super::*;
         use crate::types::address::xan;
-        use crate::types::key::ed25519::Keypair;
         use crate::types::storage::Epoch;
 
-        fn gen_keypair() -> Keypair {
+        fn gen_keypair() -> common::SecretKey {
             use rand::prelude::ThreadRng;
             use rand::thread_rng;
 
             let mut rng: ThreadRng = thread_rng();
-            Keypair::generate(&mut rng)
+            ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap()
         }
 
         /// Test that process_tx correctly identifies a raw tx with no
@@ -401,13 +401,15 @@ pub mod tx_types {
         );
         let decrypted = DecryptedTx::Decrypted(payload.clone());
         // Invalid signed data
+        let ed_sig =
+            ed25519::Signature::try_from_slice([0u8; 64].as_ref()).unwrap();
         let signed = SignedTxData {
             data: Some(
                 TxType::Decrypted(decrypted)
                     .try_to_vec()
                     .expect("Test failed"),
             ),
-            sig: ed25519_dalek::Signature::from([0u8; 64]).into(),
+            sig: common::Signature::try_from_sig(&ed_sig).unwrap(),
         };
         // create the tx with signed decrypted data
         let tx =

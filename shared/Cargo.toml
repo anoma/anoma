@@ -18,7 +18,6 @@ ferveo-tpke = [
   "ark-ec",
   "ark-serialize",
   "rand_core",
-  "rand_new",
   "rand",
 ]
 # for integration tests and test utilies
@@ -46,15 +45,19 @@ testing = [
   "tempfile",
 ]
 wasm-runtime = [
-  "loupe",
   "parity-wasm",
   "pwasm-utils",
   "wasmer-cache",
   "wasmer-compiler-singlepass",
-  "wasmer-engine-dylib",
-  "wasmer-engine-universal",
+  "wasmer-compiler-cranelift",
+  "wasmer-engine-jit",
   "wasmer-vm",
   "wasmer",
+
+  # TODO wasmer 2.x
+  # "loupe",
+  # "wasmer-engine-dylib",
+  # "wasmer-engine-universal",
 ]
 
 [dependencies]
@@ -68,28 +71,25 @@ chrono = "0.4.19"
 # Using unreleased commit on top of version 0.5.0 that adds Sync to the CLruCache
 clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 derivative = "2.2.0"
-ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
+ed25519-consensus = "1.2.0"
 hex = "0.4.3"
 tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/workspace-cleanup"}
 # TODO temp fork for borsh coding
 # Also, using the same version of tendermint-rs as we do here.
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", features = ["mocks"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", features = ["mocks"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", features = ["mocks"], optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", features = ["mocks"], optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 ics23 = "0.6.7"
 itertools = "0.10.0"
-loupe = {version = "0.1.3", optional = true}
 parity-wasm = {version = "0.42.2", optional = true}
 proptest = {version = "1.0.0", optional = true}
 prost = "0.9.0"
 prost-types = "0.9.0"
 pwasm-utils = {version = "0.18.0", optional = true}
-# TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
-rand = {version = "=0.7", optional = true}
+rand = {version = "0.8", optional = true}
 # TODO proptest rexports the RngCore trait but the re-implementations only work for version `0.8`. *sigh*
-rand_core = {version = "0.5", optional = true}
-rand_new = {package = "rand", version = "0.8", optional = true}
+rand_core = {version = "0.6", optional = true}
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_json = "1.0.62"
@@ -98,19 +98,29 @@ sha2 = "0.9.3"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", default-features = false, features = ["std", "borsh"]}
 tempfile = {version = "3.2.0", optional = true}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
-tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 thiserror = "1.0.30"
 tracing = "0.1.29"
-wasmer = {version = "=2.1.1", optional = true}
-wasmer-cache = {version = "=2.1.1", optional = true}
-wasmer-compiler-singlepass = {version = "=2.1.1", optional = true}
-wasmer-engine-dylib = {version = "=2.1.1", optional = true}
-wasmer-engine-universal = {version = "=2.1.1", optional = true}
-wasmer-vm = {version = "2.1.1", optional = true}
+wasmer = {version = "=1.0.2", optional = true}
+wasmer-cache = {version = "=1.0.2", optional = true}
+wasmer-compiler-cranelift = {version = "=1.0.2", optional = true}
+wasmer-compiler-singlepass = {version = "=1.0.2", optional = true}
+wasmer-engine-jit = {version = "=1.0.2", optional = true}
+wasmer-vm = {version = "=1.0.2", optional = true}
 wasmparser = "0.81.0"
+
+# TODO wasmer 2.x
+# loupe = {version = "0.1.3", optional = true}
+# wasmer = {version = "=2.1.0", optional = true}
+# wasmer-cache = {version = "=2.1.0", optional = true}
+# wasmer-compiler-cranelift = {version = "=2.1.0", optional = true}
+# wasmer-compiler-singlepass = {version = "=2.1.0", optional = true}
+# wasmer-engine-dylib = {version = "=2.1.0", optional = true}
+# wasmer-engine-universal = {version = "=2.1.0", optional = true}
+# wasmer-vm = {version = "=2.1.0", optional = true}
 
 [dev-dependencies]
 assert_matches = "1.5.0"

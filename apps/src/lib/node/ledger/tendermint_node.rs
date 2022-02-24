@@ -3,8 +3,9 @@ use std::str::FromStr;
 
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
-use anoma::types::key::ed25519::Keypair;
+use anoma::types::key::*;
 use anoma::types::time::DateTimeUtc;
+use borsh::BorshSerialize;
 use serde_json::json;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::Genesis;
@@ -214,11 +215,36 @@ pub fn reset(tendermint_dir: impl AsRef<Path>) -> Result<()> {
     Ok(())
 }
 
+/// Convert a common signing scheme validator key into JSON for
+/// Tendermint
+fn validator_key_to_json<SK: SecretKey>(
+    address: &Address,
+    sk: &SK,
+) -> std::result::Result<serde_json::Value, ParseSecretKeyError> {
+    let address = address.raw_hash().unwrap();
+    ed25519::SecretKey::try_from_sk(sk).map(|sk| {
+        let pk: ed25519::PublicKey = sk.ref_to();
+        let ck_arr =
+            [sk.try_to_vec().unwrap(), pk.try_to_vec().unwrap()].concat();
+        json!({
+            "address": address,
+            "pub_key": {
+                "type": "tendermint/PubKeyEd25519",
+                "value": base64::encode(pk.try_to_vec().unwrap()),
+            },
+            "priv_key": {
+                "type": "tendermint/PrivKeyEd25519",
+                "value": base64::encode(ck_arr),
+            }
+        })
+    })
+}
+
 /// Initialize validator private key for Tendermint
 pub async fn write_validator_key_async(
     home_dir: impl AsRef<Path>,
     address: &Address,
-    consensus_key: &Keypair,
+    consensus_key: &common::SecretKey,
 ) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("priv_validator_key.json");
@@ -234,21 +260,7 @@ pub async fn write_validator_key_async(
         .open(&path)
         .await
         .expect("Couldn't create private validator key file");
-    let pk: ed25519_dalek::PublicKey = consensus_key.public.clone().into();
-    let pk = base64::encode(pk.as_bytes());
-    let sk = base64::encode(consensus_key.to_bytes());
-    let address = address.raw_hash().unwrap();
-    let key = json!({
-       "address": address,
-       "pub_key": {
-         "type": "tendermint/PubKeyEd25519",
-         "value": pk,
-       },
-       "priv_key": {
-         "type": "tendermint/PrivKeyEd25519",
-         "value": sk,
-      }
-    });
+    let key = validator_key_to_json(address, consensus_key).unwrap();
     let data = serde_json::to_vec_pretty(&key)
         .expect("Couldn't encode private validator key file");
     file.write_all(&data[..])
@@ -260,7 +272,7 @@ pub async fn write_validator_key_async(
 pub fn write_validator_key(
     home_dir: impl AsRef<Path>,
     address: &Address,
-    consensus_key: &Keypair,
+    consensus_key: &common::SecretKey,
 ) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("priv_validator_key.json");
@@ -274,21 +286,7 @@ pub fn write_validator_key(
         .truncate(true)
         .open(&path)
         .expect("Couldn't create private validator key file");
-    let pk: ed25519_dalek::PublicKey = consensus_key.public.clone().into();
-    let pk = base64::encode(pk.as_bytes());
-    let sk = base64::encode(consensus_key.to_bytes());
-    let address = address.raw_hash().unwrap();
-    let key = json!({
-       "address": address,
-       "pub_key": {
-         "type": "tendermint/PubKeyEd25519",
-         "value": pk,
-       },
-       "priv_key": {
-         "type": "tendermint/PrivKeyEd25519",
-         "value": sk,
-      }
-    });
+    let key = validator_key_to_json(address, consensus_key).unwrap();
     serde_json::to_writer_pretty(file, &key)
         .expect("Couldn't write private validator key file");
 }
@@ -392,7 +390,9 @@ async fn write_tm_genesis(
         .expect("Couldn't deserialize the genesis file");
     genesis.chain_id =
         FromStr::from_str(chain_id.as_str()).expect("Invalid chain ID");
-    genesis.genesis_time = genesis_time.into();
+    genesis.genesis_time = genesis_time
+        .try_into()
+        .expect("Couldn't convert DateTimeUtc to Tendermint Time");
 
     let mut file = OpenOptions::new()
         .write(true)
