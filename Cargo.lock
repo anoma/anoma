@@ -276,11 +276,16 @@ dependencies = [
  "serde_json",
  "sha2 0.9.9",
  "tempfile",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "test-log",
+ "tokio",
  "toml",
  "tracing 0.1.35",
  "tracing-subscriber 0.3.11",
@@ -6402,34 +6407,6 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5#e43b68719e70e8e1c002e7f6fa557e0bafa01e0d"
-dependencies = [
- "async-trait",
- "bytes 1.1.0",
- "ed25519",
- "ed25519-dalek",
- "flex-error",
- "futures 0.3.21",
- "num-traits 0.2.15",
- "once_cell",
- "prost 0.9.0",
- "prost-types 0.9.0",
- "serde 1.0.137",
- "serde_bytes",
- "serde_json",
- "serde_repr",
- "sha2 0.9.9",
- "signature",
- "subtle 2.4.1",
- "subtle-encoding",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
- "time 0.3.9",
- "zeroize",
-]
-
-[[package]]
-name = "tendermint"
-version = "0.23.5"
 source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "async-trait",
@@ -6532,23 +6509,6 @@ dependencies = [
  "serde 1.0.137",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
- "time 0.3.9",
-]
-
-[[package]]
-name = "tendermint-proto"
-version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5#e43b68719e70e8e1c002e7f6fa557e0bafa01e0d"
-dependencies = [
- "bytes 1.1.0",
- "flex-error",
- "num-derive",
- "num-traits 0.2.15",
- "prost 0.9.0",
- "prost-types 0.9.0",
- "serde 1.0.137",
- "serde_bytes",
- "subtle-encoding",
  "time 0.3.9",
 ]
 

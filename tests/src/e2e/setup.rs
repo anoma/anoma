@@ -45,6 +45,7 @@ pub struct Network {
 /// Offset the ports used in the network configuration by 1000 for ABCI++ to
 /// avoid shared resources
 pub const ABCI_PLUS_PLUS_PORT_OFFSET: u16 = 1000;
+pub const ANOTHER_CHAIN_PORT_OFFSET: u16 = 1;
 
 /// Add `num` validators to the genesis config. Note that called from inside
 /// the [`network`]'s first argument's closure, there is 1 validator already
@@ -95,9 +96,27 @@ pub fn single_node_net() -> Result<Test> {
     network(|genesis| genesis, None)
 }
 
+pub fn two_single_node_nets() -> Result<(Test, Test)> {
+    Ok((
+        network(|genesis| genesis, None)?,
+        network(set_another_address, None)?,
+    ))
+}
+
+fn set_another_address(mut genesis: GenesisConfig) -> GenesisConfig {
+    let validator_0 = genesis.validator.get_mut("validator-0").unwrap();
+    let mut net_address_0 =
+        SocketAddr::from_str(validator_0.net_address.as_ref().unwrap())
+            .unwrap();
+    let current_port = net_address_0.port();
+    net_address_0.set_port(current_port + ANOTHER_CHAIN_PORT_OFFSET);
+    validator_0.net_address = Some(net_address_0.to_string());
+    genesis
+}
+
 /// Setup a configurable network.
 pub fn network(
-    update_genesis: impl Fn(GenesisConfig) -> GenesisConfig,
+    mut update_genesis: impl FnMut(GenesisConfig) -> GenesisConfig,
     consensus_timeout_commit: Option<&'static str>,
 ) -> Result<Test> {
     INIT.call_once(|| {

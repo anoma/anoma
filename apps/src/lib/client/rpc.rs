@@ -33,6 +33,8 @@ use itertools::Itertools;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
+use tendermint::merkle::proof::Proof;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
@@ -54,6 +56,8 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::merkle::proof::Proof;
 
 use crate::cli::{self, args, Context};
 use crate::client::tendermint_rpc_types::TxResponse;
@@ -1384,20 +1388,34 @@ pub async fn query_storage_value<T>(
 where
     T: BorshDeserialize,
 {
-    let path = Path::Value(key.to_owned());
-    let data = vec![];
-    let response = client
-        .abci_query(Some(path.into()), data, None, false)
-        .await
-        .unwrap();
-    match response.code {
-        Code::Ok => match T::try_from_slice(&response.value[..]) {
+    let (value, _proof) = query_storage_value_bytes(client, key, false).await;
+    match value {
+        Some(v) => match T::try_from_slice(&v[..]) {
             Ok(value) => return Some(value),
             Err(err) => eprintln!("Error decoding the value: {}", err),
         },
+        None => return None,
+    }
+    cli::safe_exit(1)
+}
+
+/// Query a storage value and the proof without decoding.
+pub async fn query_storage_value_bytes(
+    client: &HttpClient,
+    key: &storage::Key,
+    prove: bool,
+) -> (Option<Vec<u8>>, Option<Proof>) {
+    let path = Path::Value(key.to_owned());
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, prove)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => return (Some(response.value), response.proof),
         Code::Err(err) => {
             if err == 1 {
-                return None;
+                return (None, response.proof);
             } else {
                 eprintln!(
                     "Error in the query {} (error code {})",

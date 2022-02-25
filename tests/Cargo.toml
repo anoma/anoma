@@ -12,12 +12,20 @@ default = ["wasm-runtime", "ABCI"]
 wasm-runtime = ["anoma/wasm-runtime"]
 
 ABCI = [
+  "tendermint-stable",
+  "tendermint-proto-abci",
+  "tendermint-config-abci",
+  "tendermint-rpc-abci",
   "anoma/ABCI",
   "anoma/ibc-mocks-abci",
   "anoma_vm_env/ABCI",
 ]
 
 ABCI-plus-plus = [
+  "tendermint",
+  "tendermint-proto",
+  "tendermint-config",
+  "tendermint-rpc",
   "anoma/ABCI-plus-plus",
   "anoma/ibc-mocks",
   "anoma_vm_env/ABCI-plus-plus",
@@ -34,10 +42,15 @@ sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tempfile = "3.2.0"
 # temporarily using fork work-around
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true}
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true}
+tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
+tokio = {version = "1.8.2", features = ["full"]}
 tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 derivative = "2.2.0"
