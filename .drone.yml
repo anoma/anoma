@@ -1,4 +1,3 @@
----
 name: anoma-ci-wasm-pr
 kind: pipeline
 node:
@@ -623,12 +622,8 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
   commands:
-  - git clone $DRONE_GIT_HTTP_URL .
-  - git fetch --all
-  - git checkout $DRONE_TARGET_BRANCH
-  - git merge $DRONE_COMMIT
-  - CONFLICTS=$(git ls-files -u | wc -l)
-  - if [ "$CONFLICTS" -gt 0 ]; then exit 1; fi;exit 0
+  - git clone $DRONE_GIT_HTTP_URL --depth 1 --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
 - name: download-scripts
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
@@ -701,7 +696,7 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
   commands:
-  - cd scripts/ci/ && audit.sh
+  - cd scripts/ci && sh audit.sh
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: aws_access_key_id
@@ -713,7 +708,7 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
   commands:
-  - cd scripts/ci && audit.sh
+  - cd scripts/ci && sh udeps.sh
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: aws_access_key_id
@@ -1099,8 +1094,3 @@ environment:
   GIT_LFS_SKIP_SMUDGE: '1'
 clone:
   disable: true
----
-kind: signature
-hmac: 4a16d30da21742c123b66e4141ae030b7087cfa43998364e3dc541c897d87453
-
-...
