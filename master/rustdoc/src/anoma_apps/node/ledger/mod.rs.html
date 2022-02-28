@@ -528,6 +528,31 @@
 <span id="527">527</span>
 <span id="528">528</span>
 <span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rpc</span>;
@@ -868,7 +893,7 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Must be able to start a thread for the shell&quot;</span>);
 
     <span class="comment">// Wait for interrupt signal or abort message</span>
-    <span class="ident">wait_for_abort</span>(<span class="ident">abort_recv</span>).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">aborted</span> <span class="op">=</span> <span class="ident">wait_for_abort</span>(<span class="ident">abort_recv</span>).<span class="kw">await</span>;
 
     <span class="comment">// Abort the ABCI service task</span>
     <span class="ident">abci</span>.<span class="ident">abort</span>();
@@ -894,11 +919,14 @@
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">tokio::try_join!</span>(<span class="ident">tendermint_node</span>, <span class="ident">abci</span>);
     <span class="kw">match</span> <span class="ident">res</span> {
         <span class="prelude-val">Ok</span>((<span class="ident">tendermint_res</span>, <span class="ident">abci_res</span>)) =&gt; {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_res</span> {
-                <span class="macro">tracing::error!</span>(<span class="string">&quot;Tendermint error: {}&quot;</span>, <span class="ident">err</span>);
-            }
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">abci_res</span> {
-                <span class="macro">tracing::error!</span>(<span class="string">&quot;ABCI error: {}&quot;</span>, <span class="ident">err</span>);
+            <span class="comment">// we ignore errors on user-initiated shutdown</span>
+            <span class="kw">if</span> <span class="ident">aborted</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_res</span> {
+                    <span class="macro">tracing::error!</span>(<span class="string">&quot;Tendermint error: {}&quot;</span>, <span class="ident">err</span>);
+                }
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">abci_res</span> {
+                    <span class="macro">tracing::error!</span>(<span class="string">&quot;ABCI error: {}&quot;</span>, <span class="ident">err</span>);
+                }
             }
         }
         <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
@@ -908,6 +936,7 @@
             }
         }
     }
+
     <span class="macro">tracing::info!</span>(<span class="string">&quot;Anoma ledger node has shut down.&quot;</span>);
 
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">shell_handler</span>.<span class="ident">join</span>() {
@@ -966,10 +995,15 @@
     }
 }
 
+<span class="doccomment">/// Function that blocks until either</span>
+<span class="doccomment">///   1. User sends a shutdown signal</span>
+<span class="doccomment">///   2. One of the child processes terminates, sending a message on `drop`</span>
+<span class="doccomment">/// Returns a boolean to indicate which scenario occurred.</span>
+<span class="doccomment">/// `true` means that the latter happened</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_abort</span>(
     <span class="kw-2">mut</span> <span class="ident">abort_recv</span>: <span class="ident">tokio::sync::mpsc::UnboundedReceiver</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>,
-) {
+) -&gt; <span class="ident">bool</span> {
     <span class="kw">use</span> <span class="ident">tokio::signal::unix</span>::{<span class="ident">signal</span>, <span class="ident">SignalKind</span>};
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sigterm</span> <span class="op">=</span> <span class="ident">signal</span>(<span class="ident">SignalKind::terminate</span>()).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sighup</span> <span class="op">=</span> <span class="ident">signal</span>(<span class="ident">SignalKind::hangup</span>()).<span class="ident">unwrap</span>();
@@ -1005,14 +1039,21 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">who</span>) <span class="op">=</span> <span class="ident">msg</span> {
                  <span class="macro">tracing::info!</span>(<span class="string">&quot;{} has exited, shutting down...&quot;</span>, <span class="ident">who</span>);
             }
+            <span class="kw">return</span> <span class="bool-val">true</span>;
         }
     };
+    <span class="bool-val">false</span>
 }
 
+<span class="doccomment">/// Function that blocks until either</span>
+<span class="doccomment">///   1. User sends a shutdown signal</span>
+<span class="doccomment">///   2. One of the child processes terminates, sending a message on `drop`</span>
+<span class="doccomment">/// Returns a boolean to indicate which scenario occurred.</span>
+<span class="doccomment">/// `true` means that the latter happened</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_abort</span>(
     <span class="kw-2">mut</span> <span class="ident">abort_recv</span>: <span class="ident">tokio::sync::mpsc::UnboundedReceiver</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>,
-) {
+) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sigbreak</span> <span class="op">=</span> <span class="ident">tokio::signal::windows::ctrl_break</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">tokio::select!</span> {
         <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() =&gt; {
@@ -1033,14 +1074,21 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">who</span>) <span class="op">=</span> <span class="ident">msg</span> {
                  <span class="macro">tracing::info!</span>(<span class="string">&quot;{} has exited, shutting down...&quot;</span>, <span class="ident">who</span>);
             }
+            <span class="kw">return</span> <span class="bool-val">true</span>;
         }
     };
+    <span class="bool-val">false</span>
 }
 
+<span class="doccomment">/// Function that blocks until either</span>
+<span class="doccomment">///   1. User sends a shutdown signal</span>
+<span class="doccomment">///   2. One of the child processes terminates, sending a message on `drop`</span>
+<span class="doccomment">/// Returns a boolean to indicate which scenario occurred.</span>
+<span class="doccomment">/// `true` means that the latter happened</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">unix</span>, <span class="ident">windows</span>)))]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_abort</span>(
     <span class="kw-2">mut</span> <span class="ident">abort_recv</span>: <span class="ident">tokio::sync::mpsc::UnboundedReceiver</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>,
-) {
+) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">tokio::select!</span> {
         <span class="ident">signal</span> <span class="op">=</span> <span class="ident">tokio::signal::ctrl_c</span>() =&gt; {
             <span class="kw">match</span> <span class="ident">signal</span> {
@@ -1054,8 +1102,10 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">who</span>) <span class="op">=</span> <span class="ident">msg</span> {
                  <span class="macro">tracing::info!</span>(<span class="string">&quot;{} has exited, shutting down...&quot;</span>, <span class="ident">who</span>);
             }
+            <span class="kw">return</span> <span class="bool-val">true</span>;
         }
     };
+    <span class="bool-val">false</span>
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>

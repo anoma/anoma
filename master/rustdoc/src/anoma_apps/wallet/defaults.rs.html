@@ -207,6 +207,12 @@
 <span id="206">206</span>
 <span id="207">207</span>
 <span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Default addresses and keys.</span>
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>;
@@ -221,27 +227,33 @@
 };
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config::genesis::genesis_config::GenesisConfig</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::store::Alias</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::alias::Alias</span>;
 
 <span class="doccomment">/// The default addresses with their aliases.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addresses_from_genesis</span>(<span class="ident">genesis</span>: <span class="ident">GenesisConfig</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">Address</span>)<span class="op">&gt;</span> {
     <span class="comment">// Internal addresses</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">Address</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-        (<span class="string">&quot;PoS&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::ADDRESS</span>),
-        (<span class="string">&quot;PosSlashPool&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::SLASH_POOL_ADDRESS</span>),
+        (<span class="string">&quot;pos&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::ADDRESS</span>),
+        (<span class="string">&quot;pos_slash_pool&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::SLASH_POOL_ADDRESS</span>),
     ];
     <span class="comment">// Genesis validators</span>
     <span class="kw">let</span> <span class="ident">validator_addresses</span> <span class="op">=</span>
         <span class="ident">genesis</span>.<span class="ident">validator</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">alias</span>, <span class="ident">validator</span>)<span class="op">|</span> {
             <span class="comment">// The address must be set in the genesis config file</span>
-            (<span class="ident">alias</span>, <span class="ident">Address::decode</span>(<span class="ident">validator</span>.<span class="ident">address</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>())
+            (
+                <span class="ident">alias</span>.<span class="ident">into</span>(),
+                <span class="ident">Address::decode</span>(<span class="ident">validator</span>.<span class="ident">address</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
+            )
         });
     <span class="ident">addresses</span>.<span class="ident">extend</span>(<span class="ident">validator_addresses</span>);
     <span class="comment">// Genesis tokens</span>
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">accounts</span>) <span class="op">=</span> <span class="ident">genesis</span>.<span class="ident">token</span> {
         <span class="kw">let</span> <span class="ident">token_addresses</span> <span class="op">=</span> <span class="ident">accounts</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">alias</span>, <span class="ident">token</span>)<span class="op">|</span> {
             <span class="comment">// The address must be set in the genesis config file</span>
-            (<span class="ident">alias</span>, <span class="ident">Address::decode</span>(<span class="ident">token</span>.<span class="ident">address</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>())
+            (
+                <span class="ident">alias</span>.<span class="ident">into</span>(),
+                <span class="ident">Address::decode</span>(<span class="ident">token</span>.<span class="ident">address</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
+            )
         });
         <span class="ident">addresses</span>.<span class="ident">extend</span>(<span class="ident">token_addresses</span>);
     }
@@ -250,7 +262,7 @@
         <span class="kw">let</span> <span class="ident">est_addresses</span> <span class="op">=</span> <span class="ident">accounts</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">alias</span>, <span class="ident">established</span>)<span class="op">|</span> {
             <span class="comment">// The address must be set in the genesis config file</span>
             (
-                <span class="ident">alias</span>,
+                <span class="ident">alias</span>.<span class="ident">into</span>(),
                 <span class="ident">Address::decode</span>(<span class="ident">established</span>.<span class="ident">address</span>.<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
             )
         });
@@ -264,7 +276,7 @@
                 <span class="ident">implicit</span>.<span class="ident">public_key</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pk</span><span class="op">|</span> {
                     <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">common::PublicKey</span> <span class="op">=</span> <span class="ident">pk</span>.<span class="ident">to_public_key</span>().<span class="ident">unwrap</span>();
                     <span class="kw">let</span> <span class="ident">addr</span>: <span class="ident">Address</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">pk</span>).<span class="ident">into</span>();
-                    (<span class="ident">alias</span>, <span class="ident">addr</span>)
+                    (<span class="ident">alias</span>.<span class="ident">into</span>(), <span class="ident">addr</span>)
                 })
             });
         <span class="ident">addresses</span>.<span class="ident">extend</span>(<span class="ident">imp_addresses</span>);
@@ -279,15 +291,15 @@
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::store::Alias</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::alias::Alias</span>;
 
     <span class="doccomment">/// The default keys with their aliases.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">common::SecretKey</span>)<span class="op">&gt;</span> {
         <span class="macro">vec!</span>[
-            (<span class="string">&quot;Albert&quot;</span>.<span class="ident">into</span>(), <span class="ident">albert_keypair</span>()),
-            (<span class="string">&quot;Bertha&quot;</span>.<span class="ident">into</span>(), <span class="ident">bertha_keypair</span>()),
-            (<span class="string">&quot;Christel&quot;</span>.<span class="ident">into</span>(), <span class="ident">christel_keypair</span>()),
-            (<span class="string">&quot;Daewon&quot;</span>.<span class="ident">into</span>(), <span class="ident">daewon_keypair</span>()),
+            (<span class="string">&quot;albert&quot;</span>.<span class="ident">into</span>(), <span class="ident">albert_keypair</span>()),
+            (<span class="string">&quot;bertha&quot;</span>.<span class="ident">into</span>(), <span class="ident">bertha_keypair</span>()),
+            (<span class="string">&quot;christel&quot;</span>.<span class="ident">into</span>(), <span class="ident">christel_keypair</span>()),
+            (<span class="string">&quot;daewon&quot;</span>.<span class="ident">into</span>(), <span class="ident">daewon_keypair</span>()),
             (<span class="string">&quot;matchmaker&quot;</span>.<span class="ident">into</span>(), <span class="ident">matchmaker_keypair</span>()),
             (<span class="string">&quot;validator&quot;</span>.<span class="ident">into</span>(), <span class="ident">validator_keypair</span>()),
         ]
@@ -296,18 +308,18 @@
     <span class="doccomment">/// The default addresses with their aliases.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addresses</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">Address</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">Address</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            (<span class="string">&quot;PoS&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::ADDRESS</span>),
-            (<span class="string">&quot;PosSlashPool&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::SLASH_POOL_ADDRESS</span>),
+            (<span class="string">&quot;pos&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::ADDRESS</span>),
+            (<span class="string">&quot;pos_slash_pool&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::SLASH_POOL_ADDRESS</span>),
             (<span class="string">&quot;matchmaker&quot;</span>.<span class="ident">into</span>(), <span class="ident">matchmaker_address</span>()),
             (<span class="string">&quot;validator&quot;</span>.<span class="ident">into</span>(), <span class="ident">validator_address</span>()),
-            (<span class="string">&quot;Albert&quot;</span>.<span class="ident">into</span>(), <span class="ident">albert_address</span>()),
-            (<span class="string">&quot;Bertha&quot;</span>.<span class="ident">into</span>(), <span class="ident">bertha_address</span>()),
-            (<span class="string">&quot;Christel&quot;</span>.<span class="ident">into</span>(), <span class="ident">christel_address</span>()),
-            (<span class="string">&quot;Daewon&quot;</span>.<span class="ident">into</span>(), <span class="ident">daewon_address</span>()),
+            (<span class="string">&quot;albert&quot;</span>.<span class="ident">into</span>(), <span class="ident">albert_address</span>()),
+            (<span class="string">&quot;bertha&quot;</span>.<span class="ident">into</span>(), <span class="ident">bertha_address</span>()),
+            (<span class="string">&quot;christel&quot;</span>.<span class="ident">into</span>(), <span class="ident">christel_address</span>()),
+            (<span class="string">&quot;daewon&quot;</span>.<span class="ident">into</span>(), <span class="ident">daewon_address</span>()),
         ];
         <span class="kw">let</span> <span class="ident">token_addresses</span> <span class="op">=</span> <span class="ident">address::tokens</span>()
             .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="ident">alias</span>)<span class="op">|</span> (<span class="ident">alias</span>.<span class="ident">to_owned</span>(), <span class="ident">addr</span>));
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="ident">alias</span>)<span class="op">|</span> (<span class="ident">alias</span>.<span class="ident">into</span>(), <span class="ident">addr</span>));
         <span class="ident">addresses</span>.<span class="ident">extend</span>(<span class="ident">token_addresses</span>);
         <span class="ident">addresses</span>
     }
