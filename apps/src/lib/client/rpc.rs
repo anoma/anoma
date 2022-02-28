@@ -698,6 +698,10 @@ pub async fn query_slashes(ctx: Context, args: args::QuerySlashes) {
     }
 }
 
+pub async fn compute_proposal_tally(ctx: Context, args: args::TallyProposal) {
+    
+}
+
 /// Dry run a transaction
 pub async fn dry_run_tx(ledger_address: &TendermintAddress, tx_bytes: Vec<u8>) {
     let client = HttpClient::new(ledger_address.clone()).unwrap();

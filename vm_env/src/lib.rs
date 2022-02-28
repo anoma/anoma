@@ -14,12 +14,14 @@ pub mod key;
 pub mod nft;
 pub mod proof_of_stake;
 pub mod token;
+pub mod governance;
 
 pub mod tx_prelude {
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
+    pub use anoma::ledger::governance::storage;
 
     #[cfg(feature = "ibc")]
     pub use crate::ibc::{Ibc, IbcActions};
@@ -28,11 +30,12 @@ pub mod tx_prelude {
     pub use crate::nft::tx as nft;
     pub use crate::proof_of_stake::{self, PoS, PosRead, PosWrite};
     pub use crate::token::tx as token;
+    pub use crate::governance::tx as governance;
 }
 
 pub mod vp_prelude {
     // used in the VP input
-    pub use std::collections::HashSet;
+    pub use std::collections::{BTreeSet, HashSet};
 
     pub use anoma::ledger::pos as proof_of_stake;
     pub use anoma::proto::{Signed, SignedTxData};

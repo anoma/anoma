@@ -1,6 +1,6 @@
 //! Protocol parameters
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
@@ -157,8 +157,8 @@ where
     fn validate_tx(
         &self,
         _tx_data: &[u8],
-        _keys_changed: &HashSet<Key>,
-        _verifiers: &HashSet<Address>,
+        _keys_changed: &BTreeSet<Key>,
+        _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
         // TODO allow parameters change by over 2/3 validator voting power
         // No changes are currently permitted

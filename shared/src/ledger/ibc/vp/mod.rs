@@ -8,7 +8,7 @@ mod port;
 mod sequence;
 mod token;
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::context::ClientReader;
@@ -81,8 +81,8 @@ where
     fn validate_tx(
         &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
-        _verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
         let mut clients = HashSet::new();
 
@@ -704,11 +704,11 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
         keys_changed.insert(client_state_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
@@ -730,11 +730,11 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
         keys_changed.insert(client_state_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should fail because no state is stored
@@ -800,10 +800,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(client_state_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
@@ -845,10 +845,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
@@ -887,10 +887,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should fail because no client exists
@@ -959,10 +959,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
@@ -1033,10 +1033,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1094,10 +1094,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1141,10 +1141,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1207,10 +1207,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1281,10 +1281,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1350,10 +1350,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1377,10 +1377,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(port_key(&get_port_id()));
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1405,11 +1405,11 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         let cap_key = capability_key(index);
         keys_changed.insert(cap_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1475,10 +1475,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1551,10 +1551,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1632,10 +1632,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1704,10 +1704,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(commitment_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1784,10 +1784,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(receipt_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1820,10 +1820,10 @@ mod tests {
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(ack_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(

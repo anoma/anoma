@@ -1,5 +1,5 @@
 use std::borrow::Borrow;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use anoma::ledger::gas::BlockGasMeter;
 use anoma::ledger::storage::mockdb::MockDB;
@@ -29,7 +29,7 @@ pub struct TestTxEnv {
     pub storage: TestStorage,
     pub write_log: WriteLog,
     pub iterators: PrefixIterators<'static, MockDB>,
-    pub verifiers: HashSet<Address>,
+    pub verifiers: BTreeSet<Address>,
     pub gas_meter: BlockGasMeter,
     pub result_buffer: Option<Vec<u8>>,
     pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
@@ -49,7 +49,7 @@ impl Default for TestTxEnv {
             write_log: WriteLog::default(),
             iterators: PrefixIterators::default(),
             gas_meter: BlockGasMeter::default(),
-            verifiers: HashSet::default(),
+            verifiers: BTreeSet::default(),
             result_buffer: None,
             vp_wasm_cache,
             vp_cache_dir,
@@ -60,7 +60,7 @@ impl Default for TestTxEnv {
 }
 
 impl TestTxEnv {
-    pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
+    pub fn all_touched_storage_keys(&self) -> BTreeSet<Key> {
         self.write_log.get_keys()
     }
 
@@ -87,7 +87,7 @@ impl TestTxEnv {
             .map_err(|err| println!("{:?}", err))
             .ok();
         self.iterators = PrefixIterators::default();
-        self.verifiers = HashSet::default();
+        self.verifiers = BTreeSet::default();
         self.gas_meter = BlockGasMeter::default();
     }
 

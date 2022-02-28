@@ -81,6 +81,7 @@ dependencies = [
  "ark-ec",
  "ark-serialize",
  "assert_matches",
+ "base64 0.13.0",
  "bech32",
  "borsh",
  "byte-unit",

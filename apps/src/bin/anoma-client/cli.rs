@@ -33,6 +33,12 @@ pub async fn main() -> Result<()> {
                 Sub::TxMintNft(TxMintNft(args)) => {
                     tx::submit_mint_nft(ctx, args).await;
                 }
+                Sub::TxInitProposal(TxInitProposal(args)) => {
+                    tx::submit_init_proposal(ctx, args).await;
+                },
+                Sub::TxVoteProposal(TxVoteProposal(args)) => {
+                    tx::submit_vote_proposal(ctx, args).await;
+                },
                 Sub::Bond(Bond(args)) => {
                     tx::submit_bond(ctx, args).await;
                 }
@@ -68,6 +74,9 @@ pub async fn main() -> Result<()> {
                 Sub::SubscribeTopic(SubscribeTopic(args)) => {
                     gossip::subscribe_topic(ctx, args).await;
                 }
+                Sub::TallyProposal(TallyProposal(args)) => {
+                    rpc::compute_proposal_tally(ctx, args).await;
+                },
             }
         }
         cli::AnomaClient::WithoutContext(cmd, global_args) => match cmd {

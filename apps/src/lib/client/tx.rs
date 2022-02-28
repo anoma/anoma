@@ -4,8 +4,10 @@ use std::convert::TryFrom;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
+use anoma::types::governance::{Proposal, OfflineProposal};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
+use anoma::types::transaction::governance::InitProposalData;
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
     pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
@@ -32,7 +34,7 @@ use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
-use tendermint_rpc_abci::{Client, HttpClient};
+use tendermint_rpc_abci::{Client};
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -58,6 +60,7 @@ const TX_BOND_WASM: &str = "tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "tx_unbond.wasm";
 const TX_WITHDRAW_WASM: &str = "tx_withdraw.wasm";
 const VP_NFT: &str = "vp_nft.wasm";
+const TX_INIT_PROPOSAL: &str = "tx_init_proposal.wasm";
 
 pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
     let tx_code = ctx.read_wasm(args.code_path);
@@ -381,7 +384,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     }
     // Check source balance
     let balance_key = token::balance_key(&token, &source);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let client = ctx.get_http_client(args.tx.ledger_address.clone());
     match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
         Some(balance) => {
             if balance < args.amount {
@@ -466,7 +469,7 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
         serde_json::from_reader(file).expect("JSON was not well-formatted");
 
     let nft_creator_key = nft::get_creator_key(&args.nft_address);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let client = ctx.get_http_client(args.tx.ledger_address.clone());
     let nft_creator_address = match rpc::query_storage_value::<Address>(
         client,
         nft_creator_key,
@@ -489,7 +492,7 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
     };
 
     let data = data.try_to_vec().expect(
-        "Encoding transfer data to initialize a new account shouldn't fail",
+        "Encoding mint data shouldn't fail",
     );
 
     let tx_code = ctx.read_wasm(TX_MINT_NFT_TOKEN);
@@ -499,6 +502,58 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, signer.as_ref()).await;
 
     process_tx(ctx, &args.tx, tx, &keypair).await;
+}
+
+pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
+    let file = File::open(&args.proposal_data).expect("File must exist.");
+    let proposal: Proposal = serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    // TODO: check that the proposal.author address exist on chain
+    let signer = WalletAddress::new(proposal.author.clone().to_string());
+
+    let tx_data: Result<InitProposalData, _> = proposal.try_into();
+
+    let init_proposal_data = if let Ok(data) = tx_data {
+        data
+    } else {
+        eprintln!("Invalid data for init proposal transaction.");
+        safe_exit(1)
+    };
+    
+    if args.offline {
+        let signer = ctx.get(&signer);
+        let signing_key = signing::find_keypair(
+            &mut ctx.wallet,
+            &signer,
+            args.tx.ledger_address.clone(),
+        )
+        .await;
+        let offline_proposal = OfflineProposal::new(init_proposal_data, &signing_key);
+        let proposal_filename = format!("proposal");
+        let out = File::create(&proposal_filename).unwrap();
+        match serde_json::to_writer_pretty(out, &offline_proposal) {
+            Ok(_) => {
+                println!("Proposal created: {}.", proposal_filename);
+            },
+            Err(e) => {
+                eprintln!("Error while creating proposal file: {}.", e);
+                safe_exit(1)
+            },
+        }
+    } else {
+        let data = init_proposal_data.try_to_vec().expect(
+            "Encoding proposal data shouldn't fail",
+        );
+        let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
+        let tx = Tx::new(tx_code, Some(data));
+
+        let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, Some(&signer)).await;
+        process_tx(ctx, &args.tx, tx, &keypair).await;
+    }
+}
+
+pub async fn submit_vote_proposal(ctx: Context, args: args::VoteProposal) {
+    //
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
@@ -531,7 +586,7 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     // balance
     let bond_source = source.as_ref().unwrap_or(&validator);
     let balance_key = token::balance_key(&address::xan(), bond_source);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let client = ctx.get_http_client(args.tx.ledger_address.clone());
     match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
         Some(balance) => {
             if balance < args.amount {
@@ -593,7 +648,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
         validator: validator.clone(),
     };
     let bond_key = ledger::pos::bond_key(&bond_id);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let client = ctx.get_http_client(args.tx.ledger_address.clone());
     let bonds =
         rpc::query_storage_value::<Bonds>(client.clone(), bond_key).await;
     match bonds {
@@ -668,7 +723,7 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
         validator: validator.clone(),
     };
     let bond_key = ledger::pos::unbond_key(&bond_id);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let client = ctx.get_http_client(args.tx.ledger_address.clone());
     let unbonds =
         rpc::query_storage_value::<Unbonds>(client.clone(), bond_key).await;
     match unbonds {

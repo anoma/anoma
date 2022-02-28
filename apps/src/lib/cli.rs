@@ -50,6 +50,9 @@ pub mod cmds {
         TxUpdateVp(TxUpdateVp),
         TxInitNft(TxInitNft),
         TxMintNft(TxMintNft),
+        TxInitProposal(TxInitProposal),
+        TxVoteProposal(TxVoteProposal),
+        TallyProposal(TallyProposal),
         Intent(Intent),
     }
 
@@ -66,6 +69,9 @@ pub mod cmds {
                 .subcommand(TxUpdateVp::def())
                 .subcommand(TxInitNft::def())
                 .subcommand(TxMintNft::def())
+                .subcommand(TxInitProposal::def())
+                .subcommand(TxVoteProposal::def())
+                .subcommand(TallyProposal::def())
                 .subcommand(Intent::def())
         }
 
@@ -81,6 +87,9 @@ pub mod cmds {
             let tx_update_vp = SubCmd::parse(matches).map(Self::TxUpdateVp);
             let tx_nft_create = SubCmd::parse(matches).map(Self::TxInitNft);
             let tx_nft_mint = SubCmd::parse(matches).map(Self::TxMintNft);
+            let tx_init_proposal = SubCmd::parse(matches).map(Self::TxInitProposal);
+            let tx_vote_proposal = SubCmd::parse(matches).map(Self::TxVoteProposal);
+            let tally_proposal = SubCmd::parse(matches).map(Self::TallyProposal);
             let intent = SubCmd::parse(matches).map(Self::Intent);
             node.or(client)
                 .or(wallet)
@@ -92,6 +101,9 @@ pub mod cmds {
                 .or(tx_update_vp)
                 .or(tx_nft_create)
                 .or(tx_nft_mint)
+                .or(tx_init_proposal)
+                .or(tx_vote_proposal)
+                .or(tally_proposal)
                 .or(intent)
         }
     }
@@ -166,6 +178,9 @@ pub mod cmds {
                 // Nft transactions
                 .subcommand(TxInitNft::def().display_order(1))
                 .subcommand(TxMintNft::def().display_order(1))
+                // Proposal transactions
+                .subcommand(TxInitProposal::def().display_order(1))
+                .subcommand(TxVoteProposal::def().display_order(1))
                 // PoS transactions
                 .subcommand(Bond::def().display_order(2))
                 .subcommand(Unbond::def().display_order(2))
@@ -182,6 +197,7 @@ pub mod cmds {
                 .subcommand(SubscribeTopic::def().display_order(4))
                 // Utils
                 .subcommand(Utils::def().display_order(5))
+                .subcommand(TallyProposal::def().display_order(1))
         }
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
@@ -194,6 +210,8 @@ pub mod cmds {
                 Self::parse_with_ctx(matches, TxInitValidator);
             let tx_nft_create = Self::parse_with_ctx(matches, TxInitNft);
             let tx_nft_mint = Self::parse_with_ctx(matches, TxMintNft);
+            let tx_init_proposal = Self::parse_with_ctx(matches, TxInitProposal);
+            let tx_vote_proposal = Self::parse_with_ctx(matches, TxVoteProposal);
             let bond = Self::parse_with_ctx(matches, Bond);
             let unbond = Self::parse_with_ctx(matches, Unbond);
             let withdraw = Self::parse_with_ctx(matches, Withdraw);
@@ -214,6 +232,8 @@ pub mod cmds {
                 .or(tx_init_validator)
                 .or(tx_nft_create)
                 .or(tx_nft_mint)
+                .or(tx_init_proposal)
+                .or(tx_vote_proposal)
                 .or(bond)
                 .or(unbond)
                 .or(withdraw)
@@ -269,6 +289,9 @@ pub mod cmds {
         TxInitValidator(TxInitValidator),
         TxInitNft(TxInitNft),
         TxMintNft(TxMintNft),
+        TxInitProposal(TxInitProposal),
+        TxVoteProposal(TxVoteProposal),
+        TallyProposal(TallyProposal),
         Bond(Bond),
         Unbond(Unbond),
         Withdraw(Withdraw),
@@ -1049,6 +1072,73 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct TxInitProposal(pub args::InitProposal);
+
+    impl SubCmd for TxInitProposal {
+        const CMD: &'static str = "init-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| TxInitProposal(args::InitProposal::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Create a new proposal.")
+                .add_args::<args::InitProposal>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct TxVoteProposal(pub args::VoteProposal);
+
+    impl SubCmd for TxVoteProposal {
+        const CMD: &'static str = "vote-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| TxVoteProposal(args::VoteProposal::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Vote a proposal.")
+                .add_args::<args::VoteProposal>()
+        }
+    }
+    
+    
+    #[derive(Clone, Debug)]
+    pub struct TallyProposal(pub args::TallyProposal);
+
+    impl SubCmd for TallyProposal {
+        const CMD: &'static str = "tally-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| TallyProposal(args::TallyProposal::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Compute the tally for a proposal given the proposal id.")
+                .add_args::<args::TallyProposal>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct Intent(pub args::Intent);
 
     impl SubCmd for Intent {
@@ -1194,6 +1284,7 @@ pub mod args {
 
     use anoma::types::address::Address;
     use anoma::types::chain::{ChainId, ChainIdPrefix};
+    use anoma::types::governance::ProposalVote;
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::*;
     use anoma::types::storage::Epoch;
@@ -1276,12 +1367,15 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
+    const PROPOSAL_OFFLINE: ArgFlag = flag("offline");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
+    const PROPOSAL_ID: Arg<u64> = arg("proposal-id");
+    const PROPOSAL_VOTE: Arg<ProposalVote> = arg("vote");
     const SIGNER: ArgOpt<WalletAddress> = arg_opt("signer");
     const SIGNING_KEY_OPT: ArgOpt<WalletKeypair> = SIGNING_KEY.opt();
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
@@ -1787,6 +1881,129 @@ pub mod args {
                 .arg(
                     DATA_PATH.def().about(
                         "The data path file that describes the nft tokens.",
+                    ),
+                )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct InitProposal {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// The proposal file path
+        pub proposal_data: PathBuf,
+        /// Flag if proposal should be run offline
+        pub offline: bool
+    }
+
+    impl Args for InitProposal {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let proposal_data = DATA_PATH.parse(matches);
+            let offline = PROPOSAL_OFFLINE.parse(matches);
+
+            Self {
+                tx,
+                proposal_data,
+                offline
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(
+                    DATA_PATH.def().about(
+                        "The data path file (json) that describes the proposal.",
+                    ),
+                )
+                .arg(
+                    PROPOSAL_OFFLINE.def().about(
+                        "Flag if the proposal vote should run offline."
+                    )
+                )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct VoteProposal {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Proposal id
+        pub proposal_id: u64,
+        /// The vote
+        pub vote: ProposalVote,
+        /// Flag if proposal should be run offline
+        pub offline: bool,
+        /// The proposal file path
+        pub proposal_data: Option<PathBuf>
+    }
+
+    impl Args for VoteProposal {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let proposal_id = PROPOSAL_ID.parse(matches);
+            let vote = PROPOSAL_VOTE.parse(matches);
+            let offline = PROPOSAL_OFFLINE.parse(matches);
+            let proposal_data = DATA_PATH_OPT.parse(matches);
+
+            Self {
+                tx,
+                proposal_id,
+                vote,
+                offline,
+                proposal_data
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(
+                    PROPOSAL_ID.def().about(
+                        "The proposal identifier.",
+                    ).conflicts_with_all(&[PROPOSAL_OFFLINE.name, DATA_PATH_OPT.name]),
+                )
+                .arg(
+                    PROPOSAL_VOTE.def().about(
+                        "The vote for the proposal. Either yay or nay."
+                    )
+                )
+                .arg(
+                    PROPOSAL_OFFLINE.def().about(
+                        "Flag if the proposal vote should run offline."
+                    ).conflicts_with(PROPOSAL_ID.name)
+                )
+                .arg(
+                    DATA_PATH_OPT.def().about(
+                        "The data path file (json) that describes the proposal.",
+                    ).conflicts_with(PROPOSAL_ID.name)
+                )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct TallyProposal {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Proposal id
+        pub proposal_id: u64
+    }
+
+    impl Args for TallyProposal {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let proposal_id = PROPOSAL_ID.parse(matches);
+
+            Self {
+                tx,
+                proposal_id
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(
+                    PROPOSAL_ID.def().about(
+                        "The proposal identifier.",
                     ),
                 )
         }

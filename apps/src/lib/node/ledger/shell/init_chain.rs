@@ -19,6 +19,7 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 use tendermint_proto_abci::google::protobuf;
 
 use super::*;
+
 use crate::wasm_loader;
 
 impl<D, H> Shell<D, H>
@@ -43,9 +44,8 @@ where
             )));
         }
         #[cfg(not(feature = "dev"))]
-        let genesis = genesis::genesis(&self.base_dir, &self.storage.chain_id);
-        #[cfg(not(feature = "dev"))]
-        {
+        let genesis = {
+            let genesis = genesis::genesis(&self.base_dir, &self.storage.chain_id);
             let genesis_bytes = genesis.try_to_vec().unwrap();
             let errors = self.storage.chain_id.validate(genesis_bytes);
             use itertools::Itertools;
@@ -54,7 +54,8 @@ where
                 "Chain ID validation failed: {}",
                 errors.into_iter().format(". ")
             );
-        }
+            genesis
+        };
         #[cfg(feature = "dev")]
         let genesis = genesis::genesis();
 
@@ -71,6 +72,9 @@ where
             &mut self.storage,
             &genesis.parameters,
         );
+
+        genesis.gov_params.init_storage(&mut self.storage);
+
         // Depends on parameters being initialized
         self.storage
             .init_genesis_epoch(

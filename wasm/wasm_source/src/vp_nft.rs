@@ -4,8 +4,8 @@ use anoma_vm_env::vp_prelude::*;
 fn validate_tx(
     tx_data: Vec<u8>,
     addr: Address,
-    keys_changed: HashSet<storage::Key>,
-    verifiers: HashSet<Address>,
+    keys_changed: BTreeSet<storage::Key>,
+    verifiers: BTreeSet<Address>,
 ) -> bool {
     log_string(format!(
         "validate_tx called with token addr: {}, key_changed: {:#?}, \
@@ -60,9 +60,9 @@ mod tests {
             });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
 
@@ -102,9 +102,9 @@ mod tests {
             });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
 
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -153,9 +153,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
 
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -204,9 +204,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
 
         assert!(!validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -274,9 +274,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
 
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -344,9 +344,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
 
         assert!(!validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -382,9 +382,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = vp_env.get_verifiers();
+        let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
 
         assert!(!validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }

@@ -10,6 +10,7 @@ wasms += tx_init_account
 wasms += tx_init_validator
 wasms += tx_from_intent
 wasms += tx_transfer
+wasms += tx_init_proposal
 wasms += tx_init_nft
 wasms += tx_mint_nft
 wasms += tx_unbond

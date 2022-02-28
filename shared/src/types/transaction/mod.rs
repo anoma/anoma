@@ -9,6 +9,8 @@ pub mod nft;
 pub mod pos;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
+/// txs to manage governance
+pub mod governance;
 
 use std::fmt::{self, Display};
 

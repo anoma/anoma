@@ -224,6 +224,24 @@ pub mod tx_ibc {
     }
 }
 
+/// A tx to create a governance proposal.
+#[cfg(feature = "tx_init_proposal")]
+pub mod tx_init_proposal {
+    use anoma_tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let tx_data = transaction::governance::InitProposalData::try_from_slice(
+            &signed.data.unwrap()[..],
+        )
+        .unwrap();
+        log_string("apply_tx called to create a new governance proposal");
+
+        governance::init_proposal(tx_data);
+    }
+}
+
 /// A VP for a token.
 #[cfg(feature = "vp_token")]
 pub mod vp_token {
@@ -233,8 +251,8 @@ pub mod vp_token {
     fn validate_tx(
         _tx_data: Vec<u8>,
         addr: Address,
-        keys_changed: HashSet<storage::Key>,
-        verifiers: HashSet<Address>,
+        keys_changed: BTreeSet<storage::Key>,
+        verifiers: BTreeSet<Address>,
     ) -> bool {
         debug_log!(
             "validate_tx called with token addr: {}, key_changed: {:?}, \

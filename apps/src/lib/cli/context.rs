@@ -9,6 +9,8 @@ use std::str::FromStr;
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
+use tendermint_config_abci::net::Address as TendermintAddress;
+use tendermint_rpc_abci::HttpClient;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -150,6 +152,10 @@ impl Context {
             self.config.ledger.chain_dir().join(&self.config.wasm_dir),
             file_name,
         )
+    }
+
+    pub fn get_http_client(&self, address: TendermintAddress) -> HttpClient {
+        HttpClient::new(address).unwrap()
     }
 }
 
