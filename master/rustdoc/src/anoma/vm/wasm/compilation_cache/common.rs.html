@@ -1393,7 +1393,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">exponential_backoff</span>(<span class="ident">iteration</span>: <span class="ident">u64</span>) {
-    <span class="ident">sleep</span>(<span class="ident">Duration::from_millis</span>((<span class="number">2</span> <span class="op">^</span> <span class="ident">iteration</span>) <span class="op">*</span> <span class="number">10</span>))
+    <span class="ident">sleep</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">u64::pow</span>(<span class="number">2</span>, <span class="ident">iteration</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">*</span> <span class="number">10</span>))
 }
 
 <span class="kw">fn</span> <span class="ident">hash_of_code</span>(<span class="ident">code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) -&gt; <span class="ident">Hash</span> {
