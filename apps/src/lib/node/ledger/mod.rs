@@ -1,3 +1,4 @@
+mod ethereum_node;
 pub mod events;
 pub mod protocol;
 pub mod rpc;

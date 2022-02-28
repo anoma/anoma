@@ -142,6 +142,7 @@ tracing = "0.1.29"
 tracing-log = "0.1.2"
 tracing-subscriber = "0.2.25"
 websocket = "0.26.2"
+web3 = "0.18.0"
 winapi = "0.3.9"
 
 [dev-dependencies]
