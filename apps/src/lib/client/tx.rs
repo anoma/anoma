@@ -382,7 +382,9 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     // Check source balance
     let balance_key = token::balance_key(&token, &source);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
+    match rpc::query_storage_value::<token::Amount>(client, balance_key, None)
+        .await
+    {
         Some(balance) => {
             if balance < args.amount {
                 eprintln!(
@@ -470,6 +472,7 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
     let nft_creator_address = match rpc::query_storage_value::<Address>(
         client,
         nft_creator_key,
+        None,
     )
     .await
     {
@@ -532,7 +535,9 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let bond_source = source.as_ref().unwrap_or(&validator);
     let balance_key = token::balance_key(&address::xan(), bond_source);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
+    match rpc::query_storage_value::<token::Amount>(client, balance_key, None)
+        .await
+    {
         Some(balance) => {
             if balance < args.amount {
                 eprintln!(
@@ -595,7 +600,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let bond_key = ledger::pos::bond_key(&bond_id);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
     let bonds =
-        rpc::query_storage_value::<Bonds>(client.clone(), bond_key).await;
+        rpc::query_storage_value::<Bonds>(client.clone(), bond_key, None).await;
     match bonds {
         Some(bonds) => {
             let mut bond_amount: token::Amount = 0.into();
@@ -641,6 +646,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let epoch = rpc::query_epoch(args::Query {
         ledger_address: args.tx.ledger_address.clone(),
+        height: None,
     })
     .await;
 
@@ -670,7 +676,8 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let bond_key = ledger::pos::unbond_key(&bond_id);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
     let unbonds =
-        rpc::query_storage_value::<Unbonds>(client.clone(), bond_key).await;
+        rpc::query_storage_value::<Unbonds>(client.clone(), bond_key, None)
+            .await;
     match unbonds {
         Some(unbonds) => {
             let mut unbonded_amount: token::Amount = 0.into();
@@ -763,6 +770,7 @@ async fn process_tx(
     } else {
         let epoch = rpc::query_epoch(args::Query {
             ledger_address: args.ledger_address.clone(),
+            height: None,
         })
         .await;
         let tx = WrapperTx::new(

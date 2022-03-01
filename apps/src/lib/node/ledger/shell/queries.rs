@@ -39,20 +39,43 @@ where
             Ok(path) => match path {
                 Path::DryRunTx => self.dry_run_tx(&query.data),
                 Path::Epoch => {
-                    let (epoch, _gas) = self.storage.get_last_epoch();
-                    let value = anoma::ledger::storage::types::encode(&epoch);
-                    response::Query {
-                        value,
-                        ..Default::default()
+                    let height = query.height as u64;
+                    let (epoch, _gas) =
+                        self.storage.get_epoch_for_block(height);
+                    match epoch {
+                        Some(res) => {
+                            let value =
+                                anoma::ledger::storage::types::encode(&res);
+                            response::Query {
+                                value,
+                                ..Default::default()
+                            }
+                        }
+                        None => response::Query {
+                            code: 1,
+                            info: format!(
+                                "RPC error: no epoch found for block height {}",
+                                height
+                            ),
+                            ..Default::default()
+                        },
                     }
                 }
                 Path::Value(storage_key) => {
-                    self.read_storage_value(&storage_key, query.prove)
+                    let height = query.height as u64;
+                    self.read_storage_value(
+                        &storage_key,
+                        Some(height),
+                        query.prove,
+                    )
                 }
                 Path::Prefix(storage_key) => {
                     self.read_storage_prefix(&storage_key, query.prove)
                 }
-                Path::HasKey(storage_key) => self.has_storage_key(&storage_key),
+                Path::HasKey(storage_key) => {
+                    let height = query.height as u64;
+                    self.has_storage_key(&storage_key, Some(height))
+                }
             },
             Err(err) => response::Query {
                 code: 1,
@@ -69,8 +92,11 @@ where
         token: &Address,
         owner: &Address,
     ) -> std::result::Result<Amount, String> {
-        let query_resp =
-            self.read_storage_value(&token::balance_key(token, owner), false);
+        let query_resp = self.read_storage_value(
+            &token::balance_key(token, owner),
+            None,
+            false,
+        );
         if query_resp.code != 0 {
             Err(format!(
                 "Unable to read token {} balance of the given address {}",
@@ -90,9 +116,14 @@ where
     pub fn read_storage_value(
         &self,
         key: &Key,
+        height: Option<u64>,
         is_proven: bool,
     ) -> response::Query {
-        match self.storage.read(key) {
+        let storage_value = match height {
+            Some(height) => self.storage.read_at(key, BlockHeight(height)),
+            None => self.storage.read(key),
+        };
+        match storage_value {
             Ok((Some(value), _gas)) => {
                 let proof_ops = if is_proven {
                     match self.storage.get_existence_proof(key, value.clone()) {
@@ -221,8 +252,22 @@ where
     }
 
     /// Query to check if a storage key exists.
-    fn has_storage_key(&self, key: &Key) -> response::Query {
-        match self.storage.has_key(key) {
+    fn has_storage_key(
+        &self,
+        key: &Key,
+        height: Option<u64>,
+    ) -> response::Query {
+        let storage_value = match height {
+            Some(height) => {
+                let result = self.storage.read_at(key, BlockHeight(height));
+                match result {
+                    Ok((value, gas)) => Ok((value.is_some(), gas)),
+                    Err(e) => Err(e),
+                }
+            }
+            None => self.storage.has_key(key),
+        };
+        match storage_value {
             Ok((has_key, _gas)) => response::Query {
                 value: has_key.try_to_vec().unwrap(),
                 ..Default::default()

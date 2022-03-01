@@ -19,6 +19,8 @@ use itertools::Itertools;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
+use tendermint::block::Height;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
@@ -40,6 +42,8 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::block::Height;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
@@ -48,10 +52,11 @@ use crate::node::ledger::rpc::{Path, PrefixValue};
 /// Query the epoch of the last committed block
 pub async fn query_epoch(args: args::Query) -> Epoch {
     let client = HttpClient::new(args.ledger_address).unwrap();
+    let height = check_height(&client, args.height).await;
     let path = Path::Epoch;
     let data = vec![];
     let response = client
-        .abci_query(Some(path.into()), data, None, false)
+        .abci_query(Some(path.into()), data, Some(height), false)
         .await
         .unwrap();
     match response.code {
@@ -60,7 +65,6 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
                 println!("Last committed epoch: {}", epoch);
                 return epoch;
             }
-
             Err(err) => {
                 eprintln!("Error decoding the epoch value: {}", err)
             }
@@ -76,6 +80,7 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
 /// Query token balance(s)
 pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
+    let height = check_height(&client, args.query.height).await;
     let tokens = address::tokens();
     match (args.token, args.owner) {
         (Some(token), Some(owner)) => {
@@ -86,7 +91,13 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                 .get(&token)
                 .map(|c| Cow::Borrowed(*c))
                 .unwrap_or_else(|| Cow::Owned(token.to_string()));
-            match query_storage_value::<token::Amount>(client, key).await {
+            match query_storage_value::<token::Amount>(
+                client,
+                key,
+                Some(height),
+            )
+            .await
+            {
                 Some(balance) => {
                     println!("{}: {}", currency_code, balance);
                 }
@@ -100,9 +111,12 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
             let mut found_any = false;
             for (token, currency_code) in tokens {
                 let key = token::balance_key(&token, &owner);
-                if let Some(balance) =
-                    query_storage_value::<token::Amount>(client.clone(), key)
-                        .await
+                if let Some(balance) = query_storage_value::<token::Amount>(
+                    client.clone(),
+                    key,
+                    Some(height),
+                )
+                .await
                 {
                     println!("{}: {}", currency_code, balance);
                     found_any = true;
@@ -113,6 +127,10 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
             }
         }
         (Some(token), None) => {
+            println!(
+                "Ignoring --height argument as its supported only with \
+                 --owner."
+            );
             let token = ctx.get(&token);
             let key = token::balance_prefix(&token);
             let balances =
@@ -139,6 +157,10 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
             }
         }
         (None, None) => {
+            println!(
+                "Ignoring --height argument as its supported only with \
+                 --owner."
+            );
             let stdout = io::stdout();
             let mut w = stdout.lock();
             for (token, currency_code) in tokens {
@@ -169,6 +191,7 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
 pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
     let epoch = query_epoch(args.query.clone()).await;
     let client = HttpClient::new(args.query.ledger_address).unwrap();
+    let height = check_height(&client, args.query.height).await;
     match (args.owner, args.validator) {
         (Some(owner), Some(validator)) => {
             let source = ctx.get(&owner);
@@ -176,21 +199,30 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
             // Find owner's delegations to the given validator
             let bond_id = pos::BondId { source, validator };
             let bond_key = pos::bond_key(&bond_id);
-            let bonds =
-                query_storage_value::<pos::Bonds>(client.clone(), bond_key)
-                    .await;
+            let bonds = query_storage_value::<pos::Bonds>(
+                client.clone(),
+                bond_key,
+                Some(height),
+            )
+            .await;
             // Find owner's unbonded delegations from the given
             // validator
             let unbond_key = pos::unbond_key(&bond_id);
-            let unbonds =
-                query_storage_value::<pos::Unbonds>(client.clone(), unbond_key)
-                    .await;
+            let unbonds = query_storage_value::<pos::Unbonds>(
+                client.clone(),
+                unbond_key,
+                Some(height),
+            )
+            .await;
             // Find validator's slashes, if any
             let slashes_key = pos::validator_slashes_key(&bond_id.validator);
-            let slashes =
-                query_storage_value::<pos::Slashes>(client, slashes_key)
-                    .await
-                    .unwrap_or_default();
+            let slashes = query_storage_value::<pos::Slashes>(
+                client,
+                slashes_key,
+                Some(height),
+            )
+            .await
+            .unwrap_or_default();
 
             let stdout = io::stdout();
             let mut w = stdout.lock();
@@ -237,20 +269,29 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
                 validator,
             };
             let bond_key = pos::bond_key(&bond_id);
-            let bonds =
-                query_storage_value::<pos::Bonds>(client.clone(), bond_key)
-                    .await;
+            let bonds = query_storage_value::<pos::Bonds>(
+                client.clone(),
+                bond_key,
+                Some(height),
+            )
+            .await;
             // Find validator's unbonded self-bonds
             let unbond_key = pos::unbond_key(&bond_id);
-            let unbonds =
-                query_storage_value::<pos::Unbonds>(client.clone(), unbond_key)
-                    .await;
+            let unbonds = query_storage_value::<pos::Unbonds>(
+                client.clone(),
+                unbond_key,
+                Some(height),
+            )
+            .await;
             // Find validator's slashes, if any
             let slashes_key = pos::validator_slashes_key(&bond_id.validator);
-            let slashes =
-                query_storage_value::<pos::Slashes>(client, slashes_key)
-                    .await
-                    .unwrap_or_default();
+            let slashes = query_storage_value::<pos::Slashes>(
+                client,
+                slashes_key,
+                Some(height),
+            )
+            .await
+            .unwrap_or_default();
 
             let stdout = io::stdout();
             let mut w = stdout.lock();
@@ -279,6 +320,10 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
             }
         }
         (Some(owner), None) => {
+            println!(
+                "Ignoring --height argument as its supported only with \
+                 --validator."
+            );
             let owner = ctx.get(&owner);
             // Find owner's bonds to any validator
             let bonds_prefix = pos::bonds_for_source_prefix(&owner);
@@ -308,6 +353,7 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
                             let slashes = query_storage_value::<pos::Slashes>(
                                 client.clone(),
                                 slashes_key,
+                                Some(height),
                             )
                             .await
                             .unwrap_or_default();
@@ -359,6 +405,7 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
                             let slashes = query_storage_value::<pos::Slashes>(
                                 client.clone(),
                                 slashes_key,
+                                Some(height),
                             )
                             .await
                             .unwrap_or_default();
@@ -400,6 +447,10 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
             }
         }
         (None, None) => {
+            println!(
+                "Ignoring --height argument as its supported only with \
+                 --validator."
+            );
             // Find all the bonds
             let bonds_prefix = pos::bonds_prefix();
             let bonds = query_storage_prefix::<pos::Bonds>(
@@ -427,6 +478,7 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
                             let slashes = query_storage_value::<pos::Slashes>(
                                 client.clone(),
                                 slashes_key,
+                                Some(height),
                             )
                             .await
                             .unwrap_or_default();
@@ -478,6 +530,7 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
                             let slashes = query_storage_value::<pos::Slashes>(
                                 client.clone(),
                                 slashes_key,
+                                Some(height),
                             )
                             .await
                             .unwrap_or_default();
@@ -531,12 +584,13 @@ pub async fn query_voting_power(ctx: Context, args: args::QueryVotingPower) {
         None => query_epoch(args.query.clone()).await,
     };
     let client = HttpClient::new(args.query.ledger_address).unwrap();
-
+    let height = check_height(&client, args.query.height).await;
     // Find the validator set
     let validator_set_key = pos::validator_set_key();
     let validator_sets = query_storage_value::<pos::ValidatorSets>(
         client.clone(),
         validator_set_key,
+        Some(height),
     )
     .await
     .expect("Validator set should always be set");
@@ -552,6 +606,7 @@ pub async fn query_voting_power(ctx: Context, args: args::QueryVotingPower) {
                 query_storage_value::<pos::ValidatorVotingPowers>(
                     client.clone(),
                     voting_power_key,
+                    Some(height),
                 )
                 .await;
             match voting_powers.and_then(|data| data.get(epoch)) {
@@ -615,6 +670,7 @@ pub async fn query_voting_power(ctx: Context, args: args::QueryVotingPower) {
     let total_voting_powers = query_storage_value::<pos::TotalVotingPowers>(
         client,
         total_voting_power_key,
+        Some(height),
     )
     .await
     .expect("Total voting power should always be set");
@@ -627,6 +683,7 @@ pub async fn query_voting_power(ctx: Context, args: args::QueryVotingPower) {
 /// Query PoS slashes
 pub async fn query_slashes(ctx: Context, args: args::QuerySlashes) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
+    let height = check_height(&client, args.query.height).await;
     match args.validator {
         Some(validator) => {
             let validator = ctx.get(&validator);
@@ -635,6 +692,7 @@ pub async fn query_slashes(ctx: Context, args: args::QuerySlashes) {
             let slashes = query_storage_value::<pos::Slashes>(
                 client.clone(),
                 slashes_key,
+                Some(height),
             )
             .await;
             match slashes {
@@ -656,6 +714,10 @@ pub async fn query_slashes(ctx: Context, args: args::QuerySlashes) {
             }
         }
         None => {
+            println!(
+                "Ignoring --height argument as its supported only with \
+                 --validator."
+            );
             // Iterate slashes for all validators
             let slashes_prefix = pos::slashes_prefix();
             let slashes = query_storage_prefix::<pos::Slashes>(
@@ -698,6 +760,30 @@ pub async fn query_slashes(ctx: Context, args: args::QuerySlashes) {
     }
 }
 
+async fn check_height(client: &HttpClient, height: Option<Height>) -> Height {
+    let status_response = client.status().await;
+    match status_response {
+        Ok(res) => match height {
+            Some(height) => {
+                if res.sync_info.latest_block_height >= height {
+                    height
+                } else {
+                    eprintln!(
+                        "Invalid block height, heighest block is {}",
+                        res.sync_info.latest_block_height
+                    );
+                    cli::safe_exit(1)
+                }
+            }
+            None => res.sync_info.latest_block_height,
+        },
+        Err(err) => {
+            eprintln!("Error sending status request {}", err);
+            cli::safe_exit(1)
+        }
+    }
+}
+
 /// Dry run a transaction
 pub async fn dry_run_tx(ledger_address: &TendermintAddress, tx_bytes: Vec<u8>) {
     let client = HttpClient::new(ledger_address.clone()).unwrap();
@@ -714,9 +800,9 @@ pub async fn get_public_key(
     address: &Address,
     ledger_address: TendermintAddress,
 ) -> Option<common::PublicKey> {
-    let client = HttpClient::new(ledger_address).unwrap();
+    let client = HttpClient::new(ledger_address.clone()).unwrap();
     let key = pk_key(address);
-    query_storage_value(client, key).await
+    query_storage_value(client, key, None).await
 }
 
 /// Check if the given address is a known validator.
@@ -724,12 +810,12 @@ pub async fn is_validator(
     address: &Address,
     ledger_address: TendermintAddress,
 ) -> bool {
-    let client = HttpClient::new(ledger_address).unwrap();
+    let client = HttpClient::new(ledger_address.clone()).unwrap();
     // Check if there's any validator state
     let key = pos::validator_state_key(address);
     // We do not need to decode it
     let state: Option<pos::ValidatorStates> =
-        query_storage_value(client, key).await;
+        query_storage_value(client, key, None).await;
     // If there is, then the address is a validator
     state.is_some()
 }
@@ -887,6 +973,7 @@ fn process_unbonds_query(
 pub async fn query_storage_value<T>(
     client: HttpClient,
     key: storage::Key,
+    height: Option<Height>,
 ) -> Option<T>
 where
     T: BorshDeserialize,
@@ -894,7 +981,7 @@ where
     let path = Path::Value(key);
     let data = vec![];
     let response = client
-        .abci_query(Some(path.into()), data, None, false)
+        .abci_query(Some(path.into()), data, height, false)
         .await
         .unwrap();
     match response.code {

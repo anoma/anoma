@@ -183,6 +183,13 @@ pub trait DB: std::fmt::Debug {
         value: impl AsRef<[u8]>,
     ) -> Result<i64>;
 
+    /// Read a value from a key at a specific height
+    fn read_subspace_val_at(
+        &self,
+        key: &Key,
+        height: BlockHeight,
+    ) -> Result<Option<Vec<u8>>>;
+
     /// Delete the value with the given height and account subspace key from the
     /// DB. Returns the size of the removed value, if any, 0 if no previous
     /// value was found.
@@ -372,6 +379,23 @@ where
         }
     }
 
+    /// Read a value from the specified subspace and height. Reurn gas value and
+    /// gas cost
+    pub fn read_at(
+        &self,
+        key: &Key,
+        height: BlockHeight,
+    ) -> Result<(Option<Vec<u8>>, u64)> {
+        tracing::debug!("storage read key {} at height {}", key, height);
+        match self.db.read_subspace_val_at(key, height)? {
+            Some(v) => {
+                let gas = key.len() + v.len();
+                Ok((Some(v), gas as _))
+            }
+            None => Ok((None, key.len() as _)),
+        }
+    }
+
     /// Returns a prefix iterator and the gas cost
     pub fn iter_prefix(
         &self,
@@ -387,7 +411,7 @@ where
         key: &Key,
         value: impl AsRef<[u8]> + Clone,
     ) -> Result<(u64, i64)> {
-        tracing::debug!("storage write key {}", key,);
+        tracing::debug!("storage write key {}", key);
         self.block.tree.update(key, value.clone())?;
 
         let len = value.as_ref().len();
@@ -484,6 +508,14 @@ where
     /// Get the epoch of the last committed block
     pub fn get_last_epoch(&self) -> (Epoch, u64) {
         (self.last_epoch, MIN_STORAGE_GAS)
+    }
+
+    /// Get the epoch for a specific block height
+    pub fn get_epoch_for_block(&self, height: u64) -> (Option<Epoch>, u64) {
+        (
+            self.block.pred_epochs.get_epoch(BlockHeight(height)),
+            MIN_STORAGE_GAS,
+        )
     }
 
     /// Initialize the first epoch. The first epoch begins at genesis time.

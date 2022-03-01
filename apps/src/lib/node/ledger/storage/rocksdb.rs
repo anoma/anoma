@@ -685,6 +685,32 @@ impl DB for RocksDB {
 
         Ok(prev_len)
     }
+
+    fn read_subspace_val_at(
+        &self,
+        key: &Key,
+        height: BlockHeight,
+    ) -> Result<Option<Vec<u8>>> {
+        let mut height_iter = height;
+        while height_iter.ge(&height) && height_iter.ge(&BlockHeight(0)) {
+            let diff_key = Key::from(height_iter.to_db_key())
+                .push(&"diffs".to_owned())
+                .map_err(Error::KeyError)?
+                .push(&"new".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            if let Some(value) = self
+                .0
+                .get(diff_key)
+                .map_err(|e| Error::DBError(e.into_string()))?
+            {
+                return Ok(Some(value));
+            }
+            height_iter = height_iter - 1;
+        }
+        Ok(None)
+    }
 }
 
 impl<'iter> DBIter<'iter> for RocksDB {

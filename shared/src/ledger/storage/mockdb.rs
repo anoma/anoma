@@ -339,6 +339,14 @@ impl DB for MockDB {
             None => 0,
         })
     }
+
+    fn read_subspace_val_at(
+        &self,
+        _: &Key,
+        _: BlockHeight,
+    ) -> Result<Option<Vec<u8>>> {
+        unimplemented!()
+    }
 }
 
 impl<'iter> DBIter<'iter> for MockDB {

@@ -2,7 +2,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 use std::num::ParseIntError;
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -72,6 +72,14 @@ impl Add<u64> for BlockHeight {
 
     fn add(self, rhs: u64) -> Self::Output {
         Self(self.0 + rhs)
+    }
+}
+
+impl Sub<u64> for BlockHeight {
+    type Output = BlockHeight;
+
+    fn sub(self, rhs: u64) -> Self::Output {
+        Self(self.0 - rhs)
     }
 }
 

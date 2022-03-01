@@ -321,6 +321,7 @@ impl ResultHandler {
             &self.tx_signing_key,
             rpc::query_epoch(args::Query {
                 ledger_address: self.ledger_address.clone(),
+                height: None,
             })
             .await,
             0.into(),

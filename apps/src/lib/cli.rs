@@ -1202,11 +1202,15 @@ pub mod args {
     use libp2p::Multiaddr;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
+    use tendermint::block::Height;
+    #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_config::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
     use tendermint_config_abci::net::Address as TendermintAddress;
+    #[cfg(feature = "ABCI")]
+    use tendermint_stable::block::Height;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
 
@@ -1267,6 +1271,8 @@ pub mod args {
             let raw = "127.0.0.1:26657";
             TendermintAddress::from_str(raw).unwrap()
         }));
+    const HEIGHT_ABOUT: &str = "Block height";
+    const HEIGHT_OPT: ArgOpt<Height> = arg_opt("height");
     const LEDGER_ADDRESS: Arg<TendermintAddress> = arg("ledger-address");
     const LOCALHOST: ArgFlag = flag("localhost");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
@@ -2310,16 +2316,23 @@ pub mod args {
     pub struct Query {
         /// The address of the ledger node as host:port
         pub ledger_address: TendermintAddress,
+        /// The block heght
+        pub height: Option<Height>,
     }
 
     impl Args for Query {
         fn def(app: App) -> App {
             app.arg(LEDGER_ADDRESS_DEFAULT.def().about(LEDGER_ADDRESS_ABOUT))
+                .arg(HEIGHT_OPT.def().about(HEIGHT_ABOUT))
         }
 
         fn parse(matches: &ArgMatches) -> Self {
             let ledger_address = LEDGER_ADDRESS_DEFAULT.parse(matches);
-            Self { ledger_address }
+            let height = HEIGHT_OPT.parse(matches);
+            Self {
+                ledger_address,
+                height,
+            }
         }
     }
 
