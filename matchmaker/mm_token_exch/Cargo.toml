@@ -12,7 +12,8 @@ version = "0.4.0"
 crate-type = ["dylib"]
 
 [features]
-default = ["ABCI"]
+default = ["ABCI", "masp"]
+masp = []
 
 ABCI = ["anoma/ABCI"]
 

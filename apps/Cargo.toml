@@ -39,9 +39,10 @@ name = "anomaw"
 path = "src/bin/anoma-wallet/main.rs"
 
 [features]
-default = ["std", "ABCI"]
+default = ["std", "ABCI", "masp"]
 dev = ["anoma/dev"]
 std = ["ed25519-consensus/std", "rand/std", "rand_core/std"]
+masp = ["jubjub", "bls12_381", "libmasp", "masp_primitives", "masp_proofs", "zcash_primitives", "bellman", "zcash_proofs", "ff"]
 # for integration tests and test utilies
 ABCI = [
   "tendermint-stable",
@@ -143,6 +144,15 @@ tracing-log = "0.1.2"
 tracing-subscriber = "0.2.25"
 websocket = "0.26.2"
 winapi = "0.3.9"
+jubjub = {version = "0.8", optional = true }
+bls12_381 = {version = "0.6", optional = true }
+libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+zcash_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+zcash_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+bellman = { version = "0.11.1", features = ["groth16"], optional = true }
+ff = {version = "0.11", optional = true }
 
 [dev-dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}

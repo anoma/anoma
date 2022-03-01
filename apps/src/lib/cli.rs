@@ -1200,6 +1200,10 @@ pub mod args {
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
+    #[cfg(feature = "masp")]
+    use zcash_primitives::zip32::ExtendedSpendingKey;
+    #[cfg(feature = "masp")]
+    use zcash_primitives::primitives::PaymentAddress;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
@@ -1276,6 +1280,8 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
+    #[cfg(feature = "masp")]
+    const PAYMENT_ADDRESS_OPT: ArgOpt<PaymentAddress> = arg_opt("payment-address");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
@@ -1287,6 +1293,8 @@ pub mod args {
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
+    #[cfg(feature = "masp")]
+    const SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = arg_opt("spending-key");
     const TARGET: Arg<WalletAddress> = arg("target");
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
@@ -1434,6 +1442,12 @@ pub mod args {
         pub token: WalletAddress,
         /// Transferred token amount
         pub amount: token::Amount,
+        /// Spending key for shielded transactions
+        #[cfg(feature = "masp")]
+        pub spending_key: Option<ExtendedSpendingKey>,
+        /// Payment address for shielded transactions
+        #[cfg(feature = "masp")]
+        pub payment_address: Option<PaymentAddress>,
     }
 
     impl Args for TxTransfer {
@@ -1443,24 +1457,42 @@ pub mod args {
             let target = TARGET.parse(matches);
             let token = TOKEN.parse(matches);
             let amount = AMOUNT.parse(matches);
+            #[cfg(feature = "masp")]
+            let spending_key = SPENDING_KEY_OPT.parse(matches);
+            #[cfg(feature = "masp")]
+            let payment_address = PAYMENT_ADDRESS_OPT.parse(matches);
             Self {
                 tx,
                 source,
                 target,
                 token,
                 amount,
+                #[cfg(feature = "masp")]
+                spending_key,
+                #[cfg(feature = "masp")]
+                payment_address,
             }
         }
 
         fn def(app: App) -> App {
-            app.add_args::<Tx>()
+            let args = app.add_args::<Tx>()
                 .arg(SOURCE.def().about(
                     "The source account address. The source's key is used to \
                      produce the signature.",
                 ))
                 .arg(TARGET.def().about("The target account address."))
                 .arg(TOKEN.def().about("The transfer token."))
-                .arg(AMOUNT.def().about("The amount to transfer in decimal."))
+                .arg(AMOUNT.def().about("The amount to transfer in decimal."));
+            #[cfg(not(feature = "masp"))]
+            return args;
+            #[cfg(feature = "masp")]
+            return args
+                .arg(SPENDING_KEY_OPT.def().about(
+                    "The spending key for shielded transactions.",
+                ))
+                .arg(PAYMENT_ADDRESS_OPT.def().about(
+                    "The payment address for shielded transactions.",
+                ));
         }
     }
 

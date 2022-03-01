@@ -9,7 +9,7 @@ version = "0.4.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["ABCI"]
+default = ["ABCI", "masp"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
 dev = []
 ferveo-tpke = [
@@ -59,6 +59,7 @@ wasm-runtime = [
   # "wasmer-engine-dylib",
   # "wasmer-engine-universal",
 ]
+masp = ["jubjub", "bls12_381", "libmasp", "masp_primitives", "masp_proofs", "zcash_primitives", "zcash_proofs", "bellman", "ff"]
 
 [dependencies]
 anoma_proof_of_stake = {path = "../proof_of_stake"}
@@ -111,6 +112,15 @@ wasmer-compiler-singlepass = {version = "=1.0.2", optional = true}
 wasmer-engine-jit = {version = "=1.0.2", optional = true}
 wasmer-vm = {version = "=1.0.2", optional = true}
 wasmparser = "0.81.0"
+jubjub = { version = "0.8", optional = true }
+bls12_381 = { version = "0.6", optional = true }
+libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+zcash_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+zcash_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", optional = true }
+bellman = { version = "0.11.1", features = ["groth16"], optional = true }
+ff = { version = "0.11", optional = true }
 
 # TODO wasmer 2.x
 # loupe = {version = "0.1.3", optional = true}

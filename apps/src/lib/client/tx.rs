@@ -406,12 +406,18 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             }
         }
     }
+    /*#[cfg(feature = "masp")]
+    if args.spending_key.is_some() || args.payment_address.is_some() {
+        
+    }*/
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let transfer = token::Transfer {
         source,
         target,
         token,
         amount: args.amount,
+        #[cfg(feature = "masp")]
+        shielded: None,
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer
