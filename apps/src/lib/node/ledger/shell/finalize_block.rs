@@ -612,12 +612,12 @@ mod test_finalize_block {
         let (mut shell, _) = setup();
 
         let keypair = crate::wallet::defaults::daewon_keypair();
-        let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
+        let pubkey = EncryptionKey::default();
         // not valid tx bytes
         let tx = "garbage data".as_bytes().to_owned();
         let inner_tx =
             anoma::types::transaction::encrypted::EncryptedTx::encrypt(
-                &tx, pubkey.into(),
+                &tx, pubkey,
             );
         let wrapper = WrapperTx {
             fee: Fee {
