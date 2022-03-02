@@ -249,7 +249,7 @@ mod test_process_proposal {
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
     use anoma::types::transaction::encrypted::EncryptedTx;
-    use anoma::types::transaction::{Fee, Hash, EncryptionKey};
+    use anoma::types::transaction::{EncryptionKey, Fee, Hash};
     use borsh::BorshDeserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::RequestInitChain;
