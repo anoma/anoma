@@ -249,7 +249,7 @@ mod test_process_proposal {
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
     use anoma::types::transaction::encrypted::EncryptedTx;
-    use anoma::types::transaction::{Fee, Hash};
+    use anoma::types::transaction::{Fee, Hash, EncryptionKey};
     use borsh::BorshDeserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::RequestInitChain;
@@ -572,7 +572,7 @@ mod test_process_proposal {
     /// undecryptable but still accepted
     #[test]
     fn test_invalid_hash_commitment() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         shell.init_chain(RequestInitChain {
             time: Some(Timestamp {
                 seconds: 0,
@@ -647,7 +647,7 @@ mod test_process_proposal {
             ..Default::default()
         });
         let keypair = crate::wallet::defaults::daewon_keypair();
-        let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator().into();
+        let pubkey = EncryptionKey::default();
         // not valid tx bytes
         let tx = "garbage data".as_bytes().to_owned();
         let inner_tx = EncryptedTx::encrypt(&tx, pubkey);

@@ -347,7 +347,7 @@ where
 mod test_finalize_block {
     use anoma::types::address::xan;
     use anoma::types::storage::Epoch;
-    use anoma::types::transaction::Fee;
+    use anoma::types::transaction::{EncryptionKey, Fee};
 
     use super::*;
     use crate::node::ledger::shell::test_utils::*;
@@ -679,10 +679,10 @@ mod test_finalize_block {
     /// but the tx result contains the appropriate error code.
     #[test]
     fn test_undecryptable_returns_error_code() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
 
         let keypair = crate::wallet::defaults::daewon_keypair();
-        let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
+        let pubkey = EncryptionKey::default();
         // not valid tx bytes
         let tx = "garbage data".as_bytes().to_owned();
         let inner_tx =
