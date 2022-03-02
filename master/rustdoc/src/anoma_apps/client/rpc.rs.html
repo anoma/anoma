@@ -1154,6 +1154,7 @@
 <span id="1153">1153</span>
 <span id="1154">1154</span>
 <span id="1155">1155</span>
+<span id="1156">1156</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Client RPC queries</span>
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -2252,6 +2253,7 @@
     <span class="comment">// Summarize the transaction results that we were searching for</span>
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">TxResponse</span> {
         <span class="ident">info</span>: <span class="ident">event_map</span>[<span class="string">&quot;info&quot;</span>].<span class="ident">to_string</span>(),
+        <span class="ident">log</span>: <span class="ident">event_map</span>[<span class="string">&quot;log&quot;</span>].<span class="ident">to_string</span>(),
         <span class="ident">height</span>: <span class="ident">event_map</span>[<span class="string">&quot;height&quot;</span>].<span class="ident">to_string</span>(),
         <span class="ident">hash</span>: <span class="ident">event_map</span>[<span class="string">&quot;hash&quot;</span>].<span class="ident">to_string</span>(),
         <span class="ident">code</span>: <span class="ident">event_map</span>[<span class="string">&quot;code&quot;</span>].<span class="ident">to_string</span>(),

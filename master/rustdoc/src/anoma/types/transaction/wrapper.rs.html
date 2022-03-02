@@ -642,9 +642,9 @@
         <span class="doccomment">/// which decryption key will be used</span>
         <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
         <span class="doccomment">/// Max amount of gas that can be used when executing the inner tx</span>
-        <span class="ident">gas_limit</span>: <span class="ident">GasLimit</span>,
+        <span class="kw">pub</span> <span class="ident">gas_limit</span>: <span class="ident">GasLimit</span>,
         <span class="doccomment">/// the encrypted payload</span>
-        <span class="ident">inner_tx</span>: <span class="ident">EncryptedTx</span>,
+        <span class="kw">pub</span> <span class="ident">inner_tx</span>: <span class="ident">EncryptedTx</span>,
         <span class="doccomment">/// sha-2 hash of the inner transaction acting as a commitment</span>
         <span class="doccomment">/// the contents of the encrypted payload</span>
         <span class="kw">pub</span> <span class="ident">tx_hash</span>: <span class="ident">Hash</span>,

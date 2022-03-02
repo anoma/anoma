@@ -1145,6 +1145,12 @@
 <span id="1144">1144</span>
 <span id="1145">1145</span>
 <span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -2167,6 +2173,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxResponse</span> {
     <span class="kw">pub</span> <span class="ident">info</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">log</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">String</span>,
@@ -2200,6 +2207,7 @@
             .<span class="ident">remove</span>(<span class="number">0</span>);
 
     <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;info&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">log</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;log&quot;</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;height&quot;</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;hash&quot;</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">take</span>(<span class="string">&quot;code&quot;</span>).<span class="ident">unwrap</span>();
@@ -2211,6 +2219,7 @@
     };
     <span class="ident">TxResponse</span> {
         <span class="ident">info</span>,
+        <span class="ident">log</span>,
         <span class="ident">height</span>,
         <span class="ident">hash</span>,
         <span class="ident">code</span>,
@@ -2250,6 +2259,8 @@
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span>
             <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.info&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
                 .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">log</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.log&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
+            .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span>
             <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.height&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
                 .<span class="ident">unwrap</span>();
@@ -2283,6 +2294,7 @@
         };
         <span class="ident">TxResponse</span> {
             <span class="ident">info</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">info</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
+            <span class="ident">log</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">log</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">height</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">height</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">hash</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">hash</span>).<span class="ident">unwrap</span>(),
             <span class="ident">code</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">code</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),

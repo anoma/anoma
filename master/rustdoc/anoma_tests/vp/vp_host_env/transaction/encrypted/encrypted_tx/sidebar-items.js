@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["EncryptedTx","We use a specific choice of two groups and bilinear pairing We use a wrapper type to add traits"]]});

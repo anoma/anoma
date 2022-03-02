@@ -712,6 +712,7 @@
 <span id="711">711</span>
 <span id="712">712</span>
 <span id="713">713</span>
+<span id="714">714</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Any changes applied before [`Shell::finalize_block`] might have to be</span>
@@ -818,6 +819,7 @@
     <span class="ident">WasmRuntimeError</span> <span class="op">=</span> <span class="number">3</span>,
     <span class="ident">InvalidOrder</span> <span class="op">=</span> <span class="number">4</span>,
     <span class="ident">ExtraTxs</span> <span class="op">=</span> <span class="number">5</span>,
+    <span class="ident">Undecryptable</span> <span class="op">=</span> <span class="number">6</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ErrorCodes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u32</span> {

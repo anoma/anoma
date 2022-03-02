@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["encrypted_tx","Integration of Ferveo cryptographic primitives to enable encrypted txs. Not wasm compatible"]],"struct":[["EncryptedTx","We use a specific choice of two groups and bilinear pairing We use a wrapper type to add traits"]]});
