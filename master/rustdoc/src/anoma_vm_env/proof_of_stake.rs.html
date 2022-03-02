@@ -254,6 +254,12 @@
 <span id="253">253</span>
 <span id="254">254</span>
 <span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Proof of Stake system integration with functions for transactions</span>
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos::anoma_proof_of_stake</span>::{
@@ -319,6 +325,8 @@
         <span class="ident">account_key</span>,
         <span class="ident">consensus_key</span>,
         <span class="ident">rewards_account_key</span>,
+        <span class="ident">protocol_key</span>,
+        <span class="ident">dkg_key</span>,
         <span class="ident">validator_vp_code</span>,
         <span class="ident">rewards_vp_code</span>,
     }: <span class="ident">InitValidator</span>,
@@ -328,6 +336,10 @@
     <span class="kw">let</span> <span class="ident">validator_address</span> <span class="op">=</span> <span class="ident">tx::init_account</span>(<span class="kw-2">&amp;</span><span class="ident">validator_vp_code</span>);
     <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator_address</span>);
     <span class="ident">tx::write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">account_key</span>);
+    <span class="kw">let</span> <span class="ident">protocol_pk_key</span> <span class="op">=</span> <span class="ident">key::protocol_pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator_address</span>);
+    <span class="ident">tx::write</span>(<span class="kw-2">&amp;</span><span class="ident">protocol_pk_key</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">protocol_key</span>);
+    <span class="kw">let</span> <span class="ident">dkg_pk_key</span> <span class="op">=</span> <span class="ident">key::dkg_session_keys::dkg_pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator_address</span>);
+    <span class="ident">tx::write</span>(<span class="kw-2">&amp;</span><span class="ident">dkg_pk_key</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="ident">dkg_key</span>);
 
     <span class="comment">// Init staking reward account</span>
     <span class="kw">let</span> <span class="ident">rewards_address</span> <span class="op">=</span> <span class="ident">tx::init_account</span>(<span class="kw-2">&amp;</span><span class="ident">rewards_vp_code</span>);

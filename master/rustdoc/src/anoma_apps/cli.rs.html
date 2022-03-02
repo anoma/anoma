@@ -2712,6 +2712,14 @@
 <span id="2711">2711</span>
 <span id="2712">2712</span>
 <span id="2713">2713</span>
+<span id="2714">2714</span>
+<span id="2715">2715</span>
+<span id="2716">2716</span>
+<span id="2717">2717</span>
+<span id="2718">2718</span>
+<span id="2719">2719</span>
+<span id="2720">2720</span>
+<span id="2721">2721</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -3990,6 +3998,7 @@
     <span class="kw">const</span> <span class="ident">NODE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;node&quot;</span>);
     <span class="kw">const</span> <span class="ident">NFT_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;nft-address&quot;</span>);
     <span class="kw">const</span> <span class="ident">OWNER</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;owner&quot;</span>);
+    <span class="kw">const</span> <span class="ident">PROTOCOL_KEY</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;protocol-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">PUBLIC_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;public-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">RAW_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">RAW_PUBLIC_KEY_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;public-key&quot;</span>);
@@ -4028,7 +4037,7 @@
         <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
         <span class="kw">pub</span> <span class="ident">wasm_dir</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
-        <span class="kw">pub</span> <span class="ident">mode</span>: <span class="ident">TendermintMode</span>,
+        <span class="kw">pub</span> <span class="ident">mode</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TendermintMode</span><span class="op">&gt;</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Global</span> {
@@ -4037,7 +4046,7 @@
             <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">CHAIN_ID_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">BASE_DIR</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">WASM_DIR</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">TendermintMode::from</span>(<span class="ident">MODE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>));
+            <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">MODE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident">TendermintMode::from</span>);
             <span class="ident">Global</span> {
                 <span class="ident">chain_id</span>,
                 <span class="ident">base_dir</span>,
@@ -4230,6 +4239,7 @@
         <span class="kw">pub</span> <span class="ident">account_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">consensus_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">rewards_account_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">protocol_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">validator_vp_code_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">rewards_vp_code_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
@@ -4242,6 +4252,7 @@
             <span class="kw">let</span> <span class="ident">account_key</span> <span class="op">=</span> <span class="ident">VALIDATOR_ACCOUNT_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="ident">VALIDATOR_CONSENSUS_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">rewards_account_key</span> <span class="op">=</span> <span class="ident">REWARDS_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">protocol_key</span> <span class="op">=</span> <span class="ident">PROTOCOL_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">validator_vp_code_path</span> <span class="op">=</span> <span class="ident">VALIDATOR_CODE_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">rewards_vp_code_path</span> <span class="op">=</span> <span class="ident">REWARDS_CODE_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
@@ -4251,6 +4262,7 @@
                 <span class="ident">account_key</span>,
                 <span class="ident">consensus_key</span>,
                 <span class="ident">rewards_account_key</span>,
+                <span class="ident">protocol_key</span>,
                 <span class="ident">validator_vp_code_path</span>,
                 <span class="ident">rewards_vp_code_path</span>,
                 <span class="ident">unsafe_dont_encrypt</span>,
@@ -4273,6 +4285,10 @@
                 .<span class="ident">arg</span>(<span class="ident">REWARDS_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;A public key for the staking reward account. A new one \
                      will be generated if none given.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">PROTOCOL_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;A public key for signing protocol transactions. A new \
+                     one will be generated if none given.&quot;</span>,
                 ))
                 .<span class="ident">arg</span>(<span class="ident">VALIDATOR_CODE_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;The path to the validity predicate WASM code to be used \

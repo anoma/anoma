@@ -553,7 +553,59 @@
 <span id="552">552</span>
 <span id="553">553</span>
 <span id="554">554</span>
-</pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">events</span>;
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+</pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">broadcaster</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rpc</span>;
 <span class="kw">mod</span> <span class="ident">shell</span>;
@@ -581,6 +633,8 @@
 
 <span class="kw">use</span> <span class="ident"><span class="self">self</span>::shims::abcipp_shim::AbciService</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config::utils::num_of_threads</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config::TendermintMode</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::broadcaster::Broadcaster</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shell</span>::{<span class="ident">Error</span>, <span class="ident">MempoolTxType</span>, <span class="ident">Shell</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim::AbcippShim</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>};
@@ -724,8 +778,9 @@
     <span class="ident">shell::reset</span>(<span class="ident">config</span>)
 }
 
-<span class="doccomment">/// Runs two concurrent tasks: A tendermint node, a shell which contains an ABCI</span>
-<span class="doccomment">/// server for talking to the tendermint node. Both must be alive for correct</span>
+<span class="doccomment">/// Runs three concurrent tasks: A tendermint node, a shell which contains an</span>
+<span class="doccomment">/// ABCI, server for talking to the tendermint node, and a broadcaster so that</span>
+<span class="doccomment">/// the ledger may submit txs to the chain. All must be alive for correct</span>
 <span class="doccomment">/// functioning.</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_aux</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>, <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>) {
     <span class="comment">// Prefetch needed wasm artifacts</span>
@@ -813,6 +868,7 @@
 
     <span class="kw">let</span> <span class="ident">tendermint_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint_dir</span>();
     <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">ledger_address</span>.<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">rpc_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">rpc_address</span>.<span class="ident">to_string</span>();
     <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">chain_id</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">config</span>
         .<span class="ident">genesis_time</span>
@@ -824,6 +880,10 @@
     <span class="comment">// Channel for signalling shut down from the shell or from Tendermint</span>
     <span class="kw">let</span> (<span class="ident">abort_send</span>, <span class="ident">abort_recv</span>) <span class="op">=</span>
         <span class="ident">tokio::sync::mpsc::unbounded_channel</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>();
+    <span class="comment">// Channels for validators to send protocol txs to be broadcast to the</span>
+    <span class="comment">// broadcaster service</span>
+    <span class="kw">let</span> (<span class="ident">broadcaster_sender</span>, <span class="ident">broadcaster_receiver</span>) <span class="op">=</span>
+        <span class="ident">tokio::sync::mpsc::unbounded_channel</span>();
 
     <span class="comment">// Channel for signalling shut down to Tendermint process</span>
     <span class="kw">let</span> (<span class="ident">tm_abort_send</span>, <span class="ident">tm_abort_recv</span>) <span class="op">=</span>
@@ -854,14 +914,44 @@
         <span class="ident">res</span>
     });
 
+    <span class="kw">let</span> <span class="ident">broadcaster</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">matches!</span>(
+        <span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">tendermint_mode</span>,
+        <span class="ident">TendermintMode::Validator</span>
+    ) {
+        <span class="comment">// Channel for signalling shut down to broadcaster</span>
+        <span class="kw">let</span> (<span class="ident">bc_abort_send</span>, <span class="ident">bc_abort_recv</span>) <span class="op">=</span>
+            <span class="ident">tokio::sync::oneshot::channel</span>::<span class="op">&lt;</span>()<span class="op">&gt;</span>();
+        <span class="kw">let</span> <span class="ident">abort_send_for_broadcaster</span> <span class="op">=</span> <span class="ident">abort_send</span>.<span class="ident">clone</span>();
+        <span class="prelude-val">Some</span>((
+            <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                <span class="comment">// Construct a service for broadcasting protocol txs from the</span>
+                <span class="comment">// ledger</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">broadcaster</span> <span class="op">=</span>
+                    <span class="ident">Broadcaster::new</span>(<span class="kw-2">&amp;</span><span class="ident">rpc_address</span>, <span class="ident">broadcaster_receiver</span>);
+                <span class="comment">// On panic or exit, the `Drop` of `AbortSender` will send abort</span>
+                <span class="comment">// message</span>
+                <span class="kw">let</span> <span class="ident">aborter</span> <span class="op">=</span> <span class="ident">Aborter</span> {
+                    <span class="ident">sender</span>: <span class="ident">abort_send_for_broadcaster</span>,
+                    <span class="ident">who</span>: <span class="string">&quot;Broadcaster&quot;</span>,
+                };
+                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">broadcaster</span>.<span class="ident">run</span>(<span class="ident">bc_abort_recv</span>).<span class="kw">await</span>;
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;Broadcaster is no longer running.&quot;</span>);
+
+                <span class="ident">drop</span>(<span class="ident">aborter</span>);
+                <span class="ident">res</span>
+            }),
+            <span class="ident">bc_abort_send</span>,
+        ))
+    } <span class="kw">else</span> {
+        <span class="prelude-val">None</span>
+    };
+
     <span class="comment">// Construct our ABCI application.</span>
-    <span class="kw">let</span> <span class="ident">db_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">db_dir</span>();
     <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">ledger_address</span>;
     <span class="kw">let</span> (<span class="ident">shell</span>, <span class="ident">abci_service</span>) <span class="op">=</span> <span class="ident">AbcippShim::new</span>(
-        <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">base_dir</span>,
-        <span class="ident">db_dir</span>,
-        <span class="ident">config</span>.<span class="ident">chain_id</span>,
+        <span class="ident">config</span>,
         <span class="ident">wasm_dir</span>,
+        <span class="ident">broadcaster_sender</span>,
         <span class="kw-2">&amp;</span><span class="ident">db_cache</span>,
         <span class="ident">vp_wasm_compilation_cache</span>,
         <span class="ident">tx_wasm_compilation_cache</span>,
@@ -916,9 +1006,21 @@
         }
     }
 
-    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="macro">tokio::try_join!</span>(<span class="ident">tendermint_node</span>, <span class="ident">abci</span>);
+    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">broadcaster</span> {
+        <span class="prelude-val">Some</span>((<span class="ident">broadcaster</span>, <span class="ident">bc_abort_send</span>)) =&gt; {
+            <span class="comment">// request the broadcaster shutdown</span>
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">bc_abort_send</span>.<span class="ident">send</span>(());
+            <span class="macro">tokio::try_join!</span>(<span class="ident">tendermint_node</span>, <span class="ident">abci</span>, <span class="ident">broadcaster</span>)
+        }
+        <span class="prelude-val">None</span> =&gt; {
+            <span class="comment">// if the broadcaster service is not active, we fill in its return</span>
+            <span class="comment">// value with ()</span>
+            <span class="macro">tokio::try_join!</span>(<span class="ident">tendermint_node</span>, <span class="ident">abci</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">results</span><span class="op">|</span> (<span class="ident">results</span>.<span class="number">0</span>, <span class="ident">results</span>.<span class="number">1</span>, ()))
+        }
+    };
     <span class="kw">match</span> <span class="ident">res</span> {
-        <span class="prelude-val">Ok</span>((<span class="ident">tendermint_res</span>, <span class="ident">abci_res</span>)) =&gt; {
+        <span class="prelude-val">Ok</span>((<span class="ident">tendermint_res</span>, <span class="ident">abci_res</span>, <span class="kw">_</span>)) =&gt; {
             <span class="comment">// we ignore errors on user-initiated shutdown</span>
             <span class="kw">if</span> <span class="ident">aborted</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_res</span> {

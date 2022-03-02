@@ -468,6 +468,21 @@
 <span id="467">467</span>
 <span id="468">468</span>
 <span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
 <span class="doccomment">/// to enable encrypted txs inside of normal txs.</span>
 <span class="doccomment">/// *Not wasm compatible*</span>
@@ -488,7 +503,9 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::token::Amount</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction::encrypted::EncryptedTx</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction</span>::{<span class="ident">hash_tx</span>, <span class="ident">Hash</span>, <span class="ident">TxType</span>};
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction</span>::{
+        <span class="ident">hash_tx</span>, <span class="ident">EncryptionKey</span>, <span class="ident">Hash</span>, <span class="ident">TxError</span>, <span class="ident">TxType</span>,
+    };
 
     <span class="doccomment">/// TODO: Determine a sane number for this</span>
     <span class="kw">const</span> <span class="ident">GAS_LIMIT_RESOLUTION</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1_000_000</span>;
@@ -506,12 +523,6 @@
         <span class="ident">InvalidTx</span>,
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The given Tx data did not contain a valid WrapperTx&quot;</span>)]</span>
         <span class="ident">InvalidWrapperTx</span>,
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected signed WrapperTx data&quot;</span>)]</span>
-        <span class="ident">Unsigned</span>,
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
-        <span class="ident">SigError</span>(<span class="ident">VerifySigError</span>),
-        <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unable to deserialize the Tx data: {0}&quot;</span>)]</span>
-        <span class="ident">Deserialization</span>(<span class="ident">String</span>),
         <span class="attribute">#[<span class="ident">error</span>(
             <span class="string">&quot;Attempted to sign WrapperTx with keypair whose public key \
              differs from that in the WrapperTx&quot;</span>
@@ -661,10 +672,9 @@
             <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
             <span class="ident">gas_limit</span>: <span class="ident">GasLimit</span>,
             <span class="ident">tx</span>: <span class="ident">Tx</span>,
+            <span class="ident">encryption_key</span>: <span class="ident">EncryptionKey</span>,
         ) -&gt; <span class="ident">WrapperTx</span> {
-            <span class="comment">// TODO: Look up current public key from storage</span>
-            <span class="kw">let</span> <span class="ident">pubkey</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G1Affine::prime_subgroup_generator</span>();
-            <span class="kw">let</span> <span class="ident">inner_tx</span> <span class="op">=</span> <span class="ident">EncryptedTx::encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">to_bytes</span>(), <span class="ident">pubkey</span>);
+            <span class="kw">let</span> <span class="ident">inner_tx</span> <span class="op">=</span> <span class="ident">EncryptedTx::encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">to_bytes</span>(), <span class="ident">encryption_key</span>);
             <span class="self">Self</span> {
                 <span class="ident">fee</span>,
                 <span class="ident">pk</span>: <span class="ident">keypair</span>.<span class="ident">ref_to</span>(),
@@ -726,6 +736,21 @@
                 ),
             )
             .<span class="ident">sign</span>(<span class="ident">keypair</span>))
+        }
+
+        <span class="doccomment">/// Validate the signature of a wrapper tx</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_sig</span>(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            <span class="ident">signed_data</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
+            <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">common::Signature</span>,
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TxError</span><span class="op">&gt;</span> {
+            <span class="ident">common::SigScheme::verify_signature</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_data</span>, <span class="ident">sig</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                    <span class="ident">TxError::SigError</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;WrapperTx signature verification failed: {}&quot;</span>,
+                        <span class="ident">err</span>
+                    ))
+                })
         }
     }
 
@@ -824,6 +849,7 @@
                 <span class="ident">Epoch</span>(<span class="number">0</span>),
                 <span class="number">0</span>.<span class="ident">into</span>(),
                 <span class="ident">tx</span>.<span class="ident">clone</span>(),
+                <span class="ident">Default::default</span>(),
             );
             <span class="macro">assert!</span>(<span class="ident">wrapper</span>.<span class="ident">validate_ciphertext</span>());
             <span class="kw">let</span> <span class="ident">privkey</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G2Affine::prime_subgroup_generator</span>();
@@ -849,6 +875,7 @@
                 <span class="ident">Epoch</span>(<span class="number">0</span>),
                 <span class="number">0</span>.<span class="ident">into</span>(),
                 <span class="ident">tx</span>,
+                <span class="ident">Default::default</span>(),
             );
             <span class="comment">// give a incorrect commitment to the decrypted contents of the tx</span>
             <span class="ident">wrapper</span>.<span class="ident">tx_hash</span> <span class="op">=</span> <span class="ident">Hash</span>([<span class="number">0u8</span>; <span class="number">32</span>]);
@@ -880,6 +907,7 @@
                 <span class="ident">Epoch</span>(<span class="number">0</span>),
                 <span class="number">0</span>.<span class="ident">into</span>(),
                 <span class="ident">tx</span>,
+                <span class="ident">Default::default</span>(),
             )
             .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>);
@@ -903,8 +931,10 @@
                 <span class="ident">Tx::new</span>(<span class="string">&quot;Give me all the money&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(), <span class="prelude-val">None</span>);
 
             <span class="comment">// We replace the inner tx with a malicious one</span>
-            <span class="ident">wrapper</span>.<span class="ident">inner_tx</span> <span class="op">=</span>
-                <span class="ident">EncryptedTx::encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">malicious</span>.<span class="ident">to_bytes</span>(), <span class="ident">pubkey</span>);
+            <span class="ident">wrapper</span>.<span class="ident">inner_tx</span> <span class="op">=</span> <span class="ident">EncryptedTx::encrypt</span>(
+                <span class="kw-2">&amp;</span><span class="ident">malicious</span>.<span class="ident">to_bytes</span>(),
+                <span class="ident">EncryptionKey</span>(<span class="ident">pubkey</span>),
+            );
 
             <span class="comment">// We change the commitment appropriately</span>
             <span class="ident">wrapper</span>.<span class="ident">tx_hash</span> <span class="op">=</span> <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">malicious</span>.<span class="ident">to_bytes</span>());
@@ -930,7 +960,7 @@
             <span class="comment">// check that the try from method also fails</span>
             <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::types::transaction::process_tx</span>(<span class="ident">tx</span>)
                 .<span class="ident">expect_err</span>(<span class="string">&quot;Test failed&quot;</span>);
-            <span class="macro">assert_matches!</span>(<span class="ident">err</span>, <span class="ident">WrapperTxErr::SigError</span>(<span class="kw">_</span>));
+            <span class="macro">assert_matches!</span>(<span class="ident">err</span>, <span class="ident">TxError::SigError</span>(<span class="kw">_</span>));
         }
     }
 }

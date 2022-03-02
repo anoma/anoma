@@ -773,6 +773,45 @@
 <span id="772">772</span>
 <span id="773">773</span>
 <span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
@@ -784,6 +823,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key::dkg_session_keys::DkgPublicKey</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">storage</span>, <span class="ident">token</span>};
@@ -802,6 +842,7 @@
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos::types::BasisPoints</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="ident">GenesisValidator</span>, <span class="ident">PosParams</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::key::dkg_session_keys::DkgPublicKey</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
     <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">storage</span>, <span class="ident">token</span>};
@@ -830,7 +871,13 @@
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span>, <span class="ident">HexKeyError</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">common::PublicKey::from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">common::PublicKey::from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+                .<span class="ident">map_err</span>(<span class="ident">HexKeyError::InvalidPublicKey</span>)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="ident">key</span>)
+        }
+
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_dkg_public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DkgPublicKey</span>, <span class="ident">HexKeyError</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">DkgPublicKey::from_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="ident">key</span>)
         }
     }
@@ -888,6 +935,11 @@
         <span class="kw">pub</span> <span class="ident">account_public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HexString</span><span class="op">&gt;</span>,
         <span class="comment">// Public key for staking reward account. (default: generate)</span>
         <span class="kw">pub</span> <span class="ident">staking_reward_public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HexString</span><span class="op">&gt;</span>,
+        <span class="comment">// Public protocol signing key for validator account. (default:</span>
+        <span class="comment">// generate)</span>
+        <span class="kw">pub</span> <span class="ident">protocol_public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HexString</span><span class="op">&gt;</span>,
+        <span class="comment">// Public DKG session key for validator account. (default: generate)</span>
+        <span class="kw">pub</span> <span class="ident">dkg_public_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HexString</span><span class="op">&gt;</span>,
         <span class="comment">// Validator address (default: generate).</span>
         <span class="kw">pub</span> <span class="ident">address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="comment">// Staking reward account address (default: generate).</span>
@@ -1030,6 +1082,18 @@
                 .<span class="ident">as_ref</span>()
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">to_public_key</span>()
+                .<span class="ident">unwrap</span>(),
+            <span class="ident">protocol_key</span>: <span class="ident">config</span>
+                .<span class="ident">protocol_public_key</span>
+                .<span class="ident">as_ref</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">to_public_key</span>()
+                .<span class="ident">unwrap</span>(),
+            <span class="ident">dkg_public_key</span>: <span class="ident">config</span>
+                .<span class="ident">dkg_public_key</span>
+                .<span class="ident">as_ref</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">to_dkg_public_key</span>()
                 .<span class="ident">unwrap</span>(),
             <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount::whole</span>(<span class="ident">config</span>.<span class="ident">non_staked_balance</span>),
             <span class="ident">validator_vp_code_path</span>: <span class="ident">validator_vp_config</span>.<span class="ident">filename</span>.<span class="ident">to_owned</span>(),
@@ -1324,6 +1388,11 @@
     <span class="doccomment">/// this key on a transaction signature.</span>
     <span class="doccomment">/// Note that this is distinct from consensus key used in the PoS system.</span>
     <span class="kw">pub</span> <span class="ident">account_key</span>: <span class="ident">common::PublicKey</span>,
+    <span class="doccomment">/// Public key associated with validator account used for signing protocol</span>
+    <span class="doccomment">/// transactions</span>
+    <span class="kw">pub</span> <span class="ident">protocol_key</span>: <span class="ident">common::PublicKey</span>,
+    <span class="doccomment">/// The public DKG session key used during the DKG protocol</span>
+    <span class="kw">pub</span> <span class="ident">dkg_public_key</span>: <span class="ident">DkgPublicKey</span>,
     <span class="doccomment">/// These tokens are no staked and hence do not contribute to the</span>
     <span class="doccomment">/// validator&#39;s voting power</span>
     <span class="kw">pub</span> <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount</span>,
@@ -1418,6 +1487,7 @@
         <span class="ident">common::SecretKey::try_from_sk</span>(<span class="kw-2">&amp;</span><span class="ident">ed_staking_reward_keypair</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_address</span>();
     <span class="kw">let</span> <span class="ident">staking_reward_address</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xcersvee8qerxd35x9prsw2xg5erxv6pxfpygd2x89z5xsf5xvmnysejgv6rwd2rnj2avt&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> (<span class="ident">protocol_keypair</span>, <span class="ident">dkg_keypair</span>) <span class="op">=</span> <span class="ident">wallet::defaults::validator_keys</span>();
     <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">Validator</span> {
         <span class="ident">pos_data</span>: <span class="ident">GenesisValidator</span> {
             <span class="ident">address</span>,
@@ -1427,6 +1497,8 @@
             <span class="ident">staking_reward_key</span>: <span class="ident">staking_reward_keypair</span>.<span class="ident">ref_to</span>(),
         },
         <span class="ident">account_key</span>: <span class="ident">account_keypair</span>.<span class="ident">ref_to</span>(),
+        <span class="ident">protocol_key</span>: <span class="ident">protocol_keypair</span>.<span class="ident">ref_to</span>(),
+        <span class="ident">dkg_public_key</span>: <span class="ident">dkg_keypair</span>.<span class="ident">public</span>(),
         <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount::whole</span>(<span class="number">100_000</span>),
         <span class="comment">// TODO replace with https://github.com/anoma/anoma/issues/25)</span>
         <span class="ident">validator_vp_code_path</span>: <span class="ident">vp_user_path</span>.<span class="ident">into</span>(),
@@ -1528,6 +1600,8 @@
     <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
     <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet</span>;
+
     <span class="doccomment">/// Run `cargo test gen_genesis_validator -- --nocapture` to generate a</span>
     <span class="doccomment">/// new genesis validator address, staking reward address and keypair.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1541,10 +1615,14 @@
         <span class="kw">let</span> <span class="ident">staking_reward_keypair</span>: <span class="ident">common::SecretKey</span> <span class="op">=</span>
             <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">try_to_sk</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">srkp_arr</span> <span class="op">=</span> <span class="ident">staking_reward_keypair</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> (<span class="ident">protocol_keypair</span>, <span class="ident">dkg_keypair</span>) <span class="op">=</span>
+            <span class="ident">wallet::defaults::validator_keys</span>();
         <span class="macro">println!</span>(<span class="string">&quot;address: {}&quot;</span>, <span class="ident">address</span>);
         <span class="macro">println!</span>(<span class="string">&quot;staking_reward_address: {}&quot;</span>, <span class="ident">staking_reward_address</span>);
         <span class="macro">println!</span>(<span class="string">&quot;keypair: {:?}&quot;</span>, <span class="ident">kp_arr</span>);
         <span class="macro">println!</span>(<span class="string">&quot;staking_reward_keypair: {:?}&quot;</span>, <span class="ident">srkp_arr</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;protocol_keypair: {:?}&quot;</span>, <span class="ident">protocol_keypair</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;dkg_keypair: {:?}&quot;</span>, <span class="ident">dkg_keypair</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>());
     }
 }
 </code></pre></div>

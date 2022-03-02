@@ -74,16 +74,18 @@
 <span id="73">73</span>
 <span id="74">74</span>
 <span id="75">75</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
+<span id="76">76</span>
+</pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span> <span class="kw">as</span> <span class="ident">EllipticCurve</span>;
+<span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
 <span class="doccomment">/// to enable decrypting txs.</span>
 <span class="doccomment">/// *Not wasm compatible*</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">decrypted_tx</span> {
 
-    <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span> <span class="kw">as</span> <span class="ident">EllipticCurve</span>;
     <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
     <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
+    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::EllipticCurve</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction</span>::{<span class="ident">hash_tx</span>, <span class="ident">Hash</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>};
 

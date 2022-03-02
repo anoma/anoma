@@ -206,16 +206,15 @@
 <span id="205">205</span>
 <span id="206">206</span>
 <span id="207">207</span>
-<span id="208">208</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
-<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
+<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
 <span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
 
-<span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::BlockHeight</span>;
 <span class="kw">use</span> <span class="ident">futures::future::FutureExt</span>;
+<span class="kw">use</span> <span class="ident">tokio::sync::mpsc::UnboundedSender</span>;
 <span class="kw">use</span> <span class="ident">tower::Service</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">BoxError</span>, <span class="ident">Request</span> <span class="kw">as</span> <span class="ident">Req</span>, <span class="ident">Response</span> <span class="kw">as</span> <span class="ident">Resp</span>};
@@ -224,6 +223,7 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::Shell</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::abcipp_shim_types::shim</span>::{<span class="ident">request</span>, <span class="ident">Error</span>, <span class="ident">Request</span>, <span class="ident">Response</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim::request</span>::{
     <span class="ident">BeginBlock</span>, <span class="ident">ProcessedTx</span>,
 };
@@ -246,10 +246,9 @@
     <span class="doccomment">/// Create a shell with a ABCI service that passes messages to and from the</span>
     <span class="doccomment">/// shell.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
-        <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
-        <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
+        <span class="ident">config</span>: <span class="ident">config::Ledger</span>,
         <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
+        <span class="ident">broadcast_sender</span>: <span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">db_cache</span>: <span class="kw-2">&amp;</span><span class="ident">rocksdb::Cache</span>,
         <span class="ident">vp_wasm_compilation_cache</span>: <span class="ident">u64</span>,
         <span class="ident">tx_wasm_compilation_cache</span>: <span class="ident">u64</span>,
@@ -260,10 +259,9 @@
         (
             <span class="self">Self</span> {
                 <span class="ident">service</span>: <span class="ident">Shell::new</span>(
-                    <span class="ident">base_dir</span>,
-                    <span class="ident">db_path</span>,
-                    <span class="ident">chain_id</span>,
+                    <span class="ident">config</span>,
                     <span class="ident">wasm_dir</span>,
+                    <span class="ident">broadcast_sender</span>,
                     <span class="prelude-val">Some</span>(<span class="ident">db_cache</span>),
                     <span class="ident">vp_wasm_compilation_cache</span>,
                     <span class="ident">tx_wasm_compilation_cache</span>,

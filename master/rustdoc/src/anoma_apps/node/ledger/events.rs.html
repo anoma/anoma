@@ -203,6 +203,18 @@
 <span id="202">202</span>
 <span id="203">203</span>
 <span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>};
@@ -286,6 +298,18 @@
                     <span class="ident">attributes</span>: <span class="ident">HashMap::new</span>(),
                 };
                 <span class="ident">event</span>[<span class="string">&quot;hash&quot;</span>] <span class="op">=</span> <span class="ident">decrypted</span>.<span class="ident">hash_commitment</span>().<span class="ident">to_string</span>();
+                <span class="ident">event</span>
+            }
+            <span class="ident">tx</span> @ <span class="ident">TxType::Protocol</span>(<span class="kw">_</span>) =&gt; {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">Event</span> {
+                    <span class="ident">event_type</span>: <span class="ident">EventType::Applied</span>,
+                    <span class="ident">attributes</span>: <span class="ident">HashMap::new</span>(),
+                };
+                <span class="ident">event</span>[<span class="string">&quot;hash&quot;</span>] <span class="op">=</span> <span class="ident">hash_tx</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">try_to_vec</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;Serializing protocol tx should not fail&quot;</span>),
+                )
+                .<span class="ident">to_string</span>();
                 <span class="ident">event</span>
             }
             <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),

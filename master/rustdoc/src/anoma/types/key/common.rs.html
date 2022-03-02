@@ -234,6 +234,45 @@
 <span id="233">233</span>
 <span id="234">234</span>
 <span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Cryptographic keys</span>
 
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -312,6 +351,45 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SecretKey</span> {
     <span class="doccomment">/// Encapsulate Ed25519 secret keys</span>
     <span class="ident">Ed25519</span>(<span class="ident">ed25519::SecretKey</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">serializer</span>: <span class="ident">S</span>,
+    ) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    {
+        <span class="comment">// String encoded, because toml doesn&#39;t support enums</span>
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">ed25519_sk</span> @ <span class="ident">SecretKey::Ed25519</span>(<span class="kw">_</span>) =&gt; {
+                <span class="kw">let</span> <span class="ident">keypair_string</span> <span class="op">=</span>
+                    <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="string">&quot;ED25519_SK_PREFIX&quot;</span>, <span class="ident">ed25519_sk</span>);
+                <span class="ident">Serialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_string</span>, <span class="ident">serializer</span>)
+            }
+        }
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">use</span> <span class="ident">serde::de::Error</span>;
+
+        <span class="kw">let</span> <span class="ident">keypair_string</span>: <span class="ident">String</span> <span class="op">=</span>
+            <span class="ident">serde::Deserialize::deserialize</span>(<span class="ident">deserializer</span>)
+                .<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">raw</span>) <span class="op">=</span> <span class="ident">keypair_string</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;ED25519_SK_PREFIX&quot;</span>) {
+            <span class="ident">SecretKey::from_str</span>(<span class="ident">raw</span>).<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">D::Error::custom</span>(
+                <span class="string">&quot;Could not deserialize SecretKey do to invalid prefix&quot;</span>,
+            ))
+        }
+    }
 }
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::SecretKey</span> <span class="kw">for</span> <span class="ident">SecretKey</span> {

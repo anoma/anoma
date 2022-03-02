@@ -527,10 +527,6 @@
 <span id="526">526</span>
 <span id="527">527</span>
 <span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Node and client configuration</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">genesis</span>;
@@ -604,17 +600,13 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TendermintMode</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">opt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">mode</span>) <span class="op">=</span> <span class="ident">opt</span> {
-            <span class="kw">match</span> <span class="ident">mode</span>.<span class="ident">as_str</span>() {
-                <span class="string">&quot;full&quot;</span> =&gt; <span class="ident">TendermintMode::Full</span>,
-                <span class="string">&quot;validator&quot;</span> =&gt; <span class="ident">TendermintMode::Validator</span>,
-                <span class="string">&quot;seed&quot;</span> =&gt; <span class="ident">TendermintMode::Seed</span>,
-                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unrecognized mode&quot;</span>),
-            }
-        } <span class="kw">else</span> {
-            <span class="ident">TendermintMode::Validator</span>
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TendermintMode</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">mode</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">match</span> <span class="ident">mode</span>.<span class="ident">as_str</span>() {
+            <span class="string">&quot;full&quot;</span> =&gt; <span class="ident">TendermintMode::Full</span>,
+            <span class="string">&quot;validator&quot;</span> =&gt; <span class="ident">TendermintMode::Validator</span>,
+            <span class="string">&quot;seed&quot;</span> =&gt; <span class="ident">TendermintMode::Seed</span>,
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unrecognized mode&quot;</span>),
         }
     }
 }

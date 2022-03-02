@@ -6,13 +6,15 @@ non-decryptability</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="encrypted/index.html" title="anoma_vm_env::vp_prelude::transaction::encrypted mod">encrypted</a></div><div class="item-right docblock-short"><p>tools for encrypted data</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="nft/index.html" title="anoma_vm_env::vp_prelude::transaction::nft mod">nft</a></div><div class="item-right docblock-short"><p>txs to manage nfts</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="pos/index.html" title="anoma_vm_env::vp_prelude::transaction::pos mod">pos</a></div><div class="item-right docblock-short"><p>Types used for PoS system transactions</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="protocol/index.html" title="anoma_vm_env::vp_prelude::transaction::protocol mod">protocol</a></div><div class="item-right docblock-short"><p>transaction protocols made by validators</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="tx_types/index.html" title="anoma_vm_env::vp_prelude::transaction::tx_types mod">tx_types</a></div><div class="item-right docblock-short"><p>Module that includes helper functions for classifying
 different types of transactions that the ledger
 must support as well as conversion functions
 between them.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="wrapper/index.html" title="anoma_vm_env::vp_prelude::transaction::wrapper mod">wrapper</a></div><div class="item-right docblock-short"><p>wrapper txs with encrypted payloads</p>
 </div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Fee.html" title="anoma_vm_env::vp_prelude::transaction::Fee struct">Fee</a></div><div class="item-right docblock-short"><p>A fee is an amount of a specified token</p>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.EncryptionKey.html" title="anoma_vm_env::vp_prelude::transaction::EncryptionKey struct">EncryptionKey</a></div><div class="item-right docblock-short"><p>An encryption key for txs</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Fee.html" title="anoma_vm_env::vp_prelude::transaction::Fee struct">Fee</a></div><div class="item-right docblock-short"><p>A fee is an amount of a specified token</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.GasLimit.html" title="anoma_vm_env::vp_prelude::transaction::GasLimit struct">GasLimit</a></div><div class="item-right docblock-short"><p>Gas limits must be multiples of GAS_LIMIT_RESOLUTION
 This is done to minimize the amount of information leak from
 a wrapper tx. The larger the GAS_LIMIT_RESOLUTION, the
@@ -20,6 +22,8 @@ less info leaked.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Hash.html" title="anoma_vm_env::vp_prelude::transaction::Hash struct">Hash</a></div><div class="item-right docblock-short"><p>A hash, typically a sha-2 hash of a tx</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.InitAccount.html" title="anoma_vm_env::vp_prelude::transaction::InitAccount struct">InitAccount</a></div><div class="item-right docblock-short"><p>A tx data type to initialize a new established account</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.InitValidator.html" title="anoma_vm_env::vp_prelude::transaction::InitValidator struct">InitValidator</a></div><div class="item-right docblock-short"><p>A tx data type to initialize a new validator account and its staking reward
+account.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.UpdateDkgSessionKey.html" title="anoma_vm_env::vp_prelude::transaction::UpdateDkgSessionKey struct">UpdateDkgSessionKey</a></div><div class="item-right docblock-short"><p>A tx data type to initialize a new validator account and its staking reward
 account.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.UpdateVp.html" title="anoma_vm_env::vp_prelude::transaction::UpdateVp struct">UpdateVp</a></div><div class="item-right docblock-short"><p>A tx data type to update an account’s validity predicate</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.WrapperTx.html" title="anoma_vm_env::vp_prelude::transaction::WrapperTx struct">WrapperTx</a></div><div class="item-right docblock-short"><p>A transaction with an encrypted payload as well
@@ -29,6 +33,8 @@ and / or verification purposes</p>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.DecryptedTx.html" title="anoma_vm_env::vp_prelude::transaction::DecryptedTx enum">DecryptedTx</a></div><div class="item-right docblock-short"><p>Holds the result of attempting to decrypt
 a transaction and the data necessary for
 other validators to verify</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.TxError.html" title="anoma_vm_env::vp_prelude::transaction::TxError enum">TxError</a></div><div class="item-right docblock-short"><p>Errors relating to decrypting a wrapper tx and its
+encrypted payload from a Tx type</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.TxType.html" title="anoma_vm_env::vp_prelude::transaction::TxType enum">TxType</a></div><div class="item-right docblock-short"><p>Struct that classifies that kind of Tx
 based on the contents of its data.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.WrapperTxErr.html" title="anoma_vm_env::vp_prelude::transaction::WrapperTxErr enum">WrapperTxErr</a></div><div class="item-right docblock-short"><p>Errors relating to decrypting a wrapper tx and its

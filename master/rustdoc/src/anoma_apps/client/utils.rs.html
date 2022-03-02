@@ -955,6 +955,41 @@
 <span id="954">954</span>
 <span id="955">955</span>
 <span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
@@ -1145,7 +1180,7 @@
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
                     <span class="kw-2">&amp;</span><span class="ident">base_dir</span>,
                     <span class="kw-2">&amp;</span><span class="ident">chain_id</span>,
-                    <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">clone</span>(),
+                    <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>(),
                 );
                 <span class="ident">config</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>;
                 <span class="ident">config</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>, <span class="bool-val">true</span>).<span class="ident">unwrap</span>();
@@ -1335,6 +1370,11 @@
         );
         <span class="kw">let</span> (<span class="ident">_alias</span>, <span class="ident">reward_keypair</span>) <span class="op">=</span>
             <span class="ident">wallet</span>.<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="ident">reward_key_alias</span>), <span class="ident">unsafe_dont_encrypt</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Generating validator {} protocol signing key...&quot;</span>, <span class="ident">name</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Generating validator {} DKG session keypair...&quot;</span>, <span class="ident">name</span>);
+        <span class="kw">let</span> <span class="ident">validator_keys</span> <span class="op">=</span> <span class="ident">wallet</span>
+            .<span class="ident">gen_validator_keys</span>(<span class="prelude-val">None</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Generating new validator keys should not fail&quot;</span>);
         <span class="comment">// Add the validator public keys to genesis config</span>
         <span class="ident">config</span>.<span class="ident">consensus_public_key</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">genesis_config::HexString</span>(
             <span class="ident">consensus_keypair</span>.<span class="ident">ref_to</span>().<span class="ident">to_string</span>(),
@@ -1346,8 +1386,20 @@
             <span class="ident">reward_keypair</span>.<span class="ident">ref_to</span>().<span class="ident">to_string</span>(),
         ));
 
+        <span class="ident">config</span>.<span class="ident">protocol_public_key</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">genesis_config::HexString</span>(
+            <span class="ident">validator_keys</span>.<span class="ident">protocol_keypair</span>.<span class="ident">ref_to</span>().<span class="ident">to_string</span>(),
+        ));
+        <span class="ident">config</span>.<span class="ident">dkg_public_key</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">genesis_config::HexString</span>(
+            <span class="ident">validator_keys</span>
+                .<span class="ident">dkg_keypair</span>
+                .<span class="ident">as_ref</span>()
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">public</span>()
+                .<span class="ident">to_string</span>(),
+        ));
         <span class="comment">// Generate account and reward addresses</span>
         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address::gen_established_address</span>(<span class="string">&quot;validator account&quot;</span>);
+        <span class="ident">wallet</span>.<span class="ident">add_validator_data</span>(<span class="ident">address</span>.<span class="ident">clone</span>(), <span class="ident">validator_keys</span>);
         <span class="kw">let</span> <span class="ident">reward_address</span> <span class="op">=</span>
             <span class="ident">address::gen_established_address</span>(<span class="string">&quot;validator reward account&quot;</span>);
         <span class="ident">config</span>.<span class="ident">address</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>.<span class="ident">to_string</span>());
@@ -1844,6 +1896,15 @@
     <span class="kw">let</span> (<span class="ident">rewards_key_alias</span>, <span class="ident">rewards_key</span>) <span class="op">=</span> <span class="ident">wallet</span>
         .<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;{}-rewards-key&quot;</span>, <span class="ident">alias</span>)), <span class="ident">unsafe_dont_encrypt</span>);
 
+    <span class="macro">println!</span>(<span class="string">&quot;Generating protocol key and DKG session key...&quot;</span>);
+    <span class="kw">let</span> <span class="ident">validator_keys</span> <span class="op">=</span> <span class="ident">wallet</span>.<span class="ident">gen_validator_keys</span>(<span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">protocol_key</span> <span class="op">=</span> <span class="ident">validator_keys</span>.<span class="ident">get_protocol_keypair</span>().<span class="ident">ref_to</span>();
+    <span class="kw">let</span> <span class="ident">dkg_public_key</span> <span class="op">=</span> <span class="ident">validator_keys</span>
+        .<span class="ident">dkg_keypair</span>
+        .<span class="ident">as_ref</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;DKG session keypair should exist.&quot;</span>)
+        .<span class="ident">public</span>();
+    <span class="ident">wallet</span>.<span class="ident">add_validator_data</span>(<span class="ident">validator_address</span>.<span class="ident">clone</span>(), <span class="ident">validator_keys</span>);
     <span class="ident">wallet</span>.<span class="ident">save</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>));
 
     <span class="kw">let</span> <span class="ident">tendermint_home</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint_dir</span>();
@@ -1866,6 +1927,13 @@
          consensus key.&quot;</span>
     );
     <span class="macro">println!</span>();
+
+    <span class="macro">println!</span>(<span class="string">&quot;Validator account key {}&quot;</span>, <span class="ident">validator_key</span>.<span class="ident">ref_to</span>());
+    <span class="macro">println!</span>(<span class="string">&quot;Consensus key {}&quot;</span>, <span class="ident">consensus_key</span>.<span class="ident">ref_to</span>());
+    <span class="macro">println!</span>(<span class="string">&quot;Staking reward key {}&quot;</span>, <span class="ident">rewards_key</span>.<span class="ident">ref_to</span>());
+    <span class="macro">println!</span>(<span class="string">&quot;Protocol signing key {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">protocol_key</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;DKG public key {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">dkg_public_key</span>);
+
     <span class="kw">let</span> <span class="ident">genesis_validator</span> <span class="op">=</span> <span class="ident">genesis::Validator</span> {
         <span class="ident">pos_data</span>: <span class="ident">anoma::ledger::pos::GenesisValidator</span> {
             <span class="ident">address</span>: <span class="ident">validator_address</span>,
@@ -1875,6 +1943,8 @@
             <span class="ident">staking_reward_key</span>: <span class="ident">rewards_key</span>.<span class="ident">ref_to</span>(),
         },
         <span class="ident">account_key</span>: <span class="ident">validator_key</span>.<span class="ident">ref_to</span>(),
+        <span class="ident">protocol_key</span>,
+        <span class="ident">dkg_public_key</span>,
         <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount::whole</span>(<span class="number">100_000</span>),
         <span class="comment">// TODO replace with https://github.com/anoma/anoma/issues/25)</span>
         <span class="ident">validator_vp_code_path</span>: <span class="string">&quot;wasm/vp_user.wasm&quot;</span>.<span class="ident">into</span>(),

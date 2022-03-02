@@ -213,6 +213,26 @@
 <span id="212">212</span>
 <span id="213">213</span>
 <span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Default addresses and keys.</span>
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>;
@@ -223,7 +243,7 @@
     <span class="ident">addresses</span>, <span class="ident">albert_address</span>, <span class="ident">albert_keypair</span>, <span class="ident">bertha_address</span>, <span class="ident">bertha_keypair</span>,
     <span class="ident">christel_address</span>, <span class="ident">christel_keypair</span>, <span class="ident">daewon_address</span>, <span class="ident">daewon_keypair</span>, <span class="ident">keys</span>,
     <span class="ident">matchmaker_address</span>, <span class="ident">matchmaker_keypair</span>, <span class="ident">validator_address</span>,
-    <span class="ident">validator_keypair</span>,
+    <span class="ident">validator_keypair</span>, <span class="ident">validator_keys</span>,
 };
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config::genesis::genesis_config::GenesisConfig</span>;
@@ -288,10 +308,30 @@
 <span class="kw">mod</span> <span class="ident">dev</span> {
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::key::dkg_session_keys::DkgKeypair</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::alias::Alias</span>;
+
+    <span class="doccomment">/// Generate a new protocol signing keypair and DKG session keypair</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_keys</span>() -&gt; (<span class="ident">common::SecretKey</span>, <span class="ident">DkgKeypair</span>) {
+        <span class="kw">let</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">33</span>] <span class="op">=</span> [
+            <span class="number">0</span>, <span class="number">200</span>, <span class="number">107</span>, <span class="number">23</span>, <span class="number">252</span>, <span class="number">78</span>, <span class="number">80</span>, <span class="number">8</span>, <span class="number">164</span>, <span class="number">142</span>, <span class="number">3</span>, <span class="number">194</span>, <span class="number">33</span>, <span class="number">12</span>, <span class="number">250</span>,
+            <span class="number">169</span>, <span class="number">211</span>, <span class="number">127</span>, <span class="number">47</span>, <span class="number">13</span>, <span class="number">194</span>, <span class="number">54</span>, <span class="number">199</span>, <span class="number">81</span>, <span class="number">102</span>, <span class="number">246</span>, <span class="number">189</span>, <span class="number">119</span>, <span class="number">144</span>,
+            <span class="number">25</span>, <span class="number">27</span>, <span class="number">113</span>, <span class="number">222</span>,
+        ];
+        <span class="kw">let</span> <span class="ident">dkg_bytes</span> <span class="op">=</span> [
+            <span class="number">32</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">210</span>, <span class="number">193</span>, <span class="number">55</span>, <span class="number">24</span>, <span class="number">92</span>, <span class="number">233</span>, <span class="number">23</span>, <span class="number">2</span>, <span class="number">73</span>, <span class="number">204</span>, <span class="number">221</span>, <span class="number">107</span>,
+            <span class="number">110</span>, <span class="number">222</span>, <span class="number">192</span>, <span class="number">136</span>, <span class="number">54</span>, <span class="number">24</span>, <span class="number">108</span>, <span class="number">236</span>, <span class="number">137</span>, <span class="number">27</span>, <span class="number">121</span>, <span class="number">142</span>, <span class="number">142</span>, <span class="number">7</span>,
+            <span class="number">193</span>, <span class="number">248</span>, <span class="number">155</span>, <span class="number">56</span>, <span class="number">51</span>, <span class="number">21</span>,
+        ];
+
+        (
+            <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>(),
+            <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">dkg_bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>(),
+        )
+    }
 
     <span class="doccomment">/// The default keys with their aliases.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">common::SecretKey</span>)<span class="op">&gt;</span> {
