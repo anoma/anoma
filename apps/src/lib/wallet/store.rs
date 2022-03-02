@@ -1,12 +1,18 @@
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
+use std::fs;
+use std::io::prelude::*;
 use std::io::{self, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::{Address, ImplicitAddress};
+use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::key::*;
+use anoma::types::transaction::EllipticCurve;
+use ark_std::rand::prelude::*;
+use ark_std::rand::SeedableRng;
+use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -14,6 +20,32 @@ use super::alias::Alias;
 use super::keys::StoredKeypair;
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
+
+/// Special keys for a validator
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ValidatorKeys {
+    /// Special keypair for signing protocol txs
+    pub protocol_keypair: common::SecretKey,
+    /// Special session keypair needed by validators for participating
+    /// in the DKG protocol
+    pub dkg_keypair: Option<DkgKeypair>,
+}
+
+impl ValidatorKeys {
+    /// Get the protocol keypair
+    pub fn get_protocol_keypair(&self) -> &common::SecretKey {
+        &self.protocol_keypair
+    }
+}
+
+/// Special data associated with a validator
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ValidatorData {
+    /// The address associated to a validator
+    pub address: Address,
+    /// special keys for a validator
+    pub keys: ValidatorKeys,
+}
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
@@ -24,6 +56,8 @@ pub struct Store {
     /// Known mappings of public key hashes to their aliases in the `keys`
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
+    /// Special keys if the wallet belongs to a validator
+    pub(crate) validator_data: Option<ValidatorData>,
 }
 
 #[derive(Error, Debug)]
@@ -78,12 +112,11 @@ impl Store {
         let wallet_dir = wallet_path.parent().unwrap();
         fs::create_dir_all(wallet_dir)?;
         // Write the file
-        let mut file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(&wallet_path)?;
-        file.write_all(&data)
+        let options =
+            FileOptions::new().create(true).write(true).truncate(true);
+        let mut filelock =
+            FileLock::lock(wallet_path.to_str().unwrap(), true, options)?;
+        filelock.file.write_all(&data)
     }
 
     /// Load the store file or create a new one without any keys or addresses.
@@ -125,10 +158,20 @@ impl Store {
         new_store: impl FnOnce() -> Result<Self, LoadStoreError>,
     ) -> Result<Self, LoadStoreError> {
         let wallet_file = wallet_file(store_dir);
-        let store = fs::read(&wallet_file);
-        match store {
-            Ok(store_data) => {
-                Store::decode(store_data).map_err(LoadStoreError::Decode)
+        match FileLock::lock(
+            wallet_file.to_str().unwrap(),
+            true,
+            FileOptions::new().read(true).write(false),
+        ) {
+            Ok(mut filelock) => {
+                let mut store = Vec::<u8>::new();
+                filelock.file.read_to_end(&mut store).map_err(|err| {
+                    LoadStoreError::ReadWallet(
+                        store_dir.to_str().unwrap().into(),
+                        err.to_string(),
+                    )
+                })?;
+                Store::decode(store).map_err(LoadStoreError::Decode)
             }
             Err(err) => match err.kind() {
                 ErrorKind::NotFound => {
@@ -258,6 +301,43 @@ impl Store {
         (alias, raw_keypair)
     }
 
+    /// Generate keypair for signing protocol txs and for the DKG
+    /// A protocol keypair may be optionally provided
+    ///
+    /// Note that this removes the validator data.
+    pub fn gen_validator_keys(
+        protocol_keypair: Option<common::SecretKey>,
+    ) -> ValidatorKeys {
+        let protocol_keypair =
+            protocol_keypair.unwrap_or_else(Self::generate_keypair);
+        let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
+            &mut StdRng::from_entropy(),
+        );
+        ValidatorKeys {
+            protocol_keypair,
+            dkg_keypair: Some(dkg_keypair.into()),
+        }
+    }
+
+    /// Add validator data to the store
+    pub fn add_validator_data(
+        &mut self,
+        address: Address,
+        keys: ValidatorKeys,
+    ) {
+        self.validator_data = Some(ValidatorData { address, keys });
+    }
+
+    /// Returns the validator data, if it exists
+    pub fn get_validator_data(&self) -> Option<&ValidatorData> {
+        self.validator_data.as_ref()
+    }
+
+    /// Returns the validator data, if it exists
+    pub fn validator_data(self) -> Option<ValidatorData> {
+        self.validator_data
+    }
+
     /// Insert a new key with the given alias. If the alias is already used,
     /// will prompt for overwrite/reselection confirmation. If declined, then
     /// keypair is not inserted and nothing is returned, otherwise selected
@@ -384,4 +464,21 @@ const FILE_NAME: &str = "wallet.toml";
 /// Get the path to the wallet store.
 pub fn wallet_file(store_dir: impl AsRef<Path>) -> PathBuf {
     store_dir.as_ref().join(FILE_NAME)
+}
+
+#[cfg(all(test, feature = "dev"))]
+mod test_wallet {
+    use super::*;
+
+    #[test]
+    fn test_toml_roundtrip() {
+        let mut store = Store::new();
+        let validator_keys = Store::gen_validator_keys(None);
+        store.add_validator_data(
+            Address::decode("atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5").unwrap(),
+            validator_keys
+        );
+        let data = store.encode();
+        let _ = Store::decode(data).expect("Test failed");
+    }
 }

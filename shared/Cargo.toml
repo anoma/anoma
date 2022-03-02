@@ -13,10 +13,9 @@ default = ["ABCI"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
 dev = []
 ferveo-tpke = [
+  "ferveo",
   "tpke",
-  "ark-bls12-381",
   "ark-ec",
-  "ark-serialize",
   "rand_core",
   "rand",
 ]
@@ -62,9 +61,9 @@ wasm-runtime = [
 
 [dependencies]
 anoma_proof_of_stake = {path = "../proof_of_stake"}
-ark-bls12-381 = {version = "0.3", optional = true}
+ark-bls12-381 = {version = "0.3"}
 ark-ec = {version = "0.3", optional = true}
-ark-serialize = {version = "0.3", optional = true}
+ark-serialize = "0.3"
 bech32 = "0.8.0"
 borsh = "0.9.0"
 chrono = "0.4.19"
@@ -72,8 +71,10 @@ chrono = "0.4.19"
 clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 derivative = "2.2.0"
 ed25519-consensus = "1.2.0"
+ferveo = {optional = true, git = "https://github.com/anoma/ferveo"}
+ferveo-common = {git = "https://github.com/anoma/ferveo"}
 hex = "0.4.3"
-tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/workspace-cleanup"}
+tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo"}
 # TODO temp fork for borsh coding
 # Also, using the same version of tendermint-rs as we do here.
 ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", features = ["mocks"], optional = true}

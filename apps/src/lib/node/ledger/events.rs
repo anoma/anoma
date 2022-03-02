@@ -83,6 +83,18 @@ impl Event {
                 event["hash"] = decrypted.hash_commitment().to_string();
                 event
             }
+            tx @ TxType::Protocol(_) => {
+                let mut event = Event {
+                    event_type: EventType::Applied,
+                    attributes: HashMap::new(),
+                };
+                event["hash"] = hash_tx(
+                    &tx.try_to_vec()
+                        .expect("Serializing protocol tx should not fail"),
+                )
+                .to_string();
+                event
+            }
             _ => unreachable!(),
         };
         event["height"] = height.to_string();

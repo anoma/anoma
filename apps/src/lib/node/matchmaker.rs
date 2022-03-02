@@ -10,7 +10,7 @@ use anoma::types::dylib;
 use anoma::types::intent::{IntentTransfers, MatchedExchanges};
 use anoma::types::key::*;
 use anoma::types::matchmaker::AddIntentResult;
-use anoma::types::transaction::{Fee, WrapperTx};
+use anoma::types::transaction::{hash_tx, Fee, WrapperTx};
 use borsh::{BorshDeserialize, BorshSerialize};
 use libc::c_void;
 use libloading::Library;
@@ -28,7 +28,7 @@ use super::gossip::rpc::matchmakers::{
 };
 use crate::cli::args;
 use crate::client::rpc;
-use crate::client::tx::broadcast_tx;
+use crate::client::tx::{broadcast_tx, TxBroadcastData};
 use crate::{cli, config, wasm_loader};
 
 /// Run a matchmaker
@@ -313,23 +313,45 @@ impl ResultHandler {
             source: self.tx_source_address.clone(),
         };
         let tx_data = intent_transfers.try_to_vec().unwrap();
-        let tx = WrapperTx::new(
-            Fee {
-                amount: 0.into(),
-                token: address::xan(),
-            },
-            &self.tx_signing_key,
-            rpc::query_epoch(args::Query {
+        let to_broadcast = {
+            let epoch = rpc::query_epoch(args::Query {
                 ledger_address: self.ledger_address.clone(),
             })
-            .await,
-            0.into(),
-            Tx::new(tx_code, Some(tx_data)).sign(&self.tx_signing_key),
-        );
+            .await;
+            let tx = WrapperTx::new(
+                Fee {
+                    amount: 0.into(),
+                    token: address::xan(),
+                },
+                &self.tx_signing_key,
+                epoch,
+                0.into(),
+                Tx::new(tx_code, Some(tx_data)).sign(&self.tx_signing_key),
+                // TODO: Actually use the fetched encryption key
+                Default::default(),
+            );
+            let wrapper_hash = if !cfg!(feature = "ABCI") {
+                hash_tx(&tx.try_to_vec().unwrap()).to_string()
+            } else {
+                tx.tx_hash.to_string()
+            };
+
+            let decrypted_hash = if !cfg!(feature = "ABCI") {
+                Some(tx.tx_hash.to_string())
+            } else {
+                None
+            };
+            TxBroadcastData::Wrapper {
+                tx: tx
+                    .sign(&self.tx_signing_key)
+                    .expect("Wrapper tx signing keypair should be correct"),
+                wrapper_hash,
+                decrypted_hash,
+            }
+        };
 
         let response =
-            broadcast_tx(self.ledger_address.clone(), tx, &self.tx_signing_key)
-                .await;
+            broadcast_tx(self.ledger_address.clone(), &to_broadcast).await;
         match response {
             Ok(tx_response) => {
                 tracing::info!(

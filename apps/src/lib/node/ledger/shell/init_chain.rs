@@ -118,7 +118,7 @@ where
                 .unwrap();
 
             if let Some(pk) = public_key {
-                let pk_storage_key = key::pk_key(&address);
+                let pk_storage_key = pk_key(&address);
                 self.storage
                     .write(&pk_storage_key, pk.try_to_vec().unwrap())
                     .unwrap();
@@ -133,7 +133,7 @@ where
         for genesis::ImplicitAccount { public_key } in genesis.implicit_accounts
         {
             let address: address::Address = (&public_key).into();
-            let pk_storage_key = key::pk_key(&address);
+            let pk_storage_key = pk_key(&address);
             self.storage
                 .write(&pk_storage_key, public_key.try_to_vec().unwrap())
                 .unwrap();
@@ -217,7 +217,7 @@ where
                 .write(&Key::validity_predicate(addr), vp_code)
                 .expect("Unable to write user VP");
             // Validator account key
-            let pk_key = key::pk_key(addr);
+            let pk_key = pk_key(addr);
             self.storage
                 .write(
                     &pk_key,
@@ -237,6 +237,25 @@ where
                         .expect("encode token amount"),
                 )
                 .expect("Unable to set genesis balance");
+            self.storage
+                .write(
+                    &protocol_pk_key(addr),
+                    validator
+                        .protocol_key
+                        .try_to_vec()
+                        .expect("encode protocol public key"),
+                )
+                .expect("Unable to set genesis user protocol public key");
+
+            self.storage
+                .write(
+                    &dkg_session_keys::dkg_pk_key(addr),
+                    validator
+                        .dkg_public_key
+                        .try_to_vec()
+                        .expect("encode public DKG session key"),
+                )
+                .expect("Unable to set genesis user public DKG session key");
         }
 
         // PoS system depends on epoch being initialized
@@ -275,7 +294,6 @@ where
                 .expect("unexpected validator's voting power");
             response.validators.push(abci_validator);
         }
-
         Ok(response)
     }
 }

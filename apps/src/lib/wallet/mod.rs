@@ -4,9 +4,9 @@ mod keys;
 mod store;
 
 use std::collections::HashMap;
-use std::env;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::{env, fs};
 
 use anoma::types::address::Address;
 use anoma::types::key::*;
@@ -16,9 +16,9 @@ use thiserror::Error;
 use self::alias::Alias;
 pub use self::keys::{DecryptionError, StoredKeypair};
 use self::store::Store;
+pub use self::store::{ValidatorData, ValidatorKeys};
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
-use crate::std::fs;
 
 #[derive(Debug)]
 pub struct Wallet {
@@ -113,6 +113,56 @@ impl Wallet {
         // Cache the newly added key
         self.decrypted_key_cache.insert(alias.clone(), key.clone());
         (alias.into(), key)
+    }
+
+    /// Generate keypair
+    /// for signing protocol txs and for the DKG (which will also be stored)
+    /// A protocol keypair may be optionally provided, indicating that
+    /// we should re-use a keypair already in the wallet
+    pub fn gen_validator_keys(
+        &mut self,
+        protocol_pk: Option<common::PublicKey>,
+    ) -> Result<ValidatorKeys, FindKeyError> {
+        let protocol_keypair = protocol_pk.map(|pk| {
+            self.find_key_by_pkh(&PublicKeyHash::from(&pk))
+                .ok()
+                .or_else(|| {
+                    self.store
+                        .validator_data
+                        .take()
+                        .map(|data| Rc::new(data.keys.protocol_keypair))
+                })
+                .ok_or(FindKeyError::KeyNotFound)
+        });
+        match protocol_keypair {
+            Some(Err(err)) => Err(err),
+            other => {
+                Ok(Store::gen_validator_keys(other.map(|res| {
+                    Rc::get_mut(&mut res.unwrap()).unwrap().clone()
+                })))
+            }
+        }
+    }
+
+    /// Add validator data to the store
+    pub fn add_validator_data(
+        &mut self,
+        address: Address,
+        keys: ValidatorKeys,
+    ) {
+        self.store.add_validator_data(address, keys);
+    }
+
+    /// Returns the validator data, if it exists.
+    pub fn get_validator_data(&self) -> Option<&ValidatorData> {
+        self.store.get_validator_data()
+    }
+
+    /// Returns the validator data, if it exists.
+    /// [`Wallet::save`] cannot be called after using this
+    /// method as it involves a partial move
+    pub fn take_validator_data(self) -> Option<ValidatorData> {
+        self.store.validator_data()
     }
 
     /// Find the stored key by an alias, a public key hash or a public key.

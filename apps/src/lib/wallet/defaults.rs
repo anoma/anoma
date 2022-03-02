@@ -8,7 +8,7 @@ pub use dev::{
     addresses, albert_address, albert_keypair, bertha_address, bertha_keypair,
     christel_address, christel_keypair, daewon_address, daewon_keypair, keys,
     matchmaker_address, matchmaker_keypair, validator_address,
-    validator_keypair,
+    validator_keypair, validator_keys,
 };
 
 use crate::config::genesis::genesis_config::GenesisConfig;
@@ -73,10 +73,30 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
 mod dev {
     use anoma::ledger::pos;
     use anoma::types::address::{self, Address};
+    use anoma::types::key::dkg_session_keys::DkgKeypair;
     use anoma::types::key::*;
     use borsh::BorshDeserialize;
 
     use crate::wallet::alias::Alias;
+
+    /// Generate a new protocol signing keypair and DKG session keypair
+    pub fn validator_keys() -> (common::SecretKey, DkgKeypair) {
+        let bytes: [u8; 33] = [
+            0, 200, 107, 23, 252, 78, 80, 8, 164, 142, 3, 194, 33, 12, 250,
+            169, 211, 127, 47, 13, 194, 54, 199, 81, 102, 246, 189, 119, 144,
+            25, 27, 113, 222,
+        ];
+        let dkg_bytes = [
+            32, 0, 0, 0, 210, 193, 55, 24, 92, 233, 23, 2, 73, 204, 221, 107,
+            110, 222, 192, 136, 54, 24, 108, 236, 137, 27, 121, 142, 142, 7,
+            193, 248, 155, 56, 51, 21,
+        ];
+
+        (
+            BorshDeserialize::deserialize(&mut bytes.as_ref()).unwrap(),
+            BorshDeserialize::deserialize(&mut dkg_bytes.as_ref()).unwrap(),
+        )
+    }
 
     /// The default keys with their aliases.
     pub fn keys() -> Vec<(Alias, common::SecretKey)> {

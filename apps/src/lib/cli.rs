@@ -1276,6 +1276,7 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
+    const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
@@ -1314,7 +1315,7 @@ pub mod args {
         pub chain_id: Option<ChainId>,
         pub base_dir: PathBuf,
         pub wasm_dir: Option<PathBuf>,
-        pub mode: TendermintMode,
+        pub mode: Option<TendermintMode>,
     }
 
     impl Global {
@@ -1323,7 +1324,7 @@ pub mod args {
             let chain_id = CHAIN_ID_OPT.parse(matches);
             let base_dir = BASE_DIR.parse(matches);
             let wasm_dir = WASM_DIR.parse(matches);
-            let mode = TendermintMode::from(MODE.parse(matches));
+            let mode = MODE.parse(matches).map(TendermintMode::from);
             Global {
                 chain_id,
                 base_dir,
@@ -1516,6 +1517,7 @@ pub mod args {
         pub account_key: Option<WalletPublicKey>,
         pub consensus_key: Option<WalletKeypair>,
         pub rewards_account_key: Option<WalletPublicKey>,
+        pub protocol_key: Option<WalletPublicKey>,
         pub validator_vp_code_path: Option<PathBuf>,
         pub rewards_vp_code_path: Option<PathBuf>,
         pub unsafe_dont_encrypt: bool,
@@ -1528,6 +1530,7 @@ pub mod args {
             let account_key = VALIDATOR_ACCOUNT_KEY.parse(matches);
             let consensus_key = VALIDATOR_CONSENSUS_KEY.parse(matches);
             let rewards_account_key = REWARDS_KEY.parse(matches);
+            let protocol_key = PROTOCOL_KEY.parse(matches);
             let validator_vp_code_path = VALIDATOR_CODE_PATH.parse(matches);
             let rewards_vp_code_path = REWARDS_CODE_PATH.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
@@ -1537,6 +1540,7 @@ pub mod args {
                 account_key,
                 consensus_key,
                 rewards_account_key,
+                protocol_key,
                 validator_vp_code_path,
                 rewards_vp_code_path,
                 unsafe_dont_encrypt,
@@ -1559,6 +1563,10 @@ pub mod args {
                 .arg(REWARDS_KEY.def().about(
                     "A public key for the staking reward account. A new one \
                      will be generated if none given.",
+                ))
+                .arg(PROTOCOL_KEY.def().about(
+                    "A public key for signing protocol transactions. A new \
+                     one will be generated if none given.",
                 ))
                 .arg(VALIDATOR_CODE_PATH.def().about(
                     "The path to the validity predicate WASM code to be used \
