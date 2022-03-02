@@ -1977,7 +1977,7 @@ dependencies = [
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#de0b9ae3d2c0aba83aa0a925e054607a530a14e7"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -3214,7 +3214,7 @@ checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
 [[package]]
 name = "libmasp"
 version = "0.2.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#de0b9ae3d2c0aba83aa0a925e054607a530a14e7"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -3771,7 +3771,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#de0b9ae3d2c0aba83aa0a925e054607a530a14e7"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
 dependencies = [
  "aes",
  "bitvec",
@@ -3798,7 +3798,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#de0b9ae3d2c0aba83aa0a925e054607a530a14e7"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -5642,6 +5642,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "secp256k1"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d03ceae636d0fed5bae6a7f4f664354c5f4fcedf6eef053fef17e49f837d0a"
+dependencies = [
+ "secp256k1-sys",
+]
+
+[[package]]
+name = "secp256k1-sys"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "957da2573cde917463ece3570eab4a0b3f19de6f1646cde62e6fd3868f566036"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7321,6 +7339,56 @@ dependencies = [
 ]
 
 [[package]]
+name = "wagyu-zcash-parameters"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61c904628658374e651288f000934c33ef738b2d8b3e65d4100b70b395dbe2bb"
+dependencies = [
+ "wagyu-zcash-parameters-1",
+ "wagyu-zcash-parameters-2",
+ "wagyu-zcash-parameters-3",
+ "wagyu-zcash-parameters-4",
+ "wagyu-zcash-parameters-5",
+ "wagyu-zcash-parameters-6",
+]
+
+[[package]]
+name = "wagyu-zcash-parameters-1"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90bf2e21bb027d3f8428c60d6a720b54a08bf6ce4e6f834ef8e0d38bb5695da8"
+
+[[package]]
+name = "wagyu-zcash-parameters-2"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a616ab2e51e74cc48995d476e94de810fb16fc73815f390bf2941b046cc9ba2c"
+
+[[package]]
+name = "wagyu-zcash-parameters-3"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14da1e2e958ff93c0830ee68e91884069253bf3462a67831b02b367be75d6147"
+
+[[package]]
+name = "wagyu-zcash-parameters-4"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f058aeef03a2070e8666ffb5d1057d8bb10313b204a254a6e6103eb958e9a6d6"
+
+[[package]]
+name = "wagyu-zcash-parameters-5"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ffe916b30e608c032ae1b734f02574a3e12ec19ab5cc5562208d679efe4969d"
+
+[[package]]
+name = "wagyu-zcash-parameters-6"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7b6d5a78adc3e8f198e9cd730f219a695431467f7ec29dcfc63ade885feebe1"
+
+[[package]]
 name = "wait-timeout"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7937,7 +8005,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#de0b9ae3d2c0aba83aa0a925e054607a530a14e7"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
 dependencies = [
  "aes",
  "bitvec",
@@ -7957,6 +8025,8 @@ dependencies = [
  "log 0.4.14",
  "rand 0.8.4",
  "rand_core 0.6.3",
+ "ripemd160",
+ "secp256k1",
  "serde 1.0.136",
  "sha2 0.9.9",
  "subtle 2.4.1",
@@ -7965,7 +8035,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#de0b9ae3d2c0aba83aa0a925e054607a530a14e7"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -7977,6 +8047,7 @@ dependencies = [
  "jubjub",
  "lazy_static 1.4.0",
  "rand_core 0.6.3",
+ "wagyu-zcash-parameters",
  "zcash_primitives",
 ]
 

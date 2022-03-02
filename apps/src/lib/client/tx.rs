@@ -33,6 +33,66 @@ use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
+#[cfg(feature = "masp")]
+use zcash_primitives::transaction::Transaction;
+#[cfg(feature = "masp")]
+use zcash_primitives::primitives::Note;
+#[cfg(feature = "masp")]
+use zcash_primitives::consensus::TestNetwork;
+#[cfg(feature = "masp")]
+use zcash_primitives::consensus::Parameters;
+#[cfg(feature = "masp")]
+use zcash_primitives::consensus::BranchId;
+#[cfg(feature = "masp")]
+use std::collections::HashSet;
+#[cfg(feature = "masp")]
+use zcash_primitives::note_encryption::*;
+#[cfg(feature = "masp")]
+use zcash_primitives::primitives::ViewingKey;
+#[cfg(feature = "masp")]
+use std::collections::HashMap;
+#[cfg(feature = "masp")]
+use zcash_primitives::primitives::PaymentAddress;
+#[cfg(feature = "masp")]
+use zcash_primitives::transaction::components::Amount;
+#[cfg(feature = "masp")]
+use zcash_primitives::transaction::builder::{self, *};
+#[cfg(feature = "masp")]
+use rand_core::CryptoRng;
+#[cfg(feature = "masp")]
+use rand_core::RngCore;
+#[cfg(feature = "masp")]
+use zcash_primitives::merkle_tree::CommitmentTree;
+#[cfg(feature = "masp")]
+use zcash_primitives::sapling::Node;
+#[cfg(feature = "masp")]
+use ff::PrimeField;
+#[cfg(feature = "masp")]
+use zcash_primitives::merkle_tree::IncrementalWitness;
+#[cfg(feature = "masp")]
+use zcash_primitives::zip32::ExtendedSpendingKey;
+#[cfg(feature = "masp")]
+use zcash_primitives::primitives::Diversifier;
+#[cfg(feature = "masp")]
+use zcash_primitives::prover::TxProver;
+#[cfg(feature = "masp")]
+use rand_core::OsRng;
+#[cfg(feature = "masp")]
+use std::fmt::Debug;
+#[cfg(feature = "masp")]
+use std::hash::Hash;
+#[cfg(feature = "masp")]
+use std::hash::Hasher;
+#[cfg(feature = "masp")]
+use zcash_primitives::legacy::TransparentAddress;
+#[cfg(feature = "masp")]
+use zcash_primitives::transaction::components::OutPoint;
+#[cfg(feature = "masp")]
+use zcash_primitives::transaction::components::TxOut;
+#[cfg(feature = "masp")]
+use zcash_primitives::legacy::Script;
+#[cfg(feature = "masp")]
+use zcash_proofs::prover::LocalTxProver;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -348,6 +408,127 @@ pub async fn submit_init_validator(
     }
 }
 
+#[cfg(feature = "masp")]
+pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> ViewingKey {
+    esk.expsk.proof_generation_key().to_viewing_key()
+}
+
+/// Generate a valid diversifier, i.e. one that has a diversified base. Return
+/// also this diversified base.
+
+#[cfg(feature = "masp")]
+pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
+    rng: &mut R
+) -> (Diversifier, jubjub::SubgroupPoint) {
+    let mut diversifier;
+    let g_d;
+    // Keep generating random diversifiers until one has a diversified base
+    loop {
+        let mut d = [0; 11];
+        rng.fill_bytes(&mut d);
+        diversifier = Diversifier(d);
+        if let Some(val) = diversifier.g_d() {
+            g_d = val;
+            break;
+        }
+    }
+    (diversifier, g_d)
+}
+
+/// Make shielded components to embed within a Transfer object. If no shielded
+/// payment address nor spending key is specified, then no shielded components
+/// are produced. Otherwise a transaction containing nullifiers and/or note
+/// commitments are produced. Dummy transparent UTXOs are sometimes used to make
+/// transactions balanced, but it is understood that transparent account changes
+/// are effected only by the amounts and signatures specified by the containing
+/// Transfer object.
+
+#[cfg(feature = "masp")]
+pub fn gen_shielded_transfer(
+    ctx: &Context,
+    args: &args::TxTransfer,
+    balance: token::Amount,
+) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
+    // No shielded components are needed when neither source nor destination
+    // are shielded
+    if args.spending_key.is_none() && args.payment_address.is_none() {
+        return Ok(None);
+    }
+    // Context required for storing which notes are in the source's possesion
+    let height = 0u32;
+    let consensus_branch_id = BranchId::Sapling;
+    let vks = HashMap::<ViewingKey, HashSet<usize>>::new();
+    let note_map = HashMap::<usize, Note>::new();
+    let div_map = HashMap::<usize, Diversifier>::new();
+    let witness_map = HashMap::<usize, IncrementalWitness<Node>>::new();
+    let spents = HashSet::<usize>::new();
+    let amt: u64 = args.amount.into();
+    let memo: Option<Memo> = None;
+
+    // Now we build up the transaction within this object
+    let mut builder = Builder::<TestNetwork, OsRng>::new(height);
+    // If there are shielded inputs
+    if let Some(sk) = &args.spending_key {
+        let mut val_acc = 0;
+        // Retrieve the notes that can be spent by this key
+        if let Some(avail_notes) = vks.get(&to_viewing_key(&sk)) {
+            for note_idx in avail_notes {
+                // No more transaction inputs are required once we have met
+                // the target amount
+                if val_acc >= amt { break; }
+                // Spent notes cannot contribute a new transaction's pool
+                if spents.contains(note_idx) { continue; }
+                // Get note, merkle path, diversifier associated with this ID
+                let note = note_map.get(note_idx).unwrap().clone();
+                let merkle_path = witness_map.get(note_idx).unwrap().path().unwrap();
+                let diversifier = div_map.get(note_idx).unwrap();
+                val_acc += note.value;
+                // Commit this note to our transaction
+                builder.add_sapling_spend(sk.clone(), *diversifier, note, merkle_path)?;
+            }
+        }
+        // If there is change leftover send it back to this spending key
+        if val_acc > amt {
+            let vk = sk.expsk.proof_generation_key().to_viewing_key();
+            let change_pa = vk.to_payment_address(find_valid_diversifier(&mut OsRng).0).unwrap();
+            let change_amt = Amount::from_u64(val_acc - amt).unwrap();
+            builder.add_sapling_output(Some(sk.expsk.ovk), change_pa.clone(), change_amt, None)?;
+        }
+    } else {
+        // Otherwise the input must be entirely transparent. So model the source
+        // address' balance as the input UTXO
+        let balance: u64 = balance.into();
+        // We add a dummy UTXO to our transaction, but only the source of the
+        // parent Transfer object is used to validate fund availability
+        builder.add_transparent_input(
+            secp256k1::SecretKey::from_slice(&[0x00; 32]).expect("secret key"),
+            OutPoint::new([0u8; 32], 0),
+            TxOut {
+                value: Amount::from_u64(balance).unwrap(),
+                script_pubkey: Script(Vec::new())
+            }
+        )?;
+        // If there is change leftover send it back to this transparent input
+        if balance > amt {
+            builder.add_transparent_output(
+                &TransparentAddress::PublicKey([0u8; 20]),
+                Amount::from_u64(balance - amt).unwrap()
+            )?;
+        }
+    }
+    // Now handle the outputs of this transaction
+    let amt = Amount::from_u64(amt).unwrap();
+    // If there is a shielded output
+    if let Some(pa) = args.payment_address {
+        let ovk_opt = args.spending_key.as_ref().map(|x| x.expsk.ovk);
+        builder.add_sapling_output(ovk_opt, pa.clone(), amt, memo)?;
+    } else {
+        builder.add_transparent_output(&TransparentAddress::PublicKey([0u8; 20]), amt)?;
+    }
+    // Build and return the constructed transaction
+    builder.build(consensus_branch_id, &LocalTxProver::bundled()).map(|x| Some(x))
+}
+
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let source = ctx.get(&args.source);
     // Check that the source address exists on chain
@@ -382,7 +563,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     // Check source balance
     let balance_key = token::balance_key(&token, &source);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
+    let balance = match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
         Some(balance) => {
             if balance < args.amount {
                 eprintln!(
@@ -395,6 +576,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
                     safe_exit(1)
                 }
             }
+            balance
         }
         None => {
             eprintln!(
@@ -404,12 +586,10 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             if !args.tx.force {
                 safe_exit(1)
             }
+            0.into()
         }
-    }
-    /*#[cfg(feature = "masp")]
-    if args.spending_key.is_some() || args.payment_address.is_some() {
-        
-    }*/
+    };
+    
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let transfer = token::Transfer {
         source,
@@ -417,7 +597,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
         token,
         amount: args.amount,
         #[cfg(feature = "masp")]
-        shielded: None,
+        shielded: gen_shielded_transfer(&ctx, &args, balance).unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer
