@@ -192,7 +192,9 @@ where
                             result
                         );
                         self.write_log.commit_tx();
-                        tx_result["code"] = ErrorCodes::Ok.into();
+                        if !tx_result.contains_key("code") {
+                            tx_result["code"] = ErrorCodes::Ok.into();
+                        }
                         if let Some(ibc_event) = &result.ibc_event {
                             tx_result.merge_ibc_event(ibc_event);
                         }
