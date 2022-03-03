@@ -5,7 +5,6 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
-#[cfg(feature = "masp")]
 use zcash_primitives::transaction::Transaction;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -301,7 +300,6 @@ pub struct Transfer {
     /// The amount of tokens
     pub amount: Amount,
     /// Shielded transaction part
-    #[cfg(feature = "masp")]
     pub shielded: Option<Transaction>,
 }
 
@@ -339,7 +337,6 @@ impl TryFrom<FungibleTokenPacketData> for Transfer {
             target,
             token,
             amount,
-            #[cfg(feature = "masp")]
             shielded: None,
         })
     }

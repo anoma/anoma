@@ -8,7 +8,7 @@ resolver = "2"
 version = "0.4.0"
 
 [features]
-default = ["wasm-runtime", "ABCI", "masp"]
+default = ["wasm-runtime", "ABCI"]
 wasm-runtime = ["anoma/wasm-runtime"]
 
 ABCI = [
@@ -30,8 +30,6 @@ ABCI-plus-plus = [
   "anoma/ibc-vp",
   "anoma_vm_env/ABCI-plus-plus",
 ]
-
-masp = ["anoma/masp", "anoma_apps/masp"]
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing"]}

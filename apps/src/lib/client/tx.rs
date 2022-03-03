@@ -33,67 +33,36 @@ use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
-#[cfg(feature = "masp")]
 use zcash_primitives::transaction::Transaction;
-#[cfg(feature = "masp")]
 use zcash_primitives::primitives::Note;
-#[cfg(feature = "masp")]
 use zcash_primitives::consensus::TestNetwork;
-#[cfg(feature = "masp")]
 use zcash_primitives::consensus::Parameters;
-#[cfg(feature = "masp")]
 use zcash_primitives::consensus::BranchId;
-#[cfg(feature = "masp")]
 use std::collections::HashSet;
-#[cfg(feature = "masp")]
 use zcash_primitives::note_encryption::*;
-#[cfg(feature = "masp")]
 use zcash_primitives::primitives::ViewingKey;
-#[cfg(feature = "masp")]
 use std::collections::HashMap;
-#[cfg(feature = "masp")]
 use zcash_primitives::primitives::PaymentAddress;
-#[cfg(feature = "masp")]
 use zcash_primitives::transaction::components::Amount;
-#[cfg(feature = "masp")]
 use zcash_primitives::transaction::builder::{self, *};
-#[cfg(feature = "masp")]
 use rand_core::CryptoRng;
-#[cfg(feature = "masp")]
 use rand_core::RngCore;
-#[cfg(feature = "masp")]
 use zcash_primitives::merkle_tree::CommitmentTree;
-#[cfg(feature = "masp")]
 use zcash_primitives::sapling::Node;
-#[cfg(feature = "masp")]
 use ff::PrimeField;
-#[cfg(feature = "masp")]
 use zcash_primitives::merkle_tree::IncrementalWitness;
-#[cfg(feature = "masp")]
 use zcash_primitives::zip32::ExtendedSpendingKey;
-#[cfg(feature = "masp")]
 use zcash_primitives::primitives::Diversifier;
-#[cfg(feature = "masp")]
 use zcash_primitives::prover::TxProver;
-#[cfg(feature = "masp")]
 use rand_core::OsRng;
-#[cfg(feature = "masp")]
 use std::fmt::Debug;
-#[cfg(feature = "masp")]
 use std::hash::Hash;
-#[cfg(feature = "masp")]
 use std::hash::Hasher;
-#[cfg(feature = "masp")]
 use zcash_primitives::legacy::TransparentAddress;
-#[cfg(feature = "masp")]
 use zcash_primitives::transaction::components::OutPoint;
-#[cfg(feature = "masp")]
 use zcash_primitives::transaction::components::TxOut;
-#[cfg(feature = "masp")]
 use zcash_primitives::legacy::Script;
-#[cfg(feature = "masp")]
 use zcash_proofs::prover::LocalTxProver;
-#[cfg(feature = "masp")]
 use sha2::Digest;
 
 use super::{rpc, signing};
@@ -410,7 +379,6 @@ pub async fn submit_init_validator(
     }
 }
 
-#[cfg(feature = "masp")]
 pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> ViewingKey {
     esk.expsk.proof_generation_key().to_viewing_key()
 }
@@ -418,7 +386,6 @@ pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> ViewingKey {
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
 /// also this diversified base.
 
-#[cfg(feature = "masp")]
 pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     rng: &mut R
 ) -> (Diversifier, jubjub::SubgroupPoint) {
@@ -445,7 +412,6 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
 /// are effected only by the amounts and signatures specified by the containing
 /// Transfer object.
 
-#[cfg(feature = "masp")]
 pub fn gen_shielded_transfer(
     ctx: &Context,
     args: &args::TxTransfer,
@@ -605,7 +571,6 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
         target,
         token,
         amount: args.amount,
-        #[cfg(feature = "masp")]
         shielded: gen_shielded_transfer(&ctx, &args, balance).unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);

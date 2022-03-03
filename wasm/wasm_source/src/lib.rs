@@ -153,6 +153,7 @@ pub mod tx_from_intent {
             target,
             token,
             amount,
+            shielded,
         } in tx_data.matches.transfers
         {
             token::transfer(&source, &target, &token, amount);
@@ -177,15 +178,15 @@ pub mod tx_transfer {
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
         let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-        let mut stream = &signed.data.unwrap()[..];
         let transfer =
-            token::Transfer::deserialize(&mut stream).unwrap();
+            token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
         debug_log!("apply_tx called with transfer: {:#?}", transfer);
         let token::Transfer {
             source,
             target,
             token,
             amount,
+            shielded,
         } = transfer;
         token::transfer(&source, &target, &token, amount)
     }

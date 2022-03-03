@@ -10,13 +10,9 @@ use anoma_apps::wallet::DecryptionError;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
-#[cfg(feature = "masp")]
 use zcash_primitives::primitives::Diversifier;
-#[cfg(feature = "masp")]
 use rand::RngCore;
-#[cfg(feature = "masp")]
 use rand_core::OsRng;
-#[cfg(feature = "masp")]
 use rand::CryptoRng;
 
 pub fn main() -> Result<()> {
@@ -44,7 +40,6 @@ pub fn main() -> Result<()> {
                 address_add(ctx, args)
             }
         },
-        #[cfg(feature = "masp")]
         cmds::AnomaWallet::MASP(sub) => match sub {
             cmds::WalletMASP::GenPayAddr(cmds::MASPGenPayAddr(args)) => {
                 payment_address_gen(ctx, args)
@@ -56,7 +51,6 @@ pub fn main() -> Result<()> {
 
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
 /// also this diversified base.
-#[cfg(feature = "masp")]
 pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     rng: &mut R
 ) -> (Diversifier, jubjub::SubgroupPoint) {
@@ -76,7 +70,6 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
 }
 
 /// Generate a shielded payment address from the given spending key.
-#[cfg(feature = "masp")]
 fn payment_address_gen(
     _ctx: Context,
     args::MASPPayAddrGen {

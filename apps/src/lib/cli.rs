@@ -294,24 +294,16 @@ pub mod cmds {
 
     impl Cmd for AnomaWallet {
         fn add_sub(app: App) -> App {
-            let app = app.subcommand(WalletKey::def())
-                .subcommand(WalletAddress::def());
-            #[cfg(feature = "masp")]
-            return app.subcommand(WalletMASP::def());
-            #[cfg(not(feature = "masp"))]
-            return app;
+            app.subcommand(WalletKey::def())
+                .subcommand(WalletAddress::def())
+                .subcommand(WalletMASP::def())
         }
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             let key = SubCmd::parse(matches).map(Self::Key);
             let address = SubCmd::parse(matches).map(Self::Address);
-            #[cfg(feature = "masp")]
             let masp = SubCmd::parse(matches).map(Self::MASP);
-            let cmd = key.or(address);
-            #[cfg(feature = "masp")]
-            return cmd.or(masp);
-            #[cfg(not(feature = "masp"))]
-            return cmd;
+            key.or(address).or(masp)
         }
     }
 
@@ -450,13 +442,11 @@ pub mod cmds {
         }
     }
 
-    #[cfg(feature = "masp")]
     #[derive(Clone, Debug)]
     pub enum WalletMASP {
         GenPayAddr(MASPGenPayAddr),
     }
 
-    #[cfg(feature = "masp")]
     impl SubCmd for WalletMASP {
         const CMD: &'static str = "masp";
 
@@ -480,11 +470,9 @@ pub mod cmds {
     }
 
     /// Generate a new keypair and an implicit address derived from it
-    #[cfg(feature = "masp")]
     #[derive(Clone, Debug)]
     pub struct MASPGenPayAddr(pub args::MASPPayAddrGen);
 
-    #[cfg(feature = "masp")]
     impl SubCmd for MASPGenPayAddr {
         const CMD: &'static str = "gen-pay-addr";
 
@@ -1265,9 +1253,7 @@ pub mod args {
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
-    #[cfg(feature = "masp")]
     use zcash_primitives::zip32::ExtendedSpendingKey;
-    #[cfg(feature = "masp")]
     use zcash_primitives::primitives::PaymentAddress;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
@@ -1345,7 +1331,6 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
-    #[cfg(feature = "masp")]
     const PAYMENT_ADDRESS_OPT: ArgOpt<PaymentAddress> = arg_opt("payment-address");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
@@ -1358,9 +1343,7 @@ pub mod args {
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
-    #[cfg(feature = "masp")]
     const SPENDING_KEY: Arg<ExtendedSpendingKey> = arg("spending-key");
-    #[cfg(feature = "masp")]
     const SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = SPENDING_KEY.opt();
     const TARGET: Arg<WalletAddress> = arg("target");
     const TO_STDOUT: ArgFlag = flag("stdout");
@@ -1510,10 +1493,8 @@ pub mod args {
         /// Transferred token amount
         pub amount: token::Amount,
         /// Spending key for shielded transactions
-        #[cfg(feature = "masp")]
         pub spending_key: Option<ExtendedSpendingKey>,
         /// Payment address for shielded transactions
-        #[cfg(feature = "masp")]
         pub payment_address: Option<PaymentAddress>,
     }
 
@@ -1524,9 +1505,7 @@ pub mod args {
             let target = TARGET.parse(matches);
             let token = TOKEN.parse(matches);
             let amount = AMOUNT.parse(matches);
-            #[cfg(feature = "masp")]
             let spending_key = SPENDING_KEY_OPT.parse(matches);
-            #[cfg(feature = "masp")]
             let payment_address = PAYMENT_ADDRESS_OPT.parse(matches);
             Self {
                 tx,
@@ -1534,32 +1513,26 @@ pub mod args {
                 target,
                 token,
                 amount,
-                #[cfg(feature = "masp")]
                 spending_key,
-                #[cfg(feature = "masp")]
                 payment_address,
             }
         }
 
         fn def(app: App) -> App {
-            let args = app.add_args::<Tx>()
+            app.add_args::<Tx>()
                 .arg(SOURCE.def().about(
                     "The source account address. The source's key is used to \
                      produce the signature.",
                 ))
                 .arg(TARGET.def().about("The target account address."))
                 .arg(TOKEN.def().about("The transfer token."))
-                .arg(AMOUNT.def().about("The amount to transfer in decimal."));
-            #[cfg(not(feature = "masp"))]
-            return args;
-            #[cfg(feature = "masp")]
-            return args
+                .arg(AMOUNT.def().about("The amount to transfer in decimal."))
                 .arg(SPENDING_KEY_OPT.def().about(
                     "The spending key for shielded transactions.",
                 ))
                 .arg(PAYMENT_ADDRESS_OPT.def().about(
                     "The payment address for shielded transactions.",
-                ));
+                ))
         }
     }
 
@@ -2423,14 +2396,12 @@ pub mod args {
     }
 
         /// MASP generate payment address arguments
-        #[cfg(feature = "masp")]
         #[derive(Clone, Debug)]
         pub struct MASPPayAddrGen {
             /// Spending Key
             pub spending_key: ExtendedSpendingKey,
         }
 
-        #[cfg(feature = "masp")]
         impl Args for MASPPayAddrGen {
             fn parse(matches: &ArgMatches) -> Self {
                 let spending_key = SPENDING_KEY.parse(matches);

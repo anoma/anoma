@@ -100,7 +100,6 @@ dependencies = [
  "ics23",
  "itertools 0.10.3",
  "jubjub",
- "libmasp",
  "masp_primitives",
  "masp_proofs",
  "parity-wasm",
@@ -173,7 +172,6 @@ dependencies = [
  "jubjub",
  "libc",
  "libloading 0.7.3",
- "libmasp",
  "libp2p",
  "masp_primitives",
  "masp_proofs",
@@ -3210,28 +3208,6 @@ name = "libm"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
-
-[[package]]
-name = "libmasp"
-version = "0.2.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#215f7e1fbc045fef4d2a6faca46f82913c84c0a6"
-dependencies = [
- "bellman",
- "blake2b_simd",
- "blake2s_simd",
- "bls12_381",
- "ff",
- "group",
- "itertools 0.9.0",
- "jubjub",
- "lazy_static 1.4.0",
- "libc",
- "masp_primitives",
- "masp_proofs",
- "rand_core 0.6.3",
- "subtle 2.4.1",
- "zcash_primitives",
-]
 
 [[package]]
 name = "libp2p"
