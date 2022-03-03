@@ -10,6 +10,14 @@ use anoma_apps::wallet::DecryptionError;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
+#[cfg(feature = "masp")]
+use zcash_primitives::primitives::Diversifier;
+#[cfg(feature = "masp")]
+use rand::RngCore;
+#[cfg(feature = "masp")]
+use rand_core::OsRng;
+#[cfg(feature = "masp")]
+use rand::CryptoRng;
 
 pub fn main() -> Result<()> {
     let (cmd, ctx) = cli::anoma_wallet_cli();
@@ -36,8 +44,55 @@ pub fn main() -> Result<()> {
                 address_add(ctx, args)
             }
         },
+        #[cfg(feature = "masp")]
+        cmds::AnomaWallet::MASP(sub) => match sub {
+            cmds::WalletMASP::GenPayAddr(cmds::MASPGenPayAddr(args)) => {
+                payment_address_gen(ctx, args)
+            }
+        }
     }
     Ok(())
+}
+
+/// Generate a valid diversifier, i.e. one that has a diversified base. Return
+/// also this diversified base.
+#[cfg(feature = "masp")]
+pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
+    rng: &mut R
+) -> (Diversifier, jubjub::SubgroupPoint) {
+    let mut diversifier;
+    let g_d;
+    // Keep generating random diversifiers until one has a diversified base
+    loop {
+        let mut d = [0; 11];
+        rng.fill_bytes(&mut d);
+        diversifier = Diversifier(d);
+        if let Some(val) = diversifier.g_d() {
+            g_d = val;
+            break;
+        }
+    }
+    (diversifier, g_d)
+}
+
+/// Generate a shielded payment address from the given spending key.
+#[cfg(feature = "masp")]
+fn payment_address_gen(
+    _ctx: Context,
+    args::MASPPayAddrGen {
+        spending_key,
+    }: args::MASPPayAddrGen,
+) {
+    let (div, _g_d) = find_valid_diversifier(&mut OsRng);
+    let pay_addr = spending_key.expsk
+        .proof_generation_key()
+        .to_viewing_key()
+        .to_payment_address(div);
+    println!(
+        "Successfully derived the following payment address from the \
+         given spending key: {}",
+        pay_addr.unwrap()
+    );
 }
 
 /// Generate a new keypair and derive implicit address from it and store them in

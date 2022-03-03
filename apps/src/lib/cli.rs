@@ -288,18 +288,30 @@ pub mod cmds {
         Key(WalletKey),
         /// Address management commands
         Address(WalletAddress),
+        /// MASP key, address management commands
+        MASP(WalletMASP),
     }
 
     impl Cmd for AnomaWallet {
         fn add_sub(app: App) -> App {
-            app.subcommand(WalletKey::def())
-                .subcommand(WalletAddress::def())
+            let app = app.subcommand(WalletKey::def())
+                .subcommand(WalletAddress::def());
+            #[cfg(feature = "masp")]
+            return app.subcommand(WalletMASP::def());
+            #[cfg(not(feature = "masp"))]
+            return app;
         }
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             let key = SubCmd::parse(matches).map(Self::Key);
             let address = SubCmd::parse(matches).map(Self::Address);
-            key.or(address)
+            #[cfg(feature = "masp")]
+            let masp = SubCmd::parse(matches).map(Self::MASP);
+            let cmd = key.or(address);
+            #[cfg(feature = "masp")]
+            return cmd.or(masp);
+            #[cfg(not(feature = "masp"))]
+            return cmd;
         }
     }
 
@@ -435,6 +447,59 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Exports a keypair to a file.")
                 .add_args::<args::KeyExport>()
+        }
+    }
+
+    #[cfg(feature = "masp")]
+    #[derive(Clone, Debug)]
+    pub enum WalletMASP {
+        GenPayAddr(MASPGenPayAddr),
+    }
+
+    #[cfg(feature = "masp")]
+    impl SubCmd for WalletMASP {
+        const CMD: &'static str = "masp";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).and_then(|matches| {
+                let genpa = SubCmd::parse(matches).map(Self::GenPayAddr);
+                genpa
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about(
+                    "Multi-asset shielded pool address and keypair management \
+                     including methods to generate and look-up addresses and \
+                     keys.",
+                )
+                .setting(AppSettings::SubcommandRequiredElseHelp)
+                .subcommand(MASPGenPayAddr::def())
+        }
+    }
+
+    /// Generate a new keypair and an implicit address derived from it
+    #[cfg(feature = "masp")]
+    #[derive(Clone, Debug)]
+    pub struct MASPGenPayAddr(pub args::MASPPayAddrGen);
+
+    #[cfg(feature = "masp")]
+    impl SubCmd for MASPGenPayAddr {
+        const CMD: &'static str = "gen-pay-addr";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MASPGenPayAddr(args::MASPPayAddrGen::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about(
+                    "Generates a payment address from the given spending key",
+                )
+                .add_args::<args::MASPPayAddrGen>()
         }
     }
 
@@ -1294,7 +1359,9 @@ pub mod args {
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
     #[cfg(feature = "masp")]
-    const SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = arg_opt("spending-key");
+    const SPENDING_KEY: Arg<ExtendedSpendingKey> = arg("spending-key");
+    #[cfg(feature = "masp")]
+    const SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = SPENDING_KEY.opt();
     const TARGET: Arg<WalletAddress> = arg("target");
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
@@ -2354,6 +2421,30 @@ pub mod args {
             Self { ledger_address }
         }
     }
+
+        /// MASP generate payment address arguments
+        #[cfg(feature = "masp")]
+        #[derive(Clone, Debug)]
+        pub struct MASPPayAddrGen {
+            /// Spending Key
+            pub spending_key: ExtendedSpendingKey,
+        }
+
+        #[cfg(feature = "masp")]
+        impl Args for MASPPayAddrGen {
+            fn parse(matches: &ArgMatches) -> Self {
+                let spending_key = SPENDING_KEY.parse(matches);
+                Self {
+                    spending_key
+                }
+            }
+
+            fn def(app: App) -> App {
+                app.arg(SPENDING_KEY.def().about(
+                    "The spending key."
+                ))
+            }
+        }
 
     /// Wallet generate key and implicit address arguments
     #[derive(Clone, Debug)]

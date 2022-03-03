@@ -93,6 +93,8 @@ use zcash_primitives::transaction::components::TxOut;
 use zcash_primitives::legacy::Script;
 #[cfg(feature = "masp")]
 use zcash_proofs::prover::LocalTxProver;
+#[cfg(feature = "masp")]
+use sha2::Digest;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -502,12 +504,17 @@ pub fn gen_shielded_transfer(
         let balance: u64 = balance.into();
         // We add a dummy UTXO to our transaction, but only the source of the
         // parent Transfer object is used to validate fund availability
+        let secp_sk = secp256k1::SecretKey::from_slice(&[0xcd; 32]).expect("secret key");
+        let secp_ctx = secp256k1::Secp256k1::<secp256k1::SignOnly>::gen_new();
+        let secp_pk = secp256k1::PublicKey::from_secret_key(&secp_ctx, &secp_sk).serialize();
+        let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(&secp_pk));
+        let script = TransparentAddress::PublicKey(hash.into()).script();
         builder.add_transparent_input(
-            secp256k1::SecretKey::from_slice(&[0x00; 32]).expect("secret key"),
+            secp_sk,
             OutPoint::new([0u8; 32], 0),
             TxOut {
                 value: Amount::from_u64(balance).unwrap(),
-                script_pubkey: Script(Vec::new())
+                script_pubkey: script
             }
         )?;
         // If there is change leftover send it back to this transparent input
