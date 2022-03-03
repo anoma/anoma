@@ -421,6 +421,7 @@
 <span id="420">420</span>
 <span id="421">421</span>
 <span id="422">422</span>
+<span id="423">423</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Cryptographic keys</span>
 <span class="doccomment">/// Elliptic curve keys for the DKG</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dkg_session_keys</span>;
@@ -429,7 +430,7 @@
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rand&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -696,6 +697,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,

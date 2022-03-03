@@ -179,11 +179,13 @@
 <span id="178">178</span>
 <span id="179">179</span>
 <span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Protocol parameters</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::storage::types::decode</span>;
@@ -229,6 +231,7 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Parameters</span> {
     <span class="doccomment">/// Epoch duration</span>
@@ -249,6 +252,7 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EpochDuration</span> {
     <span class="doccomment">/// Minimum number of blocks in an epoch</span>

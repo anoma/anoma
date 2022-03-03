@@ -52,9 +52,11 @@
 <span id="51">51</span>
 <span id="52">52</span>
 <span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Types used for PoS system transactions</span>
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::Address</span>;
@@ -68,6 +70,7 @@
     <span class="ident">PartialEq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Hash</span>,
     <span class="ident">Eq</span>,
     <span class="ident">Serialize</span>,
@@ -93,6 +96,7 @@
     <span class="ident">PartialEq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Hash</span>,
     <span class="ident">Eq</span>,
     <span class="ident">Serialize</span>,

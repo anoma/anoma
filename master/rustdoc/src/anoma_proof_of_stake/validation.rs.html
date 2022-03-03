@@ -1552,6 +1552,19 @@
 <span id="1551">1551</span>
 <span id="1552">1552</span>
 <span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Validation of updated PoS data</span>
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -1561,7 +1574,7 @@
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Add</span>, <span class="ident">AddAssign</span>, <span class="ident">Neg</span>, <span class="ident">Sub</span>, <span class="ident">SubAssign</span>};
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::btree_set::BTreeSetShims</span>;
@@ -1587,6 +1600,7 @@
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">Hash</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>,
     <span class="ident">TokenChange</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Display</span>,
 {
@@ -1731,7 +1745,8 @@
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">Hash</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">TokenAmount</span>: <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">Debug</span>
         <span class="op">+</span> <span class="ident">Default</span>
@@ -1740,7 +1755,8 @@
         <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">TokenAmount</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">AddAssign</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">TokenChange</span>: <span class="ident">Display</span>
         <span class="op">+</span> <span class="ident">Debug</span>
         <span class="op">+</span> <span class="ident">Default</span>
@@ -1753,8 +1769,9 @@
         <span class="op">+</span> <span class="ident">PartialEq</span>
         <span class="op">+</span> <span class="ident">Eq</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
-    <span class="ident">PublicKey</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
+    <span class="ident">PublicKey</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshSchema</span>,
 {
     <span class="doccomment">/// PoS account&#39;s balance update</span>
     <span class="ident">Balance</span>(<span class="ident">Data</span><span class="op">&lt;</span><span class="ident">TokenAmount</span><span class="op">&gt;</span>),
@@ -1811,8 +1828,9 @@
         <span class="op">+</span> <span class="ident">PartialEq</span>
         <span class="op">+</span> <span class="ident">Eq</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
-    <span class="ident">PublicKey</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
+    <span class="ident">PublicKey</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshSchema</span>,
 {
     <span class="doccomment">/// Validator&#39;s state update</span>
     <span class="ident">State</span>(<span class="ident">Data</span><span class="op">&lt;</span><span class="ident">ValidatorStates</span><span class="op">&gt;</span>),
@@ -1868,7 +1886,8 @@
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">Hash</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">TokenAmount</span>: <span class="ident">Display</span>
         <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">Copy</span>
@@ -1882,7 +1901,8 @@
         <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">TokenChange</span>: <span class="ident">Display</span>
         <span class="op">+</span> <span class="ident">Debug</span>
         <span class="op">+</span> <span class="ident">Default</span>
@@ -1901,8 +1921,14 @@
         <span class="op">+</span> <span class="ident">PartialOrd</span>
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
-    <span class="ident">PublicKey</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">PartialEq</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
+    <span class="ident">PublicKey</span>: <span class="ident">Debug</span>
+        <span class="op">+</span> <span class="ident">Clone</span>
+        <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>
+        <span class="op">+</span> <span class="ident">PartialEq</span>,
 {
     <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
     <span class="kw">use</span> <span class="ident">DataUpdate</span>::<span class="kw-2">*</span>;

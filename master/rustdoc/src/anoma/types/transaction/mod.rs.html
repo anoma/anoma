@@ -473,6 +473,104 @@
 <span id="472">472</span>
 <span id="473">473</span>
 <span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Types that are used in transactions.</span>
 
 <span class="doccomment">/// txs that contain decrypted payloads or assertions of</span>
@@ -488,9 +586,10 @@
 <span class="doccomment">/// wrapper txs with encrypted payloads</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wrapper</span>;
 
+<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">decrypted</span>::<span class="kw-2">*</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">encrypted::EncryptionKey</span>;
@@ -503,6 +602,9 @@
 <span class="kw">use</span> <span class="ident">tendermint_stable::abci::transaction</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wrapper</span>::<span class="kw-2">*</span>;
 
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ibc::IbcEvent</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::storage</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas::VpsGas</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key</span>::<span class="kw-2">*</span>;
 
@@ -514,6 +616,7 @@
     <span class="ident">Eq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Serialize</span>,
     <span class="ident">Deserialize</span>,
 )]</span>
@@ -543,6 +646,96 @@
     <span class="ident">Hash</span>(<span class="ident">hash_bytes</span>)
 }
 
+<span class="doccomment">/// Transaction application result</span>
+<span class="comment">// TODO derive BorshSchema after &lt;https://github.com/near/borsh-rs/issues/82&gt;</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxResult</span> {
+    <span class="doccomment">/// Total gas used by the transaction (includes the gas used by VPs)</span>
+    <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Storage keys touched by the transaction</span>
+    <span class="kw">pub</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The results of all the triggered validity predicates by the transaction</span>
+    <span class="kw">pub</span> <span class="ident">vps_result</span>: <span class="ident">VpsResult</span>,
+    <span class="doccomment">/// New established addresses created by the transaction</span>
+    <span class="kw">pub</span> <span class="ident">initialized_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Optional IBC event emitted by the transaction</span>
+    <span class="kw">pub</span> <span class="ident">ibc_event</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IbcEvent</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">TxResult</span> {
+    <span class="doccomment">/// Check if the tx has been accepted by all the VPs</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_accepted</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">vps_result</span>.<span class="ident">rejected_vps</span>.<span class="ident">is_empty</span>()
+    }
+}
+
+<span class="doccomment">/// Result of checking a transaction with validity predicates</span>
+<span class="comment">// TODO derive BorshSchema after &lt;https://github.com/near/borsh-rs/issues/82&gt;</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpsResult</span> {
+    <span class="doccomment">/// The addresses whose VPs accepted the transaction</span>
+    <span class="kw">pub</span> <span class="ident">accepted_vps</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The addresses whose VPs rejected the transaction</span>
+    <span class="kw">pub</span> <span class="ident">rejected_vps</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The total gas used by all the VPs</span>
+    <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">VpsGas</span>,
+    <span class="doccomment">/// Errors occurred in any of the VPs, if any</span>
+    <span class="kw">pub</span> <span class="ident">errors</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">String</span>)<span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">TxResult</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;Transaction is {}. Gas used: {};{} VPs result: {}&quot;</span>,
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_accepted</span>() {
+                <span class="string">&quot;valid&quot;</span>
+            } <span class="kw">else</span> {
+                <span class="string">&quot;invalid&quot;</span>
+            },
+            <span class="self">self</span>.<span class="ident">gas_used</span>,
+            <span class="ident">iterable_to_string</span>(<span class="string">&quot;Changed keys&quot;</span>, <span class="self">self</span>.<span class="ident">changed_keys</span>.<span class="ident">iter</span>()),
+            <span class="self">self</span>.<span class="ident">vps_result</span>,
+        )
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">VpsResult</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;{}{}{}&quot;</span>,
+            <span class="ident">iterable_to_string</span>(<span class="string">&quot;Accepted&quot;</span>, <span class="self">self</span>.<span class="ident">accepted_vps</span>.<span class="ident">iter</span>()),
+            <span class="ident">iterable_to_string</span>(<span class="string">&quot;Rejected&quot;</span>, <span class="self">self</span>.<span class="ident">rejected_vps</span>.<span class="ident">iter</span>()),
+            <span class="ident">iterable_to_string</span>(
+                <span class="string">&quot;Errors&quot;</span>,
+                <span class="self">self</span>.<span class="ident">errors</span>
+                    .<span class="ident">iter</span>()
+                    .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="ident">err</span>)<span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{} in {}&quot;</span>, <span class="ident">err</span>, <span class="ident">addr</span>))
+            ),
+        )
+    }
+}
+
+<span class="doccomment">/// Format all the values of the given iterator into a string</span>
+<span class="kw">fn</span> <span class="ident">iterable_to_string</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span>(
+    <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">iter</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
+) -&gt; <span class="ident">String</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">peekable</span>();
+    <span class="kw">if</span> <span class="ident">iter</span>.<span class="ident">peek</span>().<span class="ident">is_none</span>() {
+        <span class="string">&quot;&quot;</span>.<span class="ident">into</span>()
+    } <span class="kw">else</span> {
+        <span class="macro">format!</span>(
+            <span class="string">&quot; {}: {};&quot;</span>,
+            <span class="ident">label</span>,
+            <span class="ident">iter</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">to_string</span>())
+                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                .<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>)
+        )
+    }
+}
+
 <span class="doccomment">/// A tx data type to update an account&#39;s validity predicate</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Debug</span>,
@@ -550,6 +743,7 @@
     <span class="ident">PartialEq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Serialize</span>,
     <span class="ident">Deserialize</span>,
 )]</span>
@@ -567,6 +761,7 @@
     <span class="ident">PartialEq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Serialize</span>,
     <span class="ident">Deserialize</span>,
 )]</span>
@@ -587,6 +782,7 @@
     <span class="ident">PartialEq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Serialize</span>,
     <span class="ident">Deserialize</span>,
 )]</span>
@@ -640,7 +836,7 @@
 
     <span class="doccomment">/// Struct that classifies that kind of Tx</span>
     <span class="doccomment">/// based on the contents of its data.</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TxType</span> {
         <span class="doccomment">/// An ordinary tx</span>
         <span class="ident">Raw</span>(<span class="ident">Tx</span>),

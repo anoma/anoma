@@ -199,6 +199,28 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
 <span class="doccomment">/// to enable encrypted txs.</span>
 <span class="doccomment">/// *Not wasm compatible*</span>
@@ -304,6 +326,28 @@
                 <span class="ident">auth_tag</span>: <span class="ident">CanonicalDeserialize::deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">auth_tag</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>))<span class="question-mark">?</span>,
             }))
+        }
+    }
+
+    <span class="kw">impl</span> <span class="ident">borsh::BorshSchema</span> <span class="kw">for</span> <span class="ident">EncryptedTx</span> {
+        <span class="kw">fn</span> <span class="ident">add_definitions_recursively</span>(
+            <span class="ident">definitions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::collections::HashMap</span><span class="op">&lt;</span>
+                <span class="ident">borsh::schema::Declaration</span>,
+                <span class="ident">borsh::schema::Definition</span>,
+            <span class="op">&gt;</span>,
+        ) {
+            <span class="comment">// Encoded as `(Vec&lt;u8&gt;, Vec&lt;u8&gt;, Vec&lt;u8&gt;)`</span>
+            <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span> <span class="string">&quot;u8&quot;</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="ident">definition</span> <span class="op">=</span> <span class="ident">borsh::schema::Definition::Sequence</span> { <span class="ident">elements</span> };
+            <span class="ident">definitions</span>.<span class="ident">insert</span>(<span class="string">&quot;Vec&lt;u8&gt;&quot;</span>.<span class="ident">into</span>(), <span class="ident">definition</span>);
+            <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span>
+                <span class="macro">vec!</span>[<span class="string">&quot;Vec&lt;u8&gt;&quot;</span>.<span class="ident">into</span>(), <span class="string">&quot;Vec&lt;u8&gt;&quot;</span>.<span class="ident">into</span>(), <span class="string">&quot;Vec&lt;u8&gt;&quot;</span>.<span class="ident">into</span>()];
+            <span class="kw">let</span> <span class="ident">definition</span> <span class="op">=</span> <span class="ident">borsh::schema::Definition::Tuple</span> { <span class="ident">elements</span> };
+            <span class="ident">definitions</span>.<span class="ident">insert</span>(<span class="ident"><span class="self">Self</span>::declaration</span>(), <span class="ident">definition</span>);
+        }
+
+        <span class="kw">fn</span> <span class="ident">declaration</span>() -&gt; <span class="ident">borsh::schema::Declaration</span> {
+            <span class="string">&quot;EncryptedTx&quot;</span>.<span class="ident">into</span>()
         }
     }
 

@@ -69,11 +69,13 @@
 <span id="68">68</span>
 <span id="69">69</span>
 <span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC event without IBC-related data types</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::events</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcEventError</span>, <span class="ident">IbcEvent</span> <span class="kw">as</span> <span class="ident">RawIbcEvent</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
@@ -98,7 +100,9 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Wrapped IbcEvent</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>,
+)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IbcEvent</span> {
     <span class="doccomment">/// The IBC event type</span>
     <span class="kw">pub</span> <span class="ident">event_type</span>: <span class="ident">String</span>,

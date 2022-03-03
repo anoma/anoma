@@ -185,9 +185,6 @@
 <span id="184">184</span>
 <span id="185">185</span>
 <span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Types for sending and verifying txs</span>
 <span class="doccomment">/// used in Anoma protocols</span>
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
@@ -218,7 +215,7 @@
     <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">ErrorKind</span>, <span class="ident">Write</span>};
     <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
-    <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+    <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
     <span class="kw">use</span> <span class="ident">ferveo::dkg::pv::Message</span>;
     <span class="kw">use</span> <span class="ident">serde_json</span>;
 
@@ -229,7 +226,7 @@
 
     <span class="kw">const</span> <span class="ident">TX_NEW_DKG_KP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_update_dkg_session_keypair.wasm&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
     <span class="doccomment">/// Txs sent by validators as part of internal protocols</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProtocolTx</span> {
         <span class="doccomment">/// we require ProtocolTxs be signed</span>
@@ -255,12 +252,16 @@
         }
     }
 
+    <span class="doccomment">/// DKG message wrapper type that adds Borsh encoding.</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DkgMessage</span>(<span class="kw">pub</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">EllipticCurve</span><span class="op">&gt;</span>);
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
     <span class="doccomment">/// Types of protocol messages to be sent</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ProtocolTxType</span> {
         <span class="doccomment">/// Messages to be given to the DKG state machine</span>
-        <span class="ident">DKG</span>(<span class="ident">Message</span><span class="op">&lt;</span><span class="ident">EllipticCurve</span><span class="op">&gt;</span>),
+        <span class="ident">DKG</span>(<span class="ident">DkgMessage</span>),
         <span class="doccomment">/// Tx requesting a new DKG session keypair</span>
         <span class="ident">NewDkgKeypair</span>(<span class="ident">Tx</span>),
         <span class="doccomment">/// Aggregation of Ethereum state changes</span>
@@ -318,59 +319,52 @@
         }
     }
 
-    <span class="kw">impl</span> <span class="ident">borsh::ser::BorshSerialize</span> <span class="kw">for</span> <span class="ident">ProtocolTxType</span> {
+    <span class="kw">impl</span> <span class="ident">BorshSerialize</span> <span class="kw">for</span> <span class="ident">DkgMessage</span> {
         <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;mut</span> <span class="ident">W</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">blob</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span> {
-                <span class="ident">ProtocolTxType::NewDkgKeypair</span>(<span class="ident">tx</span>) =&gt; (<span class="number">1u8</span>, <span class="ident">tx</span>.<span class="ident">try_to_vec</span>()<span class="question-mark">?</span>),
-                <span class="ident">ProtocolTxType::DKG</span>(<span class="ident">msg</span>) =&gt; (
-                    <span class="number">0u8</span>,
-                    <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>)
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                            <span class="ident">std::io::Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>)
-                        })<span class="question-mark">?</span>
-                        .<span class="ident">as_bytes</span>()
-                        .<span class="ident">to_owned</span>(),
-                ),
-                <span class="ident">ProtocolTxType::EthereumStateUpdate</span>(<span class="ident">tx</span>) =&gt; {
-                    (<span class="number">2u8</span>, <span class="ident">tx</span>.<span class="ident">try_to_vec</span>()<span class="question-mark">?</span>)
-                }
-            };
+            <span class="kw">let</span> <span class="ident">blob</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                    <span class="ident">std::io::Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>)
+                })<span class="question-mark">?</span>
+                .<span class="ident">as_bytes</span>()
+                .<span class="ident">to_owned</span>();
             <span class="ident">BorshSerialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">blob</span>, <span class="ident">writer</span>)
         }
     }
 
-    <span class="kw">impl</span> <span class="ident">borsh::de::BorshDeserialize</span> <span class="kw">for</span> <span class="ident">ProtocolTxType</span> {
+    <span class="kw">impl</span> <span class="ident">BorshDeserialize</span> <span class="kw">for</span> <span class="ident">DkgMessage</span> {
         <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> (<span class="ident">variant</span>, <span class="ident">blob</span>): (<span class="ident">u8</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">=</span>
-                <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> <span class="ident">variant</span> {
-                <span class="number">0</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">String::from_utf8</span>(<span class="ident">blob</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                        <span class="ident">std::io::Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>)
-                    })<span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ProtocolTxType::DKG</span>(
-                        <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                            <span class="ident">std::io::Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>)
-                        })<span class="question-mark">?</span>,
-                    ))
-                }
-                <span class="number">1</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ProtocolTxType::NewDkgKeypair</span>(
-                    <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">blob</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>,
-                )),
-                <span class="number">2</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ProtocolTxType::EthereumStateUpdate</span>(
-                    <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">blob</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>,
-                )),
-                <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">std::io::Error::new</span>(
-                    <span class="ident">ErrorKind::InvalidData</span>,
-                    <span class="string">&quot;Invalid enum variant&quot;</span>,
-                )),
-            }
+            <span class="kw">let</span> <span class="ident">blob</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">String::from_utf8</span>(<span class="ident">blob</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="ident">std::io::Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>)
+            })<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="ident">std::io::Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>)
+            })<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">msg</span>))
+        }
+    }
+
+    <span class="kw">impl</span> <span class="ident">BorshSchema</span> <span class="kw">for</span> <span class="ident">DkgMessage</span> {
+        <span class="kw">fn</span> <span class="ident">add_definitions_recursively</span>(
+            <span class="ident">definitions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::collections::HashMap</span><span class="op">&lt;</span>
+                <span class="ident">borsh::schema::Declaration</span>,
+                <span class="ident">borsh::schema::Definition</span>,
+            <span class="op">&gt;</span>,
+        ) {
+            <span class="comment">// Encoded as `Vec&lt;u8&gt;`;</span>
+            <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span> <span class="string">&quot;u8&quot;</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="ident">definition</span> <span class="op">=</span> <span class="ident">borsh::schema::Definition::Sequence</span> { <span class="ident">elements</span> };
+            <span class="ident">definitions</span>.<span class="ident">insert</span>(<span class="ident"><span class="self">Self</span>::declaration</span>(), <span class="ident">definition</span>);
+        }
+
+        <span class="kw">fn</span> <span class="ident">declaration</span>() -&gt; <span class="ident">borsh::schema::Declaration</span> {
+            <span class="string">&quot;DkgMessage&quot;</span>.<span class="ident">into</span>()
         }
     }
 
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&lt;</span><span class="ident">EllipticCurve</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ProtocolTxType</span> {
         <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">msg</span>: <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">EllipticCurve</span><span class="op">&gt;</span>) -&gt; <span class="ident">ProtocolTxType</span> {
-            <span class="ident">ProtocolTxType::DKG</span>(<span class="ident">msg</span>)
+            <span class="ident">ProtocolTxType::DKG</span>(<span class="ident">DkgMessage</span>(<span class="ident">msg</span>))
         }
     }
 }

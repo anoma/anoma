@@ -1242,23 +1242,28 @@
 <span id="1241">1241</span>
 <span id="1242">1242</span>
 <span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [`Epoched`] and [`EpochedDelta`] are structures for data that is set for</span>
 <span class="doccomment">//! future epochs at a given [`EpochOffset`].</span>
 
 <span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">cmp</span>, <span class="ident">fmt</span>, <span class="ident">ops</span>};
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::Epoch</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::PosParams</span>;
 
 <span class="doccomment">/// Data that may have values set for future epochs, up to an epoch at offset as</span>
 <span class="doccomment">/// set via the `Offset` type parameter.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Epoched</span><span class="op">&lt;</span><span class="ident">Data</span>, <span class="ident">Offset</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Data</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+    <span class="ident">Data</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">Offset</span>: <span class="ident">EpochOffset</span>,
 {
     <span class="doccomment">/// The epoch in which this data was last updated</span>
@@ -1270,10 +1275,14 @@
 <span class="doccomment">/// Data that may have delta values (a difference from the predecessor epoch)</span>
 <span class="doccomment">/// set for future epochs, up to an epoch at offset as set via the `Offset` type</span>
 <span class="doccomment">/// parameter.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EpochedDelta</span><span class="op">&lt;</span><span class="ident">Data</span>, <span class="ident">Offset</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Data</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">ops::Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Data</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+    <span class="ident">Data</span>: <span class="ident">Clone</span>
+        <span class="op">+</span> <span class="ident">ops::Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Data</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">Offset</span>: <span class="ident">EpochOffset</span>,
 {
     <span class="doccomment">/// The epoch in which this data was last updated</span>
@@ -1285,7 +1294,7 @@
 <span class="doccomment">/// Which offset should be used to set data. The value is read from</span>
 <span class="doccomment">/// [`PosParams`].</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EpochOffset</span>:
-    <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>
+    <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshSchema</span>
 {
     <span class="doccomment">/// Find the value of a given offset from PoS parameters.</span>
     <span class="kw">fn</span> <span class="ident">value</span>(<span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) -&gt; <span class="ident">u64</span>;
@@ -1294,7 +1303,7 @@
 }
 
 <span class="doccomment">/// Offset at pipeline length.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OffsetPipelineLen</span>;
 <span class="kw">impl</span> <span class="ident">EpochOffset</span> <span class="kw">for</span> <span class="ident">OffsetPipelineLen</span> {
     <span class="kw">fn</span> <span class="ident">value</span>(<span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) -&gt; <span class="ident">u64</span> {
@@ -1307,7 +1316,7 @@
 }
 
 <span class="doccomment">/// Offset at unbonding length.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OffsetUnboundingLen</span>;
 <span class="kw">impl</span> <span class="ident">EpochOffset</span> <span class="kw">for</span> <span class="ident">OffsetUnboundingLen</span> {
     <span class="kw">fn</span> <span class="ident">value</span>(<span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>) -&gt; <span class="ident">u64</span> {
@@ -1339,7 +1348,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Data</span>, <span class="ident">Offset</span><span class="op">&gt;</span> <span class="ident">Epoched</span><span class="op">&lt;</span><span class="ident">Data</span>, <span class="ident">Offset</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Data</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+    <span class="ident">Data</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span> <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">Offset</span>: <span class="ident">EpochOffset</span>,
 {
     <span class="doccomment">/// Initialize new epoched data. Sets the head to the given value.</span>
@@ -1533,7 +1542,8 @@
         <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">ops::Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Data</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
-        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
     <span class="ident">Offset</span>: <span class="ident">EpochOffset</span>,
 {
     <span class="doccomment">/// Initialize new epoched delta data. Sets the head to the given value.</span>

@@ -106,14 +106,6 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
 </pre><pre class="rust"><code><span class="doccomment">//! RPC endpoint is used for ledger state queries</span>
 
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -121,7 +113,6 @@
 
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>;
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::abci::Path</span> <span class="kw">as</span> <span class="ident">AbciPath</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -141,13 +132,6 @@
     <span class="ident">Prefix</span>(<span class="ident">storage::Key</span>),
     <span class="doccomment">/// Check if the given storage key exists</span>
     <span class="ident">HasKey</span>(<span class="ident">storage::Key</span>),
-}
-
-<span class="doccomment">/// RPC query path</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PrefixValue</span> {
-    <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">storage::Key</span>,
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>

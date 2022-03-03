@@ -698,6 +698,47 @@
 <span id="697">697</span>
 <span id="698">698</span>
 <span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Proof of Stake data types</span>
 
 <span class="kw">use</span> <span class="ident">core::fmt::Debug</span>;
@@ -708,7 +749,7 @@
 <span class="kw">use</span> <span class="ident">std::num::TryFromIntError</span>;
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Add</span>, <span class="ident">AddAssign</span>, <span class="ident">Mul</span>, <span class="ident">Sub</span>};
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::epoched</span>::{
     <span class="ident">Epoched</span>, <span class="ident">EpochedDelta</span>, <span class="ident">OffsetPipelineLen</span>, <span class="ident">OffsetUnboundingLen</span>,
@@ -756,6 +797,7 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Epoch</span>(<span class="ident">u64</span>);
 
@@ -772,6 +814,7 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VotingPower</span>(<span class="ident">u64</span>);
 
@@ -788,6 +831,7 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VotingPowerDelta</span>(<span class="ident">i64</span>);
 
@@ -796,6 +840,7 @@
     <span class="ident">Debug</span>,
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
@@ -845,10 +890,21 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BondId</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Address</span>: <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="ident">Address</span>: <span class="ident">Display</span>
+        <span class="op">+</span> <span class="ident">Debug</span>
+        <span class="op">+</span> <span class="ident">Clone</span>
+        <span class="op">+</span> <span class="ident">PartialEq</span>
+        <span class="op">+</span> <span class="ident">Eq</span>
+        <span class="op">+</span> <span class="ident">PartialOrd</span>
+        <span class="op">+</span> <span class="ident">Ord</span>
+        <span class="op">+</span> <span class="ident">Hash</span>
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>
+        <span class="op">+</span> <span class="ident">BorshDeserialize</span>,
 {
     <span class="doccomment">/// (Un)bond&#39;s source address is the owner of the bonded tokens.</span>
     <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">Address</span>,
@@ -866,6 +922,7 @@
     <span class="ident">Ord</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -877,6 +934,7 @@
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">Hash</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>,
 {
     <span class="doccomment">/// The `voting_power` field must be on top, because lexicographic ordering</span>
@@ -899,6 +957,7 @@
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">Hash</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>,
 {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
@@ -920,6 +979,7 @@
     <span class="ident">Ord</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValidatorSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -931,6 +991,7 @@
         <span class="op">+</span> <span class="ident">Ord</span>
         <span class="op">+</span> <span class="ident">Hash</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>,
 {
     <span class="doccomment">/// Active validator set with maximum size equal to `max_validator_slots`</span>
@@ -942,7 +1003,14 @@
 
 <span class="doccomment">/// Validator&#39;s state.</span>
 <span class="attribute">#[<span class="ident">derive</span>(
-    <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>,
+    <span class="ident">Debug</span>,
+    <span class="ident">Clone</span>,
+    <span class="ident">Copy</span>,
+    <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshSchema</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Eq</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValidatorState</span> {
     <span class="doccomment">/// Inactive validator may not participate in the consensus.</span>
@@ -957,7 +1025,9 @@
 
 <span class="doccomment">/// A bond is validator&#39;s self-bond or a delegation from a regular account to a</span>
 <span class="doccomment">/// validator.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>,
+)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Bond</span><span class="op">&lt;</span><span class="ident">Token</span>: <span class="ident">Default</span><span class="op">&gt;</span> {
     <span class="doccomment">/// A key is a the epoch set for the bond. This is used in unbonding, where</span>
     <span class="doccomment">/// it&#39;s needed for slash epoch range check.</span>
@@ -971,7 +1041,9 @@
 
 <span class="doccomment">/// An unbond contains unbonded tokens from a validator&#39;s self-bond or a</span>
 <span class="doccomment">/// delegation from a regular account to a validator.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>,
+)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Unbond</span><span class="op">&lt;</span><span class="ident">Token</span>: <span class="ident">Default</span><span class="op">&gt;</span> {
     <span class="doccomment">/// A key is a pair of the epoch of the bond from which a unbond was</span>
     <span class="doccomment">/// created the epoch of unbonding. This is needed for slash epoch range</span>
@@ -981,7 +1053,7 @@
 
 <span class="doccomment">/// A slash applied to validator, to punish byzantine behavior by removing</span>
 <span class="doccomment">/// their staked tokens at and before the epoch of the slash.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Slash</span> {
     <span class="doccomment">/// Epoch at which the slashable event occurred.</span>
     <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
@@ -998,7 +1070,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Slashes</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Slash</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// A type of slashsable event.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SlashType</span> {
     <span class="doccomment">/// Duplicate block vote.</span>
     <span class="ident">DuplicateVote</span>,
@@ -1008,7 +1080,7 @@
 
 <span class="doccomment">/// ‱ (Parts per ten thousand). This can be multiplied by any type that</span>
 <span class="doccomment">/// implements [`Into&lt;u64&gt;`] or [`Into&lt;i128&gt;`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BasisPoints</span>(<span class="ident">u64</span>);
 
 <span class="kw">impl</span> <span class="ident">VotingPower</span> {
@@ -1159,7 +1231,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BondId</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">Address</span>: <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">PartialEq</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="ident">Address</span>: <span class="ident">Display</span>
+        <span class="op">+</span> <span class="ident">Debug</span>
+        <span class="op">+</span> <span class="ident">Clone</span>
+        <span class="op">+</span> <span class="ident">PartialEq</span>
+        <span class="op">+</span> <span class="ident">Eq</span>
+        <span class="op">+</span> <span class="ident">PartialOrd</span>
+        <span class="op">+</span> <span class="ident">Ord</span>
+        <span class="op">+</span> <span class="ident">Hash</span>
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>
+        <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSchema</span>,
 {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(

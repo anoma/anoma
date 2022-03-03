@@ -83,13 +83,13 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">decrypted_tx</span> {
 
     <span class="kw">use</span> <span class="ident">ark_ec::PairingEngine</span>;
-    <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+    <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::EllipticCurve</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::transaction</span>::{<span class="ident">hash_tx</span>, <span class="ident">Hash</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>};
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
     <span class="doccomment">/// Holds the result of attempting to decrypt</span>
     <span class="doccomment">/// a transaction and the data necessary for</span>

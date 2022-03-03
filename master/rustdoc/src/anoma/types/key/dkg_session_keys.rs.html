@@ -160,6 +160,24 @@
 <span id="159">159</span>
 <span id="160">160</span>
 <span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities around the DKG session keys</span>
 
 <span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
@@ -168,7 +186,7 @@
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">ark_serialize</span>::{<span class="ident">CanonicalDeserialize</span>, <span class="ident">CanonicalSerialize</span>};
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::Address</span>;
@@ -278,6 +296,24 @@
             <span class="ident">CanonicalDeserialize::deserialize</span>(<span class="ident">pk_bytes</span>.<span class="ident">as_slice</span>())
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidInput</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">pk</span>.<span class="ident">into</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">BorshSchema</span> <span class="kw">for</span> <span class="ident">DkgPublicKey</span> {
+    <span class="kw">fn</span> <span class="ident">add_definitions_recursively</span>(
+        <span class="ident">definitions</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::collections::HashMap</span><span class="op">&lt;</span>
+            <span class="ident">borsh::schema::Declaration</span>,
+            <span class="ident">borsh::schema::Definition</span>,
+        <span class="op">&gt;</span>,
+    ) {
+        <span class="comment">// Encoded as `Vec&lt;u8&gt;`;</span>
+        <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span> <span class="string">&quot;u8&quot;</span>.<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">definition</span> <span class="op">=</span> <span class="ident">borsh::schema::Definition::Sequence</span> { <span class="ident">elements</span> };
+        <span class="ident">definitions</span>.<span class="ident">insert</span>(<span class="ident"><span class="self">Self</span>::declaration</span>(), <span class="ident">definition</span>);
+    }
+
+    <span class="kw">fn</span> <span class="ident">declaration</span>() -&gt; <span class="ident">borsh::schema::Declaration</span> {
+        <span class="string">&quot;DkgPublicKey&quot;</span>.<span class="ident">into</span>()
     }
 }
 

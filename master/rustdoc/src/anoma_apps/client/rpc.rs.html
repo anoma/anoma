@@ -1169,7 +1169,7 @@
 };
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">Epoch</span>, <span class="ident">PrefixValue</span>};
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">storage</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
@@ -1200,7 +1200,7 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli</span>::{<span class="self">self</span>, <span class="ident">args</span>, <span class="ident">Context</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::tx::TxResponse</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::rpc</span>::{<span class="ident">Path</span>, <span class="ident">PrefixValue</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::rpc::Path</span>;
 
 <span class="doccomment">/// Query the epoch of the last committed block</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_epoch</span>(<span class="ident">args</span>: <span class="ident">args::Query</span>) -&gt; <span class="ident">Epoch</span> {

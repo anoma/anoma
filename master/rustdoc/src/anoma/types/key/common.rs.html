@@ -273,12 +273,15 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Cryptographic keys</span>
 
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rand&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">CryptoRng</span>, <span class="ident">RngCore</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -301,6 +304,7 @@
     <span class="ident">Deserialize</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PublicKey</span> {
     <span class="doccomment">/// Encapsulate Ed25519 public keys</span>
@@ -346,7 +350,7 @@
 }
 
 <span class="doccomment">/// Secret key</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SecretKey</span> {
     <span class="doccomment">/// Encapsulate Ed25519 secret keys</span>
@@ -452,6 +456,7 @@
     <span class="ident">Deserialize</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Signature</span> {
     <span class="doccomment">/// Encapsulate Ed25519 signatures</span>
@@ -486,6 +491,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,

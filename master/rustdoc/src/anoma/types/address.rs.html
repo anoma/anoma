@@ -686,6 +686,24 @@
 <span id="685">685</span>
 <span id="686">686</span>
 <span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
 
@@ -696,7 +714,7 @@
 <span class="kw">use</span> <span class="ident">std::string</span>;
 
 <span class="kw">use</span> <span class="ident">bech32</span>::{<span class="self">self</span>, <span class="ident">FromBase32</span>, <span class="ident">ToBase32</span>, <span class="ident">Variant</span>};
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -718,6 +736,20 @@
 
 <span class="doccomment">/// An address string before bech32m encoding must be this size.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FIXED_LEN_STRING_BYTES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">45</span>;
+
+<span class="doccomment">/// Internal IBC address</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>);
+<span class="doccomment">/// Internal IBC token burn address</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC_BURN</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcBurn</span>);
+<span class="doccomment">/// Internal IBC token mint address</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC_MINT</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::IbcMint</span>);
+<span class="doccomment">/// Internal ledger parameters address</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PARAMETERS</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Parameters</span>);
+<span class="doccomment">/// Internal PoS address</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">POS</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PoS</span>);
+<span class="doccomment">/// Internal PoS slash pool address</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">POS_SLASH_POOL</span>: <span class="ident">Address</span> <span class="op">=</span>
+    <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PosSlashPool</span>);
 
 <span class="doccomment">/// Raw strings used to produce internal addresses. All the strings must begin</span>
 <span class="doccomment">/// with `PREFIX_INTERNAL` and be `FIXED_LEN_STRING_BYTES` characters long.</span>
@@ -775,6 +807,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,
@@ -990,6 +1023,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,
@@ -1042,6 +1076,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,
@@ -1070,6 +1105,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,

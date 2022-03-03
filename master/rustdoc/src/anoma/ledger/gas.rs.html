@@ -311,11 +311,15 @@
 <span id="310">310</span>
 <span id="311">311</span>
 <span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Gas accounting module to track the gas usage in a block for transactions and</span>
 <span class="doccomment">//! validity predicates triggered by transactions.</span>
 
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -362,7 +366,9 @@
 }
 
 <span class="doccomment">/// Gas meter for VPs parallel runs</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>,
+)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpsGas</span> {
     <span class="ident">max</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
     <span class="ident">rest</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,

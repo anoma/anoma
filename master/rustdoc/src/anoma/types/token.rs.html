@@ -358,6 +358,8 @@
 <span id="357">357</span>
 <span id="358">358</span>
 <span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A basic fungible token</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
@@ -366,7 +368,7 @@
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Add</span>, <span class="ident">AddAssign</span>, <span class="ident">Sub</span>, <span class="ident">SubAssign</span>};
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -383,6 +385,7 @@
     <span class="ident">Default</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">PartialEq</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,
@@ -643,6 +646,7 @@
     <span class="ident">PartialEq</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Hash</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialOrd</span>,

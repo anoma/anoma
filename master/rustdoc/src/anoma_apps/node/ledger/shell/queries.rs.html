@@ -311,7 +311,6 @@
 <span id="310">310</span>
 <span id="311">311</span>
 <span id="312">312</span>
-<span id="313">313</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Shell methods for querying state</span>
 <span class="kw">use</span> <span class="ident">std::cmp::max</span>;
 
@@ -320,7 +319,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key::dkg_session_keys::DkgPublicKey</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">Key</span>, <span class="ident">PrefixValue</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">ferveo_common::TendermintValidator</span>;
@@ -339,7 +338,6 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::response</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::rpc::PrefixValue</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Shell</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>

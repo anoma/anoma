@@ -483,17 +483,18 @@
 <span id="482">482</span>
 <span id="483">483</span>
 <span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
 <span class="doccomment">/// to enable encrypted txs inside of normal txs.</span>
 <span class="doccomment">/// *Not wasm compatible*</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wrapper_tx</span> {
     <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
-    <span class="kw">use</span> <span class="ident">std::io::Write</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ark_bls12_381::Bls12_381</span> <span class="kw">as</span> <span class="ident">EllipticCurve</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ark_ec</span>::{<span class="ident">AffineCurve</span>, <span class="ident">PairingEngine</span>};
-    <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+    <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
     <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
     <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -537,6 +538,7 @@
         <span class="ident">PartialEq</span>,
         <span class="ident">BorshSerialize</span>,
         <span class="ident">BorshDeserialize</span>,
+        <span class="ident">BorshSchema</span>,
         <span class="ident">Serialize</span>,
         <span class="ident">Deserialize</span>,
     )]</span>
@@ -554,7 +556,16 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This struct only stores the multiple of GAS_LIMIT_RESOLUTION,</span>
     <span class="doccomment">/// not the raw amount</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(
+        <span class="ident">Debug</span>,
+        <span class="ident">Clone</span>,
+        <span class="ident">PartialEq</span>,
+        <span class="ident">Serialize</span>,
+        <span class="ident">Deserialize</span>,
+        <span class="ident">BorshSerialize</span>,
+        <span class="ident">BorshDeserialize</span>,
+        <span class="ident">BorshSchema</span>,
+    )]</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">from</span> <span class="op">=</span> <span class="string">&quot;u64&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">into</span> <span class="op">=</span> <span class="string">&quot;u64&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GasLimit</span> {
@@ -625,24 +636,17 @@
         }
     }
 
-    <span class="kw">impl</span> <span class="ident">borsh::ser::BorshSerialize</span> <span class="kw">for</span> <span class="ident">GasLimit</span> {
-        <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;mut</span> <span class="ident">W</span>) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-            <span class="ident">BorshSerialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">u64::from</span>(<span class="self">self</span>), <span class="ident">writer</span>)
-        }
-    }
-
-    <span class="kw">impl</span> <span class="ident">borsh::BorshDeserialize</span> <span class="kw">for</span> <span class="ident">GasLimit</span> {
-        <span class="kw">fn</span> <span class="ident">deserialize</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">raw</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">BorshDeserialize::deserialize</span>(<span class="ident">buf</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">GasLimit::from</span>(<span class="ident">raw</span>))
-        }
-    }
-
     <span class="doccomment">/// A transaction with an encrypted payload as well</span>
     <span class="doccomment">/// as some non-encrypted metadata for inclusion</span>
     <span class="doccomment">/// and / or verification purposes</span>
     <span class="attribute">#[<span class="ident">derive</span>(
-        <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>,
+        <span class="ident">Debug</span>,
+        <span class="ident">Clone</span>,
+        <span class="ident">BorshSerialize</span>,
+        <span class="ident">BorshDeserialize</span>,
+        <span class="ident">BorshSchema</span>,
+        <span class="ident">Serialize</span>,
+        <span class="ident">Deserialize</span>,
     )]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WrapperTx</span> {
         <span class="doccomment">/// The fee to be payed for including the tx</span>

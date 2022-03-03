@@ -480,12 +480,14 @@
 <span id="479">479</span>
 <span id="480">480</span>
 <span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
 <span class="kw">use</span> <span class="ident">std::hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">prost::Message</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -522,7 +524,7 @@
 <span class="doccomment">/// Because the signature is not checked by the ledger, we don&#39;t inline it into</span>
 <span class="doccomment">/// the `Tx` type directly. Instead, the signature is attached to the `tx.data`,</span>
 <span class="doccomment">/// which is can then be checked by a validity predicate wasm.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignedTxData</span> {
     <span class="doccomment">/// The original tx data bytes, if any</span>
     <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -602,7 +604,9 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">Hash</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">Hash</span>,
+)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tx</span> {
     <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,

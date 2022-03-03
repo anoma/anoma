@@ -861,6 +861,18 @@
 <span id="860">860</span>
 <span id="861">861</span>
 <span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -868,7 +880,7 @@
 <span class="kw">use</span> <span class="ident">std::ops::Add</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -1026,6 +1038,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Debug</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialEq</span>,
@@ -1213,6 +1226,7 @@
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Debug</span>,
     <span class="ident">Eq</span>,
     <span class="ident">PartialEq</span>,
@@ -1325,6 +1339,7 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">BorshSchema</span>,
     <span class="ident">Serialize</span>,
     <span class="ident">Deserialize</span>,
 )]</span>
@@ -1495,6 +1510,15 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">is_empty</span>()
     }
+}
+
+<span class="doccomment">/// A value of a storage prefix iterator.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PrefixValue</span> {
+    <span class="doccomment">/// Storage key</span>
+    <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">Key</span>,
+    <span class="doccomment">/// Raw value bytes</span>
+    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
