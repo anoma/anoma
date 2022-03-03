@@ -1096,6 +1096,7 @@ pub async fn query_tx_response(
     // Summarize the transaction results that we were searching for
     let result = TxResponse {
         info: event_map["info"].to_string(),
+        log: event_map["log"].to_string(),
         height: event_map["height"].to_string(),
         hash: event_map["hash"].to_string(),
         code: event_map["code"].to_string(),

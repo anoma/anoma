@@ -1,4 +1,6 @@
 //! Cryptographic keys
+/// Elliptic curve keys for the DKG
+pub mod dkg_session_keys;
 
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
@@ -19,6 +21,7 @@ pub mod common;
 pub mod ed25519;
 
 const PK_STORAGE_KEY: &str = "public_key";
+const PROTOCOL_PK_STORAGE_KEY: &str = "protocol_public_key";
 
 /// Obtain a storage key for user's public key.
 pub fn pk_key(owner: &Address) -> storage::Key {
@@ -32,6 +35,25 @@ pub fn is_pk_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
             if key == PK_STORAGE_KEY =>
+        {
+            Some(owner)
+        }
+        _ => None,
+    }
+}
+
+/// Obtain a storage key for user's public key.
+pub fn protocol_pk_key(owner: &Address) -> storage::Key {
+    Key::from(owner.to_db_key())
+        .push(&PROTOCOL_PK_STORAGE_KEY.to_owned())
+        .expect("Cannot obtain a storage key")
+}
+
+/// Check if the given storage key is a public key. If it is, returns the owner.
+pub fn is_protocol_pk_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
+            if key == PROTOCOL_PK_STORAGE_KEY =>
         {
             Some(owner)
         }

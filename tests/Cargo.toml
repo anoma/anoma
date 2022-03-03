@@ -37,10 +37,10 @@ anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
 # TODO using the same version of tendermint-rs as we do here.
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", features = ["mocks"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", features = ["mocks"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_abcipp_v0.23.5", default-features = false, optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_tm_v0.23.5", default-features = false, optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_abcipp_v0.23.5", default-features = false, optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_tm_v0.23.5", default-features = false, optional = true}
 prost = "0.9.0"
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
@@ -51,8 +51,8 @@ tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tracing = "0.1.26"
-tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
+tracing = "0.1.30"
+tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}

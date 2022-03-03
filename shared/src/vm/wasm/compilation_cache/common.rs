@@ -407,7 +407,7 @@ impl<N: CacheName, A: WasmCacheAccess> Cache<N, A> {
 }
 
 fn exponential_backoff(iteration: u64) {
-    sleep(Duration::from_millis((2 ^ iteration) * 10))
+    sleep(Duration::from_millis(u64::pow(2, iteration as u32) * 10))
 }
 
 fn hash_of_code(code: impl AsRef<[u8]>) -> Hash {

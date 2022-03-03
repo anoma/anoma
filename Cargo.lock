@@ -88,12 +88,14 @@ dependencies = [
  "clru",
  "derivative",
  "ed25519-consensus",
+ "ferveo",
+ "ferveo-common",
  "group-threshold-cryptography",
  "hex",
- "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
- "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
- "ibc-proto 0.15.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
- "ibc-proto 0.15.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
  "ics23",
  "itertools 0.10.3",
  "parity-wasm",
@@ -117,8 +119,8 @@ dependencies = [
  "test-log",
  "thiserror",
  "tonic-build",
- "tracing",
- "tracing-subscriber",
+ "tracing 0.1.31",
+ "tracing-subscriber 0.3.9",
  "wasmer",
  "wasmer-cache",
  "wasmer-compiler-cranelift",
@@ -133,6 +135,8 @@ name = "anoma_apps"
 version = "0.4.0"
 dependencies = [
  "anoma",
+ "ark-serialize",
+ "ark-std",
  "async-std",
  "async-trait",
  "base64 0.13.0",
@@ -150,12 +154,15 @@ dependencies = [
  "directories",
  "ed25519-consensus",
  "eyre",
+ "ferveo",
+ "ferveo-common",
+ "file-lock",
  "flate2",
  "futures 0.3.19",
  "git2",
  "hex",
- "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
- "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
  "itertools 0.10.3",
  "jsonpath_lib",
  "libc",
@@ -205,11 +212,11 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tower",
- "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=yuji/abcipp-v0.23.5)",
- "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5)",
- "tracing",
- "tracing-log 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "tracing-subscriber",
+ "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=yuji/abcipp-v0.23.5-tracing)",
+ "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5_tracing)",
+ "tracing 0.1.31",
+ "tracing-log",
+ "tracing-subscriber 0.3.9",
  "web3",
  "websocket",
  "winapi 0.3.9",
@@ -247,10 +254,10 @@ dependencies = [
  "escargot",
  "eyre",
  "fs_extra",
- "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
- "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
- "ibc-proto 0.15.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
- "ibc-proto 0.15.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
  "itertools 0.10.3",
  "libp2p",
  "pretty_assertions",
@@ -264,8 +271,8 @@ dependencies = [
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
  "test-log",
- "tracing",
- "tracing-subscriber",
+ "tracing 0.1.31",
+ "tracing-subscriber 0.3.9",
 ]
 
 [[package]]
@@ -329,6 +336,18 @@ dependencies = [
  "derivative",
  "num-traits 0.2.14",
  "zeroize",
+]
+
+[[package]]
+name = "ark-ed-on-bls12-381"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43b7ada17db3854f5994e74e60b18e10e818594935ee7e1d329800c117b32970"
+dependencies = [
+ "ark-bls12-381",
+ "ark-ec",
+ "ark-ff",
+ "ark-std",
 ]
 
 [[package]]
@@ -515,7 +534,7 @@ dependencies = [
  "parking",
  "polling",
  "slab",
- "socket2 0.4.4",
+ "socket2 0.4.2",
  "waker-fn",
  "winapi 0.3.9",
 ]
@@ -827,6 +846,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "blake2"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9cf849ee05b2ee5fba5e36f97ff8ec2533916700fc0758d40d92136a42f3388"
+dependencies = [
+ "digest 0.10.3",
+]
+
+[[package]]
 name = "blake2b-rs"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -838,12 +866,12 @@ dependencies = [
 
 [[package]]
 name = "blake2b_simd"
-version = "0.5.11"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afa748e348ad3be8263be728124b24a24f268266f6f5d58af9d75f6a40b5c587"
+checksum = "72936ee4afc7f8f736d1c38383b56480b5497b4617b4a77bdbf1d2ababc76127"
 dependencies = [
  "arrayref",
- "arrayvec 0.5.2",
+ "arrayvec 0.7.2",
  "constant_time_eq",
 ]
 
@@ -1101,13 +1129,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "chacha20"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01b72a433d0cf2aef113ba70f62634c56fddb0f244e6377185c56a7cadbd8f91"
+dependencies = [
+ "cfg-if 1.0.0",
+ "cipher",
+ "cpufeatures",
+]
+
+[[package]]
 name = "chacha20poly1305"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6547abe025f4027edacd9edaa357aded014eecec42a5070d9b885c3c334aba2"
 dependencies = [
  "aead",
- "chacha20",
+ "chacha20 0.7.3",
  "cipher",
  "poly1305",
  "zeroize",
@@ -1216,7 +1255,7 @@ checksum = "b6eee477a4a8a72f4addd4de416eb56d54bc307b284d6601bafdee1f4ea462d1"
 dependencies = [
  "once_cell",
  "owo-colors",
- "tracing-core",
+ "tracing-core 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing-error",
 ]
 
@@ -1722,6 +1761,7 @@ checksum = "f2fb860ca6fafa5552fb6d0e816a69c8e49f0908bf524e30a90d97c85892d506"
 dependencies = [
  "block-buffer 0.10.2",
  "crypto-common",
+ "subtle 2.4.1",
 ]
 
 [[package]]
@@ -1792,6 +1832,7 @@ version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74e1069e39f1454367eb2de793ed062fac4c35c2934b76a81d90dd9abcd28816"
 dependencies = [
+ "serde 1.0.136",
  "signature",
 ]
 
@@ -1818,8 +1859,10 @@ checksum = "c762bae6dcaf24c4c84667b8579785430908723d5c889f469d76a41d59cc7a9d"
 dependencies = [
  "curve25519-dalek",
  "ed25519",
+ "merlin",
  "rand 0.7.3",
  "serde 1.0.136",
+ "serde_bytes",
  "sha2 0.9.9",
  "zeroize",
 ]
@@ -1991,6 +2034,68 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3fcf0cee53519c866c09b5de1f6c56ff9d647101f81c1964fa632e148896cdf"
 dependencies = [
  "instant",
+]
+
+[[package]]
+name = "ferveo"
+version = "0.1.1"
+source = "git+https://github.com/anoma/ferveo#8363c33d1cf79f93ce9fa89d4b5fe998a5a78c26"
+dependencies = [
+ "anyhow",
+ "ark-bls12-381",
+ "ark-ec",
+ "ark-ed-on-bls12-381",
+ "ark-ff",
+ "ark-poly",
+ "ark-serialize",
+ "ark-std",
+ "bincode",
+ "blake2 0.10.4",
+ "blake2b_simd",
+ "borsh",
+ "digest 0.10.3",
+ "ed25519-dalek",
+ "either",
+ "ferveo-common",
+ "group-threshold-cryptography",
+ "hex",
+ "itertools 0.10.3",
+ "measure_time",
+ "miracl_core",
+ "num",
+ "rand 0.7.3",
+ "rand 0.8.4",
+ "serde 1.0.136",
+ "serde_bytes",
+ "serde_json",
+ "subproductdomain",
+ "subtle 2.4.1",
+ "zeroize",
+]
+
+[[package]]
+name = "ferveo-common"
+version = "0.1.0"
+source = "git+https://github.com/anoma/ferveo#8363c33d1cf79f93ce9fa89d4b5fe998a5a78c26"
+dependencies = [
+ "anyhow",
+ "ark-ec",
+ "ark-serialize",
+ "ark-std",
+ "serde 1.0.136",
+ "serde_bytes",
+]
+
+[[package]]
+name = "file-lock"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cda66a9e6fd49a3ccec414748714bbcb401297bcf0dff9e9adf4bd86351d24fa"
+dependencies = [
+ "cc",
+ "libc",
+ "mktemp",
+ "nix 0.23.1",
 ]
 
 [[package]]
@@ -2393,7 +2498,7 @@ dependencies = [
 [[package]]
 name = "group-threshold-cryptography"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/workspace-cleanup#ad859d098a77ae952987ad7077c2744a9871378a"
+source = "git+https://github.com/anoma/ferveo#8363c33d1cf79f93ce9fa89d4b5fe998a5a78c26"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -2403,13 +2508,14 @@ dependencies = [
  "ark-serialize",
  "ark-std",
  "blake2b_simd",
- "chacha20",
+ "chacha20 0.8.1",
  "hex",
  "itertools 0.10.3",
  "miracl_core",
  "rand 0.8.4",
  "rand_core 0.6.3",
  "rayon",
+ "subproductdomain",
  "thiserror",
 ]
 
@@ -2449,7 +2555,7 @@ dependencies = [
  "slab",
  "tokio",
  "tokio-util",
- "tracing",
+ "tracing 0.1.31",
 ]
 
 [[package]]
@@ -2632,10 +2738,10 @@ dependencies = [
  "httpdate",
  "itoa 0.4.8",
  "pin-project-lite 0.2.8",
- "socket2 0.4.4",
+ "socket2 0.4.2",
  "tokio",
  "tower-service",
- "tracing",
+ "tracing 0.1.31",
  "want",
 ]
 
@@ -2703,62 +2809,62 @@ dependencies = [
 
 [[package]]
 name = "ibc"
-version = "0.11.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5#5b5871c920196abbfff7b29829510f3b8cf23c07"
+version = "0.12.0"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5#7d811ab5567d027c11e8f5a19102cdeb93e2af11"
 dependencies = [
  "bytes 1.1.0",
  "derive_more",
  "flex-error",
- "ibc-proto 0.15.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
  "ics23",
+ "num-traits 0.2.14",
  "prost 0.9.0",
  "prost-types 0.9.0",
  "safe-regex",
  "serde 1.0.136",
  "serde_derive",
  "serde_json",
- "sha2 0.10.1",
+ "sha2 0.10.2",
  "subtle-encoding",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
  "tendermint-light-client-verifier 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
  "tendermint-testgen 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.5)",
- "thiserror",
  "time 0.3.7",
- "tracing",
+ "tracing 0.1.31",
 ]
 
 [[package]]
 name = "ibc"
-version = "0.11.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5#71be78ae6185778a55ebf15a78ecaa4a091f7463"
+version = "0.12.0"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
 dependencies = [
  "bytes 1.1.0",
  "derive_more",
  "flex-error",
- "ibc-proto 0.15.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
  "ics23",
+ "num-traits 0.2.14",
  "prost 0.9.0",
  "prost-types 0.9.0",
  "safe-regex",
  "serde 1.0.136",
  "serde_derive",
  "serde_json",
- "sha2 0.10.1",
+ "sha2 0.10.2",
  "subtle-encoding",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
  "tendermint-light-client-verifier 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
  "tendermint-testgen 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
- "thiserror",
  "time 0.3.7",
- "tracing",
+ "tracing 0.1.31",
 ]
 
 [[package]]
 name = "ibc-proto"
-version = "0.15.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5#5b5871c920196abbfff7b29829510f3b8cf23c07"
+version = "0.16.0"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5#7d811ab5567d027c11e8f5a19102cdeb93e2af11"
 dependencies = [
  "bytes 1.1.0",
  "prost 0.9.0",
@@ -2770,8 +2876,8 @@ dependencies = [
 
 [[package]]
 name = "ibc-proto"
-version = "0.15.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5#71be78ae6185778a55ebf15a78ecaa4a091f7463"
+version = "0.16.0"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
 dependencies = [
  "bytes 1.1.0",
  "prost 0.9.0",
@@ -3132,9 +3238,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.116"
+version = "0.2.112"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "565dbd88872dbe4cc8a46e527f26483c1d1f7afa6b884a3bd6cd893d4f98da74"
+checksum = "1b03d17f364a3a042d5e5d46b053bbbf82c92c9430c592dd4c064dc6ee997125"
 
 [[package]]
 name = "libgit2-sys"
@@ -3362,7 +3468,7 @@ dependencies = [
  "log 0.4.14",
  "rand 0.8.4",
  "smallvec 1.8.0",
- "socket2 0.4.4",
+ "socket2 0.4.2",
  "void",
 ]
 
@@ -3525,7 +3631,7 @@ dependencies = [
  "libc",
  "libp2p-core",
  "log 0.4.14",
- "socket2 0.4.4",
+ "socket2 0.4.2",
 ]
 
 [[package]]
@@ -3713,9 +3819,9 @@ checksum = "ffbee8634e0d45d258acb448e7eaab3fce7a0a467395d4d9f228e3c1f01fb2e4"
 
 [[package]]
 name = "matchers"
-version = "0.0.1"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f099785f7595cc4b4553a174ce30dd7589ef93391ff414dbb67f62392b9e0ce1"
+checksum = "8263075bb86c5a1b1427b5ae862e8889656f126e9f77c484496e8b47cf5c5558"
 dependencies = [
  "regex-automata",
 ]
@@ -3740,6 +3846,15 @@ name = "maybe-uninit"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
+
+[[package]]
+name = "measure_time"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f07966480d8562b3622f51df0b4e3fe6ea7ddb3b48b19b0f44ef863c455bdf9"
+dependencies = [
+ "log 0.4.14",
+]
 
 [[package]]
 name = "memchr"
@@ -3772,6 +3887,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg 1.0.1",
+]
+
+[[package]]
+name = "merlin"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e261cf0f8b3c42ded9f7d2bb59dea03aa52bc8a1cbc7482f9fc3fd1229d3b42"
+dependencies = [
+ "byteorder",
+ "keccak",
+ "rand_core 0.5.1",
+ "zeroize",
 ]
 
 [[package]]
@@ -3925,6 +4052,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94c7128ba23c81f6471141b90f17654f89ef44a56e14b8a4dd0fddfccd655277"
 
 [[package]]
+name = "mktemp"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "975de676448231fcde04b9149d2543077e166b78fc29eae5aa219e7928410da2"
+dependencies = [
+ "uuid",
+]
+
+[[package]]
 name = "mm_template"
 version = "0.4.0"
 dependencies = [
@@ -4025,7 +4161,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac06db03ec2f46ee0ecdca1a1c34a99c0d188a0d83439b84bf0cb4b386e4ab09"
 dependencies = [
  "matrixmultiply",
- "num-complex",
+ "num-complex 0.2.4",
  "num-integer",
  "num-traits 0.2.14",
  "rawpointer",
@@ -4065,6 +4201,19 @@ dependencies = [
  "cc",
  "cfg-if 1.0.0",
  "libc",
+]
+
+[[package]]
+name = "nix"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f866317acbd3a240710c63f065ffb1e4fd466259045ccb504130b7f668f35c6"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if 1.0.0",
+ "libc",
+ "memoffset",
 ]
 
 [[package]]
@@ -4133,6 +4282,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "num"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
+dependencies = [
+ "num-bigint",
+ "num-complex 0.4.0",
+ "num-integer",
+ "num-iter",
+ "num-rational",
+ "num-traits 0.2.14",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4154,6 +4317,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-complex"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085"
+dependencies = [
+ "num-traits 0.2.14",
+]
+
+[[package]]
 name = "num-derive"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4171,6 +4343,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
 dependencies = [
  "autocfg 1.0.1",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num-iter"
+version = "0.1.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2021c8337a54d21aca0d59a92577a029af9431cb59b909b03252b9c164fad59"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num-rational"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-bigint",
+ "num-integer",
  "num-traits 0.2.14",
 ]
 
@@ -5531,9 +5726,9 @@ dependencies = [
 
 [[package]]
 name = "safe-regex"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "954950893b0d83c719cb5325bf3941bae7b1c6590d923c70f78bdfed101179b5"
+checksum = "a15289bf322e0673d52756a18194167f2378ec1a15fe884af6e2d2cb934822b0"
 dependencies = [
  "safe-regex-macro",
 ]
@@ -5832,9 +6027,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99c3bd8169c58782adad9290a9af5939994036b76187f7b4f0e6de91dbbfc0ec"
+checksum = "55deaec60f81eefe3cce0dc50bda92d6d8e88f2a27df7c5033b42afeb1ed2676"
 dependencies = [
  "cfg-if 1.0.0",
  "cpufeatures",
@@ -5933,7 +6128,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6142f7c25e94f6fd25a32c3348ec230df9109b463f59c8c7acc4bd34936babb7"
 dependencies = [
  "aes-gcm",
- "blake2",
+ "blake2 0.9.2",
  "chacha20poly1305",
  "rand 0.8.4",
  "rand_core 0.6.3",
@@ -5957,9 +6152,9 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.4.4"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66d72b759436ae32898a2af0a14218dbf55efde3feeb170eb623637db85ee1e0"
+checksum = "5dc90fe6c7be1a323296982db1836d1ea9e47b6839496dde9a541bc496df3516"
 dependencies = [
  "libc",
  "winapi 0.3.9",
@@ -6027,7 +6222,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec63571489873d4506683915840eeb1bb16b3198ee4894cc6f2fe3013d505e56"
 dependencies = [
  "ndarray",
- "num-complex",
+ "num-complex 0.2.4",
  "num-traits 0.1.43",
 ]
 
@@ -6087,6 +6282,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "subproductdomain"
+version = "0.1.0"
+source = "git+https://github.com/anoma/ferveo#8363c33d1cf79f93ce9fa89d4b5fe998a5a78c26"
+dependencies = [
+ "anyhow",
+ "ark-ec",
+ "ark-ff",
+ "ark-poly",
+ "ark-serialize",
+ "ark-std",
 ]
 
 [[package]]
@@ -6359,7 +6567,7 @@ dependencies = [
  "thiserror",
  "time 0.3.7",
  "tokio",
- "tracing",
+ "tracing 0.1.31",
  "url 2.2.2",
  "uuid",
  "walkdir",
@@ -6392,7 +6600,7 @@ dependencies = [
  "thiserror",
  "time 0.3.7",
  "tokio",
- "tracing",
+ "tracing 0.1.31",
  "url 2.2.2",
  "uuid",
  "walkdir",
@@ -6808,7 +7016,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
- "tracing",
+ "tracing 0.1.31",
  "tracing-futures 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -6843,13 +7051,13 @@ dependencies = [
  "tokio-util",
  "tower-layer",
  "tower-service",
- "tracing",
+ "tracing 0.1.31",
 ]
 
 [[package]]
 name = "tower-abci"
 version = "0.1.0"
-source = "git+https://github.com/heliaxdev/tower-abci?branch=yuji/abcipp-v0.23.5#6f5eff7079fa0edc0d1512adaa4011e3c39bcc8a"
+source = "git+https://github.com/heliaxdev/tower-abci?branch=yuji/abcipp-v0.23.5-tracing#e2f6c1e3d23ee80b24e4d91018e242f15397809c"
 dependencies = [
  "bytes 1.1.0",
  "futures 0.3.19",
@@ -6860,14 +7068,14 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tower",
- "tracing",
+ "tracing 0.1.30",
  "tracing-tower",
 ]
 
 [[package]]
 name = "tower-abci"
 version = "0.1.0"
-source = "git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5#3f21ea797a109d8ddd37be72e0907fdc5eb0b9d1"
+source = "git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5_tracing#73e43bf79fb21b4969cc09f79a0a40ce4cc7bb52"
 dependencies = [
  "bytes 1.1.0",
  "futures 0.3.19",
@@ -6878,7 +7086,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tower",
- "tracing",
+ "tracing 0.1.30",
  "tracing-tower",
 ]
 
@@ -6905,20 +7113,43 @@ checksum = "360dfd1d6d30e05fda32ace2c8c70e9c0a9da713275777f5a4dbb8a1893930c6"
 
 [[package]]
 name = "tracing"
-version = "0.1.29"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
+version = "0.1.30"
+source = "git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30#df4ba17d857db8ba1b553f7b293ac8ba967a42f8"
+dependencies = [
+ "cfg-if 1.0.0",
+ "pin-project-lite 0.2.8",
+ "tracing-attributes 0.1.19 (git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30)",
+ "tracing-core 0.1.22 (git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30)",
+]
+
+[[package]]
+name = "tracing"
+version = "0.1.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6c650a8ef0cd2dd93736f033d21cbd1224c5a967aa0c258d00fcf7dafef9b9f"
 dependencies = [
  "cfg-if 1.0.0",
  "log 0.4.14",
  "pin-project-lite 0.2.8",
- "tracing-attributes",
- "tracing-core",
+ "tracing-attributes 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing-core 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "tracing-attributes"
-version = "0.1.18"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8276d9a4a3a558d7b7ad5303ad50b53d58264641b82914b7ada36bd762e7a716"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "tracing-attributes"
+version = "0.1.19"
+source = "git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30#df4ba17d857db8ba1b553f7b293ac8ba967a42f8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6927,8 +7158,18 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.21"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
+version = "0.1.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03cfcb51380632a72d3111cb8d3447a8d908e577d31beeac006f836383d29a23"
+dependencies = [
+ "lazy_static 1.4.0",
+ "valuable",
+]
+
+[[package]]
+name = "tracing-core"
+version = "0.1.22"
+source = "git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30#df4ba17d857db8ba1b553f7b293ac8ba967a42f8"
 dependencies = [
  "lazy_static 1.4.0",
 ]
@@ -6939,8 +7180,8 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4d7c0b83d4a500748fa5879461652b361edf5c9d51ede2a2ac03875ca185e24"
 dependencies = [
- "tracing",
- "tracing-subscriber",
+ "tracing 0.1.31",
+ "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -6950,16 +7191,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
  "pin-project 1.0.10",
- "tracing",
+ "tracing 0.1.31",
 ]
 
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
+source = "git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30#df4ba17d857db8ba1b553f7b293ac8ba967a42f8"
 dependencies = [
  "pin-project-lite 0.2.8",
- "tracing",
+ "tracing 0.1.30",
 ]
 
 [[package]]
@@ -6970,61 +7211,50 @@ checksum = "a6923477a48e41c1951f1999ef8bb5a3023eb723ceadafe78ffb65dc366761e3"
 dependencies = [
  "lazy_static 1.4.0",
  "log 0.4.14",
- "tracing-core",
-]
-
-[[package]]
-name = "tracing-log"
-version = "0.1.2"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
-dependencies = [
- "lazy_static 1.4.0",
- "log 0.4.14",
- "tracing-core",
-]
-
-[[package]]
-name = "tracing-serde"
-version = "0.1.2"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
-dependencies = [
- "serde 1.0.136",
- "tracing-core",
+ "tracing-core 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "tracing-subscriber"
 version = "0.2.25"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e0d2eaa99c3c2e41547cfa109e910a68ea03823cccad4a0525dcbc9b01e8c71"
+dependencies = [
+ "sharded-slab",
+ "thread_local 1.1.4",
+ "tracing-core 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "tracing-subscriber"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e0ab7bdc962035a87fba73f3acca9b8a8d0034c2e6f60b84aeaaddddc155dce"
 dependencies = [
  "ansi_term",
- "chrono",
  "lazy_static 1.4.0",
  "matchers",
  "regex",
- "serde 1.0.136",
- "serde_json",
  "sharded-slab",
  "smallvec 1.8.0",
  "thread_local 1.1.4",
- "tracing",
- "tracing-core",
- "tracing-log 0.1.2 (git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37)",
- "tracing-serde",
+ "tracing 0.1.31",
+ "tracing-core 0.1.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing-log",
 ]
 
 [[package]]
 name = "tracing-tower"
 version = "0.1.0"
-source = "git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37#6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"
+source = "git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30#df4ba17d857db8ba1b553f7b293ac8ba967a42f8"
 dependencies = [
  "futures 0.3.19",
  "pin-project-lite 0.2.8",
  "tower-layer",
  "tower-make",
  "tower-service",
- "tracing",
- "tracing-futures 0.2.5 (git+https://github.com/tokio-rs/tracing/?rev=6cc6c47354ceeb47da7c95faa41c6d29b71b5f37)",
+ "tracing 0.1.30",
+ "tracing-futures 0.2.5 (git+https://github.com/tokio-rs/tracing/?tag=tracing-0.1.30)",
 ]
 
 [[package]]
@@ -7275,6 +7505,15 @@ name = "uuid"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom 0.2.4",
+]
+
+[[package]]
+name = "valuable"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
 
 [[package]]
 name = "value-bag"
@@ -7530,7 +7769,7 @@ dependencies = [
  "rayon",
  "serde 1.0.136",
  "smallvec 1.8.0",
- "tracing",
+ "tracing 0.1.31",
  "wasmer-compiler",
  "wasmer-types",
  "wasmer-vm",
@@ -7618,7 +7857,7 @@ dependencies = [
  "libloading 0.6.7",
  "serde 1.0.136",
  "tempfile",
- "tracing",
+ "tracing 0.1.31",
  "wasmer-compiler",
  "wasmer-engine",
  "wasmer-object",

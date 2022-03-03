@@ -6,6 +6,9 @@ use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
     let (cmd, mut ctx) = cli::anoma_node_cli();
+    if let Some(mode) = ctx.global_args.mode.clone() {
+        ctx.config.ledger.tendermint.tendermint_mode = mode;
+    }
     match cmd {
         cmds::AnomaNode::Ledger(sub) => match sub {
             cmds::Ledger::Run(_) => {

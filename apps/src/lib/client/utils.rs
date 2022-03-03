@@ -188,7 +188,7 @@ pub async fn join_network(
                 let mut config = Config::load(
                     &base_dir,
                     &chain_id,
-                    global_args.mode.clone(),
+                    global_args.mode.as_ref().unwrap().clone(),
                 );
                 config.wasm_dir = wasm_dir;
                 config.write(&base_dir, &chain_id, true).unwrap();
@@ -378,6 +378,11 @@ pub fn init_network(
         );
         let (_alias, reward_keypair) =
             wallet.gen_key(Some(reward_key_alias), unsafe_dont_encrypt);
+        println!("Generating validator {} protocol signing key...", name);
+        println!("Generating validator {} DKG session keypair...", name);
+        let validator_keys = wallet
+            .gen_validator_keys(None)
+            .expect("Generating new validator keys should not fail");
         // Add the validator public keys to genesis config
         config.consensus_public_key = Some(genesis_config::HexString(
             consensus_keypair.ref_to().to_string(),
@@ -389,8 +394,20 @@ pub fn init_network(
             reward_keypair.ref_to().to_string(),
         ));
 
+        config.protocol_public_key = Some(genesis_config::HexString(
+            validator_keys.protocol_keypair.ref_to().to_string(),
+        ));
+        config.dkg_public_key = Some(genesis_config::HexString(
+            validator_keys
+                .dkg_keypair
+                .as_ref()
+                .unwrap()
+                .public()
+                .to_string(),
+        ));
         // Generate account and reward addresses
         let address = address::gen_established_address("validator account");
+        wallet.add_validator_data(address.clone(), validator_keys);
         let reward_address =
             address::gen_established_address("validator reward account");
         config.address = Some(address.to_string());
@@ -800,7 +817,7 @@ fn init_established_account(
     if config.address.is_none() {
         let address = address::gen_established_address("established");
         config.address = Some(address.to_string());
-        wallet.add_address(name.as_ref().to_string(), address);
+        wallet.add_address(&name, address);
     }
     if config.public_key.is_none() {
         println!("Generating established account {} key...", name.as_ref());
@@ -887,6 +904,15 @@ fn init_genesis_validator_aux(
     let (rewards_key_alias, rewards_key) = wallet
         .gen_key(Some(format!("{}-rewards-key", alias)), unsafe_dont_encrypt);
 
+    println!("Generating protocol key and DKG session key...");
+    let validator_keys = wallet.gen_validator_keys(None).unwrap();
+    let protocol_key = validator_keys.get_protocol_keypair().ref_to();
+    let dkg_public_key = validator_keys
+        .dkg_keypair
+        .as_ref()
+        .expect("DKG session keypair should exist.")
+        .public();
+    wallet.add_validator_data(validator_address.clone(), validator_keys);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
     let tendermint_home = &config.ledger.tendermint_dir();
@@ -909,6 +935,13 @@ fn init_genesis_validator_aux(
          consensus key."
     );
     println!();
+
+    println!("Validator account key {}", validator_key.ref_to());
+    println!("Consensus key {}", consensus_key.ref_to());
+    println!("Staking reward key {}", rewards_key.ref_to());
+    println!("Protocol signing key {}", &protocol_key);
+    println!("DKG public key {}", &dkg_public_key);
+
     let genesis_validator = genesis::Validator {
         pos_data: anoma::ledger::pos::GenesisValidator {
             address: validator_address,
@@ -918,6 +951,8 @@ fn init_genesis_validator_aux(
             staking_reward_key: rewards_key.ref_to(),
         },
         account_key: validator_key.ref_to(),
+        protocol_key,
+        dkg_public_key,
         non_staked_balance: token::Amount::whole(100_000),
         // TODO replace with https://github.com/anoma/anoma/issues/25)
         validator_vp_code_path: "wasm/vp_user.wasm".into(),

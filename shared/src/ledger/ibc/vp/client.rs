@@ -2,7 +2,11 @@
 use std::str::FromStr;
 
 #[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::AnyConsensusState;
+use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_def::{AnyClient, ClientDef};
 #[cfg(not(feature = "ABCI"))]
@@ -28,7 +32,11 @@ use ibc::core::ics24_host::identifier::ClientId;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics26_routing::msgs::Ics26Envelope;
 #[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
+use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::client_def::{AnyClient, ClientDef};
 #[cfg(feature = "ABCI")]
@@ -54,13 +62,9 @@ use ibc_abci::core::ics24_host::identifier::ClientId;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::Time;
-#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::Time;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -326,7 +330,6 @@ where
         let client = AnyClient::from_client_type(client_state.client_type());
         let (new_client_state, new_consensus_state) = client
             .check_header_and_update_state(
-                Time::now(),
                 self,
                 client_id.clone(),
                 prev_client_state,
@@ -552,6 +555,26 @@ where
         let epoch = self.ctx.storage.get_current_epoch().0.0;
         let height = self.ctx.storage.get_block_height().0.0;
         Height::new(epoch, height)
+    }
+
+    fn host_consensus_state(
+        &self,
+        _height: Height,
+    ) -> Ics02Result<AnyConsensusState> {
+        ClientReader::pending_host_consensus_state(self)
+    }
+
+    fn pending_host_consensus_state(&self) -> Ics02Result<AnyConsensusState> {
+        let (header, gas) = self.ctx.storage.get_block_header();
+        self.ctx
+            .gas_meter
+            .borrow_mut()
+            .add(gas)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        match header {
+            Some(h) => Ok(TmConsensusState::from(h).wrap_any()),
+            None => Err(Ics02Error::missing_raw_header()),
+        }
     }
 
     fn client_counter(&self) -> Ics02Result<u64> {

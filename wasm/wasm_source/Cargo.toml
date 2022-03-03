@@ -43,8 +43,8 @@ getrandom = { version = "0.2", features = ["custom"] }
 anoma = {path = "../../shared"}
 anoma_tests = {path = "../../tests"}
 proptest = "1.0.0"
-tracing = "0.1.29"
-tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
+tracing = "0.1.30"
+tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
 [patch.crates-io]
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}

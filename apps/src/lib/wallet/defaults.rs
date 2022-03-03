@@ -8,31 +8,37 @@ pub use dev::{
     addresses, albert_address, albert_keypair, bertha_address, bertha_keypair,
     christel_address, christel_keypair, daewon_address, daewon_keypair, keys,
     matchmaker_address, matchmaker_keypair, validator_address,
-    validator_keypair,
+    validator_keypair, validator_keys,
 };
 
 use crate::config::genesis::genesis_config::GenesisConfig;
-use crate::wallet::store::Alias;
+use crate::wallet::alias::Alias;
 
 /// The default addresses with their aliases.
 pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
     // Internal addresses
     let mut addresses: Vec<(Alias, Address)> = vec![
-        ("PoS".into(), pos::ADDRESS),
-        ("PosSlashPool".into(), pos::SLASH_POOL_ADDRESS),
+        ("pos".into(), pos::ADDRESS),
+        ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
     ];
     // Genesis validators
     let validator_addresses =
         genesis.validator.into_iter().map(|(alias, validator)| {
             // The address must be set in the genesis config file
-            (alias, Address::decode(validator.address.unwrap()).unwrap())
+            (
+                alias.into(),
+                Address::decode(validator.address.unwrap()).unwrap(),
+            )
         });
     addresses.extend(validator_addresses);
     // Genesis tokens
     if let Some(accounts) = genesis.token {
         let token_addresses = accounts.into_iter().map(|(alias, token)| {
             // The address must be set in the genesis config file
-            (alias, Address::decode(token.address.unwrap()).unwrap())
+            (
+                alias.into(),
+                Address::decode(token.address.unwrap()).unwrap(),
+            )
         });
         addresses.extend(token_addresses);
     }
@@ -41,7 +47,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
         let est_addresses = accounts.into_iter().map(|(alias, established)| {
             // The address must be set in the genesis config file
             (
-                alias,
+                alias.into(),
                 Address::decode(established.address.unwrap()).unwrap(),
             )
         });
@@ -55,7 +61,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
                 implicit.public_key.map(|pk| {
                     let pk: common::PublicKey = pk.to_public_key().unwrap();
                     let addr: Address = (&pk).into();
-                    (alias, addr)
+                    (alias.into(), addr)
                 })
             });
         addresses.extend(imp_addresses);
@@ -67,18 +73,38 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
 mod dev {
     use anoma::ledger::pos;
     use anoma::types::address::{self, Address};
+    use anoma::types::key::dkg_session_keys::DkgKeypair;
     use anoma::types::key::*;
     use borsh::BorshDeserialize;
 
-    use crate::wallet::store::Alias;
+    use crate::wallet::alias::Alias;
+
+    /// Generate a new protocol signing keypair and DKG session keypair
+    pub fn validator_keys() -> (common::SecretKey, DkgKeypair) {
+        let bytes: [u8; 33] = [
+            0, 200, 107, 23, 252, 78, 80, 8, 164, 142, 3, 194, 33, 12, 250,
+            169, 211, 127, 47, 13, 194, 54, 199, 81, 102, 246, 189, 119, 144,
+            25, 27, 113, 222,
+        ];
+        let dkg_bytes = [
+            32, 0, 0, 0, 210, 193, 55, 24, 92, 233, 23, 2, 73, 204, 221, 107,
+            110, 222, 192, 136, 54, 24, 108, 236, 137, 27, 121, 142, 142, 7,
+            193, 248, 155, 56, 51, 21,
+        ];
+
+        (
+            BorshDeserialize::deserialize(&mut bytes.as_ref()).unwrap(),
+            BorshDeserialize::deserialize(&mut dkg_bytes.as_ref()).unwrap(),
+        )
+    }
 
     /// The default keys with their aliases.
     pub fn keys() -> Vec<(Alias, common::SecretKey)> {
         vec![
-            ("Albert".into(), albert_keypair()),
-            ("Bertha".into(), bertha_keypair()),
-            ("Christel".into(), christel_keypair()),
-            ("Daewon".into(), daewon_keypair()),
+            ("albert".into(), albert_keypair()),
+            ("bertha".into(), bertha_keypair()),
+            ("christel".into(), christel_keypair()),
+            ("daewon".into(), daewon_keypair()),
             ("matchmaker".into(), matchmaker_keypair()),
             ("validator".into(), validator_keypair()),
         ]
@@ -87,18 +113,18 @@ mod dev {
     /// The default addresses with their aliases.
     pub fn addresses() -> Vec<(Alias, Address)> {
         let mut addresses: Vec<(Alias, Address)> = vec![
-            ("PoS".into(), pos::ADDRESS),
-            ("PosSlashPool".into(), pos::SLASH_POOL_ADDRESS),
+            ("pos".into(), pos::ADDRESS),
+            ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
             ("matchmaker".into(), matchmaker_address()),
             ("validator".into(), validator_address()),
-            ("Albert".into(), albert_address()),
-            ("Bertha".into(), bertha_address()),
-            ("Christel".into(), christel_address()),
-            ("Daewon".into(), daewon_address()),
+            ("albert".into(), albert_address()),
+            ("bertha".into(), bertha_address()),
+            ("christel".into(), christel_address()),
+            ("daewon".into(), daewon_address()),
         ];
         let token_addresses = address::tokens()
             .into_iter()
-            .map(|(addr, alias)| (alias.to_owned(), addr));
+            .map(|(addr, alias)| (alias.into(), addr));
         addresses.extend(token_addresses);
         addresses
     }

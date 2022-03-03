@@ -264,17 +264,17 @@ where
             State::Init,
             counterpart_client_id,
             Counterparty::new(client_id, None, self.commitment_prefix()),
-            conn.versions(),
+            conn.versions().to_vec(),
             conn.delay_period(),
         );
 
         match verify_proofs(
             self,
             msg.client_state.clone(),
-            msg.proofs().height(),
+            msg.proofs.height(),
             &conn,
             &expected_conn,
-            msg.proofs(),
+            &msg.proofs,
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
@@ -313,17 +313,17 @@ where
                 Some(conn_id.clone()),
                 self.commitment_prefix(),
             ),
-            conn.versions(),
+            conn.versions().to_vec(),
             conn.delay_period(),
         );
 
         match verify_proofs(
             self,
             msg.client_state.clone(),
-            msg.proofs().height(),
+            msg.proofs.height(),
             &conn,
             &expected_conn,
-            msg.proofs(),
+            &msg.proofs,
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
@@ -345,17 +345,17 @@ where
                 Some(conn_id.clone()),
                 self.commitment_prefix(),
             ),
-            conn.versions(),
+            conn.versions().to_vec(),
             conn.delay_period(),
         );
 
         match verify_proofs(
             self,
             None,
-            msg.proofs().height(),
+            msg.proofs.height(),
             &conn,
             &expected_conn,
-            msg.proofs(),
+            &msg.proofs,
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),

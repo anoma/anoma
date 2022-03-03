@@ -195,10 +195,10 @@ where
                         };
                         self.verify_ack_proof(
                             &port_channel_id,
-                            msg.proofs().height(),
+                            msg.proofs.height(),
                             &msg.packet,
                             msg.acknowledgement.clone(),
-                            msg.proofs(),
+                            &msg.proofs,
                         )
                     }
                     State::Closed => {
@@ -238,9 +238,9 @@ where
                 };
                 self.verify_recv_proof(
                     &port_channel_id,
-                    msg.proofs().height(),
+                    msg.proofs.height(),
                     packet,
-                    msg.proofs(),
+                    &msg.proofs,
                 )
             }
             _ => Err(Error::InvalidStateChange(
@@ -566,14 +566,14 @@ where
         let ibc_msg = IbcMessage::decode(tx_data)?;
         let (height, proofs, packet, next_sequence_recv) = match ibc_msg.0 {
             Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => (
-                msg.proofs().height(),
-                msg.proofs().clone(),
+                msg.proofs.height(),
+                msg.proofs.clone(),
                 msg.packet,
                 msg.next_sequence_recv,
             ),
             Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(msg)) => (
-                msg.proofs().height(),
-                msg.proofs().clone(),
+                msg.proofs.height(),
+                msg.proofs.clone(),
                 msg.packet,
                 msg.next_sequence_recv,
             ),

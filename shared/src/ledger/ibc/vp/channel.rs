@@ -15,6 +15,8 @@ use ibc::core::ics03_connection::connection::ConnectionEnd;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics03_connection::context::ConnectionReader;
 #[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::error::Error as Ics03Error;
+#[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::context::ChannelReader;
@@ -60,6 +62,8 @@ use ibc_abci::core::ics02_client::height::Height;
 use ibc_abci::core::ics03_connection::connection::ConnectionEnd;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics03_connection::context::ConnectionReader;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::error::Error as Ics03Error;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
 #[cfg(feature = "ABCI")]
@@ -279,7 +283,7 @@ where
     fn validate_version(&self, channel: &ChannelEnd) -> Result<()> {
         let connection = self.connection_from_channel(channel)?;
         let versions = connection.versions();
-        let version = match versions.as_slice() {
+        let version = match versions {
             [version] => version,
             _ => {
                 return Err(Error::InvalidVersion(
@@ -436,11 +440,11 @@ where
         let expected_my_side =
             Counterparty::new(port_channel_id.port_id.clone(), None);
         self.verify_proofs(
-            msg.proofs().height(),
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Init,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -459,7 +463,7 @@ where
             channel,
             expected_my_side,
             State::TryOpen,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -478,7 +482,7 @@ where
             channel,
             expected_my_side,
             State::Open,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -493,11 +497,11 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
-            msg.proofs().height(),
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Closed,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -807,10 +811,10 @@ where
         &self,
         port_id: &PortId,
     ) -> Ics04Result<Capability> {
-        let cap = self
+        let (_, cap) = self
             .lookup_module_by_port(port_id)
             .map_err(|_| Ics04Error::no_port_capability(port_id.clone()))?;
-        if self.authenticate(&cap, port_id) {
+        if self.authenticate(port_id.clone(), &cap) {
             Ok(cap)
         } else {
             Err(Ics04Error::invalid_port_capability())
@@ -916,11 +920,19 @@ where
         ClientReader::host_height(self)
     }
 
-    fn host_timestamp(&self) -> Timestamp {
-        match self.ctx.storage.get_block_header().0 {
-            Some(h) => h.time.into(),
-            None => Timestamp::none(),
-        }
+    fn host_consensus_state(
+        &self,
+        height: Height,
+    ) -> Ics04Result<AnyConsensusState> {
+        ClientReader::host_consensus_state(self, height).map_err(|e| {
+            Ics04Error::ics03_connection(Ics03Error::ics02_client(e))
+        })
+    }
+
+    fn pending_host_consensus_state(&self) -> Ics04Result<AnyConsensusState> {
+        ClientReader::pending_host_consensus_state(self).map_err(|e| {
+            Ics04Error::ics03_connection(Ics03Error::ics02_client(e))
+        })
     }
 
     fn client_update_time(

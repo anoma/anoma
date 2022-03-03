@@ -56,7 +56,7 @@ where
         let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
 
         match process_tx(tx) {
-            // This occurs if the wrapper tx signature is invalid
+            // This occurs if the wrapper / protocol tx signature is invalid
             Err(err) => TxResult {
                 code: ErrorCodes::InvalidSig.into(),
                 info: err.to_string(),
@@ -67,6 +67,12 @@ where
                     code: ErrorCodes::InvalidTx.into(),
                     info: "Transaction rejected: Non-encrypted transactions \
                            are not supported"
+                        .into(),
+                },
+                TxType::Protocol(_) => TxResult {
+                    code: ErrorCodes::InvalidTx.into(),
+                    info: "Protocol transactions are a fun new feature that \
+                           is coming soon to a blockchain near you. Patience."
                         .into(),
                 },
                 TxType::Decrypted(tx) => match self.next_wrapper() {
@@ -165,6 +171,12 @@ where
         };
         match process_tx(req_tx.clone()) {
             Ok(TxType::Wrapper(_)) => {}
+            Ok(TxType::Protocol(_)) => {
+                let tx_bytes = req.tx.clone();
+                let mut response = self.process_proposal(req);
+                response.tx = tx_bytes;
+                return response;
+            }
             Ok(_) => {
                 return shim::response::ProcessProposal {
                     result: shim::response::TxResult {
@@ -200,12 +212,12 @@ where
                     self.process_proposal(shim::request::ProcessProposal {
                         tx: decoded.clone(),
                     });
+
                 // this ensures that emitted events are of the correct type
-                if ErrorCodes::from_u32(decoded_resp.result.code).unwrap()
-                    == ErrorCodes::Ok
-                {
-                    decoded_resp.tx = decoded;
-                }
+                decoded_resp.tx = decoded;
+                // this ensures that the tx queue is empty even if an error
+                // happend in [`process_proposal`].
+                self.storage.tx_queue.pop();
                 decoded_resp
             } else {
                 // This was checked above
@@ -233,9 +245,11 @@ where
 mod test_process_proposal {
     use anoma::proto::SignedTxData;
     use anoma::types::address::xan;
+    use anoma::types::key::*;
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
-    use anoma::types::transaction::{Fee, Hash};
+    use anoma::types::transaction::encrypted::EncryptedTx;
+    use anoma::types::transaction::{EncryptionKey, Fee, Hash};
     use borsh::BorshDeserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::RequestInitChain;
@@ -254,7 +268,7 @@ mod test_process_proposal {
     /// by [`process_proposal`].
     #[test]
     fn test_unsigned_wrapper_rejected() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -269,6 +283,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         let tx = Tx::new(
             vec![],
@@ -282,7 +297,7 @@ mod test_process_proposal {
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
         assert_eq!(
             response.result.info,
-            String::from("Expected signed WrapperTx data")
+            String::from("Wrapper transactions must be signed")
         );
         #[cfg(feature = "ABCI")]
         {
@@ -294,7 +309,7 @@ mod test_process_proposal {
     /// Test that a wrapper tx with invalid signature is rejected
     #[test]
     fn test_wrapper_bad_signature_rejected() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -310,6 +325,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         )
         .sign(&keypair)
         .expect("Test failed");
@@ -373,7 +389,7 @@ mod test_process_proposal {
     /// non-zero, [`process_proposal`] rejects that tx
     #[test]
     fn test_wrapper_unknown_address() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = crate::wallet::defaults::keys().remove(0).1;
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -388,6 +404,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         )
         .sign(&keypair)
         .expect("Test failed");
@@ -413,7 +430,7 @@ mod test_process_proposal {
     /// [`process_proposal`] rejects that tx
     #[test]
     fn test_wrapper_insufficient_balance_address() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         shell.init_chain(RequestInitChain {
             time: Some(Timestamp {
                 seconds: 0,
@@ -437,6 +454,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         )
         .sign(&keypair)
         .expect("Test failed");
@@ -465,7 +483,7 @@ mod test_process_proposal {
     /// validated, [`process_proposal`] rejects it
     #[test]
     fn test_decrypted_txs_out_of_order() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
         let mut txs = vec![];
         for i in 0..3 {
@@ -482,6 +500,7 @@ mod test_process_proposal {
                 Epoch(0),
                 0.into(),
                 tx.clone(),
+                Default::default(),
             );
             shell.enqueue_tx(wrapper);
             txs.push(Tx::from(TxType::Decrypted(DecryptedTx::Decrypted(tx))));
@@ -512,7 +531,7 @@ mod test_process_proposal {
     /// is rejected by [`process_proposal`]
     #[test]
     fn test_incorrectly_labelled_as_undecryptable() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
 
         let tx = Tx::new(
@@ -528,6 +547,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         shell.enqueue_tx(wrapper.clone());
 
@@ -547,10 +567,12 @@ mod test_process_proposal {
         )
     }
 
-    /// Test that undecryptable txs are accepted
+    /// Test that a wrapper tx whose inner_tx does not have
+    /// the same hash as the wrappers tx_hash field is marked
+    /// undecryptable but still accepted
     #[test]
-    fn test_undecryptable() {
-        let mut shell = TestShell::new();
+    fn test_invalid_hash_commitment() {
+        let (mut shell, _) = TestShell::new();
         shell.init_chain(RequestInitChain {
             time: Some(Timestamp {
                 seconds: 0,
@@ -574,6 +596,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         wrapper.tx_hash = Hash([0; 32]);
 
@@ -589,7 +612,6 @@ mod test_process_proposal {
 
         let request = ProcessProposal { tx: tx.to_bytes() };
         let response = shell.process_proposal(request);
-        println!("{}", response.result.info);
         assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
         #[cfg(feature = "ABCI")]
         {
@@ -610,12 +632,76 @@ mod test_process_proposal {
         }
     }
 
+    /// Test that if a wrapper tx contains garbage bytes
+    /// as its encrypted inner tx, it is correctly
+    /// marked undecryptable and the errors handled correctly
+    #[test]
+    fn test_undecryptable() {
+        let (mut shell, _) = TestShell::new();
+        shell.init_chain(RequestInitChain {
+            time: Some(Timestamp {
+                seconds: 0,
+                nanos: 0,
+            }),
+            chain_id: ChainId::default().to_string(),
+            ..Default::default()
+        });
+        let keypair = crate::wallet::defaults::daewon_keypair();
+        let pubkey = EncryptionKey::default();
+        // not valid tx bytes
+        let tx = "garbage data".as_bytes().to_owned();
+        let inner_tx = EncryptedTx::encrypt(&tx, pubkey);
+        let wrapper = WrapperTx {
+            fee: Fee {
+                amount: 0.into(),
+                token: xan(),
+            },
+            pk: keypair.ref_to(),
+            epoch: Epoch(0),
+            gas_limit: 0.into(),
+            inner_tx,
+            tx_hash: hash_tx(&tx),
+        };
+
+        let signed = if !cfg!(feature = "ABCI") {
+            shell.enqueue_tx(wrapper.clone());
+            Tx::from(TxType::Decrypted(DecryptedTx::Undecryptable(
+                #[allow(clippy::redundant_clone)]
+                wrapper.clone(),
+            )))
+        } else {
+            wrapper.sign(&keypair).expect("Test failed")
+        };
+        let request = ProcessProposal {
+            tx: signed.to_bytes(),
+        };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
+        #[cfg(feature = "ABCI")]
+        {
+            match process_tx(
+                Tx::try_from(response.tx.as_ref()).expect("Test failed"),
+            )
+            .expect("Test failed")
+            {
+                TxType::Decrypted(DecryptedTx::Undecryptable(inner)) => {
+                    assert_eq!(
+                        hash_tx(inner.try_to_vec().unwrap().as_ref()),
+                        hash_tx(wrapper.try_to_vec().unwrap().as_ref())
+                    );
+                    assert!(shell.shell.storage.tx_queue.is_empty());
+                }
+                _ => panic!("Test failed"),
+            }
+        }
+    }
+
     #[cfg(not(feature = "ABCI"))]
     /// Test that if more decrypted txs are submitted to
     /// [`process_proposal`] than expected, they are rejected
     #[test]
     fn test_too_many_decrypted_txs() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
 
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -636,7 +722,7 @@ mod test_process_proposal {
     /// Process Proposal should reject a RawTx, but not panic
     #[test]
     fn test_raw_tx_rejected() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
 
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),

@@ -623,12 +623,8 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
   commands:
-  - git clone $DRONE_GIT_HTTP_URL .
-  - git fetch --all
-  - git checkout $DRONE_TARGET_BRANCH
-  - git merge $DRONE_COMMIT
-  - CONFLICTS=$(git ls-files -u | wc -l)
-  - if [ "$CONFLICTS" -gt 0 ]; then exit 1; fi;exit 0
+  - git clone $DRONE_GIT_HTTP_URL --depth 1 --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
 - name: download-scripts
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
@@ -1101,6 +1097,6 @@ clone:
   disable: true
 ---
 kind: signature
-hmac: 57d229246df5759aa30c65dffb18197f3a764e5724862100a8dcf0e153b27dbb
+hmac: 4c6a2d9c84b634a7417a897f5af3ac91c0f06230198e824160603b8931457c7c
 
 ...

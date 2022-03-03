@@ -71,17 +71,13 @@ impl TendermintMode {
     }
 }
 
-impl From<Option<String>> for TendermintMode {
-    fn from(opt: Option<String>) -> Self {
-        if let Some(mode) = opt {
-            match mode.as_str() {
-                "full" => TendermintMode::Full,
-                "validator" => TendermintMode::Validator,
-                "seed" => TendermintMode::Seed,
-                _ => panic!("Unrecognized mode"),
-            }
-        } else {
-            TendermintMode::Validator
+impl From<String> for TendermintMode {
+    fn from(mode: String) -> Self {
+        match mode.as_str() {
+            "full" => TendermintMode::Full,
+            "validator" => TendermintMode::Validator,
+            "seed" => TendermintMode::Seed,
+            _ => panic!("Unrecognized mode"),
         }
     }
 }

@@ -10,11 +10,16 @@
 - Dependency: Backport libp2p-noise patch that fixes a compilation
   issue from <https://github.com/libp2p/rust-libp2p/pull/2264>
   ([#908](https://github.com/anoma/anoma/issues/908))
+- Wasm: Re-add accidentaly removed `tx_ibc` WASM and `vm_env::ibc` module
+  ([#916](https://github.com/anoma/anoma/pull/916))
 
 ### CI
 
 - Move cron pipeline script externally, fix cron scripts dependencies
   ([#906](https://github.com/anoma/anoma/pull/906))
+- Fix cron scripts execution ([#912](https://github.com/anoma/anoma/pull/912))
+- Build docs without attempting to merge master
+  ([#924](https://github.com/anoma/anoma/pull/924))
 
 ### FEATURES
 
@@ -23,6 +28,14 @@
 
 ### IMPROVEMENTS
 
+- Added a common signing schemes interface to ease additions/removals of signing
+  schemes to the ledger. ([#225](https://github.com/anoma/anoma/issues/225))
+- Canonicalize all wallet aliases to lowercase in the CLI.
+  ([#564](https://github.com/anoma/anoma/issues/564))
+- Ledger: Handle spurious errors on user initiated shutdown.
+  ([#716](https://github.com/anoma/anoma/issues/716))
+- Dependency: Replace ed22519-dalek with ed22519-consensus.
+  ([#753](https://github.com/anoma/anoma/issues/753))
 - Network config: Make the WASM checksums optional in network source, as it is 
   filled in by `init-network` utils command.
   ([#777](https://github.com/anoma/anoma/issues/777))

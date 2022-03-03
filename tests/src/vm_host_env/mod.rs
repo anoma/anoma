@@ -865,7 +865,7 @@ mod tests {
         let channel_key = ibc::channel_key(&port_channel_id).to_string();
         tx_host_env::write_bytes(
             &channel_key,
-            msg.channel().encode_vec().unwrap(),
+            msg.channel.encode_vec().unwrap(),
         );
         let event = ibc::make_open_init_channel_event(&channel_id, &msg);
         tx_host_env::emit_ibc_event(&event.try_into().unwrap());

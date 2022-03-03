@@ -49,9 +49,7 @@ fn run_ledger() -> Result<()> {
             run_as!(test, Who::NonValidator, Bin::Node, args, Some(40))?;
         ledger.exp_string("Anoma ledger node started")?;
         if !cfg!(feature = "ABCI") {
-            ledger.exp_string(
-                "This node is a validator (NOT in the active validator set)",
-            )?;
+            ledger.exp_string("This node is a fullnode")?;
         } else {
             ledger.exp_string("This node is not a validator")?;
         }
@@ -208,7 +206,7 @@ fn ledger_txs_and_queries() -> Result<()> {
             "--fee-token",
             XAN,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
         ],
         // 3. Submit a transaction to update an account's validity
         // predicate
@@ -225,7 +223,7 @@ fn ledger_txs_and_queries() -> Result<()> {
              "--fee-token",
              XAN,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
         ],
         // 4. Submit a custom tx
         vec![
@@ -264,7 +262,7 @@ fn ledger_txs_and_queries() -> Result<()> {
             "--fee-token",
             XAN,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
         ],
     ];
 
