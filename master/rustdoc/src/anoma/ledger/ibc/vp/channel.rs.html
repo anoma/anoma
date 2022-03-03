@@ -1003,6 +1003,18 @@
 <span id="1002">1002</span>
 <span id="1003">1003</span>
 <span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for channel module</span>
 
 <span class="kw">use</span> <span class="ident">core::time::Duration</span>;
@@ -1019,6 +1031,8 @@
 <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::connection::ConnectionEnd</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::context::ConnectionReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::error::Error</span> <span class="kw">as</span> <span class="ident">Ics03Error</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel</span>::{<span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -1065,6 +1079,8 @@
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::connection::ConnectionEnd</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::context::ConnectionReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::error::Error</span> <span class="kw">as</span> <span class="ident">Ics03Error</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel</span>::{<span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -1284,7 +1300,7 @@
     <span class="kw">fn</span> <span class="ident">validate_version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_from_channel</span>(<span class="ident">channel</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">versions</span> <span class="op">=</span> <span class="ident">connection</span>.<span class="ident">versions</span>();
-        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">versions</span>.<span class="ident">as_slice</span>() {
+        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">versions</span> {
             [<span class="ident">version</span>] =&gt; <span class="ident">version</span>,
             <span class="kw">_</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidVersion</span>(
@@ -1441,11 +1457,11 @@
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span>
             <span class="ident">Counterparty::new</span>(<span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>);
         <span class="self">self</span>.<span class="ident">verify_proofs</span>(
-            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
             <span class="ident">channel</span>,
             <span class="ident">expected_my_side</span>,
             <span class="ident">State::Init</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         )
     }
 
@@ -1464,7 +1480,7 @@
             <span class="ident">channel</span>,
             <span class="ident">expected_my_side</span>,
             <span class="ident">State::TryOpen</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         )
     }
 
@@ -1483,7 +1499,7 @@
             <span class="ident">channel</span>,
             <span class="ident">expected_my_side</span>,
             <span class="ident">State::Open</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         )
     }
 
@@ -1498,11 +1514,11 @@
             <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
         );
         <span class="self">self</span>.<span class="ident">verify_proofs</span>(
-            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
             <span class="ident">channel</span>,
             <span class="ident">expected_my_side</span>,
             <span class="ident">State::Closed</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         )
     }
 
@@ -1812,10 +1828,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">port_id</span>: <span class="kw-2">&amp;</span><span class="ident">PortId</span>,
     ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Capability</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span> <span class="self">self</span>
+        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">cap</span>) <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">lookup_module_by_port</span>(<span class="ident">port_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::no_port_capability</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>()))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">authenticate</span>(<span class="kw-2">&amp;</span><span class="ident">cap</span>, <span class="ident">port_id</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">authenticate</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">cap</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">cap</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::invalid_port_capability</span>())
@@ -1921,11 +1937,19 @@
         <span class="ident">ClientReader::host_height</span>(<span class="self">self</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">host_timestamp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Timestamp</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_header</span>().<span class="number">0</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="ident">h</span>.<span class="ident">time</span>.<span class="ident">into</span>(),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">Timestamp::none</span>(),
-        }
+    <span class="kw">fn</span> <span class="ident">host_consensus_state</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">height</span>: <span class="ident">Height</span>,
+    ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+        <span class="ident">ClientReader::host_consensus_state</span>(<span class="self">self</span>, <span class="ident">height</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Ics04Error::ics03_connection</span>(<span class="ident">Ics03Error::ics02_client</span>(<span class="ident">e</span>))
+        })
+    }
+
+    <span class="kw">fn</span> <span class="ident">pending_host_consensus_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+        <span class="ident">ClientReader::pending_host_consensus_state</span>(<span class="self">self</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="ident">Ics04Error::ics03_connection</span>(<span class="ident">Ics03Error::ics02_client</span>(<span class="ident">e</span>))
+        })
     }
 
     <span class="kw">fn</span> <span class="ident">client_update_time</span>(

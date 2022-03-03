@@ -969,10 +969,10 @@
                         };
                         <span class="self">self</span>.<span class="ident">verify_ack_proof</span>(
                             <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>,
-                            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+                            <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
                             <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>,
                             <span class="ident">msg</span>.<span class="ident">acknowledgement</span>.<span class="ident">clone</span>(),
-                            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+                            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
                         )
                     }
                     <span class="ident">State::Closed</span> =&gt; {
@@ -1012,9 +1012,9 @@
                 };
                 <span class="self">self</span>.<span class="ident">verify_recv_proof</span>(
                     <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>,
-                    <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+                    <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
                     <span class="ident">packet</span>,
-                    <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+                    <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
                 )
             }
             <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(
@@ -1340,14 +1340,14 @@
         <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">height</span>, <span class="ident">proofs</span>, <span class="ident">packet</span>, <span class="ident">next_sequence_recv</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ibc_msg</span>.<span class="number">0</span> {
             <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>)) =&gt; (
-                <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
-                <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">clone</span>(),
+                <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
+                <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">clone</span>(),
                 <span class="ident">msg</span>.<span class="ident">packet</span>,
                 <span class="ident">msg</span>.<span class="ident">next_sequence_recv</span>,
             ),
             <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToClosePacket</span>(<span class="ident">msg</span>)) =&gt; (
-                <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
-                <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">clone</span>(),
+                <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
+                <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">clone</span>(),
                 <span class="ident">msg</span>.<span class="ident">packet</span>,
                 <span class="ident">msg</span>.<span class="ident">next_sequence_recv</span>,
             ),

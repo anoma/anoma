@@ -573,11 +573,38 @@
 <span id="572">572</span>
 <span id="573">573</span>
 <span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for client module</span>
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus</span>::{
+    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
+};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -603,7 +630,11 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus</span>::{
+    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
+};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -629,13 +660,9 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint::Time</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::Time</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::handler</span>::{
@@ -901,7 +928,6 @@
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>());
         <span class="kw">let</span> (<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>) <span class="op">=</span> <span class="ident">client</span>
             .<span class="ident">check_header_and_update_state</span>(
-                <span class="ident">Time::now</span>(),
                 <span class="self">self</span>,
                 <span class="ident">client_id</span>.<span class="ident">clone</span>(),
                 <span class="ident">prev_client_state</span>,
@@ -1127,6 +1153,26 @@
         <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_current_epoch</span>().<span class="number">0.0</span>;
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_height</span>().<span class="number">0.0</span>;
         <span class="ident">Height::new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">host_consensus_state</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_height</span>: <span class="ident">Height</span>,
+    ) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+        <span class="ident">ClientReader::pending_host_consensus_state</span>(<span class="self">self</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">pending_host_consensus_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">header</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_header</span>();
+        <span class="self">self</span>.<span class="ident">ctx</span>
+            .<span class="ident">gas_meter</span>
+            .<span class="ident">borrow_mut</span>()
+            .<span class="ident">add</span>(<span class="ident">gas</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>())<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="ident">header</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">TmConsensusState::from</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>()),
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::missing_raw_header</span>()),
+        }
     }
 
     <span class="kw">fn</span> <span class="ident">client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {

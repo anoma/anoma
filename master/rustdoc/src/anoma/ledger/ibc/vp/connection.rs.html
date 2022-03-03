@@ -740,17 +740,17 @@
             <span class="ident">State::Init</span>,
             <span class="ident">counterpart_client_id</span>,
             <span class="ident">Counterparty::new</span>(<span class="ident">client_id</span>, <span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">commitment_prefix</span>()),
-            <span class="ident">conn</span>.<span class="ident">versions</span>(),
+            <span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">to_vec</span>(),
             <span class="ident">conn</span>.<span class="ident">delay_period</span>(),
         );
 
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
             <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>(),
-            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
@@ -789,17 +789,17 @@
                 <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
                 <span class="self">self</span>.<span class="ident">commitment_prefix</span>(),
             ),
-            <span class="ident">conn</span>.<span class="ident">versions</span>(),
+            <span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">to_vec</span>(),
             <span class="ident">conn</span>.<span class="ident">delay_period</span>(),
         );
 
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
             <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>(),
-            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
@@ -821,17 +821,17 @@
                 <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
                 <span class="self">self</span>.<span class="ident">commitment_prefix</span>(),
             ),
-            <span class="ident">conn</span>.<span class="ident">versions</span>(),
+            <span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">to_vec</span>(),
             <span class="ident">conn</span>.<span class="ident">delay_period</span>(),
         );
 
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
             <span class="prelude-val">None</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>().<span class="ident">height</span>(),
+            <span class="ident">msg</span>.<span class="ident">proofs</span>.<span class="ident">height</span>(),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
-            <span class="ident">msg</span>.<span class="ident">proofs</span>(),
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
