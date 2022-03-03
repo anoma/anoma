@@ -1977,7 +1977,7 @@ dependencies = [
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#0833c5a6fec520aba8e44e055bec1eb0427b8487"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -3214,7 +3214,7 @@ checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
 [[package]]
 name = "libmasp"
 version = "0.2.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#0833c5a6fec520aba8e44e055bec1eb0427b8487"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -3771,7 +3771,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#0833c5a6fec520aba8e44e055bec1eb0427b8487"
 dependencies = [
  "aes",
  "bitvec",
@@ -3798,7 +3798,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#0833c5a6fec520aba8e44e055bec1eb0427b8487"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -8005,7 +8005,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#0833c5a6fec520aba8e44e055bec1eb0427b8487"
 dependencies = [
  "aes",
  "bitvec",
@@ -8035,7 +8035,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#c0f059891127782c0a5033a65c2910eee773129a"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#0833c5a6fec520aba8e44e055bec1eb0427b8487"
 dependencies = [
  "bellman",
  "blake2b_simd",

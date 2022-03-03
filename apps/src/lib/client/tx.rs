@@ -467,6 +467,8 @@ pub fn gen_shielded_transfer(
 
     // Now we build up the transaction within this object
     let mut builder = Builder::<TestNetwork, OsRng>::new(height);
+    // Transaction fees will be taken care of in the wrapper Transfer
+    builder.set_fee(Amount::zero())?;
     // If there are shielded inputs
     if let Some(sk) = &args.spending_key {
         let mut val_acc = 0;
