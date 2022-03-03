@@ -40,7 +40,7 @@ wee_alloc = "0.4.5"
 getrandom = { version = "0.2", features = ["custom"] }
 
 [dev-dependencies]
-anoma = {path = "../../shared"}
+anoma = {path = "../../shared", default-features = false, features = ["ABCI"]}
 anoma_tests = {path = "../../tests"}
 proptest = "1.0.0"
 tracing = "0.1.29"

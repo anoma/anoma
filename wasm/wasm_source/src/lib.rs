@@ -177,8 +177,9 @@ pub mod tx_transfer {
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
         let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let mut stream = &signed.data.unwrap()[..];
         let transfer =
-            token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
+            token::Transfer::deserialize(&mut stream).unwrap();
         debug_log!("apply_tx called with transfer: {:#?}", transfer);
         let token::Transfer {
             source,

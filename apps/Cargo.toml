@@ -42,7 +42,7 @@ path = "src/bin/anoma-wallet/main.rs"
 default = ["std", "ABCI", "masp"]
 dev = ["anoma/dev"]
 std = ["ed25519-consensus/std", "rand/std", "rand_core/std"]
-masp = ["jubjub", "bls12_381", "libmasp", "masp_primitives", "masp_proofs", "zcash_primitives", "bellman", "zcash_proofs", "ff"]
+masp = ["jubjub", "bls12_381", "libmasp", "masp_primitives", "masp_proofs", "zcash_primitives", "bellman", "zcash_proofs", "ff", "anoma/masp"]
 # for integration tests and test utilies
 ABCI = [
   "tendermint-stable",

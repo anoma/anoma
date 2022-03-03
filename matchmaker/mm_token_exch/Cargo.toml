@@ -13,7 +13,7 @@ crate-type = ["dylib"]
 
 [features]
 default = ["ABCI", "masp"]
-masp = []
+masp = ["anoma/masp"]
 
 ABCI = ["anoma/ABCI"]
 

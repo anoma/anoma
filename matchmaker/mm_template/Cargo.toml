@@ -12,9 +12,11 @@ version = "0.4.0"
 crate-type = ["dylib"]
 
 [features]
-default = ["ABCI"]
+default = ["ABCI", "masp"]
 
 ABCI = ["anoma/ABCI"]
+
+masp = ["anoma/masp"]
 
 [dependencies]
 anoma = {path = "../../shared", default-features = false}
