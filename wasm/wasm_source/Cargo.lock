@@ -145,7 +145,15 @@ version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_macros",
+ "bellman",
+ "bls12_381",
  "borsh",
+ "ff",
+ "jubjub",
+ "masp_primitives",
+ "masp_proofs",
+ "zcash_primitives",
+ "zcash_proofs",
 ]
 
 [[package]]

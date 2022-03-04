@@ -164,6 +164,7 @@ dependencies = [
  "flate2",
  "futures 0.3.19",
  "git2",
+ "group",
  "hex",
  "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.5)",
  "ibc 0.11.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.5)",
@@ -296,7 +297,15 @@ version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_macros",
+ "bellman",
+ "bls12_381",
  "borsh",
+ "ff",
+ "jubjub",
+ "masp_primitives",
+ "masp_proofs",
+ "zcash_primitives",
+ "zcash_proofs",
 ]
 
 [[package]]

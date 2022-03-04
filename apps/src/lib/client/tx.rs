@@ -64,6 +64,7 @@ use zcash_primitives::transaction::components::TxOut;
 use zcash_primitives::legacy::Script;
 use zcash_proofs::prover::LocalTxProver;
 use sha2::Digest;
+use group::cofactor::CofactorGroup;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -77,6 +78,12 @@ use crate::client::tendermint_websocket_client::{
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
 use crate::std::fs::File;
+use crate::client::rpc::query_storage_prefix;
+use zcash_primitives::transaction::TxId;
+use anoma::types::token::HEAD_TX_KEY;
+use anoma::types::storage::Key;
+use crate::client::rpc::query_storage_value;
+use anoma::types::storage::KeySeg;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -404,6 +411,122 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     (diversifier, g_d)
 }
 
+/// Obtain a chronologically-ordered list of all accepted shielded transactions
+/// from the ledger. The ledger conceptually stores transactions as a linked
+/// list. More concretely, the HEAD_TX_KEY location stores the txid of the last
+/// accepted transaction, each transaction stores the txid of the previous
+/// transaction, and each transaction is stored at a key whose name is derived
+/// from its txid.
+
+pub async fn fetch_shielded_transfers(
+    ctx: &Context,
+    args: &args::TxTransfer,
+) -> Vec<Transaction> {
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    // The address of the MASP account
+    let masp_addr = Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").unwrap();
+    // Construct the key where last transaction pointer is stored
+    let head_tx_key = Key::from(masp_addr.to_db_key())
+        .push(&HEAD_TX_KEY.to_owned())
+        .expect("Cannot obtain a storage key");
+    // Query for the ID of the last accepted transaction
+    let mut head_txid_opt = query_storage_value::<TxId>(
+        client.clone(),
+        head_tx_key,
+    )
+        .await;
+    let mut shielded_txs = Vec::new();
+    // While there are still more transactions in the linked list
+    while let Some(head_txid) = head_txid_opt {
+        // Construct the key for where the current transaction is stored
+        let current_tx_key = Key::from(masp_addr.to_db_key())
+            .push(&("tx-".to_owned() + &head_txid.to_string()))
+            .expect("Cannot obtain a storage key");
+        // Obtain the current transaction and a pointer to the next
+        let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
+            client.clone(),
+            current_tx_key,
+        ).await.unwrap();
+        // Collect the current transaction
+        shielded_txs.push(current_tx);
+        head_txid_opt = next_txid;
+    }
+    // Since we iterated the transaction in reverse chronological order
+    shielded_txs.reverse();
+    shielded_txs
+}
+
+/// Applies the given transaction to the supplied context. More precisely, the
+/// shielded transaction's outputs are added to the commitment tree. Newly
+/// discovered notes are associated to the supplied viewing keys. Note
+/// nullifiers are mapped to their originating notes. Note positions are
+/// associated to notes, memos, and diversifiers. And the set of notes that we
+/// have spent are updated. The witness map is maintained to make it easier to
+/// construct note merkle paths in other code. See
+/// https://zips.z.cash/protocol/protocol.pdf#scan
+
+pub fn scan_tx(
+    tx: &Transaction,
+    tx_pos: &mut u64,
+    tree: &mut CommitmentTree<Node>,
+    vks: &mut HashMap<ViewingKey, HashSet<usize>>,
+    nf_map: &mut HashMap<[u8; 32], usize>,
+    note_map: &mut HashMap<usize, Note>,
+    memo_map: &mut HashMap<usize, Memo>,
+    div_map: &mut HashMap<usize, Diversifier>,
+    witness_map: &mut HashMap<usize, IncrementalWitness<Node>>,
+    spents: &mut HashSet<usize>
+) -> Result<(), ()> {
+    // Listen for notes sent to our viewing keys
+    for so in &(*tx).shielded_outputs {
+        // Create merkle tree leaf node from note commitment
+        let node = Node::new(so.cmu.to_repr());
+        // Update each merkle tree in the witness map with the latest addition
+        for (_, witness) in witness_map.iter_mut() {
+            witness.append(node)?;
+        }
+        let note_pos = tree.size();
+        tree.append(node)?;
+        // Finally, make it easier to construct merkle paths to this new note
+        let witness = IncrementalWitness::<Node>::from_tree(tree);
+        witness_map.insert(note_pos, witness);
+        // Let's try to see if any of our viewing keys can decrypt latest note
+        for (vk, notes) in vks.iter_mut() {
+            let decres = try_sapling_note_decryption::<TestNetwork>(
+                0,
+                &vk.ivk(),
+                &so.ephemeral_key.into_subgroup().unwrap(),
+                &so.cmu,
+                &so.enc_ciphertext
+            );
+            // So this current viewing key does decrypt this current note...
+            if let Some((note, pa, memo)) = decres {
+                // Add this note to list of notes decrypted by this viewing key
+                notes.insert(note_pos);
+                // Compute the nullifier now to quickly recognize when spent
+                let nf = note.nf(vk, note_pos.try_into().unwrap());
+                note_map.insert(note_pos, note);
+                memo_map.insert(note_pos, memo);
+                // The payment address' diversifier is required to spend note
+                div_map.insert(note_pos, *pa.diversifier());
+                nf_map.insert(nf.try_into().unwrap(), note_pos);
+                break;
+            }
+        }
+    }
+    // Cancel out those of our notes that have been spent
+    for ss in &(*tx).shielded_spends {
+        // If the shielded spend's nullifier is in our map, then target note
+        // is rendered unusable
+        if let Some(note_pos) = nf_map.get(&ss.nullifier) {
+            spents.insert(*note_pos);
+        }
+    }
+    // To avoid state corruption caused by accidentaly replaying transaction
+    *tx_pos = *tx_pos + 1;
+    Ok(())
+}
+
 /// Make shielded components to embed within a Transfer object. If no shielded
 /// payment address nor spending key is specified, then no shielded components
 /// are produced. Otherwise a transaction containing nullifiers and/or note
@@ -412,7 +535,7 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
 /// are effected only by the amounts and signatures specified by the containing
 /// Transfer object.
 
-pub fn gen_shielded_transfer(
+pub async fn gen_shielded_transfer(
     ctx: &Context,
     args: &args::TxTransfer,
     balance: token::Amount,
@@ -571,7 +694,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
         target,
         token,
         amount: args.amount,
-        shielded: gen_shielded_transfer(&ctx, &args, balance).unwrap().map(|x| x.0),
+        shielded: gen_shielded_transfer(&ctx, &args, balance).await.unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer

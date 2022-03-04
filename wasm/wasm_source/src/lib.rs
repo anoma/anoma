@@ -156,7 +156,7 @@ pub mod tx_from_intent {
             shielded,
         } in tx_data.matches.transfers
         {
-            token::transfer(&source, &target, &token, amount);
+            token::transfer(&source, &target, &token, amount, &shielded);
         }
 
         tx_data
@@ -188,7 +188,7 @@ pub mod tx_transfer {
             amount,
             shielded,
         } = transfer;
-        token::transfer(&source, &target, &token, amount)
+        token::transfer(&source, &target, &token, amount, &shielded)
     }
 }
 

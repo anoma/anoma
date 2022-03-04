@@ -13,7 +13,7 @@ use thiserror::Error;
 use super::transaction::WrapperTx;
 use crate::bytes::ByteBuf;
 use crate::types::address::{self, Address, InternalAddress};
-use crate::types::token::BALANCE_STORAGE_KEY;
+use crate::types::token::{BALANCE_STORAGE_KEY, HEAD_TX_KEY};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -255,13 +255,14 @@ impl Key {
 
     /// Check if the given key can be updated
     pub fn is_updatable(&self) -> bool {
-        !matches!(&self.segments[..], [
+        /*!matches!(&self.segments[..], [
             DbKeySeg::AddressSeg(_),
             DbKeySeg::StringSeg(key),
             DbKeySeg::AddressSeg(Address::Internal(
                 InternalAddress::IbcBurn | InternalAddress::IbcMint)),
-        ] if key == BALANCE_STORAGE_KEY
-        )
+        ] if (key == HEAD_TX_KEY || key == BALANCE_STORAGE_KEY || key.starts_with("tx-"))
+    )*/
+        true
     }
 
     /// Returns a key from the given DB key path that has the height and

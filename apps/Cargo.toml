@@ -152,6 +152,7 @@ zcash_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/ma
 zcash_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons", features = ["bundled-prover"] }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = {version = "0.11" }
+group = "0.11"
 
 [dev-dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}

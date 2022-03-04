@@ -3,6 +3,9 @@ use std::collections::HashSet;
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
 use anoma::types::token;
+use zcash_primitives::transaction::Transaction;
+use anoma::types::storage::KeySeg;
+use zcash_primitives::transaction::TxId;
 
 /// Vp imports and functions.
 pub mod vp {
@@ -69,6 +72,7 @@ pub mod tx {
         dest: &Address,
         token: &Address,
         amount: Amount,
+        shielded: &Option<Transaction>,
     ) {
         let src_key = token::balance_key(token, src);
         let dest_key = token::balance_key(token, dest);
@@ -103,6 +107,19 @@ pub mod tx {
                 tx::write_temp(&dest_key.to_string(), dest_bal)
             }
             _ => tx::write(&dest_key.to_string(), dest_bal),
+        }
+        if let Some(shielded) = shielded {
+            let masp_addr = Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").unwrap();
+            let head_tx_key = Key::from(masp_addr.to_db_key())
+                .push(&HEAD_TX_KEY.to_owned())
+                .expect("Cannot obtain a storage key");
+            let prev_tx_id: Option<TxId> =
+                tx::read(&head_tx_key.to_string());
+            let new_tx_key = Key::from(masp_addr.to_db_key())
+                .push(&("tx-".to_owned() + &shielded.txid().to_string()))
+                .expect("Cannot obtain a storage key");
+            tx::write(&new_tx_key.to_string(), (shielded, prev_tx_id));
+            tx::write(&head_tx_key.to_string(), shielded.txid());
         }
     }
 }
