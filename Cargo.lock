@@ -1984,7 +1984,7 @@ dependencies = [
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#215f7e1fbc045fef4d2a6faca46f82913c84c0a6"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -3756,7 +3756,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#215f7e1fbc045fef4d2a6faca46f82913c84c0a6"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
 dependencies = [
  "aes",
  "bitvec",
@@ -3783,7 +3783,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#215f7e1fbc045fef4d2a6faca46f82913c84c0a6"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -7990,7 +7990,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#215f7e1fbc045fef4d2a6faca46f82913c84c0a6"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
 dependencies = [
  "aes",
  "bitvec",
@@ -8020,7 +8020,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#215f7e1fbc045fef4d2a6faca46f82913c84c0a6"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
 dependencies = [
  "bellman",
  "blake2b_simd",

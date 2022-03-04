@@ -36,13 +36,11 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use zcash_primitives::transaction::Transaction;
 use zcash_primitives::primitives::Note;
 use zcash_primitives::consensus::TestNetwork;
-use zcash_primitives::consensus::Parameters;
 use zcash_primitives::consensus::BranchId;
 use std::collections::HashSet;
 use zcash_primitives::note_encryption::*;
 use zcash_primitives::primitives::ViewingKey;
 use std::collections::HashMap;
-use zcash_primitives::primitives::PaymentAddress;
 use zcash_primitives::transaction::components::Amount;
 use zcash_primitives::transaction::builder::{self, *};
 use rand_core::CryptoRng;
@@ -53,18 +51,15 @@ use ff::PrimeField;
 use zcash_primitives::merkle_tree::IncrementalWitness;
 use zcash_primitives::zip32::ExtendedSpendingKey;
 use zcash_primitives::primitives::Diversifier;
-use zcash_primitives::prover::TxProver;
 use rand_core::OsRng;
 use std::fmt::Debug;
-use std::hash::Hash;
-use std::hash::Hasher;
 use zcash_primitives::legacy::TransparentAddress;
 use zcash_primitives::transaction::components::OutPoint;
 use zcash_primitives::transaction::components::TxOut;
-use zcash_primitives::legacy::Script;
 use zcash_proofs::prover::LocalTxProver;
 use sha2::Digest;
 use group::cofactor::CofactorGroup;
+use zcash_primitives::zip32::ExtendedFullViewingKey;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -78,7 +73,6 @@ use crate::client::tendermint_websocket_client::{
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
 use crate::std::fs::File;
-use crate::client::rpc::query_storage_prefix;
 use zcash_primitives::transaction::TxId;
 use anoma::types::token::HEAD_TX_KEY;
 use anoma::types::storage::Key;
@@ -387,7 +381,19 @@ pub async fn submit_init_validator(
 }
 
 pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> ViewingKey {
-    esk.expsk.proof_generation_key().to_viewing_key()
+    ExtendedFullViewingKey::from(esk).fvk.vk
+}
+
+/// Generate a ViewingKey entry in the given map for each ExtendedSpendingKey
+
+pub fn gen_viewing_keys(
+    esks: &HashSet<ExtendedSpendingKey>,
+    vks: &mut HashMap<ViewingKey, HashSet<usize>>,
+) {
+    for esk in esks {
+        let vk = to_viewing_key(esk);
+        vks.entry(vk.into()).or_insert(HashSet::new());
+    }
 }
 
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
@@ -456,6 +462,22 @@ pub async fn fetch_shielded_transfers(
     shielded_txs
 }
 
+/// Represents the current state of the shielded pool from the perspective of
+/// the chosen viewing keys.
+
+#[derive(Default)]
+struct TxContext {
+    tx_pos: usize,
+    tree: CommitmentTree<Node>,
+    vks: HashMap<ViewingKey, HashSet<usize>>,
+    nf_map: HashMap<[u8; 32], usize>,
+    note_map: HashMap<usize, Note>,
+    memo_map: HashMap<usize, Memo>,
+    div_map: HashMap<usize, Diversifier>,
+    witness_map: HashMap<usize, IncrementalWitness<Node>>,
+    spents: HashSet<usize>,
+}
+
 /// Applies the given transaction to the supplied context. More precisely, the
 /// shielded transaction's outputs are added to the commitment tree. Newly
 /// discovered notes are associated to the supplied viewing keys. Note
@@ -465,33 +487,25 @@ pub async fn fetch_shielded_transfers(
 /// construct note merkle paths in other code. See
 /// https://zips.z.cash/protocol/protocol.pdf#scan
 
-pub fn scan_tx(
+fn scan_tx(
     tx: &Transaction,
-    tx_pos: &mut u64,
-    tree: &mut CommitmentTree<Node>,
-    vks: &mut HashMap<ViewingKey, HashSet<usize>>,
-    nf_map: &mut HashMap<[u8; 32], usize>,
-    note_map: &mut HashMap<usize, Note>,
-    memo_map: &mut HashMap<usize, Memo>,
-    div_map: &mut HashMap<usize, Diversifier>,
-    witness_map: &mut HashMap<usize, IncrementalWitness<Node>>,
-    spents: &mut HashSet<usize>
+    ctx: &mut TxContext,
 ) -> Result<(), ()> {
     // Listen for notes sent to our viewing keys
     for so in &(*tx).shielded_outputs {
         // Create merkle tree leaf node from note commitment
         let node = Node::new(so.cmu.to_repr());
         // Update each merkle tree in the witness map with the latest addition
-        for (_, witness) in witness_map.iter_mut() {
+        for (_, witness) in ctx.witness_map.iter_mut() {
             witness.append(node)?;
         }
-        let note_pos = tree.size();
-        tree.append(node)?;
+        let note_pos = ctx.tree.size();
+        ctx.tree.append(node)?;
         // Finally, make it easier to construct merkle paths to this new note
-        let witness = IncrementalWitness::<Node>::from_tree(tree);
-        witness_map.insert(note_pos, witness);
+        let witness = IncrementalWitness::<Node>::from_tree(&ctx.tree);
+        ctx.witness_map.insert(note_pos, witness);
         // Let's try to see if any of our viewing keys can decrypt latest note
-        for (vk, notes) in vks.iter_mut() {
+        for (vk, notes) in ctx.vks.iter_mut() {
             let decres = try_sapling_note_decryption::<TestNetwork>(
                 0,
                 &vk.ivk(),
@@ -505,11 +519,11 @@ pub fn scan_tx(
                 notes.insert(note_pos);
                 // Compute the nullifier now to quickly recognize when spent
                 let nf = note.nf(vk, note_pos.try_into().unwrap());
-                note_map.insert(note_pos, note);
-                memo_map.insert(note_pos, memo);
+                ctx.note_map.insert(note_pos, note);
+                ctx.memo_map.insert(note_pos, memo);
                 // The payment address' diversifier is required to spend note
-                div_map.insert(note_pos, *pa.diversifier());
-                nf_map.insert(nf.try_into().unwrap(), note_pos);
+                ctx.div_map.insert(note_pos, *pa.diversifier());
+                ctx.nf_map.insert(nf.try_into().unwrap(), note_pos);
                 break;
             }
         }
@@ -518,12 +532,12 @@ pub fn scan_tx(
     for ss in &(*tx).shielded_spends {
         // If the shielded spend's nullifier is in our map, then target note
         // is rendered unusable
-        if let Some(note_pos) = nf_map.get(&ss.nullifier) {
-            spents.insert(*note_pos);
+        if let Some(note_pos) = ctx.nf_map.get(&ss.nullifier) {
+            ctx.spents.insert(*note_pos);
         }
     }
     // To avoid state corruption caused by accidentaly replaying transaction
-    *tx_pos = *tx_pos + 1;
+    ctx.tx_pos += 1;
     Ok(())
 }
 
@@ -535,8 +549,9 @@ pub fn scan_tx(
 /// are effected only by the amounts and signatures specified by the containing
 /// Transfer object.
 
-pub async fn gen_shielded_transfer(
+fn gen_shielded_transfer_ctx(
     ctx: &Context,
+    tx_ctx: &TxContext,
     args: &args::TxTransfer,
     balance: token::Amount,
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
@@ -548,11 +563,6 @@ pub async fn gen_shielded_transfer(
     // Context required for storing which notes are in the source's possesion
     let height = 0u32;
     let consensus_branch_id = BranchId::Sapling;
-    let vks = HashMap::<ViewingKey, HashSet<usize>>::new();
-    let note_map = HashMap::<usize, Note>::new();
-    let div_map = HashMap::<usize, Diversifier>::new();
-    let witness_map = HashMap::<usize, IncrementalWitness<Node>>::new();
-    let spents = HashSet::<usize>::new();
     let amt: u64 = args.amount.into();
     let memo: Option<Memo> = None;
 
@@ -564,17 +574,17 @@ pub async fn gen_shielded_transfer(
     if let Some(sk) = &args.spending_key {
         let mut val_acc = 0;
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = vks.get(&to_viewing_key(&sk)) {
+        if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk)) {
             for note_idx in avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
                 if val_acc >= amt { break; }
                 // Spent notes cannot contribute a new transaction's pool
-                if spents.contains(note_idx) { continue; }
+                if tx_ctx.spents.contains(note_idx) { continue; }
                 // Get note, merkle path, diversifier associated with this ID
-                let note = note_map.get(note_idx).unwrap().clone();
-                let merkle_path = witness_map.get(note_idx).unwrap().path().unwrap();
-                let diversifier = div_map.get(note_idx).unwrap();
+                let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
+                let merkle_path = tx_ctx.witness_map.get(note_idx).unwrap().path().unwrap();
+                let diversifier = tx_ctx.div_map.get(note_idx).unwrap();
                 val_acc += note.value;
                 // Commit this note to our transaction
                 builder.add_sapling_spend(sk.clone(), *diversifier, note, merkle_path)?;
@@ -625,6 +635,31 @@ pub async fn gen_shielded_transfer(
     }
     // Build and return the constructed transaction
     builder.build(consensus_branch_id, &LocalTxProver::bundled()).map(|x| Some(x))
+}
+
+/// Load up the current state of the multi-asset shielded pool and try to build
+/// a valid shielded transaction in that context.
+
+pub async fn gen_shielded_transfer(
+    ctx: &Context,
+    args: &args::TxTransfer,
+    balance: token::Amount,
+) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
+    // Load all transactions accepted until this point
+    let txs = fetch_shielded_transfers(ctx, args).await;
+    let mut tx_ctx = TxContext::default();
+    // Load the viewing keys corresponding to given spending key into context
+    let mut sks = HashSet::new();
+    if let Some(spending_key) = args.spending_key.as_ref() {
+        sks.insert(spending_key.clone());
+    }
+    gen_viewing_keys(&sks, &mut tx_ctx.vks);
+    // Apply the loaded transactions to our context
+    while tx_ctx.tx_pos < txs.len() {
+        scan_tx(&txs[tx_ctx.tx_pos], &mut tx_ctx).expect("transaction scanned");
+    }
+    // Cnstruct the shielded transaction in the context that we set up
+    gen_shielded_transfer_ctx(ctx, &tx_ctx, args, balance)
 }
 
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
