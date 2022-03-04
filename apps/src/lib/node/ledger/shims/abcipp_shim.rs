@@ -6,13 +6,14 @@ use std::task::{Context, Poll};
 
 use anoma::types::storage::BlockHeight;
 use futures::future::FutureExt;
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tower::Service;
 #[cfg(not(feature = "ABCI"))]
 use tower_abci::{BoxError, Request as Req, Response as Resp};
 #[cfg(feature = "ABCI")]
 use tower_abci_old::{BoxError, Request as Req, Response as Resp};
 
+use super::super::ethereum_node::EthPollResult;
 use super::super::Shell;
 use super::abcipp_shim_types::shim::{request, Error, Request, Response};
 use crate::config;
@@ -41,6 +42,7 @@ impl AbcippShim {
         config: config::Ledger,
         wasm_dir: PathBuf,
         broadcast_sender: UnboundedSender<Vec<u8>>,
+        ethereum_recv: UnboundedReceiver<EthPollResult>,
         db_cache: &rocksdb::Cache,
         vp_wasm_compilation_cache: u64,
         tx_wasm_compilation_cache: u64,
@@ -54,6 +56,7 @@ impl AbcippShim {
                     config,
                     wasm_dir,
                     broadcast_sender,
+                    ethereum_recv,
                     Some(db_cache),
                     vp_wasm_compilation_cache,
                     tx_wasm_compilation_cache,

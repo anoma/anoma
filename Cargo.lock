@@ -159,6 +159,7 @@ dependencies = [
  "file-lock",
  "flate2",
  "futures 0.3.19",
+ "futures-lite",
  "git2",
  "hex",
  "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",

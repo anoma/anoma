@@ -1,5 +1,5 @@
-mod ethereum_node;
 mod broadcaster;
+mod ethereum_node;
 pub mod events;
 pub mod protocol;
 pub mod rpc;
@@ -262,6 +262,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
 
     let tendermint_dir = config.tendermint_dir();
+    let ethereum_url = config.ethereum_url();
     let ledger_address = config.shell.ledger_address.to_string();
     let rpc_address = config.tendermint.rpc_address.to_string();
     let chain_id = config.chain_id.clone();
@@ -275,6 +276,10 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     // Channel for signalling shut down from the shell or from Tendermint
     let (abort_send, abort_recv) =
         tokio::sync::mpsc::unbounded_channel::<&'static str>();
+    // Channels for the Ethereum relayer to send new Ethereum block headers
+    // and smart contract logs to the ledger
+    let (eth_relayer_sender, eth_relayer_receiver) =
+        tokio::sync::mpsc::unbounded_channel();
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
     let (broadcaster_sender, broadcaster_receiver) =
@@ -302,6 +307,32 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             tm_abort_recv,
         )
         .map_err(Error::Tendermint)
+        .await;
+        tracing::info!("Tendermint node is no longer running.");
+
+        drop(aborter);
+        res
+    });
+
+    // Start Ethereum fullnode
+    // Channel for signalling shut down to Tendermint process
+    let (eth_abort_send, eth_abort_recv) =
+        tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
+    let abort_send_for_eth = abort_send.clone();
+    let ethereum_node = tokio::spawn(async move {
+        // On panic or exit, the `Drop` of `AbortSender` will send abort message
+        let aborter = Aborter {
+            sender: abort_send_for_eth,
+            who: "Ethereum",
+        };
+
+        let res = ethereum_node::run(
+            &ethereum_url,
+            vec![],
+            eth_relayer_sender,
+            eth_abort_recv,
+        )
+        .map_err(Error::Ethereum)
         .await;
         tracing::info!("Tendermint node is no longer running.");
 
@@ -347,6 +378,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         config,
         wasm_dir,
         broadcaster_sender,
+        eth_relayer_receiver,
         &db_cache,
         vp_wasm_compilation_cache,
         tx_wasm_compilation_cache,
@@ -401,25 +433,46 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         }
     }
 
+    // Shutdown ethereum_node via a message to ensure that the child process
+    // is properly cleaned-up.
+    let (eth_abort_resp_send, eth_abort_resp_recv) =
+        tokio::sync::oneshot::channel::<()>();
+    // Ask to shutdown tendermint node cleanly. Ignore error, which can happen
+    // if the tendermint_node task has already finished.
+    if let Ok(()) = eth_abort_send.send(eth_abort_resp_send) {
+        match eth_abort_resp_recv.await {
+            Ok(()) => {}
+            Err(err) => {
+                tracing::error!(
+                    "Failed to receive a response from Ethereum: {}",
+                    err
+                );
+            }
+        }
+    }
+
     let res = match broadcaster {
         Some((broadcaster, bc_abort_send)) => {
             // request the broadcaster shutdown
             let _ = bc_abort_send.send(());
-            tokio::try_join!(tendermint_node, abci, broadcaster)
+            tokio::try_join!(tendermint_node, ethereum_node, abci, broadcaster)
         }
         None => {
             // if the broadcaster service is not active, we fill in its return
             // value with ()
-            tokio::try_join!(tendermint_node, abci)
-                .map(|results| (results.0, results.1, ()))
+            tokio::try_join!(tendermint_node, ethereum_node, abci)
+                .map(|results| (results.0, results.1, results.2, ()))
         }
     };
     match res {
-        Ok((tendermint_res, abci_res, _)) => {
+        Ok((tendermint_res, eth_res, abci_res, _)) => {
             // we ignore errors on user-initiated shutdown
             if aborted {
                 if let Err(err) = tendermint_res {
                     tracing::error!("Tendermint error: {}", err);
+                }
+                if let Err(err) = eth_res {
+                    tracing::error!("Ethereum error: {}", err);
                 }
                 if let Err(err) = abci_res {
                     tracing::error!("ABCI error: {}", err);

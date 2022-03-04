@@ -59,7 +59,7 @@ use tendermint_proto_abci::abci::{self, Evidence, ValidatorUpdate};
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::crypto::public_key;
 use thiserror::Error;
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 #[cfg(not(feature = "ABCI"))]
 use tower_abci::{request, response};
 #[cfg(feature = "ABCI")]
@@ -67,6 +67,7 @@ use tower_abci_old::{request, response};
 
 use super::rpc;
 use crate::config::{genesis, TendermintMode};
+use crate::node::ledger::ethereum_node::EthPollResult;
 use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
@@ -96,6 +97,8 @@ pub enum Error {
     GasOverflow,
     #[error("{0}")]
     Tendermint(tendermint_node::Error),
+    #[error("{0}")]
+    Ethereum(super::ethereum_node::Error),
     #[error("Server error: {0}")]
     TowerServer(String),
     #[error("{0}")]
@@ -149,6 +152,7 @@ pub(super) enum ShellMode {
     Validator {
         data: ValidatorData,
         broadcast_sender: UnboundedSender<Vec<u8>>,
+        ethereum_recv: UnboundedReceiver<EthPollResult>,
     },
     Full,
     Seed,
@@ -219,6 +223,7 @@ where
         config: config::Ledger,
         wasm_dir: PathBuf,
         broadcast_sender: UnboundedSender<Vec<u8>>,
+        ethereum_recv: UnboundedReceiver<EthPollResult>,
         db_cache: Option<&D::Cache>,
         vp_wasm_compilation_cache: u64,
         tx_wasm_compilation_cache: u64,
@@ -269,6 +274,7 @@ where
                         .map(|data| ShellMode::Validator {
                             data,
                             broadcast_sender,
+                            ethereum_recv,
                         })
                         .expect(
                             "Validator data should have been stored in the \
@@ -287,6 +293,7 @@ where
                             },
                         },
                         broadcast_sender,
+                        ethereum_recv,
                     }
                 }
             }
@@ -685,6 +692,8 @@ mod test_utils {
         /// receives any protocol txs sent by the shell.
         pub fn new() -> (Self, UnboundedReceiver<Vec<u8>>) {
             let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
+            let (_eth_sender, eth_receiver) =
+                tokio::sync::mpsc::unbounded_channel();
             let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
             let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
             let tx_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
@@ -698,6 +707,7 @@ mod test_utils {
                         ),
                         top_level_directory().join("wasm"),
                         sender,
+                        eth_receiver,
                         None,
                         vp_wasm_compilation_cache,
                         tx_wasm_compilation_cache,
@@ -830,6 +840,7 @@ mod test_utils {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
         let (sender, _) = tokio::sync::mpsc::unbounded_channel();
+        let (_, receiver) = tokio::sync::mpsc::unbounded_channel();
         let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
         let tx_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
@@ -840,6 +851,7 @@ mod test_utils {
             ),
             top_level_directory().join("wasm"),
             sender.clone(),
+            receiver,
             None,
             vp_wasm_compilation_cache,
             tx_wasm_compilation_cache,
@@ -887,7 +899,7 @@ mod test_utils {
 
         // Drop the shell
         std::mem::drop(shell);
-
+        let (_, receiver) = tokio::sync::mpsc::unbounded_channel();
         // Reboot the shell and check that the queue was restored from DB
         let shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
             config::Ledger::new(
@@ -897,6 +909,7 @@ mod test_utils {
             ),
             top_level_directory().join("wasm"),
             sender,
+            receiver,
             None,
             vp_wasm_compilation_cache,
             tx_wasm_compilation_cache,
