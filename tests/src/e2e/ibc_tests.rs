@@ -1,3 +1,14 @@
+//! By default, these tests will run in release mode. This can be disabled
+//! by setting environment variable `ANOMA_E2E_DEBUG=true`. For debugging,
+//! you'll typically also want to set `RUST_BACKTRACE=1`, e.g.:
+//!
+//! ```ignore,shell
+//! ANOMA_E2E_DEBUG=true RUST_BACKTRACE=1 cargo test e2e::ibc_tests -- --test-threads=1 --nocapture
+//! ```
+//!
+//! To keep the temporary files created by a test, use env var
+//! `ANOMA_E2E_KEEP_TEMP=true`.
+
 use core::convert::TryFrom;
 use core::str::FromStr;
 use core::time::Duration;
@@ -48,15 +59,13 @@ use anoma::ibc_proto::cosmos::base::v1beta1::Coin;
 use anoma::ledger::ibc::handler::{commitment_prefix, port_channel_id};
 use anoma::ledger::ibc::storage::*;
 use anoma::ledger::storage::{MerkleTree, Sha256Hasher};
+use anoma::tendermint::block::Header as TmHeader;
+use anoma::tendermint::merkle::proof::Proof as TmProof;
 use anoma::types::storage::Key;
 use anoma_apps::client::rpc::query_storage_value_bytes;
 use color_eyre::eyre::Result;
 use eyre::eyre;
 use setup::constants::*;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::block::Header as TmHeader;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::merkle::proof::Proof as TmProof;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
@@ -69,20 +78,11 @@ use tendermint_rpc::{Client, HttpClient, Order};
 use tendermint_rpc_abci::query::Query;
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient, Order};
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::Header as TmHeader;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::merkle::proof::Proof as TmProof;
 use tokio::runtime::Runtime;
 
 use crate::e2e::helpers::{find_address, get_actor_rpc, get_epoch};
-use crate::e2e::setup::{self, constants, sleep, Bin, Test, Who};
+use crate::e2e::setup::{self, sleep, Bin, Test, Who};
 use crate::{run, run_as};
-
-const TX_IBC_WASM: &str = "tx_ibc.wasm";
-const DATA_PATH: &str = "tx.data";
-const TX_IBC_ARGS: [&str; 5] =
-    ["tx", "--code-path", TX_IBC_WASM, "--data-path", DATA_PATH];
 
 #[test]
 fn run_ledger_ibc() -> Result<()> {
@@ -368,7 +368,7 @@ fn channel_handshake(
     let proofs = get_channel_proofs(test_b, &port_channel_id_b)?;
     let msg = MsgChannelOpenAck {
         port_id: port_id.clone(),
-        channel_id: channel_id_a.clone(),
+        channel_id: channel_id_a,
         counterparty_channel_id: channel_id_b.clone(),
         counterparty_version: ChanVersion::ics20(),
         proofs,
@@ -380,7 +380,7 @@ fn channel_handshake(
     let proofs = get_channel_proofs(test_a, &port_channel_id_a)?;
     let msg = MsgChannelOpenConfirm {
         port_id,
-        channel_id: channel_id_b.clone(),
+        channel_id: channel_id_b,
         proofs,
         signer: Signer::new("test_b"),
     };
@@ -407,9 +407,9 @@ fn transfer_token(
     test_b: &Test,
     source_port_channel_id: &PortChannelId,
 ) -> Result<()> {
-    let xan = find_address(&test_a, constants::XAN)?;
-    let sender = find_address(&test_a, constants::ALBERT)?;
-    let receiver = find_address(&test_b, constants::BERTHA)?;
+    let xan = find_address(test_a, XAN)?;
+    let sender = find_address(test_a, ALBERT)?;
+    let receiver = find_address(test_b, BERTHA)?;
 
     // Send a token from Chain A
     let token = Some(Coin {
@@ -486,21 +486,42 @@ fn get_ack_proof(test: &Test, packet: &Packet) -> Result<Proofs> {
 }
 
 fn submit_ibc_tx(test: &Test, message: impl Msg) -> Result<String> {
+    let data_path = test.base_dir.path().join("tx.data");
     let data = make_ibc_data(message);
-    std::fs::write(DATA_PATH, data).expect("writing data failed");
-    let mut client = run!(test, Bin::Client, TX_IBC_ARGS, Some(40))?;
-    if !cfg!(feature = "ABCI") {
-        client.exp_string("Transaction accepted")?;
-    }
-    client.exp_string("Transaction applied")?;
-    client.exp_string("Transaction is valid.")?;
+    std::fs::write(&data_path, data).expect("writing data failed");
+
+    let code_path = wasm_abs_path(TX_IBC_WASM);
+    let code_path = code_path.to_string_lossy();
+    let data_path = data_path.to_string_lossy();
+    let rpc = get_actor_rpc(test, &Who::Validator(0));
+    let mut client = run!(
+        test,
+        Bin::Client,
+        [
+            "tx",
+            "--code-path",
+            &code_path,
+            "--data-path",
+            &data_path,
+            "--signer",
+            ALBERT,
+            "--fee-amount",
+            "0",
+            "--gas-limit",
+            "0",
+            "--fee-token",
+            XAN,
+            "--ledger-address",
+            &rpc
+        ],
+        Some(40)
+    )?;
     let (_unread, matched) = if !cfg!(feature = "ABCI") {
         client.exp_regex("Wrapper transaction hash: .*\n")?
     } else {
         client.exp_regex("Transaction hash: .*\n")?
     };
-    let hash = matched.trim().rsplit_once(' ').unwrap().1.to_string();
-    client.assert_success();
+    let hash = matched.trim().rsplit_once(' ').unwrap().1.replace('"', "");
 
     Ok(hash)
 }
@@ -577,7 +598,7 @@ fn get_event(test: &Test, tx_hash: String) -> Result<IbcEvent> {
     let event = tx_result.events.get(0).ok_or_else(|| {
         eyre!("The transaction response doesn't have any event")
     })?;
-    match from_tx_response_event(height, &event) {
+    match from_tx_response_event(height, event) {
         Some(ibc_event) => Ok(ibc_event),
         None => Err(eyre!(
             "The transaction response doesn't have any IBC event: hash {}",
