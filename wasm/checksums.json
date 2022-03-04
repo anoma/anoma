@@ -1,10 +1,10 @@
 {
     "tx_bond.wasm": "tx_bond.32940de9dc80869cf4d7b4762d89a43ac06858b05c8faef11c2f22a4cf720f04.wasm",
-    "tx_from_intent.wasm": "tx_from_intent.ee79e9ab08bf451c77ddea21bdcdc7d1b2ec86bdc63ea252526130cf0a595e85.wasm",
+    "tx_from_intent.wasm": "tx_from_intent.ca86ee270f05ac154ca50752466b3f4088b69aff47a3ca3c55115d8fc6425e8d.wasm",
     "tx_init_account.wasm": "tx_init_account.197a7fe7d4bd196aeb5dc51b11637edeee2278f9064e52027eec9f91188f60b2.wasm",
-    "tx_init_nft.wasm": "tx_init_nft.46d2dc2e38ee0deadaa86db24ddd13da804534a674e05f549d20093c30827961.wasm",
+    "tx_init_nft.wasm": "tx_init_nft.2874269cd744098e90fbd1eaac94c04e7435b9240423f372dc551fdfa752444d.wasm",
     "tx_init_validator.wasm": "tx_init_validator.6a9701d14f29b0f8c071d4752e832c662cde2fc5a3800d9c76a996d2430aa7cf.wasm",
-    "tx_mint_nft.wasm": "tx_mint_nft.42a8b1b85755e9004ae725d17bb5521e0db4b33f40a2827fc3243f95bbe935e1.wasm",
+    "tx_mint_nft.wasm": "tx_mint_nft.0ed235bf14b6d0005389a536cefe63988529b4934be5858c164a1a2f0caa19ee.wasm",
     "tx_transfer.wasm": "tx_transfer.28494aef95f4d4a731797de4b5ed58d741e9af1744d80ad3cba6d9ced467f4c2.wasm",
     "tx_unbond.wasm": "tx_unbond.c56f3118c7202d4fa3d2dc33acd151b22880fcc329fcc85e6253ef0ec1e4918c.wasm",
     "tx_update_vp.wasm": "tx_update_vp.bc1bc54c3bf0edcc95a7969490c7c086befa69a0b6e2eda550bbe770813afc24.wasm",
