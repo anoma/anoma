@@ -568,9 +568,6 @@
 <span id="567">567</span>
 <span id="568">568</span>
 <span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Types that are used in transactions.</span>
 
 <span class="doccomment">/// txs that contain decrypted payloads or assertions of</span>
@@ -596,15 +593,12 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">protocol::UpdateDkgSessionKey</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint::abci::transaction</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::abci::transaction</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wrapper</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ibc::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::storage</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas::VpsGas</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint::abci::transaction</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key</span>::<span class="kw-2">*</span>;
 

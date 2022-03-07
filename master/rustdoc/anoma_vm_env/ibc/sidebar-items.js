@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Ibc","This struct integrates and gives access to lower-level IBC functions."]],"trait":[["IbcActions","IBC trait to be implemented in integration that can read and write"]]});

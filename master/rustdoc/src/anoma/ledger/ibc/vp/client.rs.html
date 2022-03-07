@@ -549,120 +549,9 @@
 <span id="548">548</span>
 <span id="549">549</span>
 <span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
-<span id="590">590</span>
-<span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for client module</span>
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus</span>::{
-    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_state::AnyClientState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_type::ClientType</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::context::ClientReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::error::Error</span> <span class="kw">as</span> <span class="ident">Ics02Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::ClientMsg</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier::ClientId</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus</span>::{
-    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_state::AnyClientState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_type::ClientType</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::context::ClientReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::error::Error</span> <span class="kw">as</span> <span class="ident">Ics02Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::ClientMsg</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier::ClientId</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics26_routing::msgs::Ics26Envelope</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::handler</span>::{
@@ -674,7 +563,24 @@
     <span class="ident">client_update_height_key</span>, <span class="ident">client_update_timestamp_key</span>, <span class="ident">consensus_state_key</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_consensus</span>::{
+    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_type::ClientType</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::context::ClientReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::error::Error</span> <span class="kw">as</span> <span class="ident">Ics02Error</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::msgs::ClientMsg</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::context::ChannelReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics24_host::identifier::ClientId</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint_proto::Protobuf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 

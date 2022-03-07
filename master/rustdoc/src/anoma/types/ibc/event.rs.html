@@ -62,33 +62,17 @@
 <span id="61">61</span>
 <span id="62">62</span>
 <span id="63">63</span>
-<span id="64">64</span>
-<span id="65">65</span>
-<span id="66">66</span>
-<span id="67">67</span>
-<span id="68">68</span>
-<span id="69">69</span>
-<span id="70">70</span>
-<span id="71">71</span>
-<span id="72">72</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC event without IBC-related data types</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::events</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcEventError</span>, <span class="ident">IbcEvent</span> <span class="kw">as</span> <span class="ident">RawIbcEvent</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::events</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcEventError</span>, <span class="ident">IbcEvent</span> <span class="kw">as</span> <span class="ident">RawIbcEvent</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint::abci::Event</span> <span class="kw">as</span> <span class="ident">AbciEvent</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::abci::Event</span> <span class="kw">as</span> <span class="ident">AbciEvent</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::events</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcEventError</span>, <span class="ident">IbcEvent</span> <span class="kw">as</span> <span class="ident">RawIbcEvent</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint::abci::Event</span> <span class="kw">as</span> <span class="ident">AbciEvent</span>;
+
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC event error: {0}&quot;</span>)]</span>
@@ -96,7 +80,6 @@
 }
 
 <span class="doccomment">/// Conversion functions result</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Wrapped IbcEvent</span>
@@ -126,7 +109,6 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">RawIbcEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IbcEvent</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 

@@ -731,109 +731,8 @@
 <span id="730">730</span>
 <span id="731">731</span>
 <span id="732">732</span>
-<span id="733">733</span>
-<span id="734">734</span>
-<span id="735">735</span>
-<span id="736">736</span>
-<span id="737">737</span>
-<span id="738">738</span>
-<span id="739">739</span>
-<span id="740">740</span>
-<span id="741">741</span>
-<span id="742">742</span>
-<span id="743">743</span>
-<span id="744">744</span>
-<span id="745">745</span>
-<span id="746">746</span>
-<span id="747">747</span>
-<span id="748">748</span>
-<span id="749">749</span>
-<span id="750">750</span>
-<span id="751">751</span>
-<span id="752">752</span>
-<span id="753">753</span>
-<span id="754">754</span>
-<span id="755">755</span>
-<span id="756">756</span>
-<span id="757">757</span>
-<span id="758">758</span>
-<span id="759">759</span>
-<span id="760">760</span>
-<span id="761">761</span>
-<span id="762">762</span>
-<span id="763">763</span>
-<span id="764">764</span>
-<span id="765">765</span>
-<span id="766">766</span>
-<span id="767">767</span>
-<span id="768">768</span>
-<span id="769">769</span>
-<span id="770">770</span>
-<span id="771">771</span>
-<span id="772">772</span>
-<span id="773">773</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for packets</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel</span>::{
-    <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::error::Error</span> <span class="kw">as</span> <span class="ident">Ics04Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::handler::verify</span>::{
-    <span class="ident">verify_channel_proofs</span>, <span class="ident">verify_next_sequence_recv</span>,
-    <span class="ident">verify_packet_acknowledgement_proofs</span>, <span class="ident">verify_packet_receipt_absence</span>,
-    <span class="ident">verify_packet_recv_proofs</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::PacketMsg</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier</span>::{
-    <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::proofs::Proofs</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::timestamp::Expiry</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel</span>::{
-    <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::error::Error</span> <span class="kw">as</span> <span class="ident">Ics04Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::handler::verify</span>::{
-    <span class="ident">verify_channel_proofs</span>, <span class="ident">verify_next_sequence_recv</span>,
-    <span class="ident">verify_packet_acknowledgement_proofs</span>, <span class="ident">verify_packet_receipt_absence</span>,
-    <span class="ident">verify_packet_recv_proofs</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::PacketMsg</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier</span>::{
-    <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics26_routing::msgs::Ics26Envelope</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::proofs::Proofs</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Expiry</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::handler</span>::{
@@ -843,6 +742,25 @@
     <span class="ident">port_channel_sequence_id</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::channel</span>::{
+    <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::context::ChannelReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::error::Error</span> <span class="kw">as</span> <span class="ident">Ics04Error</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::handler::verify</span>::{
+    <span class="ident">verify_channel_proofs</span>, <span class="ident">verify_next_sequence_recv</span>,
+    <span class="ident">verify_packet_acknowledgement_proofs</span>, <span class="ident">verify_packet_receipt_absence</span>,
+    <span class="ident">verify_packet_recv_proofs</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::msgs::PacketMsg</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics24_host::identifier</span>::{
+    <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::proofs::Proofs</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::timestamp::Expiry</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;

@@ -248,33 +248,15 @@
 <span id="247">247</span>
 <span id="248">248</span>
 <span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for sequences</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel::Order</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier::PortChannelId</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel::Order</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier::PortChannelId</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::storage</span>::{<span class="ident">port_channel_id</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Ibc</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::channel::Order</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::context::ChannelReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics24_host::identifier::PortChannelId</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::ibc::handler::packet_from_message</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};

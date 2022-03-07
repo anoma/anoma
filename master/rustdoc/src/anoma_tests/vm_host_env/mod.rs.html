@@ -1672,12 +1672,6 @@
 <span id="1671">1671</span>
 <span id="1672">1672</span>
 <span id="1673">1673</span>
-<span id="1674">1674</span>
-<span id="1675">1675</span>
-<span id="1676">1676</span>
-<span id="1677">1677</span>
-<span id="1678">1678</span>
-<span id="1679">1679</span>
 </pre><pre class="rust"><code><span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! You can enable logging with the `RUST_LOG` environment variable, e.g.:</span>
@@ -1699,11 +1693,11 @@
 
     <span class="kw">use</span> <span class="ident">std::panic</span>;
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-    <span class="kw">use</span> <span class="ident">::ibc::tx_msg::Msg</span>;
+    <span class="kw">use</span> <span class="ident">anoma::ibc::tx_msg::Msg</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::handler::IbcActions</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>;
     <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">SignedTxData</span>, <span class="ident">Tx</span>};
+    <span class="kw">use</span> <span class="ident">anoma::tendermint_proto::Protobuf</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
@@ -1713,14 +1707,8 @@
         <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">KeyValIterator</span>,
     };
     <span class="kw">use</span> <span class="ident">anoma_vm_env::vp_prelude</span>::{<span class="ident">PostKeyValIterator</span>, <span class="ident">PreKeyValIterator</span>};
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">ibc_abci::tx_msg::Msg</span>;
     <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
     <span class="kw">use</span> <span class="ident">prost::Message</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-    <span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
     <span class="kw">use</span> <span class="ident">test_log::test</span>;
 
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ibc</span>;

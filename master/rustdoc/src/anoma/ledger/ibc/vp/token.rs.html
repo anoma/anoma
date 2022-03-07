@@ -276,42 +276,18 @@
 <span id="275">275</span>
 <span id="276">276</span>
 <span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC token transfer validation as a native validity predicate</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::PacketMsg</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet::Packet</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::PacketMsg</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet::Packet</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::msgs::PacketMsg</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::packet::Packet</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">AddressError</span>, <span class="ident">InternalAddress</span>};

@@ -425,125 +425,8 @@
 <span id="424">424</span>
 <span id="425">425</span>
 <span id="426">426</span>
-<span id="427">427</span>
-<span id="428">428</span>
-<span id="429">429</span>
-<span id="430">430</span>
-<span id="431">431</span>
-<span id="432">432</span>
-<span id="433">433</span>
-<span id="434">434</span>
-<span id="435">435</span>
-<span id="436">436</span>
-<span id="437">437</span>
-<span id="438">438</span>
-<span id="439">439</span>
-<span id="440">440</span>
-<span id="441">441</span>
-<span id="442">442</span>
-<span id="443">443</span>
-<span id="444">444</span>
-<span id="445">445</span>
-<span id="446">446</span>
-<span id="447">447</span>
-<span id="448">448</span>
-<span id="449">449</span>
-<span id="450">450</span>
-<span id="451">451</span>
-<span id="452">452</span>
-<span id="453">453</span>
-<span id="454">454</span>
-<span id="455">455</span>
-<span id="456">456</span>
-<span id="457">457</span>
-<span id="458">458</span>
-<span id="459">459</span>
-<span id="460">460</span>
-<span id="461">461</span>
-<span id="462">462</span>
-<span id="463">463</span>
-<span id="464">464</span>
-<span id="465">465</span>
-<span id="466">466</span>
-<span id="467">467</span>
-<span id="468">468</span>
-<span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
-<span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for connection module</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus</span>::{
-    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_state::AnyClientState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::context::ClientReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::connection</span>::{
-    <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::context::ConnectionReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::error::Error</span> <span class="kw">as</span> <span class="ident">Ics03Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::handler::verify::verify_proofs</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics23_commitment::commitment::CommitmentPrefix</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus</span>::{
-    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_state::AnyClientState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::context::ClientReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::connection</span>::{
-    <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>,
-};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::context::ConnectionReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::error::Error</span> <span class="kw">as</span> <span class="ident">Ics03Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::handler::verify::verify_proofs</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics23_commitment::commitment::CommitmentPrefix</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::handler</span>::{
@@ -556,7 +439,26 @@
     <span class="ident">is_connection_counter_key</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_consensus</span>::{
+    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::context::ClientReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::connection</span>::{
+    <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::context::ConnectionReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::error::Error</span> <span class="kw">as</span> <span class="ident">Ics03Error</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::handler::verify::verify_proofs</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics23_commitment::commitment::CommitmentPrefix</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint_proto::Protobuf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;

@@ -221,44 +221,9 @@
 <span id="220">220</span>
 <span id="221">221</span>
 <span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
-<span id="236">236</span>
-<span id="237">237</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for port module</span>
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics05_port::capabilities</span>::{<span class="ident">Capability</span>, <span class="ident">CapabilityName</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics05_port::context</span>::{<span class="ident">CapabilityReader</span>, <span class="ident">PortReader</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics05_port::error::Error</span> <span class="kw">as</span> <span class="ident">Ics05Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier::PortId</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::context::ChannelReader</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics05_port::capabilities</span>::{<span class="ident">Capability</span>, <span class="ident">CapabilityName</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics05_port::context</span>::{<span class="ident">CapabilityReader</span>, <span class="ident">PortReader</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics05_port::error::Error</span> <span class="kw">as</span> <span class="ident">Ics05Error</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier::PortId</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::storage</span>::{
@@ -266,6 +231,11 @@
     <span class="ident">port_id</span>, <span class="ident">port_key</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics04_channel::context::ChannelReader</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics05_port::capabilities</span>::{<span class="ident">Capability</span>, <span class="ident">CapabilityName</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics05_port::context</span>::{<span class="ident">CapabilityReader</span>, <span class="ident">PortReader</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics05_port::error::Error</span> <span class="kw">as</span> <span class="ident">Ics05Error</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics24_host::identifier::PortId</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;

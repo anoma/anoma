@@ -222,11 +222,6 @@
 <span id="221">221</span>
 <span id="222">222</span>
 <span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Types for dealing with time and durations.</span>
 
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -234,14 +229,9 @@
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Duration</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint::time::Time</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint::Error</span> <span class="kw">as</span> <span class="ident">TendermintError</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::time::Time</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::Error</span> <span class="kw">as</span> <span class="ident">TendermintError</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint::time::Time</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint::Error</span> <span class="kw">as</span> <span class="ident">TendermintError</span>;
 
 <span class="doccomment">/// Check if the given `duration` has passed since the given `start.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">duration_passed</span>(

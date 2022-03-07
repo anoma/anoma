@@ -357,12 +357,8 @@
 <span id="356">356</span>
 <span id="357">357</span>
 <span id="358">358</span>
-<span id="359">359</span>
-<span id="360">360</span>
-<span id="361">361</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A basic fungible token</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Add</span>, <span class="ident">AddAssign</span>, <span class="ident">Sub</span>, <span class="ident">SubAssign</span>};
@@ -373,7 +369,6 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">AddressError</span>, <span class="ident">InternalAddress</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data::FungibleTokenPacketData</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
@@ -675,7 +670,6 @@
     <span class="ident">NoToken</span>,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">FungibleTokenPacketData</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Transfer</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">TransferError</span>;
 
