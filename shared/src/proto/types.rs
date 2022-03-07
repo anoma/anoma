@@ -3,7 +3,7 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -40,7 +40,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Because the signature is not checked by the ledger, we don't inline it into
 /// the `Tx` type directly. Instead, the signature is attached to the `tx.data`,
 /// which is can then be checked by a validity predicate wasm.
-#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
 pub struct SignedTxData {
     /// The original tx data bytes, if any
     pub data: Option<Vec<u8>>,
@@ -120,7 +120,9 @@ where
     }
 }
 
-#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, Hash)]
+#[derive(
+    Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Hash,
+)]
 pub struct Tx {
     pub code: Vec<u8>,
     pub data: Option<Vec<u8>>,

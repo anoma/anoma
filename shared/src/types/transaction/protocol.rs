@@ -28,7 +28,7 @@ mod protocol_txs {
     use std::io::{ErrorKind, Write};
     use std::path::Path;
 
-    use borsh::{BorshDeserialize, BorshSerialize};
+    use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
     use ferveo::dkg::pv::Message;
     use serde_json;
 
@@ -39,7 +39,7 @@ mod protocol_txs {
 
     const TX_NEW_DKG_KP_WASM: &str = "tx_update_dkg_session_keypair.wasm";
 
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     /// Txs sent by validators as part of internal protocols
     pub struct ProtocolTx {
         /// we require ProtocolTxs be signed
@@ -65,12 +65,16 @@ mod protocol_txs {
         }
     }
 
+    /// DKG message wrapper type that adds Borsh encoding.
     #[derive(Clone, Debug)]
+    pub struct DkgMessage(pub Message<EllipticCurve>);
+
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     #[allow(clippy::large_enum_variant)]
     /// Types of protocol messages to be sent
     pub enum ProtocolTxType {
         /// Messages to be given to the DKG state machine
-        DKG(Message<EllipticCurve>),
+        DKG(DkgMessage),
         /// Tx requesting a new DKG session keypair
         NewDkgKeypair(Tx),
         /// Aggregation of Ethereum state changes
@@ -128,59 +132,52 @@ mod protocol_txs {
         }
     }
 
-    impl borsh::ser::BorshSerialize for ProtocolTxType {
+    impl BorshSerialize for DkgMessage {
         fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-            let blob = match &self {
-                ProtocolTxType::NewDkgKeypair(tx) => (1u8, tx.try_to_vec()?),
-                ProtocolTxType::DKG(msg) => (
-                    0u8,
-                    serde_json::to_string(&msg)
-                        .map_err(|err| {
-                            std::io::Error::new(ErrorKind::InvalidData, err)
-                        })?
-                        .as_bytes()
-                        .to_owned(),
-                ),
-                ProtocolTxType::EthereumStateUpdate(tx) => {
-                    (2u8, tx.try_to_vec()?)
-                }
-            };
+            let blob = serde_json::to_string(&self.0)
+                .map_err(|err| {
+                    std::io::Error::new(ErrorKind::InvalidData, err)
+                })?
+                .as_bytes()
+                .to_owned();
             BorshSerialize::serialize(&blob, writer)
         }
     }
 
-    impl borsh::de::BorshDeserialize for ProtocolTxType {
+    impl BorshDeserialize for DkgMessage {
         fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-            let (variant, blob): (u8, Vec<u8>) =
-                BorshDeserialize::deserialize(buf)?;
-            match variant {
-                0 => {
-                    let json = String::from_utf8(blob).map_err(|err| {
-                        std::io::Error::new(ErrorKind::InvalidData, err)
-                    })?;
-                    Ok(ProtocolTxType::DKG(
-                        serde_json::from_str(&json).map_err(|err| {
-                            std::io::Error::new(ErrorKind::InvalidData, err)
-                        })?,
-                    ))
-                }
-                1 => Ok(ProtocolTxType::NewDkgKeypair(
-                    BorshDeserialize::deserialize(&mut blob.as_ref())?,
-                )),
-                2 => Ok(ProtocolTxType::EthereumStateUpdate(
-                    BorshDeserialize::deserialize(&mut blob.as_ref())?,
-                )),
-                _ => Err(std::io::Error::new(
-                    ErrorKind::InvalidData,
-                    "Invalid enum variant",
-                )),
-            }
+            let blob: Vec<u8> = BorshDeserialize::deserialize(buf)?;
+            let json = String::from_utf8(blob).map_err(|err| {
+                std::io::Error::new(ErrorKind::InvalidData, err)
+            })?;
+            let msg = serde_json::from_str(&json).map_err(|err| {
+                std::io::Error::new(ErrorKind::InvalidData, err)
+            })?;
+            Ok(Self(msg))
+        }
+    }
+
+    impl BorshSchema for DkgMessage {
+        fn add_definitions_recursively(
+            definitions: &mut std::collections::HashMap<
+                borsh::schema::Declaration,
+                borsh::schema::Definition,
+            >,
+        ) {
+            // Encoded as `Vec<u8>`;
+            let elements = "u8".into();
+            let definition = borsh::schema::Definition::Sequence { elements };
+            definitions.insert(Self::declaration(), definition);
+        }
+
+        fn declaration() -> borsh::schema::Declaration {
+            "DkgMessage".into()
         }
     }
 
     impl From<Message<EllipticCurve>> for ProtocolTxType {
         fn from(msg: Message<EllipticCurve>) -> ProtocolTxType {
-            ProtocolTxType::DKG(msg)
+            ProtocolTxType::DKG(DkgMessage(msg))
         }
     }
 }

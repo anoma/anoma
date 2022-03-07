@@ -6,7 +6,7 @@ use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -23,6 +23,7 @@ use crate::types::storage::{DbKeySeg, Key, KeySeg};
     Default,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,
@@ -283,6 +284,7 @@ pub fn is_non_owner_balance_key(key: &Key) -> Option<&Address> {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Hash,
     Eq,
     PartialOrd,

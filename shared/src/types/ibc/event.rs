@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
 use ibc::events::{Error as IbcEventError, IbcEvent as RawIbcEvent};
 #[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
@@ -27,7 +27,9 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Wrapped IbcEvent
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
+#[derive(
+    Debug, Clone, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq, Eq,
+)]
 pub struct IbcEvent {
     /// The IBC event type
     pub event_type: String,

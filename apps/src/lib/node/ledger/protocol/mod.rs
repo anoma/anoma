@@ -1,8 +1,8 @@
 //! The ledger's protocol
 use std::collections::HashSet;
-use std::{fmt, panic};
+use std::panic;
 
-use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
+use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter};
 use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
@@ -11,9 +11,8 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
-use anoma::types::ibc::IbcEvent;
 use anoma::types::storage::Key;
-use anoma::types::transaction::{DecryptedTx, TxType};
+use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -50,31 +49,6 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
-
-/// Transaction application result
-#[derive(Clone, Debug, Default)]
-pub struct TxResult {
-    pub gas_used: u64,
-    pub changed_keys: HashSet<Key>,
-    pub vps_result: VpsResult,
-    pub initialized_accounts: Vec<Address>,
-    pub ibc_event: Option<IbcEvent>,
-}
-
-impl TxResult {
-    pub fn is_accepted(&self) -> bool {
-        self.vps_result.rejected_vps.is_empty()
-    }
-}
-
-/// Result of checking a transaction with validity predicates
-#[derive(Clone, Debug, Default)]
-pub struct VpsResult {
-    pub accepted_vps: HashSet<Address>,
-    pub rejected_vps: HashSet<Address>,
-    pub gas_used: VpsGas,
-    pub errors: Vec<(Address, String)>,
-}
 
 /// Apply a given transaction
 ///
@@ -425,56 +399,4 @@ fn merge_vp_results(
         gas_used,
         errors,
     })
-}
-
-impl fmt::Display for TxResult {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Transaction is {}. Gas used: {};{} VPs result: {}",
-            if self.is_accepted() {
-                "valid"
-            } else {
-                "invalid"
-            },
-            self.gas_used,
-            iterable_to_string("Changed keys", self.changed_keys.iter()),
-            self.vps_result,
-        )
-    }
-}
-
-impl fmt::Display for VpsResult {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}{}{}",
-            iterable_to_string("Accepted", self.accepted_vps.iter()),
-            iterable_to_string("Rejected", self.rejected_vps.iter()),
-            iterable_to_string(
-                "Errors",
-                self.errors
-                    .iter()
-                    .map(|(addr, err)| format!("{} in {}", err, addr))
-            ),
-        )
-    }
-}
-
-fn iterable_to_string<T: fmt::Display>(
-    label: &str,
-    iter: impl Iterator<Item = T>,
-) -> String {
-    let mut iter = iter.peekable();
-    if iter.peek().is_none() {
-        "".into()
-    } else {
-        format!(
-            " {}: {};",
-            label,
-            iter.map(|x| x.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
-        )
-    }
 }

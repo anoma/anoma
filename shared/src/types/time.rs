@@ -3,7 +3,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::ops::{Add, Sub};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use chrono::{DateTime, Duration, TimeZone, Utc};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::time::Time;
@@ -35,6 +35,7 @@ pub fn duration_passed(
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub struct DurationSecs(pub u64);
 
@@ -71,6 +72,7 @@ impl From<DurationSecs> for std::time::Duration {
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub struct DurationNanos {
     /// The seconds
@@ -141,6 +143,25 @@ impl BorshDeserialize for DateTimeUtc {
         let actual = DateTime::parse_from_rfc3339(&raw)
             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
         Ok(Self(actual.into()))
+    }
+}
+
+impl BorshSchema for DateTimeUtc {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        // Encoded as rfc3339 `String`
+        let fields =
+            borsh::schema::Fields::UnnamedFields(vec!["string".into()]);
+        let definition = borsh::schema::Definition::Struct { fields };
+        definitions.insert(Self::declaration(), definition);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "DateTimeUtc".into()
     }
 }
 

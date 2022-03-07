@@ -6,7 +6,7 @@ use std::io::{Error, ErrorKind};
 use std::str::FromStr;
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
 use crate::types::address::Address;
@@ -116,6 +116,24 @@ impl BorshDeserialize for DkgPublicKey {
             CanonicalDeserialize::deserialize(pk_bytes.as_slice())
                 .map_err(|err| Error::new(ErrorKind::InvalidInput, err))?;
         Ok(pk.into())
+    }
+}
+
+impl BorshSchema for DkgPublicKey {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        // Encoded as `Vec<u8>`;
+        let elements = "u8".into();
+        let definition = borsh::schema::Definition::Sequence { elements };
+        definitions.insert(Self::declaration(), definition);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "DkgPublicKey".into()
     }
 }
 

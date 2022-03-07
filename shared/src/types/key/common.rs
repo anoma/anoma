@@ -3,7 +3,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
@@ -26,6 +26,7 @@ use super::{
     Deserialize,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub enum PublicKey {
     /// Encapsulate Ed25519 public keys
@@ -71,7 +72,7 @@ impl FromStr for PublicKey {
 }
 
 /// Secret key
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[allow(clippy::large_enum_variant)]
 pub enum SecretKey {
     /// Encapsulate Ed25519 secret keys
@@ -177,6 +178,7 @@ impl FromStr for SecretKey {
     Deserialize,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub enum Signature {
     /// Encapsulate Ed25519 signatures
@@ -211,6 +213,7 @@ impl super::Signature for Signature {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,

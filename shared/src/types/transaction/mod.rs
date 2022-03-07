@@ -13,9 +13,10 @@ pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
+use std::collections::HashSet;
 use std::fmt::{self, Display};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use decrypted::*;
 #[cfg(feature = "ferveo-tpke")]
 pub use encrypted::EncryptionKey;
@@ -28,6 +29,9 @@ use tendermint::abci::transaction;
 use tendermint_stable::abci::transaction;
 pub use wrapper::*;
 
+use super::ibc::IbcEvent;
+use super::storage;
+use crate::ledger::gas::VpsGas;
 use crate::types::address::Address;
 use crate::types::key::*;
 
@@ -39,6 +43,7 @@ use crate::types::key::*;
     Eq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -68,6 +73,96 @@ pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     Hash(hash_bytes)
 }
 
+/// Transaction application result
+// TODO derive BorshSchema after <https://github.com/near/borsh-rs/issues/82>
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize)]
+pub struct TxResult {
+    /// Total gas used by the transaction (includes the gas used by VPs)
+    pub gas_used: u64,
+    /// Storage keys touched by the transaction
+    pub changed_keys: HashSet<storage::Key>,
+    /// The results of all the triggered validity predicates by the transaction
+    pub vps_result: VpsResult,
+    /// New established addresses created by the transaction
+    pub initialized_accounts: Vec<Address>,
+    /// Optional IBC event emitted by the transaction
+    pub ibc_event: Option<IbcEvent>,
+}
+
+impl TxResult {
+    /// Check if the tx has been accepted by all the VPs
+    pub fn is_accepted(&self) -> bool {
+        self.vps_result.rejected_vps.is_empty()
+    }
+}
+
+/// Result of checking a transaction with validity predicates
+// TODO derive BorshSchema after <https://github.com/near/borsh-rs/issues/82>
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize)]
+pub struct VpsResult {
+    /// The addresses whose VPs accepted the transaction
+    pub accepted_vps: HashSet<Address>,
+    /// The addresses whose VPs rejected the transaction
+    pub rejected_vps: HashSet<Address>,
+    /// The total gas used by all the VPs
+    pub gas_used: VpsGas,
+    /// Errors occurred in any of the VPs, if any
+    pub errors: Vec<(Address, String)>,
+}
+
+impl fmt::Display for TxResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Transaction is {}. Gas used: {};{} VPs result: {}",
+            if self.is_accepted() {
+                "valid"
+            } else {
+                "invalid"
+            },
+            self.gas_used,
+            iterable_to_string("Changed keys", self.changed_keys.iter()),
+            self.vps_result,
+        )
+    }
+}
+
+impl fmt::Display for VpsResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}",
+            iterable_to_string("Accepted", self.accepted_vps.iter()),
+            iterable_to_string("Rejected", self.rejected_vps.iter()),
+            iterable_to_string(
+                "Errors",
+                self.errors
+                    .iter()
+                    .map(|(addr, err)| format!("{} in {}", err, addr))
+            ),
+        )
+    }
+}
+
+/// Format all the values of the given iterator into a string
+fn iterable_to_string<T: fmt::Display>(
+    label: &str,
+    iter: impl Iterator<Item = T>,
+) -> String {
+    let mut iter = iter.peekable();
+    if iter.peek().is_none() {
+        "".into()
+    } else {
+        format!(
+            " {}: {};",
+            label,
+            iter.map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
+    }
+}
+
 /// A tx data type to update an account's validity predicate
 #[derive(
     Debug,
@@ -75,6 +170,7 @@ pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -92,6 +188,7 @@ pub struct UpdateVp {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -112,6 +209,7 @@ pub struct InitAccount {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -165,7 +263,7 @@ pub mod tx_types {
 
     /// Struct that classifies that kind of Tx
     /// based on the contents of its data.
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     pub enum TxType {
         /// An ordinary tx
         Raw(Tx),

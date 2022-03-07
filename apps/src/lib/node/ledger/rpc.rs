@@ -5,7 +5,6 @@ use std::str::FromStr;
 
 use anoma::types::address::Address;
 use anoma::types::storage;
-use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Path as AbciPath;
 #[cfg(feature = "ABCI")]
@@ -25,13 +24,6 @@ pub enum Path {
     Prefix(storage::Key),
     /// Check if the given storage key exists
     HasKey(storage::Key),
-}
-
-/// RPC query path
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
-pub struct PrefixValue {
-    pub key: storage::Key,
-    pub value: Vec<u8>,
 }
 
 #[derive(Debug, Clone)]

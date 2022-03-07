@@ -106,6 +106,28 @@ pub mod encrypted_tx {
         }
     }
 
+    impl borsh::BorshSchema for EncryptedTx {
+        fn add_definitions_recursively(
+            definitions: &mut std::collections::HashMap<
+                borsh::schema::Declaration,
+                borsh::schema::Definition,
+            >,
+        ) {
+            // Encoded as `(Vec<u8>, Vec<u8>, Vec<u8>)`
+            let elements = "u8".into();
+            let definition = borsh::schema::Definition::Sequence { elements };
+            definitions.insert("Vec<u8>".into(), definition);
+            let elements =
+                vec!["Vec<u8>".into(), "Vec<u8>".into(), "Vec<u8>".into()];
+            let definition = borsh::schema::Definition::Tuple { elements };
+            definitions.insert(Self::declaration(), definition);
+        }
+
+        fn declaration() -> borsh::schema::Declaration {
+            "EncryptedTx".into()
+        }
+    }
+
     /// A helper struct for serializing EncryptedTx structs
     /// as an opaque blob
     #[derive(Clone, Debug, Serialize, Deserialize)]

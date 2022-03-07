@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
 use super::storage::types::decode;
@@ -48,6 +48,7 @@ where
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub struct Parameters {
     /// Epoch duration
@@ -68,6 +69,7 @@ pub struct Parameters {
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub struct EpochDuration {
     /// Minimum number of blocks in an epoch

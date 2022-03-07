@@ -12,7 +12,7 @@ use anoma::ledger::pos::{
 };
 use anoma::types::address::Address;
 use anoma::types::key::*;
-use anoma::types::storage::Epoch;
+use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
@@ -43,7 +43,7 @@ use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
-use crate::node::ledger::rpc::{Path, PrefixValue};
+use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
 pub async fn query_epoch(args: args::Query) -> Epoch {

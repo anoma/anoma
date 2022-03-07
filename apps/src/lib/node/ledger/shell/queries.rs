@@ -6,7 +6,7 @@ use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
 use anoma::types::key;
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
-use anoma::types::storage::Key;
+use anoma::types::storage::{Key, PrefixValue};
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
@@ -25,7 +25,6 @@ use tendermint_proto_abci::types::EvidenceParams;
 
 use super::*;
 use crate::node::ledger::response;
-use crate::node::ledger::rpc::PrefixValue;
 
 impl<D, H> Shell<D, H>
 where

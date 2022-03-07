@@ -7,7 +7,7 @@ use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
 use crate::btree_set::BTreeSetShims;
@@ -33,6 +33,7 @@ where
         + Ord
         + Hash
         + BorshSerialize
+        + BorshSchema
         + BorshDeserialize,
     TokenChange: Debug + Display,
 {
@@ -177,7 +178,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Clone
         + Debug
         + Default
@@ -186,7 +188,8 @@ where
         + Add<Output = TokenAmount>
         + AddAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Display
         + Debug
         + Default
@@ -199,8 +202,9 @@ where
         + PartialEq
         + Eq
         + BorshDeserialize
-        + BorshSerialize,
-    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
+    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
 {
     /// PoS account's balance update
     Balance(Data<TokenAmount>),
@@ -257,8 +261,9 @@ where
         + PartialEq
         + Eq
         + BorshDeserialize
-        + BorshSerialize,
-    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
+    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
 {
     /// Validator's state update
     State(Data<ValidatorStates>),
@@ -314,7 +319,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Display
         + Clone
         + Copy
@@ -328,7 +334,8 @@ where
         + Into<u64>
         + From<u64>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Display
         + Debug
         + Default
@@ -347,8 +354,14 @@ where
         + PartialOrd
         + Ord
         + BorshDeserialize
-        + BorshSerialize,
-    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize + PartialEq,
+        + BorshSerialize
+        + BorshSchema,
+    PublicKey: Debug
+        + Clone
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema
+        + PartialEq,
 {
     let current_epoch = current_epoch.into();
     use DataUpdate::*;
