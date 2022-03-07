@@ -52,14 +52,13 @@ pub async fn run(
 ) -> Result<()> {
     // the geth fullnode process
     let mut ethereum_node = Command::new("geth")
-        .args(&["--syncmode", "snap", "--ws", "--ws.api", "web3"])
+        .args(&["--syncmode", "snap", "--ws", "--ws.api", "eth"])
         .kill_on_drop(true)
         .spawn()
         .map_err(Error::StartUp)?;
     tracing::info!("Ethereum fullnode started");
-    // a channel for shutting down the relayer
-    let (ethereum_abort_sender, ethereum_abort_recv) =
-        tokio::sync::oneshot::channel();
+    // it takes a brief amount of time to open up the websocket on geth's end
+    std::thread::sleep(std::time::Duration::from_secs(5));
     tokio::select! {
         // run the ethereum fullnode
         status = ethereum_node.wait() => {
@@ -82,14 +81,11 @@ pub async fn run(
                 Ok(resp_sender) => {
                     tracing::info!("Shutting down Ethereum fullnode...");
                     ethereum_node.kill().await.unwrap();
-                    ethereum_abort_sender.send(()).unwrap();
                     resp_sender.send(()).unwrap();
-
                 },
                 Err(err) => {
                     tracing::error!("The Ethereum abort sender has unexpectedly dropped: {}", err);
                     tracing::info!("Shutting down Ethereum fullnode...");
-                    ethereum_abort_sender.send(()).unwrap();
                     ethereum_node.kill().await.unwrap();
                 }
             }
@@ -100,7 +96,6 @@ pub async fn run(
             url,
             smart_contract_addresses,
             sender,
-            ethereum_abort_recv,
         ) => {
             ethereum_node.kill().await.unwrap();
             relayer_resp
@@ -210,7 +205,9 @@ impl Stream for EthereumPoller {
                     Poll::Pending
                 }
             }
-            _ => Poll::Pending,
+            _ => {
+                Poll::Pending
+            },
         }
     }
 }
@@ -229,20 +226,16 @@ mod ethereum_relayer {
         url: &str,
         smart_contract_addresses: Vec<Vec<H160>>,
         sender: UnboundedSender<EthPollResult>,
-        mut abort_recv: tokio::sync::oneshot::Receiver<()>,
     ) -> Result<()> {
         let mut eth_poller =
             EthereumPoller::new(url, smart_contract_addresses).await?;
         loop {
-            if abort_recv.try_recv().is_ok() {
-                return Ok(());
-            }
             match eth_poller.next().await {
                 Some(poll_result) => sender
                     .send(poll_result)
                     .or(Err(Error::RelayerReceiverDropped))?,
-                None => return Err(Error::TerminatedSubscription),
-            }
+                None => return Err(Error::TerminatedSubscription) as Result<()>,
+            };
         }
     }
 }
