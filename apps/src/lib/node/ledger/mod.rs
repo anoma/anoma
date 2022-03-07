@@ -334,7 +334,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         )
         .map_err(Error::Ethereum)
         .await;
-        tracing::info!("Tendermint node is no longer running.");
+        tracing::info!("Ethereum fullnode is no longer running.");
 
         drop(aborter);
         res

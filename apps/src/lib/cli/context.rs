@@ -14,7 +14,7 @@ use super::args;
 use crate::cli::safe_exit;
 use crate::config::genesis::genesis_config;
 use crate::config::global::GlobalConfig;
-use crate::config::{self, Config};
+use crate::config::{self, Config, TendermintMode};
 use crate::wallet::Wallet;
 use crate::wasm_loader;
 
