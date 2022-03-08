@@ -357,7 +357,7 @@ pub async fn join_network(
 const TENDERMINT_NODE_ID_LENGTH: usize = 20;
 
 /// Derive Tendermint node ID from public key
-fn id_from_pk(pk: &ed25519::PublicKey) -> TendermintNodeId {
+pub fn id_from_pk(pk: &ed25519::PublicKey) -> TendermintNodeId {
     let digest = Sha256::digest(pk.try_to_vec().unwrap().as_slice());
     let mut bytes = [0u8; TENDERMINT_NODE_ID_LENGTH];
     bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
