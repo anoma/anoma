@@ -1701,6 +1701,88 @@
 <span id="1700">1700</span>
 <span id="1701">1701</span>
 <span id="1702">1702</span>
+<span id="1703">1703</span>
+<span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
+<span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
+<span id="1766">1766</span>
+<span id="1767">1767</span>
+<span id="1768">1768</span>
+<span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
+<span id="1776">1776</span>
+<span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
+<span id="1780">1780</span>
+<span id="1781">1781</span>
+<span id="1782">1782</span>
+<span id="1783">1783</span>
+<span id="1784">1784</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC integration as a native validity predicate</span>
 
 <span class="kw">mod</span> <span class="ident">channel</span>;
@@ -1713,6 +1795,7 @@
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
+<span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">token</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcTokenError</span>, <span class="ident">IbcToken</span>};
 
@@ -1721,6 +1804,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::events::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::SignedTxData</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::IbcEvent</span> <span class="kw">as</span> <span class="ident">WrappedIbcEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
@@ -1749,6 +1833,10 @@
     <span class="ident">SequenceError</span>(<span class="ident">sequence::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC event error: {0}&quot;</span>)]</span>
     <span class="ident">IbcEvent</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding transaction data error: {0}&quot;</span>)]</span>
+    <span class="ident">TxDataDecoding</span>(<span class="ident">std::io::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC message is required as transaction data&quot;</span>)]</span>
+    <span class="ident">NoTxData</span>,
 }
 
 <span class="doccomment">/// IBC functions result</span>
@@ -1781,6 +1869,9 @@
         <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">_verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="ident">tx_data</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error::TxDataDecoding</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">signed</span>.<span class="ident">data</span>.<span class="ident">ok_or</span>(<span class="ident">Error::NoTxData</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">clients</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys_changed</span> {
@@ -2053,6 +2144,7 @@
         <span class="ident">port_key</span>, <span class="ident">receipt_key</span>,
     };
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::key::testing::keypair_1</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas::VpGasMeter</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::testing::TestStorage</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::write_log::WriteLog</span>;
@@ -2269,7 +2361,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2284,8 +2376,12 @@
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="comment">// this should return true because state has been stored</span>
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2295,7 +2391,7 @@
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2310,7 +2406,7 @@
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="comment">// this should fail because no state is stored</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">ibc</span>
-            .<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
+            .<span class="ident">validate_tx</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
             .<span class="ident">unwrap_err</span>();
         <span class="macro">assert_matches!</span>(
             <span class="ident">result</span>,
@@ -2365,7 +2461,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2379,8 +2475,12 @@
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="comment">// this should return true because state has been stored</span>
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2410,7 +2510,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2424,8 +2524,12 @@
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="comment">// this should return true because state has been stored</span>
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2452,7 +2556,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2466,7 +2570,7 @@
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="comment">// this should fail because no client exists</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">ibc</span>
-            .<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
+            .<span class="ident">validate_tx</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
             .<span class="ident">unwrap_err</span>();
         <span class="macro">assert_matches!</span>(
             <span class="ident">result</span>,
@@ -2524,7 +2628,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2538,8 +2642,12 @@
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="comment">// this should return true because state has been stored</span>
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2598,7 +2706,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2611,8 +2719,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2659,7 +2771,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2672,8 +2784,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2706,7 +2822,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2719,8 +2835,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2772,7 +2892,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2785,8 +2905,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2846,7 +2970,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2859,8 +2983,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2915,7 +3043,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2928,8 +3056,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2942,7 +3074,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2955,8 +3087,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -2970,7 +3106,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -2984,8 +3120,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -3040,7 +3180,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -3053,8 +3193,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -3116,7 +3260,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -3129,8 +3273,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -3197,7 +3345,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -3210,8 +3358,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -3269,7 +3421,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -3282,8 +3434,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -3349,7 +3505,7 @@
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">msg</span>.<span class="ident">to_any</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_data</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -3362,8 +3518,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 
@@ -3385,7 +3545,7 @@
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair_1</span>());
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">_vp_cache_dir</span>) <span class="op">=</span>
             <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
@@ -3398,8 +3558,12 @@
 
         <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
         <span class="macro">assert!</span>(
-            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
+            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(
+                <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>
+            )
+            .<span class="ident">expect</span>(<span class="string">&quot;validation failed&quot;</span>)
         );
     }
 }

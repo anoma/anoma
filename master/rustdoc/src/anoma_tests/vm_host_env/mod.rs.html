@@ -1672,6 +1672,34 @@
 <span id="1671">1671</span>
 <span id="1672">1672</span>
 <span id="1673">1673</span>
+<span id="1674">1674</span>
+<span id="1675">1675</span>
+<span id="1676">1676</span>
+<span id="1677">1677</span>
+<span id="1678">1678</span>
+<span id="1679">1679</span>
+<span id="1680">1680</span>
+<span id="1681">1681</span>
+<span id="1682">1682</span>
+<span id="1683">1683</span>
+<span id="1684">1684</span>
+<span id="1685">1685</span>
+<span id="1686">1686</span>
+<span id="1687">1687</span>
+<span id="1688">1688</span>
+<span id="1689">1689</span>
+<span id="1690">1690</span>
+<span id="1691">1691</span>
+<span id="1692">1692</span>
+<span id="1693">1693</span>
+<span id="1694">1694</span>
+<span id="1695">1695</span>
+<span id="1696">1696</span>
+<span id="1697">1697</span>
+<span id="1698">1698</span>
+<span id="1699">1699</span>
+<span id="1700">1700</span>
+<span id="1701">1701</span>
 </pre><pre class="rust"><code><span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! You can enable logging with the `RUST_LOG` environment variable, e.g.:</span>
@@ -2171,7 +2199,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// get and increment the connection counter</span>
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">ibc::client_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="ident">ibc::TestIbcActions</span>
@@ -2190,7 +2219,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect_err</span>(<span class="string">&quot;validation succeeded unexpectedly&quot;</span>),
             <span class="ident">IbcError::ClientError</span>(<span class="kw">_</span>),
         ));
@@ -2205,7 +2234,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
 
         <span class="comment">// create a client with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
@@ -2216,7 +2246,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -2240,7 +2270,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// get and update the client without a header</span>
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
         <span class="comment">// update the client with the same state</span>
@@ -2266,7 +2297,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect_err</span>(<span class="string">&quot;validation succeeded unexpectedly&quot;</span>),
             <span class="ident">IbcError::ClientError</span>(<span class="kw">_</span>),
         ));
@@ -2281,7 +2312,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// update the client with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2291,7 +2323,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -2312,7 +2344,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// upgrade the client with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2322,7 +2355,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2351,7 +2384,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// get and increment the connection counter</span>
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">ibc::connection_counter_key</span>();
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="ident">ibc::TestIbcActions</span>
@@ -2370,7 +2404,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect_err</span>(<span class="string">&quot;validation succeeded unexpectedly&quot;</span>),
             <span class="ident">IbcError::ConnectionError</span>(<span class="kw">_</span>),
         ));
@@ -2385,7 +2419,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// init a connection with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2395,7 +2430,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -2413,7 +2448,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// open the connection with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2423,7 +2459,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2449,7 +2485,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// open try a connection with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2459,7 +2496,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -2478,7 +2515,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// open the connection with the mssage</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2488,7 +2526,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2520,7 +2558,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// not bind a port</span>
         <span class="comment">// get and increment the channel counter</span>
         <span class="kw">let</span> <span class="ident">counter_key</span> <span class="op">=</span> <span class="ident">ibc::channel_counter_key</span>();
@@ -2542,7 +2581,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect_err</span>(<span class="string">&quot;validation succeeded unexpectedly&quot;</span>),
             <span class="ident">IbcError::ChannelError</span>(<span class="kw">_</span>),
         ));
@@ -2561,7 +2600,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// bind a port</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">bind_port</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>)
@@ -2585,7 +2625,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect_err</span>(<span class="string">&quot;validation succeeded unexpectedly&quot;</span>),
             <span class="ident">IbcError::ChannelError</span>(<span class="kw">_</span>),
         ));
@@ -2601,7 +2641,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// init a channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2611,7 +2652,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -2627,7 +2668,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// open the channle with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2637,7 +2679,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2666,7 +2708,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// try open a channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2676,7 +2719,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -2693,7 +2736,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// open a channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2703,7 +2747,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2734,7 +2778,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// close the channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2744,7 +2789,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2775,7 +2820,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
 
         <span class="comment">// close the channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
@@ -2786,7 +2832,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2821,7 +2867,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// send the token and a packet with the data</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2831,7 +2878,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
         <span class="comment">// Check if the token was escrowed</span>
@@ -2844,7 +2891,7 @@
         <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
         <span class="macro">assert!</span>(
             <span class="ident">token_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
         );
 
@@ -2863,7 +2910,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// ack the packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2873,7 +2921,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2906,7 +2954,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// send the token and a packet with the data</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2916,7 +2965,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
         <span class="comment">// Check if the token was burned</span>
@@ -2925,7 +2974,7 @@
         <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">burn</span>);
         <span class="macro">assert!</span>(
             <span class="ident">token_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
         );
     }
@@ -2965,7 +3014,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// receive a packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2975,7 +3025,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
         <span class="comment">// Check if the token was minted</span>
@@ -2984,7 +3034,7 @@
         <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">mint</span>);
         <span class="macro">assert!</span>(
             <span class="ident">token_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
         );
     }
@@ -3042,7 +3092,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// receive a packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3052,14 +3103,14 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
         <span class="comment">// Check if the token was unescrowed</span>
         <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
         <span class="macro">assert!</span>(
             <span class="ident">token_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
         );
     }
@@ -3094,7 +3145,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// send a packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3106,7 +3158,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
 
@@ -3125,7 +3177,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// ack the packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3137,7 +3190,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -3177,7 +3230,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
         <span class="comment">// receive a packet with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
             .<span class="ident">dispatch</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3189,7 +3243,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
     }
@@ -3241,7 +3295,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
 
         <span class="comment">// close the channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
@@ -3252,7 +3307,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
         <span class="comment">// Check if the token was refunded</span>
@@ -3265,7 +3320,7 @@
         <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
         <span class="macro">assert!</span>(
             <span class="ident">token_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
         );
     }
@@ -3316,7 +3371,8 @@
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
-        };
+        }
+        .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">key::testing::keypair_1</span>());
 
         <span class="comment">// close the channel with the message</span>
         <span class="ident">ibc::TestIbcActions</span>
@@ -3327,7 +3383,7 @@
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;validation failed unexpectedly&quot;</span>)
         );
         <span class="comment">// Check if the token was refunded</span>
@@ -3340,7 +3396,7 @@
         <span class="kw">let</span> (<span class="ident">token_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_token_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">escrow</span>);
         <span class="macro">assert!</span>(
             <span class="ident">token_vp</span>
-                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
+                .<span class="ident">validate</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;token validation failed unexpectedly&quot;</span>)
         );
     }
