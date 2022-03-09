@@ -25,6 +25,7 @@ pub async fn find_keypair(
     addr: &Address,
     ledger_address: TendermintAddress,
 ) -> Rc<common::SecretKey> {
+    let client = HttpClient::new(ledger_address).unwrap();
     match addr {
         Address::Established(_) => {
             println!(

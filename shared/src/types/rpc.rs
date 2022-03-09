@@ -6,7 +6,6 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 use anoma_proof_of_stake::types::Slashes;
-use borsh::{BorshDeserialize, BorshSerialize};
 use jsonpath_lib as jsonpath;
 use serde::{Deserialize, Serialize};
 #[cfg(not(feature = "ABCI"))]
@@ -281,7 +280,7 @@ impl FromStr for Path {
         match path.as_str() {
             DRY_RUN_TX_PATH => Ok(Self::DryRunTx),
             EPOCH_PATH => Ok(Self::Epoch),
-            _ => match path.split_once("/") {
+            _ => match path.split_once('/') {
                 Some((VALUE_PREFIX, storage_key)) => {
                     let key = storage::Key::parse(storage_key)
                         .map_err(PathParseError::InvalidStorageKey)?;
@@ -326,6 +325,8 @@ pub enum PathParseError {
 pub struct TxResponse {
     /// Tx info
     pub info: String,
+    /// TX log
+    pub log: String,
     /// Height of the block containing tx
     pub height: BlockHeight,
     /// Hash of the tx
@@ -343,6 +344,7 @@ impl Display for TxResponse {
         writeln!(f, "Hash: {}", self.hash)?;
         writeln!(f, "Code: {}", self.code)?;
         writeln!(f, "Info: {}", self.info)?;
+        writeln!(f, "Log: {}", self.log)?;
         writeln!(f, "Height: {}", self.height)?;
         writeln!(f, "Gas used: {}", self.gas_used)?;
 
@@ -361,7 +363,7 @@ impl TxResponse {
     /// Retrieve the response for the given tx hash from the provided json
     /// serialized result.
     pub fn find_tx<E, T>(
-        json_response: serde_json::Value,
+        json_response: &serde_json::Value,
         event_type: E,
         tx_hash: T,
     ) -> Result<Self, QueryError>
@@ -370,7 +372,7 @@ impl TxResponse {
         E: AsRef<str>,
     {
         let tx_hash_json = serde_json::Value::String(tx_hash.into());
-        let mut selector = jsonpath::selector(&json_response);
+        let mut selector = jsonpath::selector(json_response);
         let mut index = 0u32;
         let evt_key = TendermintEventType::try_from(event_type.as_ref())?;
 
@@ -388,6 +390,8 @@ impl TxResponse {
 
         let info =
             selector(&format!("$.events.['{}.info'][{}]", evt_key, index))?;
+        let log =
+            selector(&format!("$.events.['{}.log'][{}]", evt_key, index))?;
         let height =
             selector(&format!("$.events.['{}.height'][{}]", evt_key, index))?;
         let code =
@@ -400,6 +404,7 @@ impl TxResponse {
         ));
 
         let info: String = serde_json::from_value(info[0].clone())?;
+        let log: String = serde_json::from_value(log[0].clone())?;
         let code_str: String = serde_json::from_value(code[0].clone())?;
         let gas_str: String = serde_json::from_value(gas_used[0].clone())?;
         let height_str: String = serde_json::from_value(height[0].clone())?;
@@ -425,6 +430,7 @@ impl TxResponse {
 
         Ok(TxResponse {
             info,
+            log,
             height: BlockHeight(u64::from_str(&height_str)?),
             hash: Hash::try_from(hash_str.as_bytes())?,
             code: u8::from_str(&code_str)?,

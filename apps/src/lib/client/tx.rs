@@ -501,11 +501,12 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
 
     let nft_creator_key = nft::get_creator_key(&args.nft_address);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    let nft_creator_address = match rpc::query_storage_value::<Address>(
-        client,
-        nft_creator_key,
-    )
+    let nft_creator_address = match rpc::query_storage_value::<
+        HttpClient,
+        Address,
+    >(client, nft_creator_key)
     .await
+    .unwrap()
     {
         Some(addr) => addr,
         None => {
@@ -798,10 +799,8 @@ async fn sign_tx(
              or the address from which to look up the signing key."
         );
     };
-    let epoch = rpc::query_epoch(args::Query {
-        ledger_address: args.ledger_address.clone(),
-    })
-    .await;
+    let client = HttpClient::new(args.ledger_address.clone()).unwrap();
+    let epoch = rpc::query_epoch(client).await.unwrap();
     let broadcast_data = if args.dry_run {
         TxBroadcastData::DryRun(tx)
     } else {
@@ -880,7 +879,10 @@ async fn process_tx(
 
     if args.dry_run {
         if let TxBroadcastData::DryRun(tx) = to_broadcast {
-            rpc::dry_run_tx(&args.ledger_address, tx.to_bytes()).await;
+            match rpc::dry_run_tx(client, tx.to_bytes()).await {
+                Ok(res) => println!("{:?}", res),
+                Err(e) => eprintln!("{}", e),
+            }
             (ctx, vec![])
         } else {
             panic!(
@@ -1111,16 +1113,20 @@ pub async fn submit_tx(
     };
 
     #[cfg(feature = "ABCI")]
-    let parsed = {
-        let parsed = TxResponse::find_tx(
-            wrapper_tx_subscription.receive_response()?,
-            wrapper_hash,
-        );
-        println!(
-            "Transaction applied with result: {}",
-            serde_json::to_string_pretty(&parsed).unwrap()
-        );
-        Ok(parsed)
+    let parsed = match TxResponse::find_tx(
+        &wrapper_tx_subscription.receive_response()?,
+        "applied",
+        wrapper_hash,
+    ) {
+        Ok(v) => {
+            println!("Transaction applied with result:");
+            println!("{}", &v);
+            Ok(v)
+        }
+        Err(e) => {
+            eprintln!("Couldn't find applied tx. {}", e);
+            safe_exit(1)
+        }
     };
 
     wrapper_tx_subscription.unsubscribe()?;

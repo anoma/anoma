@@ -31,7 +31,6 @@ use tendermint_rpc_abci::HttpClient;
 use super::gossip::rpc::matchmakers::{
     ClientDialer, ClientListener, MsgFromClient, MsgFromServer,
 };
-use crate::cli::args;
 use crate::client::tx::{broadcast_tx, TxBroadcastData};
 use crate::{cli, config, wasm_loader};
 
@@ -330,10 +329,6 @@ impl ResultHandler {
         };
         let tx_data = intent_transfers.try_to_vec().unwrap();
         let to_broadcast = {
-            let epoch = rpc::query_epoch(args::Query {
-                ledger_address: self.ledger_address.clone(),
-            })
-            .await;
             let tx = WrapperTx::new(
                 Fee {
                     amount: 0.into(),

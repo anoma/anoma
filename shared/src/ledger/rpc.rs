@@ -29,11 +29,11 @@ use crate::ledger::pos::types::{Epoch as PosEpoch, VotingPower};
 use crate::ledger::pos::{self, BondId, Bonds, Slash, Slashes, Unbonds};
 use crate::types::address::Address;
 use crate::types::key::*;
-use crate::types::rpc::{
-    BalanceQueryResult, BondQueryResult, Path, QueryError,
-    SlashQueryResult, TendermintEventType, TxQueryResult, TxResponse,
+pub use crate::types::rpc::{
+    BalanceQueryResult, BondQueryResult, Path, QueryError, SlashQueryResult,
+    TendermintEventType, TxQueryResult, TxResponse,
 };
-use crate::types::storage::{Epoch, PrefixValue};
+use crate::types::storage::{Epoch, Key, PrefixValue};
 use crate::types::token::Amount;
 use crate::types::transaction::Hash;
 use crate::types::{address, token};
@@ -731,7 +731,7 @@ where
     // Summarize the transaction results that we were searching for
     let result = TxResponse {
         info: event_map["info"].to_string(),
-        log: event_map["log"].to_string(), //FIXME:
+        log: event_map["log"].to_string(),
         height: serde_json::from_str(event_map["height"])?,
         hash: Hash::try_from(event_map["hash"].as_bytes())?,
         code: serde_json::from_str(event_map["code"])?,
