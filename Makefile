@@ -21,13 +21,13 @@ build:
 	$(cargo) build
 
 build-abci-plus-plus:
-	$(cargo) build --no-default-features --features "ABCI-plus-plus masp"
+	$(cargo) build --no-default-features --features "ABCI-plus-plus"
 
 build-test:
 	$(cargo) build --tests
 
 build-test-abci-plus-plus:
-	$(cargo) build --tests --no-default-features --features "ABCI-plus-plus masp"
+	$(cargo) build --tests --no-default-features --features "ABCI-plus-plus"
 
 build-release:
 	ANOMA_DEV=false $(cargo) build --release --package anoma_apps
@@ -54,11 +54,11 @@ check:
 	$(foreach wasm,$(wasm_templates),$(check-wasm) && ) true
 
 check-abci-plus-plus:
-	$(cargo) check --no-default-features --features "ABCI-plus-plus masp"
+	$(cargo) check --no-default-features --features "ABCI-plus-plus"
 
 clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets -- -D warnings
 
-clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus masp" -- -D warnings
+clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus" -- -D warnings
 
 clippy:
 	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
@@ -69,21 +69,21 @@ clippy-abci-plus-plus:
 	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
-		--features "std testing ABCI-plus-plus masp" && \
+		--features "std testing ABCI-plus-plus" && \
 	$(cargo) +$(nightly) clippy --all-targets --manifest-path ./proof_of_stake/Cargo.toml && \
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing ABCI-plus-plus masp" && \
+		--features "testing ABCI-plus-plus" && \
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
-		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus masp" && \
+		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus" && \
 	$(cargo) +$(nightly) clippy \
 		--all-targets \
 		--manifest-path ./vm_env/Cargo.toml \
 		--no-default-features \
-		--features "ABCI-plus-plus masp" && \
+		--features "ABCI-plus-plus" && \
 	make -C $(wasms) clippy && \
 	$(foreach wasm,$(wasm_templates),$(clippy-wasm) && ) true
 
@@ -107,7 +107,7 @@ run-ledger:
 
 run-ledger-abci-plus-plus:
 	# runs the node
-	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus masp" -- ledger run
+	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus" -- ledger run
 
 run-gossip:
 	# runs the node gossip node
@@ -119,7 +119,7 @@ reset-ledger:
 
 reset-ledger-abci-plus-plus:
 	# runs the node
-	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus masp" -- ledger reset
+	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus" -- ledger reset
 
 audit:
 	$(cargo) audit $(foreach ignore,$(audit-ignores), --ignore $(ignore))
@@ -133,23 +133,23 @@ test-e2e-abci-plus-plus:
 	RUST_BACKTRACE=1 $(cargo) test e2e \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
-		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus masp" \
+		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus" \
 		-- --test-threads=1
 
 test-unit-abci-plus-plus:
 	$(cargo) test \
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
-		--features "testing std ABCI-plus-plus masp" && \
+		--features "testing std ABCI-plus-plus" && \
 	$(cargo) test --manifest-path ./proof_of_stake/Cargo.toml && \
 	$(cargo) test \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing ABCI-plus-plus masp" && \
+		--features "testing ABCI-plus-plus" && \
 	$(cargo) test \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
-		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus masp" \
+		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus" \
 		-- --skip e2e && \
 	$(cargo) test \
 		--manifest-path ./vm_env/Cargo.toml \
