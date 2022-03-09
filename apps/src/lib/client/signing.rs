@@ -3,14 +3,18 @@
 
 use std::rc::Rc;
 
+use anoma::ledger::rpc;
 use anoma::types::address::{Address, ImplicitAddress};
 use anoma::types::key::*;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::HttpClient;
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::HttpClient;
 
-use super::rpc;
 use crate::cli;
 use crate::wallet::Wallet;
 
@@ -27,15 +31,14 @@ pub async fn find_keypair(
                 "Looking-up public key of {} from the ledger...",
                 addr.encode()
             );
-            let public_key = rpc::get_public_key(addr, ledger_address)
-                .await
-                .unwrap_or_else(|| {
-                    eprintln!(
-                        "No public key found for the address {}",
-                        addr.encode()
-                    );
-                    cli::safe_exit(1);
-                });
+            let pk = rpc::get_public_key(client.clone(), addr).await.unwrap();
+            let public_key = pk.unwrap_or_else(|| {
+                eprintln!(
+                    "No public key found for the address {}",
+                    addr.encode()
+                );
+                cli::safe_exit(1);
+            });
             wallet.find_key_by_pk(&public_key).unwrap_or_else(|err| {
                 eprintln!(
                     "Unable to load the keypair from the wallet for public \

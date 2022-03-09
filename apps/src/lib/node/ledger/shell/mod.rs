@@ -65,7 +65,6 @@ use tower_abci::{request, response};
 #[cfg(feature = "ABCI")]
 use tower_abci_old::{request, response};
 
-use super::rpc;
 use crate::config::{genesis, TendermintMode};
 use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;

@@ -106,8 +106,8 @@ pub fn find_voting_power(
         ],
         Some(1)
     )?;
-    let (unread, matched) = find.exp_regex("voting power: .*\n")?;
-    let voting_power_str = matched.trim().rsplit_once(' ').unwrap().1;
+    let (unread, matched) = find.exp_regex("Voting power .*\n")?;
+    let voting_power_str = matched.trim().rsplit_once(" ").unwrap().1;
     u64::from_str(voting_power_str).map_err(|e| {
         eyre!(format!(
             "Voting power: {} parsed from {}, Error: {}\n\nOutput: {}",

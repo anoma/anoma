@@ -36,7 +36,7 @@ where
     /// the default if `path` is not a supported string.
     /// INVARIANT: This method must be stateless.
     pub fn query(&self, query: request::Query) -> response::Query {
-        use rpc::Path;
+        use anoma::types::rpc::Path;
         match Path::from_str(&query.path) {
             Ok(path) => match path {
                 Path::DryRunTx => self.dry_run_tx(&query.data),

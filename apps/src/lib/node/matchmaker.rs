@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
 
+use anoma::ledger::rpc;
 use anoma::proto::Tx;
 use anoma::types::address::{self, Address};
 use anoma::types::dylib;
@@ -22,12 +23,15 @@ use tendermint_config::net::Address as TendermintAddress;
 use tendermint_config_abci::net;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::HttpClient;
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::HttpClient;
 
 use super::gossip::rpc::matchmakers::{
     ClientDialer, ClientListener, MsgFromClient, MsgFromServer,
 };
 use crate::cli::args;
-use crate::client::rpc;
 use crate::client::tx::{broadcast_tx, TxBroadcastData};
 use crate::{cli, config, wasm_loader};
 
@@ -306,6 +310,18 @@ impl ResultHandler {
     }
 
     async fn submit_tx(&self, tx_data: Vec<u8>) {
+        let client = HttpClient::new(self.ledger_address.clone()).unwrap();
+        let epoch = match rpc::query_epoch(client).await {
+            Ok(v) => {
+                println!("Last committed epoch: {}", v);
+                v
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+                cli::safe_exit(1)
+            }
+        };
+
         let tx_code = self.tx_code.clone();
         let matches = MatchedExchanges::try_from_slice(&tx_data[..]).unwrap();
         let intent_transfers = IntentTransfers {

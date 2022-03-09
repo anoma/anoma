@@ -160,6 +160,6 @@ Please see the [contributing page](./CONTRIBUTING.md).
 
 ### Dependencies
 
-The ledger currently requires that [Tendermint version 0.34.x](https://github.com/tendermint/tendermint) is installed and available on path. [The pre-built binaries and the source for 0.34.8 are here](https://github.com/tendermint/tendermint/releases/tag/v0.34.8), also directly available in some package managers.
+The ledger currently requires that [Tendermint version 0.34.9](https://github.com/tendermint/tendermint), or later, is installed and available on path. [The pre-built binaries and the source for 0.34.9 are here](https://github.com/tendermint/tendermint/releases/tag/v0.34.9), also directly available in some package managers.
 
 This can be installed by `make install` command (which runs [scripts/install/get_tendermint.sh](scripts/install/get_tendermint.sh) script).

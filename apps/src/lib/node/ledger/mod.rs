@@ -1,7 +1,6 @@
 mod broadcaster;
 pub mod events;
 pub mod protocol;
-pub mod rpc;
 mod shell;
 mod shims;
 pub mod storage;

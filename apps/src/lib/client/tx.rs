@@ -3,10 +3,12 @@ use std::convert::TryFrom;
 use std::fs::File;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
+use anoma::ledger::rpc;
 use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
+use anoma::types::rpc::TxResponse;
 use anoma::types::storage::Epoch;
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
@@ -17,8 +19,6 @@ use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
 use borsh::BorshSerialize;
 use itertools::Either::*;
-use jsonpath_lib as jsonpath;
-use serde::Serialize;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
@@ -36,7 +36,7 @@ use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
 
-use super::{rpc, signing};
+use super::signing;
 use crate::cli::context::WalletAddress;
 use crate::cli::{args, safe_exit, Context};
 use crate::client::tendermint_websocket_client::{
@@ -85,12 +85,13 @@ pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
 
 pub async fn submit_update_vp(ctx: Context, args: args::TxUpdateVp) {
     let addr = ctx.get(&args.addr);
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
 
     // Check that the address is established and exists on chain
     match &addr {
         Address::Established(_) => {
             let exists =
-                rpc::known_address(&addr, args.tx.ledger_address.clone()).await;
+                rpc::known_address(client.clone(), &addr).await.unwrap();
             if !exists {
                 eprintln!("The address {} doesn't exist on chain.", addr);
                 if !args.tx.force {
@@ -269,6 +270,8 @@ pub async fn submit_init_validator(
     let tx = Tx::new(tx_code, Some(data));
     let (mut ctx, initialized_accounts) =
         process_tx(ctx, &tx_args, tx, Some(&source)).await;
+
+    let client = HttpClient::new(tx_args.ledger_address).unwrap();
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -277,12 +280,12 @@ pub async fn submit_init_validator(
                 [account_1, account_2] => {
                     // We need to find out which address is which
                     let (validator_address, rewards_address) =
-                        if rpc::is_validator(account_1, tx_args.ledger_address)
+                        match rpc::is_validator(client.clone(), account_1)
                             .await
+                            .unwrap()
                         {
-                            (account_1, account_2)
-                        } else {
-                            (account_2, account_1)
+                            true => (account_1, account_2),
+                            false => (account_2, account_1),
                         };
 
                     let validator_address_alias = match tx_args
@@ -375,9 +378,10 @@ pub async fn submit_init_validator(
 
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let source = ctx.get(&args.source);
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
     // Check that the source address exists on chain
     let source_exists =
-        rpc::known_address(&source, args.tx.ledger_address.clone()).await;
+        rpc::known_address(client.clone(), &source).await.unwrap();
     if !source_exists {
         eprintln!("The source address {} doesn't exist on chain.", source);
         if !args.tx.force {
@@ -387,7 +391,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let target = ctx.get(&args.target);
     // Check that the target address exists on chain
     let target_exists =
-        rpc::known_address(&target, args.tx.ledger_address.clone()).await;
+        rpc::known_address(client.clone(), &target).await.unwrap();
     if !target_exists {
         eprintln!("The target address {} doesn't exist on chain.", target);
         if !args.tx.force {
@@ -397,7 +401,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let token = ctx.get(&args.token);
     // Check that the token address exists on chain
     let token_exists =
-        rpc::known_address(&token, args.tx.ledger_address.clone()).await;
+        rpc::known_address(client.clone(), &token).await.unwrap();
     if !token_exists {
         eprintln!("The token address {} doesn't exist on chain.", token);
         if !args.tx.force {
@@ -406,29 +410,39 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     }
     // Check source balance
     let balance_key = token::balance_key(&token, &source);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
-        Some(balance) => {
-            if balance < args.amount {
+    match rpc::query_storage_value::<HttpClient, token::Amount>(
+        client,
+        balance_key,
+    )
+    .await
+    {
+        Ok(v) => match v {
+            Some(balance) => {
+                if balance < args.amount {
+                    eprintln!(
+                        "The balance of the source {} of token {} is lower \
+                         than the amount to be transferred. Amount to \
+                         transfer is {} and the balance is {}.",
+                        source, token, args.amount, balance
+                    );
+                    if !args.tx.force {
+                        safe_exit(1)
+                    }
+                }
+            }
+            None => {
                 eprintln!(
-                    "The balance of the source {} of token {} is lower than \
-                     the amount to be transferred. Amount to transfer is {} \
-                     and the balance is {}.",
-                    source, token, args.amount, balance
+                    "No balance found for the source {} of token {}",
+                    source, token
                 );
                 if !args.tx.force {
                     safe_exit(1)
                 }
             }
-        }
-        None => {
-            eprintln!(
-                "No balance found for the source {} of token {}",
-                source, token
-            );
-            if !args.tx.force {
-                safe_exit(1)
-            }
+        },
+        Err(e) => {
+            eprintln!("{}", e);
+            safe_exit(1)
         }
     }
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
@@ -520,9 +534,10 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let validator = ctx.get(&args.validator);
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
+        rpc::is_validator(client.clone(), &validator).await.unwrap();
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -536,7 +551,7 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     // Check that the source address exists on chain
     if let Some(source) = &source {
         let source_exists =
-            rpc::known_address(source, args.tx.ledger_address.clone()).await;
+            rpc::known_address(client.clone(), source).await.unwrap();
         if !source_exists {
             eprintln!("The source address {} doesn't exist on chain.", source);
             if !args.tx.force {
@@ -548,26 +563,36 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     // balance
     let bond_source = source.as_ref().unwrap_or(&validator);
     let balance_key = token::balance_key(&address::xan(), bond_source);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
-        Some(balance) => {
-            if balance < args.amount {
-                eprintln!(
-                    "The balance of the source {} is lower than the amount to \
-                     be transferred. Amount to transfer is {} and the balance \
-                     is {}.",
-                    bond_source, args.amount, balance
-                );
+    match rpc::query_storage_value::<HttpClient, token::Amount>(
+        client.clone(),
+        balance_key,
+    )
+    .await
+    {
+        Ok(v) => match v {
+            Some(balance) => {
+                if balance < args.amount {
+                    eprintln!(
+                        "The balance of the source {} is lower than the \
+                         amount to be transferred. Amount to transfer is {} \
+                         and the balance is {}.",
+                        bond_source, args.amount, balance
+                    );
+                    if !args.tx.force {
+                        safe_exit(1)
+                    }
+                }
+            }
+            None => {
+                eprintln!("No balance found for the source {}", bond_source);
                 if !args.tx.force {
                     safe_exit(1)
                 }
             }
-        }
-        None => {
-            eprintln!("No balance found for the source {}", bond_source);
-            if !args.tx.force {
-                safe_exit(1)
-            }
+        },
+        Err(e) => {
+            eprintln!("{}", e);
+            safe_exit(1)
         }
     }
     let tx_code = ctx.read_wasm(TX_BOND_WASM);
@@ -585,9 +610,10 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let validator = ctx.get(&args.validator);
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
+        rpc::is_validator(client.clone(), &validator).await.unwrap();
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -608,34 +634,40 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
         validator: validator.clone(),
     };
     let bond_key = ledger::pos::bond_key(&bond_id);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
     let bonds =
-        rpc::query_storage_value::<Bonds>(client.clone(), bond_key).await;
+        rpc::query_storage_value::<HttpClient, Bonds>(client.clone(), bond_key)
+            .await;
     match bonds {
-        Some(bonds) => {
-            let mut bond_amount: token::Amount = 0.into();
-            for bond in bonds.iter() {
-                for delta in bond.deltas.values() {
-                    bond_amount += *delta;
+        Ok(v) => match v {
+            Some(bonds) => {
+                let mut bond_amount: token::Amount = 0.into();
+                for bond in bonds.iter() {
+                    for delta in bond.deltas.values() {
+                        bond_amount += *delta;
+                    }
+                }
+                if args.amount > bond_amount {
+                    eprintln!(
+                        "The total bonds of the source {} is lower than the \
+                         amount to be unbonded. Amount to unbond is {} and \
+                         the total bonds is {}.",
+                        bond_source, args.amount, bond_amount
+                    );
+                    if !args.tx.force {
+                        safe_exit(1)
+                    }
                 }
             }
-            if args.amount > bond_amount {
-                eprintln!(
-                    "The total bonds of the source {} is lower than the \
-                     amount to be unbonded. Amount to unbond is {} and the \
-                     total bonds is {}.",
-                    bond_source, args.amount, bond_amount
-                );
+            None => {
+                eprintln!("No bonds found");
                 if !args.tx.force {
                     safe_exit(1)
                 }
             }
-        }
-        None => {
-            eprintln!("No bonds found");
-            if !args.tx.force {
-                safe_exit(1)
-            }
+        },
+        Err(e) => {
+            eprintln!("{}", e);
+            safe_exit(1)
         }
     }
 
@@ -652,15 +684,22 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
-    let epoch = rpc::query_epoch(args::Query {
-        ledger_address: args.tx.ledger_address.clone(),
-    })
-    .await;
+    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let epoch = match rpc::query_epoch(client.clone()).await {
+        Ok(v) => {
+            println!("Last committed epoch: {}", v);
+            v
+        }
+        Err(e) => {
+            eprintln!("{}", e);
+            safe_exit(1)
+        }
+    };
 
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
+        rpc::is_validator(client.clone(), &validator).await.unwrap();
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -681,33 +720,41 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
         validator: validator.clone(),
     };
     let bond_key = ledger::pos::unbond_key(&bond_id);
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    let unbonds =
-        rpc::query_storage_value::<Unbonds>(client.clone(), bond_key).await;
+    let unbonds = rpc::query_storage_value::<HttpClient, Unbonds>(
+        client.clone(),
+        bond_key,
+    )
+    .await;
     match unbonds {
-        Some(unbonds) => {
-            let mut unbonded_amount: token::Amount = 0.into();
-            if let Some(unbond) = unbonds.get(epoch) {
-                for delta in unbond.deltas.values() {
-                    unbonded_amount += *delta;
+        Ok(v) => match v {
+            Some(unbonds) => {
+                let mut unbonded_amount: token::Amount = 0.into();
+                if let Some(unbond) = unbonds.get(epoch) {
+                    for delta in unbond.deltas.values() {
+                        unbonded_amount += *delta;
+                    }
+                }
+                if unbonded_amount == 0.into() {
+                    eprintln!(
+                        "There are no unbonded bonds ready to withdraw in the \
+                         current epoch {}.",
+                        epoch
+                    );
+                    if !args.tx.force {
+                        safe_exit(1)
+                    }
                 }
             }
-            if unbonded_amount == 0.into() {
-                eprintln!(
-                    "There are no unbonded bonds ready to withdraw in the \
-                     current epoch {}.",
-                    epoch
-                );
+            None => {
+                eprintln!("No unbonded bonds found");
                 if !args.tx.force {
                     safe_exit(1)
                 }
             }
-        }
-        None => {
-            eprintln!("No unbonded bonds found");
-            if !args.tx.force {
-                safe_exit(1)
-            }
+        },
+        Err(e) => {
+            eprintln!("{}", e);
+            safe_exit(1)
         }
     }
 
@@ -828,6 +875,8 @@ async fn process_tx(
     // use tendermint_rpc::Request;
     // let request_body = request.into_json();
     // println!("HTTP request body: {}", request_body);
+
+    let client = HttpClient::new(args.ledger_address.clone()).unwrap();
 
     if args.dry_run {
         if let TxBroadcastData::DryRun(tx) = to_broadcast {
@@ -1022,27 +1071,39 @@ pub async fn submit_tx(
 
     #[cfg(not(feature = "ABCI"))]
     let parsed = {
-        let parsed = parse(
+        let parsed = match TxResponse::find_tx(
             wrapper_tx_subscription.receive_response()?,
             TmEventType::Accepted,
-            wrapper_hash,
-        );
-        println!(
-            "Transaction accepted with result: {}",
-            serde_json::to_string_pretty(&parsed).unwrap()
-        );
+            &wrapper_tx_hash,
+        ) {
+            Ok(v) => {
+                println!("Transaction accepted with result: {}", v);
+                v
+            }
+            Err(e) => {
+                eprintln!("Couldn't find accepted tx. {}", e);
+                safe_exit(1)
+            }
+        };
+
         // The transaction is now on chain. We wait for it to be decrypted
         // and applied
-        if parsed.code == 0.to_string() {
-            let parsed = parse(
+        if parsed.code == 0 {
+            let parsed = match TxResponse::find_tx(
                 decrypted_tx_subscription.receive_response()?,
                 TmEventType::Applied,
                 _decrypted_hash.as_ref().unwrap(),
-            );
-            println!(
-                "Transaction applied with result: {}",
-                serde_json::to_string_pretty(&parsed).unwrap()
-            );
+            ) {
+                Ok(v) => {
+                    println!("Transaction applied with result:");
+                    println!("{}", v);
+                    v
+                }
+                Err(e) => {
+                    eprintln!("Couldn't find applied tx. {}", e);
+                    safe_exit(1)
+                }
+            };
             Ok(parsed)
         } else {
             Ok(parsed)
@@ -1071,138 +1132,4 @@ pub async fn submit_tx(
     }
 
     parsed
-}
-
-#[derive(Debug, Serialize)]
-pub struct TxResponse {
-    pub info: String,
-    pub log: String,
-    pub height: String,
-    pub hash: String,
-    pub code: String,
-    pub gas_used: String,
-    pub initialized_accounts: Vec<Address>,
-}
-
-/// Parse the JSON payload received from a subscription
-///
-/// Searches for custom events emitted from the ledger and converts
-/// them back to thin wrapper around a hashmap for further parsing.
-#[cfg(not(feature = "ABCI"))]
-fn parse(
-    json: serde_json::Value,
-    event_type: TmEventType,
-    tx_hash: &str,
-) -> TxResponse {
-    let mut selector = jsonpath::selector(&json);
-    let mut event =
-        selector(&format!("$.events.[?(@.type=='{}')]", event_type))
-            .unwrap()
-            .iter()
-            .filter_map(|event| {
-                let attrs = Attributes::from(*event);
-                match attrs.get("hash") {
-                    Some(hash) if hash == tx_hash => Some(attrs),
-                    _ => None,
-                }
-            })
-            .collect::<Vec<Attributes>>()
-            .remove(0);
-
-    let info = event.take("info").unwrap();
-    let log = event.take("log").unwrap();
-    let height = event.take("height").unwrap();
-    let hash = event.take("hash").unwrap();
-    let code = event.take("code").unwrap();
-    let gas_used = event.take("gas_used").unwrap_or_else(|| String::from("0"));
-    let initialized_accounts = event.take("initialized_accounts");
-    let initialized_accounts = match initialized_accounts {
-        Some(values) => serde_json::from_str(&values).unwrap(),
-        _ => vec![],
-    };
-    TxResponse {
-        info,
-        log,
-        height,
-        hash,
-        code,
-        gas_used,
-        initialized_accounts,
-    }
-}
-
-impl TxResponse {
-    pub fn find_tx(json: serde_json::Value, tx_hash: &str) -> Self {
-        let tx_hash_json = serde_json::Value::String(tx_hash.to_string());
-        let mut selector = jsonpath::selector(&json);
-        let mut index = 0;
-        #[cfg(feature = "ABCI")]
-        let evt_key = "applied";
-        #[cfg(not(feature = "ABCI"))]
-        let evt_key = "accepted";
-        // Find the tx with a matching hash
-        let hash = loop {
-            if let Ok(hash) =
-                selector(&format!("$.events.['{}.hash'][{}]", evt_key, index))
-            {
-                let hash = hash[0].clone();
-                if hash == tx_hash_json {
-                    break hash;
-                } else {
-                    index += 1;
-                }
-            } else {
-                eprintln!(
-                    "Couldn't find tx with hash {} in the event string {}",
-                    tx_hash, json
-                );
-                safe_exit(1)
-            }
-        };
-        let info =
-            selector(&format!("$.events.['{}.info'][{}]", evt_key, index))
-                .unwrap();
-        let log = selector(&format!("$.events.['{}.log'][{}]", evt_key, index))
-            .unwrap();
-        let height =
-            selector(&format!("$.events.['{}.height'][{}]", evt_key, index))
-                .unwrap();
-        let code =
-            selector(&format!("$.events.['{}.code'][{}]", evt_key, index))
-                .unwrap();
-        let gas_used =
-            selector(&format!("$.events.['{}.gas_used'][{}]", evt_key, index))
-                .unwrap();
-        let initialized_accounts = selector(&format!(
-            "$.events.['{}.initialized_accounts'][{}]",
-            evt_key, index
-        ));
-        let initialized_accounts = match initialized_accounts {
-            Ok(values) if !values.is_empty() => {
-                // In a response, the initialized accounts are encoded as e.g.:
-                // ```
-                // "applied.initialized_accounts": Array([
-                //   String(
-                //     "[\"atest1...\"]",
-                //   ),
-                // ]),
-                // ...
-                // So we need to decode the inner string first ...
-                let raw: String =
-                    serde_json::from_value(values[0].clone()).unwrap();
-                // ... and then decode the vec from the array inside the string
-                serde_json::from_str(&raw).unwrap()
-            }
-            _ => vec![],
-        };
-        TxResponse {
-            info: serde_json::from_value(info[0].clone()).unwrap(),
-            log: serde_json::from_value(log[0].clone()).unwrap(),
-            height: serde_json::from_value(height[0].clone()).unwrap(),
-            hash: serde_json::from_value(hash).unwrap(),
-            code: serde_json::from_value(code[0].clone()).unwrap(),
-            gas_used: serde_json::from_value(gas_used[0].clone()).unwrap(),
-            initialized_accounts,
-        }
-    }
 }

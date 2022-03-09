@@ -376,8 +376,8 @@ fn invalid_transactions() -> Result<()> {
         client.exp_string("Transaction accepted")?;
     }
     client.exp_string("Transaction applied")?;
+    client.exp_string("Code: 1")?;
     client.exp_string("Transaction is invalid")?;
-    client.exp_string(r#""code": "1"#)?;
 
     client.assert_success();
     ledger.exp_string("some VPs rejected apply_tx storage modification")?;
@@ -433,10 +433,8 @@ fn invalid_transactions() -> Result<()> {
         client.exp_string("Transaction accepted")?;
     }
     client.exp_string("Transaction applied")?;
-
+    client.exp_string("Code: 3")?;
     client.exp_string("Error trying to apply a transaction")?;
-
-    client.exp_string(r#""code": "3"#)?;
 
     client.assert_success();
     Ok(())

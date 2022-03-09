@@ -32,6 +32,46 @@ use crate::types::address::Address;
 use crate::types::hash::Hash;
 use crate::types::key::*;
 
+#[derive(
+    Clone,
+    Debug,
+    Hash,
+    PartialEq,
+    Eq,
+    BorshSerialize,
+    BorshDeserialize,
+    BorshSchema,
+    Serialize,
+    Deserialize,
+)]
+/// A hash, typically a sha-2 hash of a tx
+pub struct Hash(pub [u8; 32]);
+
+impl Display for Hash {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in &self.0 {
+            write!(f, "{:02X}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+impl From<Hash> for transaction::Hash {
+    fn from(hash: Hash) -> Self {
+        Self::new(hash.0)
+    }
+}
+
+impl TryFrom<&[u8]> for Hash {
+    type Error = hex::FromHexError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let mut hash = Hash([0; 32]);
+        hex::decode_to_slice(value, &mut hash.0)?;
+        Ok(hash)
+    }
+}
+
 /// Get the hash of a transaction
 pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     let digest = Sha256::digest(tx_bytes);
