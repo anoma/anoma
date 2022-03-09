@@ -23,10 +23,10 @@ anoma_macros = {path = "../macros"}
 borsh = "0.9.0"
 jubjub = { version = "0.8"}
 bls12_381 = { version = "0.6"}
-#libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons" }
-masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons" }
-masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons" }
-zcash_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons" }
-zcash_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-addons" }
+#libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
+zcash_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
+zcash_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = { version = "0.11" }

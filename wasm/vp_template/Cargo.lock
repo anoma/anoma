@@ -893,7 +893,7 @@ dependencies = [
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction#836c0ecd419bc7fe348fec2fd087c41004bfcc0d"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -1461,13 +1461,14 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction#836c0ecd419bc7fe348fec2fd087c41004bfcc0d"
 dependencies = [
  "aes",
  "bitvec",
  "blake2b_simd",
  "blake2s_simd",
  "bls12_381",
+ "borsh",
  "byteorder",
  "crypto_api_chachapoly",
  "equihash",
@@ -1480,6 +1481,7 @@ dependencies = [
  "log",
  "rand",
  "rand_core 0.6.3",
+ "serde",
  "sha2 0.9.9",
  "subtle",
  "zcash_primitives",
@@ -1488,7 +1490,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction#836c0ecd419bc7fe348fec2fd087c41004bfcc0d"
 dependencies = [
  "bellman",
  "blake2b_simd",
@@ -3329,7 +3331,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.4.1"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction#836c0ecd419bc7fe348fec2fd087c41004bfcc0d"
 dependencies = [
  "aes",
  "bitvec",
@@ -3357,7 +3359,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.4.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-addons#62989ec7ebd21fe31bb6df758295a989af97eb70"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction#836c0ecd419bc7fe348fec2fd087c41004bfcc0d"
 dependencies = [
  "bellman",
  "blake2b_simd",
