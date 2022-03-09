@@ -60,6 +60,7 @@ use masp_proofs::prover::LocalTxProver;
 use sha2::Digest;
 use group::cofactor::CofactorGroup;
 use masp_primitives::zip32::ExtendedFullViewingKey;
+use masp_primitives::asset_type::AssetType;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -586,6 +587,9 @@ fn gen_shielded_transfer_ctx(
 
     // Now we build up the transaction within this object
     let mut builder = Builder::<TestNetwork, OsRng>::new(height);
+    let token_bytes = ctx.get(&args.token).try_to_vec().expect("token should serialize");
+    // Generate the unique asset identifier from the unique token address
+    let asset_type = AssetType::new(token_bytes.as_ref()).expect("unable to create asset type");
     // Transaction fees will be taken care of in the wrapper Transfer
     builder.set_fee(Amount::zero())?;
     // If there are shielded inputs
@@ -601,6 +605,9 @@ fn gen_shielded_transfer_ctx(
                 if tx_ctx.spents.contains(note_idx) { continue; }
                 // Get note, merkle path, diversifier associated with this ID
                 let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
+                // Note with distinct asset type cannot be used as input to this
+                // transaction
+                if note.asset_type != asset_type { continue; }
                 let merkle_path = tx_ctx.witness_map.get(note_idx).unwrap().path().unwrap();
                 let diversifier = tx_ctx.div_map.get(note_idx).unwrap();
                 val_acc += note.value;
@@ -612,8 +619,14 @@ fn gen_shielded_transfer_ctx(
         if val_acc > amt {
             let vk = sk.expsk.proof_generation_key().to_viewing_key();
             let change_pa = vk.to_payment_address(find_valid_diversifier(&mut OsRng).0).unwrap();
-            let change_amt = Amount::from_u64(val_acc - amt).unwrap();
-            builder.add_sapling_output(Some(sk.expsk.ovk), change_pa.clone(), change_amt, None)?;
+            let change_amt = val_acc - amt;
+            builder.add_sapling_output(
+                Some(sk.expsk.ovk),
+                change_pa.clone(),
+                asset_type,
+                change_amt,
+                None
+            )?;
         }
     } else {
         // Otherwise the input must be entirely transparent. So model the source
@@ -630,7 +643,8 @@ fn gen_shielded_transfer_ctx(
             secp_sk,
             OutPoint::new([0u8; 32], 0),
             TxOut {
-                value: Amount::from_u64(balance).unwrap(),
+                asset_type,
+                value: balance,
                 script_pubkey: script
             }
         )?;
@@ -638,21 +652,28 @@ fn gen_shielded_transfer_ctx(
         if balance > amt {
             builder.add_transparent_output(
                 &TransparentAddress::PublicKey([0u8; 20]),
-                Amount::from_u64(balance - amt).unwrap()
+                asset_type,
+                balance - amt
             )?;
         }
     }
     // Now handle the outputs of this transaction
-    let amt = Amount::from_u64(amt).unwrap();
     // If there is a shielded output
     if let Some(pa) = args.payment_address {
         let ovk_opt = args.spending_key.as_ref().map(|x| x.expsk.ovk);
-        builder.add_sapling_output(ovk_opt, pa.clone(), amt, memo)?;
+        builder.add_sapling_output(ovk_opt, pa.clone(), asset_type, amt, memo)?;
     } else {
-        builder.add_transparent_output(&TransparentAddress::PublicKey([0u8; 20]), amt)?;
+        builder.add_transparent_output(
+            &TransparentAddress::PublicKey([0u8; 20]),
+            asset_type,
+            amt
+        )?;
     }
     // Build and return the constructed transaction
-    builder.build(consensus_branch_id, &LocalTxProver::bundled()).map(|x| Some(x))
+    builder.build(
+        consensus_branch_id,
+        &LocalTxProver::with_default_location().expect("unable to load MASP Parameters")
+    ).map(|x| Some(x))
 }
 
 /// Load up the current state of the multi-asset shielded pool and try to build
