@@ -3,9 +3,9 @@ use std::collections::HashSet;
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
 use anoma::types::token;
-use zcash_primitives::transaction::Transaction;
+use masp_primitives::transaction::Transaction;
 use anoma::types::storage::KeySeg;
-use zcash_primitives::transaction::TxId;
+use masp_primitives::transaction::TxId;
 
 /// Vp imports and functions.
 pub mod vp {

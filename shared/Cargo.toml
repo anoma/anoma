@@ -113,11 +113,9 @@ wasmer-vm = {version = "=1.0.2", optional = true}
 wasmparser = "0.81.0"
 jubjub = { version = "0.8"}
 bls12_381 = { version = "0.6"}
-#libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
-masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
-masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
-zcash_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
-zcash_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction" }
+#libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction2" }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction2" }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction2" }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = { version = "0.11" }
 

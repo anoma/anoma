@@ -10,7 +10,7 @@ use anoma_apps::wallet::DecryptionError;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
-use zcash_primitives::primitives::Diversifier;
+use masp_primitives::primitives::Diversifier;
 use rand::RngCore;
 use rand_core::OsRng;
 use rand::CryptoRng;

@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
-use zcash_primitives::transaction::Transaction;
+use masp_primitives::transaction::Transaction;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};

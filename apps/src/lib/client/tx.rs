@@ -33,33 +33,33 @@ use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
-use zcash_primitives::transaction::Transaction;
-use zcash_primitives::primitives::Note;
-use zcash_primitives::consensus::TestNetwork;
-use zcash_primitives::consensus::BranchId;
+use masp_primitives::transaction::Transaction;
+use masp_primitives::primitives::Note;
+use masp_primitives::consensus::TestNetwork;
+use masp_primitives::consensus::BranchId;
 use std::collections::HashSet;
-use zcash_primitives::note_encryption::*;
-use zcash_primitives::primitives::ViewingKey;
+use masp_primitives::note_encryption::*;
+use masp_primitives::primitives::ViewingKey;
 use std::collections::HashMap;
-use zcash_primitives::transaction::components::Amount;
-use zcash_primitives::transaction::builder::{self, *};
+use masp_primitives::transaction::components::Amount;
+use masp_primitives::transaction::builder::{self, *};
 use rand_core::CryptoRng;
 use rand_core::RngCore;
 use zcash_primitives::merkle_tree::CommitmentTree;
-use zcash_primitives::sapling::Node;
+use masp_primitives::sapling::Node;
 use ff::PrimeField;
 use zcash_primitives::merkle_tree::IncrementalWitness;
-use zcash_primitives::zip32::ExtendedSpendingKey;
-use zcash_primitives::primitives::Diversifier;
+use masp_primitives::zip32::ExtendedSpendingKey;
+use masp_primitives::primitives::Diversifier;
 use rand_core::OsRng;
 use std::fmt::Debug;
-use zcash_primitives::legacy::TransparentAddress;
-use zcash_primitives::transaction::components::OutPoint;
-use zcash_primitives::transaction::components::TxOut;
-use zcash_proofs::prover::LocalTxProver;
+use masp_primitives::legacy::TransparentAddress;
+use masp_primitives::transaction::components::OutPoint;
+use masp_primitives::transaction::components::TxOut;
+use masp_proofs::prover::LocalTxProver;
 use sha2::Digest;
 use group::cofactor::CofactorGroup;
-use zcash_primitives::zip32::ExtendedFullViewingKey;
+use masp_primitives::zip32::ExtendedFullViewingKey;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -73,7 +73,7 @@ use crate::client::tendermint_websocket_client::{
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
 use crate::std::fs::File;
-use zcash_primitives::transaction::TxId;
+use masp_primitives::transaction::TxId;
 use anoma::types::token::HEAD_TX_KEY;
 use anoma::types::storage::Key;
 use crate::client::rpc::query_storage_value;
@@ -465,7 +465,6 @@ pub async fn fetch_shielded_transfers(
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
 
-#[derive(Default)]
 struct TxContext {
     tx_pos: usize,
     tree: CommitmentTree<Node>,
@@ -476,6 +475,25 @@ struct TxContext {
     div_map: HashMap<usize, Diversifier>,
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
     spents: HashSet<usize>,
+}
+
+/// Default implementation to ease construction of TxContexts. Derive cannot be
+/// used here due to CommitmentTree not implementing Default.
+
+impl Default for TxContext {
+    fn default() -> TxContext {
+        TxContext {
+            tx_pos: usize::default(),
+            tree: CommitmentTree::empty(),
+            vks: HashMap::default(),
+            nf_map: HashMap::default(),
+            note_map: HashMap::default(),
+            memo_map: HashMap::default(),
+            div_map: HashMap::default(),
+            witness_map: HashMap::default(),
+            spents: HashSet::default(),
+        }
+    }
 }
 
 /// Applies the given transaction to the supplied context. More precisely, the
@@ -508,7 +526,7 @@ fn scan_tx(
         for (vk, notes) in ctx.vks.iter_mut() {
             let decres = try_sapling_note_decryption::<TestNetwork>(
                 0,
-                &vk.ivk(),
+                &vk.ivk().0,
                 &so.ephemeral_key.into_subgroup().unwrap(),
                 &so.cmu,
                 &so.enc_ciphertext
@@ -523,7 +541,7 @@ fn scan_tx(
                 ctx.memo_map.insert(note_pos, memo);
                 // The payment address' diversifier is required to spend note
                 ctx.div_map.insert(note_pos, *pa.diversifier());
-                ctx.nf_map.insert(nf.try_into().unwrap(), note_pos);
+                ctx.nf_map.insert(nf.0.try_into().unwrap(), note_pos);
                 break;
             }
         }

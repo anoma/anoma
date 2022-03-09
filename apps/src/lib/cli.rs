@@ -1253,8 +1253,8 @@ pub mod args {
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
-    use zcash_primitives::zip32::ExtendedSpendingKey;
-    use zcash_primitives::primitives::PaymentAddress;
+    use masp_primitives::zip32::ExtendedSpendingKey;
+    use masp_primitives::primitives::PaymentAddress;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
