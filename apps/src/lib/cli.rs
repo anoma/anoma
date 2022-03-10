@@ -1302,6 +1302,7 @@ pub mod args {
     use libp2p::Multiaddr;
     use masp_primitives::zip32::ExtendedSpendingKey;
     use masp_primitives::primitives::PaymentAddress;
+    use masp_primitives::keys::FullViewingKey;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
@@ -1410,6 +1411,8 @@ pub mod args {
         arg_opt("consensus-key");
     const VALIDATOR_CODE_PATH: ArgOpt<PathBuf> = arg_opt("validator-code-path");
     const VALUE: ArgOpt<String> = arg_opt("value");
+    const VIEWING_KEY: Arg<FullViewingKey> = arg("viewing-key");
+    const VIEWING_KEY_OPT: ArgOpt<FullViewingKey> = VIEWING_KEY.opt();
     const WASM_CHECKSUMS_PATH: Arg<PathBuf> = arg("wasm-checksums-path");
     const WASM_DIR: ArgOpt<PathBuf> = arg_opt("wasm-dir");
 
@@ -1955,7 +1958,9 @@ pub mod args {
         /// Common query args
         pub query: Query,
         /// The spending key being queried
-        pub spending_key: ExtendedSpendingKey,
+        pub spending_key: Option<ExtendedSpendingKey>,
+        /// The full viewing key being queries
+        pub viewing_key: Option<FullViewingKey>,
         /// Address of a token
         pub token: Option<WalletAddress>,
     }
@@ -1963,11 +1968,13 @@ pub mod args {
     impl Args for QueryShieldedBalance {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
-            let spending_key = SPENDING_KEY.parse(matches);
+            let spending_key = SPENDING_KEY_OPT.parse(matches);
+            let viewing_key = VIEWING_KEY_OPT.parse(matches);
             let token = TOKEN_OPT.parse(matches);
             Self {
                 query,
                 spending_key,
+                viewing_key,
                 token,
             }
         }
@@ -1975,9 +1982,14 @@ pub mod args {
         fn def(app: App) -> App {
             app.add_args::<Query>()
                 .arg(
-                    SPENDING_KEY
+                    SPENDING_KEY_OPT
                         .def()
                         .about("The spending key to query for unspent notes."),
+                )
+                .arg(
+                    VIEWING_KEY_OPT
+                        .def()
+                        .about("The viewing key to query for unspent notes."),
                 )
                 .arg(
                     TOKEN_OPT

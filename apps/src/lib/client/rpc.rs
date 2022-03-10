@@ -175,15 +175,26 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
 pub async fn query_shielded_balance(ctx: Context, args: args::QueryShieldedBalance) {
     // Map addresses to token names
     let tokens = address::tokens();
+    // Viewing keys are used to query shielded balances. If a spending key is
+    // provided, then convert to a viewing key first.
+    let viewing_key = match (args.viewing_key, args.spending_key) {
+        (Some(viewing_key), None) => viewing_key.vk,
+        (None, Some(spending_key)) => to_viewing_key(&spending_key),
+        _ => {
+            eprintln!("Either a viewing key or a spending key must be specified");
+            return;
+        }
+    };
     // Build up the context that will be queried for balances
-    let spending_keys = vec![args.spending_key.clone()];
+    let viewing_keys = vec![viewing_key.clone()];
     let shielded_ctx = load_shielded_context(
         &args.query.ledger_address,
-        &spending_keys,
+        &vec![],
+        &viewing_keys,
     ).await;
     // Query the multi-asset balance at the given spending key
     let balance: BTreeMap<AssetType, u64> =
-        compute_shielded_balance(&shielded_ctx, &to_viewing_key(&args.spending_key))
+        compute_shielded_balance(&shielded_ctx, &viewing_key)
         .expect("context should contain spending key").into();
     match args.token {
         // Here the user wants to know the balance for a specific token

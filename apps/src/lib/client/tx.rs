@@ -572,7 +572,8 @@ async fn gen_shielded_transfer(
     // Load the current shielded context given the spending key we possess
     let tx_ctx = load_shielded_context(
         &args.tx.ledger_address,
-        &spending_keys
+        &spending_keys,
+        &vec![],
     ).await;
     // Context required for storing which notes are in the source's possesion
     let height = 0u32;
@@ -676,6 +677,7 @@ async fn gen_shielded_transfer(
 pub async fn load_shielded_context(
     ledger_address: &TendermintAddress,
     sks: &Vec<ExtendedSpendingKey>,
+    fvks: &Vec<ViewingKey>,
 ) -> TxContext {
     // Load all transactions accepted until this point
     let txs = fetch_shielded_transfers(ledger_address).await;
@@ -684,6 +686,9 @@ pub async fn load_shielded_context(
     for esk in sks {
         let vk = to_viewing_key(esk);
         tx_ctx.vks.entry(vk.into()).or_insert(HashSet::new());
+    }
+    for vk in fvks {
+        tx_ctx.vks.entry(*vk).or_insert(HashSet::new());
     }
     // Apply the loaded transactions to our context
     while tx_ctx.tx_pos < txs.len() {
