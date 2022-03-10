@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
-use anoma::types::governance::{Proposal, OfflineProposal};
+use anoma::types::governance::{OfflineProposal, Proposal};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::transaction::governance::InitProposalData;
@@ -34,7 +34,7 @@ use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
-use tendermint_rpc_abci::{Client};
+use tendermint_rpc_abci::Client;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -491,9 +491,9 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
         tokens: nft_tokens,
     };
 
-    let data = data.try_to_vec().expect(
-        "Encoding mint data shouldn't fail",
-    );
+    let data = data
+        .try_to_vec()
+        .expect("Encoding mint data shouldn't fail");
 
     let tx_code = ctx.read_wasm(TX_MINT_NFT_TOKEN);
 
@@ -506,7 +506,8 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
 
 pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
     let file = File::open(&args.proposal_data).expect("File must exist.");
-    let proposal: Proposal = serde_json::from_reader(file).expect("JSON was not well-formatted");
+    let proposal: Proposal =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
 
     // TODO: check that the proposal.author address exist on chain
     let signer = WalletAddress::new(proposal.author.clone().to_string());
@@ -519,7 +520,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         eprintln!("Invalid data for init proposal transaction.");
         safe_exit(1)
     };
-    
+
     if args.offline {
         let signer = ctx.get(&signer);
         let signing_key = signing::find_keypair(
@@ -528,31 +529,33 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_proposal = OfflineProposal::new(init_proposal_data, &signing_key);
-        let proposal_filename = format!("proposal");
+        let offline_proposal =
+            OfflineProposal::new(init_proposal_data, &signing_key);
+        let proposal_filename = "proposal".to_string();
         let out = File::create(&proposal_filename).unwrap();
         match serde_json::to_writer_pretty(out, &offline_proposal) {
             Ok(_) => {
                 println!("Proposal created: {}.", proposal_filename);
-            },
+            }
             Err(e) => {
                 eprintln!("Error while creating proposal file: {}.", e);
                 safe_exit(1)
-            },
+            }
         }
     } else {
-        let data = init_proposal_data.try_to_vec().expect(
-            "Encoding proposal data shouldn't fail",
-        );
+        let data = init_proposal_data
+            .try_to_vec()
+            .expect("Encoding proposal data shouldn't fail");
         let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
         let tx = Tx::new(tx_code, Some(data));
 
-        let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, Some(&signer)).await;
+        let (ctx, tx, keypair) =
+            sign_tx(ctx, tx, &args.tx, Some(&signer)).await;
         process_tx(ctx, &args.tx, tx, &keypair).await;
     }
 }
 
-pub async fn submit_vote_proposal(ctx: Context, args: args::VoteProposal) {
+pub async fn submit_vote_proposal(_ctx: Context, _args: args::VoteProposal) {
     //
 }
 

@@ -6,6 +6,7 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
+pub mod governance;
 #[cfg(feature = "ibc")]
 pub mod ibc;
 pub mod imports;
@@ -14,15 +15,15 @@ pub mod key;
 pub mod nft;
 pub mod proof_of_stake;
 pub mod token;
-pub mod governance;
 
 pub mod tx_prelude {
+    pub use anoma::ledger::governance::storage;
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
-    pub use anoma::ledger::governance::storage;
 
+    pub use crate::governance::tx as governance;
     #[cfg(feature = "ibc")]
     pub use crate::ibc::{Ibc, IbcActions};
     pub use crate::imports::tx::*;
@@ -30,7 +31,6 @@ pub mod tx_prelude {
     pub use crate::nft::tx as nft;
     pub use crate::proof_of_stake::{self, PoS, PosRead, PosWrite};
     pub use crate::token::tx as token;
-    pub use crate::governance::tx as governance;
 }
 
 pub mod vp_prelude {

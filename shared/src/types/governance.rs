@@ -1,13 +1,18 @@
 //! Files defyining the types used in governance.
 
-use std::{fmt::Display, str::FromStr};
+use std::collections::HashMap;
+use std::fmt::Display;
+use std::str::FromStr;
 
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use base64::{encode};
 
-use super::{address::Address, storage::Epoch, transaction::governance::InitProposalData, key::{common::{self, Signature}, SigScheme}};
+use super::address::Address;
+use super::key::common::{self, Signature};
+use super::key::SigScheme;
+use super::storage::Epoch;
+use super::transaction::governance::InitProposalData;
 
 #[derive(
     Debug,
@@ -24,7 +29,7 @@ pub enum ProposalVote {
     /// Yes
     Yay,
     /// No
-    Nay
+    Nay,
 }
 
 impl Display for ProposalVote {
@@ -39,9 +44,7 @@ impl Display for ProposalVote {
 #[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum ProposalVoteParseError {
-    #[error(
-        "Invalid vote. Vote shall be yay or nay."
-    )]
+    #[error("Invalid vote. Vote shall be yay or nay.")]
     InvalidVote,
 }
 
@@ -59,25 +62,15 @@ impl FromStr for ProposalVote {
     }
 }
 
-
 #[derive(
-    Debug,
-    Clone,
-    BorshSerialize,
-    BorshDeserialize,
-    Serialize,
-    Deserialize,
-    Eq,
-    PartialEq,
-    Hash,
-    PartialOrd,
+    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
 )]
 /// The proposal structure
 pub struct Proposal {
     /// The proposal id
     pub id: Option<u64>,
     /// The proposal content
-    pub content: String,
+    pub content: HashMap<String, String>,
     /// The proposal author address
     pub author: Address,
     /// The epoch from which voting is allowed
@@ -87,25 +80,19 @@ pub struct Proposal {
     /// The epoch from which this changes are executed
     pub grace_epoch: Epoch,
     /// The code containing the storage changes
-    pub proposal_code: Option<Vec<u8>>
+    pub proposal_code: Option<Vec<u8>>,
 }
 
 impl Display for Proposal {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "id: {:?}, content: {}, author: {:?}",
-            self.id, self.content, self.author
-        )
+        write!(f, "id: {:?}, author: {:?}", self.id, self.author)
     }
 }
 
 #[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum ProposalError {
-    #[error(
-        "Invalid proposal data."
-    )]
+    #[error("Invalid proposal data.")]
     InvalidProposalData,
 }
 
@@ -115,7 +102,7 @@ impl TryFrom<Proposal> for InitProposalData {
     fn try_from(proposal: Proposal) -> Result<Self, Self::Error> {
         Ok(InitProposalData {
             id: proposal.id,
-            content: encode(proposal.content),
+            content: proposal.content.try_to_vec().unwrap(),
             author: proposal.author,
             voting_start_epoch: proposal.voting_start_epoch,
             voting_end_epoch: proposal.voting_end_epoch,
@@ -126,30 +113,22 @@ impl TryFrom<Proposal> for InitProposalData {
 }
 
 #[derive(
-    Debug,
-    Clone,
-    BorshSerialize,
-    BorshDeserialize,
-    Serialize,
-    Deserialize,
+    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
 )]
 /// The offline proposal structure
 pub struct OfflineProposal {
     /// The proposal data
     pub data: InitProposalData,
     /// The signature over proposal data
-    pub signature: Signature
+    pub signature: Signature,
 }
 
 impl OfflineProposal {
     /// Create an offline proposal with a signature
     pub fn new(data: InitProposalData, keypair: &common::SecretKey) -> Self {
-        let to_sign = serde_json::to_vec(&data).expect("Conversion to bytes shouldn't fail.");
+        let to_sign = serde_json::to_vec(&data)
+            .expect("Conversion to bytes shouldn't fail.");
         let signature = common::SigScheme::sign(keypair, &to_sign);
-        Self {
-            data,
-            signature,
-        }
+        Self { data, signature }
     }
 }
-

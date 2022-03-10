@@ -1,6 +1,8 @@
-use crate::types::{address::Address, storage::Epoch};
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
+
+use crate::types::address::Address;
+use crate::types::storage::Epoch;
 
 /// A tx data type to hold proposal data
 #[derive(
@@ -16,7 +18,7 @@ pub struct InitProposalData {
     /// The proposal id
     pub id: Option<u64>,
     /// The proposal content
-    pub content: String,
+    pub content: Vec<u8>,
     /// The proposal author address
     pub author: Address,
     /// The epoch from which voting is allowed
@@ -26,5 +28,5 @@ pub struct InitProposalData {
     /// The epoch from which this changes are executed
     pub grace_epoch: Epoch,
     /// The code containing the storage changes
-    pub proposal_code: Option<Vec<u8>>
+    pub proposal_code: Option<Vec<u8>>,
 }

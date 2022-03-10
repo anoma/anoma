@@ -1,9 +1,11 @@
 //! Client RPC queries
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::io::{self, Write};
 
+use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::pos::types::{
     Epoch as PosEpoch, VotingPower, WeightedValidator,
 };
@@ -71,6 +73,83 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
         ),
     }
     cli::safe_exit(1)
+}
+
+pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
+    async fn print_proposal(client: &HttpClient, id: u64, details: bool) {
+        let author_key = gov_storage::get_author_key(id);
+        let start_epoch_key = gov_storage::get_voting_start_epoch_key(id);
+        let end_epoch_key = gov_storage::get_voting_end_epoch_key(id);
+
+        let author =
+            query_storage_value::<Address>(client.clone(), author_key).await;
+        let start_epoch =
+            query_storage_value::<Epoch>(client.clone(), start_epoch_key).await;
+        let end_epoch =
+            query_storage_value::<Epoch>(client.clone(), end_epoch_key).await;
+
+        if details {
+            let content_key = gov_storage::get_content_key(id);
+            let grace_epoch_key = gov_storage::get_grace_epoch_key(id);
+
+            let content = query_storage_value::<HashMap<String, String>>(
+                client.clone(),
+                content_key,
+            )
+            .await;
+            let grace_epoch =
+                query_storage_value::<Epoch>(client.clone(), grace_epoch_key)
+                    .await;
+
+            match (author, content, start_epoch, end_epoch, grace_epoch) {
+                (
+                    Some(author),
+                    Some(content),
+                    Some(start_epoch),
+                    Some(end_epoch),
+                    Some(grace_epoch),
+                ) => {
+                    println!("Proposal: {}", id);
+                    println!("{:4}Author: {}", "", author);
+                    println!("{:4}Content:", "");
+                    for (key, value) in &content {
+                        println!("{:8}{}: {}", "", key, value);
+                    }
+                    println!("{:4}Start Epoch: {}", "", start_epoch);
+                    println!("{:4}End Epoch: {}", "", end_epoch);
+                    println!("{:4}Grace Epoch: {}", "", grace_epoch);
+                }
+                _ => eprintln!("No valid proposal was found with id {}", id),
+            }
+        } else {
+            if let (Some(author), Some(start_epoch), Some(end_epoch)) =
+                (author, start_epoch, end_epoch)
+            {
+                println!("Proposal: {}", id);
+                println!("{:4}Author: {}", "", author);
+                println!("{:4}Start Epoch: {}", "", start_epoch);
+                println!("{:4}End Epoch: {}", "", end_epoch);
+            }
+        }
+    }
+
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
+    match args.proposal_id {
+        Some(id) => print_proposal(&client, id, true).await,
+        None => {
+            let last_proposal_id_key = gov_storage::get_counter_key();
+            let last_proposal_id = query_storage_value::<u64>(
+                client.clone(),
+                last_proposal_id_key,
+            )
+            .await
+            .unwrap();
+
+            for id in 0..last_proposal_id {
+                print_proposal(&client, id, false).await;
+            }
+        }
+    }
 }
 
 /// Query token balance(s)
@@ -698,8 +777,7 @@ pub async fn query_slashes(ctx: Context, args: args::QuerySlashes) {
     }
 }
 
-pub async fn compute_proposal_tally(ctx: Context, args: args::TallyProposal) {
-    
+pub async fn compute_proposal_tally(_ctx: Context, _args: args::TallyProposal) {
 }
 
 /// Dry run a transaction

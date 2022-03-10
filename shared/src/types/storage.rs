@@ -224,7 +224,7 @@ impl Key {
 
     /// Return the segment at the index parameter
     pub fn get_at(&self, index: usize) -> Option<DbKeySeg> {
-        if self.segments.len() < index {
+        if self.segments.len() > index {
             Some(self.segments[index].clone())
         } else {
             None

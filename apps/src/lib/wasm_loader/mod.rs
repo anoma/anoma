@@ -38,9 +38,7 @@ impl Checksums {
     pub fn read_checksums_file(checksums_path: impl AsRef<Path>) -> Self {
         match fs::File::open(&checksums_path) {
             Ok(file) => match serde_json::from_reader(file) {
-                Ok(result) => {
-                    result
-                }
+                Ok(result) => result,
                 Err(_) => {
                     eprintln!(
                         "Can't read checksums from {}",
@@ -285,7 +283,10 @@ pub fn read_wasm(
                 }
                 None => {
                     if !file_path.as_ref().is_absolute() {
-                        println!("{:?}", wasm_directory.as_ref().join(file_path.as_ref()));
+                        println!(
+                            "{:?}",
+                            wasm_directory.as_ref().join(file_path.as_ref())
+                        );
                         match fs::read(
                             wasm_directory.as_ref().join(file_path.as_ref()),
                         ) {
@@ -295,7 +296,8 @@ pub fn read_wasm(
                             Err(e) => {
                                 eprintln!(
                                     "Could not read file {}: {}",
-                                    file_path.as_ref().to_string_lossy(), e.to_string()
+                                    file_path.as_ref().to_string_lossy(),
+                                    e
                                 );
                                 safe_exit(1);
                             }
@@ -308,7 +310,8 @@ pub fn read_wasm(
                             Err(e) => {
                                 eprintln!(
                                     "Could not read file {}: {}",
-                                    file_path.as_ref().to_string_lossy(), e.to_string()
+                                    file_path.as_ref().to_string_lossy(),
+                                    e
                                 );
                                 safe_exit(1);
                             }

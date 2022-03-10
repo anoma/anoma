@@ -122,7 +122,7 @@ pub mod genesis_config {
         pub min_proposal_period: u64,
         // Maximum number of characters in the proposal content
         // XXX: u64 doesn't work with toml-rs!
-        pub max_proposal_content: u64
+        pub max_proposal_content: u64,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -512,8 +512,7 @@ pub mod genesis_config {
             implicit_accounts: implicit_accounts.into_values().collect(),
             parameters,
             pos_params,
-            gov_params
-
+            gov_params,
         };
         genesis.init();
         genesis
@@ -547,7 +546,7 @@ pub struct Genesis {
     pub implicit_accounts: Vec<ImplicitAccount>,
     pub parameters: Parameters,
     pub pos_params: PosParams,
-    pub gov_params: GovParams
+    pub gov_params: GovParams,
 }
 
 impl Genesis {
@@ -772,7 +771,7 @@ pub fn genesis() -> Genesis {
         token_accounts,
         parameters,
         pos_params: PosParams::default(),
-        gov_params: GovParams::default()
+        gov_params: GovParams::default(),
     }
 }
 

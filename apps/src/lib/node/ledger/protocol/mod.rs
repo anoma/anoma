@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashSet};
 use std::{fmt, panic};
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
-use anoma::ledger::governance::{GovernanceVp, self};
+use anoma::ledger::governance::{self, GovernanceVp};
 use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
@@ -358,7 +358,6 @@ where
                             ))
                         }
                         InternalAddress::Governance => {
-                            println!("governancevp");
                             let governance = GovernanceVp { ctx };
                             let result = governance
                                 .validate_tx(tx_data, keys, &verifiers_addr)

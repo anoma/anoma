@@ -414,7 +414,7 @@ pub enum InternalAddress {
     /// Mint tokens from this address with IBC token transfer
     IbcMint,
     /// Governance address
-    Governance
+    Governance,
 }
 
 impl InternalAddress {
