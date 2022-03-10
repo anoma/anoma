@@ -15,6 +15,7 @@ wasms += tx_init_proposal
 wasms += tx_mint_nft
 wasms += tx_vote_proposal
 wasms += tx_transfer
+wasms += tx_init_proposal
 wasms += tx_unbond
 wasms += tx_update_vp
 wasms += tx_withdraw
