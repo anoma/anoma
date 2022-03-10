@@ -8,3 +8,4 @@ pub mod parameters;
 pub mod pos;
 pub mod storage;
 pub mod vp_env;
+pub mod governance;

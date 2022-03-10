@@ -209,10 +209,8 @@ pub mod cmds {
                 Self::parse_with_ctx(matches, TxInitValidator);
             let tx_nft_create = Self::parse_with_ctx(matches, TxInitNft);
             let tx_nft_mint = Self::parse_with_ctx(matches, TxMintNft);
-            let tx_init_proposal =
-                Self::parse_with_ctx(matches, TxInitProposal);
-            let tx_vote_proposal =
-                Self::parse_with_ctx(matches, TxVoteProposal);
+            let tx_init_proposal = Self::parse_with_ctx(matches, TxInitProposal);
+            let tx_vote_proposal = Self::parse_with_ctx(matches, TxVoteProposal);
             let bond = Self::parse_with_ctx(matches, Bond);
             let unbond = Self::parse_with_ctx(matches, Unbond);
             let withdraw = Self::parse_with_ctx(matches, Withdraw);
@@ -771,6 +769,28 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Query the result of a transaction.")
                 .add_args::<args::QueryResult>()
+        }
+    }
+    
+    #[derive(Clone, Debug)]
+    pub struct QueryProposal(pub args::QueryProposal);
+
+    impl SubCmd for QueryProposal {
+        const CMD: &'static str = "query-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryProposal(args::QueryProposal::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("List all proposals yet to be tallied.")
+                .add_args::<args::QueryProposal>()
         }
     }
 
@@ -1395,8 +1415,9 @@ pub mod args {
     const PROPOSAL_OFFLINE: ArgFlag = flag("offline");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
+    const PROPOSAL_OFFLINE: ArgFlag = flag("offline");
     const PROPOSAL_ID: Arg<u64> = arg("proposal-id");
-    const PROPOSAL_ID_OPT: ArgOpt<u64> = arg_opt("proposal-id");
+    const OPTIONAL_PROPOSAL_ID: ArgOpt<u64> = arg_opt("proposal-id");
     const PROPOSAL_VOTE: Arg<ProposalVote> = arg("vote");
     const RAW_ADDRESS: Arg<Address> = arg("address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
@@ -1938,14 +1959,15 @@ pub mod args {
     impl Args for QueryProposal {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
-            let proposal_id = PROPOSAL_ID_OPT.parse(matches);
+            let proposal_id = OPTIONAL_PROPOSAL_ID.parse(matches);
 
             Self { query, proposal_id }
         }
 
         fn def(app: App) -> App {
-            app.add_args::<Tx>()
-                .arg(PROPOSAL_ID_OPT.def().about("The proposal identifier."))
+            app.add_args::<Tx>().arg(
+                OPTIONAL_PROPOSAL_ID.def().about("The proposal identifier."),
+            )
         }
     }
 

@@ -14,6 +14,8 @@ pub mod pos;
 pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
+/// txs to manage governance
+pub mod governance;
 
 use std::collections::BTreeSet;
 use std::fmt;
