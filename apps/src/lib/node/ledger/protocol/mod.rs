@@ -328,6 +328,14 @@ where
                                 (*internal_addr).clone(),
                             ))
                         }
+                        InternalAddress::Governance => {
+                            let governance = GovernanceVp { ctx };
+                            let result = governance
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::GovernanceNativeVpError);
+                            gas_meter = governance.ctx.gas_meter.into_inner();
+                            result
+                        }
                         InternalAddress::IbcEscrow(_)
                         | InternalAddress::IbcBurn
                         | InternalAddress::IbcMint => {

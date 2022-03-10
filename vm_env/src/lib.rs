@@ -13,17 +13,20 @@ pub mod key;
 pub mod nft;
 pub mod proof_of_stake;
 pub mod token;
+pub mod governance;
 
 pub mod tx_prelude {
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
+    pub use anoma::ledger::governance::storage;
 
     pub use crate::ibc::{Ibc, IbcActions};
     pub use crate::imports::tx::*;
     pub use crate::intent::tx as intent;
     pub use crate::nft::tx as nft;
+    pub use crate::governance::tx as governance;
     pub use crate::proof_of_stake::{self, PoS, PosRead, PosWrite};
     pub use crate::token::tx as token;
 }

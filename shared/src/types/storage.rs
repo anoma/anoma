@@ -223,6 +223,15 @@ impl Key {
         addresses
     }
 
+    /// Return the segment at the index parameter
+    pub fn get_at(&self, index: usize) -> Option<DbKeySeg> {
+        if self.segments.len() > index {
+            Some(self.segments[index].clone())
+        } else {
+            None
+        }
+    }
+
     /// Returns the length
     pub fn len(&self) -> usize {
         self.to_string().len()

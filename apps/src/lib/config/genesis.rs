@@ -114,6 +114,22 @@ pub mod genesis_config {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct GovernanceParamasConfig {
+        // Min funds to stake to submit a proposal
+        // XXX: u64 doesn't work with toml-rs!
+        pub min_proposal_fund: u64,
+        // Maximum size of proposal in kilobytes
+        // XXX: u64 doesn't work with toml-rs!
+        pub max_proposal_code_size: u64,
+        // Proposal period length in epoch
+        // XXX: u64 doesn't work with toml-rs!
+        pub min_proposal_period: u64,
+        // Maximum number of characters in the proposal content
+        // XXX: u64 doesn't work with toml-rs!
+        pub max_proposal_content: u64,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ValidatorConfig {
         // Public key for consensus. (default: generate)
         pub consensus_public_key: Option<HexString>,
@@ -493,6 +509,13 @@ pub mod genesis_config {
             tx_whitelist: config.parameters.tx_whitelist.unwrap_or_default(),
         };
 
+        let gov_params = GovParams {
+            min_proposal_fund: 500,
+            max_proposal_code_size: 300,
+            min_proposal_period: 3,
+            max_proposal_content: 10_000,
+        };
+
         let pos_params = PosParams {
             max_validator_slots: config.pos_params.max_validator_slots,
             pipeline_len: config.pos_params.pipeline_len,
@@ -518,6 +541,7 @@ pub mod genesis_config {
             implicit_accounts: implicit_accounts.into_values().collect(),
             parameters,
             pos_params,
+            gov_params
         };
         genesis.init();
         genesis
@@ -551,6 +575,7 @@ pub struct Genesis {
     pub implicit_accounts: Vec<ImplicitAccount>,
     pub parameters: Parameters,
     pub pos_params: PosParams,
+    pub gov_params: GovParams
 }
 
 impl Genesis {
@@ -785,6 +810,7 @@ pub fn genesis() -> Genesis {
         token_accounts,
         parameters,
         pos_params: PosParams::default(),
+        gov_params: GovParams::default(),
     }
 }
 

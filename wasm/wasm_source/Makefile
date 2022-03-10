@@ -13,6 +13,7 @@ wasms += tx_init_nft
 wasms += tx_init_validator
 wasms += tx_mint_nft
 wasms += tx_transfer
+wasms += tx_init_proposal
 wasms += tx_unbond
 wasms += tx_update_vp
 wasms += tx_withdraw

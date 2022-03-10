@@ -48,6 +48,7 @@ use crate::node::ledger::tendermint_node;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
+const TX_INIT_PROPOSAL: &str = "tx_init_proposal.wasm";
 const TX_UPDATE_VP_WASM: &str = "tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "tx_transfer.wasm";
 const TX_INIT_NFT: &str = "tx_init_nft.wasm";
@@ -516,6 +517,61 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
 
     let tx = Tx::new(tx_code, Some(data));
     process_tx(ctx, &args.tx, tx, signer.as_ref()).await;
+}
+
+pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
+    let file = File::open(&args.proposal_data).expect("File must exist.");
+    let proposal: Proposal =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    // TODO: check that the proposal.author address exist on chain
+    let signer = WalletAddress::new(proposal.author.clone().to_string());
+
+    let tx_data: Result<InitProposalData, _> = proposal.try_into();
+
+    let init_proposal_data = if let Ok(data) = tx_data {
+        data
+    } else {
+        eprintln!("Invalid data for init proposal transaction.");
+        safe_exit(1)
+    };
+
+    if args.offline {
+        let signer = ctx.get(&signer);
+        let signing_key = signing::find_keypair(
+            &mut ctx.wallet,
+            &signer,
+            args.tx.ledger_address.clone(),
+        )
+        .await;
+        let offline_proposal =
+            OfflineProposal::new(init_proposal_data, &signing_key);
+        let proposal_filename = "proposal".to_string();
+        let out = File::create(&proposal_filename).unwrap();
+        match serde_json::to_writer_pretty(out, &offline_proposal) {
+            Ok(_) => {
+                println!("Proposal created: {}.", proposal_filename);
+            }
+            Err(e) => {
+                eprintln!("Error while creating proposal file: {}.", e);
+                safe_exit(1)
+            }
+        }
+    } else {
+        let data = init_proposal_data
+            .try_to_vec()
+            .expect("Encoding proposal data shouldn't fail");
+        let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
+        let tx = Tx::new(tx_code, Some(data));
+
+        let (ctx, tx, keypair) =
+            sign_tx(ctx, tx, &args.tx, Some(&signer)).await;
+        process_tx(ctx, &args.tx, tx, &keypair).await;
+    }
+}
+
+pub async fn submit_vote_proposal(_ctx: Context, _args: args::VoteProposal) {
+    //
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
