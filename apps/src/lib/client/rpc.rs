@@ -225,7 +225,7 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryShieldedBalan
             }
             for (asset_type, value) in balance {
                 if value == 0 { continue; }
-                println!("{:?}: {}", asset_type, value);
+                println!("{}: {}", asset_type, value);
                 found_any = true;
             }
             if !found_any {
