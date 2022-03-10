@@ -40,9 +40,15 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
+use std::collections::BTreeMap;
+use borsh::BorshSerialize;
+use masp_primitives::asset_type::AssetType;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
+use crate::client::tx::load_shielded_context;
+use crate::client::tx::compute_shielded_balance;
+use crate::client::tx::to_viewing_key;
 use crate::node::ledger::rpc::{Path, PrefixValue};
 
 /// Query the epoch of the last committed block
@@ -160,6 +166,70 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                         println!("No balances for token {}", token.encode())
                     }
                 }
+            }
+        }
+    }
+}
+
+/// Query token shielded balance(s)
+pub async fn query_shielded_balance(ctx: Context, args: args::QueryShieldedBalance) {
+    // Map addresses to token names
+    let tokens = address::tokens();
+    // Build up the context that will be queried for balances
+    let spending_keys = vec![args.spending_key.clone()];
+    let shielded_ctx = load_shielded_context(
+        &args.query.ledger_address,
+        &spending_keys,
+    ).await;
+    // Query the multi-asset balance at the given spending key
+    let balance: BTreeMap<AssetType, u64> =
+        compute_shielded_balance(&shielded_ctx, &to_viewing_key(&args.spending_key))
+        .expect("context should contain spending key").into();
+    match args.token {
+        // Here the user wants to know the balance for a specific token
+        Some(token) => {
+            // Compute the unique asset identifier from the token address
+            let token = ctx.get(&token);
+            let asset_type = AssetType::new(
+                token.try_to_vec().expect("token addresses should serialize").as_ref()
+            ).unwrap();
+            let currency_code = tokens
+                .get(&token)
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
+            if let Some(value) = balance.get(&asset_type) {
+                if *value == 0 {
+                    println!("No {} balance found for given key", currency_code);
+                } else {
+                    println!("{}: {}", currency_code, value);
+                }
+            } else {
+                println!("No {} balance found for given key", currency_code);
+            }
+        },
+        // Here the user wants to know all possible token balances
+        None => {
+            let mut balance = balance;
+            let mut found_any = false;
+            // Print those balances corresponding to human-readable token names
+            for (token, currency_code) in tokens {
+                // Compute the unique asset identifier from the token address
+                let asset_type = AssetType::new(
+                    token.try_to_vec().expect("token addresses should serialize").as_ref()
+                ).unwrap();
+                if let Some(value) = balance.remove(&asset_type) {
+                    if value == 0 { continue; }
+                    println!("{}: {}", currency_code, value);
+                    found_any = true;
+                }
+            }
+            for (asset_type, value) in balance {
+                if value == 0 { continue; }
+                println!("{:?}: {}", asset_type, value);
+                found_any = true;
+            }
+            if !found_any {
+                println!("No balance found for given key");
             }
         }
     }

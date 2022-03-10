@@ -381,20 +381,10 @@ pub async fn submit_init_validator(
     }
 }
 
+/// Make a ViewingKey that can view notes encrypted by given ExtendedSpendingKey
+
 pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> ViewingKey {
     ExtendedFullViewingKey::from(esk).fvk.vk
-}
-
-/// Generate a ViewingKey entry in the given map for each ExtendedSpendingKey
-
-pub fn gen_viewing_keys(
-    esks: &HashSet<ExtendedSpendingKey>,
-    vks: &mut HashMap<ViewingKey, HashSet<usize>>,
-) {
-    for esk in esks {
-        let vk = to_viewing_key(esk);
-        vks.entry(vk.into()).or_insert(HashSet::new());
-    }
 }
 
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
@@ -426,10 +416,9 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
 /// from its txid.
 
 pub async fn fetch_shielded_transfers(
-    ctx: &Context,
-    args: &args::TxTransfer,
+    ledger_address: &TendermintAddress,
 ) -> Vec<Transaction> {
-    let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+    let client = HttpClient::new(ledger_address.clone()).unwrap();
     // The address of the MASP account
     let masp_addr = Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").unwrap();
     // Construct the key where last transaction pointer is stored
@@ -466,7 +455,7 @@ pub async fn fetch_shielded_transfers(
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
 
-struct TxContext {
+pub struct TxContext {
     tx_pos: usize,
     tree: CommitmentTree<Node>,
     vks: HashMap<ViewingKey, HashSet<usize>>,
@@ -568,9 +557,8 @@ fn scan_tx(
 /// are effected only by the amounts and signatures specified by the containing
 /// Transfer object.
 
-fn gen_shielded_transfer_ctx(
+async fn gen_shielded_transfer(
     ctx: &Context,
-    tx_ctx: &TxContext,
     args: &args::TxTransfer,
     balance: token::Amount,
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
@@ -579,6 +567,13 @@ fn gen_shielded_transfer_ctx(
     if args.spending_key.is_none() && args.payment_address.is_none() {
         return Ok(None);
     }
+    // We want to fund our transaction solely from supplied spending key
+    let spending_keys = args.spending_key.clone().into_iter().collect();
+    // Load the current shielded context given the spending key we possess
+    let tx_ctx = load_shielded_context(
+        &args.tx.ledger_address,
+        &spending_keys
+    ).await;
     // Context required for storing which notes are in the source's possesion
     let height = 0u32;
     let consensus_branch_id = BranchId::Sapling;
@@ -676,29 +671,50 @@ fn gen_shielded_transfer_ctx(
     ).map(|x| Some(x))
 }
 
-/// Load up the current state of the multi-asset shielded pool and try to build
-/// a valid shielded transaction in that context.
+/// Load up the current state of the multi-asset shielded pool into a TxContext
 
-pub async fn gen_shielded_transfer(
-    ctx: &Context,
-    args: &args::TxTransfer,
-    balance: token::Amount,
-) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
+pub async fn load_shielded_context(
+    ledger_address: &TendermintAddress,
+    sks: &Vec<ExtendedSpendingKey>,
+) -> TxContext {
     // Load all transactions accepted until this point
-    let txs = fetch_shielded_transfers(ctx, args).await;
+    let txs = fetch_shielded_transfers(ledger_address).await;
     let mut tx_ctx = TxContext::default();
-    // Load the viewing keys corresponding to given spending key into context
-    let mut sks = HashSet::new();
-    if let Some(spending_key) = args.spending_key.as_ref() {
-        sks.insert(spending_key.clone());
+    // Load the viewing keys corresponding to given spending keys into context
+    for esk in sks {
+        let vk = to_viewing_key(esk);
+        tx_ctx.vks.entry(vk.into()).or_insert(HashSet::new());
     }
-    gen_viewing_keys(&sks, &mut tx_ctx.vks);
     // Apply the loaded transactions to our context
     while tx_ctx.tx_pos < txs.len() {
         scan_tx(&txs[tx_ctx.tx_pos], &mut tx_ctx).expect("transaction scanned");
     }
-    // Cnstruct the shielded transaction in the context that we set up
-    gen_shielded_transfer_ctx(ctx, &tx_ctx, args, balance)
+    tx_ctx
+}
+
+/// Compute the total unspent notes associated with the viewing key in the
+/// context. If the key is not in the context, then we do not know the balance
+/// and hence we return None.
+
+pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<Amount> {
+    // Cannot query the balance of a key that's not in the map
+    if !tx_ctx.vks.contains_key(vk) {
+        return None
+    }
+    let mut val_acc = Amount::zero();
+    // Retrieve the notes that can be spent by this key
+    if let Some(avail_notes) = tx_ctx.vks.get(vk) {
+        for note_idx in avail_notes {
+            // Spent notes cannot contribute a new transaction's pool
+            if tx_ctx.spents.contains(note_idx) { continue; }
+            // Get note associated with this ID
+            let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
+            // Finally add value to multi-asset accumulator
+            val_acc += Amount::from_u64(note.asset_type, note.value)
+                .expect("found note with invalid value or asset type");
+        }
+    }
+    Some(val_acc)
 }
 
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
