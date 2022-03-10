@@ -1,8 +1,10 @@
 //! The ledger's protocol
-use std::collections::{BTreeSet, HashSet};
-use std::{fmt, panic};
+
+use std::collections::BTreeSet;
+use std::panic;
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter};
+use anoma::ledger::governance::GovernanceVp;
 use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
@@ -44,6 +46,8 @@ pub enum Error {
     ParametersNativeVpError(parameters::Error),
     #[error("IBC Token native VP: {0}")]
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
+    #[error("Governance native VP error: {0}")]
+    GovernanceNativeVpError(anoma::ledger::governance::Error),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
 }

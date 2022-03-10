@@ -4,6 +4,7 @@ use std::collections::HashMap;
 #[cfg(not(feature = "dev"))]
 use std::path::Path;
 
+use anoma::ledger::governance::parameters::GovParams;
 use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::{GenesisValidator, PosParams};
 use anoma::types::address::Address;
@@ -24,6 +25,7 @@ pub mod genesis_config {
     use std::path::Path;
     use std::str::FromStr;
 
+    use anoma::ledger::governance::parameters::GovParams;
     use anoma::ledger::parameters::{EpochDuration, Parameters};
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
@@ -541,7 +543,7 @@ pub mod genesis_config {
             implicit_accounts: implicit_accounts.into_values().collect(),
             parameters,
             pos_params,
-            gov_params
+            gov_params,
         };
         genesis.init();
         genesis
@@ -575,7 +577,7 @@ pub struct Genesis {
     pub implicit_accounts: Vec<ImplicitAccount>,
     pub parameters: Parameters,
     pub pos_params: PosParams,
-    pub gov_params: GovParams
+    pub gov_params: GovParams,
 }
 
 impl Genesis {

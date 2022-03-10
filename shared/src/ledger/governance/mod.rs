@@ -401,21 +401,33 @@ where
 }
 
 enum KeyType {
+    #[allow(clippy::upper_case_acronyms)]
     COUNTER,
+    #[allow(clippy::upper_case_acronyms)]
     VOTE,
+    #[allow(clippy::upper_case_acronyms)]
     CONTENT,
+    #[allow(clippy::upper_case_acronyms)]
     #[allow(non_camel_case_types)]
     PROPOSAL_CODE,
+    #[allow(clippy::upper_case_acronyms)]
     #[allow(non_camel_case_types)]
     GRACE_EPOCH,
+    #[allow(clippy::upper_case_acronyms)]
     #[allow(non_camel_case_types)]
     START_EPOCH,
+    #[allow(clippy::upper_case_acronyms)]
     #[allow(non_camel_case_types)]
     END_EPOCH,
+    #[allow(clippy::upper_case_acronyms)]
     FUNDS,
+    #[allow(clippy::upper_case_acronyms)]
     BALANCE,
+    #[allow(clippy::upper_case_acronyms)]
     AUTHOR,
+    #[allow(clippy::upper_case_acronyms)]
     PARAMETER,
+    #[allow(clippy::upper_case_acronyms)]
     UNKNOWN,
 }
 
@@ -450,6 +462,8 @@ impl From<&Key> for KeyType {
 }
 
 enum ReadType {
+    #[allow(clippy::upper_case_acronyms)]
     PRE,
+    #[allow(clippy::upper_case_acronyms)]
     POST,
 }

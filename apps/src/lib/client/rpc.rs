@@ -1,9 +1,11 @@
 //! Client RPC queries
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::io::{self, Write};
 
+use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::pos::types::{
     Epoch as PosEpoch, VotingPower, WeightedValidator,
 };
@@ -165,7 +167,7 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
     }
 }
 
-///Query Proposals
+/// Query Proposals
 pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
     async fn print_proposal(client: &HttpClient, id: u64, details: bool) {
         let author_key = gov_storage::get_author_key(id);
@@ -212,15 +214,13 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                 }
                 _ => eprintln!("No valid proposal was found with id {}", id),
             }
-        } else {
-            if let (Some(author), Some(start_epoch), Some(end_epoch)) =
-                (author, start_epoch, end_epoch)
-            {
-                println!("Proposal: {}", id);
-                println!("{:4}Author: {}", "", author);
-                println!("{:4}Start Epoch: {}", "", start_epoch);
-                println!("{:4}End Epoch: {}", "", end_epoch);
-            }
+        } else if let (Some(author), Some(start_epoch), Some(end_epoch)) =
+            (author, start_epoch, end_epoch)
+        {
+            println!("Proposal: {}", id);
+            println!("{:4}Author: {}", "", author);
+            println!("{:4}Start Epoch: {}", "", start_epoch);
+            println!("{:4}End Epoch: {}", "", end_epoch);
         }
     }
 

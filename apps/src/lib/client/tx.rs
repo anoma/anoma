@@ -5,9 +5,11 @@ use std::fs::File;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
+use anoma::types::governance::{OfflineProposal, Proposal};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
+use anoma::types::transaction::governance::InitProposalData;
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
     hash_tx, pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
@@ -564,9 +566,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
         let tx = Tx::new(tx_code, Some(data));
 
-        let (ctx, tx, keypair) =
-            sign_tx(ctx, tx, &args.tx, Some(&signer)).await;
-        process_tx(ctx, &args.tx, tx, &keypair).await;
+        process_tx(ctx, &args.tx, tx, Some(&signer)).await;
     }
 }
 

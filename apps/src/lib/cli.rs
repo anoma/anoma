@@ -85,7 +85,7 @@ pub mod cmds {
             let tx_update_vp = SubCmd::parse(matches).map(Self::TxUpdateVp);
             let tx_nft_create = SubCmd::parse(matches).map(Self::TxInitNft);
             let tx_nft_mint = SubCmd::parse(matches).map(Self::TxMintNft);
-                        let tx_init_proposal =
+            let tx_init_proposal =
                 SubCmd::parse(matches).map(Self::TxInitProposal);
             let tx_vote_proposal =
                 SubCmd::parse(matches).map(Self::TxVoteProposal);
@@ -209,9 +209,9 @@ pub mod cmds {
             let tx_nft_create = Self::parse_with_ctx(matches, TxInitNft);
             let tx_nft_mint = Self::parse_with_ctx(matches, TxMintNft);
             let tx_init_proposal =
-            Self::parse_with_ctx(matches, TxInitProposal);
-        let tx_vote_proposal =
-            Self::parse_with_ctx(matches, TxVoteProposal);
+                Self::parse_with_ctx(matches, TxInitProposal);
+            let tx_vote_proposal =
+                Self::parse_with_ctx(matches, TxVoteProposal);
             let bond = Self::parse_with_ctx(matches, Bond);
             let unbond = Self::parse_with_ctx(matches, Unbond);
             let withdraw = Self::parse_with_ctx(matches, Withdraw);
@@ -769,7 +769,7 @@ pub mod cmds {
                 .add_args::<args::QueryResult>()
         }
     }
-    
+
     #[derive(Clone, Debug)]
     pub struct QueryProposal(pub args::QueryProposal);
 
