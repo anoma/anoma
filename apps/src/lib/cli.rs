@@ -449,6 +449,7 @@ pub mod cmds {
     #[derive(Clone, Debug)]
     pub enum WalletMasp {
         GenPayAddr(MaspGenPayAddr),
+        DeriveViewKey(MaspDeriveViewKey),
     }
 
     impl SubCmd for WalletMasp {
@@ -457,7 +458,8 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).and_then(|matches| {
                 let genpa = SubCmd::parse(matches).map(Self::GenPayAddr);
-                genpa
+                let derivevk = SubCmd::parse(matches).map(Self::DeriveViewKey);
+                genpa.or(derivevk)
             })
         }
 
@@ -470,6 +472,7 @@ pub mod cmds {
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp)
                 .subcommand(MaspGenPayAddr::def())
+                .subcommand(MaspDeriveViewKey::def())
         }
     }
 
@@ -492,6 +495,27 @@ pub mod cmds {
                     "Generates a payment address from the given spending key",
                 )
                 .add_args::<args::MaspPayAddrGen>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct MaspDeriveViewKey(pub args::MaspViewKeyDerive);
+
+    impl SubCmd for MaspDeriveViewKey {
+        const CMD: &'static str = "derive-view-key";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MaspDeriveViewKey(args::MaspViewKeyDerive::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about(
+                    "Derives a viewing key from the given spending key",
+                )
+                .add_args::<args::MaspViewKeyDerive>()
         }
     }
 
@@ -2456,27 +2480,49 @@ pub mod args {
         }
     }
 
-        /// MASP generate payment address arguments
-        #[derive(Clone, Debug)]
-        pub struct MaspPayAddrGen {
-            /// Spending Key
-            pub spending_key: ExtendedSpendingKey,
-        }
+    /// MASP generate payment address arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspPayAddrGen {
+        /// Spending Key
+        pub spending_key: ExtendedSpendingKey,
+    }
 
-        impl Args for MaspPayAddrGen {
-            fn parse(matches: &ArgMatches) -> Self {
-                let spending_key = SPENDING_KEY.parse(matches);
-                Self {
-                    spending_key
-                }
-            }
-
-            fn def(app: App) -> App {
-                app.arg(SPENDING_KEY.def().about(
-                    "The spending key."
-                ))
+    impl Args for MaspPayAddrGen {
+        fn parse(matches: &ArgMatches) -> Self {
+            let spending_key = SPENDING_KEY.parse(matches);
+            Self {
+                spending_key
             }
         }
+
+        fn def(app: App) -> App {
+            app.arg(SPENDING_KEY.def().about(
+                "The spending key."
+            ))
+        }
+    }
+
+    /// MASP generate payment address arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspViewKeyDerive {
+        /// Spending Key
+        pub spending_key: ExtendedSpendingKey,
+    }
+
+    impl Args for MaspViewKeyDerive {
+        fn parse(matches: &ArgMatches) -> Self {
+            let spending_key = SPENDING_KEY.parse(matches);
+            Self {
+                spending_key
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(SPENDING_KEY.def().about(
+                "The spending key."
+            ))
+        }
+    }
 
     /// Wallet generate key and implicit address arguments
     #[derive(Clone, Debug)]

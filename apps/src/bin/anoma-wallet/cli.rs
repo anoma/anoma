@@ -14,6 +14,7 @@ use masp_primitives::primitives::Diversifier;
 use rand::RngCore;
 use rand_core::OsRng;
 use rand::CryptoRng;
+use masp_primitives::keys::FullViewingKey;
 
 pub fn main() -> Result<()> {
     let (cmd, ctx) = cli::anoma_wallet_cli();
@@ -43,6 +44,9 @@ pub fn main() -> Result<()> {
         cmds::AnomaWallet::Masp(sub) => match sub {
             cmds::WalletMasp::GenPayAddr(cmds::MaspGenPayAddr(args)) => {
                 payment_address_gen(ctx, args)
+            }
+            cmds::WalletMasp::DeriveViewKey(cmds::MaspDeriveViewKey(args)) => {
+                viewing_key_derive(ctx, args)
             }
         }
     }
@@ -82,9 +86,24 @@ fn payment_address_gen(
         .to_viewing_key()
         .to_payment_address(div);
     println!(
-        "Successfully derived the following payment address from the \
+        "Successfully generated the following payment address from the \
          given spending key: {}",
         pay_addr.unwrap()
+    );
+}
+
+/// Derive a full viewing key from the given spending key.
+fn viewing_key_derive(
+    _ctx: Context,
+    args::MaspViewKeyDerive {
+        spending_key,
+    }: args::MaspViewKeyDerive,
+) {
+    let fvk = FullViewingKey::from_expanded_spending_key(&spending_key.expsk);
+    println!(
+        "Successfully derived the following viewing key from the \
+         given spending key: {}",
+        fvk
     );
 }
 
