@@ -226,10 +226,9 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
             for (key, value) in &content {
                 println!("{:8}{}: {}", "", key, value);
             }
-            println!("{:4}Start Epoch: {}", "", start_epoch);
-            println!("{:4}End Epoch: {}", "", end_epoch);
-            println!("{:4}Grace Epoch: {}", "", grace_epoch);
-        } else {
+        } else if let (Some(author), Some(start_epoch), Some(end_epoch)) =
+            (author, start_epoch, end_epoch)
+        {
             println!("Proposal: {}", id);
             println!("{:4}Author: {}", "", author);
             println!("{:4}Start Epoch: {}", "", start_epoch);
