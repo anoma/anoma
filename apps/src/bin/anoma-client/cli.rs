@@ -70,7 +70,6 @@ pub async fn main() -> Result<()> {
                 Sub::QueryRawBytes(QueryRawBytes(args)) => {
                     rpc::query_raw_bytes(ctx, args).await;
                 }
-
                 Sub::QueryProposal(QueryProposal(args)) => {
                     rpc::query_proposal(ctx, args).await;
                 }
