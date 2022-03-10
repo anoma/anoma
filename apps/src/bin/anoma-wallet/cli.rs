@@ -40,8 +40,8 @@ pub fn main() -> Result<()> {
                 address_add(ctx, args)
             }
         },
-        cmds::AnomaWallet::MASP(sub) => match sub {
-            cmds::WalletMASP::GenPayAddr(cmds::MASPGenPayAddr(args)) => {
+        cmds::AnomaWallet::Masp(sub) => match sub {
+            cmds::WalletMasp::GenPayAddr(cmds::MaspGenPayAddr(args)) => {
                 payment_address_gen(ctx, args)
             }
         }
@@ -72,9 +72,9 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
 /// Generate a shielded payment address from the given spending key.
 fn payment_address_gen(
     _ctx: Context,
-    args::MASPPayAddrGen {
+    args::MaspPayAddrGen {
         spending_key,
-    }: args::MASPPayAddrGen,
+    }: args::MaspPayAddrGen,
 ) {
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
     let pay_addr = spending_key.expsk
