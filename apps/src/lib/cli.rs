@@ -771,7 +771,7 @@ pub mod cmds {
                 .add_args::<args::QueryResult>()
         }
     }
-    
+
     #[derive(Clone, Debug)]
     pub struct QueryProposal(pub args::QueryProposal);
 
