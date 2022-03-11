@@ -4,6 +4,12 @@ pub mod vp_user;
 #[cfg(feature = "vp_testnet_faucet")]
 pub mod vp_testnet_faucet;
 
+#[cfg(feature = "vp_masp")]
+pub mod vp_masp;
+
+#[cfg(feature = "tx_masp")]
+pub mod tx_masp;
+
 /// A tx to initialize a new established address with a given public key and
 /// a validity predicate.
 #[cfg(feature = "tx_init_account")]

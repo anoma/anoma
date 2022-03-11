@@ -7,6 +7,8 @@ pub mod ibc;
 pub mod intent;
 pub mod internal;
 pub mod key;
+#[cfg(feature="masp")]
+pub mod masp;
 pub mod matchmaker;
 pub mod nft;
 pub mod storage;
