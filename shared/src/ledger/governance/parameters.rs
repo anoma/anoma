@@ -27,7 +27,7 @@ pub struct GovParams {
     /// Maximimum number of characters for proposal content
     pub max_proposal_content: u64,
     /// Minimum epochs between end and grace epochs
-    pub min_proposal_grace_epochs: u64
+    pub min_proposal_grace_epochs: u64,
 }
 
 impl Default for GovParams {
@@ -37,7 +37,7 @@ impl Default for GovParams {
             max_proposal_code_size: 500,
             min_proposal_period: 3,
             max_proposal_content: 10000,
-            min_proposal_grace_epochs: 6
+            min_proposal_grace_epochs: 6,
         }
     }
 }
@@ -80,8 +80,14 @@ impl GovParams {
             )
             .unwrap();
 
-        let min_proposal_grace_epoch_key = gov_storage::get_min_proposal_grace_epoch_key();
-        storage.write(&min_proposal_grace_epoch_key, encode(&self.min_proposal_grace_epochs)).unwrap();
+        let min_proposal_grace_epoch_key =
+            gov_storage::get_min_proposal_grace_epoch_key();
+        storage
+            .write(
+                &min_proposal_grace_epoch_key,
+                encode(&self.min_proposal_grace_epochs),
+            )
+            .unwrap();
 
         let counter_key = gov_storage::get_counter_key();
         storage.write(&counter_key, encode(&u64::MIN)).unwrap();

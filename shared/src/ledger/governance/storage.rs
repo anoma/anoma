@@ -178,9 +178,10 @@ pub fn is_counter_key(key: &Key) -> bool {
 /// Check if key is a proposal fund parameter key
 pub fn is_min_proposal_fund_key(key: &Key) -> bool {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(min_funds_param)]
-            if addr == &ADDRESS && min_funds_param == MIN_PROPOSAL_FUND_KEY =>
-        {
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(min_funds_param),
+        ] if addr == &ADDRESS && min_funds_param == MIN_PROPOSAL_FUND_KEY => {
             true
         }
         _ => false,
@@ -190,8 +191,11 @@ pub fn is_min_proposal_fund_key(key: &Key) -> bool {
 /// Check if key is a proposal max content parameter key
 pub fn is_max_content_size_key(key: &Key) -> bool {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(max_content_size_param)]
-            if addr == &ADDRESS && max_content_size_param == MAX_PROPOSAL_CONTENT_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(max_content_size_param),
+        ] if addr == &ADDRESS
+            && max_content_size_param == MAX_PROPOSAL_CONTENT_KEY =>
         {
             true
         }
@@ -202,8 +206,11 @@ pub fn is_max_content_size_key(key: &Key) -> bool {
 /// Check if key is a max proposal size key
 pub fn is_max_proposal_code_size_key(key: &Key) -> bool {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(max_content_size_param)]
-            if addr == &ADDRESS && max_content_size_param == MAX_PROPOSAL_CONTENT_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(max_content_size_param),
+        ] if addr == &ADDRESS
+            && max_content_size_param == MAX_PROPOSAL_CONTENT_KEY =>
         {
             true
         }
@@ -214,8 +221,11 @@ pub fn is_max_proposal_code_size_key(key: &Key) -> bool {
 /// Check if key is a min proposal period param key
 pub fn is_min_proposal_period_key(key: &Key) -> bool {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(min_proposal_period_param)]
-            if addr == &ADDRESS && min_proposal_period_param == MIN_PROPOSAL_PERIOD_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(min_proposal_period_param),
+        ] if addr == &ADDRESS
+            && min_proposal_period_param == MIN_PROPOSAL_PERIOD_KEY =>
         {
             true
         }
@@ -226,8 +236,11 @@ pub fn is_min_proposal_period_key(key: &Key) -> bool {
 /// Check if key is a min grace epoch key
 pub fn is_min_grace_epoch_key(key: &Key) -> bool {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(min_grace_epoch_param)]
-            if addr == &ADDRESS && min_grace_epoch_param == MIN_GRACE_EPOCH_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(min_grace_epoch_param),
+        ] if addr == &ADDRESS
+            && min_grace_epoch_param == MIN_GRACE_EPOCH_KEY =>
         {
             true
         }
@@ -237,7 +250,11 @@ pub fn is_min_grace_epoch_key(key: &Key) -> bool {
 
 /// Check if key is parameter key
 pub fn is_parameter_key(key: &Key) -> bool {
-    is_min_proposal_fund_key(key) || is_max_content_size_key(key) || is_max_proposal_code_size_key(key) || is_min_proposal_period_key(key) || is_min_grace_epoch_key(key)
+    is_min_proposal_fund_key(key)
+        || is_max_content_size_key(key)
+        || is_max_proposal_code_size_key(key)
+        || is_min_proposal_period_key(key)
+        || is_min_grace_epoch_key(key)
 }
 
 /// Check if key is start epoch or end epoch key

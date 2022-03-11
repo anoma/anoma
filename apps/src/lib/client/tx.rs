@@ -937,20 +937,20 @@ async fn account_hash_enought_balance(
     address: &Address,
     min_amount: Amount,
 ) -> bool {
-    let balance_key = token::balance_key(&m1t(), &address);
-    match rpc::query_storage_value::<Amount>(&client, &balance_key).await {
+    let balance_key = token::balance_key(&m1t(), address);
+    match rpc::query_storage_value::<Amount>(client, &balance_key).await {
         Some(amount) => {
             if amount < min_amount {
                 eprintln!("Address {} doesn't have enough funds.", address);
                 safe_exit(1);
             }
-            return true;
+            true
         }
         None => {
             eprintln!("Can't find address {}.", address);
             safe_exit(1);
         }
-    };
+    }
 }
 
 /// Save accounts initialized from a tx into the wallet, if any.

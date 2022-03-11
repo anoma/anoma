@@ -935,7 +935,8 @@ fn proposal_submission() -> Result<()> {
     }
 
     // 2. Submit valid proposal
-    let valid_proposal_json_path = test.base_dir.path().join("valid_proposal.json");
+    let valid_proposal_json_path =
+        test.base_dir.path().join("valid_proposal.json");
     let albert = find_address(&test, ALBERT)?;
     let valid_proposal_json = json!(
         {
@@ -956,7 +957,10 @@ fn proposal_submission() -> Result<()> {
             "grace_epoch": 10009
         }
     );
-    generate_proposal_json(valid_proposal_json_path.clone(), valid_proposal_json);
+    generate_proposal_json(
+        valid_proposal_json_path.clone(),
+        valid_proposal_json,
+    );
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -967,7 +971,7 @@ fn proposal_submission() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    
+
     let mut client = run!(test, Bin::Client, submit_proposal_args, Some(15))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
@@ -1001,7 +1005,7 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("XAN: 999500")?;
     client.assert_success();
 
-    // 5. Query token balance governance 
+    // 5. Query token balance governance
     let query_balance_args = vec![
         "balance",
         "--owner",
@@ -1018,7 +1022,8 @@ fn proposal_submission() -> Result<()> {
 
     // 6. Submit an invalid proposal
     // proposal is invalid due to voting_end_epoch - voting_start_epoch < 3
-    let invalid_proposal_json_path = test.base_dir.path().join("invalid_proposal.json");
+    let invalid_proposal_json_path =
+        test.base_dir.path().join("invalid_proposal.json");
     let albert = find_address(&test, ALBERT)?;
     let invalid_proposal_json = json!(
         {
@@ -1039,7 +1044,10 @@ fn proposal_submission() -> Result<()> {
             "grace_epoch": 10009
         }
     );
-    generate_proposal_json(invalid_proposal_json_path.clone(), invalid_proposal_json);
+    generate_proposal_json(
+        invalid_proposal_json_path.clone(),
+        invalid_proposal_json,
+    );
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -1050,7 +1058,7 @@ fn proposal_submission() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    
+
     let mut client = run!(test, Bin::Client, submit_proposal_args, Some(15))?;
     client.exp_string("Transaction is invalid.")?;
     client.assert_success();

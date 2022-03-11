@@ -1,6 +1,6 @@
 //! Default addresses and keys.
 
-use anoma::ledger::{pos, governance};
+use anoma::ledger::{governance, pos};
 use anoma::types::address::Address;
 use anoma::types::key::*;
 #[cfg(feature = "dev")]
@@ -72,7 +72,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
 
 #[cfg(feature = "dev")]
 mod dev {
-    use anoma::ledger::{pos, governance};
+    use anoma::ledger::{governance, pos};
     use anoma::types::address::{self, Address};
     use anoma::types::key::dkg_session_keys::DkgKeypair;
     use anoma::types::key::*;
