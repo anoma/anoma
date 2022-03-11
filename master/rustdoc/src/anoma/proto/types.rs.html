@@ -482,6 +482,10 @@
 <span id="481">481</span>
 <span id="482">482</span>
 <span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -660,6 +664,10 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
         <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">to_bytes</span>()).<span class="number">0</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">code_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">u8</span>; <span class="number">32</span>] {
+        <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">code</span>).<span class="number">0</span>
     }
 
     <span class="doccomment">/// Sign a transaction using [`SignedTxData`].</span>

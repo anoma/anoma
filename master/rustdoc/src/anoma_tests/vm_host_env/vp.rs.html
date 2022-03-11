@@ -294,6 +294,7 @@
 <span id="293">293</span>
 <span id="294">294</span>
 <span id="295">295</span>
+<span id="296">296</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
@@ -574,6 +575,7 @@
     <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_block_height</span>() -&gt; <span class="ident">u64</span>);
     <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_tx_code_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_block_epoch</span>() -&gt; <span class="ident">u64</span>);
     <span class="macro">native_host_fn!</span>(<span class="ident">vp_verify_tx_signature</span>(
             <span class="ident">pk_ptr</span>: <span class="ident">u64</span>,

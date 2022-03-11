@@ -812,6 +812,16 @@
 <span id="811">811</span>
 <span id="812">812</span>
 <span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
@@ -1008,6 +1018,12 @@
         <span class="comment">// Maximum duration per block (in seconds).</span>
         <span class="comment">// TODO: this is i64 because datetime wants it</span>
         <span class="kw">pub</span> <span class="ident">max_expected_time_per_block</span>: <span class="ident">i64</span>,
+        <span class="comment">// Hashes of whitelisted vps array. `None` value or an empty array</span>
+        <span class="comment">// disables whitelisting.</span>
+        <span class="kw">pub</span> <span class="ident">vp_whitelist</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="comment">// Hashes of whitelisted txs array. `None` value or an empty array</span>
+        <span class="comment">// disables whitelisting.</span>
+        <span class="kw">pub</span> <span class="ident">tx_whitelist</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
@@ -1297,6 +1313,8 @@
                 <span class="ident">config</span>.<span class="ident">parameters</span>.<span class="ident">max_expected_time_per_block</span>,
             )
             .<span class="ident">into</span>(),
+            <span class="ident">vp_whitelist</span>: <span class="ident">config</span>.<span class="ident">parameters</span>.<span class="ident">vp_whitelist</span>.<span class="ident">unwrap_or_default</span>(),
+            <span class="ident">tx_whitelist</span>: <span class="ident">config</span>.<span class="ident">parameters</span>.<span class="ident">tx_whitelist</span>.<span class="ident">unwrap_or_default</span>(),
         };
 
         <span class="kw">let</span> <span class="ident">pos_params</span> <span class="op">=</span> <span class="ident">PosParams</span> {
@@ -1512,6 +1530,8 @@
             <span class="ident">min_duration</span>: <span class="ident">anoma::types::time::Duration::minutes</span>(<span class="number">1</span>).<span class="ident">into</span>(),
         },
         <span class="ident">max_expected_time_per_block</span>: <span class="ident">anoma::types::time::DurationSecs</span>(<span class="number">30</span>),
+        <span class="ident">vp_whitelist</span>: <span class="macro">vec!</span>[],
+        <span class="ident">tx_whitelist</span>: <span class="macro">vec!</span>[],
     };
     <span class="kw">let</span> <span class="ident">albert</span> <span class="op">=</span> <span class="ident">EstablishedAccount</span> {
         <span class="ident">address</span>: <span class="ident">wallet::defaults::albert_address</span>(),

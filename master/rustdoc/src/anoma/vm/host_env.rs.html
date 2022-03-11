@@ -1806,6 +1806,28 @@
 <span id="1805">1805</span>
 <span id="1806">1806</span>
 <span id="1807">1807</span>
+<span id="1808">1808</span>
+<span id="1809">1809</span>
+<span id="1810">1810</span>
+<span id="1811">1811</span>
+<span id="1812">1812</span>
+<span id="1813">1813</span>
+<span id="1814">1814</span>
+<span id="1815">1815</span>
+<span id="1816">1816</span>
+<span id="1817">1817</span>
+<span id="1818">1818</span>
+<span id="1819">1819</span>
+<span id="1820">1820</span>
+<span id="1821">1821</span>
+<span id="1822">1822</span>
+<span id="1823">1823</span>
+<span id="1824">1824</span>
+<span id="1825">1825</span>
+<span id="1826">1826</span>
+<span id="1827">1827</span>
+<span id="1828">1828</span>
+<span id="1829">1829</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -3394,6 +3416,28 @@
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">vp_env::get_block_hash</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env::RuntimeError::MemoryError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
+    <span class="ident">vp_env::add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
+}
+
+<span class="doccomment">/// Getting the transaction hash function exposed to the wasm VM VP environment.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_tx_code_hash</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+) -&gt; <span class="ident">vp_env::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
+{
+    <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">tx</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">vp_env::get_tx_code_hash</span>(<span class="ident">gas_meter</span>, <span class="ident">tx</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
         .<span class="ident">memory</span>
         .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>)

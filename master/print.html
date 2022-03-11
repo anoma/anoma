@@ -3327,6 +3327,8 @@ state may be comprised of keys with a format specified above and values of arbit
 <table><thead><tr><th>Position</th><th>Name</th><th>Type</th></tr></thead><tbody>
 <tr><td>0</td><td>epoch_duration</td><td><a href="specs/encoding.html#epochduration">EpochDuration</a></td></tr>
 <tr><td>1</td><td>max_expected_time_per_block</td><td><a href="specs/encoding.html#durationsecs">DurationSecs</a></td></tr>
+<tr><td>2</td><td>vp_whitelist</td><td><a href="specs/encoding.html#vecstring">Vec&lt;string&gt;</a></td></tr>
+<tr><td>3</td><td>tx_whitelist</td><td><a href="specs/encoding.html#vecstring">Vec&lt;string&gt;</a></td></tr>
 </tbody></table>
 <h4 id="ed25519publickey"><a class="header" href="#ed25519publickey">ed25519::PublicKey</a></h4>
 <p>Fixed-size array with 32 elements of u8 (native type) (<a href="https://docs.anoma.network/master/rustdoc/anoma/types/key/ed25519/struct.PublicKey.html">rust-doc</a>)</p>
@@ -3630,6 +3632,8 @@ state may be comprised of keys with a format specified above and values of arbit
 </tbody></table>
 <h4 id="vecdbkeyseg"><a class="header" href="#vecdbkeyseg">Vec&lt;DbKeySeg&gt;</a></h4>
 <p>Dynamic-size array of <a href="specs/encoding.html#dbkeyseg">DbKeySeg</a></p>
+<h4 id="vecstring"><a class="header" href="#vecstring">Vec&lt;string&gt;</a></h4>
+<p>Dynamic-size array of string (native type)</p>
 <h4 id="vecu8"><a class="header" href="#vecu8">Vec&lt;u8&gt;</a></h4>
 <p>Dynamic-size array of u8 (native type)</p>
 <!--- THIS PAGE IS GENERATED FROM CODE: encoding_spec/src/main.rs. Do not edit manually! -->

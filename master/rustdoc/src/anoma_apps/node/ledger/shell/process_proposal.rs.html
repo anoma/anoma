@@ -746,6 +746,7 @@
 <span id="745">745</span>
 <span id="746">746</span>
 <span id="747">747</span>
+<span id="748">748</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implementation of the [&#39;VerifyHeader`], [`ProcessProposal`],</span>
 <span class="doccomment">//! and [`RevertProposal`] ABCI++ methods for the Shell</span>
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -993,11 +994,12 @@
 <span class="kw">mod</span> <span class="ident">test_process_proposal</span> {
     <span class="kw">use</span> <span class="ident">anoma::proto::SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::address::xan</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::hash::Hash</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::transaction::encrypted::EncryptedTx</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">EncryptionKey</span>, <span class="ident">Fee</span>, <span class="ident">Hash</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">EncryptionKey</span>, <span class="ident">Fee</span>};
     <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint_proto::abci::RequestInitChain</span>;

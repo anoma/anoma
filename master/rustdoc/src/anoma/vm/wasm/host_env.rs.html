@@ -120,6 +120,7 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Here, we expose the host functions into wasm&#39;s</span>
@@ -234,6 +235,7 @@
             <span class="string">&quot;anoma_vp_get_chain_id&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_get_chain_id</span>),
             <span class="string">&quot;anoma_vp_get_block_height&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_get_block_height</span>),
             <span class="string">&quot;anoma_vp_get_block_hash&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_get_block_hash</span>),
+            <span class="string">&quot;anoma_vp_get_tx_code_hash&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_get_tx_code_hash</span>),
             <span class="string">&quot;anoma_vp_get_block_epoch&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_get_block_epoch</span>),
             <span class="string">&quot;anoma_vp_verify_tx_signature&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_verify_tx_signature</span>),
             <span class="string">&quot;anoma_vp_eval&quot;</span> =&gt; <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::vp_eval</span>),

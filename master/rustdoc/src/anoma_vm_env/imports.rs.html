@@ -649,6 +649,21 @@
 <span id="648">648</span>
 <span id="649">649</span>
 <span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
@@ -1013,6 +1028,7 @@
     <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
     <span class="kw">use</span> <span class="ident">anoma::types::chain::CHAIN_ID_LENGTH</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::hash</span>::{<span class="ident">Hash</span>, <span class="ident">HASH_LENGTH</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{
@@ -1167,6 +1183,17 @@
         <span class="ident">BlockHash::try_from</span>(<span class="ident">slice</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot convert the hash&quot;</span>)
     }
 
+    <span class="doccomment">/// Get a tx hash</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_tx_code_hash</span>() -&gt; <span class="ident">Hash</span> {
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">HASH_LENGTH</span>);
+        <span class="kw">unsafe</span> {
+            <span class="ident">anoma_vp_get_tx_code_hash</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
+        }
+        <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">HASH_LENGTH</span>) };
+        <span class="ident">Hash::try_from</span>(<span class="ident">slice</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot convert the hash&quot;</span>)
+    }
+
     <span class="doccomment">/// Get epoch of the current block</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_epoch</span>() -&gt; <span class="ident">Epoch</span> {
         <span class="ident">Epoch</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_vp_get_block_epoch</span>() })
@@ -1276,6 +1303,9 @@
 
         <span class="comment">// Get the current block hash</span>
         <span class="kw">fn</span> <span class="ident">anoma_vp_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+
+        <span class="comment">// Get the current tx hash</span>
+        <span class="kw">fn</span> <span class="ident">anoma_vp_get_tx_code_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Get the current block epoch</span>
         <span class="kw">fn</span> <span class="ident">anoma_vp_get_block_epoch</span>() -&gt; <span class="ident">u64</span>;

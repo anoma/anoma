@@ -249,15 +249,42 @@
 <span id="248">248</span>
 <span id="249">249</span>
 <span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::BlockGasMeter</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::testing::TestStorage</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::time::DurationSecs</span>;
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">key</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm::prefix_iter::PrefixIterators</span>;
 <span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="self">self</span>, <span class="ident">TxCache</span>, <span class="ident">VpCache</span>};
@@ -313,6 +340,29 @@
 <span class="kw">impl</span> <span class="ident">TestTxEnv</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">get_keys</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_parameters</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">epoch_duration</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EpochDuration</span><span class="op">&gt;</span>,
+        <span class="ident">vp_whitelist</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">tx_whitelist</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) {
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">parameters::update_epoch_parameter</span>(
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">storage</span>,
+            <span class="kw-2">&amp;</span><span class="ident">epoch_duration</span>.<span class="ident">unwrap_or</span>(<span class="ident">EpochDuration</span> {
+                <span class="ident">min_num_of_blocks</span>: <span class="number">1</span>,
+                <span class="ident">min_duration</span>: <span class="ident">DurationSecs</span>(<span class="number">5</span>),
+            }),
+        );
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">parameters::update_tx_whitelist_parameter</span>(
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">storage</span>,
+            <span class="ident">tx_whitelist</span>.<span class="ident">unwrap_or_default</span>(),
+        );
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">parameters::update_vp_whitelist_parameter</span>(
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">storage</span>,
+            <span class="ident">vp_whitelist</span>.<span class="ident">unwrap_or_default</span>(),
+        );
     }
 
     <span class="doccomment">/// Fake accounts existence by initializating their VP storage.</span>

@@ -309,12 +309,10 @@
 <span id="308">308</span>
 <span id="309">309</span>
 <span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Shell methods for querying state</span>
 <span class="kw">use</span> <span class="ident">std::cmp::max</span>;
 
-<span class="kw">use</span> <span class="ident">anoma::ledger::parameters::Parameters</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::parameters::EpochDuration</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos::PosParams</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>;
@@ -552,17 +550,15 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_evidence_params</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">protocol_params</span>: <span class="kw-2">&amp;</span><span class="ident">Parameters</span>,
+        <span class="ident">epoch_duration</span>: <span class="kw-2">&amp;</span><span class="ident">EpochDuration</span>,
         <span class="ident">pos_params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>,
     ) -&gt; <span class="ident">EvidenceParams</span> {
         <span class="comment">// Minimum number of epochs before tokens are unbonded and can be</span>
         <span class="comment">// withdrawn</span>
         <span class="kw">let</span> <span class="ident">len_before_unbonded</span> <span class="op">=</span> <span class="ident">max</span>(<span class="ident">pos_params</span>.<span class="ident">unbonding_len</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="number">1</span>, <span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">max_age_num_blocks</span>: <span class="ident">i64</span> <span class="op">=</span>
-            <span class="ident">protocol_params</span>.<span class="ident">epoch_duration</span>.<span class="ident">min_num_of_blocks</span> <span class="kw">as</span> <span class="ident">i64</span>
-                <span class="op">*</span> <span class="ident">len_before_unbonded</span>;
-        <span class="kw">let</span> <span class="ident">min_duration_secs</span> <span class="op">=</span>
-            <span class="ident">protocol_params</span>.<span class="ident">epoch_duration</span>.<span class="ident">min_duration</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i64</span>;
+            <span class="ident">epoch_duration</span>.<span class="ident">min_num_of_blocks</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">*</span> <span class="ident">len_before_unbonded</span>;
+        <span class="kw">let</span> <span class="ident">min_duration_secs</span> <span class="op">=</span> <span class="ident">epoch_duration</span>.<span class="ident">min_duration</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i64</span>;
         <span class="kw">let</span> <span class="ident">max_age_duration</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">protobuf::Duration</span> {
             <span class="ident">seconds</span>: <span class="ident">min_duration_secs</span> <span class="op">*</span> <span class="ident">len_before_unbonded</span>,
             <span class="ident">nanos</span>: <span class="number">0</span>,
