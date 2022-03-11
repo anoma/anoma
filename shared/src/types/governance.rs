@@ -118,14 +118,14 @@ impl TryFrom<Proposal> for InitProposalData {
 /// The offline proposal structure
 pub struct OfflineProposal {
     /// The proposal data
-    pub data: InitProposalData,
+    pub data: Proposal,
     /// The signature over proposal data
     pub signature: Signature,
 }
 
 impl OfflineProposal {
     /// Create an offline proposal with a signature
-    pub fn new(data: InitProposalData, keypair: &common::SecretKey) -> Self {
+    pub fn new(data: Proposal, keypair: &common::SecretKey) -> Self {
         let to_sign = serde_json::to_vec(&data)
             .expect("Conversion to bytes shouldn't fail.");
         let signature = common::SigScheme::sign(keypair, &to_sign);

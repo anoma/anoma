@@ -545,8 +545,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_proposal =
-            OfflineProposal::new(init_proposal_data, &signing_key);
+        let offline_proposal = OfflineProposal::new(proposal, &signing_key);
         let proposal_filename = "proposal".to_string();
         let out = File::create(&proposal_filename).unwrap();
         match serde_json::to_writer_pretty(out, &offline_proposal) {

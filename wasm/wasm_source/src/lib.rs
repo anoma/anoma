@@ -20,7 +20,6 @@ pub mod tx_unbond;
 pub mod tx_update_vp;
 #[cfg(feature = "tx_withdraw")]
 pub mod tx_withdraw;
-
 #[cfg(feature = "vp_nft")]
 pub mod vp_nft;
 #[cfg(feature = "vp_testnet_faucet")]
