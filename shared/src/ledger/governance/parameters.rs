@@ -97,6 +97,9 @@ impl GovParams {
             )
             .unwrap();
 
+        let min_proposal_grace_epoch_key = gov_storage::get_min_proposal_grace_epoch_key();
+        storage.write(&min_proposal_grace_epoch_key, encode(&self.min_proposal_grace_epochs)).unwrap();
+
         let counter_key = gov_storage::get_counter_key();
         storage.write(&counter_key, encode(&u64::MIN)).unwrap();
     }
