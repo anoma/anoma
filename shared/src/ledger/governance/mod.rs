@@ -335,7 +335,7 @@ where
                         ) => {
                             post_funds >= min_funds_parameter
                                 && post_balance - pre_balance == post_funds
-                        },
+                        }
                         (
                             Some(min_funds_parameter),
                             None,
@@ -344,10 +344,8 @@ where
                         ) => {
                             post_funds >= min_funds_parameter
                                 && post_balance == post_funds
-                        },
-                        _ => {
-                            false
                         }
+                        _ => false,
                     }
                 }
                 (KeyType::AUTHOR, Some(proposal_id)) => {

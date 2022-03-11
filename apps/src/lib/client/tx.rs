@@ -6,22 +6,14 @@ use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::{xan as m1t, Address};
-<<<<<<< HEAD
 use anoma::types::governance::{OfflineProposal, OfflineVote, Proposal};
-=======
-use anoma::types::governance::{OfflineProposal, Proposal};
->>>>>>> [feat]: added e2e test, minors
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
 use anoma::types::token::Amount;
-<<<<<<< HEAD
 use anoma::types::transaction::governance::{
     InitProposalData, VoteProposalData,
 };
-=======
-use anoma::types::transaction::governance::InitProposalData;
->>>>>>> [feat]: added e2e test, minors
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
     hash_tx, pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
@@ -539,17 +531,6 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         serde_json::from_reader(file).expect("JSON was not well-formatted");
 
     let signer = WalletAddress::new(proposal.clone().author.to_string());
-<<<<<<< HEAD
-=======
-    let tx_data: Result<InitProposalData, _> = proposal.clone().try_into();
-
-    let init_proposal_data = if let Ok(data) = tx_data {
-        data
-    } else {
-        eprintln!("Invalid data for init proposal transaction.");
-        safe_exit(1)
-    };
->>>>>>> [feat]: added e2e test, minors
 
     if args.offline {
         let signer = ctx.get(&signer);
@@ -1038,32 +1019,45 @@ async fn account_hash_enought_balance(
     min_amount: Amount,
 ) -> bool {
 <<<<<<< HEAD
+<<<<<<< HEAD
     let balance_key = token::balance_key(&m1t(), address);
     match rpc::query_storage_value::<Amount>(client, &balance_key).await {
 =======
     let balance_key = token::balance_key(&m1t(), &address);
     match rpc::query_storage_value::<Amount>(&client, &balance_key).await {
 >>>>>>> [feat]: added e2e test, minors
+=======
+    let balance_key = token::balance_key(&m1t(), address);
+    match rpc::query_storage_value::<Amount>(client, &balance_key).await {
+>>>>>>> Clippy + fmt
         Some(amount) => {
             if amount < min_amount {
                 eprintln!("Address {} doesn't have enough funds.", address);
                 safe_exit(1);
             }
 <<<<<<< HEAD
+<<<<<<< HEAD
             true
 =======
             return true;
 >>>>>>> [feat]: added e2e test, minors
+=======
+            true
+>>>>>>> Clippy + fmt
         }
         None => {
             eprintln!("Can't find address {}.", address);
             safe_exit(1);
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
     }
 =======
     };
 >>>>>>> [feat]: added e2e test, minors
+=======
+    }
+>>>>>>> Clippy + fmt
 }
 
 /// Save accounts initialized from a tx into the wallet, if any.
