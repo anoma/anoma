@@ -2444,21 +2444,28 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct MaspPayAddrGen {
         /// Spending Key
-        pub spending_key: ExtendedSpendingKey,
+        pub spending_key: Option<ExtendedSpendingKey>,
+        /// Viewing key
+        pub viewing_key: Option<FullViewingKey>,
     }
 
     impl Args for MaspPayAddrGen {
         fn parse(matches: &ArgMatches) -> Self {
-            let spending_key = SPENDING_KEY.parse(matches);
+            let spending_key = SPENDING_KEY_OPT.parse(matches);
+            let viewing_key = VIEWING_KEY_OPT.parse(matches);
             Self {
-                spending_key
+                spending_key,
+                viewing_key,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(SPENDING_KEY.def().about(
+            app.arg(SPENDING_KEY_OPT.def().about(
                 "The spending key."
             ))
+                .arg(VIEWING_KEY_OPT.def().about(
+                    "The viewing key."
+                ))
         }
     }
 

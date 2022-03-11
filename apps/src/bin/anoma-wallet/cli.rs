@@ -73,21 +73,30 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     (diversifier, g_d)
 }
 
-/// Generate a shielded payment address from the given spending key.
+/// Generate a shielded payment address from the given key.
 fn payment_address_gen(
     _ctx: Context,
     args::MaspPayAddrGen {
         spending_key,
+        viewing_key,
     }: args::MaspPayAddrGen,
 ) {
+    let viewing_key = match (spending_key, viewing_key) {
+        (None, Some(viewing_key)) => viewing_key.vk,
+        (Some(spending_key), None) => spending_key.expsk
+            .proof_generation_key()
+            .to_viewing_key(),
+        _ => {
+            eprintln!("Either a viewing key or a spending key must be \
+                       provided");
+            return;
+        }
+    };
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
-    let pay_addr = spending_key.expsk
-        .proof_generation_key()
-        .to_viewing_key()
-        .to_payment_address(div);
+    let pay_addr = viewing_key.to_payment_address(div);
     println!(
         "Successfully generated the following payment address from the \
-         given spending key: {}",
+         given key: {}",
         pay_addr.unwrap()
     );
 }
