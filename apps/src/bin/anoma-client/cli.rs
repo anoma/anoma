@@ -49,9 +49,6 @@ pub async fn main() -> Result<()> {
                 Sub::QueryBalance(QueryBalance(args)) => {
                     rpc::query_balance(ctx, args).await;
                 }
-                Sub::QueryShieldedBalance(QueryShieldedBalance(args)) => {
-                    rpc::query_shielded_balance(ctx, args).await;
-                }
                 Sub::QueryBonds(QueryBonds(args)) => {
                     rpc::query_bonds(ctx, args).await;
                 }

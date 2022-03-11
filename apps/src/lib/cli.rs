@@ -173,7 +173,6 @@ pub mod cmds {
                 // Queries
                 .subcommand(QueryEpoch::def().display_order(3))
                 .subcommand(QueryBalance::def().display_order(3))
-                .subcommand(QueryShieldedBalance::def().display_order(3))
                 .subcommand(QueryBonds::def().display_order(3))
                 .subcommand(QueryVotingPower::def().display_order(3))
                 .subcommand(QuerySlashes::def().display_order(3))
@@ -200,7 +199,6 @@ pub mod cmds {
             let withdraw = Self::parse_with_ctx(matches, Withdraw);
             let query_epoch = Self::parse_with_ctx(matches, QueryEpoch);
             let query_balance = Self::parse_with_ctx(matches, QueryBalance);
-            let query_shielded_balance = Self::parse_with_ctx(matches, QueryShieldedBalance);
             let query_bonds = Self::parse_with_ctx(matches, QueryBonds);
             let query_voting_power =
                 Self::parse_with_ctx(matches, QueryVotingPower);
@@ -221,7 +219,6 @@ pub mod cmds {
                 .or(withdraw)
                 .or(query_epoch)
                 .or(query_balance)
-                .or(query_shielded_balance)
                 .or(query_bonds)
                 .or(query_voting_power)
                 .or(query_slashes)
@@ -276,7 +273,6 @@ pub mod cmds {
         Unbond(Unbond),
         Withdraw(Withdraw),
         QueryEpoch(QueryEpoch),
-        QueryShieldedBalance(QueryShieldedBalance),
         QueryBalance(QueryBalance),
         QueryBonds(QueryBonds),
         QueryVotingPower(QueryVotingPower),
@@ -1022,25 +1018,6 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Query balance(s) of tokens.")
                 .add_args::<args::QueryBalance>()
-        }
-    }
-
-    #[derive(Clone, Debug)]
-    pub struct QueryShieldedBalance(pub args::QueryShieldedBalance);
-
-    impl SubCmd for QueryShieldedBalance {
-        const CMD: &'static str = "shielded-balance";
-
-        fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches
-                .subcommand_matches(Self::CMD)
-                .map(|matches| QueryShieldedBalance(args::QueryShieldedBalance::parse(matches)))
-        }
-
-        fn def() -> App {
-            App::new(Self::CMD)
-                .about("Query shielded balance(s) of tokens.")
-                .add_args::<args::QueryShieldedBalance>()
         }
     }
 
@@ -1921,6 +1898,10 @@ pub mod args {
         pub query: Query,
         /// Address of an owner
         pub owner: Option<WalletAddress>,
+        /// The spending key being queried
+        pub spending_key: Option<ExtendedSpendingKey>,
+        /// The full viewing key being queries
+        pub viewing_key: Option<FullViewingKey>,
         /// Address of a token
         pub token: Option<WalletAddress>,
     }
@@ -1929,10 +1910,14 @@ pub mod args {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
             let owner = OWNER.parse(matches);
+            let spending_key = SPENDING_KEY_OPT.parse(matches);
+            let viewing_key = VIEWING_KEY_OPT.parse(matches);
             let token = TOKEN_OPT.parse(matches);
             Self {
                 query,
                 owner,
+                spending_key,
+                viewing_key,
                 token,
             }
         }
@@ -1944,43 +1929,6 @@ pub mod args {
                         .def()
                         .about("The account address whose balance to query."),
                 )
-                .arg(
-                    TOKEN_OPT
-                        .def()
-                        .about("The token's address whose balance to query."),
-                )
-        }
-    }
-
-    /// Query token balance(s)
-    #[derive(Clone, Debug)]
-    pub struct QueryShieldedBalance {
-        /// Common query args
-        pub query: Query,
-        /// The spending key being queried
-        pub spending_key: Option<ExtendedSpendingKey>,
-        /// The full viewing key being queries
-        pub viewing_key: Option<FullViewingKey>,
-        /// Address of a token
-        pub token: Option<WalletAddress>,
-    }
-
-    impl Args for QueryShieldedBalance {
-        fn parse(matches: &ArgMatches) -> Self {
-            let query = Query::parse(matches);
-            let spending_key = SPENDING_KEY_OPT.parse(matches);
-            let viewing_key = VIEWING_KEY_OPT.parse(matches);
-            let token = TOKEN_OPT.parse(matches);
-            Self {
-                query,
-                spending_key,
-                viewing_key,
-                token,
-            }
-        }
-
-        fn def(app: App) -> App {
-            app.add_args::<Query>()
                 .arg(
                     SPENDING_KEY_OPT
                         .def()

@@ -81,6 +81,21 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
 
 /// Query token balance(s)
 pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
+    // Query the balances of shielded or transparent account types depending on
+    // the CLI arguments
+    match (&args.owner, args.viewing_key, &args.spending_key) {
+        (None, Some(_viewing_key), None) => query_shielded_balance(ctx, args).await,
+        (None, None, Some(_spending_key)) => query_shielded_balance(ctx, args).await,
+        (_, None, None) => query_transparent_balance(ctx, args).await,
+        _ => {
+            eprintln!("Of a viewing key, spending key, or address, at most one \
+                       can be specified");
+        }
+    };
+}
+
+/// Query token balance(s)
+pub async fn query_transparent_balance(ctx: Context, args: args::QueryBalance) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
     let tokens = address::tokens();
     match (args.token, args.owner) {
@@ -172,9 +187,7 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
 }
 
 /// Query token shielded balance(s)
-pub async fn query_shielded_balance(ctx: Context, args: args::QueryShieldedBalance) {
-    // Map addresses to token names
-    let tokens = address::tokens();
+pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
     // Viewing keys are used to query shielded balances. If a spending key is
     // provided, then convert to a viewing key first.
     let viewing_key = match (args.viewing_key, args.spending_key) {
@@ -196,6 +209,8 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryShieldedBalan
     let balance: BTreeMap<AssetType, u64> =
         compute_shielded_balance(&shielded_ctx, &viewing_key)
         .expect("context should contain spending key").into();
+    // Map addresses to token names
+    let tokens = address::tokens();
     match args.token {
         // Here the user wants to know the balance for a specific token
         Some(token) => {
