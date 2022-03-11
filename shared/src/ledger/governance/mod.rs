@@ -78,7 +78,7 @@ where
         let result = keys_changed.iter().all(|key| {
             println!("{}", key);
             let proposal_id = get_id(key);
-
+            
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
                 (KeyType::VOTE, Some(_)) => false,
@@ -279,6 +279,18 @@ where
                         ) => {
                             post_funds >= min_funds_parameter
                                 && post_balance - pre_balance == post_funds
+                        },
+                        (
+                            Some(min_funds_parameter),
+                            None,
+                            Some(post_balance),
+                            Some(post_funds),
+                        ) => {
+                            post_funds >= min_funds_parameter
+                                && post_balance == post_funds
+                        },
+                        _ => {
+                            false
                         }
                         (
                             Some(min_funds_parameter),

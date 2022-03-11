@@ -329,6 +329,13 @@ pub fn get_min_proposal_grace_epoch_key() -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Get min grace epoch proposal key
+pub fn get_min_proposal_grace_epoch_key() -> Key {
+    Key::from(ADDRESS.to_db_key())
+        .push(&MIN_GRACE_EPOCH_KEY.to_owned())
+        .expect("Cannot obtain a storage key")
+}
+
 /// Get key of proposal ids counter
 pub fn get_counter_key() -> Key {
     Key::from(ADDRESS.to_db_key())

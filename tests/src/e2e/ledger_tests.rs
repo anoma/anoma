@@ -997,13 +997,11 @@ fn proposal_submission() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-
     let mut client = run!(test, Bin::Client, submit_proposal_args, Some(15))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 3. Query the proposal
-
     let proposal_query_args = vec![
         "query-proposal",
         "--proposal-id",
@@ -1084,7 +1082,6 @@ fn proposal_submission() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-
     let mut client = run!(test, Bin::Client, submit_proposal_args, Some(15))?;
     client.exp_string("Transaction is invalid.")?;
     client.assert_success();
