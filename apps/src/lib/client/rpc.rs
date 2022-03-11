@@ -40,7 +40,7 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
-use std::collections::BTreeMap;
+use masp_primitives::transaction::components::Amount;
 use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
 
@@ -206,9 +206,8 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
         &viewing_keys,
     ).await;
     // Query the multi-asset balance at the given spending key
-    let balance: BTreeMap<AssetType, u64> =
-        compute_shielded_balance(&shielded_ctx, &viewing_key)
-        .expect("context should contain spending key").into();
+    let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
+        .expect("context should contain spending key");
     // Map addresses to token names
     let tokens = address::tokens();
     match args.token {
@@ -223,14 +222,10 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
                 .get(&token)
                 .map(|c| Cow::Borrowed(*c))
                 .unwrap_or_else(|| Cow::Owned(token.to_string()));
-            if let Some(value) = balance.get(&asset_type) {
-                if *value == 0 {
-                    println!("No {} balance found for given key", currency_code);
-                } else {
-                    println!("{}: {}", currency_code, value);
-                }
-            } else {
+            if balance[&asset_type] == 0 {
                 println!("No {} balance found for given key", currency_code);
+            } else {
+                println!("{}: {}", currency_code, balance[&asset_type]);
             }
         },
         // Here the user wants to know all possible token balances
@@ -243,19 +238,20 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
                 let asset_type = AssetType::new(
                     token.try_to_vec().expect("token addresses should serialize").as_ref()
                 ).unwrap();
-                if let Some(value) = balance.remove(&asset_type) {
-                    if value == 0 { continue; }
-                    println!("{}: {}", currency_code, value);
+                let asset_value = balance[&asset_type];
+                if asset_value > 0 {
+                    balance -= Amount::from(asset_type, asset_value)
+                        .expect("asset should be in range");
+                    println!("{}: {}", currency_code, asset_value);
                     found_any = true;
                 }
             }
-            for (asset_type, value) in balance {
-                if value == 0 { continue; }
+            for (asset_type, value) in balance.components() {
                 println!("{}: {}", asset_type, value);
                 found_any = true;
             }
             if !found_any {
-                println!("No balance found for given key");
+                println!("No shielded balance found for given key");
             }
         }
     }

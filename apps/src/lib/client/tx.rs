@@ -715,7 +715,7 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
             // Get note associated with this ID
             let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
             // Finally add value to multi-asset accumulator
-            val_acc += Amount::from_u64(note.asset_type, note.value)
+            val_acc += Amount::from(note.asset_type, note.value)
                 .expect("found note with invalid value or asset type");
         }
     }
