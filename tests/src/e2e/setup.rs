@@ -692,4 +692,9 @@ pub mod constants {
         let working_dir = fs::canonicalize("..").unwrap();
         working_dir.join(file_name)
     }
+
+    pub fn get_artifact(file_name: &str) -> PathBuf {
+        let working_dir = fs::canonicalize("..").unwrap();
+        working_dir.join("tests/artifacts/").join(file_name)
+    }
 }
