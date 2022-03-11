@@ -130,17 +130,10 @@ pub mod genesis_config {
         pub min_proposal_period: u64,
         // Maximum number of characters in the proposal content
         // XXX: u64 doesn't work with toml-rs!
-<<<<<<< HEAD
         pub max_proposal_content_size: u64,
         // Minimum number of epoch between end and grace epoch
         // XXX: u64 doesn't work with toml-rs!
-        pub min_grace_epoch: u64,
-=======
-        pub max_proposal_content: u64,
-        // Minimum number of epoch between end and grace epoch
-        // XXX: u64 doesn't work with toml-rs!
         pub min_grace_epoch: u64
->>>>>>> [feat]: added e2e test, minors
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
