@@ -75,7 +75,7 @@ where
 
         let result = keys_changed.iter().all(|key| {
             let proposal_id = get_id(key);
-
+            
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
                 (KeyType::VOTE, Some(_)) => false,
@@ -144,19 +144,26 @@ where
                         gov_storage::get_voting_end_epoch_key(proposal_id);
                     let grace_epoch_key =
                         gov_storage::get_grace_epoch_key(proposal_id);
+                    let min_grace_epoch_key = gov_storage::get_min_proposal_grace_epoch_key();
                     let end_epoch: Option<u64> =
                         read(&self.ctx, &end_epoch_key, ReadType::POST).ok();
                     let grace_epoch: Option<u64> =
                         read(&self.ctx, &grace_epoch_key, ReadType::POST).ok();
+                    let min_grace_epoch: Option<u64> = read(&self.ctx, &min_grace_epoch_key, ReadType::PRE).ok();
                     let has_pre_grace_epoch =
                         self.ctx.has_key_pre(&grace_epoch_key).ok();
-                    match (has_pre_grace_epoch, grace_epoch, end_epoch) {
+                    match (has_pre_grace_epoch, min_grace_epoch, grace_epoch, end_epoch) {
                         (
                             Some(has_pre_grace_epoch),
+                            Some(min_grace_epoch),
                             Some(grace_epoch),
                             Some(end_epoch),
-                        ) => !has_pre_grace_epoch && end_epoch < grace_epoch,
-                        _ => false,
+                        ) => {
+                            !has_pre_grace_epoch && end_epoch < grace_epoch && grace_epoch - end_epoch >= min_grace_epoch
+                        }
+                        _ => {
+                            false
+                        }
                     }
                 }
                 (
@@ -247,8 +254,19 @@ where
                         ) => {
                             post_funds >= min_funds_parameter
                                 && post_balance - pre_balance == post_funds
+                        },
+                        (
+                            Some(min_funds_parameter),
+                            None,
+                            Some(post_balance),
+                            Some(post_funds),
+                        ) => {
+                            post_funds >= min_funds_parameter
+                                && post_balance == post_funds
+                        },
+                        _ => {
+                            false
                         }
-                        _ => false,
                     }
                 }
                 (KeyType::AUTHOR, Some(proposal_id)) => {
@@ -399,7 +417,7 @@ where
         Err(err) => Err(Error::NativeVpError(err)),
     }
 }
-
+#[allow(clippy::upper_case_acronyms)]
 enum KeyType {
     #[allow(clippy::upper_case_acronyms)]
     COUNTER,
@@ -460,7 +478,7 @@ impl From<&Key> for KeyType {
         }
     }
 }
-
+#[allow(clippy::upper_case_acronyms)]
 enum ReadType {
     #[allow(clippy::upper_case_acronyms)]
     PRE,

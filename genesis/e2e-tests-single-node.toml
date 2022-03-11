@@ -180,7 +180,7 @@ duplicate_vote_slash_rate = 500
 light_client_attack_slash_rate = 500
 
 # Governance parameters.
-[proposal_params]
+[gov_params]
 # minimum amount of xan token to lock
 min_proposal_fund = 500
 # proposal code size in kilobytes
@@ -189,3 +189,5 @@ max_proposal_code_size = 300
 min_proposal_period = 3
 # maximum number of characters in the proposal content
 max_proposal_content = 5000
+# minimum epochs between end and grace epoch
+min_grace_epoch = 6
