@@ -295,7 +295,7 @@
 <span id="294">294</span>
 <span id="295">295</span>
 <span id="296">296</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
@@ -329,8 +329,8 @@
     <span class="kw">pub</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">MockDB</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter</span>,
     <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="ident">native_vp_host_env::VpEval</span>,
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
@@ -354,8 +354,8 @@
             <span class="ident">iterators</span>: <span class="ident">PrefixIterators::default</span>(),
             <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>),
             <span class="ident">tx</span>: <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">None</span>),
-            <span class="ident">keys_changed</span>: <span class="ident">HashSet::default</span>(),
-            <span class="ident">verifiers</span>: <span class="ident">HashSet::default</span>(),
+            <span class="ident">keys_changed</span>: <span class="ident">BTreeSet::default</span>(),
+            <span class="ident">verifiers</span>: <span class="ident">BTreeSet::default</span>(),
             <span class="ident">eval_runner</span>,
             <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
             <span class="ident">vp_wasm_cache</span>,
@@ -365,14 +365,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TestVpEnv</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">get_keys</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_verifiers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_verifiers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">write_log</span>
-            .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">HashSet::default</span>())
+            .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">BTreeSet::default</span>())
             .<span class="ident">keys</span>()
             .<span class="ident">cloned</span>()
             .<span class="ident">collect</span>();

@@ -402,7 +402,7 @@
 <span id="401">401</span>
 <span id="402">402</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger&#39;s protocol</span>
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 <span class="kw">use</span> <span class="ident">std::panic</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
@@ -534,7 +534,7 @@
     <span class="ident">write_log</span>: <span class="kw-2">&amp;mut</span> <span class="ident">WriteLog</span>,
     <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
     <span class="ident">tx_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">D</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span>,
@@ -569,7 +569,7 @@
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BlockGasMeter</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
-    <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpsResult</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -580,7 +580,7 @@
     <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="ident">verifiers_from_tx</span>);
 
     <span class="comment">// collect the VPs for the verifiers</span>
-    <span class="kw">let</span> <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vp</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">verifiers</span>
+    <span class="kw">let</span> <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vp</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">verifiers</span>
         .<span class="ident">iter</span>()
         .<span class="ident">filter</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">addr</span>, <span class="ident">Address::Implicit</span>(<span class="kw">_</span>)))
         .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="ident">keys</span>)<span class="op">|</span> {
@@ -627,7 +627,7 @@
 
 <span class="doccomment">/// Execute verifiers&#39; validity predicates</span>
 <span class="kw">fn</span> <span class="ident">execute_vps</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
-    <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vp</span>)<span class="op">&gt;</span>,
+    <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vp</span>)<span class="op">&gt;</span>,
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
@@ -643,7 +643,7 @@
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="kw">_</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">addr</span>)
         .<span class="ident">cloned</span>()
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
     <span class="ident">verifiers</span>
         .<span class="ident">par_iter</span>()

@@ -52,7 +52,7 @@
 <span class="doccomment">//!    The environment inputs are passed guest-to-host and outputs back from</span>
 <span class="doccomment">//!    host-to-guest.</span>
 
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
@@ -67,9 +67,9 @@
     <span class="kw">pub</span> <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>],
     <span class="doccomment">/// The storage changed keys from the write log of storage updates</span>
     <span class="doccomment">/// performed by the transaction for the account associated with the VP</span>
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The verifiers to trigger VPs</span>
-    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Input for matchmaker wasm module call</span>

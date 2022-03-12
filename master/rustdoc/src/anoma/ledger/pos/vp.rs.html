@@ -404,7 +404,7 @@
 <span id="403">403</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Proof-of-Stake native validity predicate.</span>
 
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 <span class="kw">use</span> <span class="ident">std::panic</span>::{<span class="ident">RefUnwindSafe</span>, <span class="ident">UnwindSafe</span>};
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_proof_of_stake</span>;
@@ -500,8 +500,8 @@
     <span class="kw">fn</span> <span class="ident">validate_tx</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
-        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident">validation::Data</span>;
         <span class="kw">use</span> <span class="ident">validation::DataUpdate</span>::{<span class="self">self</span>, <span class="kw-2">*</span>};

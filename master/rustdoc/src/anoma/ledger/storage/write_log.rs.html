@@ -733,7 +733,7 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Write log is temporary storage for modifications performed by a transaction.</span>
 <span class="doccomment">//! before they are committed to the ledger&#39;s storage.</span>
 
-<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -969,7 +969,7 @@
     <span class="doccomment">/// Get the storage keys changed and accounts keys initialized in the</span>
     <span class="doccomment">/// current transaction. The account keys point to the validity predicates</span>
     <span class="doccomment">/// of the newly created accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()
     }
 
@@ -978,7 +978,7 @@
     <span class="doccomment">/// (right). The first vector excludes keys of validity predicates of</span>
     <span class="doccomment">/// newly initialized accounts, but may include keys of other data</span>
     <span class="doccomment">/// written into newly initialized accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
         <span class="kw">use</span> <span class="ident">itertools</span>::{<span class="ident">Either</span>, <span class="ident">Itertools</span>};
         <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">iter</span>().<span class="ident">partition_map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
             <span class="kw">match</span> (<span class="ident">key</span>.<span class="ident">is_validity_predicate</span>(), <span class="ident">value</span>) {
@@ -1088,14 +1088,14 @@
     <span class="doccomment">/// case every address will be the verifier of the key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verifiers_changed_keys</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_partitioned_keys</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span>
             <span class="ident">verifiers_from_tx</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">fold</span>(<span class="ident">HashMap::new</span>(), <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">acc</span>, <span class="ident">addr</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
+                    <span class="kw">let</span> <span class="ident">changed_keys</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
                         <span class="ident">changed_keys</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">key</span><span class="op">|</span> <span class="ident">key</span>.<span class="ident">clone</span>()).<span class="ident">collect</span>();
                     <span class="ident">acc</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">changed_keys</span>);
                     <span class="ident">acc</span>
@@ -1123,7 +1123,7 @@
                         <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
                     }
                     <span class="prelude-val">None</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
+                        <span class="kw">let</span> <span class="ident">keys</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
                             <span class="macro">vec!</span>[<span class="ident">key</span>.<span class="ident">clone</span>()].<span class="ident">into_iter</span>().<span class="ident">collect</span>();
                         <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">keys</span>);
                     }
@@ -1336,7 +1336,7 @@
             (<span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">testing::arb_verifiers_from_tx</span>())
             (<span class="ident">tx_write_log</span> <span class="kw">in</span> <span class="ident">testing::arb_tx_write_log</span>(<span class="ident">verifiers_from_tx</span>.<span class="ident">clone</span>()),
                 <span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">Just</span>(<span class="ident">verifiers_from_tx</span>))
-        -&gt; (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span>) {
+        -&gt; (<span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span>) {
             (<span class="ident">verifiers_from_tx</span>, <span class="ident">tx_write_log</span>)
         }
     }
@@ -1411,7 +1411,7 @@
     <span class="doccomment">/// Generate an arbitrary tx write log of [`HashMap&lt;Key,</span>
     <span class="doccomment">/// StorageModification&gt;`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_tx_write_log</span>(
-        <span class="ident">verifiers_from_tx</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers_from_tx</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>
     {
         <span class="ident">arb_key</span>().<span class="ident">prop_flat_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">key</span><span class="op">|</span> {
@@ -1429,9 +1429,9 @@
         })
     }
 
-    <span class="doccomment">/// Generate arbitrary verifiers from tx of [`HashSet&lt;Address&gt;`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_verifiers_from_tx</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">collection::hash_set</span>(<span class="ident">arb_address</span>(), <span class="number">0</span>..<span class="number">10</span>)
+    <span class="doccomment">/// Generate arbitrary verifiers from tx of [`BTreeSet&lt;Address&gt;`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_verifiers_from_tx</span>() -&gt; <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">collection::btree_set</span>(<span class="ident">arb_address</span>(), <span class="number">0</span>..<span class="number">10</span>)
     }
 
     <span class="doccomment">/// Generate an arbitrary [`StorageModification`].</span>

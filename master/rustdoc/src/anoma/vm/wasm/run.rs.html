@@ -1017,7 +1017,7 @@
 <span id="1016">1016</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Wasm runners</span>
 
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
 <span class="kw">use</span> <span class="ident">parity_wasm::elements</span>;
@@ -1095,7 +1095,7 @@
     <span class="ident">tx_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
     <span class="ident">tx_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
@@ -1108,7 +1108,7 @@
     <span class="kw">let</span> (<span class="ident">module</span>, <span class="ident">store</span>) <span class="op">=</span> <span class="ident">tx_wasm_cache</span>.<span class="ident">fetch_or_compile</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PrefixIterators::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
     <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TxEnv::new</span>(
@@ -1176,8 +1176,8 @@
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpGasMeter</span>,
-    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
-    <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+    <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -1240,8 +1240,8 @@
     <span class="ident">vp_imports</span>: <span class="ident">wasmer::ImportObject</span>,
     <span class="ident">input_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
-    <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+    <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">VpInput</span> <span class="op">=</span> <span class="ident">VpInput</span> {
         <span class="ident">addr</span>: <span class="ident">address</span>,
@@ -1536,8 +1536,8 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
 
         <span class="comment">// This code will call `eval` with the other VP below</span>
         <span class="kw">let</span> <span class="ident">vp_eval</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">VP_EVAL_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
@@ -1610,8 +1610,8 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
 
         <span class="comment">// This code will allocate memory of the given size</span>
         <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span>
@@ -1715,8 +1715,8 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
 
         <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span>
             <span class="ident">std::fs::read</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
@@ -1813,8 +1813,8 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
 
         <span class="kw">let</span> <span class="ident">vp_read_key</span> <span class="op">=</span>
             <span class="ident">std::fs::read</span>(<span class="ident">VP_READ_STORAGE_KEY_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
@@ -1859,8 +1859,8 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
 
         <span class="comment">// This code will call `eval` with the other VP below</span>
         <span class="kw">let</span> <span class="ident">vp_eval</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">VP_EVAL_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
@@ -1902,7 +1902,7 @@
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">passed</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">loop_in_tx_wasm</span>(<span class="ident">loops</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">loop_in_tx_wasm</span>(<span class="ident">loops</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="comment">// A transaction with a recursive loop.</span>
         <span class="comment">// The boilerplate code is generated from tx_template.wasm using</span>
         <span class="comment">// `wasm2wat` and the loop code is hand-written.</span>
@@ -1990,8 +1990,8 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::new</span>();
         <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="ident">vp</span>(
             <span class="ident">vp_code</span>,

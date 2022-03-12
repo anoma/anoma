@@ -685,7 +685,7 @@
 <span id="684">684</span>
 <span id="685">685</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::time::Duration</span>;
-<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -771,7 +771,7 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">ibc</span>: <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -780,13 +780,13 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">anoma::ledger::ibc::vp::Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ibc</span>
-            .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
+            .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">BTreeSet::new</span>())
     }
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TestIbcTokenVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">token</span>: <span class="ident">IbcToken</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">TestIbcTokenVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -795,7 +795,7 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">anoma::ledger::ibc::vp::IbcTokenError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">token</span>
-            .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
+            .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">BTreeSet::new</span>())
     }
 }
 
@@ -875,7 +875,7 @@
 ) -&gt; (<span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">TempDir</span>) {
     <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">tx_env</span>
         .<span class="ident">write_log</span>
-        .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
+        .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">BTreeSet::new</span>())
         .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>))
         .<span class="ident">cloned</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;no IBC address&quot;</span>);
@@ -902,7 +902,7 @@
 ) -&gt; (<span class="ident">TestIbcTokenVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">TempDir</span>) {
     <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">tx_env</span>
         .<span class="ident">write_log</span>
-        .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
+        .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">BTreeSet::new</span>())
         .<span class="ident">get</span>(<span class="ident">addr</span>)
         .<span class="ident">cloned</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;no token address&quot;</span>);

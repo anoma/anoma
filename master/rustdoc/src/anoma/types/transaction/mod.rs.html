@@ -551,7 +551,7 @@
 <span class="doccomment">/// wrapper txs with encrypted payloads</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wrapper</span>;
 
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
@@ -583,7 +583,7 @@
     <span class="doccomment">/// Total gas used by the transaction (includes the gas used by VPs)</span>
     <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// Storage keys touched by the transaction</span>
-    <span class="kw">pub</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">changed_keys</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The results of all the triggered validity predicates by the transaction</span>
     <span class="kw">pub</span> <span class="ident">vps_result</span>: <span class="ident">VpsResult</span>,
     <span class="doccomment">/// New established addresses created by the transaction</span>

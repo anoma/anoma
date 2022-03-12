@@ -161,9 +161,9 @@
     // Address of this VP
     addr: Address,
     // Storage keys that have been modified by the transation, relevant to this VP
-    keys_changed: HashSet&lt;storage::Key&gt;,
+    keys_changed: BTreeSet&lt;storage::Key&gt;,
     // Set of all the addresses whose VP was triggered by the transaction
-    verifiers: HashSet&lt;Address&gt;,
+    verifiers: BTreeSet&lt;Address&gt;,
 ) -&gt; bool;
 <span class="boring">}
 </span></code></pre></pre>

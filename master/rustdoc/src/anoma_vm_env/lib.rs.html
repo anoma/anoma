@@ -77,7 +77,7 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp_prelude</span> {
     <span class="comment">// used in the VP input</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashSet</span>};
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">parameters</span>, <span class="ident">pos</span> <span class="kw">as</span> <span class="ident">proof_of_stake</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Signed</span>, <span class="ident">SignedTxData</span>};

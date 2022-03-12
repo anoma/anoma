@@ -184,10 +184,10 @@ fn validate_tx(
     // The address of the account where this validity predicate is used
     addr: Address,
     // The storage keys that were modified by the transaction
-    keys_changed: HashSet&lt;storage::Key&gt;,
+    keys_changed: BTreeSet&lt;storage::Key&gt;,
     // The addresses of all the accounts that are verifying the current 
     // transaction
-    verifiers: HashSet&lt;Address&gt;,
+    verifiers: BTreeSet&lt;Address&gt;,
 ) -&gt; bool {
   // Returning `true` allows any key change
   true

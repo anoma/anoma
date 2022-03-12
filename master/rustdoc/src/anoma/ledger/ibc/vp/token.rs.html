@@ -285,7 +285,7 @@
 <span id="284">284</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC token transfer validation as a native validity predicate</span>
 
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
@@ -360,8 +360,8 @@
     <span class="kw">fn</span> <span class="ident">validate_tx</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
-        <span class="ident">_verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+        <span class="ident">_verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span>
             <span class="ident">SignedTxData::try_from_slice</span>(<span class="ident">tx_data</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;

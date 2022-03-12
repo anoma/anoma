@@ -1828,9 +1828,11 @@
 <span id="1827">1827</span>
 <span id="1828">1828</span>
 <span id="1829">1829</span>
+<span id="1830">1830</span>
+<span id="1831">1831</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
 <span class="kw">use</span> <span class="ident">std::num::TryFromIntError</span>;
 
@@ -1927,7 +1929,7 @@
     <span class="doccomment">/// Transaction gas meter.</span>
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">MutHostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BlockGasMeter</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The verifiers whose validity predicates should be triggered.</span>
-    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">MutHostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">MutHostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Cache for 2-step reads from host environment.</span>
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="ident">MutHostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// VP WASM compilation cache (this is available in tx context, because</span>
@@ -1963,7 +1965,7 @@
         <span class="ident">write_log</span>: <span class="kw-2">&amp;mut</span> <span class="ident">WriteLog</span>,
         <span class="ident">iterators</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span><span class="op">&gt;</span>,
         <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BlockGasMeter</span>,
-        <span class="ident">verifiers</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
         <span class="ident">result_buffer</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span> <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span> <span class="ident">tx_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
@@ -2076,10 +2078,10 @@
     <span class="doccomment">/// Cache for 2-step reads from host environment.</span>
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="ident">MutHostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The storage keys that have been changed. Used for calls to `eval`.</span>
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The verifiers whose validity predicates should be triggered. Used for</span>
     <span class="doccomment">/// calls to `eval`.</span>
-    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// VP WASM compilation cache</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">MutHostRef</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -2136,9 +2138,9 @@
         <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpGasMeter</span>,
         <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
         <span class="ident">iterators</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span><span class="op">&gt;</span>,
-        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
         <span class="ident">result_buffer</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">eval_runner</span>: <span class="kw-2">&amp;</span><span class="ident">EVAL</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span> <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
     ) -&gt; <span class="self">Self</span> {
@@ -2199,9 +2201,9 @@
         <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpGasMeter</span>,
         <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
         <span class="ident">iterators</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span><span class="op">&gt;</span>,
-        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
         <span class="ident">result_buffer</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">eval_runner</span>: <span class="kw-2">&amp;</span><span class="ident">EVAL</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span> <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
     ) -&gt; <span class="self">Self</span> {
@@ -3583,6 +3585,8 @@
 <span class="doccomment">/// A helper module for testing</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
+    <span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::memory::testing::NativeMemory</span>;
@@ -3593,7 +3597,7 @@
         <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
         <span class="ident">write_log</span>: <span class="kw-2">&amp;mut</span> <span class="ident">WriteLog</span>,
         <span class="ident">iterators</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span>,
-        <span class="ident">verifiers</span>: <span class="kw-2">&amp;mut</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
         <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BlockGasMeter</span>,
         <span class="ident">result_buffer</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span> <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
@@ -3628,9 +3632,9 @@
         <span class="ident">iterators</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span>,
         <span class="ident">gas_meter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpGasMeter</span>,
         <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
-        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
         <span class="ident">result_buffer</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">eval_runner</span>: <span class="kw-2">&amp;</span><span class="ident">EVAL</span>,
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span> <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">NativeMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>

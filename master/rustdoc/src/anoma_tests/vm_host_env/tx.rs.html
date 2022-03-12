@@ -275,7 +275,7 @@
 <span id="274">274</span>
 <span id="275">275</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::BlockGasMeter</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
@@ -307,7 +307,7 @@
     <span class="kw">pub</span> <span class="ident">storage</span>: <span class="ident">TestStorage</span>,
     <span class="kw">pub</span> <span class="ident">write_log</span>: <span class="ident">WriteLog</span>,
     <span class="kw">pub</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">MockDB</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>,
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
@@ -327,7 +327,7 @@
             <span class="ident">write_log</span>: <span class="ident">WriteLog::default</span>(),
             <span class="ident">iterators</span>: <span class="ident">PrefixIterators::default</span>(),
             <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter::default</span>(),
-            <span class="ident">verifiers</span>: <span class="ident">HashSet::default</span>(),
+            <span class="ident">verifiers</span>: <span class="ident">BTreeSet::default</span>(),
             <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
             <span class="ident">vp_wasm_cache</span>,
             <span class="ident">vp_cache_dir</span>,
@@ -338,7 +338,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TestTxEnv</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">get_keys</span>()
     }
 
@@ -388,7 +388,7 @@
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">err</span>))
             .<span class="ident">ok</span>();
         <span class="self">self</span>.<span class="ident">iterators</span> <span class="op">=</span> <span class="ident">PrefixIterators::default</span>();
-        <span class="self">self</span>.<span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::default</span>();
+        <span class="self">self</span>.<span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">BTreeSet::default</span>();
         <span class="self">self</span>.<span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter::default</span>();
     }
 

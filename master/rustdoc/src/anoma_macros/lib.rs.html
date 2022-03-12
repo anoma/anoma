@@ -289,8 +289,8 @@
 <span class="doccomment">/// fn validate_tx(</span>
 <span class="doccomment">///     tx_data: Vec&lt;u8&gt;,</span>
 <span class="doccomment">///     addr: Address,</span>
-<span class="doccomment">///     keys_changed: HashSet&lt;storage::Key&gt;,</span>
-<span class="doccomment">///     verifiers: HashSet&lt;Address&gt;</span>
+<span class="doccomment">///     keys_changed: BTreeSet&lt;storage::Key&gt;,</span>
+<span class="doccomment">///     verifiers: BTreeSet&lt;Address&gt;</span>
 <span class="doccomment">/// ) -&gt; bool</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
@@ -340,7 +340,7 @@
                     <span class="ident">keys_changed_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
             };
-            <span class="kw">let</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet::try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">keys_changed</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BTreeSet::try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
 
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
                 <span class="ident">core::slice::from_raw_parts</span>(
@@ -348,7 +348,7 @@
                     <span class="ident">verifiers_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
             };
-            <span class="kw">let</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet::try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">verifiers</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BTreeSet::try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
 
             <span class="comment">// run validation with the concrete type(s)</span>
             <span class="kw">if</span> #<span class="ident">ident</span>(<span class="ident">tx_data</span>, <span class="ident">addr</span>, <span class="ident">keys_changed</span>, <span class="ident">verifiers</span>) {
