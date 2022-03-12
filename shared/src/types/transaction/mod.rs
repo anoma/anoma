@@ -13,7 +13,7 @@ pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::fmt;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -45,7 +45,7 @@ pub struct TxResult {
     /// Total gas used by the transaction (includes the gas used by VPs)
     pub gas_used: u64,
     /// Storage keys touched by the transaction
-    pub changed_keys: HashSet<storage::Key>,
+    pub changed_keys: BTreeSet<storage::Key>,
     /// The results of all the triggered validity predicates by the transaction
     pub vps_result: VpsResult,
     /// New established addresses created by the transaction

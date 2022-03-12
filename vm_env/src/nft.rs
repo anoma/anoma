@@ -91,7 +91,7 @@ pub mod tx {
 
 /// A Nft validity predicate
 pub mod vp {
-    use std::collections::HashSet;
+    use std::collections::BTreeSet;
 
     use anoma::types::address::Address;
     pub use anoma::types::nft::*;
@@ -112,8 +112,8 @@ pub mod vp {
     pub fn vp(
         _tx_da_ta: Vec<u8>,
         nft_address: &Address,
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
     ) -> bool {
         keys_changed
             .iter()
@@ -149,7 +149,7 @@ pub mod vp {
     fn is_approved(
         nft_address: &Address,
         nft_token_id: &str,
-        verifiers: &HashSet<Address>,
+        verifiers: &BTreeSet<Address>,
     ) -> bool {
         let approvals_key =
             get_token_approval_key(nft_address, nft_token_id).to_string();
@@ -160,7 +160,10 @@ pub mod vp {
             .any(|addr| verifiers.contains(addr));
     }
 
-    fn is_creator(nft_address: &Address, verifiers: &HashSet<Address>) -> bool {
+    fn is_creator(
+        nft_address: &Address,
+        verifiers: &BTreeSet<Address>,
+    ) -> bool {
         let creator_key = get_creator_key(nft_address).to_string();
         let creator_address: Address = tx::read(creator_key).unwrap();
         verifiers.contains(&creator_address)

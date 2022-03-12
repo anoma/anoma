@@ -1,5 +1,5 @@
 use core::time::Duration;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::str::FromStr;
 
@@ -85,7 +85,7 @@ const VP_ALWAYS_TRUE_WASM: &str = "../wasm_for_tests/vp_always_true.wasm";
 
 pub struct TestIbcVp<'a> {
     pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
-    pub keys_changed: HashSet<Key>,
+    pub keys_changed: BTreeSet<Key>,
 }
 
 impl<'a> TestIbcVp<'a> {
@@ -94,13 +94,13 @@ impl<'a> TestIbcVp<'a> {
         tx_data: &[u8],
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::Error> {
         self.ibc
-            .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+            .validate_tx(tx_data, &self.keys_changed, &BTreeSet::new())
     }
 }
 
 pub struct TestIbcTokenVp<'a> {
     pub token: IbcToken<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
-    pub keys_changed: HashSet<Key>,
+    pub keys_changed: BTreeSet<Key>,
 }
 
 impl<'a> TestIbcTokenVp<'a> {
@@ -109,7 +109,7 @@ impl<'a> TestIbcTokenVp<'a> {
         tx_data: &[u8],
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::IbcTokenError> {
         self.token
-            .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+            .validate_tx(tx_data, &self.keys_changed, &BTreeSet::new())
     }
 }
 
@@ -189,7 +189,7 @@ pub fn init_ibc_vp_from_tx<'a>(
 ) -> (TestIbcVp<'a>, TempDir) {
     let keys_changed = tx_env
         .write_log
-        .verifiers_changed_keys(&HashSet::new())
+        .verifiers_changed_keys(&BTreeSet::new())
         .get(&Address::Internal(InternalAddress::Ibc))
         .cloned()
         .expect("no IBC address");
@@ -216,7 +216,7 @@ pub fn init_token_vp_from_tx<'a>(
 ) -> (TestIbcTokenVp<'a>, TempDir) {
     let keys_changed = tx_env
         .write_log
-        .verifiers_changed_keys(&HashSet::new())
+        .verifiers_changed_keys(&BTreeSet::new())
         .get(addr)
         .cloned()
         .expect("no token address");

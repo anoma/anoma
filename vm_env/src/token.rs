@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
@@ -14,8 +14,8 @@ pub mod vp {
     /// A token validity predicate.
     pub fn vp(
         token: &Address,
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
     ) -> bool {
         let mut change: Change = 0;
         let all_checked = keys_changed.iter().all(|key| {

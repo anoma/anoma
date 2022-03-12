@@ -50,8 +50,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
 fn validate_tx(
     tx_data: Vec<u8>,
     addr: Address,
-    keys_changed: HashSet<storage::Key>,
-    verifiers: HashSet<Address>,
+    keys_changed: BTreeSet<storage::Key>,
+    verifiers: BTreeSet<Address>,
 ) -> bool {
     debug_log!(
         "vp_user called with user addr: {}, key_changed: {:?}, verifiers: {:?}",
@@ -360,8 +360,8 @@ mod tests {
 
         let tx_data: Vec<u8> = vec![];
         let addr: Address = env.addr;
-        let keys_changed: HashSet<storage::Key> = HashSet::default();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let keys_changed: BTreeSet<storage::Key> = BTreeSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
 
         assert!(validate_tx(tx_data, addr, keys_changed, verifiers));
     }
@@ -391,9 +391,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -422,9 +422,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -461,9 +461,9 @@ mod tests {
         let signed_tx = tx.sign(&keypair);
         let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
         vp_env.tx = signed_tx;
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -494,9 +494,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -545,9 +545,9 @@ mod tests {
                 });
 
             let tx_data: Vec<u8> = vec![];
-            let keys_changed: HashSet<storage::Key> =
+            let keys_changed: BTreeSet<storage::Key> =
                 vp_env.all_touched_storage_keys();
-            let verifiers: HashSet<Address> = HashSet::default();
+            let verifiers: BTreeSet<Address> = BTreeSet::default();
             assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
         }
     }
@@ -589,9 +589,9 @@ mod tests {
             let signed_tx = tx.sign(&keypair);
             let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
             vp_env.tx = signed_tx;
-            let keys_changed: HashSet<storage::Key> =
+            let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-            let verifiers: HashSet<Address> = HashSet::default();
+            let verifiers: BTreeSet<Address> = BTreeSet::default();
             assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
         }
     }
@@ -617,9 +617,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -802,9 +802,9 @@ mod tests {
         let signed_tx = tx.sign(&keypair);
         let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
         vp_env.tx = signed_tx;
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 }

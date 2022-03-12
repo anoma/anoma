@@ -1,6 +1,6 @@
 //! Wasm runners
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::marker::PhantomData;
 
 use parity_wasm::elements;
@@ -78,7 +78,7 @@ pub fn tx<DB, H, CA>(
     tx_data: impl AsRef<[u8]>,
     vp_wasm_cache: &mut VpCache<CA>,
     tx_wasm_cache: &mut TxCache<CA>,
-) -> Result<HashSet<Address>>
+) -> Result<BTreeSet<Address>>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
@@ -91,7 +91,7 @@ where
     let (module, store) = tx_wasm_cache.fetch_or_compile(&tx_code)?;
 
     let mut iterators: PrefixIterators<'_, DB> = PrefixIterators::default();
-    let mut verifiers = HashSet::new();
+    let mut verifiers = BTreeSet::new();
     let mut result_buffer: Option<Vec<u8>> = None;
 
     let env = TxEnv::new(
@@ -159,8 +159,8 @@ pub fn vp<DB, H, CA>(
     storage: &Storage<DB, H>,
     write_log: &WriteLog,
     gas_meter: &mut VpGasMeter,
-    keys_changed: &HashSet<Key>,
-    verifiers: &HashSet<Address>,
+    keys_changed: &BTreeSet<Key>,
+    verifiers: &BTreeSet<Address>,
     mut vp_wasm_cache: VpCache<CA>,
 ) -> Result<bool>
 where
@@ -223,8 +223,8 @@ fn run_vp(
     vp_imports: wasmer::ImportObject,
     input_data: &[u8],
     address: &Address,
-    keys_changed: &HashSet<Key>,
-    verifiers: &HashSet<Address>,
+    keys_changed: &BTreeSet<Key>,
+    verifiers: &BTreeSet<Address>,
 ) -> Result<bool> {
     let input: VpInput = VpInput {
         addr: address,
@@ -519,8 +519,8 @@ mod tests {
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
-        let keys_changed = HashSet::new();
-        let verifiers = HashSet::new();
+        let keys_changed = BTreeSet::new();
+        let verifiers = BTreeSet::new();
 
         // This code will call `eval` with the other VP below
         let vp_eval = std::fs::read(VP_EVAL_WASM).expect("cannot load wasm");
@@ -593,8 +593,8 @@ mod tests {
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
-        let keys_changed = HashSet::new();
-        let verifiers = HashSet::new();
+        let keys_changed = BTreeSet::new();
+        let verifiers = BTreeSet::new();
 
         // This code will allocate memory of the given size
         let vp_code =
@@ -698,8 +698,8 @@ mod tests {
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
-        let keys_changed = HashSet::new();
-        let verifiers = HashSet::new();
+        let keys_changed = BTreeSet::new();
+        let verifiers = BTreeSet::new();
 
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
@@ -796,8 +796,8 @@ mod tests {
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
-        let keys_changed = HashSet::new();
-        let verifiers = HashSet::new();
+        let keys_changed = BTreeSet::new();
+        let verifiers = BTreeSet::new();
 
         let vp_read_key =
             std::fs::read(VP_READ_STORAGE_KEY_WASM).expect("cannot load wasm");
@@ -842,8 +842,8 @@ mod tests {
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
-        let keys_changed = HashSet::new();
-        let verifiers = HashSet::new();
+        let keys_changed = BTreeSet::new();
+        let verifiers = BTreeSet::new();
 
         // This code will call `eval` with the other VP below
         let vp_eval = std::fs::read(VP_EVAL_WASM).expect("cannot load wasm");
@@ -885,7 +885,7 @@ mod tests {
         assert!(!passed);
     }
 
-    fn loop_in_tx_wasm(loops: u32) -> Result<HashSet<Address>> {
+    fn loop_in_tx_wasm(loops: u32) -> Result<BTreeSet<Address>> {
         // A transaction with a recursive loop.
         // The boilerplate code is generated from tx_template.wasm using
         // `wasm2wat` and the loop code is hand-written.
@@ -973,8 +973,8 @@ mod tests {
         let addr = storage.address_gen.generate_address("rng seed");
         let write_log = WriteLog::default();
         let mut gas_meter = VpGasMeter::new(0);
-        let keys_changed = HashSet::new();
-        let verifiers = HashSet::new();
+        let keys_changed = BTreeSet::new();
+        let verifiers = BTreeSet::new();
         let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
         vp(
             vp_code,
