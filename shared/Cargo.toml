@@ -107,8 +107,6 @@ tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji
 tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
-tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
 thiserror = "1.0.30"
 tracing = "0.1.30"
 wasmer = {version = "=2.2.0", optional = true}
@@ -129,3 +127,8 @@ tracing-subscriber = {version = "0.3.7", default-features = false, features = ["
 
 [build-dependencies]
 tonic-build = "0.6.0"
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+# tendermint-rpc ultimately depends on socket2 which can not be built for wasm ISA (https://github.com/rust-lang/socket2/issues/268)
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true, features = ["http-client"]}
+tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true, features = ["http-client"]}

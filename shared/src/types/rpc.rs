@@ -1,4 +1,7 @@
+#![cfg(not(target_family = "wasm"))]
 //! Types that are used in RPC.
+//! Compile this file only for non-wasm ISA because of the thndermint-rpc dependency
+//! on socket2 (issue https://github.com/rust-lang/socket2/issues/268)
 
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};

@@ -1,4 +1,8 @@
+#![cfg(not(target_family = "wasm"))]
 //! Client RPC queries
+//! Compile this file only for non-wasm ISA because of the thndermint-rpc dependency
+//! on socket2 (issue https://github.com/rust-lang/socket2/issues/268)
+
 
 use std::clone::Clone;
 use std::collections::HashMap;
@@ -12,16 +16,13 @@ use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::query::Query;
 #[cfg(not(feature = "ABCI"))]
-use tendermint_rpc::Client;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_rpc::Order;
+use tendermint_rpc::{Client, Order};
+#[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::endpoint::abci_query::AbciQuery;
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::query::Query;
 #[cfg(feature = "ABCI")]
-use tendermint_rpc_abci::Client;
-#[cfg(feature = "ABCI")]
-use tendermint_rpc_abci::Order;
+use tendermint_rpc_abci::{Client, Order};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
 
@@ -797,6 +798,7 @@ where
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[cfg(test)]
 mod test_rpc {
     use std::collections::HashMap;
