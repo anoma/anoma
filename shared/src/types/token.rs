@@ -213,6 +213,7 @@ impl From<Amount> for Change {
 
 /// Key segment for a balance key
 pub const BALANCE_STORAGE_KEY: &str = "balance";
+/// Key segment for head shielded transaction pointer key
 pub const HEAD_TX_KEY: &str = "head-tx";
 
 /// Obtain a storage key for user's balance.
