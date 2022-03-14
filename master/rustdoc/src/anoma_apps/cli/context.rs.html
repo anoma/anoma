@@ -361,7 +361,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
             <span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>,
             <span class="kw-2">&amp;</span><span class="ident">global_config</span>.<span class="ident">default_chain_id</span>,
-            <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">clone</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">clone</span>(),
         );
 
         <span class="kw">let</span> <span class="ident">chain_dir</span> <span class="op">=</span> <span class="ident">global_args</span>

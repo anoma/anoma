@@ -1180,7 +1180,7 @@
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
                     <span class="kw-2">&amp;</span><span class="ident">base_dir</span>,
                     <span class="kw-2">&amp;</span><span class="ident">chain_id</span>,
-                    <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>(),
+                    <span class="ident">global_args</span>.<span class="ident">mode</span>.<span class="ident">clone</span>(),
                 );
                 <span class="ident">config</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>;
                 <span class="ident">config</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>, <span class="bool-val">true</span>).<span class="ident">unwrap</span>();
@@ -1645,7 +1645,7 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
                 <span class="kw-2">&amp;</span><span class="ident">validator_dir</span>,
                 <span class="kw-2">&amp;</span><span class="ident">chain_id</span>,
-                <span class="ident">TendermintMode::Validator</span>,
+                <span class="prelude-val">Some</span>(<span class="ident">TendermintMode::Validator</span>),
             );
 
             <span class="comment">// Configure the ledger</span>
@@ -1727,7 +1727,7 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
         <span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>,
         <span class="kw-2">&amp;</span><span class="ident">chain_id</span>,
-        <span class="ident">TendermintMode::Validator</span>,
+        <span class="prelude-val">Some</span>(<span class="ident">TendermintMode::Validator</span>),
     );
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="ident">persistent_peers</span>;
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">consensus_timeout_commit</span> <span class="op">=</span>
@@ -1842,7 +1842,7 @@
     <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
         <span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>,
         <span class="kw-2">&amp;</span><span class="ident">chain_id</span>,
-        <span class="ident">TendermintMode::Validator</span>,
+        <span class="prelude-val">Some</span>(<span class="ident">TendermintMode::Validator</span>),
     );
     <span class="ident">init_genesis_validator_aux</span>(
         <span class="kw-2">&amp;mut</span> <span class="ident">wallet</span>,
