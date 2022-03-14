@@ -1205,6 +1205,8 @@
 <span id="1204">1204</span>
 <span id="1205">1205</span>
 <span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -1257,8 +1259,8 @@
 <span class="kw">const</span> <span class="ident">TX_INIT_VALIDATOR_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_validator.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_update_vp.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_transfer.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_CREATE_NFT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_create_nft.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_MINT_NFT_TOKEN</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_mint_nft_tokens.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_INIT_NFT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_nft.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_MINT_NFT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_mint_nft.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;vp_user.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_BOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_bond.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_UNBOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_unbond.wasm&quot;</span>;
@@ -1681,7 +1683,8 @@
         <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
     );
 
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_CREATE_NFT</span>);
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_INIT_NFT</span>);
+
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
     <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="ident">signer</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span>;
 }
@@ -1718,7 +1721,8 @@
         <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
     );
 
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_MINT_NFT_TOKEN</span>);
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_MINT_NFT</span>);
+
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
     <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="ident">signer</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span>;
 }
