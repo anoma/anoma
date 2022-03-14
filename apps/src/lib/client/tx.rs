@@ -43,7 +43,7 @@ use crate::client::tendermint_websocket_client::{
     Error, TendermintWebsocketClient, WebSocketAddress,
 };
 #[cfg(not(feature = "ABCI"))]
-use crate::node::ledger::events::{Attributes, EventType as TmEventType};
+use crate::node::ledger::events::EventType as TmEventType;
 use crate::node::ledger::tendermint_node;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
@@ -1074,9 +1074,9 @@ pub async fn submit_tx(
     #[cfg(not(feature = "ABCI"))]
     let parsed = {
         let parsed = match TxResponse::find_tx(
-            wrapper_tx_subscription.receive_response()?,
-            TmEventType::Accepted,
-            &wrapper_tx_hash,
+            &wrapper_tx_subscription.receive_response()?,
+            format!("{}", TmEventType::Accepted),
+            wrapper_hash,
         ) {
             Ok(v) => {
                 println!("Transaction accepted with result: {}", v);
@@ -1092,8 +1092,8 @@ pub async fn submit_tx(
         // and applied
         if parsed.code == 0 {
             let parsed = match TxResponse::find_tx(
-                decrypted_tx_subscription.receive_response()?,
-                TmEventType::Applied,
+                &decrypted_tx_subscription.receive_response()?,
+                format!("{}", TmEventType::Applied),
                 _decrypted_hash.as_ref().unwrap(),
             ) {
                 Ok(v) => {

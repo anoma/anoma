@@ -1,8 +1,7 @@
 #![cfg(not(target_family = "wasm"))]
 //! Client RPC queries
-//! Compile this file only for non-wasm ISA because of the thndermint-rpc dependency
-//! on socket2 (issue https://github.com/rust-lang/socket2/issues/268)
-
+//! Compile this file only for non-wasm ISA because of the thndermint-rpc
+//! dependency on socket2 (issue https://github.com/rust-lang/socket2/issues/268)
 
 use std::clone::Clone;
 use std::collections::HashMap;
@@ -13,6 +12,8 @@ use borsh::BorshDeserialize;
 use itertools::Itertools;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::endpoint::abci_query::AbciQuery;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::query::Query;
 #[cfg(not(feature = "ABCI"))]
@@ -29,6 +30,7 @@ use tendermint_stable::abci::Code;
 use crate::ledger::pos::types::{Epoch as PosEpoch, VotingPower};
 use crate::ledger::pos::{self, BondId, Bonds, Slash, Slashes, Unbonds};
 use crate::types::address::Address;
+use crate::types::hash::Hash;
 use crate::types::key::*;
 pub use crate::types::rpc::{
     BalanceQueryResult, BondQueryResult, Path, QueryError, SlashQueryResult,
@@ -36,7 +38,6 @@ pub use crate::types::rpc::{
 };
 use crate::types::storage::{Epoch, Key, PrefixValue};
 use crate::types::token::Amount;
-use crate::types::transaction::Hash;
 use crate::types::{address, token};
 
 #[allow(missing_docs)]
@@ -754,7 +755,7 @@ pub async fn query_tx_result<C, T>(
 ) -> Result<TxQueryResult>
 where
     C: Client + Clone + Sync,
-    T: AsRef<[u8]>,
+    T: AsRef<str>,
 {
     // First try looking up application event pertaining to given hash.
     let hash = Hash::try_from(tx_hash.as_ref())?;
@@ -773,7 +774,7 @@ where
             response: tx_response,
             event_type: TendermintEventType::Applied,
         }),
-        Err(e) => {
+        Err(_e) => {
             // If this fails then instead look for an acceptance event (only
             // ABCI++)
             #[cfg(not(feature = "ABCI"))]
@@ -793,7 +794,7 @@ where
             }
             // For ABCI simply return the error
             #[cfg(feature = "ABCI")]
-            Err(e)
+            Err(_e)
         }
     }
 }

@@ -1,7 +1,7 @@
 #![cfg(not(target_family = "wasm"))]
 //! Types that are used in RPC.
-//! Compile this file only for non-wasm ISA because of the thndermint-rpc dependency
-//! on socket2 (issue https://github.com/rust-lang/socket2/issues/268)
+//! Compile this file only for non-wasm ISA because of the thndermint-rpc
+//! dependency on socket2 (issue https://github.com/rust-lang/socket2/issues/268)
 
 use std::collections::HashMap;
 use std::fmt::{self, Display, Formatter};
@@ -24,8 +24,8 @@ use thiserror::Error;
 use super::address;
 use super::token::Amount;
 use crate::types::address::Address;
+use crate::types::hash::{self, Hash};
 use crate::types::storage::{self, BlockHeight};
-use crate::types::transaction::Hash;
 
 const DRY_RUN_TX_PATH: &str = "dry_run_tx";
 const EPOCH_PATH: &str = "epoch";
@@ -435,7 +435,7 @@ impl TxResponse {
             info,
             log,
             height: BlockHeight(u64::from_str(&height_str)?),
-            hash: Hash::try_from(hash_str.as_bytes())?,
+            hash: Hash::try_from(hash_str.as_str())?,
             code: u8::from_str(&code_str)?,
             gas_used: u64::from_str(&gas_str)?,
             initialized_accounts,
@@ -458,9 +458,9 @@ pub enum QueryError {
     /// Bad query format
     #[error("Error in the query {0} (error code {1})")]
     Format(String, u32),
-    /// Hash decoding error
-    #[error("Couldn't decode hash from hex string: {0}")]
-    FromHexError(#[from] hex::FromHexError),
+    /// Hash decoding error from bytes
+    #[error("{0}")]
+    FromHexError(#[from] hash::Error),
     /// Block not found
     #[error("Unable to find a block applying the given transaction hash {0}")]
     BlockNotFound(Hash),
