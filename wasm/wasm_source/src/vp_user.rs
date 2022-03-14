@@ -25,6 +25,7 @@ enum KeyType<'a> {
     InvalidIntentSet(&'a Address),
     Nft(&'a Address),
     Vp(&'a Address),
+    Masp,
     Unknown,
 }
 
@@ -40,6 +41,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
             Self::Nft(address)
         } else if let Some(address) = key.is_validity_predicate() {
             Self::Vp(address)
+        } else if token::is_masp_key(key) {
+            Self::Masp
         } else {
             Self::Unknown
         }
@@ -169,6 +172,9 @@ fn validate_tx(
                 } else {
                     true
                 }
+            }
+            KeyType::Masp => {
+                true
             }
             KeyType::Unknown => *valid_sig,
         };

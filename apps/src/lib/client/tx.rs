@@ -79,6 +79,7 @@ use anoma::types::token::HEAD_TX_KEY;
 use anoma::types::storage::Key;
 use crate::client::rpc::query_storage_value;
 use anoma::types::storage::KeySeg;
+use anoma::types::address::masp;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -420,7 +421,7 @@ pub async fn fetch_shielded_transfers(
 ) -> Vec<Transaction> {
     let client = HttpClient::new(ledger_address.clone()).unwrap();
     // The address of the MASP account
-    let masp_addr = Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").unwrap();
+    let masp_addr = masp();
     // Construct the key where last transaction pointer is stored
     let head_tx_key = Key::from(masp_addr.to_db_key())
         .push(&HEAD_TX_KEY.to_owned())
@@ -724,6 +725,16 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
 
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let source = ctx.get(&args.source);
+    let target = ctx.get(&args.target);
+    if (source == masp()) != args.spending_key.is_some() {
+        // A spending key implies a transparent transfer from the MASP address
+        eprintln!("Must either specify source address or a spending key");
+        safe_exit(1)
+    } else if (target == masp()) != args.payment_address.is_some() {
+        // A payment address implies a transparent transfer to the MASP address
+        eprintln!("Must either specify target address or a payment address");
+        safe_exit(1)
+    }
     // Check that the source address exists on chain
     let source_exists =
         rpc::known_address(&source, args.tx.ledger_address.clone()).await;
@@ -733,7 +744,6 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             safe_exit(1)
         }
     }
-    let target = ctx.get(&args.target);
     // Check that the target address exists on chain
     let target_exists =
         rpc::known_address(&target, args.tx.ledger_address.clone()).await;

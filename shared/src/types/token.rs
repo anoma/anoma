@@ -279,6 +279,18 @@ pub fn is_non_owner_balance_key(key: &Key) -> Option<&Address> {
     }
 }
 
+/// Check if the given storage key is a masp key
+pub fn is_masp_key(key: &Key) -> bool {
+    let masp_addr = Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").expect("The token address decoding shouldn't fail");
+    match &key.segments[..] {
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(key),
+        ] if *addr == masp_addr && (key == HEAD_TX_KEY || key.starts_with("tx")) => true,
+        _ => false,
+    }
+}
+
 /// A simple bilateral token transfer
 #[derive(
     Debug,

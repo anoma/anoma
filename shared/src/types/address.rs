@@ -471,6 +471,11 @@ pub fn kartoffel() -> Address {
     Address::decode("atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90").expect("The token address decoding shouldn't fail")
 }
 
+/// Temporary helper for testing
+pub fn masp() -> Address {
+    Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").expect("The token address decoding shouldn't fail")
+}
+
 /// Temporary helper for testing, a hash map of tokens addresses with their
 /// informal currency codes.
 pub fn tokens() -> HashMap<Address, &'static str> {
