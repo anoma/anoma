@@ -10,11 +10,9 @@ use anoma_apps::wallet::DecryptionError;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
-use masp_primitives::primitives::Diversifier;
-use rand::RngCore;
 use rand_core::OsRng;
-use rand::CryptoRng;
 use masp_primitives::keys::FullViewingKey;
+use anoma_apps::client::tx::find_valid_diversifier;
 
 pub fn main() -> Result<()> {
     let (cmd, ctx) = cli::anoma_wallet_cli();
@@ -51,26 +49,6 @@ pub fn main() -> Result<()> {
         }
     }
     Ok(())
-}
-
-/// Generate a valid diversifier, i.e. one that has a diversified base. Return
-/// also this diversified base.
-pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
-    rng: &mut R
-) -> (Diversifier, jubjub::SubgroupPoint) {
-    let mut diversifier;
-    let g_d;
-    // Keep generating random diversifiers until one has a diversified base
-    loop {
-        let mut d = [0; 11];
-        rng.fill_bytes(&mut d);
-        diversifier = Diversifier(d);
-        if let Some(val) = diversifier.g_d() {
-            g_d = val;
-            break;
-        }
-    }
-    (diversifier, g_d)
 }
 
 /// Generate a shielded payment address from the given key.

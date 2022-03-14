@@ -40,7 +40,6 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
-use masp_primitives::transaction::components::Amount;
 use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
 
@@ -240,8 +239,7 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
                 ).unwrap();
                 let asset_value = balance[&asset_type];
                 if asset_value > 0 {
-                    balance -= Amount::from(asset_type, asset_value)
-                        .expect("asset should be in range");
+                    balance -= balance.project(asset_type);
                     println!("{}: {}", currency_code, asset_value);
                     found_any = true;
                 }
