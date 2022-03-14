@@ -50,19 +50,15 @@ testing = [
   "tempfile",
 ]
 wasm-runtime = [
+  "loupe",
   "parity-wasm",
   "pwasm-utils",
   "wasmer-cache",
   "wasmer-compiler-singlepass",
-  "wasmer-compiler-cranelift",
-  "wasmer-engine-jit",
+  "wasmer-engine-dylib",
+  "wasmer-engine-universal",
   "wasmer-vm",
   "wasmer",
-
-  # TODO wasmer 2.x
-  # "loupe",
-  # "wasmer-engine-dylib",
-  # "wasmer-engine-universal",
 ]
 
 [dependencies]
@@ -88,6 +84,7 @@ ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0
 ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_tm_v0.23.5", default-features = false, optional = true}
 ics23 = "0.6.7"
 itertools = "0.10.0"
+loupe = {version = "0.1.3", optional = true}
 parity-wasm = {version = "0.42.2", optional = true}
 proptest = {version = "1.0.0", optional = true}
 prost = "0.9.0"
@@ -110,23 +107,13 @@ tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 thiserror = "1.0.30"
 tracing = "0.1.30"
-wasmer = {version = "=1.0.2", optional = true}
-wasmer-cache = {version = "=1.0.2", optional = true}
-wasmer-compiler-cranelift = {version = "=1.0.2", optional = true}
-wasmer-compiler-singlepass = {version = "=1.0.2", optional = true}
-wasmer-engine-jit = {version = "=1.0.2", optional = true}
-wasmer-vm = {version = "=1.0.2", optional = true}
-wasmparser = "0.81.0"
-
-# TODO wasmer 2.x
-# loupe = {version = "0.1.3", optional = true}
-# wasmer = {version = "=2.1.0", optional = true}
-# wasmer-cache = {version = "=2.1.0", optional = true}
-# wasmer-compiler-cranelift = {version = "=2.1.0", optional = true}
-# wasmer-compiler-singlepass = {version = "=2.1.0", optional = true}
-# wasmer-engine-dylib = {version = "=2.1.0", optional = true}
-# wasmer-engine-universal = {version = "=2.1.0", optional = true}
-# wasmer-vm = {version = "=2.1.0", optional = true}
+wasmer = {version = "=2.2.0", optional = true}
+wasmer-cache = {version = "=2.2.0", optional = true}
+wasmer-compiler-singlepass = {version = "=2.2.0", optional = true}
+wasmer-engine-dylib = {version = "=2.2.0", optional = true}
+wasmer-engine-universal = {version = "=2.2.0", optional = true}
+wasmer-vm = {version = "2.2.0", optional = true}
+wasmparser = "0.83.0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
