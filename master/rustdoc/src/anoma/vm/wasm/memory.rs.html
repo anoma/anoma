@@ -472,6 +472,10 @@
 <span id="471">471</span>
 <span id="472">472</span>
 <span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
 
@@ -704,8 +708,16 @@
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">exports</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Exports</span>,
     ) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span>(), <span class="ident">HostEnvInitError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">exports</span>.<span class="ident">get_memory</span>(<span class="string">&quot;memory&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">initialize</span>(<span class="ident">memory</span>.<span class="ident">clone</span>()) {
+        <span class="comment">// &quot;`TxEnv` holds a reference to the Wasm `Memory`, which itself</span>
+        <span class="comment">// internally holds a reference to the instance which owns that</span>
+        <span class="comment">// memory. However the instance itself also holds a reference to</span>
+        <span class="comment">// the `TxEnv` when it is instantiated, thus creating a circular</span>
+        <span class="comment">// reference.</span>
+        <span class="comment">// You can work around this by using `get_with_generics_weak` which</span>
+        <span class="comment">// creates a weak reference to the `Instance` internally.&quot;</span>
+        <span class="comment">// &lt;https://github.com/wasmerio/wasmer/issues/2780#issuecomment-1054452629&gt;</span>
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">exports</span>.<span class="ident">get_with_generics_weak</span>(<span class="string">&quot;memory&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">initialize</span>(<span class="ident">memory</span>) {
             <span class="macro">tracing::error!</span>(<span class="string">&quot;wasm memory is already initialized&quot;</span>);
         }
         <span class="prelude-val">Ok</span>(())
@@ -749,8 +761,7 @@
     }
 }
 
-<span class="comment">// TODO wasmer 2.x</span>
-<span class="comment">// #[derive(loupe::MemoryUsage)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">loupe::MemoryUsage</span>)]</span>
 <span class="doccomment">/// A custom [`Tunables`] to set a WASM memory limits.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Adapted from &lt;https://github.com/wasmerio/wasmer/blob/29d7b4a5f1c401d9a1e95086ed85878c8407ec16/examples/tunables_limit_memory.rs&gt;.</span>
@@ -910,10 +921,7 @@
 
         <span class="comment">// Any compiler and any engine do the job here</span>
         <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">Cranelift::default</span>();
-        <span class="comment">// TODO wasmer 2.x</span>
-        <span class="comment">// let engine =</span>
-        <span class="comment">// wasmer_engine_universal::Universal::new(compiler).engine();</span>
-        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_jit::JIT::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
+        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_universal::Universal::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
 
         <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables::for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target::default</span>());
         <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="ident">Pages</span>(<span class="number">24</span>);
