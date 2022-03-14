@@ -227,6 +227,16 @@
 <span id="226">226</span>
 <span id="227">227</span>
 <span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Chain related data types</span>
 <span class="comment">// TODO move BlockHash and BlockHeight here from the storage types</span>
 
@@ -255,7 +265,17 @@
 
 <span class="doccomment">/// Chain ID</span>
 <span class="attribute">#[<span class="ident">derive</span>(
-    <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>,
+    <span class="ident">Debug</span>,
+    <span class="ident">Clone</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshDeserialize</span>,
+    <span class="ident">PartialOrd</span>,
+    <span class="ident">Ord</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Eq</span>,
+    <span class="ident">Hash</span>,
 )]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ChainId</span>(<span class="ident">String</span>);

@@ -286,6 +286,23 @@
 <span id="285">285</span>
 <span id="286">286</span>
 <span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
 </pre><pre class="rust"><code><span class="doccomment">//! CLI input types can be used for command arguments</span>
 
 <span class="kw">use</span> <span class="ident">std::env</span>;
@@ -432,12 +449,29 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">from_context</span><span class="op">|</span> <span class="ident">from_context</span>.<span class="ident">arg_from_mut_ctx</span>(<span class="self">self</span>))
     }
 
+    <span class="doccomment">/// Get the wasm directory configured for the chain.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Note that in &quot;dev&quot; build, this may be the root `wasm` dir.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wasm_dir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PathBuf</span> {
+        <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">chain_dir</span>().<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">wasm_dir</span>);
+
+        <span class="comment">// In dev-mode with dev chain (the default), load wasm directly from the</span>
+        <span class="comment">// root wasm dir instead of the chain dir</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span>
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">global_config</span>.<span class="ident">default_chain_id</span> <span class="op">==</span> <span class="ident">ChainId::default</span>() {
+                <span class="string">&quot;wasm&quot;</span>.<span class="ident">into</span>()
+            } <span class="kw">else</span> {
+                <span class="ident">wasm_dir</span>
+            };
+
+        <span class="ident">wasm_dir</span>
+    }
+
     <span class="doccomment">/// Read the given WASM file from the WASM directory or an absolute path.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_wasm</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">file_name</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="ident">wasm_loader::read_wasm</span>(
-            <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">chain_dir</span>().<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">wasm_dir</span>),
-            <span class="ident">file_name</span>,
-        )
+        <span class="ident">wasm_loader::read_wasm</span>(<span class="self">self</span>.<span class="ident">wasm_dir</span>(), <span class="ident">file_name</span>)
     }
 }
 
