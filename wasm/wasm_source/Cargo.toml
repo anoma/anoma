@@ -27,6 +27,7 @@ vp_nft = ["anoma_vp_prelude"]
 vp_testnet_faucet = ["anoma_vp_prelude", "once_cell"]
 vp_token = ["anoma_vp_prelude"]
 vp_user = ["anoma_vp_prelude", "once_cell", "rust_decimal"]
+vp_multisig = ["anoma_vp_prelude", "once_cell"]
 
 [dependencies]
 anoma_tx_prelude = {path = "../../tx_prelude", optional = true}

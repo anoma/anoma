@@ -29,3 +29,5 @@ pub mod vp_testnet_faucet;
 pub mod vp_token;
 #[cfg(feature = "vp_user")]
 pub mod vp_user;
+#[cfg(feature = "vp_multisig")]
+pub mod vp_multisig;
