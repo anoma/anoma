@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["HASH_LENGTH","The length of the transaction hash string"]],"enum":[["Error",""]],"struct":[["Hash","A hash, typically a sha-2 hash of a tx"]],"type":[["HashResult","Result for functions that may fail"]]});

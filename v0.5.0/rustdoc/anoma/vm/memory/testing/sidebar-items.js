@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["slice","Slice management and manipulation."]],"struct":[["NativeMemory","Native memory implementation may be used for testing VM host environment natively, without compiling to wasm."]]});

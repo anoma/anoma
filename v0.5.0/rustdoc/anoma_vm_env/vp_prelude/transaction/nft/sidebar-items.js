@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CreateNft","A tx data type to create a new NFT"],["MintNft","A tx data type to mint nft tokens"]]});

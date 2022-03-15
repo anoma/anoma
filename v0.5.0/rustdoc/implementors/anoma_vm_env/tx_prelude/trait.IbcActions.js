@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_vm_env"] = [{"text":"impl <a class=\"trait\" href=\"anoma_vm_env/tx_prelude/trait.IbcActions.html\" title=\"trait anoma_vm_env::tx_prelude::IbcActions\">IbcActions</a> for <a class=\"struct\" href=\"anoma_vm_env/ibc/struct.Ibc.html\" title=\"struct anoma_vm_env::ibc::Ibc\">Ibc</a>","synthetic":false,"types":["anoma_vm_env::ibc::Ibc"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

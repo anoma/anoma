@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["decrypted_tx","Integration of Ferveo cryptographic primitives to enable decrypting txs. Not wasm compatible"]],"type":[["EllipticCurve",""]]});

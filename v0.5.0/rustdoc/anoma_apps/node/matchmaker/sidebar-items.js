@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["run","Run a matchmaker"]],"struct":[["ResultHandler","Result handler processes the results sent from the matchmaker [`Runner`]."],["Runner","A matchmaker receive intents and tries to find a match with previously received intent."]]});

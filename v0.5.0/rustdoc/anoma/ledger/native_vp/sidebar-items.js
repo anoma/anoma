@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""]],"struct":[["Ctx","A validity predicate’s host context."]],"trait":[["NativeVp","A native VP module should implement its validation logic using this trait."]],"type":[["Result","Native VP function result"]]});

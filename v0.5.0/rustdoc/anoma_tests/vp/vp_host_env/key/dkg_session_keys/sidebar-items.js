@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["dkg_pk_key","Obtain a storage key for user’s public dkg session key."],["is_dkg_pk_key","Check if the given storage key is a public dkg session key. If it is, returns the owner."]],"struct":[["DkgKeypair","A keypair used in the DKG protocol"],["DkgPublicKey","A public keypair used in the DKG protocol"]]});

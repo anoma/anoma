@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Takes ownership and “forgets” about the value without running its destructor."><meta name="keywords" content="rust, rustlang, rust-lang, forget"><title>forget in anoma_apps::std::mem - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><div class="sidebar-elems"><h2 class="location">Other items in<br><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">mem</a></h2><div id="sidebar-vars" data-name="forget" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">mem</a>::<wbr><a class="fn" href="#">forget</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0, const since 1.46.0">1.0.0 (const: 1.46.0)</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.58.1/src/core/mem/mod.rs.html#144" title="goto source code">[src]</a></span></h1><div class="docblock item-decl"><pre class="rust fn"><code>pub const fn forget&lt;T&gt;(t: T)</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Takes ownership and “forgets” about the value <strong>without running its destructor</strong>.</p>
+<p>Any resources the value manages, such as heap memory or a file handle, will linger
+forever in an unreachable state. However, it does not guarantee that pointers
+to this memory will remain valid.</p>
+<ul>
+<li>If you want to leak memory, see <a href="../../std/boxed/struct.Box.html#method.leak"><code>Box::leak</code></a>.</li>
+<li>If you want to obtain a raw pointer to the memory, see <a href="../../std/boxed/struct.Box.html#method.into_raw"><code>Box::into_raw</code></a>.</li>
+<li>If you want to dispose of a value properly, running its destructor, see
+<a href="fn.drop.html"><code>mem::drop</code></a>.</li>
+</ul>
+<h2 id="safety" class="section-header"><a href="#safety">Safety</a></h2>
+<p><code>forget</code> is not marked as <code>unsafe</code>, because Rust’s safety guarantees
+do not include a guarantee that destructors will always run. For example,
+a program can create a reference cycle using <a href="../../std/rc/struct.Rc.html"><code>Rc</code></a>, or call
+<a href="../../std/process/fn.exit.html"><code>process::exit</code></a> to exit without running destructors. Thus, allowing
+<code>mem::forget</code> from safe code does not fundamentally change Rust’s safety
+guarantees.</p>
+<p>That said, leaking resources such as memory or I/O objects is usually undesirable.
+The need comes up in some specialized use cases for FFI or unsafe code, but even
+then, <a href="struct.ManuallyDrop.html" title="ManuallyDrop"><code>ManuallyDrop</code></a> is typically preferred.</p>
+<p>Because forgetting a value is allowed, any <code>unsafe</code> code you write must
+allow for this possibility. You cannot return a value and expect that the
+caller will necessarily run the value’s destructor.</p>
+<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
+<p>The canonical safe use of <code>mem::forget</code> is to circumvent a value’s destructor
+implemented by the <code>Drop</code> trait. For example, this will leak a <code>File</code>, i.e. reclaim
+the space taken by the variable but never close the underlying system resource:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::mem</span>;
+<span class="kw">use</span> <span class="ident">std::fs::File</span>;
+
+<span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="string">&quot;foo.txt&quot;</span>).<span class="ident">unwrap</span>();
+<span class="ident">mem::forget</span>(<span class="ident">file</span>);</code></pre></div>
+<p>This is useful when the ownership of the underlying resource was previously
+transferred to code outside of Rust, for example by transmitting the raw
+file descriptor to C code.</p>
+<h2 id="relationship-with-manuallydrop" class="section-header"><a href="#relationship-with-manuallydrop">Relationship with <code>ManuallyDrop</code></a></h2>
+<p>While <code>mem::forget</code> can also be used to transfer <em>memory</em> ownership, doing so is error-prone.
+<a href="struct.ManuallyDrop.html" title="ManuallyDrop"><code>ManuallyDrop</code></a> should be used instead. Consider, for example, this code:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::mem</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">65</span>, <span class="number">122</span>];
+<span class="comment">// Build a `String` using the contents of `v`</span>
+<span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">String::from_raw_parts</span>(<span class="ident">v</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">v</span>.<span class="ident">len</span>(), <span class="ident">v</span>.<span class="ident">capacity</span>()) };
+<span class="comment">// leak `v` because its memory is now managed by `s`</span>
+<span class="ident">mem::forget</span>(<span class="ident">v</span>);  <span class="comment">// ERROR - v is invalid and must not be passed to a function</span>
+<span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;Az&quot;</span>);
+<span class="comment">// `s` is implicitly dropped and its memory deallocated.</span></code></pre></div>
+<p>There are two issues with the above example:</p>
+<ul>
+<li>If more code were added between the construction of <code>String</code> and the invocation of
+<code>mem::forget()</code>, a panic within it would cause a double free because the same memory
+is handled by both <code>v</code> and <code>s</code>.</li>
+<li>After calling <code>v.as_mut_ptr()</code> and transmitting the ownership of the data to <code>s</code>,
+the <code>v</code> value is invalid. Even when a value is just moved to <code>mem::forget</code> (which won’t
+inspect it), some types have strict requirements on their values that
+make them invalid when dangling or no longer owned. Using invalid values in any
+way, including passing them to or returning them from functions, constitutes
+undefined behavior and may break the assumptions made by the compiler.</li>
+</ul>
+<p>Switching to <code>ManuallyDrop</code> avoids both issues:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
+
+<span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">65</span>, <span class="number">122</span>];
+<span class="comment">// Before we disassemble `v` into its raw parts, make sure it</span>
+<span class="comment">// does not get dropped!</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">ManuallyDrop::new</span>(<span class="ident">v</span>);
+<span class="comment">// Now disassemble `v`. These operations cannot panic, so there cannot be a leak.</span>
+<span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">cap</span>) <span class="op">=</span> (<span class="ident">v</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">v</span>.<span class="ident">len</span>(), <span class="ident">v</span>.<span class="ident">capacity</span>());
+<span class="comment">// Finally, build a `String`.</span>
+<span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">String::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">len</span>, <span class="ident">cap</span>) };
+<span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;Az&quot;</span>);
+<span class="comment">// `s` is implicitly dropped and its memory deallocated.</span></code></pre></div>
+<p><code>ManuallyDrop</code> robustly prevents double-free because we disable <code>v</code>’s destructor
+before doing anything else. <code>mem::forget()</code> doesn’t allow this because it consumes its
+argument, forcing us to call it only after extracting anything we need from <code>v</code>. Even
+if a panic were introduced between construction of <code>ManuallyDrop</code> and building the
+string (which cannot happen in the code as shown), it would result in a leak and not a
+double free. In other words, <code>ManuallyDrop</code> errs on the side of leaking instead of
+erring on the side of (double-)dropping.</p>
+<p>Also, <code>ManuallyDrop</code> prevents us from having to “touch” <code>v</code> after transferring the
+ownership to <code>s</code> — the final step of interacting with <code>v</code> to dispose of it without
+running its destructor is entirely avoided.</p>
+</div></details></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+</body></html>

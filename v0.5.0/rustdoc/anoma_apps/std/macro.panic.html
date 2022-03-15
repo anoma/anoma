@@ -1,0 +1,37 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Panics the current thread."><meta name="keywords" content="rust, rustlang, rust-lang, panic"><title>panic in anoma_apps::std - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc macro"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><div class="sidebar-elems"><h2 class="location">Other items in<br><a href="../index.html">anoma_apps</a>::<wbr><a href="index.html">std</a></h2><div id="sidebar-vars" data-name="panic" data-ty="macro" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Macro <a href="../index.html">anoma_apps</a>::<wbr><a href="index.html">std</a>::<wbr><a class="macro" href="#">panic</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.58.1/src/std/macros.rs.html#13-19" title="goto source code">[src]</a></span></h1><div class="docblock item-decl"><div class="example-wrap"><pre class="rust macro"><code><span class="macro">macro_rules!</span> <span class="ident">panic</span> {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span> : <span class="ident">tt</span>) <span class="kw-2">*</span>) =&gt; { ... };
+}</code></pre></div>
+</div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Panics the current thread.</p>
+<p>This allows a program to terminate immediately and provide feedback
+to the caller of the program. <code>panic!</code> should be used when a program reaches
+an unrecoverable state.</p>
+<p>This macro is the perfect way to assert conditions in example code and in
+tests. <code>panic!</code> is closely tied with the <code>unwrap</code> method of both
+<a href="option/enum.Option.html#method.unwrap"><code>Option</code></a> and <a href="result/enum.Result.html#method.unwrap"><code>Result</code></a> enums. Both implementations call
+<code>panic!</code> when they are set to <a href="option/enum.Option.html#variant.None" title="None"><code>None</code></a> or <a href="result/enum.Result.html#variant.Err" title="Err"><code>Err</code></a> variants.</p>
+<p>When using <code>panic!()</code> you can specify a string payload, that is built using
+the <a href="../std/macro.format.html"><code>format!</code></a> syntax. That payload is used when injecting the panic into
+the calling Rust thread, causing the thread to panic entirely.</p>
+<p>The behavior of the default <code>std</code> hook, i.e. the code that runs directly
+after the panic is invoked, is to print the message payload to
+<code>stderr</code> along with the file/line/column information of the <code>panic!()</code>
+call. You can override the panic hook using <a href="../std/panic/fn.set_hook.html"><code>std::panic::set_hook()</code></a>.
+Inside the hook a panic can be accessed as a <code>&amp;dyn Any + Send</code>,
+which contains either a <code>&amp;str</code> or <code>String</code> for regular <code>panic!()</code> invocations.
+To panic with a value of another other type, <a href="../std/panic/fn.panic_any.html"><code>panic_any</code></a> can be used.</p>
+<p><a href="result/enum.Result.html" title="Result"><code>Result</code></a> enum is often a better solution for recovering from errors than
+using the <code>panic!</code> macro. This macro should be used to avoid proceeding using
+incorrect values, such as from external sources. Detailed information about
+error handling is found in the <a href="../book/ch09-00-error-handling.html">book</a>.</p>
+<p>See also the macro <a href="macro.compile_error.html" title="compile_error!"><code>compile_error!</code></a>, for raising errors during compilation.</p>
+<h2 id="current-implementation" class="section-header"><a href="#current-implementation">Current implementation</a></h2>
+<p>If the main thread panics it will terminate all your threads and end your
+program with code <code>101</code>.</p>
+<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
+<div class='information'><div class='tooltip should_panic'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered should_panic"><code><span class="macro">panic!</span>();
+<span class="macro">panic!</span>(<span class="string">&quot;this is a terrible mistake!&quot;</span>);
+<span class="macro">panic!</span>(<span class="string">&quot;this is a {} {message}&quot;</span>, <span class="string">&quot;fancy&quot;</span>, <span class="ident">message</span> <span class="op">=</span> <span class="string">&quot;message&quot;</span>);
+<span class="ident">std::panic::panic_any</span>(<span class="number">4</span>); <span class="comment">// panic with the value of 4 to be collected elsewhere</span></code></pre></div>
+</div></details></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_apps" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+</body></html>

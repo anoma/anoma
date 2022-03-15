@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_apps"] = [{"text":"impl <a class=\"trait\" href=\"anoma_apps/std/ops/trait.Index.html\" title=\"trait anoma_apps::std::ops::Index\">Index</a>&lt;&amp;'_ <a class=\"primitive\" href=\"https://doc.rust-lang.org/1.58.1/std/primitive.str.html\">str</a>&gt; for <a class=\"struct\" href=\"anoma_apps/node/ledger/events/struct.Event.html\" title=\"struct anoma_apps::node::ledger::events::Event\">Event</a>","synthetic":false,"types":["anoma_apps::node::ledger::events::Event"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

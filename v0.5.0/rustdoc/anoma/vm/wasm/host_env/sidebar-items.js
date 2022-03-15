@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["tx_imports","Prepare imports (memory and host functions) exposed to the vm guest running transaction code"],["vp_imports","Prepare imports (memory and host functions) exposed to the vm guest running validity predicate code"]]});

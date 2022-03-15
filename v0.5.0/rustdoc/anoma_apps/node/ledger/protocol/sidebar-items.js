@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""]],"fn":[["apply_tx","Apply a given transaction"]],"type":[["Result",""]]});

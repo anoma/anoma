@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["handle_rpc_event",""],["rpc_server",""],["start_rpc_server","Start a rpc server in it’s own thread. The used address to listen is in the `config` argument. All received event by the rpc are send to the channel return by this function."]]});
