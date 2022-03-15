@@ -1,0 +1,1816 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;shell&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><script defer src="../../../../../main.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+</pre><pre class="rust"><code><span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Any changes applied before [`Shell::finalize_block`] might have to be</span>
+<span class="doccomment">//! reverted, so any changes applied in the methods `Shell::prepare_proposal`</span>
+<span class="doccomment">//! (ABCI++), [`Shell::process_proposal`] must be also reverted (unless we can</span>
+<span class="doccomment">//! simply overwrite them in the next block).</span>
+<span class="doccomment">//! More info in &lt;https://github.com/anoma/anoma/issues/362&gt;.</span>
+<span class="kw">mod</span> <span class="ident">finalize_block</span>;
+<span class="kw">mod</span> <span class="ident">init_chain</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">mod</span> <span class="ident">prepare_proposal</span>;
+<span class="kw">mod</span> <span class="ident">process_proposal</span>;
+<span class="kw">mod</span> <span class="ident">queries</span>;
+
+<span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
+<span class="kw">use</span> <span class="ident">std::mem</span>;
+<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_imports</span>)]</span>
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+
+<span class="kw">use</span> <span class="ident">anoma::ledger::gas::BlockGasMeter</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::pos::anoma_proof_of_stake::types</span>::{
+    <span class="ident">ActiveValidator</span>, <span class="ident">ValidatorSetUpdate</span>,
+};
+<span class="kw">use</span> <span class="ident">anoma::ledger::pos::anoma_proof_of_stake::PosBase</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">DBIter</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>, <span class="ident">DB</span>};
+<span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">ibc</span>, <span class="ident">parameters</span>, <span class="ident">pos</span>};
+<span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{
+    <span class="ident">hash_tx</span>, <span class="ident">process_tx</span>, <span class="ident">verify_decrypted_correctly</span>, <span class="ident">AffineCurve</span>, <span class="ident">DecryptedTx</span>,
+    <span class="ident">EllipticCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>,
+};
+<span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">token</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="ident">TxCache</span>, <span class="ident">VpCache</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm::WasmCacheRwAccess</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
+<span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">num_derive</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">ToPrimitive</span>};
+<span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">ToPrimitive</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::abci</span>::{
+    <span class="self">self</span>, <span class="ident">Evidence</span>, <span class="ident">RequestPrepareProposal</span>, <span class="ident">ValidatorUpdate</span>,
+};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::crypto::public_key</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::types::ConsensusParams</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::abci::ConsensusParams</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::abci</span>::{<span class="self">self</span>, <span class="ident">Evidence</span>, <span class="ident">ValidatorUpdate</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::crypto::public_key</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">use</span> <span class="ident">tokio::sync::mpsc::UnboundedSender</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tower_abci_old</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::rpc</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config</span>::{<span class="ident">genesis</span>, <span class="ident">TendermintMode</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::events::Event</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim::response::TxResult</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_imports</span>)]</span>
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::ValidatorData</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
+
+<span class="kw">fn</span> <span class="ident">key_to_tendermint</span><span class="op">&lt;</span><span class="ident">PK</span>: <span class="ident">PublicKey</span><span class="op">&gt;</span>(
+    <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PK</span>,
+) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">public_key::Sum</span>, <span class="ident">ParsePublicKeyError</span><span class="op">&gt;</span> {
+    <span class="ident">ed25519::PublicKey::try_from_pk</span>(<span class="ident">pk</span>)
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pk</span><span class="op">|</span> <span class="ident">public_key::Sum::Ed25519</span>(<span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()))
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error removing the DB data: {0}&quot;</span>)]</span>
+    <span class="ident">RemoveDB</span>(<span class="ident">std::io::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;chain ID mismatch: {0}&quot;</span>)]</span>
+    <span class="ident">ChainId</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding a transaction from bytes: {0}&quot;</span>)]</span>
+    <span class="ident">TxDecoding</span>(<span class="ident">proto::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error trying to apply a transaction: {0}&quot;</span>)]</span>
+    <span class="ident">TxApply</span>(<span class="ident">protocol::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Gas limit exceeding while applying transactions in block&quot;</span>)]</span>
+    <span class="ident">GasOverflow</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
+    <span class="ident">Tendermint</span>(<span class="ident">tendermint_node::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Server error: {0}&quot;</span>)]</span>
+    <span class="ident">TowerServer</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
+    <span class="ident">Broadcaster</span>(<span class="ident">tokio::sync::mpsc::error::TryRecvError</span>),
+}
+
+<span class="doccomment">/// The different error codes that the ledger may</span>
+<span class="doccomment">/// send back to a client indicating the status</span>
+<span class="doccomment">/// of their submitted tx</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">FromPrimitive</span>, <span class="ident">ToPrimitive</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ErrorCodes</span> {
+    <span class="prelude-val">Ok</span> <span class="op">=</span> <span class="number">0</span>,
+    <span class="ident">InvalidTx</span> <span class="op">=</span> <span class="number">1</span>,
+    <span class="ident">InvalidSig</span> <span class="op">=</span> <span class="number">2</span>,
+    <span class="ident">WasmRuntimeError</span> <span class="op">=</span> <span class="number">3</span>,
+    <span class="ident">InvalidOrder</span> <span class="op">=</span> <span class="number">4</span>,
+    <span class="ident">ExtraTxs</span> <span class="op">=</span> <span class="number">5</span>,
+    <span class="ident">Undecryptable</span> <span class="op">=</span> <span class="number">6</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ErrorCodes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u32</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">ErrorCodes</span>) -&gt; <span class="ident">u32</span> {
+        <span class="ident">code</span>.<span class="ident">to_u32</span>().<span class="ident">unwrap</span>()
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ErrorCodes</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">code</span>: <span class="ident">ErrorCodes</span>) -&gt; <span class="ident">String</span> {
+        <span class="ident">u32::from</span>(<span class="ident">code</span>).<span class="ident">to_string</span>()
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// simply nuke the DB files</span>
+    <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db_dir</span>();
+    <span class="kw">match</span> <span class="ident">std::fs::remove_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">db_path</span>) {
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">==</span> <span class="ident">std::io::ErrorKind::NotFound</span> =&gt; (),
+        <span class="ident">res</span> =&gt; <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Error::RemoveDB</span>)<span class="question-mark">?</span>,
+    };
+    <span class="comment">// reset Tendermint state</span>
+    <span class="ident">tendermint_node::reset</span>(<span class="ident">config</span>.<span class="ident">tendermint_dir</span>())
+        .<span class="ident">map_err</span>(<span class="ident">Error::Tendermint</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>, <span class="ident">clippy::large_enum_variant</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum</span> <span class="ident">ShellMode</span> {
+    <span class="ident">Validator</span> {
+        <span class="ident">data</span>: <span class="ident">ValidatorData</span>,
+        <span class="ident">broadcast_sender</span>: <span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    },
+    <span class="ident">Full</span>,
+    <span class="ident">Seed</span>,
+}
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="kw">impl</span> <span class="ident">ShellMode</span> {
+    <span class="doccomment">/// Get the validator address if ledger is in validator mode</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_validator_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">address::Address</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span> {
+            <span class="ident">ShellMode::Validator</span> { <span class="ident">data</span>, .. } =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">address</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MempoolTxType</span> {
+    <span class="doccomment">/// A transaction that has not been validated by this node before</span>
+    <span class="ident">NewTransaction</span>,
+    <span class="doccomment">/// A transaction that has been validated at some previous level that may</span>
+    <span class="doccomment">/// need to be validated again</span>
+    <span class="ident">RecheckTransaction</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shell</span><span class="op">&lt;</span>
+    <span class="ident">D</span> <span class="op">=</span> <span class="ident">storage::PersistentDB</span>,
+    <span class="ident">H</span> <span class="op">=</span> <span class="ident">storage::PersistentStorageHasher</span>,
+<span class="op">&gt;</span> <span class="kw">where</span>
+    <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+{
+    <span class="doccomment">/// The id of the current chain</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
+    <span class="doccomment">/// The persistent storage</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">storage</span>: <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Gas meter for the current block</span>
+    <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>,
+    <span class="doccomment">/// Write log for the current block</span>
+    <span class="ident">write_log</span>: <span class="ident">WriteLog</span>,
+    <span class="doccomment">/// Byzantine validators given from ABCI++ `prepare_proposal` are stored in</span>
+    <span class="doccomment">/// this field. They will be slashed when we finalize the block.</span>
+    <span class="ident">byzantine_validators</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Evidence</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Path to the base directory with DB data and configs</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// Path to the WASM directory for files used in the genesis block.</span>
+    <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// Information about the running shell instance</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="ident">mode</span>: <span class="ident">ShellMode</span>,
+    <span class="doccomment">/// VP WASM compilation cache</span>
+    <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Tx WASM compilation cache</span>
+    <span class="ident">tx_wasm_cache</span>: <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Shell</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+{
+    <span class="doccomment">/// Create a new shell from a path to a database and a chain id. Looks</span>
+    <span class="doccomment">/// up the database with this data and tries to load the last state.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">config</span>: <span class="ident">config::Ledger</span>,
+        <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
+        <span class="ident">broadcast_sender</span>: <span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">db_cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">D::Cache</span><span class="op">&gt;</span>,
+        <span class="ident">vp_wasm_compilation_cache</span>: <span class="ident">u64</span>,
+        <span class="ident">tx_wasm_compilation_cache</span>: <span class="ident">u64</span>,
+    ) -&gt; <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">chain_id</span>;
+        <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">db_dir</span>(<span class="kw-2">&amp;</span><span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">base_dir</span>;
+        <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">tendermint_mode</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">Path::new</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>).<span class="ident">is_dir</span>() {
+            <span class="ident">std::fs::create_dir</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Creating directory for Anoma should not fail&quot;</span>);
+        }
+        <span class="comment">// load last state from storage</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Storage::open</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>.<span class="ident">clone</span>(), <span class="ident">db_cache</span>);
+        <span class="ident">storage</span>
+            .<span class="ident">load_last_state</span>()
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="macro">tracing::error!</span>(<span class="string">&quot;Cannot load the last state from the DB {}&quot;</span>, <span class="ident">e</span>);
+            })
+            .<span class="ident">expect</span>(<span class="string">&quot;PersistentStorage cannot be initialized&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">vp_wasm_cache_dir</span> <span class="op">=</span>
+            <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">join</span>(<span class="string">&quot;vp_wasm_cache&quot;</span>);
+        <span class="kw">let</span> <span class="ident">tx_wasm_cache_dir</span> <span class="op">=</span>
+            <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">join</span>(<span class="string">&quot;tx_wasm_cache&quot;</span>);
+        <span class="comment">// load in keys and address from wallet if mode is set to `Validator`</span>
+        <span class="kw">let</span> <span class="ident">mode</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">mode</span> {
+            <span class="ident">TendermintMode::Validator</span> =&gt; {
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
+                {
+                    <span class="kw">let</span> <span class="ident">wallet_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>());
+                    <span class="kw">let</span> <span class="ident">genesis_path</span> <span class="op">=</span>
+                        <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>.<span class="ident">as_str</span>()));
+                    <span class="macro">tracing::debug!</span>(
+                        <span class="string">&quot;{}&quot;</span>,
+                        <span class="ident">wallet_path</span>.<span class="ident">as_path</span>().<span class="ident">to_str</span>().<span class="ident">unwrap</span>()
+                    );
+                    <span class="kw">let</span> <span class="ident">wallet</span> <span class="op">=</span> <span class="ident">wallet::Wallet::load_or_new_from_genesis</span>(
+                        <span class="ident">wallet_path</span>,
+                        <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                            <span class="ident">genesis::genesis_config::open_genesis_config</span>(
+                                <span class="ident">genesis_path</span>,
+                            )
+                        },
+                    );
+                    <span class="ident">wallet</span>
+                        .<span class="ident">take_validator_data</span>()
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">ShellMode::Validator</span> {
+                            <span class="ident">data</span>,
+                            <span class="ident">broadcast_sender</span>,
+                        })
+                        .<span class="ident">expect</span>(
+                            <span class="string">&quot;Validator data should have been stored in the \
+                             wallet&quot;</span>,
+                        )
+                }
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+                {
+                    <span class="kw">let</span> <span class="ident">validator_keys</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_keys</span>();
+                    <span class="ident">ShellMode::Validator</span> {
+                        <span class="ident">data</span>: <span class="ident">wallet::ValidatorData</span> {
+                            <span class="ident">address</span>: <span class="ident">wallet::defaults::validator_address</span>(),
+                            <span class="ident">keys</span>: <span class="ident">wallet::ValidatorKeys</span> {
+                                <span class="ident">protocol_keypair</span>: <span class="ident">validator_keys</span>.<span class="number">0</span>,
+                                <span class="ident">dkg_keypair</span>: <span class="prelude-val">Some</span>(<span class="ident">validator_keys</span>.<span class="number">1</span>),
+                            },
+                        },
+                        <span class="ident">broadcast_sender</span>,
+                    }
+                }
+            }
+            <span class="ident">TendermintMode::Full</span> =&gt; <span class="ident">ShellMode::Full</span>,
+            <span class="ident">TendermintMode::Seed</span> =&gt; <span class="ident">ShellMode::Seed</span>,
+        };
+
+        <span class="self">Self</span> {
+            <span class="ident">chain_id</span>,
+            <span class="ident">storage</span>,
+            <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter::default</span>(),
+            <span class="ident">write_log</span>: <span class="ident">WriteLog::default</span>(),
+            <span class="ident">byzantine_validators</span>: <span class="macro">vec!</span>[],
+            <span class="ident">base_dir</span>,
+            <span class="ident">wasm_dir</span>,
+            <span class="ident">mode</span>,
+            <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache::new</span>(
+                <span class="ident">vp_wasm_cache_dir</span>,
+                <span class="ident">vp_wasm_compilation_cache</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            ),
+            <span class="ident">tx_wasm_cache</span>: <span class="ident">TxCache::new</span>(
+                <span class="ident">tx_wasm_cache_dir</span>,
+                <span class="ident">tx_wasm_compilation_cache</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            ),
+        }
+    }
+
+    <span class="doccomment">/// Iterate lazily over the wrapper txs in order</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">lazy_next</span>()
+    }
+
+    <span class="doccomment">/// Iterate lazily over the wrapper txs in order</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">pop</span>()
+    }
+
+    <span class="doccomment">/// If we reject the decrypted txs because they were out of</span>
+    <span class="doccomment">/// order, reset the iterator.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_tx_queue_iter</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">rewind</span>()
+    }
+
+    <span class="doccomment">/// Load the Merkle root hash and the height of the last committed block, if</span>
+    <span class="doccomment">/// any. This is returned when ABCI sends an `info` request.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_state</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">response::Info</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Info::default</span>();
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_state</span>();
+
+        <span class="kw">match</span> <span class="ident">result</span> {
+            <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">height</span>)) =&gt; {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;Last state root hash: {}, height: {}&quot;</span>,
+                    <span class="ident">root</span>,
+                    <span class="ident">height</span>
+                );
+                <span class="ident">response</span>.<span class="ident">last_block_app_hash</span> <span class="op">=</span> <span class="ident">root</span>.<span class="number">0</span>;
+                <span class="ident">response</span>.<span class="ident">last_block_height</span> <span class="op">=</span>
+                    <span class="ident">height</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Invalid block height&quot;</span>);
+            }
+            <span class="prelude-val">None</span> =&gt; {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;No state could be found, chain is not initialized&quot;</span>
+                );
+            }
+        };
+
+        <span class="ident">response</span>
+    }
+
+    <span class="doccomment">/// Apply PoS slashes from the evidence</span>
+    <span class="kw">fn</span> <span class="ident">slash</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">byzantine_validators</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">let</span> <span class="ident">byzantine_validators</span> <span class="op">=</span>
+                <span class="ident">mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">byzantine_validators</span>);
+            <span class="kw">let</span> <span class="ident">pos_params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">read_pos_params</span>();
+            <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">block</span>.<span class="ident">epoch</span>;
+            <span class="kw">for</span> <span class="ident">evidence</span> <span class="kw">in</span> <span class="ident">byzantine_validators</span> {
+                <span class="kw">let</span> <span class="ident">evidence_height</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">u64::try_from</span>(<span class="ident">evidence</span>.<span class="ident">height</span>) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">height</span>) =&gt; <span class="ident">height</span>,
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                        <span class="macro">tracing::error!</span>(
+                            <span class="string">&quot;Unexpected evidence block height {}&quot;</span>,
+                            <span class="ident">err</span>
+                        );
+                        <span class="kw">continue</span>;
+                    }
+                };
+                <span class="kw">let</span> <span class="ident">evidence_epoch</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
+                    .<span class="ident">storage</span>
+                    .<span class="ident">block</span>
+                    .<span class="ident">pred_epochs</span>
+                    .<span class="ident">get_epoch</span>(<span class="ident">BlockHeight</span>(<span class="ident">evidence_height</span>))
+                {
+                    <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) =&gt; <span class="ident">epoch</span>,
+                    <span class="prelude-val">None</span> =&gt; {
+                        <span class="macro">tracing::error!</span>(
+                            <span class="string">&quot;Couldn&#39;t find epoch for evidence block height {}&quot;</span>,
+                            <span class="ident">evidence_height</span>
+                        );
+                        <span class="kw">continue</span>;
+                    }
+                };
+                <span class="kw">let</span> <span class="ident">slash_type</span> <span class="op">=</span>
+                    <span class="kw">match</span> <span class="ident">abci::EvidenceType::from_i32</span>(<span class="ident">evidence</span>.<span class="ident">r#type</span>) {
+                        <span class="prelude-val">Some</span>(<span class="ident">r#type</span>) =&gt; <span class="kw">match</span> <span class="ident">r#type</span> {
+                            <span class="ident">abci::EvidenceType::DuplicateVote</span> =&gt; {
+                                <span class="ident">pos::types::SlashType::DuplicateVote</span>
+                            }
+                            <span class="ident">abci::EvidenceType::LightClientAttack</span> =&gt; {
+                                <span class="ident">pos::types::SlashType::LightClientAttack</span>
+                            }
+                            <span class="ident">abci::EvidenceType::Unknown</span> =&gt; {
+                                <span class="macro">tracing::error!</span>(
+                                    <span class="string">&quot;Unknown evidence: {:#?}&quot;</span>,
+                                    <span class="ident">evidence</span>
+                                );
+                                <span class="kw">continue</span>;
+                            }
+                        },
+                        <span class="prelude-val">None</span> =&gt; {
+                            <span class="macro">tracing::error!</span>(
+                                <span class="string">&quot;Unexpected evidence type {}&quot;</span>,
+                                <span class="ident">evidence</span>.<span class="ident">r#type</span>
+                            );
+                            <span class="kw">continue</span>;
+                        }
+                    };
+                <span class="kw">let</span> <span class="ident">validator_raw_hash</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">evidence</span>.<span class="ident">validator</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">validator</span>) =&gt; {
+                        <span class="kw">match</span> <span class="ident">String::from_utf8</span>(<span class="ident">validator</span>.<span class="ident">address</span>) {
+                            <span class="prelude-val">Ok</span>(<span class="ident">raw_hash</span>) =&gt; <span class="ident">raw_hash</span>,
+                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                                <span class="macro">tracing::error!</span>(
+                                    <span class="string">&quot;Evidence failed to decode validator \
+                                     address from utf-8 with {}&quot;</span>,
+                                    <span class="ident">err</span>
+                                );
+                                <span class="kw">continue</span>;
+                            }
+                        }
+                    }
+                    <span class="prelude-val">None</span> =&gt; {
+                        <span class="macro">tracing::error!</span>(
+                            <span class="string">&quot;Evidence without a validator {:#?}&quot;</span>,
+                            <span class="ident">evidence</span>
+                        );
+                        <span class="kw">continue</span>;
+                    }
+                };
+                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
+                    .<span class="ident">storage</span>
+                    .<span class="ident">read_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="ident">validator_raw_hash</span>)
+                {
+                    <span class="prelude-val">Some</span>(<span class="ident">validator</span>) =&gt; <span class="ident">validator</span>,
+                    <span class="prelude-val">None</span> =&gt; {
+                        <span class="macro">tracing::error!</span>(
+                            <span class="string">&quot;Cannot find validator&#39;s address from raw hash {}&quot;</span>,
+                            <span class="ident">validator_raw_hash</span>
+                        );
+                        <span class="kw">continue</span>;
+                    }
+                };
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;Slashing {} for {} in epoch {}, block height {}&quot;</span>,
+                    <span class="ident">evidence_epoch</span>,
+                    <span class="ident">slash_type</span>,
+                    <span class="ident">validator</span>,
+                    <span class="ident">evidence_height</span>
+                );
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">slash</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">pos_params</span>,
+                    <span class="ident">current_epoch</span>,
+                    <span class="ident">evidence_epoch</span>,
+                    <span class="ident">evidence_height</span>,
+                    <span class="ident">slash_type</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">validator</span>,
+                ) {
+                    <span class="macro">tracing::error!</span>(<span class="string">&quot;Error in slashing: {}&quot;</span>, <span class="ident">err</span>);
+                }
+            }
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="doccomment">/// INVARIANT: This method must be stateless.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extend_vote</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_req</span>: <span class="ident">request::ExtendVote</span>,
+    ) -&gt; <span class="ident">response::ExtendVote</span> {
+        <span class="ident">Default::default</span>()
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="doccomment">/// INVARIANT: This method must be stateless.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_vote_extension</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_req</span>: <span class="ident">request::VerifyVoteExtension</span>,
+    ) -&gt; <span class="ident">response::VerifyVoteExtension</span> {
+        <span class="ident">Default::default</span>()
+    }
+
+    <span class="doccomment">/// Commit a block. Persist the application state and return the Merkle root</span>
+    <span class="doccomment">/// hash.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">response::Commit</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Commit::default</span>();
+        <span class="comment">// commit changes from the write-log to storage</span>
+        <span class="self">self</span>.<span class="ident">write_log</span>
+            .<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">storage</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Expected committing block write log success&quot;</span>);
+        <span class="comment">// store the block&#39;s data in DB</span>
+        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">commit</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="macro">tracing::error!</span>(
+                <span class="string">&quot;Encountered a storage error while committing a block {:?}&quot;</span>,
+                <span class="ident">e</span>
+            )
+        });
+
+        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">merkle_root</span>();
+        <span class="macro">tracing::info!</span>(
+            <span class="string">&quot;Committed block hash: {}, height: {}&quot;</span>,
+            <span class="ident">root</span>,
+            <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">last_height</span>,
+        );
+        <span class="ident">response</span>.<span class="ident">data</span> <span class="op">=</span> <span class="ident">root</span>.<span class="number">0</span>;
+        <span class="ident">response</span>
+    }
+
+    <span class="doccomment">/// Validate a transaction request. On success, the transaction will</span>
+    <span class="doccomment">/// included in the mempool and propagated to peers, otherwise it will be</span>
+    <span class="doccomment">/// rejected.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mempool_validate</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
+        <span class="ident">r#_type</span>: <span class="ident">MempoolTxType</span>,
+    ) -&gt; <span class="ident">response::CheckTx</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::CheckTx::default</span>();
+        <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::TxDecoding</span>) {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">String::from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">msg</span>) =&gt; {
+                <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
+                <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();
+            }
+        }
+        <span class="ident">response</span>
+    }
+
+    <span class="doccomment">/// Simulate validation and application of a transaction.</span>
+    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">response::Query</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Query::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vp_wasm_cache</span>.<span class="ident">read_only</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_wasm_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx_wasm_cache</span>.<span class="ident">read_only</span>();
+        <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">tx</span>) =&gt; {
+                <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">TxType::Decrypted</span>(<span class="ident">DecryptedTx::Decrypted</span>(<span class="ident">tx</span>));
+                <span class="kw">match</span> <span class="ident">protocol::apply_tx</span>(
+                    <span class="ident">tx</span>,
+                    <span class="ident">tx_bytes</span>.<span class="ident">len</span>(),
+                    <span class="kw-2">&amp;mut</span> <span class="ident">gas_meter</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">write_log</span>,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">vp_wasm_cache</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">tx_wasm_cache</span>,
+                )
+                .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>)
+                {
+                    <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>(),
+                    <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
+                        <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
+                        <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">error</span>);
+                    }
+                }
+                <span class="ident">response</span>
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
+                <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Error::TxDecoding</span>(<span class="ident">err</span>));
+                <span class="ident">response</span>
+            }
+        }
+    }
+
+    <span class="doccomment">/// Lookup a validator&#39;s keypair for their established account from their</span>
+    <span class="doccomment">/// wallet. If the node is not validator, this function returns None</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">get_account_keypair</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">common::SecretKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">wallet_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="self">self</span>.<span class="ident">chain_id</span>.<span class="ident">as_str</span>());
+        <span class="kw">let</span> <span class="ident">genesis_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>
+            .<span class="ident">base_dir</span>
+            .<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="self">self</span>.<span class="ident">chain_id</span>.<span class="ident">as_str</span>()));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wallet</span> <span class="op">=</span>
+            <span class="ident">wallet::Wallet::load_or_new_from_genesis</span>(<span class="ident">wallet_path</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                <span class="ident">genesis::genesis_config::open_genesis_config</span>(<span class="ident">genesis_path</span>)
+            });
+        <span class="self">self</span>.<span class="ident">mode</span>.<span class="ident">get_validator_address</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">pk_bytes</span> <span class="op">=</span> <span class="self">self</span>
+                .<span class="ident">storage</span>
+                .<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>(<span class="ident">addr</span>))
+                .<span class="ident">expect</span>(
+                    <span class="string">&quot;A validator should have a public key associated with \
+                     it&#39;s established account&quot;</span>,
+                )
+                .<span class="number">0</span>
+                .<span class="ident">expect</span>(
+                    <span class="string">&quot;A validator should have a public key associated with \
+                     it&#39;s established account&quot;</span>,
+                );
+            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">common::SecretKey::deserialize</span>(<span class="kw-2">&amp;mut</span> <span class="ident">pk_bytes</span>.<span class="ident">as_slice</span>())
+                .<span class="ident">expect</span>(<span class="string">&quot;Validator&#39;s public key should be deserializable&quot;</span>)
+                .<span class="ident">ref_to</span>();
+            <span class="ident">wallet</span>.<span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>).<span class="ident">expect</span>(
+                <span class="string">&quot;A validator&#39;s established keypair should be stored in its \
+                 wallet&quot;</span>,
+            )
+        })
+    }
+}
+
+<span class="doccomment">/// Helper functions and types for writing unit tests</span>
+<span class="doccomment">/// for the shell</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">test_utils</span> {
+    <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
+
+    <span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
+    <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">BlockStateWrite</span>, <span class="ident">MerkleTree</span>, <span class="ident">Sha256Hasher</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">xan</span>, <span class="ident">EstablishedAddressGen</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">Epoch</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::transaction::Fee</span>;
+    <span class="kw">use</span> <span class="ident">tempfile::tempdir</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">tendermint::block</span>::{<span class="ident">header::Version</span>, <span class="ident">Header</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">tendermint</span>::{<span class="ident">Hash</span>, <span class="ident">Time</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_proto::abci</span>::{
+        <span class="ident">Event</span> <span class="kw">as</span> <span class="ident">TmEvent</span>, <span class="ident">RequestInitChain</span>, <span class="ident">ResponsePrepareProposal</span>,
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_proto::google::protobuf::Timestamp</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_proto_abci::abci</span>::{<span class="ident">Event</span> <span class="kw">as</span> <span class="ident">TmEvent</span>, <span class="ident">RequestInitChain</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_proto_abci::google::protobuf::Timestamp</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::block</span>::{<span class="ident">header::Version</span>, <span class="ident">Header</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable</span>::{<span class="ident">Hash</span>, <span class="ident">Time</span>};
+    <span class="kw">use</span> <span class="ident">tokio::sync::mpsc::UnboundedReceiver</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::shims::abcipp_shim_types::shim::request</span>::{
+        <span class="ident">FinalizeBlock</span>, <span class="ident">ProcessProposal</span>,
+    };
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::storage</span>::{<span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span>};
+
+    <span class="doccomment">/// Gets the absolute path to root directory</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">top_level_directory</span>() -&gt; <span class="ident">PathBuf</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_path</span> <span class="op">=</span> <span class="ident">std::env::current_dir</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Current directory should exist&quot;</span>)
+            .<span class="ident">canonicalize</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Current directory should exist&quot;</span>);
+        <span class="kw">while</span> <span class="ident">current_path</span>.<span class="ident">file_name</span>().<span class="ident">unwrap</span>() <span class="op">!</span><span class="op">=</span> <span class="string">&quot;apps&quot;</span> {
+            <span class="ident">current_path</span>.<span class="ident">pop</span>();
+        }
+        <span class="ident">current_path</span>.<span class="ident">pop</span>();
+        <span class="ident">current_path</span>
+    }
+
+    <span class="doccomment">/// Generate a random public/private keypair</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">gen_keypair</span>() -&gt; <span class="ident">common::SecretKey</span> {
+        <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
+        <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
+        <span class="ident">ed25519::SigScheme::generate</span>(<span class="kw-2">&amp;mut</span> <span class="ident">rng</span>).<span class="ident">try_to_sk</span>().<span class="ident">unwrap</span>()
+    }
+
+    <span class="doccomment">/// A wrapper around the shell that implements</span>
+    <span class="doccomment">/// Drop so as to clean up the files that it</span>
+    <span class="doccomment">/// generates. Also allows illegal state</span>
+    <span class="doccomment">/// modifications for testing purposes</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">TestShell</span> {
+        <span class="kw">pub</span> <span class="ident">shell</span>: <span class="ident">Shell</span><span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">TestShell</span> {
+        <span class="doccomment">/// Returns a new shell paired with a broadcast receiver, which will</span>
+        <span class="doccomment">/// receives any protocol txs sent by the shell.</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; (<span class="self">Self</span>, <span class="ident">UnboundedReceiver</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+            <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">tokio::sync::mpsc::unbounded_channel</span>();
+            <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>().<span class="ident">canonicalize</span>().<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+            <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+            (
+                <span class="self">Self</span> {
+                    <span class="ident">shell</span>: <span class="ident">Shell</span>::<span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span><span class="ident">::new</span>(
+                        <span class="ident">config::Ledger::new</span>(
+                            <span class="ident">base_dir</span>,
+                            <span class="ident">Default::default</span>(),
+                            <span class="ident">TendermintMode::Validator</span>,
+                        ),
+                        <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+                        <span class="ident">sender</span>,
+                        <span class="prelude-val">None</span>,
+                        <span class="ident">vp_wasm_compilation_cache</span>,
+                        <span class="ident">tx_wasm_compilation_cache</span>,
+                    ),
+                },
+                <span class="ident">receiver</span>,
+            )
+        }
+
+        <span class="doccomment">/// Forward a InitChain request and expect a success</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_chain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">RequestInitChain</span>) {
+            <span class="self">self</span>.<span class="ident">shell</span>
+                .<span class="ident">init_chain</span>(<span class="ident">req</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Test shell failed to initialize&quot;</span>);
+        }
+
+        <span class="doccomment">/// Forward the prepare proposal request and return the response</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_proposal</span>(
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+            <span class="ident">req</span>: <span class="ident">RequestPrepareProposal</span>,
+        ) -&gt; <span class="ident">ResponsePrepareProposal</span> {
+            <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">prepare_proposal</span>(<span class="ident">req</span>)
+        }
+
+        <span class="doccomment">/// Forward a ProcessProposal request and extract the relevant</span>
+        <span class="doccomment">/// response data to return</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_proposal</span>(
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+            <span class="ident">req</span>: <span class="ident">ProcessProposal</span>,
+        ) -&gt; <span class="ident">shim::response::ProcessProposal</span> {
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+            {
+                <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">process_proposal</span>(<span class="ident">req</span>)
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+            {
+                <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">process_and_decode_proposal</span>(<span class="ident">req</span>)
+            }
+        }
+
+        <span class="doccomment">/// Forward a FinalizeBlock request return a vector of</span>
+        <span class="doccomment">/// the events created for each transaction</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize_block</span>(
+            <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+            <span class="ident">req</span>: <span class="ident">FinalizeBlock</span>,
+        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TmEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">finalize_block</span>(<span class="ident">req</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">resp</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">resp</span>.<span class="ident">events</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">err</span>),
+            }
+        }
+
+        <span class="doccomment">/// Add a wrapper tx to the queue of txs to be decrypted</span>
+        <span class="doccomment">/// in the current block proposal</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enqueue_tx</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">wrapper</span>: <span class="ident">WrapperTx</span>) {
+            <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">wrapper</span>);
+            <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">reset_tx_queue_iter</span>();
+        }
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+        <span class="doccomment">/// Get the next wrapper tx to be decoded</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+            <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">next_wrapper</span>()
+        }
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+        <span class="doccomment">/// Get the next wrapper tx to be decoded</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_wrapper</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+            <span class="self">self</span>.<span class="ident">shell</span>.<span class="ident">next_wrapper</span>()
+        }
+    }
+
+    <span class="doccomment">/// Start a new test shell and initialize it. Returns the shell paired with</span>
+    <span class="doccomment">/// a broadcast receiver, which will receives any protocol txs sent by the</span>
+    <span class="doccomment">/// shell.</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">setup</span>() -&gt; (<span class="ident">TestShell</span>, <span class="ident">UnboundedReceiver</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">test</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">TestShell::new</span>();
+        <span class="ident">test</span>.<span class="ident">init_chain</span>(<span class="ident">RequestInitChain</span> {
+            <span class="ident">time</span>: <span class="prelude-val">Some</span>(<span class="ident">Timestamp</span> {
+                <span class="ident">seconds</span>: <span class="number">0</span>,
+                <span class="ident">nanos</span>: <span class="number">0</span>,
+            }),
+            <span class="ident">chain_id</span>: <span class="ident">ChainId::default</span>().<span class="ident">to_string</span>(),
+            ..<span class="ident">Default::default</span>()
+        });
+        (<span class="ident">test</span>, <span class="ident">receiver</span>)
+    }
+
+    <span class="doccomment">/// This is just to be used in testing. It is not</span>
+    <span class="doccomment">/// a meaningful default.</span>
+    <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FinalizeBlock</span> {
+        <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+            <span class="ident">FinalizeBlock</span> {
+                <span class="ident">hash</span>: <span class="ident">BlockHash</span>([<span class="number">0u8</span>; <span class="number">32</span>]),
+                <span class="ident">header</span>: <span class="ident">Header</span> {
+                    <span class="ident">version</span>: <span class="ident">Version</span> { <span class="ident">block</span>: <span class="number">0</span>, <span class="ident">app</span>: <span class="number">0</span> },
+                    <span class="ident">chain_id</span>: <span class="ident">String::from</span>(<span class="string">&quot;test&quot;</span>)
+                        .<span class="ident">try_into</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;Should not fail&quot;</span>),
+                    <span class="ident">height</span>: <span class="number">0u64</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Should not fail&quot;</span>),
+                    <span class="ident">time</span>: <span class="ident">Time::now</span>(),
+                    <span class="ident">last_block_id</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">last_commit_hash</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">data_hash</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">validators_hash</span>: <span class="ident">Hash::None</span>,
+                    <span class="ident">next_validators_hash</span>: <span class="ident">Hash::None</span>,
+                    <span class="ident">consensus_hash</span>: <span class="ident">Hash::None</span>,
+                    <span class="ident">app_hash</span>: <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="ident">::new</span>()
+                        .<span class="ident">try_into</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;Should not fail&quot;</span>),
+                    <span class="ident">last_results_hash</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">evidence_hash</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">proposer_address</span>: <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">20</span>]
+                        .<span class="ident">try_into</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;Should not fail&quot;</span>),
+                },
+                <span class="ident">byzantine_validators</span>: <span class="macro">vec!</span>[],
+                <span class="ident">txs</span>: <span class="macro">vec!</span>[],
+                <span class="ident">reject_all_decrypted</span>: <span class="bool-val">false</span>,
+            }
+        }
+    }
+
+    <span class="doccomment">/// We test that on shell shutdown, the tx queue gets persisted in a DB, and</span>
+    <span class="doccomment">/// on startup it is read successfully</span>
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_tx_queue_persistence</span>() {
+        <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>().<span class="ident">canonicalize</span>().<span class="ident">unwrap</span>();
+        <span class="comment">// we have to use RocksDB for this test</span>
+        <span class="kw">let</span> (<span class="ident">sender</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">tokio::sync::mpsc::unbounded_channel</span>();
+        <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+        <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shell</span> <span class="op">=</span> <span class="ident">Shell</span>::<span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span><span class="ident">::new</span>(
+            <span class="ident">config::Ledger::new</span>(
+                <span class="ident">base_dir</span>.<span class="ident">clone</span>(),
+                <span class="ident">Default::default</span>(),
+                <span class="ident">TendermintMode::Validator</span>,
+            ),
+            <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+            <span class="ident">sender</span>.<span class="ident">clone</span>(),
+            <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_compilation_cache</span>,
+            <span class="ident">tx_wasm_compilation_cache</span>,
+        );
+        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">gen_keypair</span>();
+        <span class="comment">// enqueue a wrapper tx</span>
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
+            <span class="string">&quot;wasm_code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(),
+            <span class="prelude-val">Some</span>(<span class="string">&quot;transaction data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>()),
+        );
+        <span class="kw">let</span> <span class="ident">wrapper</span> <span class="op">=</span> <span class="ident">WrapperTx::new</span>(
+            <span class="ident">Fee</span> {
+                <span class="ident">amount</span>: <span class="number">0</span>.<span class="ident">into</span>(),
+                <span class="ident">token</span>: <span class="ident">xan</span>(),
+            },
+            <span class="kw-2">&amp;</span><span class="ident">keypair</span>,
+            <span class="ident">Epoch</span>(<span class="number">0</span>),
+            <span class="number">0</span>.<span class="ident">into</span>(),
+            <span class="ident">tx</span>,
+            <span class="ident">Default::default</span>(),
+        );
+        <span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">wrapper</span>);
+        <span class="comment">// Artificially increase the block height so that chain</span>
+        <span class="comment">// will read the new block when restarted</span>
+        <span class="kw">let</span> <span class="ident">merkle_tree</span> <span class="op">=</span> <span class="ident">MerkleTree</span>::<span class="op">&lt;</span><span class="ident">Sha256Hasher</span><span class="op">&gt;</span><span class="ident">::default</span>();
+        <span class="kw">let</span> <span class="ident">stores</span> <span class="op">=</span> <span class="ident">merkle_tree</span>.<span class="ident">stores</span>();
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">BlockHash</span>([<span class="number">0</span>; <span class="number">32</span>]);
+        <span class="kw">let</span> <span class="ident">pred_epochs</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="kw">let</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="string">&quot;test&quot;</span>);
+        <span class="ident">shell</span>
+            .<span class="ident">storage</span>
+            .<span class="ident">db</span>
+            .<span class="ident">write_block</span>(<span class="ident">BlockStateWrite</span> {
+                <span class="ident">merkle_tree_stores</span>: <span class="ident">stores</span>,
+                <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">hash</span>,
+                <span class="ident">height</span>: <span class="ident">BlockHeight</span>(<span class="number">1</span>),
+                <span class="ident">epoch</span>: <span class="ident">Epoch</span>(<span class="number">0</span>),
+                <span class="ident">pred_epochs</span>: <span class="kw-2">&amp;</span><span class="ident">pred_epochs</span>,
+                <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>(<span class="number">3</span>),
+                <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc::now</span>(),
+                <span class="ident">address_gen</span>: <span class="kw-2">&amp;</span><span class="ident">address_gen</span>,
+                <span class="ident">tx_queue</span>: <span class="kw-2">&amp;</span><span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>,
+            })
+            .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>);
+
+        <span class="comment">// Drop the shell</span>
+        <span class="ident">std::mem::drop</span>(<span class="ident">shell</span>);
+
+        <span class="comment">// Reboot the shell and check that the queue was restored from DB</span>
+        <span class="kw">let</span> <span class="ident">shell</span> <span class="op">=</span> <span class="ident">Shell</span>::<span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span><span class="ident">::new</span>(
+            <span class="ident">config::Ledger::new</span>(
+                <span class="ident">base_dir</span>,
+                <span class="ident">Default::default</span>(),
+                <span class="ident">TendermintMode::Validator</span>,
+            ),
+            <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+            <span class="ident">sender</span>,
+            <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_compilation_cache</span>,
+            <span class="ident">tx_wasm_compilation_cache</span>,
+        );
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>());
+    }
+}
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div>
+</body></html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps&#x2F;src&#x2F;lib&#x2F;node&#x2F;ledger&#x2F;broadcaster.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>broadcaster.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1"> 1</span>
+<span id="2"> 2</span>
+<span id="3"> 3</span>
+<span id="4"> 4</span>
+<span id="5"> 5</span>
+<span id="6"> 6</span>
+<span id="7"> 7</span>
+<span id="8"> 8</span>
+<span id="9"> 9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_rpc_abci</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
+<span class="kw">use</span> <span class="ident">tokio::sync::mpsc::UnboundedReceiver</span>;
+
+<span class="doccomment">/// A service for broadcasting txs via an HTTP client.</span>
+<span class="doccomment">/// The receiver is for receiving message payloads for other services</span>
+<span class="doccomment">/// to be broadcast.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Broadcaster</span> {
+    <span class="ident">client</span>: <span class="ident">HttpClient</span>,
+    <span class="ident">receiver</span>: <span class="ident">UnboundedReceiver</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Broadcaster</span> {
+    <span class="doccomment">/// Create a new broadcaster that will send Http messages</span>
+    <span class="doccomment">/// over the given url.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">receiver</span>: <span class="ident">UnboundedReceiver</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">client</span>: <span class="ident">HttpClient::new</span>(<span class="macro">format!</span>(<span class="string">&quot;http://{}&quot;</span>, <span class="ident">url</span>).<span class="ident">as_str</span>())
+                .<span class="ident">unwrap</span>(),
+            <span class="ident">receiver</span>,
+        }
+    }
+
+    <span class="doccomment">/// Loop forever, braodcasting messages that have been received</span>
+    <span class="doccomment">/// by the receiver</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_loop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">loop</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">msg</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">recv</span>().<span class="kw">await</span> {
+                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">broadcast_tx_sync</span>(<span class="ident">msg</span>.<span class="ident">into</span>()).<span class="kw">await</span>;
+            }
+        }
+    }
+
+    <span class="doccomment">/// Loop until an abort signal is received, forwarding messages over</span>
+    <span class="doccomment">/// the HTTP client as they are received from the receiver.</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">abort_recv</span>: <span class="ident">tokio::sync::oneshot::Receiver</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+    ) {
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;Starting broadcaster.&quot;</span>);
+        <span class="macro">tokio::select!</span> {
+            <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">run_loop</span>() =&gt; {
+                <span class="macro">tracing::error!</span>(<span class="string">&quot;Broadcaster unexpectedly shut down.&quot;</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;Shutting down broadcaster...&quot;</span>);
+            },
+            <span class="ident">resp_sender</span> <span class="op">=</span> <span class="ident">abort_recv</span> =&gt; {
+                <span class="kw">match</span> <span class="ident">resp_sender</span> {
+                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                        <span class="macro">tracing::info!</span>(<span class="string">&quot;Shutting down broadcaster...&quot;</span>);
+                    },
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                        <span class="macro">tracing::error!</span>(<span class="string">&quot;The broadcaster abort sender has unexpectedly dropped: {}&quot;</span>, <span class="ident">err</span>);
+                        <span class="macro">tracing::info!</span>(<span class="string">&quot;Shutting down broadcaster...&quot;</span>);
+                    }
+                }
+            }
+        }
+    }
+}
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+</body></html>

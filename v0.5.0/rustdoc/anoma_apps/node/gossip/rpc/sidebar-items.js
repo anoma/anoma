@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["client",""],["matchmakers","This module provides connection between an intent gossiper node (the server) and matchmakers (clients) over WebSocket."]]});

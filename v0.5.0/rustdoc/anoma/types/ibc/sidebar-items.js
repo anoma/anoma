@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["data","IBC-related data definitions."],["event","IBC event without IBC-related data types"]]});

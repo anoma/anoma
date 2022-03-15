@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""],["IbcTokenError",""]],"struct":[["Ibc","IBC VP"],["IbcToken","IBC token native VP for IBC token transfer"]],"type":[["Result","IBC functions result"]]});

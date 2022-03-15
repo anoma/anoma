@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_encoding_spec"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/lazy_static/1.4.0/lazy_static/trait.LazyStatic.html\" title=\"trait lazy_static::LazyStatic\">LazyStatic</a> for <a class=\"struct\" href=\"anoma_encoding_spec/struct.BORSH_TYPES.html\" title=\"struct anoma_encoding_spec::BORSH_TYPES\">BORSH_TYPES</a>","synthetic":false,"types":["anoma_encoding_spec::BORSH_TYPES"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

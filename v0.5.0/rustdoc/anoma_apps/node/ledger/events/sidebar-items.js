@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["EventType","The two types of custom events we currently use"]],"struct":[["Attributes","A thin wrapper around a HashMap for parsing event JSONs returned in tendermint subscription responses."],["Event","Custom events that can be queried from Tendermint using a websocket client"]]});

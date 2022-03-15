@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["arb_keypair","Generate an arbitrary [`super::SecretKey`]."],["gen_keypair","Generate a new random [`super::SecretKey`]."],["keypair_1","A keypair for tests"],["keypair_2","A keypair for tests"]]});

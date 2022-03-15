@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MockDB","An in-memory DB for testing."],["MockDBWriteBatch","An in-memory write batch is not needed as it just updates values in memory. It’s here to satisfy the storage interface."],["MockIterator","A prefix iterator base for the [`MockPrefixIterator`]."]],"type":[["MockPrefixIterator","A prefix iterator for the [`MockDB`]."]]});

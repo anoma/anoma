@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["BufRead","A `BufRead` is a type of `Read`er which has an internal buffer, allowing it to perform extra ways of reading."],["Read","The `Read` trait allows for reading bytes from a source."],["Seek","The `Seek` trait provides a cursor which can be moved within a stream of bytes."],["Write","A trait for objects which are byte-oriented sinks."]]});

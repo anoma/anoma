@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["DecryptedTx","Holds the result of attempting to decrypt a transaction and the data necessary for other validators to verify"]],"fn":[["verify_decrypted_correctly","Verify that if the encrypted payload was marked “undecryptable”, we should not be able to decrypt it"]]});
