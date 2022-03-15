@@ -235,8 +235,5 @@ test-miri:
 	$(cargo) +$(nightly) clean
 	MIRIFLAGS="-Zmiri-disable-isolation" $(cargo) +$(nightly) miri test
 
-copy-wasm:
-	rm -rf .anoma/anoma-devchain.000000000000000/wasm/*.wasm .anoma/anoma-devchain.000000000000000/wasm/*.json
-	cp wasm/*.json wasm/*.wasm .anoma/anoma-devchain.000000000000000/wasm
 
-.PHONY : build check build-release clippy copy-wasm install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker build-wasm-scripts clean-wasm-scripts dev-deps test-miri
+.PHONY : build check build-release clippy install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker build-wasm-scripts clean-wasm-scripts dev-deps test-miri

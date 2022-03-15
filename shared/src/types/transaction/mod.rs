@@ -16,7 +16,7 @@ pub mod protocol;
 pub mod wrapper;
 
 use std::collections::BTreeSet;
-use std::fmt::{self, Display};
+use std::fmt::{self};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use decrypted::*;

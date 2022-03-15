@@ -11,7 +11,9 @@ use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
 use anoma::types::token::Amount;
-use anoma::types::transaction::governance::InitProposalData;
+use anoma::types::transaction::governance::{
+    InitProposalData, VoteProposalData,
+};
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
     hash_tx, pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
@@ -53,6 +55,7 @@ use crate::node::ledger::tendermint_node;
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
 const TX_INIT_PROPOSAL: &str = "tx_init_proposal.wasm";
+const TX_VOTE_PROPOSAL: &str = "tx_vote_proposal.wasm";
 const TX_UPDATE_VP_WASM: &str = "tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "tx_transfer.wasm";
 const TX_INIT_NFT: &str = "tx_init_nft.wasm";
@@ -528,14 +531,6 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         serde_json::from_reader(file).expect("JSON was not well-formatted");
 
     let signer = WalletAddress::new(proposal.clone().author.to_string());
-    let tx_data: Result<InitProposalData, _> = proposal.clone().try_into();
-
-    let init_proposal_data = if let Ok(data) = tx_data {
-        data
-    } else {
-        eprintln!("Invalid data for init proposal transaction.");
-        safe_exit(1)
-    };
 
     if args.offline {
         let signer = ctx.get(&signer);
@@ -560,6 +555,14 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
     } else {
         let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
 
+        let tx_data: Result<InitProposalData, _> = proposal.clone().try_into();
+        let init_proposal_data = if let Ok(data) = tx_data {
+            data
+        } else {
+            eprintln!("Invalid data for init proposal transaction.");
+            safe_exit(1)
+        };
+
         let min_proposal_funds_key = gov_storage::get_min_proposal_fund_key();
         let min_proposal_funds: Amount =
             rpc::query_storage_value(&client, &min_proposal_funds_key)
@@ -583,8 +586,30 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
     }
 }
 
-pub async fn submit_vote_proposal(_ctx: Context, _args: args::VoteProposal) {
-    //
+pub async fn submit_vote_proposal(ctx: Context, args: args::VoteProposal) {
+    if args.offline {
+    } else {
+        let signer = if let Some(addr) = &args.tx.signer {
+            addr
+        } else {
+            eprintln!("Missing mandatory argument --signer.");
+            safe_exit(1)
+        };
+        // TODO: check if its validator or delegator
+        let tx_data = VoteProposalData {
+            id: args.proposal_id,
+            vote: args.vote,
+            voter: ctx.get(signer),
+        };
+
+        let data = tx_data
+            .try_to_vec()
+            .expect("Encoding proposal data shouldn't fail");
+        let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
+        let tx = Tx::new(tx_code, Some(data));
+
+        process_tx(ctx, &args.tx, tx, Some(signer)).await;
+    }
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {

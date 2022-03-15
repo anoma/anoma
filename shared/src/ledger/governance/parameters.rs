@@ -25,7 +25,7 @@ pub struct GovParams {
     /// Minimum proposal voting period in epochs
     pub min_proposal_period: u64,
     /// Maximimum number of characters for proposal content
-    pub max_proposal_content: u64,
+    pub max_proposal_content_size: u64,
     /// Minimum epochs between end and grace epochs
     pub min_proposal_grace_epochs: u64,
 }
@@ -36,7 +36,7 @@ impl Default for GovParams {
             min_proposal_fund: 500,
             max_proposal_code_size: 500,
             min_proposal_period: 3,
-            max_proposal_content: 10000,
+            max_proposal_content_size: 10000,
             min_proposal_grace_epochs: 6,
         }
     }
@@ -71,12 +71,12 @@ impl GovParams {
             .write(&min_proposal_period_key, encode(&self.min_proposal_period))
             .unwrap();
 
-        let max_proposal_content_key =
+        let max_proposal_content_size_key =
             gov_storage::get_max_proposal_content_key();
         storage
             .write(
-                &max_proposal_content_key,
-                encode(&self.max_proposal_content),
+                &max_proposal_content_size_key,
+                encode(&self.max_proposal_content_size),
             )
             .unwrap();
 

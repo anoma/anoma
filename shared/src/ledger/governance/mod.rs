@@ -11,10 +11,11 @@ use borsh::BorshDeserialize;
 use thiserror::Error;
 
 use self::storage as gov_storage;
+use super::pos as pos_storage;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{xan as m1t, Address, InternalAddress};
-use crate::types::storage::{DbKeySeg, Key};
+use crate::types::storage::{DbKeySeg, Epoch, Key};
 use crate::types::token as token_storage;
 use crate::types::token::Amount;
 use crate::vm::WasmCacheAccess;
@@ -78,7 +79,60 @@ where
 
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
-                (KeyType::VOTE, Some(_)) => false,
+                (KeyType::VOTE, Some(proposal_id)) => {
+                    let counter_key = gov_storage::get_counter_key();
+                    let voting_start_epoch_key =
+                        gov_storage::get_voting_start_epoch_key(proposal_id);
+                    let voting_end_epoch_key =
+                        gov_storage::get_voting_end_epoch_key(proposal_id);
+                    let current_epoch = self.ctx.get_block_epoch().ok();
+                    let pre_voting_start_epoch: Option<Epoch> =
+                        read(&self.ctx, &voting_start_epoch_key, ReadType::PRE)
+                            .ok();
+                    let pre_voting_end_epoch: Option<Epoch> =
+                        read(&self.ctx, &voting_end_epoch_key, ReadType::PRE)
+                            .ok();
+                    let pre_counter: Option<u64> =
+                        read(&self.ctx, &counter_key, ReadType::PRE).ok();
+                    let voter = get_address(key);
+
+                    match (
+                        pre_counter,
+                        voter,
+                        current_epoch,
+                        pre_voting_start_epoch,
+                        pre_voting_end_epoch,
+                    ) {
+                        (
+                            Some(pre_counter),
+                            Some(voter),
+                            Some(current_epoch),
+                            Some(pre_voting_start_epoch),
+                            Some(pre_voting_end_epoch),
+                        ) => {
+                            pre_counter > proposal_id
+                                && current_epoch >= pre_voting_start_epoch
+                                && current_epoch <= pre_voting_end_epoch
+                                && is_delegator(
+                                    &self.ctx,
+                                    pre_voting_start_epoch,
+                                    verifiers,
+                                    &voter,
+                                )
+                                || (is_validator(
+                                    &self.ctx,
+                                    pre_voting_start_epoch,
+                                    verifiers,
+                                    &voter,
+                                ) && is_valid_validator_voting_period(
+                                    current_epoch,
+                                    pre_voting_start_epoch,
+                                    pre_voting_end_epoch,
+                                ))
+                        }
+                        _ => false,
+                    }
+                }
                 (KeyType::CONTENT, Some(proposal_id)) => {
                     let content_key: Key =
                         gov_storage::get_content_key(proposal_id);
@@ -182,9 +236,9 @@ where
                         gov_storage::get_voting_start_epoch_key(proposal_id);
                     let end_epoch_key =
                         gov_storage::get_voting_end_epoch_key(proposal_id);
-                    let start_epoch: Option<u64> =
+                    let start_epoch: Option<Epoch> =
                         read(&self.ctx, &start_epoch_key, ReadType::POST).ok();
-                    let end_epoch: Option<u64> =
+                    let end_epoch: Option<Epoch> =
                         read(&self.ctx, &end_epoch_key, ReadType::POST).ok();
                     let current_epoch = self.ctx.get_block_epoch().ok();
                     let min_period_parameter_key =
@@ -215,7 +269,6 @@ where
                             Some(end_epoch),
                             Some(current_epoch),
                         ) => {
-                            let current_epoch = current_epoch.0;
                             if end_epoch <= start_epoch
                                 || start_epoch <= current_epoch
                             {
@@ -225,7 +278,7 @@ where
                                 && !has_pre_end_epoch
                                 && start_epoch < end_epoch
                                 && (end_epoch - start_epoch) % min_period == 0
-                                && start_epoch - current_epoch >= min_period
+                                && (start_epoch - current_epoch).0 >= min_period
                         }
                         _ => false,
                     }
@@ -351,10 +404,72 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    if is_valid_proposal_init_key_set(context, keys) {
-        return true;
-    };
-    false
+    is_valid_proposal_init_key_set(context, keys)
+        || is_valid_vote_key_set(context, keys)
+}
+
+fn is_validator<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    epoch: Epoch,
+    verifiers: &BTreeSet<Address>,
+    address: &Address,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let validator_set_key = pos_storage::validator_set_key();
+    let pre_validator_set: pos_storage::ValidatorSets =
+        read(context, &validator_set_key, ReadType::PRE).unwrap();
+    let validator_set = pre_validator_set.get(epoch);
+
+    match validator_set {
+        Some(set) => {
+            set.active.iter().any(|weighted_validator| {
+                weighted_validator.address.eq(address)
+            }) && verifiers.contains(address)
+        }
+        None => false,
+    }
+}
+
+fn is_delegator<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    epoch: Epoch,
+    verifiers: &BTreeSet<Address>,
+    address: &Address,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let bonds_prefix_key = pos_storage::bonds_for_source_prefix(address);
+    let mut bonds_iter = context.iter_prefix(&bonds_prefix_key).unwrap();
+    loop {
+        let next = context.iter_pre_next(&mut bonds_iter).unwrap();
+        if let Some((_, data)) = next {
+            let epoched_bond =
+                pos_storage::Bonds::try_from_slice(&data[..]).unwrap();
+            if epoched_bond.get(epoch).is_some() {
+                verifiers.contains(address);
+            }
+        } else {
+            return false;
+        }
+    }
+}
+
+fn is_valid_validator_voting_period(
+    current_epoch: Epoch,
+    voting_start_epoch: Epoch,
+    voting_end_epoch: Epoch,
+) -> bool {
+    voting_start_epoch < voting_end_epoch
+        && current_epoch
+            <= voting_start_epoch
+                + ((voting_end_epoch - voting_start_epoch) * 2) / 3
 }
 
 fn is_valid_proposal_init_key_set<DB, H, CA>(
@@ -369,23 +484,33 @@ where
     let counter_key = gov_storage::get_counter_key();
     let pre_counter: Option<u64> =
         read(context, &counter_key, ReadType::PRE).ok();
-    if pre_counter.is_none() {
-        return false;
+
+    match pre_counter {
+        Some(counter) => {
+            let mandatory_keys = BTreeSet::from([
+                counter_key,
+                gov_storage::get_content_key(counter),
+                gov_storage::get_author_key(counter),
+                gov_storage::get_funds_key(counter),
+                gov_storage::get_voting_start_epoch_key(counter),
+                gov_storage::get_voting_end_epoch_key(counter),
+            ]);
+            keys.is_superset(&mandatory_keys)
+        }
+        None => false,
     }
-    let counter = pre_counter.unwrap();
+}
 
-    // Construct the set of expected keys
-    let mandatory_keys = BTreeSet::from([
-        counter_key,
-        gov_storage::get_content_key(counter),
-        gov_storage::get_author_key(counter),
-        gov_storage::get_funds_key(counter),
-        gov_storage::get_voting_start_epoch_key(counter),
-        gov_storage::get_voting_end_epoch_key(counter),
-    ]);
-
-    // Check that expected set is a subset the actual one
-    keys.is_superset(&mandatory_keys)
+fn is_valid_vote_key_set<DB, H, CA>(
+    _context: &Ctx<DB, H, CA>,
+    keys: &BTreeSet<Key>,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    return keys.iter().all(gov_storage::is_vote_key);
 }
 
 fn get_id(key: &Key) -> Option<u64> {
@@ -393,6 +518,16 @@ fn get_id(key: &Key) -> Option<u64> {
         Some(id) => match id {
             DbKeySeg::AddressSeg(_) => None,
             DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
+        },
+        None => None,
+    }
+}
+
+fn get_address(key: &Key) -> Option<Address> {
+    match key.get_at(4) {
+        Some(addr) => match addr {
+            DbKeySeg::AddressSeg(res) => Some(res),
+            DbKeySeg::StringSeg(_) => None,
         },
         None => None,
     }
