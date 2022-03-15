@@ -344,6 +344,7 @@ fn invalid_transactions() -> Result<()> {
         target: find_address(&test, ALBERT)?,
         token: find_address(&test, XAN)?,
         amount: token::Amount::whole(1),
+        shielded: None,
     };
     let data = transfer
         .try_to_vec()
