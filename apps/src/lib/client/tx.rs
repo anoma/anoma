@@ -75,7 +75,7 @@ use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
 use crate::std::fs::File;
 use masp_primitives::transaction::TxId;
-use anoma::types::token::HEAD_TX_KEY;
+use anoma::types::token::{HEAD_TX_KEY, TX_KEY_PREFIX};
 use anoma::types::storage::Key;
 use crate::client::rpc::query_storage_value;
 use anoma::types::storage::KeySeg;
@@ -437,7 +437,7 @@ pub async fn fetch_shielded_transfers(
     while let Some(head_txid) = head_txid_opt {
         // Construct the key for where the current transaction is stored
         let current_tx_key = Key::from(masp_addr.to_db_key())
-            .push(&("tx-".to_owned() + &head_txid.to_string()))
+            .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
             .expect("Cannot obtain a storage key");
         // Obtain the current transaction and a pointer to the next
         let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
@@ -794,6 +794,15 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     };
     
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
+    // The non-MASP entity, if any, will be signer for shielded transactions
+    let default_signer =
+        if source == masp() && target == masp() {
+            None
+        } else if source == masp() {
+            Some(&args.target)
+        } else {
+            Some(&args.source)
+        };
     let transfer = token::Transfer {
         source,
         target,
@@ -805,10 +814,10 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let data = transfer
         .try_to_vec()
         .expect("Encoding tx data shouldn't fail");
-
+    
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
+        sign_tx(ctx, tx, &args.tx, default_signer).await;
     process_tx(ctx, &args.tx, tx, &keypair).await;
 }
 

@@ -15,7 +15,7 @@
 use anoma_vp_prelude::intent::{
     Exchange, FungibleTokenIntent, IntentTransfers,
 };
-use anoma_vp_prelude::*;
+use anoma_vp_prelude::{*, address::masp};
 use once_cell::unsync::Lazy;
 use rust_decimal::prelude::*;
 
@@ -93,7 +93,7 @@ fn validate_tx(
                         read_post(&key).unwrap_or_default();
                     let change = post.change() - pre.change();
                     // debit has to signed, credit doesn't
-                    let valid = change >= 0 || *valid_sig || *valid_intent;
+                    let valid = change >= 0 || addr == masp() || *valid_sig || *valid_intent;
                     debug_log!(
                         "token key: {}, change: {}, valid_sig: {}, \
                          valid_intent: {}, valid modification: {}",

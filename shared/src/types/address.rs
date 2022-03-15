@@ -473,7 +473,7 @@ pub fn kartoffel() -> Address {
 
 /// Temporary helper for testing
 pub fn masp() -> Address {
-    Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1d9khqw36x5eyxse4xqmyvdpkxscnwvej8q65vwf4x9q5zvzrxvcyvvzyg5erxvfkxq6r2dj9al567u").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing, a hash map of tokens addresses with their

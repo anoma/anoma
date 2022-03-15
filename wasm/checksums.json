@@ -1,16 +1,16 @@
 {
-    "tx_bond.wasm": "tx_bond.88ddc8e19fdcd7b1dec28b5bca9a0313972a8bc9f99fe7423ad40b1e2c3db690.wasm",
-    "tx_from_intent.wasm": "tx_from_intent.2aafd7c7a68a1f1c945c5be80f2e090195bf61311cae05fa7a5f1d4f2dc003ae.wasm",
+    "tx_bond.wasm": "tx_bond.3a9b9e10672e94869522ac8efa1a72a73c729e855c6fe525ec98bd3791b33b7d.wasm",
+    "tx_from_intent.wasm": "tx_from_intent.9db3b96e9267664145e517118e785ecc234879dd823f49d3076c45b5bb538f4b.wasm",
     "tx_init_account.wasm": "tx_init_account.0b5b8e4ecafc267c70a36bc555c948025b6c65edb01e012c8f9105e240ed3fb2.wasm",
     "tx_init_nft.wasm": "tx_init_nft.5de92b701b0a721c58b3462f34d43c2428615f630ebee1a99e7da56671dbdd49.wasm",
     "tx_init_validator.wasm": "tx_init_validator.e1a1add42dc6dc610e05e485e07c523a667d3f5b62e5d3fb038d479177ff2274.wasm",
     "tx_mint_nft.wasm": "tx_mint_nft.9a1fc121921a4d24adc4dd55eb68814a893b2a29bd32c37bc6cc93bc71238590.wasm",
-    "tx_transfer.wasm": "tx_transfer.71e74d3d3c1c1682ca5e3b81aad59926f80ca786a4522ce1d43e1f7cee292c26.wasm",
+    "tx_transfer.wasm": "tx_transfer.af28826fb3e5606133045cc7e2870492fdc62f1dd6e6ac0ff9e52e42d76289d3.wasm",
     "tx_unbond.wasm": "tx_unbond.8f8631c32f5388359f5396054e92f0def0dfdaabbeb4ee78947ba21d5c22b313.wasm",
     "tx_update_vp.wasm": "tx_update_vp.5969eb46ef8cce6067c2f6e8eb76972f9843c52ad239ac5fadcbe7752291f5d7.wasm",
-    "tx_withdraw.wasm": "tx_withdraw.1a3f90447ba4058b1a9a38e083ae6d669333f45907ca34352aebbfd6d25e7b7f.wasm",
+    "tx_withdraw.wasm": "tx_withdraw.21f74e1c1e1abee91884dc9a659079c7866d493f04cefe3a27cdb10c48a9c84a.wasm",
     "vp_nft.wasm": "vp_nft.451f6149596c08ebb654246d513072805ebae7b47b409c299fe5426d18ccc096.wasm",
     "vp_testnet_faucet.wasm": "vp_testnet_faucet.2e73a91169ca264852b3aa50eb1372e8126292cbf1330e3ea81201150648a0c3.wasm",
-    "vp_token.wasm": "vp_token.ab84d498b73733700f45ac8326745b6dae4d956e0aa448a82ccae9992ae51956.wasm",
-    "vp_user.wasm": "vp_user.5a38f5986732085aae4bfe90610712011f3b30a52d855e01fc96a1ccc22f4a4e.wasm"
+    "vp_token.wasm": "vp_token.e41f8ba1d96c756547f210e1b1d70be6c95a861d6bfce40322b8287effe98ecc.wasm",
+    "vp_user.wasm": "vp_user.ecccbe8e9bf7fd70c39c0ace85d44a0400094fc775f9743996f6286db8375539.wasm"
 }
