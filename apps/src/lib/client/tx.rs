@@ -794,11 +794,12 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     };
     
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
+    let masp_addr = masp();
     // The non-MASP entity, if any, will be signer for shielded transactions
     let default_signer =
-        if source == masp() && target == masp() {
+        if source == masp_addr && target == masp_addr {
             None
-        } else if source == masp() {
+        } else if source == masp_addr {
             Some(&args.target)
         } else {
             Some(&args.source)
