@@ -475,6 +475,16 @@ where
     (true, post_counter - pre_counter)
 }
 
+fn get_address(key: &Key) -> Option<Address> {
+    match key.get_at(4) {
+        Some(addr) => match addr {
+            DbKeySeg::AddressSeg(res) => Some(res),
+            DbKeySeg::StringSeg(_) => None,
+        },
+        None => None,
+    }
+}
+
 fn read<T, DB, H, CA>(
     context: &Ctx<DB, H, CA>,
     key: &Key,
