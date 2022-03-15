@@ -62,11 +62,10 @@ impl FromStr for Path {
     type Err = PathParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let path = s.to_lowercase();
-        match path.as_str() {
+        match s {
             DRY_RUN_TX_PATH => Ok(Self::DryRunTx),
             EPOCH_PATH => Ok(Self::Epoch),
-            _ => match path.split_once('/') {
+            _ => match s.split_once('/') {
                 Some((VALUE_PREFIX, storage_key)) => {
                     let key = storage::Key::parse(storage_key)
                         .map_err(PathParseError::InvalidStorageKey)?;

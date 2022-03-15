@@ -278,12 +278,40 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         tokio::sync::mpsc::unbounded_channel::<&'static str>();
     // Channels for the Ethereum relayer to send new Ethereum block headers
     // and smart contract logs to the ledger
-    let (eth_relayer_sender, eth_relayer_receiver) =
+    let (eth_relayer_sender, mut eth_relayer_receiver) =
         tokio::sync::mpsc::unbounded_channel();
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
     let (broadcaster_sender, broadcaster_receiver) =
         tokio::sync::mpsc::unbounded_channel();
+
+    // Start Ethereum fullnode
+    // Channel for signalling shut down to Tendermint process
+    let (eth_abort_send, eth_abort_recv) =
+        tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
+    let abort_send_for_eth = abort_send.clone();
+    let ethereum_node = tokio::spawn(async move {
+        // On panic or exit, the `Drop` of `AbortSender` will send abort message
+        let aborter = Aborter {
+            sender: abort_send_for_eth,
+            who: "Ethereum",
+        };
+
+        let res = ethereum_node::run(
+            &ethereum_url,
+            vec![],
+            eth_relayer_sender,
+            eth_abort_recv,
+        )
+            .map_err(Error::Ethereum)
+            .await;
+        tracing::info!("Ethereum fullnode is no longer running.");
+
+        drop(aborter);
+        res
+    });
+    // wait for the Ethereum fullnode to finish syncinc.
+    eth_relayer_receiver.recv().await;
 
     // Channel for signalling shut down to Tendermint process
     let (tm_abort_send, tm_abort_recv) =
@@ -309,32 +337,6 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .map_err(Error::Tendermint)
         .await;
         tracing::info!("Tendermint node is no longer running.");
-
-        drop(aborter);
-        res
-    });
-
-    // Start Ethereum fullnode
-    // Channel for signalling shut down to Tendermint process
-    let (eth_abort_send, eth_abort_recv) =
-        tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
-    let abort_send_for_eth = abort_send.clone();
-    let ethereum_node = tokio::spawn(async move {
-        // On panic or exit, the `Drop` of `AbortSender` will send abort message
-        let aborter = Aborter {
-            sender: abort_send_for_eth,
-            who: "Ethereum",
-        };
-
-        let res = ethereum_node::run(
-            &ethereum_url,
-            vec![],
-            eth_relayer_sender,
-            eth_abort_recv,
-        )
-        .map_err(Error::Ethereum)
-        .await;
-        tracing::info!("Ethereum fullnode is no longer running.");
 
         drop(aborter);
         res

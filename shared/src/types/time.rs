@@ -5,14 +5,9 @@ use std::ops::{Add, Sub};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use chrono::{DateTime, Duration, TimeZone, Utc};
-#[cfg(not(feature = "ABCI"))]
-use tendermint::time::Time;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::Error as TendermintError;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::time::Time;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::Error as TendermintError;
+
+use crate::tendermint::time::Time;
+use crate::tendermint::Error as TendermintError;
 
 /// Check if the given `duration` has passed since the given `start.
 pub fn duration_passed(

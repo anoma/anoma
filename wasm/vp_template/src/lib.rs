@@ -4,8 +4,8 @@ use anoma_vp_prelude::*;
 fn validate_tx(
     tx_data: Vec<u8>,
     addr: Address,
-    keys_changed: HashSet<storage::Key>,
-    verifiers: HashSet<Address>,
+    keys_changed: BTreeSet<storage::Key>,
+    verifiers: BTreeSet<Address>,
 ) -> bool {
     log_string(format!(
         "validate_tx called with addr: {}, key_changed: {:#?}, tx_data: \

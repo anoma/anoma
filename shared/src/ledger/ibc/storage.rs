@@ -1,46 +1,21 @@
 //! Functions for IBC-related data to access the storage
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use std::str::FromStr;
 
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::core::ics04_channel::packet::Sequence;
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::core::ics05_port::capabilities::Capability;
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::core::ics24_host::path::{
-    AcksPath, ChannelEndsPath, ClientConsensusStatePath, ClientStatePath,
-    ClientTypePath, CommitmentsPath, ConnectionsPath, PortsPath, ReceiptsPath,
-    SeqAcksPath, SeqRecvsPath, SeqSendsPath,
-};
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::core::ics24_host::Path;
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::core::ics04_channel::packet::Sequence;
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::core::ics05_port::capabilities::Capability;
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::core::ics24_host::path::{
-    AcksPath, ChannelEndsPath, ClientConsensusStatePath, ClientStatePath,
-    ClientTypePath, CommitmentsPath, ConnectionsPath, PortsPath, ReceiptsPath,
-    SeqAcksPath, SeqRecvsPath, SeqSendsPath,
-};
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::core::ics24_host::Path;
 use thiserror::Error;
 
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics04_channel::packet::Sequence;
+use crate::ibc::core::ics05_port::capabilities::Capability;
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics24_host::path::{
+    AcksPath, ChannelEndsPath, ClientConsensusStatePath, ClientStatePath,
+    ClientTypePath, CommitmentsPath, ConnectionsPath, PortsPath, ReceiptsPath,
+    SeqAcksPath, SeqRecvsPath, SeqSendsPath,
+};
+use crate::ibc::core::ics24_host::Path;
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::{self, DbKeySeg, Key, KeySeg};
 
@@ -48,7 +23,6 @@ const CLIENTS_COUNTER: &str = "clients/counter";
 const CONNECTIONS_COUNTER: &str = "connections/counter";
 const CHANNELS_COUNTER: &str = "channelEnds/counter";
 const CAPABILITIES_INDEX: &str = "capabilities/index";
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 const CAPABILITIES: &str = "capabilities";
 
 #[allow(missing_docs)]
@@ -164,7 +138,6 @@ pub fn capability_index_key() -> Key {
         .expect("Creating a key for the capability index shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the client type
 pub fn client_type_key(client_id: &ClientId) -> Key {
     let path = Path::ClientType(ClientTypePath(client_id.clone()));
@@ -172,7 +145,6 @@ pub fn client_type_key(client_id: &ClientId) -> Key {
         .expect("Creating a key for the client state shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the client state
 pub fn client_state_key(client_id: &ClientId) -> Key {
     let path = Path::ClientState(ClientStatePath(client_id.clone()));
@@ -180,7 +152,6 @@ pub fn client_state_key(client_id: &ClientId) -> Key {
         .expect("Creating a key for the client state shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the consensus state
 pub fn consensus_state_key(client_id: &ClientId, height: Height) -> Key {
     let path = Path::ClientConsensusState(ClientConsensusStatePath {
@@ -192,7 +163,20 @@ pub fn consensus_state_key(client_id: &ClientId, height: Height) -> Key {
         .expect("Creating a key for the consensus state shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
+/// Returns a key prefix for the consensus state
+pub fn consensus_state_prefix(client_id: &ClientId) -> Key {
+    let path = Path::ClientConsensusState(ClientConsensusStatePath {
+        client_id: client_id.clone(),
+        epoch: 0,
+        height: 0,
+    });
+    let suffix = "/0-0".to_string();
+    let path = path.to_string();
+    let prefix = path.strip_suffix(&suffix).expect("The suffix should exist");
+    ibc_key(prefix)
+        .expect("Creating a key prefix of the consensus state shouldn't fail")
+}
+
 /// Returns a key for the connection end
 pub fn connection_key(conn_id: &ConnectionId) -> Key {
     let path = Path::Connections(ConnectionsPath(conn_id.clone()));
@@ -200,7 +184,6 @@ pub fn connection_key(conn_id: &ConnectionId) -> Key {
         .expect("Creating a key for the connection shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the channel end
 pub fn channel_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::ChannelEnds(ChannelEndsPath(
@@ -211,7 +194,6 @@ pub fn channel_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for the channel shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the port
 pub fn port_key(port_id: &PortId) -> Key {
     let path = Path::Ports(PortsPath(port_id.clone()));
@@ -219,14 +201,12 @@ pub fn port_key(port_id: &PortId) -> Key {
         .expect("Creating a key for the port shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key of the reversed map for IBC capabilities
 pub fn capability_key(index: u64) -> Key {
     let path = format!("{}/{}", CAPABILITIES, index);
     ibc_key(path).expect("Creating a key for a capability shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for nextSequenceSend
 pub fn next_sequence_send_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::SeqSends(SeqSendsPath(
@@ -237,7 +217,6 @@ pub fn next_sequence_send_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for nextSequenceSend shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for nextSequenceRecv
 pub fn next_sequence_recv_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::SeqRecvs(SeqRecvsPath(
@@ -248,7 +227,6 @@ pub fn next_sequence_recv_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for nextSequenceRecv shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for nextSequenceAck
 pub fn next_sequence_ack_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::SeqAcks(SeqAcksPath(
@@ -259,7 +237,6 @@ pub fn next_sequence_ack_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for nextSequenceAck shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the commitment
 pub fn commitment_key(
     port_id: &PortId,
@@ -275,7 +252,6 @@ pub fn commitment_key(
         .expect("Creating a key for the commitment shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the receipt
 pub fn receipt_key(
     port_id: &PortId,
@@ -291,7 +267,6 @@ pub fn receipt_key(
         .expect("Creating a key for the receipt shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the ack
 pub fn ack_key(
     port_id: &PortId,
@@ -307,21 +282,18 @@ pub fn ack_key(
         .expect("Creating a key for the ack shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the timestamp for the client update
 pub fn client_update_timestamp_key(client_id: &ClientId) -> Key {
     let path = format!("clients/{}/update_timestamp", client_id);
     ibc_key(path).expect("Creating a key for the ack shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the timestamp for the client update
 pub fn client_update_height_key(client_id: &ClientId) -> Key {
     let path = format!("clients/{}/update_height", client_id);
     ibc_key(path).expect("Creating a key for the ack shouldn't fail")
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a client ID from the given client key `#IBC/clients/<client_id>`
 pub fn client_id(key: &Key) -> Result<ClientId> {
     match &key.segments[..] {
@@ -343,7 +315,30 @@ pub fn client_id(key: &Key) -> Result<ClientId> {
     }
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
+/// Returns the height from the given consensus state key
+/// `#IBC/clients/<client_id>/consensusState/0-<height>`
+pub fn consensus_height(key: &Key) -> Result<Height> {
+    match &key.segments[..] {
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::StringSeg(_client_id),
+            DbKeySeg::StringSeg(module),
+            DbKeySeg::StringSeg(height),
+        ] if addr == &Address::Internal(InternalAddress::Ibc)
+            && prefix == "clients"
+            && module == "consensusStates" =>
+        {
+            Height::from_str(height)
+                .map_err(|e| Error::InvalidKey(e.to_string()))
+        }
+        _ => Err(Error::InvalidKey(format!(
+            "The key doesn't have a consensus height: {}",
+            key
+        ))),
+    }
+}
+
 /// Returns a connection ID from the given connection key
 /// `#IBC/connections/<conn_id>`
 pub fn connection_id(key: &Key) -> Result<ConnectionId> {
@@ -365,7 +360,6 @@ pub fn connection_id(key: &Key) -> Result<ConnectionId> {
     }
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a pair of port ID and channel ID from the given channel/sequence key
 /// `#IBC/<prefix>/ports/<port_id>/channels/<channel_id>`
 pub fn port_channel_id(key: &Key) -> Result<PortChannelId> {
@@ -401,7 +395,6 @@ pub fn port_channel_id(key: &Key) -> Result<PortChannelId> {
     }
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a tuple of port ID, channel ID and Sequence from the given packet
 /// info key `#IBC/<info_prefix>/ports/<port_id>/channels/<channel_id>/
 /// sequences/<sequence>`
@@ -442,7 +435,6 @@ pub fn port_channel_sequence_id(
     }
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a port ID from the given port key `#IBC/ports/<port_id>`
 pub fn port_id(key: &Key) -> Result<PortId> {
     match &key.segments[..] {
@@ -464,7 +456,6 @@ pub fn port_id(key: &Key) -> Result<PortId> {
     }
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a capability from the given capability key
 /// `#IBC/capabilities/<index>`
 pub fn capability(key: &Key) -> Result<Capability> {

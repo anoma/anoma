@@ -19,9 +19,9 @@ fn validate_tx(
     // Address of this VP
     addr: Address,
     // Storage keys that have been modified by the transation, relevant to this VP
-    keys_changed: HashSet<storage::Key>,
+    keys_changed: BTreeSet<storage::Key>,
     // Set of all the addresses whose VP was triggered by the transaction
-    verifiers: HashSet<Address>,
+    verifiers: BTreeSet<Address>,
 ) -> bool;
 ```
 

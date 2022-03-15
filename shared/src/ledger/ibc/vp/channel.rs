@@ -2,111 +2,7 @@
 
 use core::time::Duration;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::ConnectionEnd;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::context::ConnectionReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::error::Error as Ics03Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Receipt, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::capabilities::Capability;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::context::PortReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::proofs::Proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Timestamp;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::ConnectionEnd;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::context::ConnectionReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::error::Error as Ics03Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::handler::verify::verify_channel_proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Receipt, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::capabilities::Capability;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::context::PortReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::proofs::Proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::Time;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::Time;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -121,9 +17,38 @@ use super::super::storage::{
     port_channel_id, receipt_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics02_client::client_consensus::AnyConsensusState;
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics03_connection::connection::ConnectionEnd;
+use crate::ibc::core::ics03_connection::context::ConnectionReader;
+use crate::ibc::core::ics03_connection::error::Error as Ics03Error;
+use crate::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty, State,
+};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics04_channel::error::Error as Ics04Error;
+use crate::ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
+use crate::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+use crate::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+use crate::ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
+use crate::ibc::core::ics04_channel::packet::{Receipt, Sequence};
+use crate::ibc::core::ics05_port::capabilities::Capability;
+use crate::ibc::core::ics05_port::context::PortReader;
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::proofs::Proofs;
+use crate::ibc::timestamp::Timestamp;
 use crate::ledger::native_vp::Error as NativeVpError;
 use crate::ledger::parameters;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
+use crate::tendermint::Time;
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{
     Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt,
 };

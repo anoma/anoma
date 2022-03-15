@@ -50,8 +50,8 @@ const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
 const TX_UPDATE_VP_WASM: &str = "tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "tx_transfer.wasm";
-const TX_CREATE_NFT: &str = "tx_create_nft.wasm";
-const TX_MINT_NFT_TOKEN: &str = "tx_mint_nft_tokens.wasm";
+const TX_INIT_NFT: &str = "tx_init_nft.wasm";
+const TX_MINT_NFT: &str = "tx_mint_nft.wasm";
 const VP_USER_WASM: &str = "vp_user.wasm";
 const TX_BOND_WASM: &str = "tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "tx_unbond.wasm";
@@ -474,7 +474,8 @@ pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {
         "Encoding transfer data to initialize a new account shouldn't fail",
     );
 
-    let tx_code = ctx.read_wasm(TX_CREATE_NFT);
+    let tx_code = ctx.read_wasm(TX_INIT_NFT);
+
     let tx = Tx::new(tx_code, Some(data));
     process_tx(ctx, &args.tx, tx, signer.as_ref()).await;
 }
@@ -511,7 +512,8 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
         "Encoding transfer data to initialize a new account shouldn't fail",
     );
 
-    let tx_code = ctx.read_wasm(TX_MINT_NFT_TOKEN);
+    let tx_code = ctx.read_wasm(TX_MINT_NFT);
+
     let tx = Tx::new(tx_code, Some(data));
     process_tx(ctx, &args.tx, tx, signer.as_ref()).await;
 }

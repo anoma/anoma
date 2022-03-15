@@ -13,8 +13,8 @@ pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
-use std::collections::HashSet;
-use std::fmt::{self, Display};
+use std::collections::{BTreeSet, HashSet};
+use std::fmt;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use decrypted::*;
@@ -23,54 +23,19 @@ pub use encrypted::EncryptionKey;
 pub use protocol::UpdateDkgSessionKey;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-#[cfg(not(feature = "ABCI"))]
-use tendermint::abci::transaction;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::abci::transaction;
 pub use wrapper::*;
 
 use super::ibc::IbcEvent;
 use super::storage;
 use crate::ledger::gas::VpsGas;
 use crate::types::address::Address;
+use crate::types::hash::Hash;
 use crate::types::key::*;
-
-#[derive(
-    Clone,
-    Debug,
-    Hash,
-    PartialEq,
-    Eq,
-    BorshSerialize,
-    BorshDeserialize,
-    BorshSchema,
-    Serialize,
-    Deserialize,
-)]
-/// A hash, typically a sha-2 hash of a tx
-pub struct Hash(pub [u8; 32]);
-
-impl Display for Hash {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in &self.0 {
-            write!(f, "{:02X}", byte)?;
-        }
-        Ok(())
-    }
-}
-
-impl From<Hash> for transaction::Hash {
-    fn from(hash: Hash) -> Self {
-        Self::new(hash.0)
-    }
-}
 
 /// Get the hash of a transaction
 pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     let digest = Sha256::digest(tx_bytes);
-    let mut hash_bytes = [0u8; 32];
-    hash_bytes.copy_from_slice(&digest);
-    Hash(hash_bytes)
+    Hash(*digest.as_ref())
 }
 
 /// Transaction application result
@@ -80,7 +45,7 @@ pub struct TxResult {
     /// Total gas used by the transaction (includes the gas used by VPs)
     pub gas_used: u64,
     /// Storage keys touched by the transaction
-    pub changed_keys: HashSet<storage::Key>,
+    pub changed_keys: BTreeSet<storage::Key>,
     /// The results of all the triggered validity predicates by the transaction
     pub vps_result: VpsResult,
     /// New established addresses created by the transaction

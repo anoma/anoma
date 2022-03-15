@@ -653,7 +653,7 @@ pub fn init_network(
             let mut config = Config::load(
                 &validator_dir,
                 &chain_id,
-                TendermintMode::Validator,
+                Some(TendermintMode::Validator),
             );
 
             // Configure the ledger
@@ -735,7 +735,7 @@ pub fn init_network(
     let mut config = Config::load(
         &global_args.base_dir,
         &chain_id,
-        TendermintMode::Validator,
+        Some(TendermintMode::Validator),
     );
     config.ledger.tendermint.p2p_persistent_peers = persistent_peers;
     config.ledger.tendermint.consensus_timeout_commit =
@@ -850,7 +850,7 @@ pub fn init_genesis_validator(
     let config = Config::load(
         &global_args.base_dir,
         &chain_id,
-        TendermintMode::Validator,
+        Some(TendermintMode::Validator),
     );
     init_genesis_validator_aux(
         &mut wallet,

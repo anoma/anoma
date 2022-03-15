@@ -1,6 +1,5 @@
 //! A basic fungible token
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
@@ -11,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::types::address::{Address, Error as AddressError, InternalAddress};
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use crate::types::ibc::data::FungibleTokenPacketData;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
@@ -313,7 +311,6 @@ pub enum TransferError {
     NoToken,
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 impl TryFrom<FungibleTokenPacketData> for Transfer {
     type Error = TransferError;
 

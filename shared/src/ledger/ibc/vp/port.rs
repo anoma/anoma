@@ -1,26 +1,6 @@
 //! IBC validity predicate for port module
 use std::str::FromStr;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::capabilities::{Capability, CapabilityName};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::context::{CapabilityReader, PortReader};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::error::Error as Ics05Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::PortId;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::capabilities::{Capability, CapabilityName};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::context::{CapabilityReader, PortReader};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::error::Error as Ics05Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::PortId;
 use thiserror::Error;
 
 use super::super::storage::{
@@ -28,6 +8,11 @@ use super::super::storage::{
     port_id, port_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics05_port::capabilities::{Capability, CapabilityName};
+use crate::ibc::core::ics05_port::context::{CapabilityReader, PortReader};
+use crate::ibc::core::ics05_port::error::Error as Ics05Error;
+use crate::ibc::core::ics24_host::identifier::PortId;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::storage::Key;
 use crate::vm::WasmCacheAccess;

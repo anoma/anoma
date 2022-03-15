@@ -1,70 +1,6 @@
 //! IBC validity predicate for client module
 use std::str::FromStr;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_def::{AnyClient, ClientDef};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_type::ClientType;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::error::Error as Ics02Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::ClientMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::ClientId;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_def::{AnyClient, ClientDef};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_type::ClientType;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::error::Error as Ics02Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::ClientMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::ClientId;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -73,11 +9,30 @@ use super::super::handler::{
 };
 use super::super::storage::{
     client_counter_key, client_state_key, client_type_key,
-    client_update_height_key, client_update_timestamp_key, consensus_state_key,
+    client_update_height_key, client_update_timestamp_key, consensus_height,
+    consensus_state_key, consensus_state_prefix,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+use crate::ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
+use crate::ibc::core::ics02_client::client_def::{AnyClient, ClientDef};
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::client_type::ClientType;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::error::Error as Ics02Error;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+use crate::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+use crate::ibc::core::ics02_client::msgs::ClientMsg;
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics24_host::identifier::ClientId;
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ledger::storage::{self, StorageHasher};
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
+use crate::types::storage::Key;
 use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
@@ -495,28 +450,62 @@ where
         }
     }
 
+    // Reimplement to avoid reading the posterior state
+    fn maybe_consensus_state(
+        &self,
+        client_id: &ClientId,
+        height: Height,
+    ) -> Ics02Result<Option<AnyConsensusState>> {
+        let key = consensus_state_key(client_id, height);
+        match self.ctx.read_pre(&key) {
+            Ok(Some(value)) => {
+                let cs = AnyConsensusState::decode_vec(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                Ok(Some(cs))
+            }
+            Ok(None) => Ok(None),
+            Err(_) => Err(Ics02Error::implementation_specific()),
+        }
+    }
+
     /// Search for the lowest consensus state higher than `height`.
     fn next_consensus_state(
         &self,
         client_id: &ClientId,
         height: Height,
     ) -> Ics02Result<Option<AnyConsensusState>> {
-        let mut h = height.increment();
-        loop {
-            match self.consensus_state(client_id, h) {
-                Ok(cs) => return Ok(Some(cs)),
-                Err(e)
-                    if e.detail()
-                        == Ics02Error::consensus_state_not_found(
-                            client_id.clone(),
-                            h,
-                        )
-                        .detail() =>
-                {
-                    h = h.increment()
-                }
-                _ => return Err(Ics02Error::implementation_specific()),
+        let prefix = consensus_state_prefix(client_id);
+        let mut iter = self
+            .ctx
+            .iter_prefix(&prefix)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        let mut lowest_height_value = None;
+        while let Some((key, value)) = self
+            .ctx
+            .iter_pre_next(&mut iter)
+            .map_err(|_| Ics02Error::implementation_specific())?
+        {
+            let key = Key::parse(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            let consensus_height = consensus_height(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            if consensus_height > height {
+                lowest_height_value = match lowest_height_value {
+                    Some((lowest, _)) if consensus_height < lowest => {
+                        Some((consensus_height, value))
+                    }
+                    Some(_) => continue,
+                    None => Some((consensus_height, value)),
+                };
             }
+        }
+        match lowest_height_value {
+            Some((_, value)) => {
+                let cs = AnyConsensusState::decode_vec(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                Ok(Some(cs))
+            }
+            None => Ok(None),
         }
     }
 
@@ -526,35 +515,45 @@ where
         client_id: &ClientId,
         height: Height,
     ) -> Ics02Result<Option<AnyConsensusState>> {
-        let mut h = match height.decrement() {
-            Ok(prev) => prev,
-            Err(_) => return Ok(None),
-        };
-        loop {
-            match self.consensus_state(client_id, h) {
-                Ok(cs) => return Ok(Some(cs)),
-                Err(e)
-                    if e.detail()
-                        == Ics02Error::consensus_state_not_found(
-                            client_id.clone(),
-                            h,
-                        )
-                        .detail() =>
-                {
-                    h = match height.decrement() {
-                        Ok(prev) => prev,
-                        Err(_) => return Ok(None),
-                    };
-                }
-                _ => return Err(Ics02Error::implementation_specific()),
+        let prefix = consensus_state_prefix(client_id);
+        let mut iter = self
+            .ctx
+            .iter_prefix(&prefix)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        let mut highest_height_value = None;
+        while let Some((key, value)) = self
+            .ctx
+            .iter_pre_next(&mut iter)
+            .map_err(|_| Ics02Error::implementation_specific())?
+        {
+            let key = Key::parse(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            let consensus_height = consensus_height(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            if consensus_height < height {
+                highest_height_value = match highest_height_value {
+                    Some((highest, _)) if consensus_height > highest => {
+                        Some((consensus_height, value))
+                    }
+                    Some(_) => continue,
+                    None => Some((consensus_height, value)),
+                };
             }
+        }
+        match highest_height_value {
+            Some((_, value)) => {
+                let cs = AnyConsensusState::decode_vec(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                Ok(Some(cs))
+            }
+            None => Ok(None),
         }
     }
 
     fn host_height(&self) -> Height {
-        let epoch = self.ctx.storage.get_current_epoch().0.0;
         let height = self.ctx.storage.get_block_height().0.0;
-        Height::new(epoch, height)
+        // the revision number is always 0
+        Height::new(0, height)
     }
 
     fn host_consensus_state(

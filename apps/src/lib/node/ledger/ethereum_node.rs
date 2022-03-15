@@ -52,13 +52,49 @@ pub async fn run(
 ) -> Result<()> {
     // the geth fullnode process
     let mut ethereum_node = Command::new("geth")
-        .args(&["--syncmode", "snap", "--ws", "--ws.api", "eth"])
+        .args(&["--syncmode", "snap", "--goerli", "--ws", "--ws.api", "eth"])
         .kill_on_drop(true)
         .spawn()
         .map_err(Error::StartUp)?;
     tracing::info!("Ethereum fullnode started");
     // it takes a brief amount of time to open up the websocket on geth's end
     std::thread::sleep(std::time::Duration::from_secs(5));
+
+    // we now wait for the full node to sync
+    let websocket = WebSocket::new(url).await.map_err(Error::Web3)?;
+    let mut sync = EthSubscribe::new(websocket)
+        .subscribe_syncing()
+        .await
+        .map_err(Error::Web3)?;
+
+    loop {
+        match sync.next().await {
+            Some(Ok(sync_state)) => {
+                match sync_state {
+                    SyncState::Syncing(info) => {
+                        tracing::info!(
+                            "Syncing Ethereum, at block: {}. Estimated highest block: {}",
+                            info.current_block,
+                            info.highest_block,
+                        );
+                    }
+                    SyncState::NotSyncing => {
+                        tracing::info!("Finished syncing");
+                        break
+                    }
+                }
+            }
+            Some(Err(err)) => {
+                tracing::error!("Encountered an error while syncing: {}", err);
+                return Err(Error::Web3(err));
+
+            }
+            _ => {}
+        }
+    }
+    let _ = sync.unsubscribe().await;
+    sender.send(Default::default()).unwrap();
+
     tokio::select! {
         // run the ethereum fullnode
         status = ethereum_node.wait() => {
@@ -92,7 +128,7 @@ pub async fn run(
             Ok(())
         }
         // run the relayer
-        relayer_resp = ethereum_relayer::run(
+        relayer_resp = ethereum_channel::run(
             url,
             smart_contract_addresses,
             sender,
@@ -214,7 +250,7 @@ impl Stream for EthereumPoller {
 
 /// Runs the process the relays the results of polling the
 /// ethereum subscription streams.
-mod ethereum_relayer {
+mod ethereum_channel {
     use super::*;
 
     /// Creates a new poller given the websocket url and the smart contract

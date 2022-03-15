@@ -178,6 +178,10 @@ impl Tx {
         hash_tx(&self.to_bytes()).0
     }
 
+    pub fn code_hash(&self) -> [u8; 32] {
+        hash_tx(&self.code).0
+    }
+
     /// Sign a transaction using [`SignedTxData`].
     pub fn sign(self, keypair: &common::SecretKey) -> Self {
         let to_sign = self.hash();

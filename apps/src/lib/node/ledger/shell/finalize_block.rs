@@ -196,7 +196,9 @@ where
                             tx_result["code"] = ErrorCodes::Ok.into();
                         }
                         if let Some(ibc_event) = &result.ibc_event {
-                            tx_result.merge_ibc_event(ibc_event);
+                            // Add the IBC event besides the tx_result
+                            let event = Event::from(ibc_event.clone());
+                            response.events.push(event.into());
                         }
                         match serde_json::to_string(
                             &result.initialized_accounts,
@@ -331,11 +333,12 @@ where
         });
 
         // Update evidence parameters
-        let (parameters, _gas) = parameters::read(&self.storage)
-            .expect("Couldn't read protocol parameters");
+        let (epoch_duration, _gas) =
+            parameters::read_epoch_parameter(&self.storage)
+                .expect("Couldn't read epoch duration parameters");
         let pos_params = self.storage.read_pos_params();
         let evidence_params =
-            self.get_evidence_params(&parameters, &pos_params);
+            self.get_evidence_params(&epoch_duration, &pos_params);
         response.consensus_param_updates = Some(ConsensusParams {
             evidence: Some(evidence_params),
             ..response.consensus_param_updates.take().unwrap_or_default()

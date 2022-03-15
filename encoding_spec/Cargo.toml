@@ -1,0 +1,29 @@
+[package]
+authors = ["Heliax AG <hello@heliax.dev>"]
+description = "Anoma encoding spec generator"
+edition = "2021"
+license = "GPL-3.0"
+name = "anoma_encoding_spec"
+readme = "../README.md"
+resolver = "2"
+version = "0.5.0"
+
+[features]
+default = ["ABCI"]
+
+ABCI = [
+  "anoma/ABCI",
+  "anoma/ibc-vp-abci",
+]
+
+ABCI-plus-plus = [
+  "anoma/ABCI-plus-plus",
+  "anoma/ibc-vp",
+]
+
+[dependencies]
+anoma = {path = "../shared", default-features = false}
+borsh = "0.9.0"
+itertools = "0.10.3"
+lazy_static = "1.4.0"
+madato = "0.5.3"

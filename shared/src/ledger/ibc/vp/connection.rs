@@ -1,73 +1,5 @@
 //! IBC validity predicate for connection module
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::{
-    ConnectionEnd, Counterparty, State,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::context::ConnectionReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::error::Error as Ics03Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::handler::verify::verify_proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
-#[cfg(feature = "ABCI")]
-use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::{
-    ConnectionEnd, Counterparty, State,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::context::ConnectionReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::error::Error as Ics03Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::handler::verify::verify_proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{ClientId, ConnectionId};
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -80,7 +12,26 @@ use super::super::storage::{
     is_connection_counter_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+use crate::ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics03_connection::connection::{
+    ConnectionEnd, Counterparty, State,
+};
+use crate::ibc::core::ics03_connection::context::ConnectionReader;
+use crate::ibc::core::ics03_connection::error::Error as Ics03Error;
+use crate::ibc::core::ics03_connection::handler::verify::verify_proofs;
+use crate::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+use crate::ibc::core::ics23_commitment::commitment::CommitmentPrefix;
+use crate::ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
 use crate::ledger::storage::{self, StorageHasher};
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::{BlockHeight, Epoch, Key};
 use crate::vm::WasmCacheAccess;

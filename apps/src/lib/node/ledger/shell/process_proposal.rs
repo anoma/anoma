@@ -245,11 +245,12 @@ where
 mod test_process_proposal {
     use anoma::proto::SignedTxData;
     use anoma::types::address::xan;
+    use anoma::types::hash::Hash;
     use anoma::types::key::*;
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
     use anoma::types::transaction::encrypted::EncryptedTx;
-    use anoma::types::transaction::{EncryptionKey, Fee, Hash};
+    use anoma::types::transaction::{EncryptionKey, Fee};
     use borsh::BorshDeserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::RequestInitChain;

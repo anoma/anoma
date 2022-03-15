@@ -1,65 +1,5 @@
 //! IBC validity predicate for packets
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty, Order, State,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::handler::verify::{
-    verify_channel_proofs, verify_next_sequence_recv,
-    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
-    verify_packet_recv_proofs,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::PacketMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, PortChannelId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::proofs::Proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Expiry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty, Order, State,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::handler::verify::{
-    verify_channel_proofs, verify_next_sequence_recv,
-    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
-    verify_packet_recv_proofs,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::PacketMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, PortChannelId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::proofs::Proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Expiry;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -69,6 +9,25 @@ use super::super::storage::{
     port_channel_sequence_id, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty, Order, State,
+};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics04_channel::error::Error as Ics04Error;
+use crate::ibc::core::ics04_channel::handler::verify::{
+    verify_channel_proofs, verify_next_sequence_recv,
+    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
+    verify_packet_recv_proofs,
+};
+use crate::ibc::core::ics04_channel::msgs::PacketMsg;
+use crate::ibc::core::ics04_channel::packet::{Packet, Sequence};
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::proofs::Proofs;
+use crate::ibc::timestamp::Expiry;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::Key;

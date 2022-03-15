@@ -6,7 +6,6 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
-#[cfg(feature = "ibc")]
 pub mod ibc;
 pub mod imports;
 pub mod intent;
@@ -21,7 +20,6 @@ pub mod tx_prelude {
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
 
-    #[cfg(feature = "ibc")]
     pub use crate::ibc::{Ibc, IbcActions};
     pub use crate::imports::tx::*;
     pub use crate::intent::tx as intent;
@@ -32,9 +30,9 @@ pub mod tx_prelude {
 
 pub mod vp_prelude {
     // used in the VP input
-    pub use std::collections::HashSet;
+    pub use std::collections::{BTreeSet, HashSet};
 
-    pub use anoma::ledger::pos as proof_of_stake;
+    pub use anoma::ledger::{parameters, pos as proof_of_stake};
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
     pub use anoma::types::*;

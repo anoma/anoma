@@ -4,7 +4,7 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_tx_prelude"
 resolver = "2"
-version = "0.4.0"
+version = "0.5.0"
 
 [features]
 default = ["ABCI"]
@@ -19,3 +19,4 @@ ABCI-plus-plus = [
 
 [dependencies]
 anoma_vm_env = {path = "../vm_env", default-features = false}
+sha2 = "0.10.1"

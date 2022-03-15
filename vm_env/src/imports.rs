@@ -362,6 +362,7 @@ pub mod vp {
     use std::marker::PhantomData;
 
     use anoma::types::chain::CHAIN_ID_LENGTH;
+    use anoma::types::hash::{Hash, HASH_LENGTH};
     use anoma::types::internal::HostEnvResult;
     use anoma::types::key::*;
     use anoma::types::storage::{
@@ -516,6 +517,17 @@ pub mod vp {
         BlockHash::try_from(slice).expect("Cannot convert the hash")
     }
 
+    /// Get a tx hash
+    pub fn get_tx_code_hash() -> Hash {
+        let result = Vec::with_capacity(HASH_LENGTH);
+        unsafe {
+            anoma_vp_get_tx_code_hash(result.as_ptr() as _);
+        }
+        let slice =
+            unsafe { slice::from_raw_parts(result.as_ptr(), HASH_LENGTH) };
+        Hash::try_from(slice).expect("Cannot convert the hash")
+    }
+
     /// Get epoch of the current block
     pub fn get_block_epoch() -> Epoch {
         Epoch(unsafe { anoma_vp_get_block_epoch() })
@@ -625,6 +637,9 @@ pub mod vp {
 
         // Get the current block hash
         fn anoma_vp_get_block_hash(result_ptr: u64);
+
+        // Get the current tx hash
+        fn anoma_vp_get_tx_code_hash(result_ptr: u64);
 
         // Get the current block epoch
         fn anoma_vp_get_block_epoch() -> u64;

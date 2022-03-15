@@ -40,7 +40,8 @@ pub fn get_actor_rpc(test: &Test, who: &Who) -> String {
         Who::NonValidator => TendermintMode::Full,
         Who::Validator(_) => TendermintMode::Validator,
     };
-    let config = Config::load(&base_dir, &test.net.chain_id, tendermint_mode);
+    let config =
+        Config::load(&base_dir, &test.net.chain_id, Some(tendermint_mode));
     config.ledger.tendermint.rpc_address.to_string()
 }
 
@@ -51,7 +52,8 @@ pub fn get_gossiper_mm_server(test: &Test, who: &Who) -> String {
         Who::NonValidator => TendermintMode::Full,
         Who::Validator(_) => TendermintMode::Validator,
     };
-    let config = Config::load(&base_dir, &test.net.chain_id, tendermint_mode);
+    let config =
+        Config::load(&base_dir, &test.net.chain_id, Some(tendermint_mode));
     config.intent_gossiper.matchmakers_server_addr.to_string()
 }
 

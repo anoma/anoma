@@ -4,14 +4,36 @@
 
 ### BUG FIXES
 
+- WASM: Fix WASM cache exponential backoff
+  ([#834](https://github.com/anoma/anoma/issues/834))
 - Ledger: Temporarily downgrade back to wasmer v1.0.2 until
   [the leak that is affecting Linux](https://github.com/anoma/anoma/issues/871) 
   is found and fixed. ([#870](https://github.com/anoma/anoma/pull/870))
+- Ledger: Upgrade to wasmer v2.2.0 and fix memory leak
+  caused by a circular reference in the WASM memory
+  ([#871](https://github.com/anoma/anoma/issues/871))
+- Change the validity predicate main entry-point function to receive
+  `changed_keys` and `verifiers` arguments in a deterministic order.
+  ([#891](https://github.com/anoma/anoma/issues/891))
 - Dependency: Backport libp2p-noise patch that fixes a compilation
   issue from <https://github.com/libp2p/rust-libp2p/pull/2264>
   ([#908](https://github.com/anoma/anoma/issues/908))
 - Wasm: Re-add accidentaly removed `tx_ibc` WASM and `vm_env::ibc` module
   ([#916](https://github.com/anoma/anoma/pull/916))
+- Ledger & Matchmaker: In "dev" chain with "dev" build, load WASM directly from
+  the root `wasm` directory. ([#933](https://github.com/anoma/anoma/issues/933))
+- Ledger: Decode signed data in IBC VPs
+  ([#938](https://github.com/anoma/anoma/issues/938))
+- Ledger: Fixed handling of the Tendermint mode global argument.
+  ([#943](https://github.com/anoma/anoma/pull/943))
+- Ledger: Set IBC event besides tx_result
+  ([#944](https://github.com/anoma/anoma/issues/944))
+- Ledger: Fix IBC ClientReader functions
+  ([#949](https://github.com/anoma/anoma/issues/949))
+- Ledger: Set 0 as IBC height revision number
+  ([#950](https://github.com/anoma/anoma/issues/950))
+- Ledger: Fix the path via ABCI query
+  ([#958](https://github.com/anoma/anoma/issues/958))
 
 ### CI
 
@@ -21,10 +43,26 @@
 - Build docs without attempting to merge master
   ([#924](https://github.com/anoma/anoma/pull/924))
 
+### DOCS
+
+- Added specifications for ledger, RPC, default transactions
+  and encoding, which is partially derived from code.
+  ([#887](https://github.com/anoma/anoma/pull/887))
+
 ### FEATURES
 
+- Added IBC transaction ([#411](https://github.com/anoma/anoma/issues/411))
+- Ledger: Added validity predicate whitelist configurable for a network to limit which validity predicates are permitted ([#875](https://github.com/anoma/anoma/issues/875))
+- Ledger: Added transaction whitelist configurable for a network to limit which transactions are permitted ([#876](https://github.com/anoma/anoma/issues/876))
 - Added transactions and vp to create and mint nfts.
   ([#882](https://github.com/anoma/anoma/issues/882))
+ - Supports a new type of transaction intended to be sent by validators, so called protocol transactions. 
+   - New transaction type
+   - Generation of keys for validators to sign protocol txs
+   - A service to broadcast protocol txs from the ledger
+   - Improved client tx broadcasting
+     
+   (#[913](https://github.com/anoma/anoma/pull/913))
 
 ### IMPROVEMENTS
 
@@ -51,6 +89,16 @@
   ([#886](https://github.com/anoma/anoma/issues/886))
 - Update the Rust toolchain to 1.58.1.
   ([#902](https://github.com/anoma/anoma/pull/902))
+- Implemented `BorshSchema` for ledger's the public types.
+  ([#907](https://github.com/anoma/anoma/pull/907))
+- Updated the tx result from an undecryptable tx to give an error code and message stating message was not decryptable
+  ([#910](https://github.com/anoma/anoma/pull/910))
+- Ledger: Update ibc-rs to v0.12.0
+  ([#926](https://github.com/anoma/anoma/issues/926))
+- WASM: Use tx/VP specific preludes.
+  ([#948](https://github.com/anoma/anoma/pull/948))
+- WASM: Split up tx and VP modules into files.
+  ([#952](https://github.com/anoma/anoma/pull/952))
 
 ## v0.4.0
 

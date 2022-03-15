@@ -3,19 +3,12 @@
 use std::collections::HashMap;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use ibc::events::{Error as IbcEventError, IbcEvent as RawIbcEvent};
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use ibc_abci::events::{Error as IbcEventError, IbcEvent as RawIbcEvent};
-#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
-use tendermint::abci::Event as AbciEvent;
-#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
-use tendermint_stable::abci::Event as AbciEvent;
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use thiserror::Error;
 
+use crate::ibc::events::{Error as IbcEventError, IbcEvent as RawIbcEvent};
+use crate::tendermint::abci::Event as AbciEvent;
+
 #[allow(missing_docs)]
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("IBC event error: {0}")]
@@ -23,7 +16,6 @@ pub enum Error {
 }
 
 /// Conversion functions result
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Wrapped IbcEvent
@@ -53,7 +45,6 @@ impl std::fmt::Display for IbcEvent {
     }
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 impl TryFrom<RawIbcEvent> for IbcEvent {
     type Error = Error;
 

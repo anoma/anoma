@@ -1,7 +1,7 @@
 //! Native validity predicate interface associated with internal accounts such
 //! as the PoS and IBC modules.
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use thiserror::Error;
 
@@ -37,8 +37,8 @@ pub trait NativeVp {
     fn validate_tx(
         &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
     ) -> std::result::Result<bool, Self::Error>;
 }
 
@@ -238,8 +238,8 @@ where
     pub fn eval(
         &mut self,
         address: &Address,
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
         vp_code: Vec<u8>,
         input_data: Vec<u8>,
     ) -> bool {
