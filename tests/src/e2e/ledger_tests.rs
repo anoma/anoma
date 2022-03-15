@@ -356,6 +356,7 @@ fn invalid_transactions() -> Result<()> {
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
+    let daewon_lower = DAEWON.to_lowercase();
     let tx_args = vec![
         "tx",
         "--code-path",
@@ -363,7 +364,7 @@ fn invalid_transactions() -> Result<()> {
         "--data-path",
         &tx_data_path,
         "--signing-key",
-        DAEWON,
+        &daewon_lower,
         "--fee-amount",
         "0",
         "--gas-limit",
@@ -406,12 +407,13 @@ fn invalid_transactions() -> Result<()> {
     ledger.exp_string("Last state root hash:")?;
 
     // 5. Submit an invalid transactions (invalid token address)
+    let daewon_lower = DAEWON.to_lowercase();
     let tx_args = vec![
         "transfer",
         "--source",
         DAEWON,
         "--signing-key",
-        DAEWON,
+        &daewon_lower,
         "--target",
         ALBERT,
         "--token",
