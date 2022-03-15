@@ -445,6 +445,44 @@
 <span id="444">444</span>
 <span id="445">445</span>
 <span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Functions for IBC-related data to access the storage</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -610,6 +648,20 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the consensus state shouldn&#39;t fail&quot;</span>)
 }
 
+<span class="doccomment">/// Returns a key prefix for the consensus state</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">consensus_state_prefix</span>(<span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) -&gt; <span class="ident">Key</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientConsensusState</span>(<span class="ident">ClientConsensusStatePath</span> {
+        <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">epoch</span>: <span class="number">0</span>,
+        <span class="ident">height</span>: <span class="number">0</span>,
+    });
+    <span class="kw">let</span> <span class="ident">suffix</span> <span class="op">=</span> <span class="string">&quot;/0-0&quot;</span>.<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">strip_suffix</span>(<span class="kw-2">&amp;</span><span class="ident">suffix</span>).<span class="ident">expect</span>(<span class="string">&quot;The suffix should exist&quot;</span>);
+    <span class="ident">ibc_key</span>(<span class="ident">prefix</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Creating a key prefix of the consensus state shouldn&#39;t fail&quot;</span>)
+}
+
 <span class="doccomment">/// Returns a key for the connection end</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_key</span>(<span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>) -&gt; <span class="ident">Key</span> {
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">ConnectionsPath</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()));
@@ -743,6 +795,30 @@
         }
         <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
             <span class="string">&quot;The key doesn&#39;t have a client ID: {}&quot;</span>,
+            <span class="ident">key</span>
+        ))),
+    }
+}
+
+<span class="doccomment">/// Returns the height from the given consensus state key</span>
+<span class="doccomment">/// `#IBC/clients/&lt;client_id&gt;/consensusState/0-&lt;height&gt;`</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">consensus_height</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Height</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
+        [
+            <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>),
+            <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>),
+            <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">_client_id</span>),
+            <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">module</span>),
+            <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">height</span>),
+        ] <span class="kw">if</span> <span class="ident">addr</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)
+            <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">==</span> <span class="string">&quot;clients&quot;</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">module</span> <span class="op">==</span> <span class="string">&quot;consensusStates&quot;</span> =&gt;
+        {
+            <span class="ident">Height::from_str</span>(<span class="ident">height</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+        }
+        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
+            <span class="string">&quot;The key doesn&#39;t have a consensus height: {}&quot;</span>,
             <span class="ident">key</span>
         ))),
     }
