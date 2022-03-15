@@ -11,10 +11,11 @@ use borsh::BorshDeserialize;
 use thiserror::Error;
 
 use self::storage as gov_storage;
+use super::pos as pos_storage;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{xan as m1t, Address, InternalAddress};
-use crate::types::storage::{DbKeySeg, Key};
+use crate::types::storage::{DbKeySeg, Epoch, Key};
 use crate::types::token as token_storage;
 use crate::types::token::Amount;
 use crate::vm::WasmCacheAccess;
@@ -80,7 +81,60 @@ where
 
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
-                (KeyType::VOTE, Some(_)) => false,
+                (KeyType::VOTE, Some(proposal_id)) => {
+                    let counter_key = gov_storage::get_counter_key();
+                    let voting_start_epoch_key =
+                        gov_storage::get_voting_start_epoch_key(proposal_id);
+                    let voting_end_epoch_key =
+                        gov_storage::get_voting_end_epoch_key(proposal_id);
+                    let current_epoch = self.ctx.get_block_epoch().ok();
+                    let pre_voting_start_epoch: Option<Epoch> =
+                        read(&self.ctx, &voting_start_epoch_key, ReadType::PRE)
+                            .ok();
+                    let pre_voting_end_epoch: Option<Epoch> =
+                        read(&self.ctx, &voting_end_epoch_key, ReadType::PRE)
+                            .ok();
+                    let pre_counter: Option<u64> =
+                        read(&self.ctx, &counter_key, ReadType::PRE).ok();
+                    let voter = get_address(key);
+
+                    match (
+                        pre_counter,
+                        voter,
+                        current_epoch,
+                        pre_voting_start_epoch,
+                        pre_voting_end_epoch,
+                    ) {
+                        (
+                            Some(pre_counter),
+                            Some(voter),
+                            Some(current_epoch),
+                            Some(pre_voting_start_epoch),
+                            Some(pre_voting_end_epoch),
+                        ) => {
+                            pre_counter > proposal_id
+                                && current_epoch >= pre_voting_start_epoch
+                                && current_epoch <= pre_voting_end_epoch
+                                && is_delegator(
+                                    &self.ctx,
+                                    pre_voting_start_epoch,
+                                    verifiers,
+                                    &voter,
+                                )
+                                || (is_validator(
+                                    &self.ctx,
+                                    pre_voting_start_epoch,
+                                    verifiers,
+                                    &voter,
+                                ) && is_valid_validator_voting_period(
+                                    current_epoch,
+                                    pre_voting_start_epoch,
+                                    pre_voting_end_epoch,
+                                ))
+                        }
+                        _ => false,
+                    }
+                }
                 (KeyType::CONTENT, Some(proposal_id)) => {
                     let content_key: Key =
                         gov_storage::get_content_key(proposal_id);
@@ -198,9 +252,9 @@ where
                         gov_storage::get_voting_start_epoch_key(proposal_id);
                     let end_epoch_key =
                         gov_storage::get_voting_end_epoch_key(proposal_id);
-                    let start_epoch: Option<u64> =
+                    let start_epoch: Option<Epoch> =
                         read(&self.ctx, &start_epoch_key, ReadType::POST).ok();
-                    let end_epoch: Option<u64> =
+                    let end_epoch: Option<Epoch> =
                         read(&self.ctx, &end_epoch_key, ReadType::POST).ok();
                     let current_epoch = self.ctx.get_block_epoch().ok();
                     let min_period_parameter_key =
@@ -231,7 +285,6 @@ where
                             Some(end_epoch),
                             Some(current_epoch),
                         ) => {
-                            let current_epoch = current_epoch.0;
                             if end_epoch <= start_epoch
                                 || start_epoch <= current_epoch
                             {
@@ -241,7 +294,7 @@ where
                                 && !has_pre_end_epoch
                                 && start_epoch < end_epoch
                                 && (end_epoch - start_epoch) % min_period == 0
-                                && start_epoch - current_epoch >= min_period
+                                && (start_epoch - current_epoch).0 >= min_period
                         }
                         _ => false,
                     }
@@ -432,6 +485,16 @@ fn get_id(key: &Key) -> Option<u64> {
         Some(id) => match id {
             DbKeySeg::AddressSeg(_) => None,
             DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
+        },
+        None => None,
+    }
+}
+
+fn get_address(key: &Key) -> Option<Address> {
+    match key.get_at(4) {
+        Some(addr) => match addr {
+            DbKeySeg::AddressSeg(res) => Some(res.clone()),
+            DbKeySeg::StringSeg(_) => None,
         },
         None => None,
     }
