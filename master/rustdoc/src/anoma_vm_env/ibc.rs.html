@@ -54,7 +54,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::handler::IbcActions</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
 
@@ -91,8 +91,8 @@
         <span class="ident">transfer</span>(<span class="ident">src</span>, <span class="ident">dest</span>, <span class="ident">token</span>, <span class="ident">amount</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">Epoch</span>, <span class="ident">BlockHeight</span>) {
-        (<span class="ident">tx::get_block_epoch</span>(), <span class="ident">tx::get_block_height</span>())
+    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BlockHeight</span> {
+        <span class="ident">tx::get_block_height</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">get_header_time</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rfc3339String</span> {

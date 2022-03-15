@@ -1056,9 +1056,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">host_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Height</span> {
-        <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_current_epoch</span>().<span class="number">0.0</span>;
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_height</span>().<span class="number">0.0</span>;
-        <span class="ident">Height::new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
+        <span class="comment">// the revision number is always 0</span>
+        <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="ident">height</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">host_consensus_state</span>(

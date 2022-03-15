@@ -681,9 +681,6 @@
 <span id="680">680</span>
 <span id="681">681</span>
 <span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::time::Duration</span>;
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -759,7 +756,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::ibc::data::FungibleTokenPacketData</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="ident">wasm</span>, <span class="ident">WasmCacheRwAccess</span>};
@@ -856,11 +853,8 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">Epoch</span>, <span class="ident">BlockHeight</span>) {
-        (
-            <span class="ident">tx_host_env::get_block_epoch</span>(),
-            <span class="ident">tx_host_env::get_block_height</span>(),
-        )
+    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BlockHeight</span> {
+        <span class="ident">tx_host_env::get_block_height</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">get_header_time</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rfc3339String</span> {

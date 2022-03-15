@@ -1427,7 +1427,7 @@
     <span class="ident">PacketReceipt</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::IbcEvent</span> <span class="kw">as</span> <span class="ident">AnomaIbcEvent</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::Rfc3339String</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 
@@ -1493,7 +1493,7 @@
     );
 
     <span class="doccomment">/// Get the current height of this chain</span>
-    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">Epoch</span>, <span class="ident">BlockHeight</span>);
+    <span class="kw">fn</span> <span class="ident">get_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BlockHeight</span>;
 
     <span class="doccomment">/// Get the current time of the tendermint header of this chain</span>
     <span class="kw">fn</span> <span class="ident">get_header_time</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rfc3339String</span>;
@@ -2092,8 +2092,8 @@
             <span class="ident">time</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding shouldn&#39;t fail&quot;</span>),
         );
 
-        <span class="kw">let</span> (<span class="ident">epoch</span>, <span class="ident">height</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_height</span>();
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="ident">epoch</span>.<span class="number">0</span>, <span class="ident">height</span>.<span class="number">0</span>);
+        <span class="comment">// the revision number is always 0</span>
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="self">self</span>.<span class="ident">get_height</span>().<span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">height_key</span> <span class="op">=</span> <span class="ident">storage::client_update_height_key</span>(<span class="ident">client_id</span>);
         <span class="comment">// write the current height as u64</span>
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
