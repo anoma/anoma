@@ -945,6 +945,8 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 6. Submit an invalid proposal
 /// 7. Check invalid proposal was not accepted
 /// 8. Query token balance (funds shall not be submitted)
+/// 9. Send a yay vote from a validator
+/// 10. Send a yay vote from a normal user
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -978,9 +980,9 @@ fn proposal_submission() -> Result<()> {
                 "requires": "2"
             },
             "author": albert,
-            "voting_start_epoch": 9999,
-            "voting_end_epoch": 10002,
-            "grace_epoch": 10009
+            "voting_start_epoch": 3,
+            "voting_end_epoch": 12,
+            "grace_epoch": 30
         }
     );
     generate_proposal_json(
@@ -1112,6 +1114,46 @@ fn proposal_submission() -> Result<()> {
 
     let mut client = run!(test, Bin::Client, query_balance_args, Some(15))?;
     client.exp_string("XAN: 999500")?;
+    client.assert_success();
+
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 < 3 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    // 9. Send a yay vote from a validator
+    // let submit_proposal_vote = vec![
+    //     "vote-proposal",
+    //     "--proposal-id",
+    //     "0",
+    //     "--vote",
+    //     "yay",
+    //     "--signer",
+    //     "validator-0",
+    //     "--ledger-address",
+    //     &validator_one_rpc,
+    // ];
+
+    // let mut client = run!(test, Bin::Client, submit_proposal_vote,
+    // Some(40))?; client.exp_string("Transaction is valid.")?;
+    // client.assert_success();
+
+    // 10. Send a yay vote from a normal user
+    let submit_proposal_vote = vec![
+        "vote-proposal",
+        "--proposal-id",
+        "0",
+        "--vote",
+        "yay",
+        "--signer",
+        ALBERT,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
+    client.exp_string("Transaction is invalid.")?;
     client.assert_success();
 
     Ok(())

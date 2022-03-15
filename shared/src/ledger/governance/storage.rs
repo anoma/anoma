@@ -1,4 +1,5 @@
 use super::ADDRESS;
+use crate::types::address::Address;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 const PROPOSAL_PREFIX: &str = "proposal";
