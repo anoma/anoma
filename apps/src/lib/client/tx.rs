@@ -648,7 +648,7 @@ async fn gen_shielded_transfer(
         // If there is change leftover send it back to this transparent input
         if balance > amt {
             builder.add_transparent_output(
-                &TransparentAddress::PublicKey([0u8; 20]),
+                &TransparentAddress::PublicKey(hash.into()),
                 asset_type,
                 balance - amt
             )?;
@@ -660,8 +660,13 @@ async fn gen_shielded_transfer(
         let ovk_opt = args.spending_key.as_ref().map(|x| x.expsk.ovk);
         builder.add_sapling_output(ovk_opt, pa.clone(), asset_type, amt, memo)?;
     } else {
+        // Embed the transparent target address into the shielded transaction so
+        // that it can be signed 
+        let target = ctx.get(&args.target);
+        let target_enc = target.try_to_vec().expect("target address encoding");
+        let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(target_enc.as_ref()));
         builder.add_transparent_output(
-            &TransparentAddress::PublicKey([0u8; 20]),
+            &TransparentAddress::PublicKey(hash.into()),
             asset_type,
             amt
         )?;
