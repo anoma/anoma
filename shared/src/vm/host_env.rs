@@ -1664,15 +1664,14 @@ where
     CA: WasmCacheAccess,
 {
     use crate::types::masp::*;
+    use masp_primitives::transaction::Transaction;
     let gas_meter = unsafe { env.ctx.gas_meter.get() };
     let (tx_bytes, gas) = env
         .memory
         .read_bytes(tx_ptr, tx_len as _)
         .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
     vp_env::add_gas(gas_meter, gas)?;
-    let shielded_tx_bytes: ShieldedTransactionBytes =
-        BorshDeserialize::try_from_slice(tx_bytes.as_slice()).unwrap();
-    let shielded_tx: ShieldedTransaction = shielded_tx_bytes.into();
+    let shielded_tx: Transaction = BorshDeserialize::try_from_slice(tx_bytes.as_slice()).unwrap();
     // Placeholder parameters
     let parameters: PreparedVerifyingKey<Bls12> =
         crate::ledger::masp::load_groth_params().1;

@@ -1,11 +1,24 @@
 //! MASP verification wrappers.
 
-use std::fs::File;
+use std::{fs::File, ops::Deref, env};
 
-use crate::types::masp::*;
-use bellman::groth16::{generate_random_parameters, prepare_verifying_key};
-use masp_proofs::circuit::sapling::Spend;
-use rand_new::SeedableRng;
+use bellman::groth16::{
+    generate_random_parameters, prepare_verifying_key, PreparedVerifyingKey,
+};
+use bls12_381::Bls12;
+use masp_primitives::{
+    asset_type::AssetType,
+    consensus::BranchId::Sapling,
+    redjubjub::PublicKey,
+    transaction::{
+        components::{OutputDescription, SpendDescription},
+        signature_hash_data, Transaction, SIGHASH_ALL,
+    },
+};
+use masp_proofs::{
+    circuit::sapling::Spend, sapling::SaplingVerificationContext,
+};
+use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
 
 /// Very bad test groth16 parameters
@@ -40,7 +53,8 @@ pub fn load_groth_params() -> (
     bellman::groth16::Parameters<Bls12>,
     bellman::groth16::PreparedVerifyingKey<Bls12>,
 ) {
-    let param_f = File::open("params.bin").unwrap();
+    let homedir = env::var("HOME").unwrap();
+    let param_f = File::open(homedir + "/.zcash-params/sapling-spend.params").unwrap();
     let params = bellman::groth16::Parameters::read(&param_f, false).unwrap();
     let vk = prepare_verifying_key(&params.vk);
     (params, vk)
@@ -56,18 +70,21 @@ pub fn dump_groth_params() {
 /// check_spend wrapper
 pub fn check_spend(
     spend: &SpendDescription,
+    sighash: &[u8; 32],
     ctx: &mut SaplingVerificationContext,
     parameters: &PreparedVerifyingKey<Bls12>,
 ) -> bool {
+    let zkproof =
+        bellman::groth16::Proof::read(spend.zkproof.as_slice()).unwrap();
     ctx.check_spend(
         spend.cv,
         spend.anchor,
         &spend.nullifier,
         // TODO: should make this clone, or just use an ExtendedPoint?
         PublicKey(spend.rk.0.clone()),
-        &spend.sighash_value,
-        spend.spend_auth_sig,
-        spend.zkproof.clone(),
+        sighash,
+        spend.spend_auth_sig.unwrap(),
+        zkproof,
         parameters,
     )
 }
@@ -78,28 +95,36 @@ pub fn check_output(
     ctx: &mut SaplingVerificationContext,
     parameters: &PreparedVerifyingKey<Bls12>,
 ) -> bool {
+    let zkproof =
+        bellman::groth16::Proof::read(output.zkproof.as_slice()).unwrap();
     ctx.check_output(
         output.cv,
         output.cmu,
-        output.epk,
-        output.zkproof.clone(),
+        output.ephemeral_key,
+        zkproof,
         parameters,
     )
 }
 
 /// Verify a shielded transaction.
 pub fn verify_shielded_tx(
-    transaction: &ShieldedTransaction,
+    transaction: &Transaction,
     parameters: &PreparedVerifyingKey<Bls12>,
 ) -> bool {
     let mut ctx = SaplingVerificationContext::new();
+    let tx_data = transaction.deref();
 
-    let spends_valid = transaction
-        .spends
+    let sighash: [u8; 32] =
+        signature_hash_data(&tx_data, Sapling, SIGHASH_ALL, None)
+            .try_into()
+            .unwrap();
+
+    let spends_valid = tx_data
+        .shielded_spends
         .iter()
-        .all(|spend| check_spend(spend, &mut ctx, parameters));
-    let outputs_valid = transaction
-        .outputs
+        .all(|spend| check_spend(spend, &sighash, &mut ctx, parameters));
+    let outputs_valid = tx_data
+        .shielded_outputs
         .iter()
         .all(|output| check_output(output, &mut ctx, parameters));
 
@@ -107,9 +132,15 @@ pub fn verify_shielded_tx(
         return false;
     }
 
+    let assets_and_values: Vec<(AssetType, i64)> = tx_data
+        .vout
+        .iter()
+        .map(|o| (o.asset_type, o.value.try_into().unwrap()))
+        .collect();
+
     ctx.final_check(
-        &transaction.assets_and_values,
-        &transaction.sighash_value,
-        transaction.binding_sig,
+        assets_and_values.as_slice(),
+        &sighash,
+        tx_data.binding_sig.unwrap(),
     )
 }

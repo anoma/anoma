@@ -160,6 +160,7 @@ dependencies = [
  "anoma_macros",
  "bellman",
  "borsh",
+ "masp_primitives",
 ]
 
 [[package]]

@@ -19,7 +19,7 @@ masp = [
   "jubjub",
   "masp_primitives",
   "masp_proofs",
-  "rand_new",
+  "rand",
   "rand_xorshift",
 ]
 ferveo-tpke = [
@@ -105,10 +105,9 @@ proptest = {version = "1.0.0", optional = true}
 prost = "0.9.0"
 prost-types = "0.9.0"
 pwasm-utils = {version = "0.18.0", optional = true}
-rand = {version = "=0.7", optional = true}
+rand = {version = "0.8", optional = true}
 # TODO proptest rexports the RngCore trait but the re-implementations only work for version `0.8`. *sigh*
 rand_core = {version = "0.6", optional = true}
-rand_new = {package = "rand", version = "0.8", optional = true}
 rand_xorshift = {version = "0.3.0", optional = true}
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
