@@ -25,10 +25,6 @@ all:
 check:
 	$(foreach wasm,$(wasms),make check_$(wasm) && ) true
 
-# `cargo check` all wasms
-check:
-	$(foreach wasm,$(wasms),make check_$(wasm) && ) true
-
 # `cargo test` all wasms
 test:
 	$(foreach wasm,$(wasms),make test_$(wasm) && ) true

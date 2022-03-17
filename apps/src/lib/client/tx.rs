@@ -1115,7 +1115,6 @@ pub async fn submit_tx(
     #[cfg(feature = "ABCI")]
     let parsed = match TxResponse::find_tx(
         &wrapper_tx_subscription.receive_response()?,
-        "applied",
         wrapper_hash,
     ) {
         Ok(v) => {

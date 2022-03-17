@@ -324,7 +324,7 @@ pub enum PathParseError {
 }
 
 /// The tendermint response for a tx
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TxResponse {
     /// Tx info
     pub info: String,
@@ -365,56 +365,74 @@ impl Display for TxResponse {
 impl TxResponse {
     /// Retrieve the response for the given tx hash from the provided json
     /// serialized result.
-    pub fn find_tx<E, T>(
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the requested hash is not found or if the json schema
+    /// differs from the expected one.
+    #[cfg(feature = "ABCI")]
+    pub fn find_tx<T>(
         json_response: &serde_json::Value,
-        event_type: E,
         tx_hash: T,
     ) -> Result<Self, QueryError>
     where
-        T: Into<String>,
-        E: AsRef<str>,
+        T: AsRef<str>,
     {
-        let tx_hash_json = serde_json::Value::String(tx_hash.into());
         let mut selector = jsonpath::selector(json_response);
-        let mut index = 0u32;
-        let evt_key = TendermintEventType::try_from(event_type.as_ref())?;
 
-        // Find the tx with a matching hash
-        let hash = loop {
+        let mut response = TxResponse::default();
+
+        let mut index = 0usize;
+        let hash_ref = tx_hash.as_ref();
+
+        response.hash = loop {
             let hash =
-                selector(&format!("$.events.['{}.hash'][{}]", evt_key, index))?;
-
-            let hash = hash[0].clone();
-            if hash == tx_hash_json {
-                break hash;
+                selector(&format!("$.events.['applied.hash'][{}]", index))?[0];
+            let hash_str: String = serde_json::from_value(hash.to_owned())?;
+            if hash_str.as_str() == hash_ref {
+                break Hash::try_from(hash_ref)?;
             }
             index += 1;
         };
 
-        let info =
-            selector(&format!("$.events.['{}.info'][{}]", evt_key, index))?;
-        let log =
-            selector(&format!("$.events.['{}.log'][{}]", evt_key, index))?;
-        let height =
-            selector(&format!("$.events.['{}.height'][{}]", evt_key, index))?;
-        let code =
-            selector(&format!("$.events.['{}.code'][{}]", evt_key, index))?;
-        let gas_used =
-            selector(&format!("$.events.['{}.gas_used'][{}]", evt_key, index))?;
-        let initialized_accounts = selector(&format!(
-            "$.events.['{}.initialized_accounts'][{}]",
-            evt_key, index
-        ));
+        response.info = {
+            let value =
+                selector(&format!("$.events.['applied.info'][{}]", index))?[0];
+            serde_json::from_value(value.to_owned())?
+        };
 
-        let info: String = serde_json::from_value(info[0].clone())?;
-        let log: String = serde_json::from_value(log[0].clone())?;
-        let code_str: String = serde_json::from_value(code[0].clone())?;
-        let gas_str: String = serde_json::from_value(gas_used[0].clone())?;
-        let height_str: String = serde_json::from_value(height[0].clone())?;
-        let hash_str: String = serde_json::from_value(hash)?;
+        response.code = {
+            let value =
+                selector(&format!("$.events.['applied.code'][{}]", index))?[0];
+            u8::from_str(value.as_str().unwrap())?
+        };
 
-        let initialized_accounts = match initialized_accounts {
-            Ok(values) if !values.is_empty() => {
+        response.gas_used = {
+            let value =
+                selector(&format!("$.events.['applied.gas_used'][{}]", index))?
+                    [0];
+            u64::from_str(value.as_str().unwrap())?
+        };
+
+        response.log = {
+            let value =
+                selector(&format!("$.events.['applied.log'][{}]", index))?[0];
+            serde_json::from_value(value.to_owned())?
+        };
+
+        response.height = {
+            let value =
+                selector(&format!("$.events.['applied.height'][{}]", index))?
+                    [0];
+            BlockHeight(u64::from_str(value.as_str().unwrap())?)
+        };
+
+        response.initialized_accounts = {
+            let values = selector(&format!(
+                "$.events.['applied.initialized_accounts'][{}]",
+                index
+            ))?;
+            match values.get(0) {
                 // In a response, the initialized accounts are encoded as e.g.:
                 // ```
                 // "applied.initialized_accounts": Array([
@@ -423,23 +441,103 @@ impl TxResponse {
                 //   ),
                 // ]),
                 // ...
-                // So we need to decode the inner string first ...
-                let raw: String = serde_json::from_value(values[0].clone())?;
-                // ... and then decode the vec from the array inside the string
-                serde_json::from_str(&raw)?
+                // So we need to decode the vec from the array inside the string
+                Some(v) => {
+                    serde_json::from_str(v.to_owned().as_str().unwrap())?
+                }
+                None => vec![],
             }
-            _ => vec![],
         };
 
-        Ok(TxResponse {
-            info,
-            log,
-            height: BlockHeight(u64::from_str(&height_str)?),
-            hash: Hash::try_from(hash_str.as_str())?,
-            code: u8::from_str(&code_str)?,
-            gas_used: u64::from_str(&gas_str)?,
-            initialized_accounts,
-        })
+        Ok(response)
+    }
+
+    /// Retrieve the response for the given tx hash from the provided json
+    /// serialized result.
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the json schema differs from the expected one.
+    #[cfg(not(feature = "ABCI"))]
+    pub fn find_tx<E, T>(
+        json_response: &serde_json::Value,
+        event_type: E,
+        tx_hash: T,
+    ) -> Result<Self, QueryError>
+    where
+        E: AsRef<str>,
+        T: AsRef<str> + Into<String>,
+    {
+        let mut response = TxResponse::default();
+        let mut selector = jsonpath::selector(json_response);
+        let evt_key = TendermintEventType::try_from(event_type.as_ref())?;
+
+        response.hash = Hash::try_from(tx_hash.as_ref())?;
+
+        let event = selector(&format!(
+            "$.events.[?(@.type=='{}' && @.attributes.[?(@.key=='hash' && \
+             @.value=='{}')])]",
+            evt_key,
+            tx_hash.into()
+        ))?;
+
+        for obj in event[0]
+            .as_object()
+            .unwrap()
+            .get("attributes")
+            .unwrap()
+            .as_array()
+            .unwrap()
+        {
+            let obj = obj.as_object().unwrap();
+            match obj.get("key").unwrap().as_str().unwrap() {
+                "info" => {
+                    response.info = serde_json::from_value(
+                        obj.get("value").unwrap().to_owned(),
+                    )?
+                }
+                "code" => {
+                    response.code = u8::from_str(
+                        obj.get("value").unwrap().as_str().unwrap(),
+                    )?
+                }
+                "gas_used" => {
+                    response.gas_used = u64::from_str(
+                        obj.get("value").unwrap().as_str().unwrap(),
+                    )?
+                }
+                "log" => {
+                    response.log = serde_json::from_value(
+                        obj.get("value").unwrap().to_owned(),
+                    )?
+                }
+                "height" => {
+                    response.height = BlockHeight(u64::from_str(
+                        obj.get("value").unwrap().as_str().unwrap(),
+                    )?)
+                }
+                "initialized_accounts" => {
+                    response.initialized_accounts =
+                        match obj.get("value").unwrap().as_str() {
+                            // In a response, the initialized accounts are
+                            // encoded as e.g.: ```
+                            // "applied.initialized_accounts": Array([
+                            //   String(
+                            //     "[\"atest1...\"]",
+                            //   ),
+                            // ]),
+                            // ...
+                            // So we need to decode the vec from the array
+                            // inside the string
+                            Some(v) => serde_json::from_str(v)?,
+                            None => vec![],
+                        };
+                }
+                _ => (),
+            }
+        }
+
+        Ok(response)
     }
 }
 

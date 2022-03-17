@@ -787,10 +787,10 @@ where
                     },
                 )
                 .await?;
-                return Ok(TxQueryResult {
+                Ok(TxQueryResult {
                     response: tx_response,
                     event_type: TendermintEventType::Accepted,
-                });
+                })
             }
             // For ABCI simply return the error
             #[cfg(feature = "ABCI")]

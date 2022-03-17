@@ -30,6 +30,7 @@ pub type HashResult<T> = std::result::Result<T, Error>;
 #[derive(
     Clone,
     Debug,
+    Default,
     Hash,
     PartialEq,
     Eq,
