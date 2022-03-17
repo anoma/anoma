@@ -391,3 +391,25 @@ pub fn get_committing_proposals_key(id: u64, epoch: u64) -> Key {
         .push(&id.to_string())
         .expect("Cannot obtain a storage key")
 }
+
+/// Get proposal id from key
+pub fn get_id(key: &Key) -> Option<u64> {
+    match key.get_at(2) {
+        Some(id) => match id {
+            DbKeySeg::AddressSeg(_) => None,
+            DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
+        },
+        None => None,
+    }
+}
+
+/// Get voter address from vote key
+pub fn get_address(key: &Key) -> Option<Address> {
+    match key.get_at(4) {
+        Some(addr) => match addr {
+            DbKeySeg::AddressSeg(res) => Some(res.clone()),
+            DbKeySeg::StringSeg(_) => None,
+        },
+        None => None,
+    }
+}

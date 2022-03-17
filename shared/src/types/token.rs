@@ -2,7 +2,7 @@
 
 use std::convert::TryFrom;
 use std::fmt::Display;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -70,6 +70,13 @@ impl Amount {
     /// Create a new amount with the maximum value
     pub fn max() -> Self {
         Self { micro: u64::MAX }
+    }
+
+    /// Create amount from Change
+    pub fn from_change(change: Change) -> Self {
+        Self {
+            micro: change as u64,
+        }
     }
 }
 
@@ -155,6 +162,14 @@ impl Sub for Amount {
 impl SubAssign for Amount {
     fn sub_assign(&mut self, rhs: Self) {
         self.micro -= rhs.micro
+    }
+}
+
+impl Div for Amount {
+    type Output = f64;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self.micro as f64 / rhs.micro as f64
     }
 }
 

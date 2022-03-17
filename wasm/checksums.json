@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
     "tx_bond.wasm": "tx_bond.df6318f7101cabf93f00ebc105c9cebb54448ebde7bc1467ff798779c7cf604c.wasm",
     "tx_from_intent.wasm": "tx_from_intent.d2e9e8f146f40e87e8e80486dfdcf8be354e64a1523d7d3921bbbc9cce6144f7.wasm",
     "tx_ibc.wasm": "tx_ibc.25f60b7e904dd562e012da60ce9f025cb48f7ebbadd55b09959fe9f5507faa6d.wasm",
@@ -16,23 +15,4 @@
     "vp_testnet_faucet.wasm": "vp_testnet_faucet.48e3d2ce0215ffe30580d8d22fdd339e21e432a3c8e428ea823015ac3c47a2bd.wasm",
     "vp_token.wasm": "vp_token.052cf7d93762729ebc363993b56545bbcc7a361f68cfeb02bffa1ca358471a60.wasm",
     "vp_user.wasm": "vp_user.b8e0c549e6284743f3c4fd045dce97a219c594cb905b4165e7b4588b478e30da.wasm"
-=======
-    "tx_bond.wasm": "tx_bond.2c6882d1cd8a8b502d0e4211c23ed548fac020437b8bcafb4a25342073343cde.wasm",
-    "tx_from_intent.wasm": "tx_from_intent.5456ed538cb51528a0a078071e6b4ca6fff09ab8907b948f64fcc997d0fb099a.wasm",
-    "tx_ibc.wasm": "tx_ibc.42feb7201a229f445ca509c76ebdea3f264aa431ca69502bba0234307039864a.wasm",
-    "tx_init_account.wasm": "tx_init_account.2451ef93a122cee8515699a54b3d29bb770fbe36e4a551f49214c524719fd460.wasm",
-    "tx_init_nft.wasm": "tx_init_nft.8da87cb3f54c6596e2f6f9da1665c8e20e83a22a3586532c90fe6eac818418c5.wasm",
-    "tx_init_proposal.wasm": "tx_init_proposal.166e80896e250f1a29c3854425ccc125c703a10f3835780f0395a70d1c8eee26.wasm",
-    "tx_init_validator.wasm": "tx_init_validator.0d5aecdc8bd965beb9c98ce59a1363470698fcb9e126f137ff7484030b9035f0.wasm",
-    "tx_mint_nft.wasm": "tx_mint_nft.ff4526fbd3314f0ec5446ff92a7eba1249f47bfc813dc2c6e4a8c906a305700e.wasm",
-    "tx_transfer.wasm": "tx_transfer.3d4f4cd7ad96f4516529cf22f3368d9f5084118424fe5b82ad411d0190437f14.wasm",
-    "tx_unbond.wasm": "tx_unbond.91b8c96e691e30e68ea6657155e1514946ba7c8c06d109672ec675431f2243ad.wasm",
-    "tx_update_vp.wasm": "tx_update_vp.6718498db6a9e62bc3fc4a7b4a1072aef89a815abbc9f847a0d4ef230940d544.wasm",
-    "tx_vote_proposal.wasm": "tx_vote_proposal.e74c5499cafb9c35c3e02c53e87f725fa84d5869a8c7b891307c8c602b7fc1fe.wasm",
-    "tx_withdraw.wasm": "tx_withdraw.d994060d2e57bfa21c29b011e5bb38275079857befdcf011ed6f1db61318de8e.wasm",
-    "vp_nft.wasm": "vp_nft.ffcfd71776881c4f52679499d12e9ede718723f33d22764d44f5e70cedf13ac5.wasm",
-    "vp_testnet_faucet.wasm": "vp_testnet_faucet.1615470f7a305e7a1f454cd7ab4d1149a6dc3ef3411fcbbf89c14d50a7c617fb.wasm",
-    "vp_token.wasm": "vp_token.db2efa0894a9fe147f9a364dfcd6f56433f2af9e900c02d7e37c33c41970cb01.wasm",
-    "vp_user.wasm": "vp_user.5a4fb33d5e5bf8ed18dde521834a21359d96acc9cc551057a0d953222f9fdd6b.wasm"
->>>>>>> [feat]: initial implementation vote
 }
