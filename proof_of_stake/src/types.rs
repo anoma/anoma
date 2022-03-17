@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
-use std::ops::{Add, AddAssign, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
@@ -349,6 +349,22 @@ impl VotingPower {
     }
 }
 
+impl Add for VotingPower {
+    type Output = VotingPower;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl Sub for VotingPower {
+    type Output = VotingPower;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
+}
+
 impl VotingPowerDelta {
     /// Try to convert token change into a voting power change.
     pub fn try_from_token_change(
@@ -605,17 +621,15 @@ impl From<VotingPower> for u64 {
     }
 }
 
-impl Add for VotingPower {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
-    }
-}
-
 impl AddAssign for VotingPower {
     fn add_assign(&mut self, rhs: Self) {
         self.0 += rhs.0
+    }
+}
+
+impl SubAssign for VotingPower {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0
     }
 }
 

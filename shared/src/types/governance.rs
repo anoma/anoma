@@ -1,7 +1,7 @@
 //! Files defyining the types used in governance.
 
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -32,6 +32,16 @@ pub enum ProposalVote {
     Nay,
 }
 
+impl ProposalVote {
+    /// Check if a vote is yay
+    pub fn is_yay(&self) -> bool {
+        match self {
+            ProposalVote::Yay => true,
+            ProposalVote::Nay => false,
+        }
+    }
+}
+
 impl Display for ProposalVote {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -58,6 +68,26 @@ impl FromStr for ProposalVote {
             Ok(ProposalVote::Nay)
         } else {
             Err(ProposalVoteParseError::InvalidVote)
+        }
+    }
+}
+
+/// The result of a proposal
+pub enum TallyResult {
+    /// Proposal was accepted
+    Passed,
+    /// Proposal was rejected
+    Rejected,
+    /// Proposal result is unknown
+    Unknown,
+}
+
+impl fmt::Display for TallyResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TallyResult::Passed => write!(f, "passed"),
+            TallyResult::Rejected => write!(f, "rejected"),
+            TallyResult::Unknown => write!(f, "unknown"),
         }
     }
 }
