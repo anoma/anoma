@@ -375,13 +375,40 @@ pub fn get_proposal_code_key(id: u64) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
-/// Get proposal code key
-pub fn get_vote_proposal_key(id: u64, address: Address) -> Key {
+/// Get proposal vote prefix key
+pub fn get_proposal_prefix_key(id: u64) -> Key {
     proposal_prefix()
         .push(&id.to_string())
         .expect("Cannot obtain a storage key")
         .push(&PROPOSAL_VOTE.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Get proposal code key
+pub fn get_vote_proposal_key(id: u64, address: Address) -> Key {
+    get_proposal_prefix_key(id)
         .push(&address)
         .expect("Cannot obtain a storage key")
+}
+
+/// Get proposal id from key
+pub fn get_id(key: &Key) -> Option<u64> {
+    match key.get_at(2) {
+        Some(id) => match id {
+            DbKeySeg::AddressSeg(_) => None,
+            DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
+        },
+        None => None,
+    }
+}
+
+/// Get voter address from vote key
+pub fn get_address(key: &Key) -> Option<Address> {
+    match key.get_at(4) {
+        Some(addr) => match addr {
+            DbKeySeg::AddressSeg(res) => Some(res),
+            DbKeySeg::StringSeg(_) => None,
+        },
+        None => None,
+    }
 }

@@ -920,7 +920,9 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 7. Check invalid proposal was not accepted
 /// 8. Query token balance (funds shall not be submitted)
 /// 9. Send a yay vote from a validator
-/// 10. Send a yay vote from a normal user
+/// 10. Delegate some token and send a nay vote
+/// 11. Send a yay vote from a normal user
+/// 12. Query the proposal and check the result
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -955,7 +957,7 @@ fn proposal_submission() -> Result<()> {
             },
             "author": albert,
             "voting_start_epoch": 3,
-            "voting_end_epoch": 12,
+            "voting_end_epoch": 6,
             "grace_epoch": 30
         }
     );
@@ -1093,30 +1095,79 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("XAN: 999500")?;
     client.assert_success();
 
+    // 9. Send a yay vote from a validator
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     while epoch.0 < 3 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
 
-    // 9. Send a yay vote from a validator
-    // let submit_proposal_vote = vec![
-    //     "vote-proposal",
-    //     "--proposal-id",
-    //     "0",
-    //     "--vote",
-    //     "yay",
-    //     "--signer",
-    //     "validator-0",
-    //     "--ledger-address",
-    //     &validator_one_rpc,
-    // ];
+    let submit_proposal_vote = vec![
+        "vote-proposal",
+        "--proposal-id",
+        "0",
+        "--vote",
+        "yay",
+        "--signer",
+        "validator-0",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
 
-    // let mut client = run!(test, Bin::Client, submit_proposal_vote,
-    // Some(40))?; client.exp_string("Transaction is valid.")?;
-    // client.assert_success();
+    let mut client = run_as!(
+        test,
+        Who::Validator(0),
+        Bin::Client,
+        submit_proposal_vote,
+        Some(15)
+    )?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
 
-    // 10. Send a yay vote from a normal user
+    // 10. Delegate some token and send a nay vote
+    let tx_args = vec![
+        "bond",
+        "--validator",
+        "validator-0",
+        "--source",
+        BERTHA,
+        "--amount",
+        "900",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
+    let submit_proposal_vote_delagator = vec![
+        "vote-proposal",
+        "--proposal-id",
+        "0",
+        "--vote",
+        "nay",
+        "--signer",
+        BERTHA,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(
+        test,
+        Bin::Client,
+        submit_proposal_vote_delagator,
+        Some(15)
+    )?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
+    // 11. Send a yay vote from a non-validator/non-delegator user
     let submit_proposal_vote = vec![
         "vote-proposal",
         "--proposal-id",
@@ -1131,6 +1182,26 @@ fn proposal_submission() -> Result<()> {
 
     let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
     client.exp_string("Transaction is invalid.")?;
+    client.assert_success();
+
+    // 12. Query the proposal and check the result
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 <= 6 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    let query_proposal = vec![
+        "query-proposal",
+        "--proposal-id",
+        "0",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_proposal, Some(15))?;
+    client.exp_string("Status: done")?;
+    client.exp_string("Result: passed")?;
     client.assert_success();
 
     Ok(())

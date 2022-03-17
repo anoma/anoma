@@ -15,7 +15,7 @@ use super::pos as pos_storage;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{xan as m1t, Address, InternalAddress};
-use crate::types::storage::{DbKeySeg, Epoch, Key};
+use crate::types::storage::{Epoch, Key};
 use crate::types::token as token_storage;
 use crate::types::token::Amount;
 use crate::vm::WasmCacheAccess;
@@ -75,7 +75,7 @@ where
         };
 
         let result = keys_changed.iter().all(|key| {
-            let proposal_id = get_id(key);
+            let proposal_id = gov_storage::get_id(key);
 
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
@@ -94,7 +94,7 @@ where
                             .ok();
                     let pre_counter: Option<u64> =
                         read(&self.ctx, &counter_key, ReadType::PRE).ok();
-                    let voter = get_address(key);
+                    let voter = gov_storage::get_address(key);
 
                     match (
                         pre_counter,
@@ -110,25 +110,33 @@ where
                             Some(pre_voting_start_epoch),
                             Some(pre_voting_end_epoch),
                         ) => {
-                            pre_counter > proposal_id
-                                && current_epoch >= pre_voting_start_epoch
-                                && current_epoch <= pre_voting_end_epoch
-                                && is_delegator(
-                                    &self.ctx,
-                                    pre_voting_start_epoch,
-                                    verifiers,
-                                    &voter,
-                                )
-                                || (is_validator(
-                                    &self.ctx,
-                                    pre_voting_start_epoch,
-                                    verifiers,
-                                    &voter,
-                                ) && is_valid_validator_voting_period(
+                            let is_delegator = is_delegator(
+                                &self.ctx,
+                                pre_voting_start_epoch,
+                                verifiers,
+                                &voter,
+                            );
+                            let is_validator = is_validator(
+                                &self.ctx,
+                                pre_voting_start_epoch,
+                                verifiers,
+                                &voter,
+                            );
+                            let is_valid_validator_voting_period =
+                                is_valid_validator_voting_period(
                                     current_epoch,
                                     pre_voting_start_epoch,
                                     pre_voting_end_epoch,
-                                ))
+                                );
+                            println!("{}", is_delegator);
+                            println!("{}", is_validator);
+                            println!("{}", is_valid_validator_voting_period);
+                            pre_counter > proposal_id
+                                && current_epoch >= pre_voting_start_epoch
+                                && current_epoch <= pre_voting_end_epoch
+                                && (is_delegator
+                                    || (is_validator
+                                        && is_valid_validator_voting_period))
                         }
                         _ => false,
                     }
@@ -452,13 +460,15 @@ where
         if let Some((_, data)) = next {
             let epoched_bond =
                 pos_storage::Bonds::try_from_slice(&data[..]).unwrap();
-            if epoched_bond.get(epoch).is_some() {
-                verifiers.contains(address);
+            if epoched_bond.get(epoch).is_some() && verifiers.contains(address)
+            {
+                return true;
             }
         } else {
-            return false;
+            break;
         }
     }
+    false
 }
 
 fn is_valid_validator_voting_period(
@@ -511,26 +521,6 @@ where
     CA: 'static + WasmCacheAccess,
 {
     return keys.iter().all(gov_storage::is_vote_key);
-}
-
-fn get_id(key: &Key) -> Option<u64> {
-    match key.get_at(2) {
-        Some(id) => match id {
-            DbKeySeg::AddressSeg(_) => None,
-            DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
-        },
-        None => None,
-    }
-}
-
-fn get_address(key: &Key) -> Option<Address> {
-    match key.get_at(4) {
-        Some(addr) => match addr {
-            DbKeySeg::AddressSeg(res) => Some(res),
-            DbKeySeg::StringSeg(_) => None,
-        },
-        None => None,
-    }
 }
 
 fn read<T, DB, H, CA>(
