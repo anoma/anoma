@@ -948,12 +948,18 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 8. Query token balance (funds shall not be submitted)
 /// 9. Send a yay vote from a validator
 <<<<<<< HEAD
+<<<<<<< HEAD
 /// 10. Delegate some token and send a nay vote
 /// 11. Send a yay vote from a normal user
 /// 12. Query the proposal and check the result
 =======
 /// 10. Send a yay vote from a normal user
 >>>>>>> [feat]: initial implementation vote
+=======
+/// 10. Delegate some token and send a nay vote
+/// 11. Send a yay vote from a normal user
+/// 12. Query the proposal and check the result
+>>>>>>> [feat]: initial tally implementation
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -1013,10 +1019,14 @@ fn proposal_submission() -> Result<()> {
             "author": albert,
             "voting_start_epoch": 3,
 <<<<<<< HEAD
+<<<<<<< HEAD
             "voting_end_epoch": 9,
 =======
             "voting_end_epoch": 12,
 >>>>>>> [feat]: initial implementation vote
+=======
+            "voting_end_epoch": 6,
+>>>>>>> [feat]: initial tally implementation
             "grace_epoch": 30
         }
     );
@@ -1150,9 +1160,13 @@ fn proposal_submission() -> Result<()> {
     client.assert_success();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     // 9. Send a yay vote from a validator
 =======
 >>>>>>> [feat]: initial implementation vote
+=======
+    // 9. Send a yay vote from a validator
+>>>>>>> [feat]: initial tally implementation
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     while epoch.0 < 3 {
         sleep(1);
@@ -1160,6 +1174,9 @@ fn proposal_submission() -> Result<()> {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> [feat]: initial tally implementation
     let submit_proposal_vote = vec![
         "vote-proposal",
         "--proposal-id",
@@ -1182,11 +1199,35 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
+<<<<<<< HEAD
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     while epoch.0 <= 6 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
+=======
+    // 10. Delegate some token and send a nay vote
+    let tx_args = vec![
+        "bond",
+        "--validator",
+        "validator-0",
+        "--source",
+        BERTHA,
+        "--amount",
+        "900",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+>>>>>>> [feat]: initial tally implementation
 
     let submit_proposal_vote_delagator = vec![
         "vote-proposal",
@@ -1200,12 +1241,22 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
+<<<<<<< HEAD
     let mut client =
         run!(test, Bin::Client, submit_proposal_vote_delagator, Some(15))?;
+=======
+    let mut client = run!(
+        test,
+        Bin::Client,
+        submit_proposal_vote_delagator,
+        Some(15)
+    )?;
+>>>>>>> [feat]: initial tally implementation
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 11. Send a yay vote from a non-validator/non-delegator user
+<<<<<<< HEAD
 =======
     // 9. Send a yay vote from a validator
     // let submit_proposal_vote = vec![
@@ -1226,6 +1277,8 @@ fn proposal_submission() -> Result<()> {
 
     // 10. Send a yay vote from a normal user
 >>>>>>> [feat]: initial implementation vote
+=======
+>>>>>>> [feat]: initial tally implementation
     let submit_proposal_vote = vec![
         "vote-proposal",
         "--proposal-id",
@@ -1243,9 +1296,15 @@ fn proposal_submission() -> Result<()> {
     client.assert_success();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     // 12. Query the proposal and check the result
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     while epoch.0 <= 9 {
+=======
+    // 12. Query the proposal and check the result
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 <= 6 {
+>>>>>>> [feat]: initial tally implementation
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
@@ -1263,6 +1322,7 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Result: passed")?;
     client.assert_success();
 
+<<<<<<< HEAD
     Ok(())
 }
 
@@ -1361,6 +1421,8 @@ fn proposal_offline() -> Result<()> {
 
 =======
 >>>>>>> [feat]: initial implementation vote
+=======
+>>>>>>> [feat]: initial tally implementation
     Ok(())
 }
 
