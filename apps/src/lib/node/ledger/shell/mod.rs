@@ -11,6 +11,7 @@ mod init_chain;
 mod prepare_proposal;
 mod process_proposal;
 mod queries;
+mod vote_extensions;
 
 use std::convert::{TryFrom, TryInto};
 use std::mem;
@@ -478,24 +479,6 @@ where
                 }
             }
         }
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    /// INVARIANT: This method must be stateless.
-    pub fn extend_vote(
-        &self,
-        _req: request::ExtendVote,
-    ) -> response::ExtendVote {
-        Default::default()
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    /// INVARIANT: This method must be stateless.
-    pub fn verify_vote_extension(
-        &self,
-        _req: request::VerifyVoteExtension,
-    ) -> response::VerifyVoteExtension {
-        Default::default()
     }
 
     /// Commit a block. Persist the application state and return the Merkle root

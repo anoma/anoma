@@ -216,7 +216,7 @@ where
                 // this ensures that emitted events are of the correct type
                 decoded_resp.tx = decoded;
                 // this ensures that the tx queue is empty even if an error
-                // happend in [`process_proposal`].
+                // happened in [`process_proposal`].
                 self.storage.tx_queue.pop();
                 decoded_resp
             } else {
@@ -237,6 +237,7 @@ where
     ) -> shim::response::RevertProposal {
         Default::default()
     }
+
 }
 
 /// We test the failure cases of [`process_proposal`]. The happy flows

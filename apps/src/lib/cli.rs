@@ -1315,7 +1315,7 @@ pub mod args {
         pub chain_id: Option<ChainId>,
         pub base_dir: PathBuf,
         pub wasm_dir: Option<PathBuf>,
-        pub mode: TendermintMode,
+        pub mode: Option<TendermintMode>,
     }
 
     impl Global {
@@ -1324,8 +1324,7 @@ pub mod args {
             let chain_id = CHAIN_ID_OPT.parse(matches);
             let base_dir = BASE_DIR.parse(matches);
             let wasm_dir = WASM_DIR.parse(matches);
-            let mode = MODE.parse(matches).map(TendermintMode::from)
-                .unwrap_or(TendermintMode::Validator);
+            let mode = MODE.parse(matches).map(TendermintMode::from);
             Global {
                 chain_id,
                 base_dir,

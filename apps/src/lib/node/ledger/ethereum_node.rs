@@ -34,8 +34,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// the ledger.
 #[derive(Default)]
 pub struct EthPollResult {
-    new_header: Option<BlockHeader>,
-    new_logs: HashMap<H160, Log>,
+    pub new_header: Option<BlockHeader>,
+    pub new_logs: HashMap<H160, Log>,
+    pub error: Option<String>,
 }
 
 /// Run the Ethereum fullnode as well as a relayer
@@ -86,14 +87,14 @@ pub async fn run(
             }
             Some(Err(err)) => {
                 tracing::error!("Encountered an error while syncing: {}", err);
-                return Err(Error::Web3(err));
-
             }
             _ => {}
         }
     }
     let _ = sync.unsubscribe().await;
-    sender.send(Default::default()).unwrap();
+    if sender.send(Default::default()).is_err() {
+        panic!("The channel from the Ethereum unexpectedly dropped")
+    }
 
     tokio::select! {
         // run the ethereum fullnode
@@ -150,8 +151,6 @@ pub async fn run(
 /// If the fullnode is syncing, we return Poll::Pending. Otherwise
 /// we eagerly return any new headers and logs.
 pub struct EthereumPoller {
-    /// The subscription for checking if the fullnode is synced
-    sync_subscription: SubscriptionStream<WebSocket, SyncState>,
     /// Subscription for getting new block headers
     header_subscription: SubscriptionStream<WebSocket, BlockHeader>,
     /// Subscription for the logs of provided smart contract addresses
@@ -184,10 +183,6 @@ impl EthereumPoller {
         }
 
         Ok(Self {
-            sync_subscription: eth_subscriber
-                .subscribe_syncing()
-                .await
-                .map_err(Error::Web3)?,
             header_subscription: eth_subscriber
                 .subscribe_new_heads()
                 .await
@@ -204,46 +199,46 @@ impl Stream for EthereumPoller {
         mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Option<Self::Item>> {
-        match self.sync_subscription.poll_next(cx) {
-            // we first check that we are done syncing
-            Poll::Ready(Some(Ok(SyncState::NotSyncing))) => {
-                let mut eth_poll_result = EthPollResult::default();
-                let mut pending = true;
+        let mut eth_poll_result = EthPollResult::default();
+        let mut pending = true;
 
-                // try to poll the next ethereum header
-                match self.header_subscription.poll_next(cx) {
-                    Poll::Ready(Some(Ok(header))) => {
-                        eth_poll_result.new_header = Some(header);
-                        pending = false;
-                    }
-                    Poll::Ready(None) => return Poll::Ready(None),
-                    _ => {}
-                }
-
-                // poll each log subscription
-                for log_subscription in self.log_subscriptions.iter_mut() {
-                    // try to poll the next log from the Ethereum smart contract
-                    // address
-                    match log_subscription.poll_next(cx) {
-                        Poll::Ready(Some(Ok(log))) => {
-                            eth_poll_result.new_logs.insert(log.address, log);
-                            pending = false;
-                        }
-                        Poll::Ready(None) => return Poll::Ready(None),
-                        _ => {}
-                    }
-                }
-
-                // if any poll returned a result, return it
-                if !pending {
-                    Poll::Ready(Some(eth_poll_result))
-                } else {
-                    Poll::Pending
-                }
+        // try to poll the next ethereum header
+        match self.header_subscription.poll_next(cx) {
+            Poll::Ready(Some(Ok(header))) => {
+                eth_poll_result.new_header = Some(header);
+                pending = false;
             }
-            _ => {
-                Poll::Pending
-            },
+            Poll::Ready(Some(Err(err))) => {
+                eth_poll_result.error = Some(format!("Error in Ethereum header: {:?}", err));
+                pending = false;
+            }
+            Poll::Ready(None) => return Poll::Ready(None),
+            _ => {}
+        }
+
+        // poll each log subscription
+        for log_subscription in self.log_subscriptions.iter_mut() {
+            // try to poll the next log from the Ethereum smart contract
+            // address
+            match log_subscription.poll_next(cx) {
+                Poll::Ready(Some(Ok(log))) => {
+                    eth_poll_result.new_logs.insert(log.address, log);
+                    pending = false;
+                }
+                Poll::Ready(Some(Err(err))) => {
+                    eth_poll_result.error = Some(format!("Error in Ethereum log: {:?}", err));
+                    pending = false;
+                }
+                Poll::Ready(None) => return Poll::Ready(None),
+                _ => {}
+            }
+        }
+
+        // if any poll returned a result, return it
+        if !pending {
+            Poll::Ready(Some(eth_poll_result))
+        } else {
+            Poll::Pending
         }
     }
 }
