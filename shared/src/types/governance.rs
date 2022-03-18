@@ -1,6 +1,6 @@
 //! Files defyining the types used in governance.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::address::Address;
+use super::hash::Hash;
 use super::key::common::{self, Signature};
 use super::key::SigScheme;
 use super::storage::Epoch;
@@ -100,7 +101,7 @@ pub struct Proposal {
     /// The proposal id
     pub id: Option<u64>,
     /// The proposal content
-    pub content: HashMap<String, String>,
+    pub content: BTreeMap<String, String>,
     /// The proposal author address
     pub author: Address,
     /// The epoch from which voting is allowed
@@ -151,14 +152,86 @@ pub struct OfflineProposal {
     pub data: Proposal,
     /// The signature over proposal data
     pub signature: Signature,
+    /// The public key to check the signature
+    pub pubkey: common::PublicKey,
 }
 
 impl OfflineProposal {
     /// Create an offline proposal with a signature
-    pub fn new(data: Proposal, keypair: &common::SecretKey) -> Self {
-        let to_sign = serde_json::to_vec(&data)
+    pub fn new(
+        proposal: Proposal,
+        pubkey: common::PublicKey,
+        signing_key: &common::SecretKey,
+    ) -> Self {
+        let proposal_data = serde_json::to_vec(&proposal)
             .expect("Conversion to bytes shouldn't fail.");
-        let signature = common::SigScheme::sign(keypair, &to_sign);
-        Self { data, signature }
+        let proposal_data_hash = Hash::sha256(&proposal_data);
+        let signature =
+            common::SigScheme::sign(signing_key, &proposal_data_hash);
+        Self {
+            data: proposal,
+            signature,
+            pubkey,
+        }
+    }
+
+    /// Check whether the signature is valid or not
+    pub fn check_signature(&self) -> bool {
+        let proposal_data = serde_json::to_vec(&self.data)
+            .expect("Conversion to bytes shouldn't fail.");
+        let proposal_data_hash = Hash::sha256(&proposal_data);
+        common::SigScheme::verify_signature(
+            &self.pubkey,
+            &proposal_data_hash,
+            &self.signature,
+        )
+        .is_ok()
+    }
+}
+
+#[derive(
+    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+)]
+/// The offline proposal structure
+pub struct OfflineVote {
+    /// The proposal data hash
+    pub proposal_hash: Hash,
+    /// The proposal vote
+    pub vote: ProposalVote,
+    /// The signature over proposal data
+    pub signature: Signature,
+    /// The public key to check the signature
+    pub pubkey: common::PublicKey,
+}
+
+impl OfflineVote {
+    /// Create an offline vote for a proposal
+    pub fn new(
+        proposal: &OfflineProposal,
+        vote: ProposalVote,
+        pubkey: common::PublicKey,
+        signing_key: &common::SecretKey,
+    ) -> Self {
+        let proposal_data = serde_json::to_vec(proposal)
+            .expect("Conversion to bytes shouldn't fail.");
+        let proposal_data_hash = Hash::sha256(&proposal_data);
+        let signature =
+            common::SigScheme::sign(signing_key, &proposal_data_hash);
+        Self {
+            proposal_hash: proposal_data_hash,
+            vote,
+            signature,
+            pubkey,
+        }
+    }
+
+    /// Check whether the signature is valid or not
+    pub fn check_signature(&self) -> bool {
+        common::SigScheme::verify_signature(
+            &self.pubkey,
+            &self.proposal_hash,
+            &self.signature,
+        )
+        .is_ok()
     }
 }

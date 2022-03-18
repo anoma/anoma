@@ -1116,7 +1116,6 @@ pub async fn query_has_storage_key(
 }
 
 /// Represents a query for an event pertaining to the specified transaction
-
 #[derive(Debug, Clone)]
 pub enum TxEventQuery {
     Accepted(String),
@@ -1142,7 +1141,6 @@ impl TxEventQuery {
 }
 
 /// Transaction event queries are semantically a subset of general queries
-
 impl From<TxEventQuery> for Query {
     fn from(tx_query: TxEventQuery) -> Self {
         match tx_query {
@@ -1157,7 +1155,6 @@ impl From<TxEventQuery> for Query {
 }
 
 /// Lookup the full response accompanying the specified transaction event
-
 pub async fn query_tx_response(
     ledger_address: &TendermintAddress,
     tx_query: TxEventQuery,

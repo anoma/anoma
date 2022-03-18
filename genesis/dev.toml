@@ -175,8 +175,8 @@ light_client_attack_slash_rate = 500
 [gov_params]
 # minimum amount of xan token to lock
 min_proposal_fund = 500
-# proposal code size in kilobytes
-max_proposal_code_size = 300 
+# proposal code size in bytes
+max_proposal_code_size = 300000
 # proposal period length in epoch
 min_proposal_period = 3
 # maximum number of characters in the proposal content
