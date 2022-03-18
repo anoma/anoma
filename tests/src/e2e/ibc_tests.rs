@@ -54,7 +54,7 @@ use anoma::ibc::core::ics24_host::identifier::{
     ChainId, ClientId, ConnectionId, PortChannelId, PortId,
 };
 use anoma::ibc::events::{from_tx_response_event, IbcEvent};
-use anoma::ibc::proofs::Proofs;
+use anoma::ibc::proofs::{ConsensusProof, Proofs};
 use anoma::ibc::signer::Signer;
 use anoma::ibc::timestamp::Timestamp;
 use anoma::ibc::tx_msg::Msg;
@@ -107,7 +107,7 @@ use tendermint_rpc::{Client, HttpClient, Url};
 use tendermint_rpc_abci::{Client, HttpClient, Url};
 use tokio::runtime::Runtime;
 
-use crate::e2e::helpers::{find_address, get_actor_rpc, get_epoch};
+use crate::e2e::helpers::{find_address, get_actor_rpc, get_validator_pk};
 use crate::e2e::setup::{self, sleep, Bin, Test, Who};
 use crate::{run, run_as};
 
@@ -131,10 +131,22 @@ fn run_ledger_ibc() -> Result<()> {
     let (conn_id_a, conn_id_b) =
         connection_handshake(&test_a, &test_b, &client_id_a, &client_id_b)?;
 
-    let (port_channel_id_a, _) =
-        channel_handshake(&test_a, &test_b, &conn_id_a, &conn_id_b)?;
+    let (port_channel_id_a, _) = channel_handshake(
+        &test_a,
+        &test_b,
+        &client_id_a,
+        &client_id_b,
+        &conn_id_a,
+        &conn_id_b,
+    )?;
 
-    transfer_token(&test_a, &test_b, &port_channel_id_a)?;
+    transfer_token(
+        &test_a,
+        &test_b,
+        &client_id_a,
+        &client_id_b,
+        &port_channel_id_a,
+    )?;
 
     // Check the balance on Chain A
     let rpc_a = get_actor_rpc(&test_a, &Who::Validator(0));
@@ -217,7 +229,7 @@ fn make_client_state(test: &Test, height: Height) -> AnyClientState {
         unbonding_period,
         max_clock_drift,
         height,
-        MerkleTree::<Sha256Hasher>::default().proof_specs().into(),
+        proof_specs(),
         vec!["upgrade".to_string(), "upgradedIBCState".to_string()],
         AllowUpdate {
             after_expiry: true,
@@ -240,19 +252,31 @@ fn proof_specs() -> ProofSpecs {
     MerkleTree::<Sha256Hasher>::default().proof_specs().into()
 }
 
-fn update_to_latest_client(
+fn update_client_with_height(
     src_test: &Test,
     target_test: &Test,
-    client_id: &ClientId,
+    target_client_id: &ClientId,
+    target_height: Height,
 ) -> Result<()> {
-    // check the current state on the target chain
-    let client_state = query_client_state(target_test, client_id)?;
+    // check the current(stale) state on the target chain
+    let key = client_state_key(target_client_id);
+    let (value, _) = query_value_with_proof(target_test, &key)?;
+    let client_state = match value {
+        Some(v) => AnyClientState::decode_vec(&v)
+            .map_err(|e| eyre!("Decoding the client state failed: {}", e))?,
+        None => {
+            return Err(eyre!(
+                "The client state doesn't exist: client ID {}",
+                target_client_id
+            ));
+        }
+    };
     let trusted_height = client_state.latest_height();
-    // get the latest height on the source chain
-    let target_height = query_height(src_test)?;
+
     update_client(
+        src_test,
         target_test,
-        client_id,
+        target_client_id,
         trusted_height,
         target_height,
         &client_state,
@@ -260,22 +284,16 @@ fn update_to_latest_client(
 }
 
 fn update_client(
-    test: &Test,
+    src_test: &Test,
+    target_test: &Test,
     client_id: &ClientId,
     trusted_height: Height,
     target_height: Height,
     client_state: &AnyClientState,
 ) -> Result<()> {
-    let config = dummy_chain_config(test);
-    let pk = test
-        .genesis
-        .validator
-        .get("validator-0")
-        .unwrap()
-        .account_public_key
-        .as_ref()
-        .unwrap();
-    let peer_id: TendermintNodeId = id_from_pk(pk.to_public_key().unwrap());
+    let config = dummy_chain_config(src_test);
+    let pk = get_validator_pk(src_test, &Who::Validator(0)).unwrap();
+    let peer_id: TendermintNodeId = id_from_pk(pk);
     let mut light_client =
         TmLightClient::from_config(&config, peer_id).unwrap();
     let Verified { target, supporting } = light_client
@@ -288,7 +306,7 @@ fn update_client(
             client_id: client_id.clone(),
             signer: Signer::new("test"),
         };
-        submit_ibc_tx(test, message)?;
+        submit_ibc_tx(target_test, message)?;
     }
 
     let message = MsgUpdateAnyClient {
@@ -296,14 +314,14 @@ fn update_client(
         client_id: client_id.clone(),
         signer: Signer::new("test"),
     };
-    submit_ibc_tx(test, message)?;
+    submit_ibc_tx(target_test, message)?;
 
     Ok(())
 }
 
 fn dummy_chain_config(test: &Test) -> ChainConfig {
-    let rpc_addr =
-        Url::from_str(&get_actor_rpc(test, &Who::Validator(0))).unwrap();
+    let addr = format!("http://{}", get_actor_rpc(test, &Who::Validator(0)));
+    let rpc_addr = Url::from_str(&addr).unwrap();
     // use only id and rpc_addr
     ChainConfig {
         id: ChainId::new(test.net.chain_id.as_str().to_string(), 0),
@@ -339,7 +357,6 @@ fn connection_handshake(
     client_id_a: &ClientId,
     client_id_b: &ClientId,
 ) -> Result<(ConnectionId, ConnectionId)> {
-    // OpenInitConnection on Chain A
     let msg = MsgConnectionOpenInit {
         client_id: client_id_a.clone(),
         counterparty: ConnCounterparty::new(
@@ -351,6 +368,7 @@ fn connection_handshake(
         delay_period: Duration::new(30, 0),
         signer: Signer::new("test_a"),
     };
+    // OpenInitConnection on Chain A
     let height = submit_ibc_tx(test_a, msg)?;
     let conn_id_a = match get_event(test_a, height)? {
         Some(IbcEvent::OpenInitConnection(event)) => event
@@ -360,12 +378,10 @@ fn connection_handshake(
         _ => return Err(eyre!("Transaction failed")),
     };
 
-    // Update the client state of Chain A on Chain B
-    update_to_latest_client(test_a, test_b, client_id_b)?;
-
-    // OpenTryConnection on Chain B
-    // get the B's proofs on Chain A
-    let proofs = get_connection_proofs(test_a, &conn_id_a)?;
+    // get the proofs from Chain A
+    let height_a = query_height(test_a)?;
+    let (client_state, proofs) =
+        get_connection_proofs(test_a, client_id_a, &conn_id_a, height_a)?;
     let counterparty = ConnCounterparty::new(
         client_id_a.clone(),
         Some(conn_id_a.clone()),
@@ -374,13 +390,16 @@ fn connection_handshake(
     let msg = MsgConnectionOpenTry {
         previous_connection_id: None,
         client_id: client_id_b.clone(),
-        client_state: None,
+        client_state: Some(client_state),
         counterparty,
         counterparty_versions: vec![ConnVersion::default()],
         proofs,
         delay_period: Duration::new(30, 0),
         signer: Signer::new("test_b"),
     };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // OpenTryConnection on Chain B
     let height = submit_ibc_tx(test_b, msg)?;
     let conn_id_b = match get_event(test_b, height)? {
         Some(IbcEvent::OpenTryConnection(event)) => event
@@ -390,48 +409,71 @@ fn connection_handshake(
         _ => return Err(eyre!("Transaction failed")),
     };
 
-    // OpenAckConnection on Chain A
     // get the A's proofs on Chain B
-    let proofs = get_connection_proofs(test_b, &conn_id_b)?;
+    let height_b = query_height(test_b)?;
+    let (client_state, proofs) =
+        get_connection_proofs(test_b, client_id_b, &conn_id_b, height_b)?;
     let msg = MsgConnectionOpenAck {
         connection_id: conn_id_a.clone(),
         counterparty_connection_id: conn_id_b.clone(),
-        client_state: None,
+        client_state: Some(client_state),
         proofs,
         version: ConnVersion::default(),
         signer: Signer::new("test_a"),
     };
+    // Update the client state of Chain B on Chain A
+    update_client_with_height(test_b, test_a, client_id_a, height_b)?;
+    // OpenAckConnection on Chain A
     submit_ibc_tx(test_a, msg)?;
 
-    // OpenConfirmConnection on Chain B
     // get the proofs on Chain A
-    let proofs = get_connection_proofs(test_a, &conn_id_a)?;
+    let height_a = query_height(test_a)?;
+    let (_, proofs) =
+        get_connection_proofs(test_a, client_id_a, &conn_id_a, height_a)?;
     let msg = MsgConnectionOpenConfirm {
         connection_id: conn_id_b.clone(),
         proofs,
         signer: Signer::new("test_b"),
     };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // OpenConfirmConnection on Chain B
     submit_ibc_tx(test_b, msg)?;
 
     Ok((conn_id_a, conn_id_b))
 }
 
+// get the proofs on the target height
 fn get_connection_proofs(
     test: &Test,
+    client_id: &ClientId,
     conn_id: &ConnectionId,
-) -> Result<Proofs> {
-    let height = query_height(test)?;
-    let key = connection_key(&conn_id);
-    let tm_proof = query_proof(test, &key)?;
+    target_height: Height,
+) -> Result<(AnyClientState, Proofs)> {
+    let key = connection_key(conn_id);
+    let (_, tm_proof) = query_value_with_proof(test, &key)?;
     let connection_proof = convert_proof(tm_proof)?;
 
-    Proofs::new(connection_proof, None, None, None, height)
-        .map_err(|e| eyre!("Creating proofs failed: error {}", e))
+    let (client_state, client_state_proof, consensus_proof) =
+        get_client_states(test, client_id)?;
+
+    let proofs = Proofs::new(
+        connection_proof,
+        Some(client_state_proof),
+        Some(consensus_proof),
+        None,
+        target_height,
+    )
+    .map_err(|e| eyre!("Creating proofs failed: error {}", e))?;
+
+    Ok((client_state, proofs))
 }
 
 fn channel_handshake(
     test_a: &Test,
     test_b: &Test,
+    client_id_a: &ClientId,
+    client_id_b: &ClientId,
     conn_id_a: &ConnectionId,
     conn_id_b: &ConnectionId,
 ) -> Result<(PortChannelId, PortChannelId)> {
@@ -439,7 +481,7 @@ fn channel_handshake(
     let port_id = PortId::from_str("test_port").unwrap();
     let counterparty = ChanCounterparty::new(port_id.clone(), None);
     let channel = ChannelEnd::new(
-        ChanState::Uninitialized,
+        ChanState::Init,
         ChanOrder::Unordered,
         counterparty,
         vec![conn_id_a.clone()],
@@ -461,17 +503,19 @@ fn channel_handshake(
     let port_channel_id_a =
         port_channel_id(port_id.clone(), channel_id_a.clone());
 
-    // OpenTryChannel on Chain B
+    // get the proofs from Chain A
+    let height_a = query_height(test_a)?;
+    let proofs =
+        get_channel_proofs(test_a, client_id_a, &port_channel_id_a, height_a)?;
     let counterparty =
         ChanCounterparty::new(port_id.clone(), Some(channel_id_a.clone()));
     let channel = ChannelEnd::new(
-        ChanState::Uninitialized,
+        ChanState::TryOpen,
         ChanOrder::Unordered,
         counterparty,
         vec![conn_id_b.clone()],
         ChanVersion::ics20(),
     );
-    let proofs = get_channel_proofs(test_a, &port_channel_id_a)?;
     let msg = MsgChannelOpenTry {
         port_id: port_id.clone(),
         previous_channel_id: None,
@@ -480,9 +524,12 @@ fn channel_handshake(
         proofs,
         signer: Signer::new("test_b"),
     };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // OpenTryChannel on Chain B
     let height = submit_ibc_tx(test_b, msg)?;
     let channel_id_b = match get_event(test_b, height)? {
-        Some(IbcEvent::OpenInitChannel(event)) => event
+        Some(IbcEvent::OpenTryChannel(event)) => event
             .channel_id()
             .ok_or(eyre!("No channel ID is set"))?
             .clone(),
@@ -491,8 +538,10 @@ fn channel_handshake(
     let port_channel_id_b =
         port_channel_id(port_id.clone(), channel_id_b.clone());
 
-    // OpenAckChannel on Chain A
-    let proofs = get_channel_proofs(test_b, &port_channel_id_b)?;
+    // get the A's proofs on Chain B
+    let height_b = query_height(test_b)?;
+    let proofs =
+        get_channel_proofs(test_b, client_id_b, &port_channel_id_b, height_b)?;
     let msg = MsgChannelOpenAck {
         port_id: port_id.clone(),
         channel_id: channel_id_a,
@@ -501,16 +550,24 @@ fn channel_handshake(
         proofs,
         signer: Signer::new("test_a"),
     };
+    // Update the client state of Chain B on Chain A
+    update_client_with_height(test_b, test_a, client_id_a, height_b)?;
+    // OpenAckChannel on Chain A
     submit_ibc_tx(test_a, msg)?;
 
-    // OpenConfirmChannel on Chain B
-    let proofs = get_channel_proofs(test_a, &port_channel_id_a)?;
+    // get the proofs on Chain A
+    let height_a = query_height(test_a)?;
+    let proofs =
+        get_channel_proofs(test_a, client_id_a, &port_channel_id_a, height_a)?;
     let msg = MsgChannelOpenConfirm {
         port_id,
         channel_id: channel_id_b,
         proofs,
         signer: Signer::new("test_b"),
     };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // OpenConfirmChannel on Chain B
     submit_ibc_tx(test_b, msg)?;
 
     Ok((port_channel_id_a, port_channel_id_b))
@@ -518,27 +575,68 @@ fn channel_handshake(
 
 fn get_channel_proofs(
     test: &Test,
+    client_id: &ClientId,
     port_channel_id: &PortChannelId,
+    target_height: Height,
 ) -> Result<Proofs> {
-    let height = query_height(test)?;
     let key = channel_key(port_channel_id);
-    let tm_proof = query_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key)?;
     let proof = convert_proof(tm_proof)?;
 
-    Proofs::new(proof, None, None, None, height)
-        .map_err(|e| eyre!("Creating proofs failed: error {}", e))
+    let (_, client_state_proof, consensus_proof) =
+        get_client_states(test, client_id)?;
+
+    Proofs::new(
+        proof,
+        Some(client_state_proof),
+        Some(consensus_proof),
+        None,
+        target_height,
+    )
+    .map_err(|e| eyre!("Creating proofs failed: error {}", e))
+}
+
+// get the client state, the proof of the client state, and the proof of the
+// consensus state
+fn get_client_states(
+    test: &Test,
+    client_id: &ClientId,
+) -> Result<(AnyClientState, CommitmentProofBytes, ConsensusProof)> {
+    let key = client_state_key(client_id);
+    let (value, tm_proof) = query_value_with_proof(test, &key)?;
+    let client_state = match value {
+        Some(v) => AnyClientState::decode_vec(&v)
+            .map_err(|e| eyre!("Decoding the client state failed: {}", e))?,
+        None => {
+            return Err(eyre!(
+                "The client state doesn't exist: client ID {}",
+                client_id
+            ));
+        }
+    };
+    let client_state_proof = convert_proof(tm_proof)?;
+
+    let height = client_state.latest_height();
+    let key = consensus_state_key(client_id, height);
+    let (_, tm_proof) = query_value_with_proof(test, &key)?;
+    let proof = convert_proof(tm_proof)?;
+    let consensus_proof = ConsensusProof::new(proof, height)
+        .map_err(|e| eyre!("Creating ConsensusProof failed: error {}", e))?;
+
+    Ok((client_state, client_state_proof, consensus_proof))
 }
 
 fn transfer_token(
     test_a: &Test,
     test_b: &Test,
+    client_id_a: &ClientId,
+    client_id_b: &ClientId,
     source_port_channel_id: &PortChannelId,
 ) -> Result<()> {
     let xan = find_address(test_a, XAN)?;
     let sender = find_address(test_a, ALBERT)?;
     let receiver = find_address(test_b, BERTHA)?;
 
-    // Send a token from Chain A
     let token = Some(Coin {
         denom: xan.to_string(),
         amount: "1000000".to_string(),
@@ -552,19 +650,23 @@ fn transfer_token(
         timeout_height: Height::new(100, 100),
         timeout_timestamp: (Timestamp::now() + Duration::new(30, 0)).unwrap(),
     };
+    // Send a token from Chain A
     let height = submit_ibc_tx(test_a, msg)?;
     let packet = match get_event(test_a, height)? {
         Some(IbcEvent::SendPacket(event)) => event.packet,
         _ => return Err(eyre!("Transaction failed")),
     };
 
-    // Receive the token on Chain B
-    let proofs = get_commitment_proof(test_a, &packet)?;
+    let height_a = query_height(test_a)?;
+    let proofs = get_commitment_proof(test_a, &packet, height_a)?;
     let msg = MsgRecvPacket {
         packet,
         proofs,
         signer: Signer::new("test_b"),
     };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // Receive the token on Chain B
     let height = submit_ibc_tx(test_b, msg)?;
     let (acknowledgement, packet) = match get_event(test_b, height)? {
         Some(IbcEvent::WriteAcknowledgement(event)) => {
@@ -573,44 +675,54 @@ fn transfer_token(
         _ => return Err(eyre!("Transaction failed")),
     };
 
-    // Acknowledge on Chain A
-    let proofs = get_ack_proof(test_a, &packet)?;
+    // get the proof on Chain B
+    let height_b = query_height(test_b)?;
+    let proofs = get_ack_proof(test_b, &packet, height_b)?;
     let msg = MsgAcknowledgement {
         packet,
         acknowledgement: acknowledgement.into(),
         proofs,
         signer: Signer::new("test_a"),
     };
-    submit_ibc_tx(test_b, msg)?;
+    // Update the client state of Chain B on Chain A
+    update_client_with_height(test_b, test_a, client_id_a, height_b)?;
+    // Acknowledge on Chain A
+    submit_ibc_tx(test_a, msg)?;
 
     Ok(())
 }
 
-fn get_commitment_proof(test: &Test, packet: &Packet) -> Result<Proofs> {
-    let height = query_height(test)?;
+fn get_commitment_proof(
+    test: &Test,
+    packet: &Packet,
+    target_height: Height,
+) -> Result<Proofs> {
     let key = commitment_key(
         &packet.source_port,
         &packet.source_channel,
         packet.sequence,
     );
-    let tm_proof = query_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key)?;
     let commitment_proof = convert_proof(tm_proof)?;
 
-    Proofs::new(commitment_proof, None, None, None, height)
+    Proofs::new(commitment_proof, None, None, None, target_height)
         .map_err(|e| eyre!("Creating proofs failed: error {}", e))
 }
 
-fn get_ack_proof(test: &Test, packet: &Packet) -> Result<Proofs> {
-    let height = query_height(test)?;
+fn get_ack_proof(
+    test: &Test,
+    packet: &Packet,
+    target_height: Height,
+) -> Result<Proofs> {
     let key = ack_key(
         &packet.destination_port,
         &packet.destination_channel,
         packet.sequence,
     );
-    let tm_proof = query_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key)?;
     let ack_proof = convert_proof(tm_proof)?;
 
-    Proofs::new(ack_proof, None, None, None, height)
+    Proofs::new(ack_proof, None, None, None, target_height)
         .map_err(|e| eyre!("Creating proofs failed: error {}", e))
 }
 
@@ -674,6 +786,11 @@ fn submit_ibc_tx(
         ));
     }
 
+    // wait for the next block to use the app hash
+    while height as u64 + 1 > query_height(test)?.revision_height {
+        sleep(1);
+    }
+
     Ok(height)
 }
 
@@ -694,12 +811,8 @@ fn query_height(test: &Test) -> Result<Height> {
     let status = rt
         .block_on(client.status())
         .map_err(|e| eyre!("Getting the status failed: {}", e))?;
-    let epoch = get_epoch(test, &rpc)?;
 
-    Ok(Height::new(
-        epoch.0,
-        status.sync_info.latest_block_height.into(),
-    ))
+    Ok(Height::new(0, status.sync_info.latest_block_height.into()))
 }
 
 fn query_header(test: &Test, height: Height) -> Result<TmHeader> {
@@ -755,25 +868,10 @@ fn get_event(test: &Test, height: u32) -> Result<Option<IbcEvent>> {
     Ok(None)
 }
 
-fn query_client_state(
+fn query_value_with_proof(
     test: &Test,
-    client_id: &ClientId,
-) -> Result<AnyClientState> {
-    let rpc = get_actor_rpc(test, &Who::Validator(0));
-    let ledger_address = TendermintAddress::from_str(&rpc).unwrap();
-    let client = HttpClient::new(ledger_address).unwrap();
-    let key = client_state_key(client_id);
-    let result = Runtime::new()
-        .unwrap()
-        .block_on(query_storage_value_bytes(client, key, false));
-    match result {
-        (Some(value), _) => AnyClientState::decode_vec(&value)
-            .map_err(|e| eyre!("Decoding the client state failed: {}", e)),
-        _ => Err(eyre!("Getting the client state failed")),
-    }
-}
-
-fn query_with_proof(test: &Test, key: &Key) -> Result<(Vec<u8>, TmProof)> {
+    key: &Key,
+) -> Result<(Option<Vec<u8>>, TmProof)> {
     let rpc = get_actor_rpc(test, &Who::Validator(0));
     let ledger_address = TendermintAddress::from_str(&rpc).unwrap();
     let client = HttpClient::new(ledger_address).unwrap();
@@ -781,21 +879,8 @@ fn query_with_proof(test: &Test, key: &Key) -> Result<(Vec<u8>, TmProof)> {
         .unwrap()
         .block_on(query_storage_value_bytes(&client, key, true));
     match result {
-        (Some(value), Some(proof)) => Ok((value, proof)),
-        _ => Err(eyre!("The value doesn't exist: key {}", key)),
-    }
-}
-
-fn query_proof(test: &Test, key: &Key) -> Result<TmProof> {
-    let rpc = get_actor_rpc(test, &Who::Validator(0));
-    let ledger_address = TendermintAddress::from_str(&rpc).unwrap();
-    let client = HttpClient::new(ledger_address).unwrap();
-    let result = Runtime::new()
-        .unwrap()
-        .block_on(query_storage_value_bytes(&client, key, true));
-    match result {
-        (_, Some(proof)) => Ok(proof),
-        _ => Err(eyre!("Proof doesn't exist: key {}", key)),
+        (value, Some(proof)) => Ok((value, proof)),
+        _ => Err(eyre!("Query failed: key {}", key)),
     }
 }
 
