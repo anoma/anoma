@@ -122,7 +122,7 @@ pub mod genesis_config {
         // Min funds to stake to submit a proposal
         // XXX: u64 doesn't work with toml-rs!
         pub min_proposal_fund: u64,
-        // Maximum size of proposal in kilobytes
+        // Maximum size of proposal in bytes
         // XXX: u64 doesn't work with toml-rs!
         pub max_proposal_code_size: u64,
         // Proposal period length in epoch

@@ -4,6 +4,7 @@ use std::fmt::{self, Display};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::transaction;
 #[cfg(feature = "ABCI")]
@@ -49,6 +50,12 @@ impl Display for Hash {
     }
 }
 
+impl AsRef<[u8]> for Hash {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 impl TryFrom<&[u8]> for Hash {
     type Error = self::Error;
 
@@ -71,5 +78,13 @@ impl TryFrom<&[u8]> for Hash {
 impl From<Hash> for transaction::Hash {
     fn from(hash: Hash) -> Self {
         Self::new(hash.0)
+    }
+}
+
+impl Hash {
+    /// Compute sha256 of some bytes
+    pub fn sha256(data: impl AsRef<[u8]>) -> Self {
+        let digest = Sha256::digest(data.as_ref());
+        Self(*digest.as_ref())
     }
 }

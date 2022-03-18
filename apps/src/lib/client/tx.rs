@@ -6,7 +6,7 @@ use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::{xan as m1t, Address};
-use anoma::types::governance::{OfflineProposal, Proposal};
+use anoma::types::governance::{OfflineProposal, OfflineVote, Proposal};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
@@ -534,13 +534,18 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
 
     if args.offline {
         let signer = ctx.get(&signer);
+        let public_key =
+            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
+                .await
+                .expect("Public key should exist.");
         let signing_key = signing::find_keypair(
             &mut ctx.wallet,
             &signer,
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_proposal = OfflineProposal::new(proposal, &signing_key);
+        let offline_proposal =
+            OfflineProposal::new(proposal, public_key, &signing_key);
         let proposal_filename = "proposal".to_string();
         let out = File::create(&proposal_filename).unwrap();
         match serde_json::to_writer_pretty(out, &offline_proposal) {
@@ -586,20 +591,57 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
     }
 }
 
-pub async fn submit_vote_proposal(ctx: Context, args: args::VoteProposal) {
-    if args.offline {
+pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
+    let signer = if let Some(addr) = &args.tx.signer {
+        addr
     } else {
-        let signer = if let Some(addr) = &args.tx.signer {
-            addr
-        } else {
-            eprintln!("Missing mandatory argument --signer.");
+        eprintln!("Missing mandatory argument --signer.");
+        safe_exit(1)
+    };
+
+    if args.offline {
+        let signer = ctx.get(signer);
+        let proposal_file_path =
+            args.proposal_data.expect("Proposal file should exist.");
+        let file = File::open(&proposal_file_path).expect("File must exist.");
+        let proposal: OfflineProposal =
+            serde_json::from_reader(file).expect("JSON was not well-formatted");
+        if !proposal.check_signature() {
+            eprintln!("Proposal signature mismatch!");
             safe_exit(1)
-        };
-        // TODO: check if its validator or delegator
+        }
+
+        let public_key =
+            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
+                .await
+                .expect("Public key should exist.");
+        let signing_key = signing::find_keypair(
+            &mut ctx.wallet,
+            &signer,
+            args.tx.ledger_address.clone(),
+        )
+        .await;
+        let offline_vote =
+            OfflineVote::new(&proposal, args.vote, public_key, &signing_key);
+
+        let proposal_vote_filename =
+            format!("proposal-vote-{}", &signer.to_string());
+        let out = File::create(&proposal_vote_filename).unwrap();
+        match serde_json::to_writer_pretty(out, &offline_vote) {
+            Ok(_) => {
+                println!("Proposal vote created: {}.", proposal_vote_filename);
+            }
+            Err(e) => {
+                eprintln!("Error while creating proposal vote file: {}.", e);
+                safe_exit(1)
+            }
+        }
+    } else {
+        let voter_address = ctx.get(signer);
         let tx_data = VoteProposalData {
-            id: args.proposal_id,
+            id: args.proposal_id.unwrap(),
             vote: args.vote,
-            voter: ctx.get(signer),
+            voter: voter_address,
         };
 
         let data = tx_data
