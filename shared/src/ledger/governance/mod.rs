@@ -77,6 +77,7 @@ where
         };
 
         let result = keys_changed.iter().all(|key| {
+            println!("{}", key.to_string());
             let proposal_id = gov_storage::get_id(key);
 
             let key_type: KeyType = key.into();
