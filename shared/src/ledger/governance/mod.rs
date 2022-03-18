@@ -77,6 +77,7 @@ where
         };
 
         let result = keys_changed.iter().all(|key| {
+            println!("{}", key.to_string());
             let proposal_id = gov_storage::get_id(key);
 
             let key_type: KeyType = key.into();
@@ -130,9 +131,6 @@ where
                                     pre_voting_start_epoch,
                                     pre_voting_end_epoch,
                                 );
-                            println!("{}", is_delegator);
-                            println!("{}", is_validator);
-                            println!("{}", is_valid_validator_voting_period);
                             pre_counter > proposal_id
                                 && current_epoch >= pre_voting_start_epoch
                                 && current_epoch <= pre_voting_end_epoch
@@ -300,9 +298,8 @@ where
                             }
                             !has_pre_start_epoch
                                 && !has_pre_end_epoch
-                                && start_epoch < end_epoch
                                 && (end_epoch - start_epoch) % min_period == 0
-                                && (start_epoch - current_epoch).0 >= min_period
+                                && (end_epoch - start_epoch).0 >= min_period
                         }
                         _ => false,
                     }
