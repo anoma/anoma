@@ -285,8 +285,12 @@ pub async fn submit_init_validator(
                 [account_1, account_2] => {
                     // We need to find out which address is which
                     let (validator_address, rewards_address) =
-                        if rpc::is_validator(account_1, tx_args.ledger_address)
-                            .await
+                        if rpc::is_validator(
+                            account_1,
+                            None,
+                            tx_args.ledger_address,
+                        )
+                        .await
                         {
                             (account_1, account_2)
                         } else {
@@ -534,10 +538,6 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
 
     if args.offline {
         let signer = ctx.get(&signer);
-        let public_key =
-            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
-                .await
-                .expect("Public key should exist.");
         let signing_key = signing::find_keypair(
             &mut ctx.wallet,
             &signer,
@@ -545,7 +545,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         )
         .await;
         let offline_proposal =
-            OfflineProposal::new(proposal, public_key, &signing_key);
+            OfflineProposal::new(proposal, signer, &signing_key);
         let proposal_filename = "proposal".to_string();
         let out = File::create(&proposal_filename).unwrap();
         match serde_json::to_writer_pretty(out, &offline_proposal) {
@@ -623,25 +623,32 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
         let proposal_file_path =
             args.proposal_data.expect("Proposal file should exist.");
         let file = File::open(&proposal_file_path).expect("File must exist.");
+
         let proposal: OfflineProposal =
             serde_json::from_reader(file).expect("JSON was not well-formatted");
-        if !proposal.check_signature() {
+        let public_key = rpc::get_public_key(
+            &proposal.address,
+            args.tx.ledger_address.clone(),
+        )
+        .await
+        .expect("Public key should exist.");
+        if !proposal.check_signature(&public_key) {
             eprintln!("Proposal signature mismatch!");
             safe_exit(1)
         }
 
-        let public_key =
-            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
-                .await
-                .expect("Public key should exist.");
         let signing_key = signing::find_keypair(
             &mut ctx.wallet,
             &signer,
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_vote =
-            OfflineVote::new(&proposal, args.vote, public_key, &signing_key);
+        let offline_vote = OfflineVote::new(
+            &proposal,
+            args.vote,
+            signer.clone(),
+            &signing_key,
+        );
 
         let proposal_vote_filename =
             format!("proposal-vote-{}", &signer.to_string());
@@ -697,7 +704,8 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
+        rpc::is_validator(&validator, None, args.tx.ledger_address.clone())
+            .await;
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -763,7 +771,8 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
+        rpc::is_validator(&validator, None, args.tx.ledger_address.clone())
+            .await;
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -835,7 +844,8 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
+        rpc::is_validator(&validator, None, args.tx.ledger_address.clone())
+            .await;
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
