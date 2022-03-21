@@ -932,7 +932,9 @@
 };
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos::anoma_proof_of_stake::PosBase</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
-<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">DBIter</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>, <span class="ident">DB</span>};
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{
+    <span class="ident">DBIter</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>, <span class="ident">DB</span>,
+};
 <span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">ibc</span>, <span class="ident">parameters</span>, <span class="ident">pos</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
@@ -1082,10 +1084,8 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shell</span><span class="op">&lt;</span>
-    <span class="ident">D</span> <span class="op">=</span> <span class="ident">storage::PersistentDB</span>,
-    <span class="ident">H</span> <span class="op">=</span> <span class="ident">storage::PersistentStorageHasher</span>,
-<span class="op">&gt;</span> <span class="kw">where</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shell</span><span class="op">&lt;</span><span class="ident">D</span> <span class="op">=</span> <span class="ident">storage::PersistentDB</span>, <span class="ident">H</span> <span class="op">=</span> <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
