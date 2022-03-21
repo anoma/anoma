@@ -428,12 +428,6 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
-<span id="430">430</span>
-<span id="431">431</span>
-<span id="432">432</span>
-<span id="433">433</span>
-<span id="434">434</span>
-<span id="435">435</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for connection module</span>
 
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -448,10 +442,7 @@
     <span class="ident">is_connection_counter_key</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_consensus</span>::{
-    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
-};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_consensus::AnyConsensusState</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::client_state::AnyClientState</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::context::ClientReader</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc::core::ics02_client::height::Height</span>;
@@ -836,13 +827,10 @@
 
     <span class="kw">fn</span> <span class="ident">host_consensus_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_height</span>: <span class="ident">Height</span>,
+        <span class="ident">height</span>: <span class="ident">Height</span>,
     ) -&gt; <span class="ident">Ics03Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_header</span>().<span class="number">0</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="ident">h</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ics03Error::implementation_specific</span>()),
-        };
-        <span class="prelude-val">Ok</span>(<span class="ident">TmConsensusState::from</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>())
+        <span class="ident">ClientReader::host_consensus_state</span>(<span class="self">self</span>, <span class="ident">height</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Ics03Error::ics02_client</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics03Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {

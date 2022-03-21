@@ -1783,6 +1783,10 @@
 <span id="1782">1782</span>
 <span id="1783">1783</span>
 <span id="1784">1784</span>
+<span id="1785">1785</span>
+<span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC integration as a native validity predicate</span>
 
 <span class="kw">mod</span> <span class="ident">channel</span>;
@@ -2151,6 +2155,7 @@
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">PacketAck</span>, <span class="ident">PacketReceipt</span>};
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>};
 
     <span class="kw">fn</span> <span class="ident">get_client_id</span>() -&gt; <span class="ident">ClientId</span> {
         <span class="ident">ClientId::from_str</span>(<span class="string">&quot;test_client&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a client ID failed&quot;</span>)
@@ -2166,6 +2171,9 @@
         <span class="ident">storage</span>
             .<span class="ident">set_header</span>(<span class="ident">get_dummy_header</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;Setting a dummy header shouldn&#39;t fail&quot;</span>);
+        <span class="ident">storage</span>
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">1</span>))
+            .<span class="ident">unwrap</span>();
 
         <span class="comment">// insert a mock client type</span>
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">get_client_id</span>();
@@ -2176,7 +2184,7 @@
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert a mock client state</span>
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_client_id</span>());
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
@@ -2343,7 +2351,7 @@
     <span class="kw">fn</span> <span class="ident">test_create_client</span>() {
         <span class="kw">let</span> (<span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
 
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
@@ -2584,7 +2592,7 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
@@ -2602,7 +2610,7 @@
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
             <span class="prelude-val">Some</span>(<span class="ident">proof_consensus</span>),
             <span class="prelude-val">None</span>,
-            <span class="ident">height</span>,
+            <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>),
         )
         .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgConnectionOpenTry</span> {
@@ -2667,7 +2675,7 @@
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
             <span class="ident">height</span>,
             <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
@@ -2686,7 +2694,7 @@
             <span class="prelude-val">Some</span>(<span class="ident">proof_client</span>),
             <span class="prelude-val">Some</span>(<span class="ident">proof_consensus</span>),
             <span class="prelude-val">None</span>,
-            <span class="ident">height</span>,
+            <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>),
         )
         .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -2744,7 +2752,7 @@
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">proof_conn</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
@@ -2855,7 +2863,7 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
@@ -2932,7 +2940,7 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
@@ -3010,7 +3018,7 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// prepare data</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">proof_channel</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_client</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proof_consensus</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(
@@ -3158,7 +3166,7 @@
             }),
             <span class="ident">sender</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;sender&quot;</span>),
             <span class="ident">receiver</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;receiver&quot;</span>),
-            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
+            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
 
@@ -3234,12 +3242,12 @@
             <span class="ident">destination_port</span>: <span class="ident">get_port_id</span>(),
             <span class="ident">destination_channel</span>: <span class="ident">get_channel_id</span>(),
             <span class="ident">data</span>: <span class="macro">vec!</span>[<span class="number">0</span>],
-            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
+            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
         <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span>
-            <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>))
+            <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>))
                 .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgRecvPacket</span> {
             <span class="ident">packet</span>,
@@ -3299,7 +3307,7 @@
             <span class="ident">destination_port</span>: <span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
             <span class="ident">destination_channel</span>: <span class="ident">counterparty</span>.<span class="ident">channel_id</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>(),
             <span class="ident">data</span>: <span class="macro">vec!</span>[<span class="number">0</span>],
-            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
+            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
         <span class="comment">// insert an opened connection</span>
@@ -3327,7 +3335,7 @@
         <span class="kw">let</span> <span class="ident">ack</span> <span class="op">=</span> <span class="ident">PacketAck::default</span>().<span class="ident">encode_to_vec</span>();
         <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span>
-            <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>))
+            <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>))
                 .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgAcknowledgement</span> {
             <span class="ident">packet</span>,
@@ -3396,7 +3404,7 @@
             }),
             <span class="ident">sender</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;sender&quot;</span>),
             <span class="ident">receiver</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;receiver&quot;</span>),
-            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
+            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
 
@@ -3471,12 +3479,12 @@
             <span class="ident">destination_port</span>: <span class="ident">get_port_id</span>(),
             <span class="ident">destination_channel</span>: <span class="ident">get_channel_id</span>(),
             <span class="ident">data</span>: <span class="macro">vec!</span>[<span class="number">0</span>],
-            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
+            <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">100</span>),
             <span class="ident">timeout_timestamp</span>,
         };
         <span class="kw">let</span> <span class="ident">proof_packet</span> <span class="op">=</span> <span class="ident">CommitmentProofBytes::try_from</span>(<span class="macro">vec!</span>[<span class="number">0</span>]).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span>
-            <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>))
+            <span class="ident">Proofs::new</span>(<span class="ident">proof_packet</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>))
                 .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">MsgRecvPacket</span> {
             <span class="ident">packet</span>,
