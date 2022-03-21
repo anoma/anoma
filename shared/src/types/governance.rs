@@ -214,11 +214,19 @@ impl OfflineVote {
     ) -> Self {
         let proposal_data = serde_json::to_vec(proposal)
             .expect("Conversion to bytes shouldn't fail.");
-        let proposal_data_hash = Hash::sha256(&proposal_data);
-        let signature =
-            common::SigScheme::sign(signing_key, &proposal_data_hash);
+        let proposal_hash = Hash::sha256(&proposal_data);
+        let proposal_hash_data = proposal_hash
+            .try_to_vec()
+            .expect("Conversion to bytes shouldn't fail.");
+        let proposal_vote_data = vote
+            .try_to_vec()
+            .expect("Conversion to bytes shouldn't fail.");
+        let signature = common::SigScheme::sign(
+            signing_key,
+            &[proposal_hash_data, proposal_vote_data].concat(),
+        );
         Self {
-            proposal_hash: proposal_data_hash,
+            proposal_hash,
             vote,
             signature,
             pubkey,
@@ -227,9 +235,17 @@ impl OfflineVote {
 
     /// Check whether the signature is valid or not
     pub fn check_signature(&self) -> bool {
+        let proposal_hash_data = self
+            .proposal_hash
+            .try_to_vec()
+            .expect("Conversion to bytes shouldn't fail.");
+        let proposal_vote_data = self
+            .vote
+            .try_to_vec()
+            .expect("Conversion to bytes shouldn't fail.");
         common::SigScheme::verify_signature(
             &self.pubkey,
-            &self.proposal_hash,
+            &[proposal_hash_data, proposal_vote_data].concat(),
             &self.signature,
         )
         .is_ok()
