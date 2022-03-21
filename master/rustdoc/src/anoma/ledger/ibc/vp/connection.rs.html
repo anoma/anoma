@@ -425,6 +425,15 @@
 <span id="424">424</span>
 <span id="425">425</span>
 <span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for connection module</span>
 
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -673,11 +682,20 @@
         }
 
         <span class="comment">// counterpart connection ID check</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">counterpart_conn_id</span>) <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_conn_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">msg</span>.<span class="ident">counterparty_connection_id</span> {
+        <span class="kw">match</span> <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident">counterpart_conn_id</span>) =&gt; {
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_conn_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">msg</span>.<span class="ident">counterparty_connection_id</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;The counterpart connection ID mismatched: ID {}&quot;</span>,
+                        <span class="ident">counterpart_conn_id</span>
+                    )));
+                }
+            }
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;The counterpart connection ID mismatched: ID {}&quot;</span>,
-                    <span class="ident">counterpart_conn_id</span>
+                    <span class="string">&quot;The connection doesn&#39;t have the counterpart connection \
+                     ID: ID {}&quot;</span>,
+                    <span class="ident">conn_id</span>
                 )));
             }
         }
