@@ -595,6 +595,17 @@
 <span id="594">594</span>
 <span id="595">595</span>
 <span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for client module</span>
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -629,7 +640,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tendermint_proto::Protobuf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -1155,13 +1166,13 @@
 
     <span class="kw">fn</span> <span class="ident">host_consensus_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_height</span>: <span class="ident">Height</span>,
+        <span class="ident">height</span>: <span class="ident">Height</span>,
     ) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
-        <span class="ident">ClientReader::pending_host_consensus_state</span>(<span class="self">self</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">pending_host_consensus_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">header</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_header</span>();
+        <span class="kw">let</span> (<span class="ident">header</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">ctx</span>
+            .<span class="ident">storage</span>
+            .<span class="ident">get_block_header</span>(<span class="prelude-val">Some</span>(<span class="ident">BlockHeight</span>(<span class="ident">height</span>.<span class="ident">revision_height</span>)))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>())<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">ctx</span>
             .<span class="ident">gas_meter</span>
             .<span class="ident">borrow_mut</span>()
@@ -1171,6 +1182,17 @@
             <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">TmConsensusState::from</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>()),
             <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::missing_raw_header</span>()),
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">pending_host_consensus_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">block_height</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_height</span>();
+        <span class="self">self</span>.<span class="ident">ctx</span>
+            .<span class="ident">gas_meter</span>
+            .<span class="ident">borrow_mut</span>()
+            .<span class="ident">add</span>(<span class="ident">gas</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="ident">block_height</span>.<span class="number">0</span>);
+        <span class="ident">ClientReader::host_consensus_state</span>(<span class="self">self</span>, <span class="ident">height</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {

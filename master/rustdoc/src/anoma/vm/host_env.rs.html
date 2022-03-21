@@ -1830,6 +1830,8 @@
 <span id="1829">1829</span>
 <span id="1830">1830</span>
 <span id="1831">1831</span>
+<span id="1832">1832</span>
+<span id="1833">1833</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
 <span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
@@ -3381,7 +3383,9 @@
     <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> (<span class="ident">header</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_header</span>();
+    <span class="kw">let</span> (<span class="ident">header</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>
+        .<span class="ident">get_block_header</span>(<span class="prelude-val">None</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageError</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">header</span> {
         <span class="prelude-val">Some</span>(<span class="ident">h</span>) =&gt; {
             <span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="ident">h</span>

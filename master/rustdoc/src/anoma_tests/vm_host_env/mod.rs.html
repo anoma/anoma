@@ -2255,7 +2255,7 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
         <span class="comment">// update the block height for the following client update</span>
         <span class="ident">env</span>.<span class="ident">storage</span>
-            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">1</span>))
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">2</span>))
             .<span class="ident">unwrap</span>();
         <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
 
@@ -2332,7 +2332,7 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
         <span class="comment">// update the block height for the following client update</span>
         <span class="ident">env</span>.<span class="ident">storage</span>
-            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">2</span>))
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">3</span>))
             .<span class="ident">unwrap</span>();
         <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">ibc::tm_dummy_header</span>()).<span class="ident">unwrap</span>();
 

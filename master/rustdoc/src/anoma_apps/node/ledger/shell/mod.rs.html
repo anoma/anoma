@@ -905,6 +905,7 @@
 <span id="904">904</span>
 <span id="905">905</span>
 <span id="906">906</span>
+<span id="907">907</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Any changes applied before [`Shell::finalize_block`] might have to be</span>
@@ -1781,6 +1782,7 @@
             .<span class="ident">db</span>
             .<span class="ident">write_block</span>(<span class="ident">BlockStateWrite</span> {
                 <span class="ident">merkle_tree_stores</span>: <span class="ident">stores</span>,
+                <span class="ident">header</span>: <span class="prelude-val">None</span>,
                 <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="ident">hash</span>,
                 <span class="ident">height</span>: <span class="ident">BlockHeight</span>(<span class="number">1</span>),
                 <span class="ident">epoch</span>: <span class="ident">Epoch</span>(<span class="number">0</span>),

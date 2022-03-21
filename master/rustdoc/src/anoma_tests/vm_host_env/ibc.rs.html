@@ -681,6 +681,9 @@
 <span id="680">680</span>
 <span id="681">681</span>
 <span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::time::Duration</span>;
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -756,7 +759,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::ibc::data::FungibleTokenPacketData</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="ident">wasm</span>, <span class="ident">WasmCacheRwAccess</span>};
@@ -926,6 +929,9 @@
     <span class="ident">init_genesis_storage</span>(<span class="ident">storage</span>);
     <span class="comment">// block header to check timeout timestamp</span>
     <span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">tm_dummy_header</span>()).<span class="ident">unwrap</span>();
+    <span class="ident">storage</span>
+        .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">1</span>))
+        .<span class="ident">unwrap</span>();
 
     <span class="comment">// initialize a token</span>
     <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
@@ -1038,7 +1044,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_create_client</span>() -&gt; <span class="ident">MsgCreateAnyClient</span> {
-    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
     <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
         <span class="ident">height</span>,
         <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
@@ -1053,7 +1059,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_update_client</span>(<span class="ident">client_id</span>: <span class="ident">ClientId</span>) -&gt; <span class="ident">MsgUpdateAnyClient</span> {
-    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">11</span>);
+    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">2</span>);
     <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
         <span class="ident">height</span>,
         <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
@@ -1144,7 +1150,7 @@
 }
 
 <span class="kw">fn</span> <span class="ident">dummy_proofs</span>() -&gt; <span class="ident">Proofs</span> {
-    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
     <span class="kw">let</span> <span class="ident">consensus_proof</span> <span class="op">=</span>
         <span class="ident">ConsensusProof::new</span>(<span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">try_into</span>().<span class="ident">unwrap</span>(), <span class="ident">height</span>).<span class="ident">unwrap</span>();
     <span class="ident">Proofs::new</span>(
