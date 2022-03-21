@@ -1352,6 +1352,8 @@
 <span id="1351">1351</span>
 <span id="1352">1352</span>
 <span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Functions to handle IBC modules</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -1810,6 +1812,8 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span>
             <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="ident">Error::Decoding</span>)<span class="question-mark">?</span>;
+        <span class="ident">channel</span>
+            .<span class="ident">set_counterparty_channel_id</span>(<span class="ident">msg</span>.<span class="ident">counterparty_channel_id</span>.<span class="ident">clone</span>());
         <span class="ident">open_channel</span>(<span class="kw-2">&amp;mut</span> <span class="ident">channel</span>);
         <span class="self">self</span>.<span class="ident">write_ibc_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">channel_key</span>,

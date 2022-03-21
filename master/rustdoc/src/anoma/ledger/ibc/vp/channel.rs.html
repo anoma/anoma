@@ -940,6 +940,23 @@
 <span id="939">939</span>
 <span id="940">940</span>
 <span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for channel module</span>
 
 <span class="kw">use</span> <span class="ident">core::time::Duration</span>;
@@ -1321,6 +1338,23 @@
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">counterparty</span>().<span class="ident">channel_id</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident">counterpart_channel_id</span>) =&gt; {
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_channel_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">msg</span>.<span class="ident">counterparty_channel_id</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;The counterpart channel ID mismatched: ID {}&quot;</span>,
+                        <span class="ident">counterpart_channel_id</span>
+                    )));
+                }
+            }
+            <span class="prelude-val">None</span> =&gt; {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;The channel doesn&#39;t have the counterpart channel ID: ID \
+                     {}&quot;</span>,
+                    <span class="ident">port_channel_id</span>
+                )));
+            }
+        }
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span> <span class="ident">Counterparty::new</span>(
             <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
             <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
