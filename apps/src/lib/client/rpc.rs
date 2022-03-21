@@ -244,7 +244,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                 println!("{:4}Status: on-going", "");
             } else {
                 let (delegator_voters, validator_voters) =
-                    get_votes(client, start_epoch, id).await;
+                    get_votes(&client, start_epoch, id).await;
                 println!("{:4}Status: done", "");
                 println!(
                     "{:4}Result: {}",
@@ -463,6 +463,194 @@ pub async fn query_proposal_result(
                             } else if is_delegator(
                                 &proposal_vote.address,
                                 Some(proposal.tally_epoch),
+                                args.query.ledger_address.clone(),
+                            )
+                            .await
+                            {
+                                delegator_voters.insert(
+                                    proposal_vote.address,
+                                    proposal_vote.vote,
+                                );
+                            }
+                        }
+                        println!(
+                            "{:4}Result: {}",
+                            "",
+                            compute_tally(
+                                &client,
+                                current_epoch,
+                                &delegator_voters,
+                                &validator_voters
+                            )
+                            .await
+                        );
+                    }
+                    None => {
+                        eprintln!(
+                            "Offline flag must be followed by data-path."
+                        );
+                        cli::safe_exit(1)
+                    }
+                };
+            } else {
+                eprintln!("Either id or offline should be used as arguments.");
+                cli::safe_exit(1)
+            }
+        }
+    }
+}
+
+pub async fn query_proposal_result(
+    _ctx: Context,
+    args: args::QueryProposalResult,
+) {
+    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
+    let current_epoch = query_epoch(args.query.clone()).await;
+
+    match args.proposal_id {
+        Some(id) => {
+            let start_epoch_key = gov_storage::get_voting_start_epoch_key(id);
+            let end_epoch_key = gov_storage::get_voting_end_epoch_key(id);
+            let start_epoch =
+                query_storage_value::<Epoch>(&client, &start_epoch_key).await;
+            let end_epoch =
+                query_storage_value::<Epoch>(&client, &end_epoch_key).await;
+
+            match (start_epoch, end_epoch) {
+                (Some(start_epoch), Some(end_epoch)) => {
+                    if current_epoch > end_epoch {
+                        let (delegator_voters, validator_voters) =
+                            get_votes(&client, start_epoch, id).await;
+                        println!("Proposal: {}", id);
+                        println!(
+                            "{:4}Result: {}",
+                            "",
+                            compute_tally(
+                                &client,
+                                start_epoch,
+                                &delegator_voters,
+                                &validator_voters
+                            )
+                            .await
+                        );
+                    } else {
+                        eprintln!("Proposal is still in progress.");
+                        cli::safe_exit(1)
+                    }
+                }
+                _ => {
+                    eprintln!("Error while retriving proposal.");
+                    cli::safe_exit(1)
+                }
+            }
+        }
+        None => {
+            if args.offline {
+                match args.proposal_folder {
+                    Some(path) => {
+                        let mut dir = fs::read_dir(&path).await.expect("asd");
+                        let mut files = HashSet::new();
+                        let mut is_proposal_present = false;
+
+                        while let Some(entry) = dir.next().await {
+                            match entry {
+                                Ok(entry) => match entry.file_type().await {
+                                    Ok(entry_stat) => {
+                                        if entry_stat.is_file() {
+                                            if entry.file_name().eq(&"proposal")
+                                            {
+                                                is_proposal_present = true
+                                            } else {
+                                                files.insert(entry.path());
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        eprintln!(
+                                            "Can't read entry type: {}.",
+                                            e
+                                        );
+                                        cli::safe_exit(1)
+                                    }
+                                },
+                                Err(e) => {
+                                    eprintln!("Can't read entry: {}.", e);
+                                    cli::safe_exit(1)
+                                }
+                            }
+                        }
+
+                        if !is_proposal_present {
+                            eprintln!(
+                                "The folder must contain a the offline \
+                                 proposal in a file named proposal"
+                            );
+                            cli::safe_exit(1)
+                        }
+
+                        let file = File::open(&path.join("proposal"))
+                            .expect("Proposal file must exist.");
+                        let proposal: OfflineProposal =
+                            serde_json::from_reader(file).expect(
+                                "JSON was not well-formatted for proposal.",
+                            );
+
+                        let public_key = get_public_key(
+                            &proposal.address,
+                            args.query.ledger_address.clone(),
+                        )
+                        .await
+                        .expect("Public key should exist.");
+
+                        if !proposal.check_signature(&public_key) {
+                            eprintln!("Bad proposal signature.");
+                            cli::safe_exit(1)
+                        }
+
+                        let proposal_hash = proposal.compute_hash();
+
+                        let mut delegator_voters: HashMap<
+                            Address,
+                            ProposalVote,
+                        > = HashMap::new();
+                        let mut validator_voters: HashMap<
+                            Address,
+                            ProposalVote,
+                        > = HashMap::new();
+
+                        for path in files {
+                            let file = File::open(&path)
+                                .expect("Proposal file must exist.");
+                            let proposal_vote: OfflineVote =
+                                serde_json::from_reader(file).expect(
+                                    "JSON was not well-formatted for offline \
+                                     vote.",
+                                );
+
+                            let public_key = get_public_key(
+                                &proposal_vote.address,
+                                args.query.ledger_address.clone(),
+                            )
+                            .await
+                            .expect("Public key should exist.");
+                            if !proposal_vote.proposal_hash.eq(&proposal_hash)
+                                || proposal_vote.check_signature(&public_key)
+                            {
+                                continue;
+                            }
+
+                            if is_validator(
+                                &proposal_vote.address,
+                                args.query.ledger_address.clone(),
+                            )
+                            .await
+                            {
+                                validator_voters.insert(
+                                    proposal_vote.address,
+                                    proposal_vote.vote,
+                                );
+                            } else if is_delegator(
+                                &proposal_vote.address,
                                 args.query.ledger_address.clone(),
                             )
                             .await
@@ -1110,6 +1298,22 @@ pub async fn is_delegator(
     }
 }
 
+/// Check if a given address is a known delegator
+pub async fn is_delegator(
+    address: &Address,
+    ledger_address: TendermintAddress,
+) -> bool {
+    let client = HttpClient::new(ledger_address).unwrap();
+    let bonds_prefix = pos::bonds_for_source_prefix(&address);
+    let bonds =
+        query_storage_prefix::<pos::Bonds>(client.clone(), bonds_prefix).await;
+    if let Some(bonds) = bonds {
+        bonds.count() > 0
+    } else {
+        false
+    }
+}
+
 /// Check if the address exists on chain. Established address exists if it has a
 /// stored validity predicate. Implicit and internal addresses always return
 /// true.
@@ -1631,15 +1835,15 @@ pub async fn compute_tally(
     }
 
     for (addr, vote) in delegator_voters {
-        if !bond_data.contains_key(addr) {
+        if !bond_data.contains_key(&addr) {
             if vote.is_yay() {
-                yay_votes_tokens += bond_data.get(addr).unwrap().1;
+                yay_votes_tokens += bond_data.get(&addr).unwrap().1;
             }
         } else {
-            let delegator_data = bond_data.get(addr).unwrap();
+            let delegator_data = bond_data.get(&addr).unwrap();
             let validator_vote =
                 validator_voters.get(&delegator_data.0).unwrap();
-            if validator_vote.is_yay() && validator_vote.ne(vote) {
+            if validator_vote.is_yay() && validator_vote.ne(&vote) {
                 yay_votes_tokens -= delegator_data.1;
             } else {
                 yay_votes_tokens += delegator_data.1;
