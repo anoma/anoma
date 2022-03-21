@@ -965,6 +965,30 @@ fn proposal_submission() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
 
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
+    // 1.1 Delegate some token
+    let tx_args = vec![
+        "bond",
+        "--validator",
+        "validator-0",
+        "--source",
+        BERTHA,
+        "--amount",
+        "900",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
     // 2. Submit valid proposal
     let valid_proposal_json_path =
         test.base_dir.path().join("valid_proposal.json");
@@ -1078,8 +1102,6 @@ fn proposal_submission() -> Result<()> {
         invalid_proposal_json,
     );
 
-    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
-
     let submit_proposal_args = vec![
         "init-proposal",
         "--data-path",
@@ -1148,30 +1170,8 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
-    // 10. Delegate some token and send a nay vote
-    let tx_args = vec![
-        "bond",
-        "--validator",
-        "validator-0",
-        "--source",
-        BERTHA,
-        "--amount",
-        "900",
-        "--fee-amount",
-        "0",
-        "--gas-limit",
-        "0",
-        "--fee-token",
-        XAN,
-        "--ledger-address",
-        &validator_one_rpc,
-    ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
-    client.exp_string("Transaction is valid.")?;
-    client.assert_success();
-
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 <= 8 {
+    while epoch.0 <= 6 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
