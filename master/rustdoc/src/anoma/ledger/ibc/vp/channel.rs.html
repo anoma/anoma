@@ -955,12 +955,11 @@
 <span id="954">954</span>
 <span id="955">955</span>
 <span id="956">956</span>
-<span id="957">957</span>
-<span id="958">958</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for channel module</span>
 
 <span class="kw">use</span> <span class="ident">core::time::Duration</span>;
 
+<span class="kw">use</span> <span class="ident">prost::Message</span>;
 <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -1553,16 +1552,14 @@
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;Decoding the prior packet info failed: {}&quot;</span>,
-                        <span class="ident">e</span>
-                    ))
-                })
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()),
+            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">String::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;Decoding the prior commitment failed: {}&quot;</span>,
+                    <span class="ident">e</span>
+                ))
+            }),
             <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The prior packet info doesn&#39;t exist: Key {}&quot;</span>,
+                <span class="string">&quot;The prior commitment doesn&#39;t exist: Key {}&quot;</span>,
                 <span class="ident">key</span>
             ))),
         }
@@ -1779,9 +1776,8 @@
     ) -&gt; <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; <span class="ident">String::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>()),
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
         }
