@@ -310,6 +310,7 @@ pub async fn get_token_balance(
     let balance_key = balance_key(token, owner);
     query_storage_value(client, &balance_key).await
 }
+
 pub async fn query_proposal_result(
     _ctx: Context,
     args: args::QueryProposalResult,
@@ -1107,22 +1108,6 @@ pub async fn is_delegator(
             .await;
             bonds.is_some() && bonds.unwrap().count() > 0
         }
-    }
-}
-
-/// Check if a given address is a known delegator
-pub async fn is_delegator(
-    address: &Address,
-    ledger_address: TendermintAddress,
-) -> bool {
-    let client = HttpClient::new(ledger_address).unwrap();
-    let bonds_prefix = pos::bonds_for_source_prefix(&address);
-    let bonds =
-        query_storage_prefix::<pos::Bonds>(client.clone(), bonds_prefix).await;
-    if let Some(bonds) = bonds {
-        bonds.count() > 0
-    } else {
-        false
     }
 }
 
