@@ -2720,6 +2720,51 @@
 <span id="2719">2719</span>
 <span id="2720">2720</span>
 <span id="2721">2721</span>
+<span id="2722">2722</span>
+<span id="2723">2723</span>
+<span id="2724">2724</span>
+<span id="2725">2725</span>
+<span id="2726">2726</span>
+<span id="2727">2727</span>
+<span id="2728">2728</span>
+<span id="2729">2729</span>
+<span id="2730">2730</span>
+<span id="2731">2731</span>
+<span id="2732">2732</span>
+<span id="2733">2733</span>
+<span id="2734">2734</span>
+<span id="2735">2735</span>
+<span id="2736">2736</span>
+<span id="2737">2737</span>
+<span id="2738">2738</span>
+<span id="2739">2739</span>
+<span id="2740">2740</span>
+<span id="2741">2741</span>
+<span id="2742">2742</span>
+<span id="2743">2743</span>
+<span id="2744">2744</span>
+<span id="2745">2745</span>
+<span id="2746">2746</span>
+<span id="2747">2747</span>
+<span id="2748">2748</span>
+<span id="2749">2749</span>
+<span id="2750">2750</span>
+<span id="2751">2751</span>
+<span id="2752">2752</span>
+<span id="2753">2753</span>
+<span id="2754">2754</span>
+<span id="2755">2755</span>
+<span id="2756">2756</span>
+<span id="2757">2757</span>
+<span id="2758">2758</span>
+<span id="2759">2759</span>
+<span id="2760">2760</span>
+<span id="2761">2761</span>
+<span id="2762">2762</span>
+<span id="2763">2763</span>
+<span id="2764">2764</span>
+<span id="2765">2765</span>
+<span id="2766">2766</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -2899,6 +2944,7 @@
                 .<span class="ident">subcommand</span>(<span class="ident">QueryVotingPower::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">QuerySlashes::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">QueryResult::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
+                .<span class="ident">subcommand</span>(<span class="ident">QueryRawBytes::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
                 <span class="comment">// Intents</span>
                 .<span class="ident">subcommand</span>(<span class="ident">Intent::def</span>().<span class="ident">display_order</span>(<span class="number">4</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">SubscribeTopic::def</span>().<span class="ident">display_order</span>(<span class="number">4</span>))
@@ -2926,6 +2972,7 @@
                 <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryVotingPower</span>);
             <span class="kw">let</span> <span class="ident">query_slashes</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QuerySlashes</span>);
             <span class="kw">let</span> <span class="ident">query_result</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryResult</span>);
+            <span class="kw">let</span> <span class="ident">query_raw_bytes</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryRawBytes</span>);
             <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Intent</span>);
             <span class="kw">let</span> <span class="ident">subscribe_topic</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">SubscribeTopic</span>);
             <span class="kw">let</span> <span class="ident">utils</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::WithoutContext</span>);
@@ -2945,6 +2992,7 @@
                 .<span class="ident">or</span>(<span class="ident">query_voting_power</span>)
                 .<span class="ident">or</span>(<span class="ident">query_slashes</span>)
                 .<span class="ident">or</span>(<span class="ident">query_result</span>)
+                .<span class="ident">or</span>(<span class="ident">query_raw_bytes</span>)
                 .<span class="ident">or</span>(<span class="ident">intent</span>)
                 .<span class="ident">or</span>(<span class="ident">subscribe_topic</span>)
                 .<span class="ident">or</span>(<span class="ident">utils</span>)
@@ -2999,6 +3047,7 @@
         <span class="ident">QueryBonds</span>(<span class="ident">QueryBonds</span>),
         <span class="ident">QueryVotingPower</span>(<span class="ident">QueryVotingPower</span>),
         <span class="ident">QuerySlashes</span>(<span class="ident">QuerySlashes</span>),
+        <span class="ident">QueryRawBytes</span>(<span class="ident">QueryRawBytes</span>),
         <span class="comment">// Gossip cmds</span>
         <span class="ident">Intent</span>(<span class="ident">Intent</span>),
         <span class="ident">SubscribeTopic</span>(<span class="ident">SubscribeTopic</span>),
@@ -3727,6 +3776,25 @@
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryRawBytes</span>(<span class="kw">pub</span> <span class="ident">args::QueryRawBytes</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">QueryRawBytes</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query-bytes&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>.<span class="ident">subcommand_matches</span>(<span class="ident"><span class="self">Self</span>::CMD</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> {
+                <span class="ident">QueryRawBytes</span>(<span class="ident">args::QueryRawBytes::parse</span>(<span class="ident">matches</span>))
+            })
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() -&gt; <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query the raw bytes of a given storage key&quot;</span>)
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::QueryRawBytes</span><span class="op">&gt;</span>()
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxInitNft</span>(<span class="kw">pub</span> <span class="ident">args::NftCreate</span>);
 
     <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">TxInitNft</span> {
@@ -3918,7 +3986,7 @@
     <span class="kw">use</span> <span class="ident">anoma::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">ChainIdPrefix</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">DecimalWrapper</span>, <span class="ident">Exchange</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Epoch</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::transaction::GasLimit</span>;
     <span class="kw">use</span> <span class="ident">libp2p::Multiaddr</span>;
@@ -3989,6 +4057,7 @@
             <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="string">&quot;127.0.0.1:26657&quot;</span>;
             <span class="ident">TendermintAddress::from_str</span>(<span class="ident">raw</span>).<span class="ident">unwrap</span>()
         }));
+
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">TendermintAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;ledger-address&quot;</span>);
     <span class="kw">const</span> <span class="ident">LOCALHOST</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;localhost&quot;</span>);
     <span class="kw">const</span> <span class="ident">MATCHMAKER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;matchmaker-path&quot;</span>);
@@ -4010,6 +4079,7 @@
     <span class="kw">const</span> <span class="ident">SIGNING_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;signing-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">SOURCE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;source&quot;</span>);
     <span class="kw">const</span> <span class="ident">SOURCE_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SOURCE</span>.<span class="ident">opt</span>();
+    <span class="kw">const</span> <span class="ident">STORAGE_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;storage-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">TARGET</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;target&quot;</span>);
     <span class="kw">const</span> <span class="ident">TO_STDOUT</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;stdout&quot;</span>);
     <span class="kw">const</span> <span class="ident">TOKEN_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">TOKEN</span>.<span class="ident">opt</span>();
@@ -4718,7 +4788,27 @@
             )
         }
     }
+    <span class="doccomment">/// Query the raw bytes of given storage key</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryRawBytes</span> {
+        <span class="doccomment">/// The storage key to query</span>
+        <span class="kw">pub</span> <span class="ident">storage_key</span>: <span class="ident">storage::Key</span>,
+        <span class="doccomment">/// Common query args</span>
+        <span class="kw">pub</span> <span class="ident">query</span>: <span class="ident">Query</span>,
+    }
 
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">QueryRawBytes</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) -&gt; <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">storage_key</span> <span class="op">=</span> <span class="ident">STORAGE_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::parse</span>(<span class="ident">matches</span>);
+            <span class="self">Self</span> { <span class="ident">storage_key</span>, <span class="ident">query</span> }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) -&gt; <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Query</span><span class="op">&gt;</span>()
+                .<span class="ident">arg</span>(<span class="ident">STORAGE_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;Storage key&quot;</span>))
+        }
+    }
     <span class="doccomment">/// Intent arguments</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Intent</span> {

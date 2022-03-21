@@ -1155,6 +1155,29 @@
 <span id="1154">1154</span>
 <span id="1155">1155</span>
 <span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Client RPC queries</span>
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -1228,6 +1251,29 @@
         ),
     }
     <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+}
+
+<span class="doccomment">/// Query the raw bytes of given storage key</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_raw_bytes</span>(<span class="ident">_ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryRawBytes</span>) {
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Value</span>(<span class="ident">args</span>.<span class="ident">storage_key</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
+        .<span class="ident">abci_query</span>(<span class="prelude-val">Some</span>(<span class="ident">path</span>.<span class="ident">into</span>()), <span class="ident">data</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+    <span class="kw">match</span> <span class="ident">response</span>.<span class="ident">code</span> {
+        <span class="ident">Code::Ok</span> =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">hex::encode</span>(<span class="kw-2">&amp;</span><span class="ident">response</span>.<span class="ident">value</span>));
+        }
+        <span class="ident">Code::Err</span>(<span class="ident">err</span>) =&gt; {
+            <span class="macro">eprintln!</span>(
+                <span class="string">&quot;Error in the query {}  (error code {})&quot;</span>,
+                <span class="ident">response</span>.<span class="ident">info</span>, <span class="ident">err</span>
+            );
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+        }
+    }
 }
 
 <span class="doccomment">/// Query token balance(s)</span>
