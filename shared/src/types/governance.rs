@@ -152,15 +152,15 @@ pub struct OfflineProposal {
     pub data: Proposal,
     /// The signature over proposal data
     pub signature: Signature,
-    /// The public key to check the signature
-    pub pubkey: common::PublicKey,
+    /// The address corresponding to the signature pk
+    pub address: Address
 }
 
 impl OfflineProposal {
     /// Create an offline proposal with a signature
     pub fn new(
         proposal: Proposal,
-        pubkey: common::PublicKey,
+        address: Address,
         signing_key: &common::SecretKey,
     ) -> Self {
         let proposal_data = serde_json::to_vec(&proposal)
@@ -171,21 +171,26 @@ impl OfflineProposal {
         Self {
             data: proposal,
             signature,
-            pubkey,
+            address,
         }
     }
 
     /// Check whether the signature is valid or not
-    pub fn check_signature(&self) -> bool {
-        let proposal_data = serde_json::to_vec(&self.data)
-            .expect("Conversion to bytes shouldn't fail.");
-        let proposal_data_hash = Hash::sha256(&proposal_data);
+    pub fn check_signature(&self, public_key: &common::PublicKey) -> bool {
+        let proposal_data_hash = self.compute_hash();
         common::SigScheme::verify_signature(
-            &self.pubkey,
+            public_key,
             &proposal_data_hash,
             &self.signature,
         )
         .is_ok()
+    }
+
+    /// Compute the hash of the proposal
+    pub fn compute_hash(&self) -> Hash {
+        let proposal_data = serde_json::to_vec(&self.data)
+            .expect("Conversion to bytes shouldn't fail.");
+        Hash::sha256(&proposal_data)
     }
 }
 
@@ -200,8 +205,8 @@ pub struct OfflineVote {
     pub vote: ProposalVote,
     /// The signature over proposal data
     pub signature: Signature,
-    /// The public key to check the signature
-    pub pubkey: common::PublicKey,
+    /// The address corresponding to the signature pk
+    pub address: Address
 }
 
 impl OfflineVote {
@@ -209,7 +214,7 @@ impl OfflineVote {
     pub fn new(
         proposal: &OfflineProposal,
         vote: ProposalVote,
-        pubkey: common::PublicKey,
+        address: Address,
         signing_key: &common::SecretKey,
     ) -> Self {
         let proposal_data = serde_json::to_vec(proposal)
@@ -229,7 +234,7 @@ impl OfflineVote {
             proposal_hash,
             vote,
             signature,
-            pubkey,
+            address,
         }
     }
 
