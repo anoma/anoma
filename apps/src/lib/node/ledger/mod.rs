@@ -295,7 +295,8 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
         let abort_send_for_eth = abort_send.clone();
         let ethereum_node = tokio::spawn(async move {
-            // On panic or exit, the `Drop` of `AbortSender` will send abort message
+            // On panic or exit, the `Drop` of `AbortSender` will send abort
+            // message
             let aborter = Aborter {
                 sender: abort_send_for_eth,
                 who: "Ethereum",
@@ -328,25 +329,32 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             tokio::sync::oneshot::channel::<()>();
 
         (
-            Some((ethereum_node, eth_abort_send, eth_abort_resp_send, eth_abort_resp_recv)),
-            Some((tokio::spawn(async move {
-                // Construct a service for broadcasting protocol txs from the
-                // ledger
-                let mut broadcaster =
-                    Broadcaster::new(&rpc_address, broadcaster_receiver);
-                // On panic or exit, the `Drop` of `AbortSender` will send abort
-                // message
-                let aborter = Aborter {
-                    sender: abort_send_for_broadcaster,
-                    who: "Broadcaster",
-                };
-                let res = broadcaster.run(bc_abort_recv).await;
-                tracing::info!("Broadcaster is no longer running.");
+            Some((
+                ethereum_node,
+                eth_abort_send,
+                eth_abort_resp_send,
+                eth_abort_resp_recv,
+            )),
+            Some((
+                tokio::spawn(async move {
+                    // Construct a service for broadcasting protocol txs from
+                    // the ledger
+                    let mut broadcaster =
+                        Broadcaster::new(&rpc_address, broadcaster_receiver);
+                    // On panic or exit, the `Drop` of `AbortSender` will send
+                    // abort message
+                    let aborter = Aborter {
+                        sender: abort_send_for_broadcaster,
+                        who: "Broadcaster",
+                    };
+                    let res = broadcaster.run(bc_abort_recv).await;
+                    tracing::info!("Broadcaster is no longer running.");
 
-                drop(aborter);
-                res
-            }),
-            bc_abort_send))
+                    drop(aborter);
+                    res
+                }),
+                bc_abort_send,
+            )),
         )
     } else {
         (None, None)
@@ -443,11 +451,17 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     }
 
     let res = if let (
-        Some((ethereum_node, eth_abort_send, eth_abort_resp_send, eth_abort_resp_recv)),
-        Some((broadcaster, bc_abort_send))
-    ) = (ethereum_node, broadcaster) {
-        // Ask to shutdown tendermint node cleanly. Ignore error, which can happen
-        // if the tendermint_node task has already finished.
+        Some((
+            ethereum_node,
+            eth_abort_send,
+            eth_abort_resp_send,
+            eth_abort_resp_recv,
+        )),
+        Some((broadcaster, bc_abort_send)),
+    ) = (ethereum_node, broadcaster)
+    {
+        // Ask to shutdown tendermint node cleanly. Ignore error, which can
+        // happen if the tendermint_node task has already finished.
         if let Ok(()) = eth_abort_send.send(eth_abort_resp_send) {
             match eth_abort_resp_recv.await {
                 Ok(()) => {}

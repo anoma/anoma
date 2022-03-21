@@ -39,6 +39,25 @@ mod protocol_txs {
 
     const TX_NEW_DKG_KP_WASM: &str = "tx_update_dkg_session_keypair.wasm";
 
+    /// Convert Tendermint vote extensions to an Anoma native type
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+    pub struct VoteExtension {
+        /// Data whose authenticity if given by a validator signature
+        pub signed_data: Vec<u8>,
+        /// Data that can be self-authenticated
+        pub self_authenticating_data: Vec<u8>,
+    }
+
+    #[cfg(not(feature = "ABCI"))]
+    impl From<tendermint_proto::types::VoteExtension> for VoteExtension {
+        fn from(ext: tendermint_proto::types::VoteExtension) -> Self {
+            Self {
+                signed_data: ext.app_data_to_sign,
+                self_authenticating_data: ext.app_data_self_authenticating,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     /// Txs sent by validators as part of internal protocols
     pub struct ProtocolTx {
@@ -77,9 +96,8 @@ mod protocol_txs {
         DKG(DkgMessage),
         /// Tx requesting a new DKG session keypair
         NewDkgKeypair(Tx),
-        /// Aggregation of Ethereum state changes
-        /// voted on by validators in last block
-        EthereumStateUpdate(Tx),
+        /// Aggregation of Vote Extension data from previous block
+        VoteExtensions(Vec<VoteExtension>),
     }
 
     impl ProtocolTxType {

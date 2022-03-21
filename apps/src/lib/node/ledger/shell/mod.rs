@@ -75,6 +75,7 @@ use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
 #[allow(unused_imports)]
 use crate::wallet::ValidatorData;
+use crate::wallet::ValidatorKeys;
 use crate::{config, wallet};
 
 fn key_to_tendermint<PK: PublicKey>(
@@ -92,6 +93,8 @@ pub enum Error {
     ChainId(String),
     #[error("Error decoding a transaction from bytes: {0}")]
     TxDecoding(proto::Error),
+    #[error("Error decoding a vote extension from bytes: {0}")]
+    VoteExtDecoding(std::io::Error),
     #[error("Error trying to apply a transaction: {0}")]
     TxApply(protocol::Error),
     #[error("Gas limit exceeding while applying transactions in block")]
@@ -165,6 +168,23 @@ impl ShellMode {
     pub fn get_validator_address(&self) -> Option<&address::Address> {
         match &self {
             ShellMode::Validator { data, .. } => Some(&data.address),
+            _ => None,
+        }
+    }
+
+    pub fn get_protocol_key(&self) -> Option<&common::SecretKey> {
+        match &self {
+            ShellMode::Validator {
+                data:
+                    ValidatorData {
+                        keys:
+                            ValidatorKeys {
+                                protocol_keypair, ..
+                            },
+                        ..
+                    },
+                ..
+            } => Some(protocol_keypair),
             _ => None,
         }
     }

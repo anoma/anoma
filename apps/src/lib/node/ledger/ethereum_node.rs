@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::pin::Pin;
 
+use ethereum_types::EthereumHeader;
 use futures::task::{Context, Poll};
 use futures_lite::{Stream, StreamExt};
 use thiserror::Error;
@@ -24,6 +26,8 @@ pub enum Error {
         "The receiver of the Ethereum relayer messages unexpectedly dropped"
     )]
     RelayerReceiverDropped,
+    #[error("Encountered an invalid Ethereum header")]
+    InvalidHeader,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -34,7 +38,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// the ledger.
 #[derive(Default)]
 pub struct EthPollResult {
-    pub new_header: Option<BlockHeader>,
+    pub new_header: Option<EthereumHeader>,
     pub new_logs: HashMap<H160, Log>,
     pub error: Option<String>,
 }
@@ -70,21 +74,20 @@ pub async fn run(
 
     loop {
         match sync.next().await {
-            Some(Ok(sync_state)) => {
-                match sync_state {
-                    SyncState::Syncing(info) => {
-                        tracing::info!(
-                            "Syncing Ethereum, at block: {}. Estimated highest block: {}",
-                            info.current_block,
-                            info.highest_block,
-                        );
-                    }
-                    SyncState::NotSyncing => {
-                        tracing::info!("Finished syncing");
-                        break
-                    }
+            Some(Ok(sync_state)) => match sync_state {
+                SyncState::Syncing(info) => {
+                    tracing::info!(
+                        "Syncing Ethereum, at block: {}. Estimated highest \
+                         block: {}",
+                        info.current_block,
+                        info.highest_block,
+                    );
                 }
-            }
+                SyncState::NotSyncing => {
+                    tracing::info!("Finished syncing");
+                    break;
+                }
+            },
             Some(Err(err)) => {
                 tracing::error!("Encountered an error while syncing: {}", err);
             }
@@ -205,11 +208,14 @@ impl Stream for EthereumPoller {
         // try to poll the next ethereum header
         match self.header_subscription.poll_next(cx) {
             Poll::Ready(Some(Ok(header))) => {
-                eth_poll_result.new_header = Some(header);
-                pending = false;
+                if let Ok(header) = header.try_into() {
+                    eth_poll_result.new_header = Some(header);
+                    pending = false;
+                }
             }
             Poll::Ready(Some(Err(err))) => {
-                eth_poll_result.error = Some(format!("Error in Ethereum header: {:?}", err));
+                eth_poll_result.error =
+                    Some(format!("Error in Ethereum header: {:?}", err));
                 pending = false;
             }
             Poll::Ready(None) => return Poll::Ready(None),
@@ -226,7 +232,8 @@ impl Stream for EthereumPoller {
                     pending = false;
                 }
                 Poll::Ready(Some(Err(err))) => {
-                    eth_poll_result.error = Some(format!("Error in Ethereum log: {:?}", err));
+                    eth_poll_result.error =
+                        Some(format!("Error in Ethereum log: {:?}", err));
                     pending = false;
                 }
                 Poll::Ready(None) => return Poll::Ready(None),
@@ -265,8 +272,105 @@ mod ethereum_channel {
                 Some(poll_result) => sender
                     .send(poll_result)
                     .or(Err(Error::RelayerReceiverDropped))?,
-                None => return Err(Error::TerminatedSubscription) as Result<()>,
+                None => {
+                    return Err(Error::TerminatedSubscription) as Result<()>;
+                }
             };
+        }
+    }
+}
+
+pub mod ethereum_types {
+    use std::convert::TryFrom;
+
+    #[cfg(not(feature = "ABCI"))]
+    use anoma::proto::Signed;
+    use anoma::types::hash::Hash;
+    #[cfg(not(feature = "ABCI"))]
+    use anoma::types::key::*;
+    use borsh::{BorshDeserialize, BorshSerialize};
+
+    use super::*;
+
+    #[derive(BorshSerialize, BorshDeserialize)]
+    /// Pared down information from an Ethereum block header.
+    /// Should only represent headers of mined blocks.
+    pub struct EthereumHeader {
+        /// Hash of the block
+        pub hash: Hash,
+        /// Hash of the parent
+        pub parent_hash: Hash,
+        /// Block number
+        pub number: u64,
+        /// State root hash
+        pub state_root: Hash,
+        /// Transactions root hash
+        pub transactions_root: Hash,
+    }
+
+    #[cfg(not(feature = "ABCI"))]
+    impl EthereumHeader {
+        pub fn sign(
+            self,
+            signing_key: &common::SecretKey,
+        ) -> SignedEthereumHeader {
+            let sig = common::SigScheme::sign(signing_key, &self.hash.0);
+            SignedEthereumHeader {
+                public_key: signing_key.ref_to(),
+                signed_header: Signed { data: self, sig },
+            }
+        }
+    }
+
+    impl TryFrom<BlockHeader> for EthereumHeader {
+        type Error = Error;
+
+        fn try_from(header: BlockHeader) -> Result<Self> {
+            Ok(EthereumHeader {
+                hash: header
+                    .hash
+                    .map(|h| Hash(h.0))
+                    .ok_or(Error::InvalidHeader)?,
+                parent_hash: Hash(header.parent_hash.0),
+                number: header
+                    .number
+                    .map(|num| num.as_u64())
+                    .ok_or(Error::InvalidHeader)?,
+                state_root: Hash(header.state_root.0),
+                transactions_root: Hash(header.transactions_root.0),
+            })
+        }
+    }
+
+    #[cfg(not(feature = "ABCI"))]
+    #[derive(BorshSerialize, BorshDeserialize)]
+    /// A verifiable signed instance of the EthereumHeader.
+    pub struct SignedEthereumHeader {
+        pub public_key: common::PublicKey,
+        pub signed_header: Signed<EthereumHeader>,
+    }
+
+    #[cfg(not(feature = "ABCI"))]
+    impl SignedEthereumHeader {
+        /// Check that validity of the signature
+        pub fn verify_signature(
+            &self,
+        ) -> std::result::Result<(), VerifySigError> {
+            let Signed {
+                data: EthereumHeader { hash, .. },
+                sig,
+            } = &self.signed_header;
+            common::SigScheme::verify_signature_raw(
+                &self.public_key,
+                &hash.0,
+                sig,
+            )
+        }
+
+        /// Get the Ethereum header out and return it
+        pub fn extract_header(self) -> EthereumHeader {
+            let Signed { data, .. } = self.signed_header;
+            data
         }
     }
 }

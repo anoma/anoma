@@ -6,7 +6,7 @@ use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
 use anoma::types::key;
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
-use anoma::types::storage::{Key, PrefixValue};
+use anoma::types::storage::{Epoch, Key, PrefixValue};
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
@@ -264,16 +264,17 @@ where
     pub fn get_validator_from_protocol_pk(
         &self,
         pk: &key::common::PublicKey,
+        epoch: Option<Epoch>,
     ) -> Option<TendermintValidator<EllipticCurve>> {
         let pk_bytes = pk
             .try_to_vec()
             .expect("Serializing public key should not fail");
         // get the current epoch
-        let (current_epoch, _) = self.storage.get_current_epoch();
+        let epoch = epoch.unwrap_or_else(|| self.storage.get_current_epoch().0);
         // get the active validator set
         self.storage
             .read_validator_set()
-            .get(current_epoch)
+            .get(epoch)
             .expect("Validators for the next epoch should be known")
             .active
             .iter()

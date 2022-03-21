@@ -1,6 +1,13 @@
 //! Implementation of the ['VerifyHeader`], [`ProcessProposal`],
 //! and [`RevertProposal`] ABCI++ methods for the Shell
+use anoma::types::transaction::protocol::ProtocolTxType;
+#[cfg(not(feature = "ABCI"))]
+use anoma::types::transaction::protocol::VoteExtension;
+
 use super::*;
+#[cfg(not(feature = "ABCI"))]
+use crate::node::ledger::shell::vote_extensions::VoteExtensionData;
+use crate::std::option::Option::None;
 
 impl<D, H> Shell<D, H>
 where
@@ -69,11 +76,40 @@ where
                            are not supported"
                         .into(),
                 },
-                TxType::Protocol(_) => TxResult {
-                    code: ErrorCodes::InvalidTx.into(),
-                    info: "Protocol transactions are a fun new feature that \
-                           is coming soon to a blockchain near you. Patience."
-                        .into(),
+                TxType::Protocol(protocol_tx) => match &protocol_tx.tx {
+                    ProtocolTxType::VoteExtensions(_exts) => {
+                        #[cfg(not(feature = "ABCI"))]
+                        if self.validate_vote_extensions(_exts) {
+                            TxResult {
+                                code: ErrorCodes::Ok.into(),
+                                info: "Process proposal accepted this \
+                                       transaction"
+                                    .into(),
+                            }
+                        } else {
+                            TxResult {
+                                code: ErrorCodes::InvalidTx.into(),
+                                info: "The vote extensions were not properly \
+                                       signed."
+                                    .into(),
+                            }
+                        }
+                        #[cfg(feature = "ABCI")]
+                        TxResult {
+                            code: ErrorCodes::InvalidTx.into(),
+                            info: "Protocol transactions are a fun new \
+                                   feature that is coming soon to a \
+                                   blockchain near you. Patience."
+                                .into(),
+                        }
+                    }
+                    _ => TxResult {
+                        code: ErrorCodes::InvalidTx.into(),
+                        info: "Protocol transactions are a fun new feature \
+                               that is coming soon to a blockchain near you. \
+                               Patience."
+                            .into(),
+                    },
                 },
                 TxType::Decrypted(tx) => match self.next_wrapper() {
                     Some(wrapper) => {
@@ -125,14 +161,14 @@ where
                             .unwrap_or_default();
 
                         if tx.fee.amount <= balance {
-                            shim::response::TxResult {
+                            TxResult {
                                 code: ErrorCodes::Ok.into(),
                                 info: "Process proposal accepted this \
                                        transaction"
                                     .into(),
                             }
                         } else {
-                            shim::response::TxResult {
+                            TxResult {
                                 code: ErrorCodes::InvalidTx.into(),
                                 info: "The address given does not have \
                                        sufficient balance to pay fee"
@@ -230,6 +266,24 @@ where
         }
     }
 
+    /// Verify that each vote extension was signed by a validator in the
+    /// correct epoch and that the signature is correct.
+    #[cfg(not(feature = "ABCI"))]
+    fn validate_vote_extensions(&self, exts: &[VoteExtension]) -> bool {
+        exts.iter()
+            .filter_map(|ext| VoteExtensionData::try_from(ext).ok())
+            .all(|VoteExtensionData { ethereum_headers }| {
+                ethereum_headers.iter().all(|header| {
+                    self.get_validator_from_protocol_pk(
+                        &header.public_key,
+                        Some(self.storage.get_last_epoch().0),
+                    )
+                    .is_some()
+                        && header.verify_signature().is_ok()
+                })
+            })
+    }
+
     #[cfg(not(feature = "ABCI"))]
     pub fn revert_proposal(
         &mut self,
@@ -237,7 +291,6 @@ where
     ) -> shim::response::RevertProposal {
         Default::default()
     }
-
 }
 
 /// We test the failure cases of [`process_proposal`]. The happy flows

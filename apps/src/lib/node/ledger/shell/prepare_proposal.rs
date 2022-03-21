@@ -2,6 +2,7 @@
 
 #[cfg(not(feature = "ABCI"))]
 mod prepare_block {
+    use anoma::types::transaction::protocol::{ProtocolTxType, VoteExtension};
 
     use super::super::*;
     use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;
@@ -32,11 +33,31 @@ mod prepare_block {
                 // TODO: This should not be hardcoded
                 let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
 
-                // TODO: Craft the Ethereum state update tx
+                // Add the vote extensions in as a protocol tx
+                let mut txs: Vec<TxBytes> = vec![
+                    self.mode
+                        .get_protocol_key()
+                        .map(|protocol_key| {
+                            ProtocolTxType::VoteExtensions(
+                                req.votes
+                                    .into_iter()
+                                    .filter_map(|vote| {
+                                        vote.vote_extension
+                                            .map(VoteExtension::from)
+                                    })
+                                    .collect(),
+                            )
+                            .sign(&protocol_key.ref_to(), protocol_key)
+                        })
+                        .unwrap()
+                        .try_to_vec()
+                        .unwrap(),
+                ];
+
                 // filter in half of the new txs from Tendermint, only keeping
                 // wrappers
                 let number_of_new_txs = 1 + req.block_data.len() / 2;
-                let mut txs: Vec<TxBytes> = req
+                let mut new_txs: Vec<TxBytes> = req
                     .block_data
                     .into_iter()
                     .take(number_of_new_txs)
@@ -48,7 +69,7 @@ mod prepare_block {
                         }
                     })
                     .collect();
-
+                txs.append(&mut new_txs);
                 // decrypt the wrapper txs included in the previous block
                 let mut decrypted_txs = self
                     .storage
@@ -76,10 +97,11 @@ mod prepare_block {
     mod test_prepare_proposal {
         use anoma::types::address::xan;
         use anoma::types::storage::Epoch;
-        use anoma::types::transaction::Fee;
+        use anoma::types::transaction::{process_tx, Fee};
 
         use super::*;
         use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
+        use anoma::types::transaction::protocol::ProtocolTx;
 
         /// Test that if a tx from the mempool is not a
         /// WrapperTx type, it is not included in the
@@ -94,8 +116,19 @@ mod prepare_block {
             let req = RequestPrepareProposal {
                 block_data: vec![tx.to_bytes()],
                 block_data_size: 0,
+                votes: vec![],
             };
-            assert_eq!(shell.prepare_proposal(req).block_data.len(), 0);
+            let block_data = shell.prepare_proposal(req).block_data;
+            assert_eq!(block_data.len(), 1);
+            let vote_extensions = Tx::try_from_slice(&block_data[0][..])
+                .expect("Test failed");
+
+            assert!(
+                matches!(
+                    process_tx(vote_extensions).expect("Test failed"),
+                    TxType::Protocol(ProtocolTx{tx: ProtocolTxType::VoteExtensions(_), ..})
+                )
+            );
         }
 
         /// Test that if an error is encountered while
@@ -132,8 +165,19 @@ mod prepare_block {
             let req = RequestPrepareProposal {
                 block_data: vec![wrapper],
                 block_data_size: 0,
+                votes: vec![],
             };
-            assert_eq!(shell.prepare_proposal(req).block_data.len(), 0);
+            let block_data = shell.prepare_proposal(req).block_data;
+            assert_eq!(block_data.len(), 1);
+            let vote_extensions = Tx::try_from_slice(&block_data[0][..])
+                .expect("Test failed");
+
+            assert!(
+                matches!(
+                    process_tx(vote_extensions).expect("Test failed"),
+                    TxType::Protocol(ProtocolTx{tx: ProtocolTxType::VoteExtensions(_), ..})
+                )
+            );
         }
 
         /// Test that the decrypted txs are included
@@ -149,6 +193,7 @@ mod prepare_block {
             let mut req = RequestPrepareProposal {
                 block_data: vec![],
                 block_data_size: 0,
+                votes: vec![],
             };
             // create a request with two new wrappers from mempool and
             // two wrappers from the previous block to be decrypted
@@ -188,9 +233,19 @@ mod prepare_block {
                 .map(|tx| tx.data.clone().expect("Test failed"))
                 .collect();
 
-            let received: Vec<Vec<u8>> = shell
-                .prepare_proposal(req)
-                .block_data
+            let mut block_data = shell.prepare_proposal(req).block_data;
+            let vote_extensions = block_data.remove(0);
+            let vote_extensions = Tx::try_from_slice(&vote_extensions[..])
+                .expect("Test failed");
+
+            assert!(
+                matches!(
+                    process_tx(vote_extensions).expect("Test failed"),
+                    TxType::Protocol(ProtocolTx{tx: ProtocolTxType::VoteExtensions(_), ..})
+                )
+            );
+
+            let received: Vec<Vec<u8>> = block_data
                 .iter()
                 .map(|tx_bytes| {
                     Tx::try_from(tx_bytes.as_slice())
