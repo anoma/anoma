@@ -67,7 +67,7 @@ use anoma::tendermint::merkle::proof::Proof as TmProof;
 use anoma::tendermint::node::Id as TendermintNodeId;
 use anoma::tendermint::trust_threshold::TrustThresholdFraction;
 use anoma::tendermint_proto::Protobuf;
-use anoma::types::storage::Key;
+use anoma::types::storage::{BlockHeight, Key};
 use anoma_apps::client::rpc::query_storage_value_bytes;
 use anoma_apps::client::utils::id_from_pk;
 use color_eyre::eyre::Result;
@@ -260,7 +260,7 @@ fn update_client_with_height(
 ) -> Result<()> {
     // check the current(stale) state on the target chain
     let key = client_state_key(target_client_id);
-    let (value, _) = query_value_with_proof(target_test, &key)?;
+    let (value, _) = query_value_with_proof(target_test, &key, target_height)?;
     let client_state = match value {
         Some(v) => AnyClientState::decode_vec(&v)
             .map_err(|e| eyre!("Decoding the client state failed: {}", e))?,
@@ -365,7 +365,7 @@ fn connection_handshake(
             commitment_prefix(),
         ),
         version: Some(ConnVersion::default()),
-        delay_period: Duration::new(30, 0),
+        delay_period: Duration::new(1, 0),
         signer: Signer::new("test_a"),
     };
     // OpenInitConnection on Chain A
@@ -394,7 +394,7 @@ fn connection_handshake(
         counterparty,
         counterparty_versions: vec![ConnVersion::default()],
         proofs,
-        delay_period: Duration::new(30, 0),
+        delay_period: Duration::new(1, 0),
         signer: Signer::new("test_b"),
     };
     // Update the client state of Chain A on Chain B
@@ -450,12 +450,14 @@ fn get_connection_proofs(
     conn_id: &ConnectionId,
     target_height: Height,
 ) -> Result<(AnyClientState, Proofs)> {
+    // we need proofs at the height of the previous block
+    let query_height = target_height.decrement().unwrap();
     let key = connection_key(conn_id);
-    let (_, tm_proof) = query_value_with_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key, query_height)?;
     let connection_proof = convert_proof(tm_proof)?;
 
     let (client_state, client_state_proof, consensus_proof) =
-        get_client_states(test, client_id)?;
+        get_client_states(test, client_id, query_height)?;
 
     let proofs = Proofs::new(
         connection_proof,
@@ -579,12 +581,14 @@ fn get_channel_proofs(
     port_channel_id: &PortChannelId,
     target_height: Height,
 ) -> Result<Proofs> {
+    // we need proofs at the height of the previous block
+    let query_height = target_height.decrement().unwrap();
     let key = channel_key(port_channel_id);
-    let (_, tm_proof) = query_value_with_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key, query_height)?;
     let proof = convert_proof(tm_proof)?;
 
     let (_, client_state_proof, consensus_proof) =
-        get_client_states(test, client_id)?;
+        get_client_states(test, client_id, query_height)?;
 
     Proofs::new(
         proof,
@@ -601,9 +605,10 @@ fn get_channel_proofs(
 fn get_client_states(
     test: &Test,
     client_id: &ClientId,
+    target_height: Height, // should have been already decremented
 ) -> Result<(AnyClientState, CommitmentProofBytes, ConsensusProof)> {
     let key = client_state_key(client_id);
-    let (value, tm_proof) = query_value_with_proof(test, &key)?;
+    let (value, tm_proof) = query_value_with_proof(test, &key, target_height)?;
     let client_state = match value {
         Some(v) => AnyClientState::decode_vec(&v)
             .map_err(|e| eyre!("Decoding the client state failed: {}", e))?,
@@ -618,7 +623,7 @@ fn get_client_states(
 
     let height = client_state.latest_height();
     let key = consensus_state_key(client_id, height);
-    let (_, tm_proof) = query_value_with_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key, target_height)?;
     let proof = convert_proof(tm_proof)?;
     let consensus_proof = ConsensusProof::new(proof, height)
         .map_err(|e| eyre!("Creating ConsensusProof failed: error {}", e))?;
@@ -697,12 +702,14 @@ fn get_commitment_proof(
     packet: &Packet,
     target_height: Height,
 ) -> Result<Proofs> {
+    // we need proofs at the height of the previous block
+    let query_height = target_height.decrement().unwrap();
     let key = commitment_key(
         &packet.source_port,
         &packet.source_channel,
         packet.sequence,
     );
-    let (_, tm_proof) = query_value_with_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key, query_height)?;
     let commitment_proof = convert_proof(tm_proof)?;
 
     Proofs::new(commitment_proof, None, None, None, target_height)
@@ -714,12 +721,14 @@ fn get_ack_proof(
     packet: &Packet,
     target_height: Height,
 ) -> Result<Proofs> {
+    // we need proofs at the height of the previous block
+    let query_height = target_height.decrement().unwrap();
     let key = ack_key(
         &packet.destination_port,
         &packet.destination_channel,
         packet.sequence,
     );
-    let (_, tm_proof) = query_value_with_proof(test, &key)?;
+    let (_, tm_proof) = query_value_with_proof(test, &key, query_height)?;
     let ack_proof = convert_proof(tm_proof)?;
 
     Proofs::new(ack_proof, None, None, None, target_height)
@@ -871,13 +880,17 @@ fn get_event(test: &Test, height: u32) -> Result<Option<IbcEvent>> {
 fn query_value_with_proof(
     test: &Test,
     key: &Key,
+    height: Height,
 ) -> Result<(Option<Vec<u8>>, TmProof)> {
     let rpc = get_actor_rpc(test, &Who::Validator(0));
     let ledger_address = TendermintAddress::from_str(&rpc).unwrap();
     let client = HttpClient::new(ledger_address).unwrap();
-    let result = Runtime::new()
-        .unwrap()
-        .block_on(query_storage_value_bytes(&client, key, true));
+    let result = Runtime::new().unwrap().block_on(query_storage_value_bytes(
+        &client,
+        key,
+        Some(BlockHeight(height.revision_height)),
+        true,
+    ));
     match result {
         (value, Some(proof)) => Ok((value, proof)),
         _ => Err(eyre!("Query failed: key {}", key)),
