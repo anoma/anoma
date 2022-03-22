@@ -9,7 +9,7 @@
 //! To keep the temporary files created by a test, use env var
 //! `ANOMA_E2E_KEEP_TEMP=true`.
 
-use std::fs::{OpenOptions, self};
+use std::fs::{self, OpenOptions};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
@@ -1295,7 +1295,7 @@ fn proposal_offline() -> Result<()> {
             "author": albert,
             "voting_start_epoch": 3,
             "voting_end_epoch": 6,
-            "grace_epoch": 30
+            "grace_epoch": 6
         }
     );
     generate_proposal_json(
@@ -1353,10 +1353,19 @@ fn proposal_offline() -> Result<()> {
 
     // 4. Compute offline tally
     let proposal_data_folder = working_dir().join("proposal-test-data");
-    fs::create_dir_all(&proposal_data_folder).expect("Should create a new folder.");
-    fs::copy(expected_path_proposal, &proposal_data_folder.join("proposal")).expect("Should copy proposal file.");
-    fs::copy(expected_path_vote, &proposal_data_folder.join(&expected_file_name)).expect("Should copy proposal vote file.");
-    
+    fs::create_dir_all(&proposal_data_folder)
+        .expect("Should create a new folder.");
+    fs::copy(
+        expected_path_proposal,
+        &proposal_data_folder.join("proposal"),
+    )
+    .expect("Should copy proposal file.");
+    fs::copy(
+        expected_path_vote,
+        &proposal_data_folder.join(&expected_file_name),
+    )
+    .expect("Should copy proposal vote file.");
+
     let tally_offline = vec![
         "query-proposal-result",
         "--data-path",

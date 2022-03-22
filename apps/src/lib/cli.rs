@@ -226,7 +226,8 @@ pub mod cmds {
             let query_result = Self::parse_with_ctx(matches, QueryResult);
             let query_raw_bytes = Self::parse_with_ctx(matches, QueryRawBytes);
             let query_proposal = Self::parse_with_ctx(matches, QueryProposal);
-            let query_proposal_result = Self::parse_with_ctx(matches, QueryProposalResult);
+            let query_proposal_result =
+                Self::parse_with_ctx(matches, QueryProposalResult);
             let intent = Self::parse_with_ctx(matches, Intent);
             let subscribe_topic = Self::parse_with_ctx(matches, SubscribeTopic);
             let utils = SubCmd::parse(matches).map(Self::WithoutContext);
@@ -1995,23 +1996,36 @@ pub mod args {
             let offline = PROPOSAL_OFFLINE.parse(matches);
             let proposal_folder = DATA_PATH_OPT.parse(matches);
 
-            Self { query, proposal_id, offline, proposal_folder }
+            Self {
+                query,
+                proposal_id,
+                offline,
+                proposal_folder,
+            }
         }
 
         fn def(app: App) -> App {
-            app.add_args::<Tx>().arg(
-                OPTIONAL_PROPOSAL_ID.def().about("The proposal identifier."),
-                ).arg(
+            app.add_args::<Tx>()
+                .arg(
+                    OPTIONAL_PROPOSAL_ID
+                        .def()
+                        .about("The proposal identifier."),
+                )
+                .arg(
                     PROPOSAL_OFFLINE
                         .def()
-                        .about("Flag if the proposal result should run on offline data.")
+                        .about(
+                            "Flag if the proposal result should run on \
+                             offline data.",
+                        )
                         .conflicts_with(PROPOSAL_ID.name),
                 )
                 .arg(
                     DATA_PATH_OPT
                         .def()
                         .about(
-                            "The path to the folder containing the proposal json and votes",
+                            "The path to the folder containing the proposal \
+                             json and votes",
                         )
                         .conflicts_with(PROPOSAL_ID.name),
                 )

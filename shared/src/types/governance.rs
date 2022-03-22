@@ -148,12 +148,16 @@ impl TryFrom<Proposal> for InitProposalData {
 )]
 /// The offline proposal structure
 pub struct OfflineProposal {
-    /// The proposal data
-    pub data: Proposal,
+    /// The proposal content
+    pub content: BTreeMap<String, String>,
+    /// The proposal author address
+    pub author: Address,
+    /// The epoch from which this changes are executed
+    pub tally_epoch: Epoch,
     /// The signature over proposal data
     pub signature: Signature,
     /// The address corresponding to the signature pk
-    pub address: Address
+    pub address: Address,
 }
 
 impl OfflineProposal {
@@ -163,13 +167,25 @@ impl OfflineProposal {
         address: Address,
         signing_key: &common::SecretKey,
     ) -> Self {
-        let proposal_data = serde_json::to_vec(&proposal)
+        let content_serialized = serde_json::to_vec(&proposal.content)
             .expect("Conversion to bytes shouldn't fail.");
-        let proposal_data_hash = Hash::sha256(&proposal_data);
+        let author_serialized = serde_json::to_vec(&proposal.author)
+            .expect("Conversion to bytes shouldn't fail.");
+        let tally_epoch_serialized = serde_json::to_vec(&proposal.grace_epoch)
+            .expect("Conversion to bytes shouldn't fail.");
+        let proposal_serialized = &[
+            content_serialized,
+            author_serialized,
+            tally_epoch_serialized,
+        ]
+        .concat();
+        let proposal_data_hash = Hash::sha256(&proposal_serialized);
         let signature =
             common::SigScheme::sign(signing_key, &proposal_data_hash);
         Self {
-            data: proposal,
+            content: proposal.content,
+            author: proposal.author,
+            tally_epoch: proposal.grace_epoch,
             signature,
             address,
         }
@@ -188,9 +204,19 @@ impl OfflineProposal {
 
     /// Compute the hash of the proposal
     pub fn compute_hash(&self) -> Hash {
-        let proposal_data = serde_json::to_vec(&self.data)
+        let content_serialized = serde_json::to_vec(&self.content)
             .expect("Conversion to bytes shouldn't fail.");
-        Hash::sha256(&proposal_data)
+        let author_serialized = serde_json::to_vec(&self.author)
+            .expect("Conversion to bytes shouldn't fail.");
+        let tally_epoch_serialized = serde_json::to_vec(&self.tally_epoch)
+            .expect("Conversion to bytes shouldn't fail.");
+        let proposal_serialized = &[
+            content_serialized,
+            author_serialized,
+            tally_epoch_serialized,
+        ]
+        .concat();
+        Hash::sha256(&proposal_serialized)
     }
 }
 
@@ -206,7 +232,7 @@ pub struct OfflineVote {
     /// The signature over proposal data
     pub signature: Signature,
     /// The address corresponding to the signature pk
-    pub address: Address
+    pub address: Address,
 }
 
 impl OfflineVote {
@@ -217,19 +243,16 @@ impl OfflineVote {
         address: Address,
         signing_key: &common::SecretKey,
     ) -> Self {
-        let proposal_data = serde_json::to_vec(proposal)
-            .expect("Conversion to bytes shouldn't fail.");
-        let proposal_hash = Hash::sha256(&proposal_data);
+        let proposal_hash = proposal.compute_hash();
         let proposal_hash_data = proposal_hash
             .try_to_vec()
             .expect("Conversion to bytes shouldn't fail.");
         let proposal_vote_data = vote
             .try_to_vec()
             .expect("Conversion to bytes shouldn't fail.");
-        let signature = common::SigScheme::sign(
-            signing_key,
-            &[proposal_hash_data, proposal_vote_data].concat(),
-        );
+        let vote_serialized =
+            &[proposal_hash_data, proposal_vote_data].concat();
+        let signature = common::SigScheme::sign(signing_key, &vote_serialized);
         Self {
             proposal_hash,
             vote,
@@ -238,8 +261,8 @@ impl OfflineVote {
         }
     }
 
-    /// Check whether the signature is valid or not
-    pub fn check_signature(&self) -> bool {
+    /// compute the hash of a proposal
+    pub fn compute_hash(&self) -> Hash {
         let proposal_hash_data = self
             .proposal_hash
             .try_to_vec()
@@ -248,9 +271,18 @@ impl OfflineVote {
             .vote
             .try_to_vec()
             .expect("Conversion to bytes shouldn't fail.");
+        let vote_serialized =
+            &[proposal_hash_data, proposal_vote_data].concat();
+
+        Hash::sha256(vote_serialized)
+    }
+
+    /// Check whether the signature is valid or not
+    pub fn check_signature(&self, public_key: &common::PublicKey) -> bool {
+        let vote_data_hash = self.compute_hash();
         common::SigScheme::verify_signature(
-            &self.pubkey,
-            &[proposal_hash_data, proposal_vote_data].concat(),
+            public_key,
+            &vote_data_hash,
             &self.signature,
         )
         .is_ok()
