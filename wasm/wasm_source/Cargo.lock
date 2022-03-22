@@ -1609,7 +1609,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#24e5faed97e8a55dcd3785678c43d6642502a9cd"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#2c40e91e2a59b5a64c6932f8e7931f9c1c4fe24d"
 dependencies = [
  "aes",
  "bip0039",
@@ -1640,7 +1640,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#24e5faed97e8a55dcd3785678c43d6642502a9cd"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#2c40e91e2a59b5a64c6932f8e7931f9c1c4fe24d"
 dependencies = [
  "bellman",
  "blake2b_simd 1.0.0",
