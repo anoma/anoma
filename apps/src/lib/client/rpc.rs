@@ -244,7 +244,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                 println!("{:4}Status: on-going", "");
             } else {
                 let (delegator_voters, validator_voters) =
-                    get_votes(&client, start_epoch, id).await;
+                    get_votes(client, start_epoch, id).await;
                 println!("{:4}Status: done", "");
                 println!(
                     "{:4}Result: {}",
@@ -1632,15 +1632,15 @@ pub async fn compute_tally(
     }
 
     for (addr, vote) in delegator_voters {
-        if !bond_data.contains_key(&addr) {
+        if !bond_data.contains_key(addr) {
             if vote.is_yay() {
-                yay_votes_tokens += bond_data.get(&addr).unwrap().1;
+                yay_votes_tokens += bond_data.get(addr).unwrap().1;
             }
         } else {
-            let delegator_data = bond_data.get(&addr).unwrap();
+            let delegator_data = bond_data.get(addr).unwrap();
             let validator_vote =
                 validator_voters.get(&delegator_data.0).unwrap();
-            if validator_vote.is_yay() && validator_vote.ne(&vote) {
+            if validator_vote.is_yay() && validator_vote.ne(vote) {
                 yay_votes_tokens -= delegator_data.1;
             } else {
                 yay_votes_tokens += delegator_data.1;
