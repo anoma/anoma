@@ -561,7 +561,6 @@ fn scan_tx(
 async fn gen_shielded_transfer(
     ctx: &Context,
     args: &args::TxTransfer,
-    balance: token::Amount,
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
     // No shielded components are needed when neither source nor destination
     // are shielded
@@ -626,9 +625,6 @@ async fn gen_shielded_transfer(
             )?;
         }
     } else {
-        // Otherwise the input must be entirely transparent. So model the source
-        // address' balance as the input UTXO
-        let balance: u64 = balance.into();
         // We add a dummy UTXO to our transaction, but only the source of the
         // parent Transfer object is used to validate fund availability
         let secp_sk = secp256k1::SecretKey::from_slice(&[0xcd; 32]).expect("secret key");
@@ -641,18 +637,10 @@ async fn gen_shielded_transfer(
             OutPoint::new([0u8; 32], 0),
             TxOut {
                 asset_type,
-                value: balance,
+                value: amt,
                 script_pubkey: script
             }
         )?;
-        // If there is change leftover send it back to this transparent input
-        if balance > amt {
-            builder.add_transparent_output(
-                &TransparentAddress::PublicKey(hash.into()),
-                asset_type,
-                balance - amt
-            )?;
-        }
     }
     // Now handle the outputs of this transaction
     // If there is a shielded output
@@ -771,7 +759,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     // Check source balance
     let balance_key = token::balance_key(&token, &source);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    let balance = match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
+    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
         Some(balance) => {
             if balance < args.amount {
                 eprintln!(
@@ -784,7 +772,6 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
                     safe_exit(1)
                 }
             }
-            balance
         }
         None => {
             eprintln!(
@@ -794,7 +781,6 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             if !args.tx.force {
                 safe_exit(1)
             }
-            0.into()
         }
     };
     
@@ -814,7 +800,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
         target,
         token,
         amount: args.amount,
-        shielded: gen_shielded_transfer(&ctx, &args, balance).await.unwrap().map(|x| x.0),
+        shielded: gen_shielded_transfer(&ctx, &args).await.unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer
