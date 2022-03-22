@@ -39,8 +39,8 @@ anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
 prost = "0.9.0"
-ibc-relayer = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_abcipp_v0.23.5", default-features = false, optional = true}
-ibc-relayer-abci = {package = "ibc-relayer", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_tm_v0.23.5", default-features = false, optional = true}
+ibc-relayer = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.14.0_abcipp_rebase_master", default-features = false, optional = true}
+ibc-relayer-abci = {package = "ibc-relayer", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.14.0_tm_v0.23.5", default-features = false, optional = true}
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}

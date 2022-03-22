@@ -22,7 +22,7 @@ use anoma::types::governance::{
     OfflineProposal, OfflineVote, ProposalVote, TallyResult,
 };
 use anoma::types::key::*;
-use anoma::types::storage::{Epoch, Key, KeySeg, PrefixValue};
+use anoma::types::storage::{BlockHeight, Epoch, Key, KeySeg, PrefixValue};
 use anoma::types::token::{balance_key, Amount};
 use anoma::types::{address, storage, token};
 use async_std::fs::{self};
@@ -32,6 +32,8 @@ use borsh::BorshDeserialize;
 use itertools::Itertools;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
+#[cfg(not(feature = "ABCI"))]
+use tendermint::block::Height;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::merkle::proof::Proof;
 #[cfg(not(feature = "ABCI"))]
@@ -56,6 +58,8 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::block::Height;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::merkle::proof::Proof;
 
@@ -1388,7 +1392,8 @@ pub async fn query_storage_value<T>(
 where
     T: BorshDeserialize,
 {
-    let (value, _proof) = query_storage_value_bytes(client, key, false).await;
+    let (value, _proof) =
+        query_storage_value_bytes(client, key, None, false).await;
     match value {
         Some(v) => match T::try_from_slice(&v[..]) {
             Ok(value) => return Some(value),
@@ -1403,12 +1408,14 @@ where
 pub async fn query_storage_value_bytes(
     client: &HttpClient,
     key: &storage::Key,
+    height: Option<BlockHeight>,
     prove: bool,
 ) -> (Option<Vec<u8>>, Option<Proof>) {
     let path = Path::Value(key.to_owned());
     let data = vec![];
+    let height = height.map(|h| Height::try_from(h.0).unwrap());
     let response = client
-        .abci_query(Some(path.into()), data, None, prove)
+        .abci_query(Some(path.into()), data, height, prove)
         .await
         .unwrap();
     match response.code {

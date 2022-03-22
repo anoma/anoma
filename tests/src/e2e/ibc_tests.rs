@@ -64,9 +64,9 @@ use anoma::ledger::ibc::storage::*;
 use anoma::ledger::storage::{MerkleTree, Sha256Hasher};
 use anoma::tendermint::block::Header as TmHeader;
 use anoma::tendermint::merkle::proof::Proof as TmProof;
-use anoma::tendermint::node::Id as TendermintNodeId;
 use anoma::tendermint::trust_threshold::TrustThresholdFraction;
 use anoma::tendermint_proto::Protobuf;
+use anoma::types::key::PublicKey;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma_apps::client::rpc::query_storage_value_bytes;
 use anoma_apps::client::utils::id_from_pk;
@@ -293,7 +293,7 @@ fn update_client(
 ) -> Result<()> {
     let config = dummy_chain_config(src_test);
     let pk = get_validator_pk(src_test, &Who::Validator(0)).unwrap();
-    let peer_id: TendermintNodeId = id_from_pk(pk);
+    let peer_id = id_from_pk(&PublicKey::try_from_pk(&pk).unwrap());
     let mut light_client =
         TmLightClient::from_config(&config, peer_id).unwrap();
     let Verified { target, supporting } = light_client
@@ -495,22 +495,22 @@ fn channel_handshake(
         signer: Signer::new("test_a"),
     };
     let height = submit_ibc_tx(test_a, msg)?;
-    let channel_id_a = match get_event(test_a, height)? {
-        Some(IbcEvent::OpenInitChannel(event)) => event
-            .channel_id()
-            .ok_or(eyre!("No channel ID is set"))?
-            .clone(),
-        _ => return Err(eyre!("Transaction failed")),
-    };
-    let port_channel_id_a =
-        port_channel_id(port_id.clone(), channel_id_a.clone());
+    let channel_id_a =
+        match get_event(test_a, height)? {
+            Some(IbcEvent::OpenInitChannel(event)) => event
+                .channel_id()
+                .cloned()
+                .ok_or(eyre!("No channel ID is set"))?,
+            _ => return Err(eyre!("Transaction failed")),
+        };
+    let port_channel_id_a = port_channel_id(port_id.clone(), channel_id_a);
 
     // get the proofs from Chain A
     let height_a = query_height(test_a)?;
     let proofs =
         get_channel_proofs(test_a, client_id_a, &port_channel_id_a, height_a)?;
     let counterparty =
-        ChanCounterparty::new(port_id.clone(), Some(channel_id_a.clone()));
+        ChanCounterparty::new(port_id.clone(), Some(channel_id_a));
     let channel = ChannelEnd::new(
         ChanState::TryOpen,
         ChanOrder::Unordered,
@@ -533,12 +533,11 @@ fn channel_handshake(
     let channel_id_b = match get_event(test_b, height)? {
         Some(IbcEvent::OpenTryChannel(event)) => event
             .channel_id()
-            .ok_or(eyre!("No channel ID is set"))?
-            .clone(),
+            .cloned()
+            .ok_or(eyre!("No channel ID is set"))?,
         _ => return Err(eyre!("Transaction failed")),
     };
-    let port_channel_id_b =
-        port_channel_id(port_id.clone(), channel_id_b.clone());
+    let port_channel_id_b = port_channel_id(port_id.clone(), channel_id_b);
 
     // get the A's proofs on Chain B
     let height_b = query_height(test_b)?;
@@ -547,7 +546,7 @@ fn channel_handshake(
     let msg = MsgChannelOpenAck {
         port_id: port_id.clone(),
         channel_id: channel_id_a,
-        counterparty_channel_id: channel_id_b.clone(),
+        counterparty_channel_id: channel_id_b,
         counterparty_version: ChanVersion::ics20(),
         proofs,
         signer: Signer::new("test_a"),
@@ -648,7 +647,7 @@ fn transfer_token(
     });
     let msg = MsgTransfer {
         source_port: source_port_channel_id.port_id.clone(),
-        source_channel: source_port_channel_id.channel_id.clone(),
+        source_channel: source_port_channel_id.channel_id,
         token,
         sender: Signer::new(sender.to_string()),
         receiver: Signer::new(receiver.to_string()),
