@@ -583,11 +583,86 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             );
             safe_exit(1);
         }
+        let min_proposal_funds_key = gov_storage::get_min_proposal_fund_key();
+        let min_proposal_funds: Amount =
+            rpc::query_storage_value(&client, &min_proposal_funds_key)
+                .await
+                .unwrap();
+        if account_hash_enought_balance(
+            &client,
+            &proposal.author,
+            min_proposal_funds,
+        )
+        .await
+        {
+            let data = init_proposal_data
+                .try_to_vec()
+                .expect("Encoding proposal data shouldn't fail");
+            let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
+            let tx = Tx::new(tx_code, Some(data));
 
-        let data = init_proposal_data
+            process_tx(ctx, &args.tx, tx, Some(&signer)).await;
+        }
+    }
+}
+
+pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
+    let signer = if let Some(addr) = &args.tx.signer {
+        addr
+    } else {
+        eprintln!("Missing mandatory argument --signer.");
+        safe_exit(1)
+    };
+
+    if args.offline {
+        let signer = ctx.get(signer);
+        let proposal_file_path =
+            args.proposal_data.expect("Proposal file should exist.");
+        let file = File::open(&proposal_file_path).expect("File must exist.");
+        let proposal: OfflineProposal =
+            serde_json::from_reader(file).expect("JSON was not well-formatted");
+        if !proposal.check_signature() {
+            eprintln!("Proposal signature mismatch!");
+            safe_exit(1)
+        }
+
+        let public_key =
+            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
+                .await
+                .expect("Public key should exist.");
+        let signing_key = signing::find_keypair(
+            &mut ctx.wallet,
+            &signer,
+            args.tx.ledger_address.clone(),
+        )
+        .await;
+        let offline_vote =
+            OfflineVote::new(&proposal, args.vote, public_key, &signing_key);
+
+        let proposal_vote_filename =
+            format!("proposal-vote-{}", &signer.to_string());
+        let out = File::create(&proposal_vote_filename).unwrap();
+        match serde_json::to_writer_pretty(out, &offline_vote) {
+            Ok(_) => {
+                println!("Proposal vote created: {}.", proposal_vote_filename);
+            }
+            Err(e) => {
+                eprintln!("Error while creating proposal vote file: {}.", e);
+                safe_exit(1)
+            }
+        }
+    } else {
+        let voter_address = ctx.get(signer);
+        let tx_data = VoteProposalData {
+            id: args.proposal_id.unwrap(),
+            vote: args.vote,
+            voter: voter_address,
+        };
+
+        let data = tx_data
             .try_to_vec()
             .expect("Encoding proposal data shouldn't fail");
-        let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
+        let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
         let tx = Tx::new(tx_code, Some(data));
 
         process_tx(ctx, &args.tx, tx, Some(&signer)).await;
@@ -998,6 +1073,27 @@ async fn process_tx(
                 );
                 safe_exit(1)
             }
+        }
+    }
+}
+
+async fn account_hash_enought_balance(
+    client: &HttpClient,
+    address: &Address,
+    min_amount: Amount,
+) -> bool {
+    let balance_key = token::balance_key(&m1t(), address);
+    match rpc::query_storage_value::<Amount>(client, &balance_key).await {
+        Some(amount) => {
+            if amount < min_amount {
+                eprintln!("Address {} doesn't have enough funds.", address);
+                safe_exit(1);
+            }
+            true
+        }
+        None => {
+            eprintln!("Can't find address {}.", address);
+            safe_exit(1);
         }
     }
 }

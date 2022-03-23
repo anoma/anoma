@@ -133,7 +133,7 @@ pub mod genesis_config {
         pub max_proposal_content_size: u64,
         // Minimum number of epoch between end and grace epoch
         // XXX: u64 doesn't work with toml-rs!
-        pub min_grace_epoch: u64,
+        pub min_grace_epoch: u64
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
