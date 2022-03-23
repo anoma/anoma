@@ -54,11 +54,11 @@ check:
 	$(foreach wasm,$(wasm_templates),$(check-wasm) && ) true
 
 check-abci-plus-plus:
-	$(cargo) check --no-default-features --features "ABCI-plus-plus"
+	$(cargo) check --no-default-features --features "ABCI-plus-plus eth-fullnode"
 
 clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets -- -D warnings
 
-clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus" -- -D warnings
+clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus eth-fullnode" -- -D warnings
 
 clippy:
 	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
@@ -69,7 +69,7 @@ clippy-abci-plus-plus:
 	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
-		--features "std testing ABCI-plus-plus" && \
+		--features "std testing ABCI-plus-plus eth-fullnode" && \
 	$(cargo) +$(nightly) clippy --all-targets --manifest-path ./proof_of_stake/Cargo.toml && \
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./shared/Cargo.toml \
@@ -107,7 +107,7 @@ run-ledger:
 
 run-ledger-abci-plus-plus:
 	# runs the node
-	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus" -- ledger run
+	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus eth-fullnode" -- ledger run
 
 run-gossip:
 	# runs the node gossip node
@@ -127,7 +127,10 @@ audit:
 test: test-unit test-e2e test-wasm
 
 test-e2e:
-	RUST_BACKTRACE=1 $(cargo) test e2e -- --test-threads=1
+	RUST_BACKTRACE=1 $(cargo) test e2e \
+		--no-default-features \
+		--features "wasm-runtime ABCI" \
+		-- --test-threads=1
 
 test-e2e-abci-plus-plus:
 	RUST_BACKTRACE=1 $(cargo) test e2e \

@@ -625,6 +625,8 @@ where
 #[cfg(test)]
 mod test_utils {
     use std::path::PathBuf;
+    #[cfg(all(not(feature = "ABCI"), not(feature = "eth-fullnode")))]
+    use std::thread::JoinHandle;
 
     use anoma::ledger::storage::mockdb::MockDB;
     use anoma::ledger::storage::{BlockStateWrite, MerkleTree, Sha256Hasher};
@@ -632,6 +634,8 @@ mod test_utils {
     use anoma::types::chain::ChainId;
     use anoma::types::key::*;
     use anoma::types::storage::{BlockHash, Epoch};
+    #[cfg(not(feature = "ABCI"))]
+    use anoma::types::transaction::protocol::VoteExtension;
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
@@ -752,6 +756,13 @@ mod test_utils {
             }
         }
 
+        /// Forward an aggregation of vote extensions to the shell's
+        /// validation function
+        #[cfg(not(feature = "ABCI"))]
+        pub fn validate_vote_extensions(&self, exts: &[VoteExtension]) -> bool {
+            self.shell.validate_vote_extensions(exts)
+        }
+
         /// Forward a FinalizeBlock request return a vector of
         /// the events created for each transaction
         pub fn finalize_block(
@@ -799,6 +810,31 @@ mod test_utils {
             ..Default::default()
         });
         (test, receiver)
+    }
+
+    /// Create a test shell talking to a mock ethereum fullnode process
+    /// Returns the shell and a handle to the mock process
+    #[cfg(all(not(feature = "ABCI"), not(feature = "eth-fullnode")))]
+    pub(super) async fn setup_with_mocked_eth_fullnode()
+    -> (TestShell, JoinHandle<()>) {
+        use crate::node::ledger::ethereum_node::ethereum_channel;
+        let (mut test, _) = setup();
+        let (sender, recv) =
+            tokio::sync::mpsc::unbounded_channel::<EthPollResult>();
+        let handle = std::thread::spawn(|| {
+            tokio_test::block_on(ethereum_channel::run("", vec![], sender))
+                .unwrap()
+        });
+        match &mut test.shell.mode {
+            ShellMode::Validator { ethereum_recv, .. } => {
+                *ethereum_recv = recv;
+            }
+            _ => panic!(
+                "Can not setup a mocked ethereum fullnode if the ledger is \
+                 not in Validator mode."
+            ),
+        }
+        (test, handle)
     }
 
     /// This is just to be used in testing. It is not

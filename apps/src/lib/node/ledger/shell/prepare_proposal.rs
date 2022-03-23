@@ -97,11 +97,11 @@ mod prepare_block {
     mod test_prepare_proposal {
         use anoma::types::address::xan;
         use anoma::types::storage::Epoch;
+        use anoma::types::transaction::protocol::ProtocolTx;
         use anoma::types::transaction::{process_tx, Fee};
 
         use super::*;
         use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
-        use anoma::types::transaction::protocol::ProtocolTx;
 
         /// Test that if a tx from the mempool is not a
         /// WrapperTx type, it is not included in the
@@ -120,15 +120,16 @@ mod prepare_block {
             };
             let block_data = shell.prepare_proposal(req).block_data;
             assert_eq!(block_data.len(), 1);
-            let vote_extensions = Tx::try_from_slice(&block_data[0][..])
-                .expect("Test failed");
+            let vote_extensions =
+                Tx::try_from_slice(&block_data[0][..]).expect("Test failed");
 
-            assert!(
-                matches!(
-                    process_tx(vote_extensions).expect("Test failed"),
-                    TxType::Protocol(ProtocolTx{tx: ProtocolTxType::VoteExtensions(_), ..})
-                )
-            );
+            assert!(matches!(
+                process_tx(vote_extensions).expect("Test failed"),
+                TxType::Protocol(ProtocolTx {
+                    tx: ProtocolTxType::VoteExtensions(_),
+                    ..
+                })
+            ));
         }
 
         /// Test that if an error is encountered while
@@ -169,15 +170,16 @@ mod prepare_block {
             };
             let block_data = shell.prepare_proposal(req).block_data;
             assert_eq!(block_data.len(), 1);
-            let vote_extensions = Tx::try_from_slice(&block_data[0][..])
-                .expect("Test failed");
+            let vote_extensions =
+                Tx::try_from_slice(&block_data[0][..]).expect("Test failed");
 
-            assert!(
-                matches!(
-                    process_tx(vote_extensions).expect("Test failed"),
-                    TxType::Protocol(ProtocolTx{tx: ProtocolTxType::VoteExtensions(_), ..})
-                )
-            );
+            assert!(matches!(
+                process_tx(vote_extensions).expect("Test failed"),
+                TxType::Protocol(ProtocolTx {
+                    tx: ProtocolTxType::VoteExtensions(_),
+                    ..
+                })
+            ));
         }
 
         /// Test that the decrypted txs are included
@@ -235,15 +237,16 @@ mod prepare_block {
 
             let mut block_data = shell.prepare_proposal(req).block_data;
             let vote_extensions = block_data.remove(0);
-            let vote_extensions = Tx::try_from_slice(&vote_extensions[..])
-                .expect("Test failed");
+            let vote_extensions =
+                Tx::try_from_slice(&vote_extensions[..]).expect("Test failed");
 
-            assert!(
-                matches!(
-                    process_tx(vote_extensions).expect("Test failed"),
-                    TxType::Protocol(ProtocolTx{tx: ProtocolTxType::VoteExtensions(_), ..})
-                )
-            );
+            assert!(matches!(
+                process_tx(vote_extensions).expect("Test failed"),
+                TxType::Protocol(ProtocolTx {
+                    tx: ProtocolTxType::VoteExtensions(_),
+                    ..
+                })
+            ));
 
             let received: Vec<Vec<u8>> = block_data
                 .iter()

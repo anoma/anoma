@@ -65,6 +65,8 @@ mod extend_votes {
             }
         }
 
+        /// At present this checks the signature on all Ethereum headers
+        ///
         /// INVARIANT: This method must be stateless.
         pub fn verify_vote_extension(
             &self,
@@ -129,3 +131,67 @@ mod extend_votes {
 
 #[cfg(not(feature = "ABCI"))]
 pub use extend_votes::*;
+
+#[cfg(all(test, not(feature = "eth-fullnode"), not(feature = "ABCI")))]
+mod test_vote_extensions {
+    use std::convert::TryFrom;
+
+    use tendermint_proto::types::Vote;
+    use tower_abci::request;
+
+    use super::*;
+    use crate::node::ledger::shell::test_utils::*;
+
+    /// Test that we successfully receive ethereum headers
+    /// from the channel to fullnode process
+    ///
+    /// We further check that ledger side buffering is done if multiple
+    /// headers are in the channel
+    #[test]
+    #[cfg(not(feature = "eth-fullnode"))]
+    fn test_get_eth_headers() {
+        let (mut shell, _) =
+            tokio_test::block_on(setup_with_mocked_eth_fullnode());
+        // a header is sent every 2 seconds.
+        // We should receive at least 2 headers as such
+        std::thread::sleep(std::time::Duration::from_secs(5));
+        let headers = shell.shell.new_ethereum_headers();
+        assert!(headers.len() > 1);
+    }
+
+    /// Test that ethereum headers are added to vote extensions.
+    /// Check that these vote extensions pass verification
+    #[test]
+    #[cfg(not(feature = "eth-fullnode"))]
+    fn test_eth_headers_vote_extensions() {
+        let (mut shell, _) =
+            tokio_test::block_on(setup_with_mocked_eth_fullnode());
+        // a header is sent every 2 seconds.
+        // We should receive at least 2 headers as such
+        std::thread::sleep(std::time::Duration::from_secs(5));
+        let vote_extension = shell
+            .shell
+            .extend_vote(Default::default())
+            .vote_extension
+            .expect("Test failed");
+        let vote_extension_data =
+            VoteExtensionData::try_from(vote_extension.clone())
+                .expect("Test failed");
+
+        assert!(vote_extension_data.ethereum_headers.len() > 1);
+        let vote = Vote {
+            r#type: 0,
+            height: 0,
+            round: 0,
+            block_id: None,
+            timestamp: None,
+            validator_address: vec![],
+            validator_index: 0,
+            signature: vec![],
+            vote_extension: Some(vote_extension),
+        };
+        let req = request::VerifyVoteExtension { vote: Some(vote) };
+        let res = shell.shell.verify_vote_extension(req);
+        assert_eq!(res.result, 0);
+    }
+}

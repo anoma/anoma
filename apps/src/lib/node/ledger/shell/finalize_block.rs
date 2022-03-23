@@ -18,8 +18,9 @@ use tendermint_stable::block::Header;
 
 use super::*;
 #[cfg(not(feature = "ABCI"))]
-use crate::node::ledger::shell::vote_extensions::VoteExtensionData;
 use crate::node::ledger::ethereum_node::ethereum_types::EthereumHeader;
+#[cfg(not(feature = "ABCI"))]
+use crate::node::ledger::shell::vote_extensions::VoteExtensionData;
 
 impl<D, H> Shell<D, H>
 where
@@ -174,7 +175,14 @@ where
                     match &_protocol_tx.tx {
                         ProtocolTxType::VoteExtensions(votes) => {
                             self.update_ethereum_headers(votes.clone());
-                            Event::new_tx_event(&tx_type, height.0)
+                            let mut event =
+                                Event::new_tx_event(&tx_type, height.0);
+                            event["log"] = format!(
+                                "Collected an verified vote extensions from \
+                                 {} validators.",
+                                votes.len()
+                            );
+                            event
                         }
                         _ => {
                             continue;

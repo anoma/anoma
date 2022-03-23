@@ -19,7 +19,8 @@ where
 {
     /// The epoch in which this data was last updated
     last_update: Epoch,
-    data: Vec<Option<Data>>,
+    /// The vector of possible values
+    pub data: Vec<Option<Data>>,
     offset: PhantomData<Offset>,
 }
 

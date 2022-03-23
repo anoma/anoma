@@ -39,7 +39,7 @@ name = "anomaw"
 path = "src/bin/anoma-wallet/main.rs"
 
 [features]
-default = ["std", "ABCI"]
+default = ["std", "ABCI", "eth-fullnode"]
 dev = ["anoma/dev"]
 std = ["ed25519-consensus/std", "rand/std", "rand_core/std"]
 # for integration tests and test utilies
@@ -62,6 +62,7 @@ ABCI-plus-plus = [
   "anoma/ibc-vp",
 ]
 testing = ["dev"]
+eth-fullnode = []
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["wasm-runtime", "ferveo-tpke", "rand"]}

@@ -577,6 +577,7 @@ where
         CargoBuild::new()
             .package(APPS_PACKAGE)
             .manifest_path(manifest_path)
+            .no_default_features()
             .features("ABCI")
             // Explicitly disable dev, in case it's enabled when a test is
             // invoked

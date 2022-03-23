@@ -1,11 +1,15 @@
 //! E2E test helpers
 
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
 use anoma::types::key::*;
 use anoma::types::storage::Epoch;
 use anoma_apps::config::{Config, TendermintMode};
+use anoma_apps::client::tendermint_websocket_client::{
+    TendermintWebsocketClient, WebSocketAddress
+};
 use color_eyre::eyre::Result;
 use eyre::eyre;
 
@@ -134,3 +138,10 @@ pub fn get_epoch(test: &Test, ledger_address: &str) -> Result<Epoch> {
     })?;
     Ok(Epoch(epoch))
 }
+
+/*pub fn query_event() {
+    let mut event_subscription = TendermintWebsocketClient::open(
+        WebSocketAddress::try_from("127.0.0.1:26657").unwrap(),
+        None,
+    ).unwrap();
+}*/
