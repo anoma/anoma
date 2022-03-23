@@ -1,26 +1,6 @@
 //! IBC validity predicate for port module
 use std::str::FromStr;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::capabilities::Capability;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::context::PortReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::error::Error as Ics05Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::PortId;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::capabilities::Capability;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::context::PortReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::error::Error as Ics05Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::PortId;
 use thiserror::Error;
 
 use super::super::storage::{
@@ -28,6 +8,11 @@ use super::super::storage::{
     port_id, port_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics05_port::capabilities::{Capability, CapabilityName};
+use crate::ibc::core::ics05_port::context::{CapabilityReader, PortReader};
+use crate::ibc::core::ics05_port::error::Error as Ics05Error;
+use crate::ibc::core::ics24_host::identifier::PortId;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::storage::Key;
 use crate::vm::WasmCacheAccess;
@@ -99,7 +84,7 @@ where
                     let cap = capability(key)?;
                     let port_id = self.get_port_by_capability(&cap)?;
                     match self.lookup_module_by_port(&port_id) {
-                        Ok(c) if c == cap => Ok(()),
+                        Ok((_, c)) if c == cap => Ok(()),
                         Ok(_) => Err(Error::InvalidPort(format!(
                             "The port is invalid: ID {}",
                             port_id
@@ -169,10 +154,12 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
+    type ModuleId = ();
+
     fn lookup_module_by_port(
         &self,
         port_id: &PortId,
-    ) -> Ics05Result<Capability> {
+    ) -> Ics05Result<(Self::ModuleId, Capability)> {
         let key = port_key(port_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
@@ -180,18 +167,51 @@ where
                     .try_into()
                     .map_err(|_| Ics05Error::implementation_specific())?;
                 let index = u64::from_be_bytes(index);
-                Ok(Capability::from(index))
+                Ok(((), Capability::from(index)))
             }
             Ok(None) => Err(Ics05Error::unknown_port(port_id.clone())),
             Err(_) => Err(Ics05Error::implementation_specific()),
         }
     }
+}
 
-    fn authenticate(&self, cap: &Capability, port_id: &PortId) -> bool {
-        match self.get_port_by_capability(cap) {
-            Ok(p) => p == *port_id,
-            Err(_) => false,
+impl<'a, DB, H, CA> CapabilityReader for Ibc<'a, DB, H, CA>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    fn get_capability(&self, name: &CapabilityName) -> Ics05Result<Capability> {
+        let port_id = get_port_id(name)?;
+        let (_, capability) = self.lookup_module_by_port(&port_id)?;
+        Ok(capability)
+    }
+
+    fn authenticate_capability(
+        &self,
+        name: &CapabilityName,
+        capability: &Capability,
+    ) -> Ics05Result<()> {
+        // check if the capability can be read by the name and the port ID is
+        // read by the capability
+        if *capability == self.get_capability(name)?
+            && self
+                .get_port_by_capability(capability)
+                .map_err(|_| Ics05Error::implementation_specific())?
+                == get_port_id(name)?
+        {
+            Ok(())
+        } else {
+            Err(Ics05Error::unknown_port(get_port_id(name)?))
         }
+    }
+}
+
+fn get_port_id(name: &CapabilityName) -> Ics05Result<PortId> {
+    match name.to_string().strip_prefix("ports/") {
+        Some(s) => PortId::from_str(s)
+            .map_err(|_| Ics05Error::implementation_specific()),
+        None => Err(Ics05Error::implementation_specific()),
     }
 }
 

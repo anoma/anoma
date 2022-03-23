@@ -1,17 +1,18 @@
+pub use ark_bls12_381::Bls12_381 as EllipticCurve;
 /// Integration of Ferveo cryptographic primitives
 /// to enable decrypting txs.
 /// *Not wasm compatible*
 #[cfg(feature = "ferveo-tpke")]
 pub mod decrypted_tx {
 
-    use ark_bls12_381::Bls12_381 as EllipticCurve;
     use ark_ec::PairingEngine;
-    use borsh::{BorshDeserialize, BorshSerialize};
+    use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
+    use super::EllipticCurve;
     use crate::proto::Tx;
     use crate::types::transaction::{hash_tx, Hash, TxType, WrapperTx};
 
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     #[allow(clippy::large_enum_variant)]
     /// Holds the result of attempting to decrypt
     /// a transaction and the data necessary for

@@ -3,61 +3,129 @@
 /// txs that contain decrypted payloads or assertions of
 /// non-decryptability
 pub mod decrypted;
-mod encrypted;
+/// tools for encrypted data
+pub mod encrypted;
+/// txs to manage nfts
+pub mod nft;
 pub mod pos;
+/// transaction protocols made by validators
+pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
-use std::fmt::{self, Display};
+use std::collections::{BTreeSet, HashSet};
+use std::fmt;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use decrypted::*;
+#[cfg(feature = "ferveo-tpke")]
+pub use encrypted::EncryptionKey;
+pub use protocol::UpdateDkgSessionKey;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-#[cfg(not(feature = "ABCI"))]
-use tendermint::abci::transaction;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::abci::transaction;
 pub use wrapper::*;
 
+use super::ibc::IbcEvent;
+use super::storage;
+use crate::ledger::gas::VpsGas;
 use crate::types::address::Address;
+use crate::types::hash::Hash;
 use crate::types::key::*;
-
-#[derive(
-    Clone,
-    Debug,
-    Hash,
-    PartialEq,
-    Eq,
-    BorshSerialize,
-    BorshDeserialize,
-    Serialize,
-    Deserialize,
-)]
-/// A hash, typically a sha-2 hash of a tx
-pub struct Hash(pub [u8; 32]);
-
-impl Display for Hash {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in &self.0 {
-            write!(f, "{:02X}", byte)?;
-        }
-        Ok(())
-    }
-}
-
-impl From<Hash> for transaction::Hash {
-    fn from(hash: Hash) -> Self {
-        Self::new(hash.0)
-    }
-}
 
 /// Get the hash of a transaction
 pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     let digest = Sha256::digest(tx_bytes);
-    let mut hash_bytes = [0u8; 32];
-    hash_bytes.copy_from_slice(&digest);
-    Hash(hash_bytes)
+    Hash(*digest.as_ref())
+}
+
+/// Transaction application result
+// TODO derive BorshSchema after <https://github.com/near/borsh-rs/issues/82>
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize)]
+pub struct TxResult {
+    /// Total gas used by the transaction (includes the gas used by VPs)
+    pub gas_used: u64,
+    /// Storage keys touched by the transaction
+    pub changed_keys: BTreeSet<storage::Key>,
+    /// The results of all the triggered validity predicates by the transaction
+    pub vps_result: VpsResult,
+    /// New established addresses created by the transaction
+    pub initialized_accounts: Vec<Address>,
+    /// Optional IBC event emitted by the transaction
+    pub ibc_event: Option<IbcEvent>,
+}
+
+impl TxResult {
+    /// Check if the tx has been accepted by all the VPs
+    pub fn is_accepted(&self) -> bool {
+        self.vps_result.rejected_vps.is_empty()
+    }
+}
+
+/// Result of checking a transaction with validity predicates
+// TODO derive BorshSchema after <https://github.com/near/borsh-rs/issues/82>
+#[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize)]
+pub struct VpsResult {
+    /// The addresses whose VPs accepted the transaction
+    pub accepted_vps: HashSet<Address>,
+    /// The addresses whose VPs rejected the transaction
+    pub rejected_vps: HashSet<Address>,
+    /// The total gas used by all the VPs
+    pub gas_used: VpsGas,
+    /// Errors occurred in any of the VPs, if any
+    pub errors: Vec<(Address, String)>,
+}
+
+impl fmt::Display for TxResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Transaction is {}. Gas used: {};{} VPs result: {}",
+            if self.is_accepted() {
+                "valid"
+            } else {
+                "invalid"
+            },
+            self.gas_used,
+            iterable_to_string("Changed keys", self.changed_keys.iter()),
+            self.vps_result,
+        )
+    }
+}
+
+impl fmt::Display for VpsResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}",
+            iterable_to_string("Accepted", self.accepted_vps.iter()),
+            iterable_to_string("Rejected", self.rejected_vps.iter()),
+            iterable_to_string(
+                "Errors",
+                self.errors
+                    .iter()
+                    .map(|(addr, err)| format!("{} in {}", err, addr))
+            ),
+        )
+    }
+}
+
+/// Format all the values of the given iterator into a string
+fn iterable_to_string<T: fmt::Display>(
+    label: &str,
+    iter: impl Iterator<Item = T>,
+) -> String {
+    let mut iter = iter.peekable();
+    if iter.peek().is_none() {
+        "".into()
+    } else {
+        format!(
+            " {}: {};",
+            label,
+            iter.map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
+    }
 }
 
 /// A tx data type to update an account's validity predicate
@@ -67,6 +135,7 @@ pub fn hash_tx(tx_bytes: &[u8]) -> Hash {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -84,6 +153,7 @@ pub struct UpdateVp {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -104,6 +174,7 @@ pub struct InitAccount {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -118,6 +189,10 @@ pub struct InitValidator {
     /// This can be used for signature verification of transactions for the
     /// newly created account.
     pub rewards_account_key: common::PublicKey,
+    /// Public key used to sign protocol transactions
+    pub protocol_key: common::PublicKey,
+    /// Serialization of the public session key used in the DKG
+    pub dkg_key: DkgPublicKey,
     /// The VP code for validator account
     pub validator_vp_code: Vec<u8>,
     /// The VP code for validator's staking reward account
@@ -132,12 +207,28 @@ pub struct InitValidator {
 pub mod tx_types {
     use std::convert::TryFrom;
 
+    use thiserror;
+
     use super::*;
     use crate::proto::{SignedTxData, Tx};
+    use crate::types::transaction::protocol::ProtocolTx;
+
+    /// Errors relating to decrypting a wrapper tx and its
+    /// encrypted payload from a Tx type
+    #[allow(missing_docs)]
+    #[derive(thiserror::Error, Debug, PartialEq)]
+    pub enum TxError {
+        #[error("{0}")]
+        Unsigned(String),
+        #[error("{0}")]
+        SigError(String),
+        #[error("Failed to deserialize Tx: {0}")]
+        Deserialization(String),
+    }
 
     /// Struct that classifies that kind of Tx
     /// based on the contents of its data.
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     pub enum TxType {
         /// An ordinary tx
         Raw(Tx),
@@ -145,6 +236,8 @@ pub mod tx_types {
         Wrapper(WrapperTx),
         /// An attempted decryption of a wrapper tx
         Decrypted(DecryptedTx),
+        /// Txs issued by validators as part of internal protocols
+        Protocol(ProtocolTx),
     }
 
     impl From<TxType> for Tx {
@@ -191,7 +284,7 @@ pub mod tx_types {
     /// data if valid and return it wrapped in a enum variant
     /// indicating it is a wrapper. Otherwise, an error is
     /// returned indicating the signature was not valid
-    pub fn process_tx(tx: Tx) -> Result<TxType, WrapperTxErr> {
+    pub fn process_tx(tx: Tx) -> Result<TxType, TxError> {
         if let Some(Ok(SignedTxData {
             data: Some(data),
             ref sig,
@@ -200,18 +293,28 @@ pub mod tx_types {
             .as_ref()
             .map(|data| SignedTxData::try_from_slice(&data[..]))
         {
+            let signed_hash = Tx {
+                code: tx.code,
+                data: Some(data.clone()),
+                timestamp: tx.timestamp,
+            }
+            .hash();
             match TxType::try_from(Tx {
                 code: vec![],
                 data: Some(data),
                 timestamp: tx.timestamp,
             })
-            .map_err(|err| WrapperTxErr::Deserialization(err.to_string()))?
+            .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
                 // verify signature and extract signed data
                 TxType::Wrapper(wrapper) => {
-                    tx.verify_sig(&wrapper.pk, sig)
-                        .map_err(WrapperTxErr::SigError)?;
+                    wrapper.validate_sig(signed_hash, sig)?;
                     Ok(TxType::Wrapper(wrapper))
+                }
+                // verify signature and extract signed data
+                TxType::Protocol(protocol) => {
+                    protocol.validate_sig(signed_hash, sig)?;
+                    Ok(TxType::Protocol(protocol))
                 }
                 // we extract the signed data, but don't check the signature
                 decrypted @ TxType::Decrypted(_) => Ok(decrypted),
@@ -220,10 +323,15 @@ pub mod tx_types {
             }
         } else {
             match TxType::try_from(tx)
-                .map_err(|err| WrapperTxErr::Deserialization(err.to_string()))?
+                .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
                 // we only accept signed wrappers
-                TxType::Wrapper(_) => Err(WrapperTxErr::Unsigned),
+                TxType::Wrapper(_) => Err(TxError::Unsigned(
+                    "Wrapper transactions must be signed".into(),
+                )),
+                TxType::Protocol(_) => Err(TxError::Unsigned(
+                    "Protocol transactions must be signed".into(),
+                )),
                 // return as is
                 val => Ok(val),
             }
@@ -323,6 +431,7 @@ pub mod tx_types {
                 Epoch(0),
                 0.into(),
                 tx.clone(),
+                Default::default(),
             )
             .sign(&keypair)
             .expect("Test failed");
@@ -357,6 +466,7 @@ pub mod tx_types {
                 Epoch(0),
                 0.into(),
                 tx,
+                Default::default(),
             );
 
             let tx = Tx::new(
@@ -366,7 +476,7 @@ pub mod tx_types {
                 ),
             );
             let result = process_tx(tx).expect_err("Test failed");
-            assert_matches!(result, WrapperTxErr::Unsigned);
+            assert_matches!(result, TxError::Unsigned(_));
         }
     }
 
@@ -423,3 +533,5 @@ pub mod tx_types {
 
 #[cfg(feature = "ferveo-tpke")]
 pub use tx_types::*;
+
+use crate::types::key::dkg_session_keys::DkgPublicKey;

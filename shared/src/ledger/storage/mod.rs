@@ -12,6 +12,14 @@ use core::fmt::Debug;
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::merkle::proof::Proof;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Error as TmProtoError;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Error as TmProtoError;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 #[cfg(feature = "ABCI")]
@@ -98,8 +106,10 @@ pub enum Error {
     CodingError(types::Error),
     #[error("Merkle tree error: {0}")]
     MerkleTreeError(MerkleTreeError),
-    #[error("Merkle tree error: {0}")]
+    #[error("DB error: {0}")]
     DBError(String),
+    #[error("Tendermint Protobuf error: {0}")]
+    ProtobufCodingError(TmProtoError),
 }
 
 /// The block's state as stored in the database.
@@ -129,6 +139,8 @@ pub struct BlockStateRead {
 pub struct BlockStateWrite<'a> {
     /// Merkle tree stores
     pub merkle_tree_stores: MerkleTreeStoresWrite<'a>,
+    /// Header of the block
+    pub header: Option<&'a Header>,
     /// Hash of the block
     pub hash: &'a BlockHash,
     /// Height of the block
@@ -169,6 +181,9 @@ pub trait DB: std::fmt::Debug {
 
     /// Write block's metadata
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()>;
+
+    /// Read the block header with the given height from the DB
+    fn read_block_header(&self, height: BlockHeight) -> Result<Option<Header>>;
 
     /// Read the latest value for account subspace key from the DB
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>>;
@@ -328,6 +343,7 @@ where
     pub fn commit(&mut self) -> Result<()> {
         let state = BlockStateWrite {
             merkle_tree_stores: self.block.tree.stores(),
+            header: self.header.as_ref(),
             hash: &self.block.hash,
             height: self.block.height,
             epoch: self.block.epoch,
@@ -503,8 +519,23 @@ where
     }
 
     /// Get the block header
-    pub fn get_block_header(&self) -> (Option<Header>, u64) {
-        (self.header.clone(), MIN_STORAGE_GAS)
+    pub fn get_block_header(
+        &self,
+        height: Option<BlockHeight>,
+    ) -> Result<(Option<Header>, u64)> {
+        match height {
+            Some(h) if h == self.get_block_height().0 => {
+                Ok((self.header.clone(), MIN_STORAGE_GAS))
+            }
+            Some(h) => match self.db.read_block_header(h)? {
+                Some(header) => {
+                    let gas = header.encoded_len() as u64;
+                    Ok((Some(header), gas))
+                }
+                None => Ok((None, MIN_STORAGE_GAS)),
+            },
+            None => Ok((self.header.clone(), MIN_STORAGE_GAS)),
+        }
     }
 
     /// Initialize a new epoch when the current epoch is finished. Returns
@@ -678,10 +709,12 @@ mod tests {
             start_time in 0..10000_i64,
             min_num_of_blocks in 1..10_u64,
             min_duration in 1..100_i64,
+            max_expected_time_per_block in 1..100_i64,
         )
         (
             min_num_of_blocks in Just(min_num_of_blocks),
             min_duration in Just(min_duration),
+            max_expected_time_per_block in Just(max_expected_time_per_block),
             start_height in Just(start_height),
             start_time in Just(start_time),
             block_height in start_height + 1..(start_height + 2 * min_num_of_blocks as u64),
@@ -690,16 +723,18 @@ mod tests {
             min_blocks_delta in -(min_num_of_blocks as i64 - 1)..5,
             // Delta will be applied on the `min_duration` parameter
             min_duration_delta in -(min_duration as i64 - 1)..50,
-        ) -> (EpochDuration, BlockHeight, DateTimeUtc, BlockHeight, DateTimeUtc,
-                i64, i64) {
+            // Delta will be applied on the `max_expected_time_per_block` parameter
+            max_time_per_block_delta in -(max_expected_time_per_block as i64 - 1)..50,
+        ) -> (EpochDuration, i64, BlockHeight, DateTimeUtc, BlockHeight, DateTimeUtc,
+                i64, i64, i64) {
             let epoch_duration = EpochDuration {
                 min_num_of_blocks,
                 min_duration: Duration::seconds(min_duration).into(),
             };
-            (epoch_duration,
+            (epoch_duration, max_expected_time_per_block,
                 BlockHeight(start_height), Utc.timestamp(start_time, 0).into(),
                 BlockHeight(block_height), Utc.timestamp(block_time, 0).into(),
-                min_blocks_delta, min_duration_delta)
+                min_blocks_delta, min_duration_delta, max_time_per_block_delta)
         }
     }
 
@@ -712,8 +747,8 @@ mod tests {
         ///    duration doesn't change, but the next one does.
         #[test]
         fn update_epoch_after_its_duration(
-            (epoch_duration, start_height, start_time, block_height, block_time,
-            min_blocks_delta, min_duration_delta)
+            (epoch_duration, max_expected_time_per_block, start_height, start_time, block_height, block_time,
+            min_blocks_delta, min_duration_delta, max_time_per_block_delta)
             in arb_and_epoch_duration_start_and_block())
         {
             let mut storage = TestStorage {
@@ -725,6 +760,9 @@ mod tests {
             };
             let mut parameters = Parameters {
                 epoch_duration: epoch_duration.clone(),
+                max_expected_time_per_block: Duration::seconds(max_expected_time_per_block).into(),
+                vp_whitelist: vec![],
+                tx_whitelist: vec![]
             };
             parameters::init_genesis_storage(&mut storage, &parameters);
 
@@ -762,7 +800,10 @@ mod tests {
             let min_duration: i64 = parameters.epoch_duration.min_duration.0 as _;
             parameters.epoch_duration.min_duration =
                 Duration::seconds(min_duration + min_duration_delta).into();
-            parameters::update(&mut storage, &parameters).unwrap();
+            parameters.max_expected_time_per_block =
+                Duration::seconds(max_expected_time_per_block + max_time_per_block_delta).into();
+            parameters::update_max_expected_time_per_block_parameter(&mut storage, &parameters.max_expected_time_per_block).unwrap();
+            parameters::update_epoch_parameter(&mut storage, &parameters.epoch_duration).unwrap();
 
             // Test for 2.
             let epoch_before = storage.last_epoch;

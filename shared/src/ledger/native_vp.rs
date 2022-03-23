@@ -1,7 +1,7 @@
 //! Native validity predicate interface associated with internal accounts such
 //! as the PoS and IBC modules.
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use thiserror::Error;
 
@@ -37,8 +37,8 @@ pub trait NativeVp {
     fn validate_tx(
         &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
     ) -> std::result::Result<bool, Self::Error>;
 }
 
@@ -120,6 +120,17 @@ where
         vp_env::read_post(
             &mut *self.gas_meter.borrow_mut(),
             self.storage,
+            self.write_log,
+            key,
+        )
+        .map_err(Error::ContextError)
+    }
+
+    /// Storage read temporary state (after tx execution). It will try to read
+    /// from only the write log.
+    pub fn read_temp(&self, key: &Key) -> Result<Option<Vec<u8>>> {
+        vp_env::read_temp(
+            &mut *self.gas_meter.borrow_mut(),
             self.write_log,
             key,
         )
@@ -227,8 +238,8 @@ where
     pub fn eval(
         &mut self,
         address: &Address,
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
         vp_code: Vec<u8>,
         input_data: Vec<u8>,
     ) -> bool {

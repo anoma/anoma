@@ -49,9 +49,7 @@ fn run_ledger() -> Result<()> {
             run_as!(test, Who::NonValidator, Bin::Node, args, Some(40))?;
         ledger.exp_string("Anoma ledger node started")?;
         if !cfg!(feature = "ABCI") {
-            ledger.exp_string(
-                "This node is a validator (NOT in the active validator set)",
-            )?;
+            ledger.exp_string("This node is a fullnode")?;
         } else {
             ledger.exp_string("This node is not a validator")?;
         }
@@ -167,6 +165,7 @@ fn run_ledger_load_state_and_reset() -> Result<()> {
 /// 4. Submit a custom tx
 /// 5. Submit a tx to initialize a new account
 /// 6. Query token balance
+/// 7. Query the raw bytes of a storage key
 #[test]
 fn ledger_txs_and_queries() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -208,7 +207,7 @@ fn ledger_txs_and_queries() -> Result<()> {
             "--fee-token",
             XAN,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
         ],
         // 3. Submit a transaction to update an account's validity
         // predicate
@@ -225,7 +224,7 @@ fn ledger_txs_and_queries() -> Result<()> {
              "--fee-token",
              XAN,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
         ],
         // 4. Submit a custom tx
         vec![
@@ -256,7 +255,7 @@ fn ledger_txs_and_queries() -> Result<()> {
             "--code-path",
             &vp_user,
             "--alias",
-            "test-account",
+            "Test-Account",
             "--fee-amount",
             "0",
             "--gas-limit",
@@ -264,7 +263,7 @@ fn ledger_txs_and_queries() -> Result<()> {
             "--fee-token",
             XAN,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
         ],
     ];
 
@@ -307,6 +306,31 @@ fn ledger_txs_and_queries() -> Result<()> {
     for (query_args, expected) in &query_args_and_expected_response {
         let mut client = run!(test, Bin::Client, query_args, Some(40))?;
         client.exp_regex(expected)?;
+
+        client.assert_success();
+    }
+    let christel = find_address(&test, CHRISTEL)?;
+    // as setup in `genesis/e2e-tests-single-node.toml`
+    let christel_balance = token::Amount::whole(1000000);
+    let xan = find_address(&test, XAN)?;
+    let storage_key = token::balance_key(&xan, &christel).to_string();
+    let query_args_and_expected_response = vec![
+        // 7. Query storage key and get hex-encoded raw bytes
+        (
+            vec![
+                "query-bytes",
+                "--storage-key",
+                &storage_key,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            // expect hex encoded of borsh encoded bytes
+            hex::encode(christel_balance.try_to_vec().unwrap()),
+        ),
+    ];
+    for (query_args, expected) in &query_args_and_expected_response {
+        let mut client = run!(test, Bin::Client, query_args, Some(40))?;
+        client.exp_string(expected)?;
 
         client.assert_success();
     }
@@ -462,6 +486,8 @@ fn pos_bonds() -> Result<()> {
             let parameters = ParametersConfig {
                 min_num_of_blocks: 2,
                 min_duration: 1,
+                max_expected_time_per_block: 1,
+                ..genesis.parameters
             };
             let pos_params = PosParamsConfig {
                 pipeline_len: 1,
@@ -657,6 +683,8 @@ fn pos_init_validator() -> Result<()> {
             let parameters = ParametersConfig {
                 min_num_of_blocks: 2,
                 min_duration: 1,
+                max_expected_time_per_block: 1,
+                ..genesis.parameters
             };
             let pos_params = PosParamsConfig {
                 pipeline_len,

@@ -1,17 +1,15 @@
 //! A basic fungible token
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::types::address::{Address, Error as AddressError, InternalAddress};
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use crate::types::ibc::data::FungibleTokenPacketData;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
@@ -23,6 +21,7 @@ use crate::types::storage::{DbKeySeg, Key, KeySeg};
     Default,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,
@@ -283,6 +282,7 @@ pub fn is_non_owner_balance_key(key: &Key) -> Option<&Address> {
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Hash,
     Eq,
     PartialOrd,
@@ -311,7 +311,6 @@ pub enum TransferError {
     NoToken,
 }
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 impl TryFrom<FungibleTokenPacketData> for Transfer {
     type Error = TransferError;
 

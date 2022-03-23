@@ -1,10 +1,12 @@
 //! Cryptographic keys
+/// Elliptic curve keys for the DKG
+pub mod dkg_session_keys;
 
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
@@ -20,6 +22,7 @@ pub mod ed25519;
 pub mod secp256k1;
 
 const PK_STORAGE_KEY: &str = "public_key";
+const PROTOCOL_PK_STORAGE_KEY: &str = "protocol_public_key";
 
 /// Obtain a storage key for user's public key.
 pub fn pk_key(owner: &Address) -> storage::Key {
@@ -33,6 +36,25 @@ pub fn is_pk_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
             if key == PK_STORAGE_KEY =>
+        {
+            Some(owner)
+        }
+        _ => None,
+    }
+}
+
+/// Obtain a storage key for user's public key.
+pub fn protocol_pk_key(owner: &Address) -> storage::Key {
+    Key::from(owner.to_db_key())
+        .push(&PROTOCOL_PK_STORAGE_KEY.to_owned())
+        .expect("Cannot obtain a storage key")
+}
+
+/// Check if the given storage key is a public key. If it is, returns the owner.
+pub fn is_protocol_pk_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
+            if key == PROTOCOL_PK_STORAGE_KEY =>
         {
             Some(owner)
         }
@@ -118,7 +140,7 @@ pub enum SchemeType {
 /// Represents a signature
 
 pub trait Signature:
-    Hash + PartialOrd + Serialize + BorshSerialize + BorshDeserialize
+    Hash + PartialOrd + Serialize + BorshSerialize + BorshDeserialize + BorshSchema
 {
     /// The scheme type of this implementation
     const TYPE: SchemeType;
@@ -145,6 +167,7 @@ pub trait Signature:
 pub trait PublicKey:
     BorshSerialize
     + BorshDeserialize
+    + BorshSchema
     + Ord
     + Clone
     + Display
@@ -180,6 +203,7 @@ pub trait PublicKey:
 pub trait SecretKey:
     BorshSerialize
     + BorshDeserialize
+    + BorshSchema
     + Display
     + Debug
     + RefTo<Self::PublicKey>
@@ -254,6 +278,7 @@ pub trait SigScheme: Eq + Ord + Debug + Serialize + Default {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,

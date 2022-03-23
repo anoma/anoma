@@ -1,98 +1,9 @@
 //! IBC validity predicate for channel module
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::ConnectionEnd;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::context::ConnectionReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Receipt, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::capabilities::Capability;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::context::PortReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::proofs::Proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Timestamp;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::ConnectionEnd;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::context::ConnectionReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::handler::verify::verify_channel_proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Receipt, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::capabilities::Capability;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::context::PortReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::proofs::Proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Timestamp;
+use core::time::Duration;
+
+use prost::Message;
 use sha2::Digest;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -101,14 +12,44 @@ use super::super::handler::{
     make_open_init_channel_event, make_open_try_channel_event,
 };
 use super::super::storage::{
-    ack_key, channel_counter_key, channel_key, commitment_key,
-    is_channel_counter_key, next_sequence_ack_key, next_sequence_recv_key,
-    next_sequence_send_key, port_channel_id, receipt_key,
-    Error as IbcStorageError,
+    ack_key, channel_counter_key, channel_key, client_update_height_key,
+    client_update_timestamp_key, commitment_key, is_channel_counter_key,
+    next_sequence_ack_key, next_sequence_recv_key, next_sequence_send_key,
+    port_channel_id, receipt_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics02_client::client_consensus::AnyConsensusState;
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics03_connection::connection::ConnectionEnd;
+use crate::ibc::core::ics03_connection::context::ConnectionReader;
+use crate::ibc::core::ics03_connection::error::Error as Ics03Error;
+use crate::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty, State,
+};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics04_channel::error::Error as Ics04Error;
+use crate::ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
+use crate::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+use crate::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+use crate::ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
+use crate::ibc::core::ics04_channel::packet::{Receipt, Sequence};
+use crate::ibc::core::ics05_port::capabilities::Capability;
+use crate::ibc::core::ics05_port::context::PortReader;
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::proofs::Proofs;
+use crate::ibc::timestamp::Timestamp;
 use crate::ledger::native_vp::Error as NativeVpError;
+use crate::ledger::parameters;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
+use crate::tendermint::Time;
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{
     Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt,
 };
@@ -134,6 +75,10 @@ pub enum Error {
     InvalidSequence(String),
     #[error("Packet info error: {0}")]
     InvalidPacketInfo(String),
+    #[error("Client update timestamp error: {0}")]
+    InvalidTimestamp(String),
+    #[error("Client update hight error: {0}")]
+    InvalidHeight(String),
     #[error("Proof verification error: {0}")]
     ProofVerificationFailure(Ics04Error),
     #[error("Decoding TX data error: {0}")]
@@ -264,7 +209,7 @@ where
     fn validate_version(&self, channel: &ChannelEnd) -> Result<()> {
         let connection = self.connection_from_channel(channel)?;
         let versions = connection.versions();
-        let version = match versions.as_slice() {
+        let version = match versions {
             [version] => version,
             _ => {
                 return Err(Error::InvalidVersion(
@@ -421,10 +366,11 @@ where
         let expected_my_side =
             Counterparty::new(port_channel_id.port_id.clone(), None);
         self.verify_proofs(
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Init,
-            msg.proofs.clone(),
+            &msg.proofs,
         )
     }
 
@@ -434,15 +380,33 @@ where
         channel: &ChannelEnd,
         msg: &MsgChannelOpenAck,
     ) -> Result<()> {
+        match channel.counterparty().channel_id() {
+            Some(counterpart_channel_id) => {
+                if *counterpart_channel_id != msg.counterparty_channel_id {
+                    return Err(Error::InvalidChannel(format!(
+                        "The counterpart channel ID mismatched: ID {}",
+                        counterpart_channel_id
+                    )));
+                }
+            }
+            None => {
+                return Err(Error::InvalidChannel(format!(
+                    "The channel doesn't have the counterpart channel ID: ID \
+                     {}",
+                    port_channel_id
+                )));
+            }
+        }
         let expected_my_side = Counterparty::new(
             port_channel_id.port_id.clone(),
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::TryOpen,
-            msg.proofs.clone(),
+            &msg.proofs,
         )
     }
 
@@ -457,10 +421,11 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Open,
-            msg.proofs.clone(),
+            &msg.proofs,
         )
     }
 
@@ -475,19 +440,21 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Closed,
-            msg.proofs.clone(),
+            &msg.proofs,
         )
     }
 
     fn verify_proofs(
         &self,
+        height: Height,
         channel: &ChannelEnd,
         expected_my_side: Counterparty,
         expected_state: State,
-        proofs: Proofs,
+        proofs: &Proofs,
     ) -> Result<()> {
         let connection = self.connection_from_channel(channel)?;
         let counterpart_conn_id =
@@ -506,15 +473,16 @@ where
             *channel.ordering(),
             expected_my_side,
             expected_connection_hops,
-            channel.version(),
+            channel.version().clone(),
         );
 
         match verify_channel_proofs(
             self,
+            height,
             channel,
             &connection,
             &expected_channel,
-            &proofs,
+            proofs,
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
@@ -627,17 +595,56 @@ where
     ) -> Result<String> {
         let key = commitment_key(&key.0, &key.1, key.2);
         match self.ctx.read_pre(&key)? {
-            Some(value) => std::str::from_utf8(&value[..])
-                .map_err(|e| {
-                    Error::InvalidPacketInfo(format!(
-                        "Decoding the prior packet info failed: {}",
-                        e
-                    ))
-                })
-                .map(|s| s.to_string()),
+            Some(value) => String::decode(&value[..]).map_err(|e| {
+                Error::InvalidPacketInfo(format!(
+                    "Decoding the prior commitment failed: {}",
+                    e
+                ))
+            }),
             None => Err(Error::InvalidPacketInfo(format!(
-                "The prior packet info doesn't exist: Key {}",
+                "The prior commitment doesn't exist: Key {}",
                 key
+            ))),
+        }
+    }
+
+    pub(super) fn client_update_time_pre(
+        &self,
+        client_id: &ClientId,
+    ) -> Result<Timestamp> {
+        let key = client_update_timestamp_key(client_id);
+        match self.ctx.read_pre(&key)? {
+            Some(value) => {
+                let time = Time::decode_vec(&value).map_err(|_| {
+                    Error::InvalidTimestamp(format!(
+                        "Timestamp conversion failed: ID {}",
+                        client_id
+                    ))
+                })?;
+                Ok(time.into())
+            }
+            None => Err(Error::InvalidTimestamp(format!(
+                "Timestamp doesn't exist: ID {}",
+                client_id
+            ))),
+        }
+    }
+
+    pub(super) fn client_update_height_pre(
+        &self,
+        client_id: &ClientId,
+    ) -> Result<Height> {
+        let key = client_update_height_key(client_id);
+        match self.ctx.read_pre(&key)? {
+            Some(value) => Height::decode_vec(&value).map_err(|_| {
+                Error::InvalidHeight(format!(
+                    "Height conversion failed: ID {}",
+                    client_id
+                ))
+            }),
+            None => Err(Error::InvalidHeight(format!(
+                "Client update height doesn't exist: ID {}",
+                client_id
             ))),
         }
     }
@@ -745,10 +752,10 @@ where
         &self,
         port_id: &PortId,
     ) -> Ics04Result<Capability> {
-        let cap = self
+        let (_, cap) = self
             .lookup_module_by_port(port_id)
             .map_err(|_| Ics04Error::no_port_capability(port_id.clone()))?;
-        if self.authenticate(&cap, port_id) {
+        if self.authenticate(port_id.clone(), &cap) {
             Ok(cap)
         } else {
             Err(Ics04Error::invalid_port_capability())
@@ -812,9 +819,8 @@ where
     ) -> Ics04Result<String> {
         let commitment_key = commitment_key(&key.0, &key.1, key.2);
         match self.ctx.read_post(&commitment_key) {
-            Ok(Some(value)) => std::str::from_utf8(&value)
-                .map_err(|_| Ics04Error::implementation_specific())
-                .map(|s| s.to_string()),
+            Ok(Some(value)) => String::decode(&value[..])
+                .map_err(|_| Ics04Error::implementation_specific()),
             Ok(None) => Err(Ics04Error::packet_commitment_not_found(key.2)),
             Err(_) => Err(Ics04Error::implementation_specific()),
         }
@@ -851,13 +857,58 @@ where
     }
 
     fn host_height(&self) -> Height {
-        self.host_current_height()
+        ClientReader::host_height(self)
     }
 
-    fn host_timestamp(&self) -> Timestamp {
-        match self.ctx.storage.get_block_header().0 {
-            Some(h) => Timestamp::from_datetime(h.time.into()),
-            None => Timestamp::none(),
+    fn host_consensus_state(
+        &self,
+        height: Height,
+    ) -> Ics04Result<AnyConsensusState> {
+        ClientReader::host_consensus_state(self, height).map_err(|e| {
+            Ics04Error::ics03_connection(Ics03Error::ics02_client(e))
+        })
+    }
+
+    fn pending_host_consensus_state(&self) -> Ics04Result<AnyConsensusState> {
+        ClientReader::pending_host_consensus_state(self).map_err(|e| {
+            Ics04Error::ics03_connection(Ics03Error::ics02_client(e))
+        })
+    }
+
+    fn client_update_time(
+        &self,
+        client_id: &ClientId,
+        height: Height,
+    ) -> Ics04Result<Timestamp> {
+        let key = client_update_timestamp_key(client_id);
+        match self.ctx.read_post(&key) {
+            Ok(Some(value)) => {
+                let time = Time::decode_vec(&value)
+                    .map_err(|_| Ics04Error::implementation_specific())?;
+                Ok(time.into())
+            }
+            Ok(None) => Err(Ics04Error::processed_time_not_found(
+                client_id.clone(),
+                height,
+            )),
+            Err(_) => Err(Ics04Error::implementation_specific()),
+        }
+    }
+
+    fn client_update_height(
+        &self,
+        client_id: &ClientId,
+        height: Height,
+    ) -> Ics04Result<Height> {
+        let key = client_update_height_key(client_id);
+        match self.ctx.read_post(&key) {
+            Ok(Some(value)) => Height::decode_vec(&value)
+                .map_err(|_| Ics04Error::implementation_specific()),
+            Ok(None) => Err(Ics04Error::processed_height_not_found(
+                client_id.clone(),
+                height,
+            )),
+            Err(_) => Err(Ics04Error::implementation_specific()),
         }
     }
 
@@ -865,6 +916,18 @@ where
         let key = channel_counter_key();
         self.read_counter(&key)
             .map_err(|_| Ics04Error::implementation_specific())
+    }
+
+    fn max_expected_time_per_block(&self) -> Duration {
+        match parameters::read(self.ctx.storage) {
+            Ok((parameters, gas)) => {
+                match self.ctx.gas_meter.borrow_mut().add(gas) {
+                    Ok(_) => parameters.max_expected_time_per_block.into(),
+                    Err(_) => Duration::default(),
+                }
+            }
+            Err(_) => Duration::default(),
+        }
     }
 }
 

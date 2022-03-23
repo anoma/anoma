@@ -12,6 +12,7 @@ members = [
   "vm_env",
   "macros",
   "vp_prelude",
+  "encoding_spec",
 ]
 
 # wasm packages have to be built separately
@@ -21,9 +22,17 @@ exclude = [
 ]
 
 [patch.crates-io]
-tracing = {git = "https://github.com/tokio-rs/tracing/", rev = "6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"}
-tracing-core = {git = "https://github.com/tokio-rs/tracing/", rev = "6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"}
-tracing-subscriber = {git = "https://github.com/tokio-rs/tracing/", rev = "6cc6c47354ceeb47da7c95faa41c6d29b71b5f37"}
+# TODO backported patch in the noise protocl for <https://github.com/libp2p/rust-libp2p/pull/2264>, blocked on libp2p upgrade <https://github.com/anoma/anoma/pull/751>
+libp2p = {git = "https://github.com/heliaxdev/rust-libp2p.git", rev = "1abe349c231eb307d3dbe03f3ffffc6cf5e9084d"}
+# TODO temp patch for <https://github.com/near/borsh-rs/issues/82>, <https://github.com/near/borsh-rs/issues/84> and more tba.
+borsh = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+borsh-derive = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+borsh-derive-internal = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+borsh-schema-derive-internal = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+# borsh = {path = "../borsh-rs/borsh"}
+# borsh-derive = {path = "../borsh-rs/borsh-derive"}
+# borsh-derive-internal = {path = "../borsh-rs/borsh-derive-internal"}
+# borsh-schema-derive-internal = {path = "../borsh-rs/borsh-schema-derive-internal"}
 
 [profile.release]
 lto = true

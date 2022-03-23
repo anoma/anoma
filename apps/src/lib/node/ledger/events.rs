@@ -83,17 +83,27 @@ impl Event {
                 event["hash"] = decrypted.hash_commitment().to_string();
                 event
             }
+            tx @ TxType::Protocol(_) => {
+                let mut event = Event {
+                    event_type: EventType::Applied,
+                    attributes: HashMap::new(),
+                };
+                event["hash"] = hash_tx(
+                    &tx.try_to_vec()
+                        .expect("Serializing protocol tx should not fail"),
+                )
+                .to_string();
+                event
+            }
             _ => unreachable!(),
         };
         event["height"] = height.to_string();
+        event["log"] = "".to_string();
         event
     }
 
-    pub fn merge_ibc_event(&mut self, ibc_event: &IbcEvent) {
-        self.event_type = EventType::Ibc(ibc_event.event_type.clone());
-        for (key, value) in ibc_event.attributes.iter() {
-            self[key] = value.clone();
-        }
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.attributes.contains_key(key)
     }
 }
 
@@ -111,6 +121,15 @@ impl IndexMut<&str> for Event {
             self.attributes.insert(String::from(index), String::new());
         }
         self.attributes.get_mut(index).unwrap()
+    }
+}
+
+impl From<IbcEvent> for Event {
+    fn from(ibc_event: IbcEvent) -> Self {
+        Self {
+            event_type: EventType::Ibc(ibc_event.event_type),
+            attributes: ibc_event.attributes,
+        }
     }
 }
 

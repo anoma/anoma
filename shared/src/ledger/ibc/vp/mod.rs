@@ -8,22 +8,18 @@ mod port;
 mod sequence;
 mod token;
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::events::IbcEvent;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::events::IbcEvent;
+use borsh::BorshDeserialize;
 use thiserror::Error;
 pub use token::{Error as IbcTokenError, IbcToken};
 
 use super::storage::{client_id, ibc_prefix, is_client_counter_key, IbcPrefix};
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::events::IbcEvent;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
+use crate::proto::SignedTxData;
 use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::IbcEvent as WrappedIbcEvent;
 use crate::types::storage::Key;
@@ -52,6 +48,10 @@ pub enum Error {
     SequenceError(sequence::Error),
     #[error("IBC event error: {0}")]
     IbcEvent(String),
+    #[error("Decoding transaction data error: {0}")]
+    TxDataDecoding(std::io::Error),
+    #[error("IBC message is required as transaction data")]
+    NoTxData,
 }
 
 /// IBC functions result
@@ -81,9 +81,12 @@ where
     fn validate_tx(
         &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
-        _verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
+        let signed = SignedTxData::try_from_slice(tx_data)
+            .map_err(Error::TxDataDecoding)?;
+        let tx_data = &signed.data.ok_or(Error::NoTxData)?;
         let mut clients = HashSet::new();
 
         for key in keys_changed {
@@ -152,6 +155,7 @@ where
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum StateChange {
     Created,
     Updated,
@@ -286,179 +290,57 @@ impl From<sequence::Error> for Error {
 
 #[cfg(test)]
 mod tests {
+    use core::time::Duration;
     use std::convert::TryFrom;
     use std::str::FromStr;
-    use std::time::Duration;
 
-    use chrono::Utc;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::client_consensus::ConsensusState;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::client_state::ClientState;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::client_type::ClientType;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::header::{AnyHeader, Header};
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::connection::{
+    use crate::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+    use crate::ibc::core::ics02_client::client_consensus::ConsensusState;
+    use crate::ibc::core::ics02_client::client_state::ClientState;
+    use crate::ibc::core::ics02_client::client_type::ClientType;
+    use crate::ibc::core::ics02_client::header::Header;
+    use crate::ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
+    use crate::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+    use crate::ibc::core::ics03_connection::connection::{
         ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
     };
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::version::Version;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::channel::{
+    use crate::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+    use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+    use crate::ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
+    use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+    use crate::ibc::core::ics03_connection::version::Version as ConnVersion;
+    use crate::ibc::core::ics04_channel::channel::{
         ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
     };
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics04_channel::packet::{Packet, Sequence};
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics24_host::identifier::{
+    use crate::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+    use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+    use crate::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+    use crate::ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
+    use crate::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+    use crate::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+    use crate::ibc::core::ics04_channel::packet::{Packet, Sequence};
+    use crate::ibc::core::ics04_channel::Version as ChanVersion;
+    use crate::ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
+    use crate::ibc::core::ics24_host::identifier::{
         ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
     };
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::mock::client_state::{MockClientState, MockConsensusState};
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::mock::header::MockHeader;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::proofs::{ConsensusProof, Proofs};
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::signer::Signer;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::timestamp::Timestamp;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::tx_msg::Msg;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc::Height;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics02_client::client_state::ClientState;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics02_client::client_type::ClientType;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics02_client::header::Header;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics03_connection::connection::{
-        ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
-    };
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics03_connection::version::Version;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::channel::{
-        ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
-    };
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics23_commitment::commitment::CommitmentProofBytes;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics24_host::identifier::{
-        ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-    };
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::mock::header::MockHeader;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::proofs::{ConsensusProof, Proofs};
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::signer::Signer;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::timestamp::Timestamp;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::tx_msg::Msg;
-    #[cfg(feature = "ABCI")]
-    use ibc_abci::Height;
-    #[cfg(not(feature = "ABCI"))]
-    use ibc_proto::cosmos::base::v1beta1::Coin;
-    #[cfg(feature = "ABCI")]
-    use ibc_proto_abci::cosmos::base::v1beta1::Coin;
+    use crate::ibc::mock::client_state::{MockClientState, MockConsensusState};
+    use crate::ibc::mock::header::MockHeader;
+    use crate::ibc::proofs::{ConsensusProof, Proofs};
+    use crate::ibc::signer::Signer;
+    use crate::ibc::timestamp::Timestamp;
+    use crate::ibc::tx_msg::Msg;
+    use crate::ibc::Height;
+    use crate::ibc_proto::cosmos::base::v1beta1::Coin;
     use prost::Message;
     use sha2::Digest;
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint::account::Id as TmAccountId;
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint::block::header::{Header as TmHeader, Version as TmVersion};
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint::block::Height as TmHeight;
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint::chain::Id as TmChainId;
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint::hash::{AppHash, Hash as TmHash};
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint::time::Time as TmTime;
-    #[cfg(not(feature = "ABCI"))]
-    use tendermint_proto::Protobuf;
-    #[cfg(feature = "ABCI")]
-    use tendermint_proto_abci::Protobuf;
-    #[cfg(feature = "ABCI")]
-    use tendermint_stable::account::Id as TmAccountId;
-    #[cfg(feature = "ABCI")]
-    use tendermint_stable::block::header::{
-        Header as TmHeader, Version as TmVersion,
-    };
-    #[cfg(feature = "ABCI")]
-    use tendermint_stable::block::Height as TmHeight;
-    #[cfg(feature = "ABCI")]
-    use tendermint_stable::chain::Id as TmChainId;
-    #[cfg(feature = "ABCI")]
-    use tendermint_stable::hash::{AppHash, Hash as TmHash};
-    #[cfg(feature = "ABCI")]
-    use tendermint_stable::time::Time as TmTime;
+    use crate::tendermint::account::Id as TmAccountId;
+    use crate::tendermint::block::header::{Header as TmHeader, Version as TmVersion};
+    use crate::tendermint::block::Height as TmHeight;
+    use crate::tendermint::chain::Id as TmChainId;
+    use crate::tendermint::hash::{AppHash, Hash as TmHash};
+    use crate::tendermint::time::Time as TmTime;
+    use crate::tendermint_proto::Protobuf;
 
     use super::super::handler::{
         commitment_prefix, init_connection, make_create_client_event,
@@ -471,18 +353,20 @@ mod tests {
     };
     use super::super::storage::{
         ack_key, capability_key, channel_key, client_state_key,
-        client_type_key, commitment_key, connection_key, consensus_state_key,
+        client_type_key, client_update_height_key, client_update_timestamp_key,
+        commitment_key, connection_key, consensus_state_key,
         next_sequence_ack_key, next_sequence_recv_key, next_sequence_send_key,
         port_key, receipt_key,
     };
     use super::*;
+    use crate::types::key::testing::keypair_1;
     use crate::ledger::gas::VpGasMeter;
     use crate::ledger::storage::testing::TestStorage;
     use crate::ledger::storage::write_log::WriteLog;
     use crate::proto::Tx;
     use crate::types::ibc::data::{PacketAck, PacketReceipt};
-    use crate::types::time::{DateTimeUtc, DurationSecs};
     use crate::vm::wasm;
+    use crate::types::storage::{BlockHash, BlockHeight};
 
     fn get_client_id() -> ClientId {
         ClientId::from_str("test_client").expect("Creating a client ID failed")
@@ -498,6 +382,9 @@ mod tests {
         storage
             .set_header(get_dummy_header())
             .expect("Setting a dummy header shouldn't fail");
+        storage
+            .begin_block(BlockHash::default(), BlockHeight(1))
+            .unwrap();
 
         // insert a mock client type
         let client_id = get_client_id();
@@ -508,12 +395,12 @@ mod tests {
             .expect("write failed");
         // insert a mock client state
         let client_state_key = client_state_key(&get_client_id());
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
         };
-        let client_state = MockClientState(header).wrap_any();
+        let client_state = MockClientState::new(header).wrap_any();
         let bytes = client_state.encode_vec().expect("encoding failed");
         write_log
             .write(&client_state_key, bytes)
@@ -524,6 +411,20 @@ mod tests {
         let bytes = consensus_state.encode_vec().expect("encoding failed");
         write_log
             .write(&consensus_key, bytes)
+            .expect("write failed");
+        // insert update time and height
+        let client_update_time_key = client_update_timestamp_key(&client_id);
+        let bytes = TmTime::now().encode_vec().expect("encoding failed");
+        write_log
+            .write(&client_update_time_key, bytes)
+            .expect("write failed");
+        let client_update_height_key = client_update_height_key(&client_id);
+        let host_height = Height::new(10, 100);
+        write_log
+            .write(
+                &client_update_height_key,
+                host_height.encode_vec().expect("encoding failed"),
+            )
             .expect("write failed");
         write_log.commit_tx();
 
@@ -537,8 +438,7 @@ mod tests {
                 .expect("Creating an TmChainId shouldn't fail"),
             height: TmHeight::try_from(10_u64)
                 .expect("Creating a height shouldn't fail"),
-            time: TmTime::from_str("2021-11-01T18:14:32.024837Z")
-                .expect("Setting the time shouldn't fail"),
+            time: TmTime::now(),
             last_block_id: None,
             last_commit_hash: None,
             data_hash: None,
@@ -578,7 +478,7 @@ mod tests {
             conn_state,
             get_client_id(),
             get_conn_counterparty(),
-            vec![Version::default()],
+            vec![ConnVersion::default()],
             Duration::new(100, 0),
         )
     }
@@ -603,7 +503,7 @@ mod tests {
             order,
             get_channel_counterparty(),
             vec![get_connection_id()],
-            order.to_string(),
+            ChanVersion::ics20(),
         )
     }
 
@@ -662,12 +562,12 @@ mod tests {
     fn test_create_client() {
         let (storage, mut write_log) = insert_init_states();
 
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
         };
-        let client_state = MockClientState(header).wrap_any();
+        let client_state = MockClientState::new(header).wrap_any();
         let consensus_state = MockConsensusState::new(header).wrap_any();
         let msg = MsgCreateAnyClient {
             client_state,
@@ -680,23 +580,27 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
         keys_changed.insert(client_state_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -706,22 +610,22 @@ mod tests {
         let write_log = WriteLog::default();
         let tx_code = vec![];
         let tx_data = vec![];
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
         keys_changed.insert(client_state_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should fail because no state is stored
         let result = ibc
-            .validate_tx(&tx_data, &keys_changed, &verifiers)
+            .validate_tx(tx.data.as_ref().unwrap(), &keys_changed, &verifiers)
             .unwrap_err();
         assert_matches!(
             result,
@@ -747,7 +651,7 @@ mod tests {
             header: header.wrap_any(),
             signer: Signer::new("account0"),
         };
-        let client_state = MockClientState(header).wrap_any();
+        let client_state = MockClientState::new(header).wrap_any();
         let bytes = client_state.encode_vec().expect("encoding failed");
         write_log
             .write(&client_state_key, bytes)
@@ -760,26 +664,42 @@ mod tests {
             .expect("write failed");
         let event = make_update_client_event(&client_id, &msg);
         write_log.set_ibc_event(event.try_into().unwrap());
+        // update time and height for this updating
+        let key = client_update_timestamp_key(&client_id);
+        write_log
+            .write(&key, TmTime::now().encode_vec().expect("encoding failed"))
+            .expect("write failed");
+        let key = client_update_height_key(&client_id);
+        write_log
+            .write(
+                &key,
+                Height::new(10, 101).encode_vec().expect("encoding failed"),
+            )
+            .expect("write failed");
 
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(client_state_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -792,7 +712,7 @@ mod tests {
         let msg = MsgConnectionOpenInit {
             client_id: get_client_id(),
             counterparty: get_conn_counterparty(),
-            version: Version::default(),
+            version: ConnVersion::default(),
             delay_period: Duration::new(100, 0),
             signer: Signer::new("account0"),
         };
@@ -809,22 +729,26 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -837,7 +761,7 @@ mod tests {
         let msg = MsgConnectionOpenInit {
             client_id: get_client_id(),
             counterparty: get_conn_counterparty(),
-            version: Version::default(),
+            version: ConnVersion::default(),
             delay_period: Duration::new(100, 0),
             signer: Signer::new("account0"),
         };
@@ -851,21 +775,21 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should fail because no client exists
         let result = ibc
-            .validate_tx(&tx_data, &keys_changed, &verifiers)
+            .validate_tx(tx.data.as_ref().unwrap(), &keys_changed, &verifiers)
             .unwrap_err();
         assert_matches!(
             result,
@@ -879,23 +803,25 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
         };
-        let client_state = MockClientState(header).wrap_any();
-        let proof_conn = CommitmentProofBytes::from(vec![0]);
-        let proof_client = CommitmentProofBytes::from(vec![0]);
-        let proof_consensus =
-            ConsensusProof::new(CommitmentProofBytes::from(vec![0]), height)
-                .unwrap();
+        let client_state = MockClientState::new(header).wrap_any();
+        let proof_conn = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_consensus = ConsensusProof::new(
+            CommitmentProofBytes::try_from(vec![0]).unwrap(),
+            height,
+        )
+        .unwrap();
         let proofs = Proofs::new(
             proof_conn,
             Some(proof_client),
             Some(proof_consensus),
             None,
-            height,
+            Height::new(0, 1),
         )
         .unwrap();
         let msg = MsgConnectionOpenTry {
@@ -903,7 +829,7 @@ mod tests {
             client_id: get_client_id(),
             client_state: Some(client_state),
             counterparty: get_conn_counterparty(),
-            counterparty_versions: vec![Version::default()],
+            counterparty_versions: vec![ConnVersion::default()],
             proofs,
             delay_period: Duration::new(100, 0),
             signer: Signer::new("account0"),
@@ -921,22 +847,26 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -956,24 +886,26 @@ mod tests {
         write_log.write(&conn_key, bytes).expect("write failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
         };
-        let client_state = MockClientState(header).wrap_any();
+        let client_state = MockClientState::new(header).wrap_any();
         let counterparty = get_conn_counterparty();
-        let proof_conn = CommitmentProofBytes::from(vec![0]);
-        let proof_client = CommitmentProofBytes::from(vec![0]);
-        let proof_consensus =
-            ConsensusProof::new(CommitmentProofBytes::from(vec![0]), height)
-                .unwrap();
+        let proof_conn = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_consensus = ConsensusProof::new(
+            CommitmentProofBytes::try_from(vec![0]).unwrap(),
+            height,
+        )
+        .unwrap();
         let proofs = Proofs::new(
             proof_conn,
             Some(proof_client),
             Some(proof_consensus),
             None,
-            height,
+            Height::new(0, 1),
         )
         .unwrap();
         let tx_code = vec![];
@@ -985,7 +917,7 @@ mod tests {
                 .clone(),
             client_state: Some(client_state),
             proofs,
-            version: Version::default(),
+            version: ConnVersion::default(),
             signer: Signer::new("account0"),
         };
         let event = make_open_ack_connection_event(&msg);
@@ -993,21 +925,25 @@ mod tests {
 
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1027,12 +963,14 @@ mod tests {
         write_log.write(&conn_key, bytes).expect("write failed");
 
         // prepare data
-        let height = Height::new(1, 10);
-        let proof_conn = CommitmentProofBytes::from(vec![0]);
-        let proof_client = CommitmentProofBytes::from(vec![0]);
-        let proof_consensus =
-            ConsensusProof::new(CommitmentProofBytes::from(vec![0]), height)
-                .unwrap();
+        let height = Height::new(0, 1);
+        let proof_conn = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_consensus = ConsensusProof::new(
+            CommitmentProofBytes::try_from(vec![0]).unwrap(),
+            height,
+        )
+        .unwrap();
         let proofs = Proofs::new(
             proof_conn,
             Some(proof_client),
@@ -1052,21 +990,25 @@ mod tests {
 
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1099,21 +1041,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1128,12 +1074,14 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
-        let proof_channel = CommitmentProofBytes::from(vec![0]);
-        let proof_client = CommitmentProofBytes::from(vec![0]);
-        let proof_consensus =
-            ConsensusProof::new(CommitmentProofBytes::from(vec![0]), height)
-                .unwrap();
+        let height = Height::new(0, 1);
+        let proof_channel = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_consensus = ConsensusProof::new(
+            CommitmentProofBytes::try_from(vec![0]).unwrap(),
+            height,
+        )
+        .unwrap();
         let proofs = Proofs::new(
             proof_channel,
             Some(proof_client),
@@ -1147,7 +1095,7 @@ mod tests {
             port_id: get_port_id(),
             previous_channel_id: None,
             channel: channel.clone(),
-            counterparty_version: Order::Ordered.to_string(),
+            counterparty_version: ChanVersion::ics20(),
             proofs,
             signer: Signer::new("account0"),
         };
@@ -1163,21 +1111,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1199,12 +1151,14 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
-        let proof_channel = CommitmentProofBytes::from(vec![0]);
-        let proof_client = CommitmentProofBytes::from(vec![0]);
-        let proof_consensus =
-            ConsensusProof::new(CommitmentProofBytes::from(vec![0]), height)
-                .unwrap();
+        let height = Height::new(0, 1);
+        let proof_channel = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_consensus = ConsensusProof::new(
+            CommitmentProofBytes::try_from(vec![0]).unwrap(),
+            height,
+        )
+        .unwrap();
         let proofs = Proofs::new(
             proof_channel,
             Some(proof_client),
@@ -1220,7 +1174,7 @@ mod tests {
                 .channel_id()
                 .unwrap()
                 .clone(),
-            counterparty_version: Order::Ordered.to_string(),
+            counterparty_version: ChanVersion::ics20(),
             proofs,
             signer: Signer::new("account0"),
         };
@@ -1235,21 +1189,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1271,12 +1229,14 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
-        let proof_channel = CommitmentProofBytes::from(vec![0]);
-        let proof_client = CommitmentProofBytes::from(vec![0]);
-        let proof_consensus =
-            ConsensusProof::new(CommitmentProofBytes::from(vec![0]), height)
-                .unwrap();
+        let height = Height::new(0, 1);
+        let proof_channel = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
+        let proof_consensus = ConsensusProof::new(
+            CommitmentProofBytes::try_from(vec![0]).unwrap(),
+            height,
+        )
+        .unwrap();
         let proofs = Proofs::new(
             proof_channel,
             Some(proof_client),
@@ -1302,21 +1262,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1329,21 +1293,25 @@ mod tests {
 
         let tx_code = vec![];
         let tx_data = vec![];
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(port_key(&get_port_id()));
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1357,22 +1325,26 @@ mod tests {
 
         let tx_code = vec![];
         let tx_data = vec![];
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         let cap_key = capability_key(index);
         keys_changed.insert(cap_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1394,8 +1366,8 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare a message
-        let timestamp = DateTimeUtc::now() + DurationSecs(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+        let timeout_timestamp =
+            (Timestamp::now() + Duration::from_secs(100)).unwrap();
         let msg = MsgTransfer {
             source_port: get_port_id(),
             source_channel: get_channel_id(),
@@ -1405,7 +1377,7 @@ mod tests {
             }),
             sender: Signer::new("sender"),
             receiver: Signer::new("receiver"),
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
 
@@ -1418,30 +1390,38 @@ mod tests {
         let packet = packet_from_message(&msg, sequence, &counterparty);
         // insert a commitment
         let commitment = hash(&packet);
+        let mut commitment_bytes = vec![];
+        commitment
+            .encode(&mut commitment_bytes)
+            .expect("encoding shouldn't fail");
         let key = commitment_key(&get_port_id(), &get_channel_id(), sequence);
         write_log
-            .write(&key, commitment.as_bytes().to_vec())
+            .write(&key, commitment_bytes)
             .expect("write failed");
         write_log.commit_tx();
 
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1468,8 +1448,8 @@ mod tests {
         increment_seq(&mut write_log, &seq_key, sequence);
         // make a packet and data
         let counterparty = get_channel_counterparty();
-        let timestamp = Utc::now() + chrono::Duration::seconds(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let timeout_timestamp =
+            (Timestamp::now() + Duration::from_secs(100)).unwrap();
         let packet = Packet {
             sequence,
             source_port: counterparty.port_id().clone(),
@@ -1477,12 +1457,12 @@ mod tests {
             destination_port: get_port_id(),
             destination_channel: get_channel_id(),
             data: vec![0],
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
-        let proof_packet = CommitmentProofBytes::from(vec![0]);
+        let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
-            Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
+            Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
                 .unwrap();
         let msg = MsgRecvPacket {
             packet,
@@ -1503,21 +1483,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1529,8 +1513,8 @@ mod tests {
         let sequence = get_next_seq(&storage, &seq_key);
         // make a packet
         let counterparty = get_channel_counterparty();
-        let timestamp = Utc::now() + chrono::Duration::seconds(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let timeout_timestamp =
+            (Timestamp::now() + core::time::Duration::from_secs(100)).unwrap();
         let packet = Packet {
             sequence,
             source_port: get_port_id(),
@@ -1538,7 +1522,7 @@ mod tests {
             destination_port: counterparty.port_id().clone(),
             destination_channel: counterparty.channel_id().unwrap().clone(),
             data: vec![0],
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
         // insert an opened connection
@@ -1564,9 +1548,9 @@ mod tests {
 
         // prepare data
         let ack = PacketAck::default().encode_to_vec();
-        let proof_packet = CommitmentProofBytes::from(vec![0]);
+        let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
-            Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
+            Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
                 .unwrap();
         let msg = MsgAcknowledgement {
             packet,
@@ -1584,21 +1568,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1620,8 +1608,8 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare a message
-        let timestamp = DateTimeUtc::now() + DurationSecs(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+        let timeout_timestamp =
+            (Timestamp::now() + Duration::from_secs(100)).unwrap();
         let msg = MsgTransfer {
             source_port: get_port_id(),
             source_channel: get_channel_id(),
@@ -1631,7 +1619,7 @@ mod tests {
             }),
             sender: Signer::new("sender"),
             receiver: Signer::new("receiver"),
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
 
@@ -1647,8 +1635,12 @@ mod tests {
             &packet.source_channel,
             sequence,
         );
+        let mut commitment_bytes = vec![];
+        commitment
+            .encode(&mut commitment_bytes)
+            .expect("encoding shouldn't fail");
         write_log
-            .write(&commitment_key, commitment.as_bytes().to_vec())
+            .write(&commitment_key, commitment_bytes)
             .expect("write failed");
         let event = make_send_packet_event(packet);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1656,21 +1648,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(commitment_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1693,8 +1689,8 @@ mod tests {
 
         // make a packet and data
         let counterparty = get_channel_counterparty();
-        let timestamp = Utc::now() + chrono::Duration::seconds(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let timeout_timestamp =
+            (Timestamp::now() + Duration::from_secs(100)).unwrap();
         let packet = Packet {
             sequence: Sequence::from(1),
             source_port: counterparty.port_id().clone(),
@@ -1702,12 +1698,12 @@ mod tests {
             destination_port: get_port_id(),
             destination_channel: get_channel_id(),
             data: vec![0],
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
-        let proof_packet = CommitmentProofBytes::from(vec![0]);
+        let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
-            Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
+            Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
                 .unwrap();
         let msg = MsgRecvPacket {
             packet,
@@ -1736,21 +1732,25 @@ mod tests {
         let tx_code = vec![];
         let mut tx_data = vec![];
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(receipt_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 
@@ -1772,21 +1772,25 @@ mod tests {
 
         let tx_code = vec![];
         let tx_data = vec![];
-        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair_1());
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
-        let mut keys_changed = HashSet::new();
+        let mut keys_changed = BTreeSet::new();
         keys_changed.insert(ack_key);
 
-        let verifiers = HashSet::new();
+        let verifiers = BTreeSet::new();
 
         let ibc = Ibc { ctx };
         assert!(
-            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
-                .expect("validation failed")
+            ibc.validate_tx(
+                tx.data.as_ref().unwrap(),
+                &keys_changed,
+                &verifiers
+            )
+            .expect("validation failed")
         );
     }
 }

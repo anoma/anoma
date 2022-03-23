@@ -3,6 +3,7 @@
 
 use std::convert::TryFrom;
 
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
 #[allow(missing_docs)]
@@ -49,7 +50,9 @@ pub struct VpGasMeter {
 }
 
 /// Gas meter for VPs parallel runs
-#[derive(Clone, Debug, Default)]
+#[derive(
+    Clone, Debug, Default, BorshSerialize, BorshDeserialize, BorshSchema,
+)]
 pub struct VpsGas {
     max: Option<u64>,
     rest: Vec<u64>,

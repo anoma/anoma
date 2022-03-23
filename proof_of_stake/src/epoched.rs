@@ -4,17 +4,17 @@
 use core::marker::PhantomData;
 use core::{cmp, fmt, ops};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use crate::types::Epoch;
 use crate::PosParams;
 
 /// Data that may have values set for future epochs, up to an epoch at offset as
 /// set via the `Offset` type parameter.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub struct Epoched<Data, Offset>
 where
-    Data: Clone + BorshDeserialize + BorshSerialize,
+    Data: Clone + BorshDeserialize + BorshSerialize + BorshSchema,
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
@@ -26,10 +26,14 @@ where
 /// Data that may have delta values (a difference from the predecessor epoch)
 /// set for future epochs, up to an epoch at offset as set via the `Offset` type
 /// parameter.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub struct EpochedDelta<Data, Offset>
 where
-    Data: Clone + ops::Add<Output = Data> + BorshDeserialize + BorshSerialize,
+    Data: Clone
+        + ops::Add<Output = Data>
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
@@ -41,7 +45,7 @@ where
 /// Which offset should be used to set data. The value is read from
 /// [`PosParams`].
 pub trait EpochOffset:
-    fmt::Debug + Clone + BorshDeserialize + BorshSerialize
+    fmt::Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema
 {
     /// Find the value of a given offset from PoS parameters.
     fn value(params: &PosParams) -> u64;
@@ -50,7 +54,7 @@ pub trait EpochOffset:
 }
 
 /// Offset at pipeline length.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub struct OffsetPipelineLen;
 impl EpochOffset for OffsetPipelineLen {
     fn value(params: &PosParams) -> u64 {
@@ -63,7 +67,7 @@ impl EpochOffset for OffsetPipelineLen {
 }
 
 /// Offset at unbonding length.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub struct OffsetUnboundingLen;
 impl EpochOffset for OffsetUnboundingLen {
     fn value(params: &PosParams) -> u64 {
@@ -95,7 +99,7 @@ impl DynEpochOffset {
 
 impl<Data, Offset> Epoched<Data, Offset>
 where
-    Data: fmt::Debug + Clone + BorshDeserialize + BorshSerialize,
+    Data: fmt::Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
     Offset: EpochOffset,
 {
     /// Initialize new epoched data. Sets the head to the given value.
@@ -289,7 +293,8 @@ where
         + Clone
         + ops::Add<Output = Data>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     Offset: EpochOffset,
 {
     /// Initialize new epoched delta data. Sets the head to the given value.

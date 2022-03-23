@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
@@ -14,8 +14,8 @@ pub mod vp {
     /// A token validity predicate.
     pub fn vp(
         token: &Address,
-        keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        verifiers: &BTreeSet<Address>,
     ) -> bool {
         let mut change: Change = 0;
         let all_checked = keys_changed.iter().all(|key| {
@@ -27,14 +27,21 @@ pub mod vp {
                 Some(owner) => {
                     // accumulate the change
                     let key = key.to_string();
-                    let pre: Amount =
-                        vp::read_pre(&key).unwrap_or_else(|| match owner {
-                            Address::Internal(InternalAddress::IbcMint) => {
-                                Amount::max()
-                            }
-                            _ => Amount::default(),
-                        });
-                    let post: Amount = vp::read_post(&key).unwrap_or_default();
+                    let pre: Amount = match owner {
+                        Address::Internal(InternalAddress::IbcMint) => {
+                            Amount::max()
+                        }
+                        Address::Internal(InternalAddress::IbcBurn) => {
+                            Amount::default()
+                        }
+                        _ => vp::read_pre(&key).unwrap_or_default(),
+                    };
+                    let post: Amount = match owner {
+                        Address::Internal(
+                            InternalAddress::IbcMint | InternalAddress::IbcBurn,
+                        ) => vp::read_temp(&key).unwrap_or_default(),
+                        _ => vp::read_post(&key).unwrap_or_default(),
+                    };
                     let this_change = post.change() - pre.change();
                     change += this_change;
                     // make sure that the spender approved the transaction
@@ -77,7 +84,25 @@ pub mod tx {
         let mut dest_bal: Amount =
             tx::read(&dest_key.to_string()).unwrap_or_default();
         dest_bal.receive(&amount);
-        tx::write(&src_key.to_string(), src_bal);
-        tx::write(&dest_key.to_string(), dest_bal);
+        match src {
+            Address::Internal(InternalAddress::IbcMint) => {
+                tx::write_temp(&src_key.to_string(), src_bal)
+            }
+            Address::Internal(InternalAddress::IbcBurn) => {
+                tx::log_string("invalid transfer from the burn address");
+                unreachable!()
+            }
+            _ => tx::write(&src_key.to_string(), src_bal),
+        }
+        match dest {
+            Address::Internal(InternalAddress::IbcMint) => {
+                tx::log_string("invalid transfer to the mint address");
+                unreachable!()
+            }
+            Address::Internal(InternalAddress::IbcBurn) => {
+                tx::write_temp(&dest_key.to_string(), dest_bal)
+            }
+            _ => tx::write(&dest_key.to_string(), dest_bal),
+        }
     }
 }

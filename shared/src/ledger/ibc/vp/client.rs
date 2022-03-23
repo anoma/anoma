@@ -1,58 +1,6 @@
 //! IBC validity predicate for client module
 use std::str::FromStr;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_def::{AnyClient, ClientDef};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_type::ClientType;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::error::Error as Ics02Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::ClientMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::ClientId;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_def::{AnyClient, ClientDef};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_type::ClientType;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::error::Error as Ics02Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::ClientMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::ClientId;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -60,11 +8,31 @@ use super::super::handler::{
     make_upgrade_client_event,
 };
 use super::super::storage::{
-    client_counter_key, client_state_key, client_type_key, consensus_state_key,
+    client_counter_key, client_state_key, client_type_key,
+    client_update_height_key, client_update_timestamp_key, consensus_height,
+    consensus_state_key, consensus_state_prefix,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+use crate::ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
+use crate::ibc::core::ics02_client::client_def::{AnyClient, ClientDef};
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::client_type::ClientType;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::error::Error as Ics02Error;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+use crate::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+use crate::ibc::core::ics02_client::msgs::ClientMsg;
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics24_host::identifier::ClientId;
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ledger::storage::{self, StorageHasher};
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
+use crate::types::storage::{BlockHeight, Key};
 use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
@@ -76,6 +44,10 @@ pub enum Error {
     InvalidClient(String),
     #[error("Header error: {0}")]
     InvalidHeader(String),
+    #[error("Client update time error: {0}")]
+    InvalidTimestamp(String),
+    #[error("Client update height error: {0}")]
+    InvalidHeight(String),
     #[error("Proof verification error: {0}")]
     ProofVerificationFailure(String),
     #[error("Decoding TX data error: {0}")]
@@ -127,6 +99,80 @@ where
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
 
+    fn get_client_update_time_change(
+        &self,
+        client_id: &ClientId,
+    ) -> Result<StateChange> {
+        let key = client_update_timestamp_key(client_id);
+        let timestamp_change = self
+            .get_state_change(&key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
+        let key = client_update_height_key(client_id);
+        let height_change = self
+            .get_state_change(&key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
+        // the time and height should be updated at once
+        match (timestamp_change, height_change) {
+            (StateChange::Created, StateChange::Created) => {
+                Ok(StateChange::Created)
+            }
+            (StateChange::Updated, StateChange::Updated) => {
+                let timestamp_pre =
+                    self.client_update_time_pre(client_id).map_err(|e| {
+                        Error::InvalidTimestamp(format!(
+                            "Reading the prior client update time failed: {}",
+                            e
+                        ))
+                    })?;
+                let timestamp_post = self
+                    .client_update_time(client_id, Height::default())
+                    .map_err(|e| {
+                        Error::InvalidTimestamp(format!(
+                            "Reading the posterior client update time failed: \
+                             {}",
+                            e
+                        ))
+                    })?;
+                if timestamp_post.nanoseconds() <= timestamp_pre.nanoseconds() {
+                    return Err(Error::InvalidTimestamp(format!(
+                        "The state change of the client update time is \
+                         invalid: ID {}",
+                        client_id
+                    )));
+                }
+                let height_pre =
+                    self.client_update_height_pre(client_id).map_err(|e| {
+                        Error::InvalidHeight(format!(
+                            "Reading the prior client update height failed: {}",
+                            e
+                        ))
+                    })?;
+                let height_post = self
+                    .client_update_height(client_id, Height::default())
+                    .map_err(|e| {
+                        Error::InvalidTimestamp(format!(
+                            "Reading the posterior client update height \
+                             failed: {}",
+                            e
+                        ))
+                    })?;
+                if height_post <= height_pre {
+                    return Err(Error::InvalidHeight(format!(
+                        "The state change of the client update height is \
+                         invalid: ID {}",
+                        client_id
+                    )));
+                }
+                Ok(StateChange::Updated)
+            }
+            _ => Err(Error::InvalidStateChange(format!(
+                "The state change of the client update time and height are \
+                 invalid: ID {}",
+                client_id
+            ))),
+        }
+    }
+
     fn validate_created_client(
         &self,
         client_id: &ClientId,
@@ -162,6 +208,14 @@ where
                 "The client type is mismatched".to_owned(),
             ));
         }
+        if self.get_client_update_time_change(client_id)?
+            != StateChange::Created
+        {
+            return Err(Error::InvalidClient(format!(
+                "The client update time or height are invalid: ID {}",
+                client_id,
+            )));
+        }
 
         let event = make_create_client_event(client_id, &msg);
         self.check_emitted_event(event)
@@ -173,6 +227,14 @@ where
         client_id: &ClientId,
         tx_data: &[u8],
     ) -> Result<()> {
+        if self.get_client_update_time_change(client_id)?
+            != StateChange::Updated
+        {
+            return Err(Error::InvalidClient(format!(
+                "The client update time and height are invalid: ID {}",
+                client_id,
+            )));
+        }
         // check the type of data in tx_data
         let ibc_msg = IbcMessage::decode(tx_data)?;
         match ibc_msg.0 {
@@ -388,28 +450,62 @@ where
         }
     }
 
+    // Reimplement to avoid reading the posterior state
+    fn maybe_consensus_state(
+        &self,
+        client_id: &ClientId,
+        height: Height,
+    ) -> Ics02Result<Option<AnyConsensusState>> {
+        let key = consensus_state_key(client_id, height);
+        match self.ctx.read_pre(&key) {
+            Ok(Some(value)) => {
+                let cs = AnyConsensusState::decode_vec(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                Ok(Some(cs))
+            }
+            Ok(None) => Ok(None),
+            Err(_) => Err(Ics02Error::implementation_specific()),
+        }
+    }
+
     /// Search for the lowest consensus state higher than `height`.
     fn next_consensus_state(
         &self,
         client_id: &ClientId,
         height: Height,
     ) -> Ics02Result<Option<AnyConsensusState>> {
-        let mut h = height.increment();
-        loop {
-            match self.consensus_state(client_id, h) {
-                Ok(cs) => return Ok(Some(cs)),
-                Err(e)
-                    if e.detail()
-                        == Ics02Error::consensus_state_not_found(
-                            client_id.clone(),
-                            h,
-                        )
-                        .detail() =>
-                {
-                    h = h.increment()
-                }
-                _ => return Err(Ics02Error::implementation_specific()),
+        let prefix = consensus_state_prefix(client_id);
+        let mut iter = self
+            .ctx
+            .iter_prefix(&prefix)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        let mut lowest_height_value = None;
+        while let Some((key, value)) = self
+            .ctx
+            .iter_pre_next(&mut iter)
+            .map_err(|_| Ics02Error::implementation_specific())?
+        {
+            let key = Key::parse(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            let consensus_height = consensus_height(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            if consensus_height > height {
+                lowest_height_value = match lowest_height_value {
+                    Some((lowest, _)) if consensus_height < lowest => {
+                        Some((consensus_height, value))
+                    }
+                    Some(_) => continue,
+                    None => Some((consensus_height, value)),
+                };
             }
+        }
+        match lowest_height_value {
+            Some((_, value)) => {
+                let cs = AnyConsensusState::decode_vec(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                Ok(Some(cs))
+            }
+            None => Ok(None),
         }
     }
 
@@ -419,29 +515,76 @@ where
         client_id: &ClientId,
         height: Height,
     ) -> Ics02Result<Option<AnyConsensusState>> {
-        let mut h = match height.decrement() {
-            Ok(prev) => prev,
-            Err(_) => return Ok(None),
-        };
-        loop {
-            match self.consensus_state(client_id, h) {
-                Ok(cs) => return Ok(Some(cs)),
-                Err(e)
-                    if e.detail()
-                        == Ics02Error::consensus_state_not_found(
-                            client_id.clone(),
-                            h,
-                        )
-                        .detail() =>
-                {
-                    h = match height.decrement() {
-                        Ok(prev) => prev,
-                        Err(_) => return Ok(None),
-                    };
-                }
-                _ => return Err(Ics02Error::implementation_specific()),
+        let prefix = consensus_state_prefix(client_id);
+        let mut iter = self
+            .ctx
+            .iter_prefix(&prefix)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        let mut highest_height_value = None;
+        while let Some((key, value)) = self
+            .ctx
+            .iter_pre_next(&mut iter)
+            .map_err(|_| Ics02Error::implementation_specific())?
+        {
+            let key = Key::parse(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            let consensus_height = consensus_height(&key)
+                .map_err(|_| Ics02Error::implementation_specific())?;
+            if consensus_height < height {
+                highest_height_value = match highest_height_value {
+                    Some((highest, _)) if consensus_height > highest => {
+                        Some((consensus_height, value))
+                    }
+                    Some(_) => continue,
+                    None => Some((consensus_height, value)),
+                };
             }
         }
+        match highest_height_value {
+            Some((_, value)) => {
+                let cs = AnyConsensusState::decode_vec(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                Ok(Some(cs))
+            }
+            None => Ok(None),
+        }
+    }
+
+    fn host_height(&self) -> Height {
+        let height = self.ctx.storage.get_block_height().0.0;
+        // the revision number is always 0
+        Height::new(0, height)
+    }
+
+    fn host_consensus_state(
+        &self,
+        height: Height,
+    ) -> Ics02Result<AnyConsensusState> {
+        let (header, gas) = self
+            .ctx
+            .storage
+            .get_block_header(Some(BlockHeight(height.revision_height)))
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        self.ctx
+            .gas_meter
+            .borrow_mut()
+            .add(gas)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        match header {
+            Some(h) => Ok(TmConsensusState::from(h).wrap_any()),
+            None => Err(Ics02Error::missing_raw_header()),
+        }
+    }
+
+    fn pending_host_consensus_state(&self) -> Ics02Result<AnyConsensusState> {
+        let (block_height, gas) = self.ctx.storage.get_block_height();
+        self.ctx
+            .gas_meter
+            .borrow_mut()
+            .add(gas)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        let height = Height::new(0, block_height.0);
+        ClientReader::host_consensus_state(self, height)
     }
 
     fn client_counter(&self) -> Ics02Result<u64> {

@@ -1,6 +1,6 @@
 //! Virtual machine's host environment exposes functions that may be called from
 //! within a virtual machine.
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::convert::TryInto;
 use std::num::TryFromIntError;
 
@@ -97,7 +97,7 @@ where
     /// Transaction gas meter.
     pub gas_meter: MutHostRef<'a, &'a BlockGasMeter>,
     /// The verifiers whose validity predicates should be triggered.
-    pub verifiers: MutHostRef<'a, &'a HashSet<Address>>,
+    pub verifiers: MutHostRef<'a, &'a BTreeSet<Address>>,
     /// Cache for 2-step reads from host environment.
     pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
     /// VP WASM compilation cache (this is available in tx context, because
@@ -133,7 +133,7 @@ where
         write_log: &mut WriteLog,
         iterators: &mut PrefixIterators<'a, DB>,
         gas_meter: &mut BlockGasMeter,
-        verifiers: &mut HashSet<Address>,
+        verifiers: &mut BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
         #[cfg(feature = "wasm-runtime")] tx_wasm_cache: &mut TxCache<CA>,
@@ -246,10 +246,10 @@ where
     /// Cache for 2-step reads from host environment.
     pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
     /// The storage keys that have been changed. Used for calls to `eval`.
-    pub keys_changed: HostRef<'a, &'a HashSet<Key>>,
+    pub keys_changed: HostRef<'a, &'a BTreeSet<Key>>,
     /// The verifiers whose validity predicates should be triggered. Used for
     /// calls to `eval`.
-    pub verifiers: HostRef<'a, &'a HashSet<Address>>,
+    pub verifiers: HostRef<'a, &'a BTreeSet<Address>>,
     /// VP WASM compilation cache
     #[cfg(feature = "wasm-runtime")]
     pub vp_wasm_cache: MutHostRef<'a, &'a VpCache<CA>>,
@@ -306,9 +306,9 @@ where
         gas_meter: &mut VpGasMeter,
         tx: &Tx,
         iterators: &mut PrefixIterators<'a, DB>,
-        verifiers: &HashSet<Address>,
+        verifiers: &BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
     ) -> Self {
@@ -369,9 +369,9 @@ where
         gas_meter: &mut VpGasMeter,
         tx: &Tx,
         iterators: &mut PrefixIterators<'a, DB>,
-        verifiers: &HashSet<Address>,
+        verifiers: &BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
     ) -> Self {
@@ -534,6 +534,9 @@ where
         Some(&write_log::StorageModification::InitAccount { .. }) => {
             HostEnvResult::Success.to_i64()
         }
+        Some(&write_log::StorageModification::Temp { .. }) => {
+            HostEnvResult::Success.to_i64()
+        }
         None => {
             // when not found in write log, try to check the storage
             let storage = unsafe { env.ctx.storage.get() };
@@ -600,6 +603,15 @@ where
                 .map_err(TxRuntimeError::NumConversionError)?;
             let result_buffer = unsafe { env.ctx.result_buffer.get() };
             result_buffer.replace(vp.clone());
+            len
+        }
+        Some(&write_log::StorageModification::Temp { ref value }) => {
+            let len: i64 = value
+                .len()
+                .try_into()
+                .map_err(TxRuntimeError::NumConversionError)?;
+            let result_buffer = unsafe { env.ctx.result_buffer.get() };
+            result_buffer.replace(value.clone());
             len
         }
         None => {
@@ -734,6 +746,21 @@ where
                 // a VP of a new account doesn't need to be iterated
                 continue;
             }
+            Some(&write_log::StorageModification::Temp { ref value }) => {
+                let key_val = KeyVal {
+                    key,
+                    val: value.clone(),
+                }
+                .try_to_vec()
+                .map_err(TxRuntimeError::EncodingError)?;
+                let len: i64 = key_val
+                    .len()
+                    .try_into()
+                    .map_err(TxRuntimeError::NumConversionError)?;
+                let result_buffer = unsafe { env.ctx.result_buffer.get() };
+                result_buffer.replace(key_val);
+                return Ok(len);
+            }
             None => {
                 let key_val = KeyVal { key, val }
                     .try_to_vec()
@@ -781,7 +808,67 @@ where
 
     let key = Key::parse(key).map_err(TxRuntimeError::StorageDataError)?;
 
-    // check address existence
+    check_address_existence(env, &key)?;
+
+    let write_log = unsafe { env.ctx.write_log.get() };
+    let (gas, _size_diff) = write_log
+        .write(&key, value)
+        .map_err(TxRuntimeError::StorageModificationError)?;
+    tx_add_gas(env, gas)
+    // TODO: charge the size diff
+}
+
+/// Temporary storage write function exposed to the wasm VM Tx environment. The
+/// given key/value will be written only to the write log. It will be never
+/// written to the storage.
+pub fn tx_write_temp<MEM, DB, H, CA>(
+    env: &TxEnv<MEM, DB, H, CA>,
+    key_ptr: u64,
+    key_len: u64,
+    val_ptr: u64,
+    val_len: u64,
+) -> TxResult<()>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
+    let (key, gas) = env
+        .memory
+        .read_string(key_ptr, key_len as _)
+        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
+    tx_add_gas(env, gas)?;
+    let (value, gas) = env
+        .memory
+        .read_bytes(val_ptr, val_len as _)
+        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
+    tx_add_gas(env, gas)?;
+
+    tracing::debug!("tx_write_temp {}, {:?}", key, value);
+
+    let key = Key::parse(key).map_err(TxRuntimeError::StorageDataError)?;
+
+    check_address_existence(env, &key)?;
+
+    let write_log = unsafe { env.ctx.write_log.get() };
+    let (gas, _size_diff) = write_log
+        .write_temp(&key, value)
+        .map_err(TxRuntimeError::StorageModificationError)?;
+    tx_add_gas(env, gas)
+    // TODO: charge the size diff
+}
+
+fn check_address_existence<MEM, DB, H, CA>(
+    env: &TxEnv<MEM, DB, H, CA>,
+    key: &Key,
+) -> TxResult<()>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
     let write_log = unsafe { env.ctx.write_log.get() };
     let storage = unsafe { env.ctx.storage.get() };
     for addr in key.find_addresses() {
@@ -811,12 +898,7 @@ where
             }
         }
     }
-
-    let (gas, _size_diff) = write_log
-        .write(&key, value)
-        .map_err(TxRuntimeError::StorageModificationError)?;
-    tx_add_gas(env, gas)
-    // TODO: charge the size diff
+    Ok(())
 }
 
 /// Storage delete function exposed to the wasm VM Tx environment. The given
@@ -960,6 +1042,51 @@ where
     let storage = unsafe { env.ctx.storage.get() };
     let write_log = unsafe { env.ctx.write_log.get() };
     let value = vp_env::read_post(gas_meter, storage, write_log, &key)?;
+    Ok(match value {
+        Some(value) => {
+            let len: i64 = value
+                .len()
+                .try_into()
+                .map_err(vp_env::RuntimeError::NumConversionError)?;
+            let result_buffer = unsafe { env.ctx.result_buffer.get() };
+            result_buffer.replace(value);
+            len
+        }
+        None => HostEnvResult::Fail.to_i64(),
+    })
+}
+
+/// Storage read temporary state (after tx execution) function exposed to the
+/// wasm VM VP environment. It will try to read from only the write log.
+///
+/// Returns `-1` when the key is not present, or the length of the data when
+/// the key is present (the length may be `0`).
+pub fn vp_read_temp<MEM, DB, H, EVAL, CA>(
+    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    key_ptr: u64,
+    key_len: u64,
+) -> vp_env::Result<i64>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
+{
+    let (key, gas) = env
+        .memory
+        .read_string(key_ptr, key_len as _)
+        .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
+    let gas_meter = unsafe { env.ctx.gas_meter.get() };
+    vp_env::add_gas(gas_meter, gas)?;
+
+    tracing::debug!("vp_read_temp {}, key {}", key, key_ptr,);
+
+    // try to read from the write log
+    let key =
+        Key::parse(key).map_err(vp_env::RuntimeError::StorageDataError)?;
+    let write_log = unsafe { env.ctx.write_log.get() };
+    let value = vp_env::read_temp(gas_meter, write_log, &key)?;
     Ok(match value {
         Some(value) => {
             let len: i64 = value
@@ -1409,6 +1536,42 @@ where
     Ok(height.0)
 }
 
+/// Getting the block time function exposed to the wasm VM Tx
+/// environment. The time is that of the block header to which the current
+/// transaction is being applied.
+pub fn tx_get_block_time<MEM, DB, H, CA>(
+    env: &TxEnv<MEM, DB, H, CA>,
+) -> TxResult<i64>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
+    let storage = unsafe { env.ctx.storage.get() };
+    let (header, gas) = storage
+        .get_block_header(None)
+        .map_err(TxRuntimeError::StorageError)?;
+    Ok(match header {
+        Some(h) => {
+            let time = h
+                .time
+                .to_rfc3339()
+                .try_to_vec()
+                .map_err(TxRuntimeError::EncodingError)?;
+            let len: i64 = time
+                .len()
+                .try_into()
+                .map_err(TxRuntimeError::NumConversionError)?;
+            let result_buffer = unsafe { env.ctx.result_buffer.get() };
+            result_buffer.replace(time);
+            tx_add_gas(env, gas)?;
+            len
+        }
+        None => HostEnvResult::Fail.to_i64(),
+    })
+}
+
 /// Getting the block hash function exposed to the wasm VM VP environment. The
 /// hash is that of the block to which the current transaction is being applied.
 pub fn vp_get_block_hash<MEM, DB, H, EVAL, CA>(
@@ -1425,6 +1588,28 @@ where
     let gas_meter = unsafe { env.ctx.gas_meter.get() };
     let storage = unsafe { env.ctx.storage.get() };
     let hash = vp_env::get_block_hash(gas_meter, storage)?;
+    let gas = env
+        .memory
+        .write_bytes(result_ptr, hash.0)
+        .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
+    vp_env::add_gas(gas_meter, gas)
+}
+
+/// Getting the transaction hash function exposed to the wasm VM VP environment.
+pub fn vp_get_tx_code_hash<MEM, DB, H, EVAL, CA>(
+    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    result_ptr: u64,
+) -> vp_env::Result<()>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
+{
+    let gas_meter = unsafe { env.ctx.gas_meter.get() };
+    let tx = unsafe { env.ctx.tx.get() };
+    let hash = vp_env::get_tx_code_hash(gas_meter, tx)?;
     let gas = env
         .memory
         .write_bytes(result_ptr, hash.0)
@@ -1570,6 +1755,8 @@ where
 /// A helper module for testing
 #[cfg(feature = "testing")]
 pub mod testing {
+    use std::collections::BTreeSet;
+
     use super::*;
     use crate::ledger::storage::{self, StorageHasher};
     use crate::vm::memory::testing::NativeMemory;
@@ -1580,7 +1767,7 @@ pub mod testing {
         storage: &Storage<DB, H>,
         write_log: &mut WriteLog,
         iterators: &mut PrefixIterators<'static, DB>,
-        verifiers: &mut HashSet<Address>,
+        verifiers: &mut BTreeSet<Address>,
         gas_meter: &mut BlockGasMeter,
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
@@ -1615,9 +1802,9 @@ pub mod testing {
         iterators: &mut PrefixIterators<'static, DB>,
         gas_meter: &mut VpGasMeter,
         tx: &Tx,
-        verifiers: &HashSet<Address>,
+        verifiers: &BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
-        keys_changed: &HashSet<Key>,
+        keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
     ) -> VpEnv<'static, NativeMemory, DB, H, EVAL, CA>

@@ -3,8 +3,11 @@
 use std::convert::{TryFrom, TryInto};
 use std::ops::{Add, Sub};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use chrono::{DateTime, Duration, TimeZone, Utc};
+
+use crate::tendermint::time::Time;
+use crate::tendermint::Error as TendermintError;
 
 /// Check if the given `duration` has passed since the given `start.
 pub fn duration_passed(
@@ -27,6 +30,7 @@ pub fn duration_passed(
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub struct DurationSecs(pub u64);
 
@@ -45,6 +49,12 @@ impl From<std::time::Duration> for DurationSecs {
     }
 }
 
+impl From<DurationSecs> for std::time::Duration {
+    fn from(duration_secs: DurationSecs) -> Self {
+        std::time::Duration::new(duration_secs.0, 0)
+    }
+}
+
 /// A duration in nanos precision.
 #[derive(
     Clone,
@@ -57,6 +67,7 @@ impl From<std::time::Duration> for DurationSecs {
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub struct DurationNanos {
     /// The seconds
@@ -130,6 +141,25 @@ impl BorshDeserialize for DateTimeUtc {
     }
 }
 
+impl BorshSchema for DateTimeUtc {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        // Encoded as rfc3339 `String`
+        let fields =
+            borsh::schema::Fields::UnnamedFields(vec!["string".into()]);
+        let definition = borsh::schema::Definition::Struct { fields };
+        definitions.insert(Self::declaration(), definition);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "DateTimeUtc".into()
+    }
+}
+
 impl From<DateTime<Utc>> for DateTimeUtc {
     fn from(dt: DateTime<Utc>) -> Self {
         Self(dt)
@@ -176,16 +206,18 @@ impl From<DateTimeUtc> for Rfc3339String {
     }
 }
 
-#[cfg(not(feature = "ABCI"))]
-impl From<DateTimeUtc> for tendermint::time::Time {
-    fn from(dt: DateTimeUtc) -> Self {
-        dt.0.into()
+impl TryFrom<DateTimeUtc> for Time {
+    type Error = TendermintError;
+
+    fn try_from(dt: DateTimeUtc) -> Result<Self, Self::Error> {
+        Self::parse_from_rfc3339(&DateTime::to_rfc3339(&dt.0))
     }
 }
 
-#[cfg(feature = "ABCI")]
-impl From<DateTimeUtc> for tendermint_stable::time::Time {
-    fn from(dt: DateTimeUtc) -> Self {
-        dt.0.into()
+impl TryFrom<Time> for DateTimeUtc {
+    type Error = chrono::ParseError;
+
+    fn try_from(t: Time) -> Result<Self, Self::Error> {
+        Rfc3339String(t.to_rfc3339()).try_into()
     }
 }

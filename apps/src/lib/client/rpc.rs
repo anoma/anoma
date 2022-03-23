@@ -12,7 +12,7 @@ use anoma::ledger::pos::{
 };
 use anoma::types::address::Address;
 use anoma::types::key::*;
-use anoma::types::storage::Epoch;
+use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
@@ -43,7 +43,7 @@ use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
-use crate::node::ledger::rpc::{Path, PrefixValue};
+use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
 pub async fn query_epoch(args: args::Query) -> Epoch {
@@ -71,6 +71,29 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
         ),
     }
     cli::safe_exit(1)
+}
+
+/// Query the raw bytes of given storage key
+pub async fn query_raw_bytes(_ctx: Context, args: args::QueryRawBytes) {
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
+    let path = Path::Value(args.storage_key);
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, false)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => {
+            println!("{}", hex::encode(&response.value));
+        }
+        Code::Err(err) => {
+            eprintln!(
+                "Error in the query {}  (error code {})",
+                response.info, err
+            );
+            cli::safe_exit(1)
+        }
+    }
 }
 
 /// Query token balance(s)
@@ -1096,6 +1119,7 @@ pub async fn query_tx_response(
     // Summarize the transaction results that we were searching for
     let result = TxResponse {
         info: event_map["info"].to_string(),
+        log: event_map["log"].to_string(),
         height: event_map["height"].to_string(),
         hash: event_map["hash"].to_string(),
         code: event_map["code"].to_string(),

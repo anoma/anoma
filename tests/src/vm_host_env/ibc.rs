@@ -1,8 +1,50 @@
-use std::collections::{HashMap, HashSet};
+use core::time::Duration;
+use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::str::FromStr;
-use std::time::Duration;
 
+use anoma::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+use anoma::ibc::core::ics02_client::client_consensus::ConsensusState;
+use anoma::ibc::core::ics02_client::client_state::{
+    AnyClientState, ClientState,
+};
+use anoma::ibc::core::ics02_client::header::Header;
+use anoma::ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
+use anoma::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+use anoma::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+use anoma::ibc::core::ics03_connection::connection::Counterparty as ConnCounterparty;
+use anoma::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+use anoma::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+use anoma::ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
+use anoma::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+use anoma::ibc::core::ics03_connection::version::Version as ConnVersion;
+use anoma::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
+};
+use anoma::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use anoma::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use anoma::ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
+use anoma::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+use anoma::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+use anoma::ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
+use anoma::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+use anoma::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+use anoma::ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
+use anoma::ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
+use anoma::ibc::core::ics04_channel::packet::{Packet, Sequence};
+use anoma::ibc::core::ics04_channel::Version as ChanVersion;
+use anoma::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortId,
+};
+use anoma::ibc::mock::client_state::{MockClientState, MockConsensusState};
+use anoma::ibc::mock::header::MockHeader;
+use anoma::ibc::proofs::{ConsensusProof, Proofs};
+use anoma::ibc::signer::Signer;
+use anoma::ibc::timestamp::Timestamp;
+use anoma::ibc::Height;
+use anoma::ibc_proto::cosmos::base::v1beta1::Coin;
+use anoma::ibc_proto::ibc::core::commitment::v1::MerkleProof;
+use anoma::ibc_proto::ics23::CommitmentProof;
 use anoma::ledger::gas::VpGasMeter;
 pub use anoma::ledger::ibc::handler::*;
 use anoma::ledger::ibc::init_genesis_storage;
@@ -19,196 +61,23 @@ use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
+use anoma::tendermint::account::Id as TmAccountId;
+use anoma::tendermint::block::header::{
+    Header as TmHeader, Version as TmVersion,
+};
+use anoma::tendermint::block::Height as TmHeight;
+use anoma::tendermint::chain::Id as TmChainId;
+use anoma::tendermint::hash::{AppHash, Hash as TmHash};
+use anoma::tendermint::time::Time as TmTime;
+use anoma::tendermint_proto::Protobuf;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
 use anoma::types::ibc::IbcEvent;
-use anoma::types::storage::Key;
-use anoma::types::time::{DateTimeUtc, DurationSecs};
+use anoma::types::storage::{BlockHash, BlockHeight, Key};
+use anoma::types::time::Rfc3339String;
 use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
-#[cfg(not(feature = "ABCI"))]
-use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::ConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::{AnyClientState, ClientState};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::header::Header;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::Counterparty as ConnCounterparty;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::version::Version;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::State as ChanState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty as ChanCounterparty, Order,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::mock::client_state::{MockClientState, MockConsensusState};
-#[cfg(not(feature = "ABCI"))]
-use ibc::mock::header::MockHeader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::proofs::{ConsensusProof, Proofs};
-#[cfg(not(feature = "ABCI"))]
-use ibc::signer::Signer;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Timestamp;
-#[cfg(not(feature = "ABCI"))]
-use ibc::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::header::Header;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::Counterparty as ConnCounterparty;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::version::Version;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::State as ChanState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty as ChanCounterparty, Order,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::timeout::MsgTimeout;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics23_commitment::commitment::CommitmentProofBytes;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
-#[cfg(feature = "ABCI")]
-use ibc_abci::mock::header::MockHeader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::proofs::{ConsensusProof, Proofs};
-#[cfg(feature = "ABCI")]
-use ibc_abci::signer::Signer;
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Timestamp;
-#[cfg(feature = "ABCI")]
-use ibc_abci::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::cosmos::base::v1beta1::Coin;
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::ibc::core::commitment::v1::MerkleProof;
-#[cfg(feature = "ABCI")]
-use ibc_proto_abci::cosmos::base::v1beta1::Coin;
-#[cfg(feature = "ABCI")]
-use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
 use tempfile::TempDir;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::account::Id as TmAccountId;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::block::header::{Header as TmHeader, Version as TmVersion};
-#[cfg(not(feature = "ABCI"))]
-use tendermint::block::Height as TmHeight;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::chain::Id as TmChainId;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::hash::{AppHash, Hash as TmHash};
-#[cfg(not(feature = "ABCI"))]
-use tendermint::time::Time as TmTime;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::account::Id as TmAccountId;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::header::{
-    Header as TmHeader, Version as TmVersion,
-};
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::Height as TmHeight;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::chain::Id as TmChainId;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::hash::{AppHash, Hash as TmHash};
-#[cfg(feature = "ABCI")]
-use tendermint_stable::time::Time as TmTime;
 
 use crate::tx::*;
 
@@ -216,7 +85,7 @@ const VP_ALWAYS_TRUE_WASM: &str = "../wasm_for_tests/vp_always_true.wasm";
 
 pub struct TestIbcVp<'a> {
     pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
-    pub keys_changed: HashSet<Key>,
+    pub keys_changed: BTreeSet<Key>,
 }
 
 impl<'a> TestIbcVp<'a> {
@@ -225,13 +94,13 @@ impl<'a> TestIbcVp<'a> {
         tx_data: &[u8],
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::Error> {
         self.ibc
-            .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+            .validate_tx(tx_data, &self.keys_changed, &BTreeSet::new())
     }
 }
 
 pub struct TestIbcTokenVp<'a> {
     pub token: IbcToken<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
-    pub keys_changed: HashSet<Key>,
+    pub keys_changed: BTreeSet<Key>,
 }
 
 impl<'a> TestIbcTokenVp<'a> {
@@ -240,7 +109,7 @@ impl<'a> TestIbcTokenVp<'a> {
         tx_data: &[u8],
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::IbcTokenError> {
         self.token
-            .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+            .validate_tx(tx_data, &self.keys_changed, &BTreeSet::new())
     }
 }
 
@@ -285,8 +154,28 @@ impl IbcActions for TestIbcActions {
         let mut dest_bal: Amount =
             tx_host_env::read(&dest_key.to_string()).unwrap_or_default();
         dest_bal.receive(&amount);
-        tx_host_env::write(src_key.to_string(), src_bal);
-        tx_host_env::write(dest_key.to_string(), dest_bal);
+        match src {
+            Address::Internal(InternalAddress::IbcMint) => {
+                tx_host_env::write_temp(&src_key.to_string(), src_bal)
+            }
+            Address::Internal(InternalAddress::IbcBurn) => unreachable!(),
+            _ => tx_host_env::write(&src_key.to_string(), src_bal),
+        }
+        match dest {
+            Address::Internal(InternalAddress::IbcMint) => unreachable!(),
+            Address::Internal(InternalAddress::IbcBurn) => {
+                tx_host_env::write_temp(&dest_key.to_string(), dest_bal)
+            }
+            _ => tx_host_env::write(&dest_key.to_string(), dest_bal),
+        }
+    }
+
+    fn get_height(&self) -> BlockHeight {
+        tx_host_env::get_block_height()
+    }
+
+    fn get_header_time(&self) -> Rfc3339String {
+        tx_host_env::get_block_time()
     }
 }
 
@@ -297,7 +186,7 @@ pub fn init_ibc_vp_from_tx<'a>(
 ) -> (TestIbcVp<'a>, TempDir) {
     let keys_changed = tx_env
         .write_log
-        .verifiers_changed_keys(&HashSet::new())
+        .verifiers_changed_keys(&BTreeSet::new())
         .get(&Address::Internal(InternalAddress::Ibc))
         .cloned()
         .expect("no IBC address");
@@ -324,7 +213,7 @@ pub fn init_token_vp_from_tx<'a>(
 ) -> (TestIbcTokenVp<'a>, TempDir) {
     let keys_changed = tx_env
         .write_log
-        .verifiers_changed_keys(&HashSet::new())
+        .verifiers_changed_keys(&BTreeSet::new())
         .get(addr)
         .cloned()
         .expect("no token address");
@@ -354,6 +243,9 @@ pub fn init_storage(storage: &mut TestStorage) -> (Address, Address) {
     init_genesis_storage(storage);
     // block header to check timeout timestamp
     storage.set_header(tm_dummy_header()).unwrap();
+    storage
+        .begin_block(BlockHash::default(), BlockHeight(1))
+        .unwrap();
 
     // initialize a token
     let code = std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
@@ -374,8 +266,7 @@ pub fn tm_dummy_header() -> TmHeader {
             .expect("Creating an TmChainId shouldn't fail"),
         height: TmHeight::try_from(10_u64)
             .expect("Creating a height shouldn't fail"),
-        time: TmTime::from_str("2021-11-01T18:14:32.024837Z")
-            .expect("Setting the time shouldn't fail"),
+        time: TmTime::now(),
         last_block_id: None,
         last_commit_hash: None,
         data_hash: None,
@@ -467,12 +358,12 @@ pub fn prepare_opened_channel(
 }
 
 pub fn msg_create_client() -> MsgCreateAnyClient {
-    let height = Height::new(1, 10);
+    let height = Height::new(0, 1);
     let header = MockHeader {
         height,
         timestamp: Timestamp::now(),
     };
-    let client_state = MockClientState(header).wrap_any();
+    let client_state = MockClientState::new(header).wrap_any();
     let consensus_state = MockConsensusState::new(header).wrap_any();
     MsgCreateAnyClient {
         client_state,
@@ -482,7 +373,7 @@ pub fn msg_create_client() -> MsgCreateAnyClient {
 }
 
 pub fn msg_update_client(client_id: ClientId) -> MsgUpdateAnyClient {
-    let height = Height::new(1, 11);
+    let height = Height::new(0, 2);
     let header = MockHeader {
         height,
         timestamp: Timestamp::now(),
@@ -501,12 +392,14 @@ pub fn msg_upgrade_client(client_id: ClientId) -> MsgUpgradeAnyClient {
         height,
         timestamp: Timestamp::now(),
     };
-    let client_state = MockClientState(header).wrap_any();
+    let client_state = MockClientState::new(header).wrap_any();
     let consensus_state = MockConsensusState::new(header).wrap_any();
-    let proof_upgrade_client =
-        MerkleProof::try_from(CommitmentProofBytes::from(vec![])).unwrap();
-    let proof_upgrade_consensus_state =
-        MerkleProof::try_from(CommitmentProofBytes::from(vec![])).unwrap();
+    let proof_upgrade_client = MerkleProof {
+        proofs: vec![CommitmentProof { proof: None }],
+    };
+    let proof_upgrade_consensus_state = MerkleProof {
+        proofs: vec![CommitmentProof { proof: None }],
+    };
     MsgUpgradeAnyClient {
         client_id,
         client_state,
@@ -521,7 +414,7 @@ pub fn msg_connection_open_init(client_id: ClientId) -> MsgConnectionOpenInit {
     MsgConnectionOpenInit {
         client_id,
         counterparty: dummy_connection_counterparty(),
-        version: Version::default(),
+        version: ConnVersion::default(),
         delay_period: Duration::new(100, 0),
         signer: Signer::new("test"),
     }
@@ -536,7 +429,7 @@ pub fn msg_connection_open_try(
         client_id,
         client_state: Some(client_state),
         counterparty: dummy_connection_counterparty(),
-        counterparty_versions: vec![Version::default()],
+        counterparty_versions: vec![ConnVersion::default()],
         proofs: dummy_proofs(),
         delay_period: Duration::new(100, 0),
         signer: Signer::new("test"),
@@ -555,7 +448,7 @@ pub fn msg_connection_open_ack(
         counterparty_connection_id,
         client_state: Some(client_state),
         proofs: dummy_proofs(),
-        version: Version::default(),
+        version: ConnVersion::default(),
         signer: Signer::new("test"),
     }
 }
@@ -571,11 +464,12 @@ pub fn msg_connection_open_confirm(
 }
 
 fn dummy_proofs() -> Proofs {
-    let height = Height::new(1, 10);
-    let consensus_proof = ConsensusProof::new(vec![0].into(), height).unwrap();
+    let height = Height::new(0, 1);
+    let consensus_proof =
+        ConsensusProof::new(vec![0].try_into().unwrap(), height).unwrap();
     Proofs::new(
-        vec![0].into(),
-        Some(vec![0].into()),
+        vec![0].try_into().unwrap(),
+        Some(vec![0].try_into().unwrap()),
         Some(consensus_proof),
         None,
         height,
@@ -611,7 +505,7 @@ pub fn msg_channel_open_try(
         port_id,
         previous_channel_id: None,
         channel: dummy_channel(ChanState::TryOpen, Order::Ordered, conn_id),
-        counterparty_version: Order::Ordered.to_string(),
+        counterparty_version: ChanVersion::ics20(),
         proofs: dummy_proofs(),
         signer: Signer::new("test"),
     }
@@ -628,7 +522,7 @@ pub fn msg_channel_open_ack(
             .channel_id()
             .unwrap()
             .clone(),
-        counterparty_version: Order::Ordered.to_string(),
+        counterparty_version: ChanVersion::ics20(),
         proofs: dummy_proofs(),
         signer: Signer::new("test"),
     }
@@ -679,7 +573,7 @@ fn dummy_channel(
         order,
         dummy_channel_counterparty(),
         vec![connection_id],
-        order.to_string(),
+        ChanVersion::ics20(),
     )
 }
 
@@ -702,8 +596,8 @@ pub fn msg_transfer(
     token: String,
     sender: &Address,
 ) -> MsgTransfer {
-    let timestamp = DateTimeUtc::now() + DurationSecs(100);
-    let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+    let timeout_timestamp =
+        (Timestamp::now() + Duration::from_secs(100)).unwrap();
     MsgTransfer {
         source_port: port_id,
         source_channel: channel_id,
@@ -749,8 +643,8 @@ pub fn received_packet(
     receiver: &Address,
 ) -> Packet {
     let counterparty = dummy_channel_counterparty();
-    let timestamp = chrono::Utc::now() + chrono::Duration::seconds(100);
-    let timeout_timestamp = Timestamp::from_datetime(timestamp);
+    let timeout_timestamp =
+        (Timestamp::now() + Duration::from_secs(100)).unwrap();
     let data = FungibleTokenPacketData {
         denomination: token,
         amount: 100u64.to_string(),

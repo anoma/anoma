@@ -1,7 +1,7 @@
 //! Write log is temporary storage for modifications performed by a transaction.
 //! before they are committed to the ledger's storage.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use thiserror::Error;
 
@@ -15,6 +15,8 @@ use crate::types::storage::Key;
 pub enum Error {
     #[error("Storage error applying a write log: {0}")]
     StorageError(storage::Error),
+    #[error("Trying to update a temporary value")]
+    UpdateTemporaryValue,
     #[error(
         "Trying to update a validity predicate that a new account that's not \
          yet committed to storage"
@@ -22,6 +24,8 @@ pub enum Error {
     UpdateVpOfNewAccount,
     #[error("Trying to delete a validity predicate")]
     DeleteVp,
+    #[error("Trying to write a temporary value after deleting")]
+    WriteTempAfterDelete,
 }
 
 /// Result for functions that may fail
@@ -43,6 +47,12 @@ pub enum StorageModification {
     InitAccount {
         /// Validity predicate bytes
         vp: Vec<u8>,
+    },
+    /// Temporary value. This value will be never written to the storage. After
+    /// writing a temporary value, it can't be mutated with normal write.
+    Temp {
+        /// Value bytes
+        value: Vec<u8>,
     },
 }
 
@@ -89,6 +99,9 @@ impl WriteLog {
                     StorageModification::InitAccount { ref vp } => {
                         key.len() + vp.len()
                     }
+                    StorageModification::Temp { ref value } => {
+                        key.len() + value.len()
+                    }
                 };
                 (Some(v), gas as _)
             }
@@ -99,6 +112,8 @@ impl WriteLog {
     /// Write a key and a value and return the gas cost and the size difference
     /// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a
     /// validity predicate of a new account that's not yet committed to storage.
+    /// Fails with [`Error::UpdateTemporaryValue`] when attempting to update a
+    /// temporary value.
     pub fn write(&mut self, key: &Key, value: Vec<u8>) -> Result<(u64, i64)> {
         let len = value.len();
         let gas = key.len() + len;
@@ -113,6 +128,46 @@ impl WriteLog {
                 StorageModification::Delete => len as i64,
                 StorageModification::InitAccount { .. } => {
                     return Err(Error::UpdateVpOfNewAccount);
+                }
+                StorageModification::Temp { .. } => {
+                    return Err(Error::UpdateTemporaryValue);
+                }
+            },
+            // set just the length of the value because we don't know if
+            // the previous value exists on the storage
+            None => len as i64,
+        };
+        Ok((gas as _, size_diff))
+    }
+
+    /// Write a key and a value and return the gas cost and the size difference
+    /// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a
+    /// validity predicate of a new account that's not yet committed to storage.
+    /// Fails with [`Error::WriteTempAfterDelete`] when attempting to update a
+    /// temporary value after deleting.
+    pub fn write_temp(
+        &mut self,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<(u64, i64)> {
+        let len = value.len();
+        let gas = key.len() + len;
+        let size_diff = match self
+            .tx_write_log
+            .insert(key.clone(), StorageModification::Temp { value })
+        {
+            Some(prev) => match prev {
+                StorageModification::Write { ref value } => {
+                    len as i64 - value.len() as i64
+                }
+                StorageModification::Delete => {
+                    return Err(Error::WriteTempAfterDelete);
+                }
+                StorageModification::InitAccount { .. } => {
+                    return Err(Error::UpdateVpOfNewAccount);
+                }
+                StorageModification::Temp { ref value } => {
+                    len as i64 - value.len() as i64
                 }
             },
             // set just the length of the value because we don't know if
@@ -140,6 +195,7 @@ impl WriteLog {
                 StorageModification::InitAccount { .. } => {
                     return Err(Error::DeleteVp);
                 }
+                StorageModification::Temp { ref value } => value.len() as i64,
             },
             // set 0 because we don't know if the previous value exists on the
             // storage
@@ -181,7 +237,7 @@ impl WriteLog {
     /// Get the storage keys changed and accounts keys initialized in the
     /// current transaction. The account keys point to the validity predicates
     /// of the newly created accounts.
-    pub fn get_keys(&self) -> HashSet<Key> {
+    pub fn get_keys(&self) -> BTreeSet<Key> {
         self.tx_write_log.keys().cloned().collect()
     }
 
@@ -190,7 +246,7 @@ impl WriteLog {
     /// (right). The first vector excludes keys of validity predicates of
     /// newly initialized accounts, but may include keys of other data
     /// written into newly initialized accounts.
-    pub fn get_partitioned_keys(&self) -> (HashSet<&Key>, HashSet<&Address>) {
+    pub fn get_partitioned_keys(&self) -> (BTreeSet<&Key>, HashSet<&Address>) {
         use itertools::{Either, Itertools};
         self.tx_write_log.iter().partition_map(|(key, value)| {
             match (key.is_validity_predicate(), value) {
@@ -281,6 +337,8 @@ impl WriteLog {
                         .batch_write_subspace_val(&mut batch, key, vp.clone())
                         .map_err(Error::StorageError)?;
                 }
+                // temporary value isn't persisted
+                StorageModification::Temp { .. } => {}
             }
         }
         storage.exec_batch(batch).map_err(Error::StorageError)?;
@@ -298,14 +356,14 @@ impl WriteLog {
     /// case every address will be the verifier of the key.
     pub fn verifiers_changed_keys(
         &self,
-        verifiers_from_tx: &HashSet<Address>,
-    ) -> HashMap<Address, HashSet<Key>> {
+        verifiers_from_tx: &BTreeSet<Address>,
+    ) -> HashMap<Address, BTreeSet<Key>> {
         let (changed_keys, initialized_accounts) = self.get_partitioned_keys();
         let mut verifiers =
             verifiers_from_tx
                 .iter()
                 .fold(HashMap::new(), |mut acc, addr| {
-                    let changed_keys: HashSet<Key> =
+                    let changed_keys: BTreeSet<Key> =
                         changed_keys.iter().map(|&key| key.clone()).collect();
                     acc.insert(addr.clone(), changed_keys);
                     acc
@@ -333,7 +391,7 @@ impl WriteLog {
                         keys.insert(key.clone());
                     }
                     None => {
-                        let keys: HashSet<Key> =
+                        let keys: BTreeSet<Key> =
                             vec![key.clone()].into_iter().collect();
                         verifiers.insert(addr.clone(), keys);
                     }
@@ -497,6 +555,7 @@ mod tests {
         let key1 = Key::parse("key1").expect("cannot parse the key string");
         let key2 = Key::parse("key2").expect("cannot parse the key string");
         let key3 = Key::parse("key3").expect("cannot parse the key string");
+        let key4 = Key::parse("key4").expect("cannot parse the key string");
 
         // initialize an account
         let vp1 = "vp1".as_bytes().to_vec();
@@ -508,6 +567,7 @@ mod tests {
         write_log.write(&key1, val1.clone()).unwrap();
         write_log.write(&key2, val1.clone()).unwrap();
         write_log.write(&key3, val1.clone()).unwrap();
+        write_log.write_temp(&key4, val1.clone()).unwrap();
         write_log.commit_tx();
 
         // these values are not written due to drop_tx
@@ -535,6 +595,8 @@ mod tests {
         assert!(value.is_none());
         let (value, _) = storage.read(&key3).expect("read failed");
         assert_eq!(value.expect("no read value"), val3);
+        let (value, _) = storage.read(&key4).expect("read failed");
+        assert_eq!(value, None);
     }
 
     prop_compose! {
@@ -542,7 +604,7 @@ mod tests {
             (verifiers_from_tx in testing::arb_verifiers_from_tx())
             (tx_write_log in testing::arb_tx_write_log(verifiers_from_tx.clone()),
                 verifiers_from_tx in Just(verifiers_from_tx))
-        -> (HashSet<Address>, HashMap<Key, StorageModification>) {
+        -> (BTreeSet<Address>, HashMap<Key, StorageModification>) {
             (verifiers_from_tx, tx_write_log)
         }
     }
@@ -617,7 +679,7 @@ pub mod testing {
     /// Generate an arbitrary tx write log of [`HashMap<Key,
     /// StorageModification>`].
     pub fn arb_tx_write_log(
-        verifiers_from_tx: HashSet<Address>,
+        verifiers_from_tx: BTreeSet<Address>,
     ) -> impl Strategy<Value = HashMap<Key, StorageModification>> + 'static
     {
         arb_key().prop_flat_map(move |key| {
@@ -635,9 +697,9 @@ pub mod testing {
         })
     }
 
-    /// Generate arbitrary verifiers from tx of [`HashSet<Address>`].
-    pub fn arb_verifiers_from_tx() -> impl Strategy<Value = HashSet<Address>> {
-        collection::hash_set(arb_address(), 0..10)
+    /// Generate arbitrary verifiers from tx of [`BTreeSet<Address>`].
+    pub fn arb_verifiers_from_tx() -> impl Strategy<Value = BTreeSet<Address>> {
+        collection::btree_set(arb_address(), 0..10)
     }
 
     /// Generate an arbitrary [`StorageModification`].
@@ -651,6 +713,8 @@ pub mod testing {
                 Just(StorageModification::Delete),
                 any::<Vec<u8>>()
                     .prop_map(|vp| StorageModification::InitAccount { vp }),
+                any::<Vec<u8>>()
+                    .prop_map(|value| StorageModification::Temp { value }),
             ]
             .boxed()
         } else {
@@ -658,6 +722,8 @@ pub mod testing {
                 any::<Vec<u8>>()
                     .prop_map(|value| StorageModification::Write { value }),
                 Just(StorageModification::Delete),
+                any::<Vec<u8>>()
+                    .prop_map(|value| StorageModification::Temp { value }),
             ]
             .boxed()
         }

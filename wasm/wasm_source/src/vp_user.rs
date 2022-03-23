@@ -19,12 +19,39 @@ use anoma_vp_prelude::*;
 use once_cell::unsync::Lazy;
 use rust_decimal::prelude::*;
 
+enum KeyType<'a> {
+    Token(&'a Address),
+    PoS,
+    InvalidIntentSet(&'a Address),
+    Nft(&'a Address),
+    Vp(&'a Address),
+    Unknown,
+}
+
+impl<'a> From<&'a storage::Key> for KeyType<'a> {
+    fn from(key: &'a storage::Key) -> KeyType<'a> {
+        if let Some(address) = token::is_any_token_balance_key(key) {
+            Self::Token(address)
+        } else if proof_of_stake::is_pos_key(key) {
+            Self::PoS
+        } else if let Some(address) = intent::is_invalid_intent_key(key) {
+            Self::InvalidIntentSet(address)
+        } else if let Some(address) = nft::is_nft_key(key) {
+            Self::Nft(address)
+        } else if let Some(address) = key.is_validity_predicate() {
+            Self::Vp(address)
+        } else {
+            Self::Unknown
+        }
+    }
+}
+
 #[validity_predicate]
 fn validate_tx(
     tx_data: Vec<u8>,
     addr: Address,
-    keys_changed: HashSet<storage::Key>,
-    verifiers: HashSet<Address>,
+    keys_changed: BTreeSet<storage::Key>,
+    verifiers: BTreeSet<Address>,
 ) -> bool {
     debug_log!(
         "vp_user called with user addr: {}, key_changed: {:?}, verifiers: {:?}",
@@ -52,87 +79,117 @@ fn validate_tx(
         _ => false,
     });
 
+    if !is_tx_whitelisted() {
+        return false;
+    }
+
     for key in keys_changed.iter() {
-        let is_valid = if let Some(owner) = token::is_any_token_balance_key(key)
-        {
-            if owner == &addr {
-                let key = key.to_string();
-                let pre: token::Amount = read_pre(&key).unwrap_or_default();
-                let post: token::Amount = read_post(&key).unwrap_or_default();
-                let change = post.change() - pre.change();
-                // debit has to signed, credit doesn't
-                let valid = change >= 0 || *valid_sig || *valid_intent;
-                debug_log!(
-                    "token key: {}, change: {}, valid_sig: {}, valid_intent: \
-                     {}, valid modification: {}",
-                    key,
-                    change,
-                    *valid_sig,
-                    *valid_intent,
+        let key_type: KeyType = key.into();
+        let is_valid = match key_type {
+            KeyType::Token(owner) => {
+                if owner == &addr {
+                    let key = key.to_string();
+                    let pre: token::Amount = read_pre(&key).unwrap_or_default();
+                    let post: token::Amount =
+                        read_post(&key).unwrap_or_default();
+                    let change = post.change() - pre.change();
+                    // debit has to signed, credit doesn't
+                    let valid = change >= 0 || *valid_sig || *valid_intent;
+                    debug_log!(
+                        "token key: {}, change: {}, valid_sig: {}, \
+                         valid_intent: {}, valid modification: {}",
+                        key,
+                        change,
+                        *valid_sig,
+                        *valid_intent,
+                        valid
+                    );
                     valid
-                );
-                valid
-            } else {
-                debug_log!(
-                    "This address ({}) is not of owner ({}) of token key: {}",
-                    addr,
-                    owner,
-                    key
-                );
-                // If this is not the owner, allow any change
-                true
-            }
-        } else if proof_of_stake::is_pos_key(key) {
-            // Allow the account to be used in PoS
-            let bond_id = proof_of_stake::is_bond_key(key)
-                .or_else(|| proof_of_stake::is_unbond_key(key));
-            let valid = match bond_id {
-                Some(bond_id) => {
-                    // Bonds and unbonds changes for this address
-                    // must be signed
-                    bond_id.source != addr || *valid_sig
-                }
-                None => {
-                    // Any other PoS changes are allowed without signature
+                } else {
+                    debug_log!(
+                        "This address ({}) is not of owner ({}) of token key: \
+                         {}",
+                        addr,
+                        owner,
+                        key
+                    );
+                    // If this is not the owner, allow any change
                     true
                 }
-            };
-            debug_log!(
-                "PoS key {} {}",
-                key,
-                if valid { "accepted" } else { "rejected" }
-            );
-            valid
-        } else if let Some(owner) = intent::is_invalid_intent_key(key) {
-            if owner == &addr {
-                let key = key.to_string();
-                let pre: HashSet<key::common::Signature> =
-                    read_pre(&key).unwrap_or_default();
-                let post: HashSet<key::common::Signature> =
-                    read_post(&key).unwrap_or_default();
-                // A new invalid intent must have been added
-                pre.len() + 1 == post.len()
-            } else {
-                debug_log!(
-                    "This address ({}) is not of owner ({}) of \
-                     InvalidIntentSet key: {}",
-                    addr,
-                    owner,
-                    key
-                );
-                // If this is not the owner, allow any change
-                true
             }
-        } else {
-            debug_log!("Unknown key modified, valid sig {}", *valid_sig);
-            // Allow any other key change if authorized by a signature
-            *valid_sig
+            KeyType::PoS => {
+                // Allow the account to be used in PoS
+                let bond_id = proof_of_stake::is_bond_key(key)
+                    .or_else(|| proof_of_stake::is_unbond_key(key));
+                let valid = match bond_id {
+                    Some(bond_id) => {
+                        // Bonds and unbonds changes for this address
+                        // must be signed
+                        bond_id.source != addr || *valid_sig
+                    }
+                    None => {
+                        // Any other PoS changes are allowed without signature
+                        true
+                    }
+                };
+                debug_log!(
+                    "PoS key {} {}",
+                    key,
+                    if valid { "accepted" } else { "rejected" }
+                );
+                valid
+            }
+            KeyType::InvalidIntentSet(owner) => {
+                if owner == &addr {
+                    let key = key.to_string();
+                    let pre: HashSet<key::common::Signature> =
+                        read_pre(&key).unwrap_or_default();
+                    let post: HashSet<key::common::Signature> =
+                        read_post(&key).unwrap_or_default();
+                    // A new invalid intent must have been added
+                    pre.len() + 1 == post.len()
+                } else {
+                    debug_log!(
+                        "This address ({}) is not of owner ({}) of \
+                         InvalidIntentSet key: {}",
+                        addr,
+                        owner,
+                        key
+                    );
+                    // If this is not the owner, allow any change
+                    true
+                }
+            }
+            KeyType::Nft(owner) => {
+                if owner == &addr {
+                    *valid_sig
+                } else {
+                    true
+                }
+            }
+            KeyType::Vp(owner) => {
+                let key = key.to_string();
+                let has_post: bool = has_key_post(&key);
+                if owner == &addr {
+                    if has_post {
+                        let vp: Vec<u8> = read_bytes_post(&key).unwrap();
+                        return *valid_sig && is_vp_whitelisted(&vp);
+                    } else {
+                        return false;
+                    }
+                } else {
+                    let vp: Vec<u8> = read_bytes_post(&key).unwrap();
+                    return is_vp_whitelisted(&vp);
+                }
+            }
+            KeyType::Unknown => *valid_sig,
         };
         if !is_valid {
             debug_log!("key {} modification failed vp", key);
             return false;
         }
     }
+
     true
 }
 
@@ -303,8 +360,8 @@ mod tests {
 
         let tx_data: Vec<u8> = vec![];
         let addr: Address = env.addr;
-        let keys_changed: HashSet<storage::Key> = HashSet::default();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let keys_changed: BTreeSet<storage::Key> = BTreeSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
 
         assert!(validate_tx(tx_data, addr, keys_changed, verifiers));
     }
@@ -334,9 +391,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -365,9 +422,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -379,7 +436,7 @@ mod tests {
 
         let vp_owner = address::testing::established_address_1();
         let keypair = key::testing::keypair_1();
-        let public_key = &keypair.ref_to();
+        let public_key = keypair.ref_to();
         let target = address::testing::established_address_2();
         let token = address::xan();
         let amount = token::Amount::from(10_098_123);
@@ -391,7 +448,7 @@ mod tests {
         // be able to transfer from it
         tx_env.credit_tokens(&vp_owner, &token, amount);
 
-        tx_env.write_public_key(&vp_owner, public_key);
+        tx_env.write_public_key(&vp_owner, &public_key);
 
         // Initialize VP environment from a transaction
         let mut vp_env =
@@ -404,9 +461,9 @@ mod tests {
         let signed_tx = tx.sign(&keypair);
         let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
         vp_env.tx = signed_tx;
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -437,9 +494,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -488,9 +545,9 @@ mod tests {
                 });
 
             let tx_data: Vec<u8> = vec![];
-            let keys_changed: HashSet<storage::Key> =
+            let keys_changed: BTreeSet<storage::Key> =
                 vp_env.all_touched_storage_keys();
-            let verifiers: HashSet<Address> = HashSet::default();
+            let verifiers: BTreeSet<Address> = BTreeSet::default();
             assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
         }
     }
@@ -508,14 +565,14 @@ mod tests {
             let mut tx_env = TestTxEnv::default();
 
             let keypair = key::testing::keypair_1();
-            let public_key = &keypair.ref_to();
+            let public_key = keypair.ref_to();
 
             // Spawn all the accounts in the storage key to be able to modify
             // their storage
             let storage_key_addresses = storage_key.find_addresses();
             tx_env.spawn_accounts(storage_key_addresses);
 
-            tx_env.write_public_key(&vp_owner, public_key);
+            tx_env.write_public_key(&vp_owner, &public_key);
 
             // Initialize VP environment from a transaction
             let mut vp_env =
@@ -532,9 +589,9 @@ mod tests {
             let signed_tx = tx.sign(&keypair);
             let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
             vp_env.tx = signed_tx;
-            let keys_changed: HashSet<storage::Key> =
+            let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-            let verifiers: HashSet<Address> = HashSet::default();
+            let verifiers: BTreeSet<Address> = BTreeSet::default();
             assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
         }
     }
@@ -560,9 +617,9 @@ mod tests {
         });
 
         let tx_data: Vec<u8> = vec![];
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -572,17 +629,18 @@ mod tests {
     fn test_signed_vp_update_accepted() {
         // Initialize a tx environment
         let mut tx_env = TestTxEnv::default();
+        tx_env.init_parameters(None, None, None);
 
         let vp_owner = address::testing::established_address_1();
         let keypair = key::testing::keypair_1();
-        let public_key = &keypair.ref_to();
+        let public_key = keypair.ref_to();
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
         // Spawn the accounts to be able to modify their storage
         tx_env.spawn_accounts([&vp_owner]);
 
-        tx_env.write_public_key(&vp_owner, public_key);
+        tx_env.write_public_key(&vp_owner, &public_key);
 
         // Initialize VP environment from a transaction
         let mut vp_env =
@@ -595,9 +653,158 @@ mod tests {
         let signed_tx = tx.sign(&keypair);
         let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
         vp_env.tx = signed_tx;
-        let keys_changed: HashSet<storage::Key> =
+        let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
-        let verifiers: HashSet<Address> = HashSet::default();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
+        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+    }
+
+    /// Test that a validity predicate update is rejected if not whitelisted
+    #[test]
+    fn test_signed_vp_update_not_whitelisted_rejected() {
+        // Initialize a tx environment
+        let mut tx_env = TestTxEnv::default();
+        tx_env.init_parameters(None, Some(vec!["some_hash".to_string()]), None);
+
+        let vp_owner = address::testing::established_address_1();
+        let keypair = key::testing::keypair_1();
+        let public_key = keypair.ref_to();
+        let vp_code =
+            std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
+
+        // Spawn the accounts to be able to modify their storage
+        tx_env.spawn_accounts([&vp_owner]);
+
+        tx_env.write_public_key(&vp_owner, &public_key);
+
+        // Initialize VP environment from a transaction
+        let mut vp_env =
+            init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+                // Update VP in a transaction
+                tx_host_env::update_validity_predicate(address, &vp_code);
+            });
+
+        let tx = vp_env.tx.clone();
+        let signed_tx = tx.sign(&keypair);
+        let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
+        vp_env.tx = signed_tx;
+        let keys_changed: BTreeSet<storage::Key> =
+            vp_env.all_touched_storage_keys();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
+        assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+    }
+
+    /// Test that a validity predicate update is accepted if whitelisted
+    #[test]
+    fn test_signed_vp_update_whitelisted_accepted() {
+        // Initialize a tx environment
+        let mut tx_env = TestTxEnv::default();
+
+        let vp_owner = address::testing::established_address_1();
+        let keypair = key::testing::keypair_1();
+        let public_key = keypair.ref_to();
+        let vp_code =
+            std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
+
+        let vp_hash = sha256(&vp_code);
+        tx_env.init_parameters(None, Some(vec![vp_hash.to_string()]), None);
+
+        // Spawn the accounts to be able to modify their storage
+        tx_env.spawn_accounts([&vp_owner]);
+
+        tx_env.write_public_key(&vp_owner, &public_key);
+
+        // Initialize VP environment from a transaction
+        let mut vp_env =
+            init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+                // Update VP in a transaction
+                tx_host_env::update_validity_predicate(address, &vp_code);
+            });
+
+        let tx = vp_env.tx.clone();
+        let signed_tx = tx.sign(&keypair);
+        let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
+        vp_env.tx = signed_tx;
+        let keys_changed: BTreeSet<storage::Key> =
+            vp_env.all_touched_storage_keys();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
+        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+    }
+
+    /// Test that a tx is rejected if not whitelisted
+    #[test]
+    fn test_tx_not_whitelisted_rejected() {
+        // Initialize a tx environment
+        let mut tx_env = TestTxEnv::default();
+
+        let vp_owner = address::testing::established_address_1();
+        let keypair = key::testing::keypair_1();
+        let public_key = keypair.ref_to();
+        let vp_code =
+            std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
+
+        let vp_hash = sha256(&vp_code);
+        tx_env.init_parameters(
+            None,
+            Some(vec![vp_hash.to_string()]),
+            Some(vec!["some_hash".to_string()]),
+        );
+
+        // Spawn the accounts to be able to modify their storage
+        tx_env.spawn_accounts([&vp_owner]);
+
+        tx_env.write_public_key(&vp_owner, &public_key);
+
+        // Initialize VP environment from a transaction
+        let mut vp_env =
+            init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+                // Update VP in a transaction
+                tx_host_env::update_validity_predicate(address, &vp_code);
+            });
+
+        let tx = vp_env.tx.clone();
+        let signed_tx = tx.sign(&keypair);
+        let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
+        vp_env.tx = signed_tx;
+        let keys_changed: BTreeSet<storage::Key> =
+            vp_env.all_touched_storage_keys();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
+        assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+    }
+
+    #[test]
+    fn test_tx_whitelisted_accepted() {
+        // Initialize a tx environment
+        let mut tx_env = TestTxEnv::default();
+
+        let vp_owner = address::testing::established_address_1();
+        let keypair = key::testing::keypair_1();
+        let public_key = keypair.ref_to();
+        let vp_code =
+            std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
+
+        // hardcoded hash of VP_ALWAYS_TRUE_WASM
+        tx_env.init_parameters(None, None, Some(vec!["E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855".to_string()]));
+
+        // Spawn the accounts to be able to modify their storage
+        tx_env.spawn_accounts([&vp_owner]);
+
+        tx_env.write_public_key(&vp_owner, &public_key);
+
+        // Initialize VP environment from a transaction
+        let mut vp_env =
+            init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+                // Update VP in a transaction
+                tx_host_env::update_validity_predicate(address, &vp_code);
+            });
+
+        let tx = vp_env.tx.clone();
+        let signed_tx = tx.sign(&keypair);
+        let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
+        vp_env.tx = signed_tx;
+        let keys_changed: BTreeSet<storage::Key> =
+            vp_env.all_touched_storage_keys();
+        let verifiers: BTreeSet<Address> = BTreeSet::default();
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 }

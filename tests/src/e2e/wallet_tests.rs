@@ -24,7 +24,7 @@ use crate::run;
 #[test]
 fn wallet_encrypted_key_cmds() -> Result<()> {
     let test = setup::single_node_net()?;
-    let key_alias = "test_key_1";
+    let key_alias = "Test_Key_1";
     let password = "VeRySeCuR3";
 
     // 1. key gen
@@ -43,7 +43,7 @@ fn wallet_encrypted_key_cmds() -> Result<()> {
     cmd.send_line(password)?;
     cmd.exp_string(&format!(
         "Successfully added a key and an address with alias: \"{}\"",
-        key_alias
+        key_alias.to_lowercase()
     ))?;
 
     // 2. key find
@@ -61,7 +61,10 @@ fn wallet_encrypted_key_cmds() -> Result<()> {
 
     // 3. key list
     let mut cmd = run!(test, Bin::Wallet, &["key", "list"], Some(20))?;
-    cmd.exp_string(&format!("Alias \"{}\" (encrypted):", key_alias))?;
+    cmd.exp_string(&format!(
+        "Alias \"{}\" (encrypted):",
+        key_alias.to_lowercase()
+    ))?;
 
     Ok(())
 }

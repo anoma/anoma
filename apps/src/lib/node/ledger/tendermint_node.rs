@@ -112,6 +112,7 @@ pub async fn run(
     #[cfg(feature = "dev")]
     {
         let genesis = &crate::config::genesis::genesis();
+        let consensus_key = crate::wallet::defaults::validator_keypair();
         // write the validator key file if it didn't already exist
         if !has_validator_key {
             write_validator_key_async(
@@ -124,7 +125,7 @@ pub async fn run(
                     )
                     .pos_data
                     .address,
-                &crate::wallet::defaults::validator_keypair(),
+                &consensus_key,
             )
             .await;
         }
@@ -237,12 +238,13 @@ fn validator_key_to_json<SK: SecretKey>(
                 "value": base64::encode(ck_arr),
             }
         })
+    })
         .or_else(|_err| {
             secp256k1::SecretKey::try_from_sk(sk).map(|sk| {
                 let pk: secp256k1::PublicKey = sk.ref_to();
                 let ck_arr =
                     [sk.try_to_vec().unwrap(), pk.try_to_vec().unwrap()]
-                        .concat();
+                    .concat();
                 json!({
                     "address": address,
                     "pub_key": {
@@ -256,7 +258,6 @@ fn validator_key_to_json<SK: SecretKey>(
                 })
             })
         })
-    })
 }
 
 /// Initialize validator private key for Tendermint
@@ -409,7 +410,9 @@ async fn write_tm_genesis(
         .expect("Couldn't deserialize the genesis file");
     genesis.chain_id =
         FromStr::from_str(chain_id.as_str()).expect("Invalid chain ID");
-    genesis.genesis_time = genesis_time.into();
+    genesis.genesis_time = genesis_time
+        .try_into()
+        .expect("Couldn't convert DateTimeUtc to Tendermint Time");
 
     let mut file = OpenOptions::new()
         .write(true)

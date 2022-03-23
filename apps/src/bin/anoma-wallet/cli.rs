@@ -81,7 +81,7 @@ fn key_find(
                     );
                     cli::safe_exit(1)
                 }
-                Some(alias) => wallet.find_key(alias),
+                Some(alias) => wallet.find_key(alias.to_lowercase()),
             }
         }
     };
@@ -153,12 +153,12 @@ fn key_list(
 fn key_export(ctx: Context, args::KeyExport { alias }: args::KeyExport) {
     let mut wallet = ctx.wallet;
     wallet
-        .find_key(alias.clone())
+        .find_key(alias.to_lowercase())
         .map(|keypair| {
             let file_data = keypair
                 .try_to_vec()
                 .expect("Encoding keypair shouldn't fail");
-            let file_name = format!("key_{}", alias);
+            let file_name = format!("key_{}", alias.to_lowercase());
             let mut file = File::create(&file_name).unwrap();
 
             file.write_all(file_data.as_ref()).unwrap();
@@ -199,7 +199,7 @@ fn address_find(ctx: Context, args: args::AddressFind) {
         println!(
             "No address with alias {} found. Use the command `address list` \
              to see all the known addresses.",
-            args.alias
+            args.alias.to_lowercase()
         );
     }
 }
@@ -208,7 +208,7 @@ fn address_find(ctx: Context, args: args::AddressFind) {
 fn address_add(ctx: Context, args: args::AddressAdd) {
     let mut wallet = ctx.wallet;
     if wallet
-        .add_address(args.alias.clone(), args.address)
+        .add_address(args.alias.clone().to_lowercase(), args.address)
         .is_none()
     {
         eprintln!("Address not added");
@@ -217,6 +217,6 @@ fn address_add(ctx: Context, args: args::AddressAdd) {
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully added a key and an address with alias: \"{}\"",
-        args.alias
+        args.alias.to_lowercase()
     );
 }

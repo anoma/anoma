@@ -1,65 +1,5 @@
 //! IBC validity predicate for packets
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty, Order, State,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::handler::verify::{
-    verify_channel_proofs, verify_next_sequence_recv,
-    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
-    verify_packet_recv_proofs,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::PacketMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, PortChannelId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::proofs::Proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Expiry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty, Order, State,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::handler::verify::{
-    verify_channel_proofs, verify_next_sequence_recv,
-    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
-    verify_packet_recv_proofs,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::PacketMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, PortChannelId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::proofs::Proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Expiry;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -69,6 +9,25 @@ use super::super::storage::{
     port_channel_sequence_id, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty, Order, State,
+};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics04_channel::error::Error as Ics04Error;
+use crate::ibc::core::ics04_channel::handler::verify::{
+    verify_channel_proofs, verify_next_sequence_recv,
+    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
+    verify_packet_recv_proofs,
+};
+use crate::ibc::core::ics04_channel::msgs::PacketMsg;
+use crate::ibc::core::ics04_channel::packet::{Packet, Sequence};
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::proofs::Proofs;
+use crate::ibc::timestamp::Expiry;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::Key;
@@ -195,6 +154,7 @@ where
                         };
                         self.verify_ack_proof(
                             &port_channel_id,
+                            msg.proofs.height(),
                             &msg.packet,
                             msg.acknowledgement.clone(),
                             &msg.proofs,
@@ -235,7 +195,12 @@ where
                     port_id: receipt_key.0,
                     channel_id: receipt_key.1,
                 };
-                self.verify_recv_proof(&port_channel_id, packet, &msg.proofs)
+                self.verify_recv_proof(
+                    &port_channel_id,
+                    msg.proofs.height(),
+                    packet,
+                    &msg.proofs,
+                )
             }
             _ => Err(Error::InvalidStateChange(
                 "The state change of the receipt is invalid".to_owned(),
@@ -495,6 +460,7 @@ where
     fn verify_recv_proof(
         &self,
         port_channel_id: &PortChannelId,
+        height: Height,
         packet: &Packet,
         proofs: &Proofs,
     ) -> Result<()> {
@@ -512,15 +478,15 @@ where
         let connection = self
             .connection_from_channel(&channel)
             .map_err(|e| Error::InvalidConnection(e.to_string()))?;
-        let client_id = connection.client_id().clone();
 
-        verify_packet_recv_proofs(self, packet, client_id, proofs)
+        verify_packet_recv_proofs(self, height, packet, &connection, proofs)
             .map_err(Error::ProofVerificationFailure)
     }
 
     fn verify_ack_proof(
         &self,
         port_channel_id: &PortChannelId,
+        height: Height,
         packet: &Packet,
         ack: Vec<u8>,
         proofs: &Proofs,
@@ -539,10 +505,14 @@ where
         let connection = self
             .connection_from_channel(&channel)
             .map_err(|e| Error::InvalidConnection(e.to_string()))?;
-        let client_id = connection.client_id().clone();
 
         verify_packet_acknowledgement_proofs(
-            self, packet, ack, client_id, proofs,
+            self,
+            height,
+            packet,
+            ack,
+            &connection,
+            proofs,
         )
         .map_err(Error::ProofVerificationFailure)
     }
@@ -553,13 +523,19 @@ where
         tx_data: &[u8],
     ) -> Result<()> {
         let ibc_msg = IbcMessage::decode(tx_data)?;
-        let (packet, proofs, next_sequence_recv) = match ibc_msg.0 {
-            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => {
-                (msg.packet, msg.proofs, msg.next_sequence_recv)
-            }
-            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(msg)) => {
-                (msg.packet, msg.proofs, msg.next_sequence_recv)
-            }
+        let (height, proofs, packet, next_sequence_recv) = match ibc_msg.0 {
+            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => (
+                msg.proofs.height(),
+                msg.proofs.clone(),
+                msg.packet,
+                msg.next_sequence_recv,
+            ),
+            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(msg)) => (
+                msg.proofs.height(),
+                msg.proofs.clone(),
+                msg.packet,
+                msg.next_sequence_recv,
+            ),
             _ => {
                 return Err(Error::InvalidChannel(format!(
                     "Unexpected message was given for timeout: Port/Channel \
@@ -634,11 +610,12 @@ where
                     *channel.ordering(),
                     expected_my_side,
                     expected_conn_hops,
-                    channel.version(),
+                    channel.version().clone(),
                 );
 
                 verify_channel_proofs(
                     self,
+                    height,
                     &channel,
                     &connection,
                     &expected_channel,
@@ -670,7 +647,8 @@ where
             }
             match verify_next_sequence_recv(
                 self,
-                client_id,
+                height,
+                &connection,
                 packet,
                 next_sequence_recv,
                 &proofs,
@@ -680,7 +658,11 @@ where
             }
         } else {
             match verify_packet_receipt_absence(
-                self, client_id, packet, &proofs,
+                self,
+                height,
+                &connection,
+                packet,
+                &proofs,
             ) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(Error::ProofVerificationFailure(e)),

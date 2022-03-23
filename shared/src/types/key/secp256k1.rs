@@ -6,7 +6,7 @@ use std::hash::{Hash, Hasher};
 use std::io::{ErrorKind, Write};
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSerialize, BorshSchema};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
 use serde::de::{Error, SeqAccess, Visitor};
@@ -51,25 +51,25 @@ impl From<libsecp256k1::PublicKey> for PublicKey {
 #[allow(clippy::derive_hash_xor_eq)]
 impl Hash for PublicKey {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.serialize().hash(state);
+        self.0.serialize_compressed().hash(state);
     }
 }
 
 impl PartialOrd for PublicKey {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.0.serialize().partial_cmp(&other.0.serialize())
+        self.0.serialize_compressed().partial_cmp(&other.0.serialize_compressed())
     }
 }
 
 impl Ord for PublicKey {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.serialize().cmp(&other.0.serialize())
+        self.0.serialize_compressed().cmp(&other.0.serialize_compressed())
     }
 }
 
 impl fmt::Display for PublicKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", hex::encode(&self.0.serialize()))
+        write!(f, "{}", hex::encode(&self.0.serialize_compressed()))
     }
 }
 
@@ -86,23 +86,46 @@ impl FromStr for PublicKey {
 impl BorshDeserialize for PublicKey {
     fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
         // deserialize the bytes first
-        Ok(PublicKey(
-            libsecp256k1::PublicKey::parse(
-                &(BorshDeserialize::deserialize(buf)?),
-            )
+        let pk = libsecp256k1::PublicKey::parse_compressed(
+            buf.get(0..libsecp256k1::util::COMPRESSED_PUBLIC_KEY_SIZE)
+                .ok_or_else(|| std::io::Error::from(ErrorKind::UnexpectedEof))?
+                .try_into()
+                .unwrap(),
+        )
             .map_err(|e| {
                 std::io::Error::new(
                     ErrorKind::InvalidInput,
                     format!("Error decoding secp256k1 public key: {}", e),
                 )
-            })?,
-        ))
+            })?;
+        *buf = &buf[libsecp256k1::util::COMPRESSED_PUBLIC_KEY_SIZE..];
+        Ok(PublicKey(pk))
+    }
+}
+
+impl BorshSchema for PublicKey {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        // Encoded as `[u8; COMPRESSED_PUBLIC_KEY_SIZE]`
+        let elements = "u8".into();
+        let length = libsecp256k1::util::COMPRESSED_PUBLIC_KEY_SIZE as u32;
+        let definition = borsh::schema::Definition::Array { elements, length };
+        definitions.insert(Self::declaration(), definition);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "secp256k1::PublicKey".into()
     }
 }
 
 impl BorshSerialize for PublicKey {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        BorshSerialize::serialize(&self.0.serialize(), writer)
+        writer.write(&self.0.serialize_compressed())?;
+        Ok(())
     }
 }
 
@@ -174,6 +197,25 @@ impl BorshDeserialize for SecretKey {
 impl BorshSerialize for SecretKey {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
         BorshSerialize::serialize(&self.0.serialize(), writer)
+    }
+}
+
+impl BorshSchema for SecretKey {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        // Encoded as `[u8; SECRET_KEY_SIZE]`
+        let elements = "u8".into();
+        let length = libsecp256k1::util::SECRET_KEY_SIZE as u32;
+        let definition = borsh::schema::Definition::Array { elements, length };
+        definitions.insert(Self::declaration(), definition);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "secp256k1::SecretKey".into()
     }
 }
 
@@ -273,6 +315,26 @@ impl BorshSerialize for Signature {
         BorshSerialize::serialize(&self.0.serialize(), writer)
     }
 }
+
+impl BorshSchema for Signature {
+    fn add_definitions_recursively(
+        definitions: &mut std::collections::HashMap<
+            borsh::schema::Declaration,
+            borsh::schema::Definition,
+        >,
+    ) {
+        // Encoded as `[u8; SIGNATURE_SIZE]`
+        let elements = "u8".into();
+        let length = libsecp256k1::util::SIGNATURE_SIZE as u32;
+        let definition = borsh::schema::Definition::Array { elements, length };
+        definitions.insert(Self::declaration(), definition);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        "secp256k1::Signature".into()
+    }
+}
+
 
 #[allow(clippy::derive_hash_xor_eq)]
 impl Hash for Signature {

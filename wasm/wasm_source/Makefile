@@ -6,13 +6,17 @@ nightly := $(shell cat ../../rust-nightly-version)
 # All the wasms that can be built from this source, switched via Cargo features
 # Wasms can be added via the Cargo.toml `[features]` list.
 wasms := tx_bond
-wasms += tx_init_account
-wasms += tx_init_validator
 wasms += tx_from_intent
+wasms += tx_ibc
+wasms += tx_init_account
+wasms += tx_init_nft
+wasms += tx_init_validator
+wasms += tx_mint_nft
 wasms += tx_transfer
 wasms += tx_unbond
 wasms += tx_update_vp
 wasms += tx_withdraw
+wasms += vp_nft
 wasms += vp_testnet_faucet
 wasms += vp_token
 wasms += vp_user
@@ -31,6 +35,9 @@ test:
 # `cargo clippy` all wasms
 clippy:
 	$(foreach wasm,$(wasms),make clippy_$(wasm) && ) true
+
+clippy-fix:
+	$(cargo) +$(nightly) clippy --fix -Z unstable-options --all-targets --allow-dirty --allow-staged
 
 fmt:
 	$(cargo) +$(nightly) fmt --all

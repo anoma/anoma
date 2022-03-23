@@ -74,7 +74,7 @@ clippy-abci-plus-plus:
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing ABCI-plus-plus" && \
+		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks" && \
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
@@ -145,7 +145,7 @@ test-unit-abci-plus-plus:
 	$(cargo) test \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing ABCI-plus-plus" && \
+		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks" && \
 	$(cargo) test \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
@@ -157,7 +157,9 @@ test-unit-abci-plus-plus:
 		--features "ABCI-plus-plus"
 
 test-unit:
-	$(cargo) test -- --skip e2e
+	$(cargo) test --no-default-features \
+		--features "wasm-runtime ABCI ibc-mocks-abci" \
+		-- --skip e2e
 
 test-wasm:
 	make -C $(wasms) test
@@ -189,6 +191,7 @@ clean:
 
 build-doc:
 	$(cargo) doc --no-deps
+	$(cargo) run --bin anoma_encoding_spec
 	make -C docs build
 
 doc:

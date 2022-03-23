@@ -1,12 +1,12 @@
 use std::convert::{TryFrom, TryInto};
 use std::future::Future;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use anoma::types::chain::ChainId;
 use anoma::types::storage::BlockHeight;
 use futures::future::FutureExt;
+use tokio::sync::mpsc::UnboundedSender;
 use tower::Service;
 #[cfg(not(feature = "ABCI"))]
 use tower_abci::{BoxError, Request as Req, Response as Resp};
@@ -15,6 +15,7 @@ use tower_abci_old::{BoxError, Request as Req, Response as Resp};
 
 use super::super::Shell;
 use super::abcipp_shim_types::shim::{request, Error, Request, Response};
+use crate::config;
 use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
     BeginBlock, ProcessedTx,
 };
@@ -37,10 +38,9 @@ impl AbcippShim {
     /// Create a shell with a ABCI service that passes messages to and from the
     /// shell.
     pub fn new(
-        base_dir: PathBuf,
-        db_path: impl AsRef<Path>,
-        chain_id: ChainId,
+        config: config::Ledger,
         wasm_dir: PathBuf,
+        broadcast_sender: UnboundedSender<Vec<u8>>,
         db_cache: &rocksdb::Cache,
         vp_wasm_compilation_cache: u64,
         tx_wasm_compilation_cache: u64,
@@ -51,10 +51,9 @@ impl AbcippShim {
         (
             Self {
                 service: Shell::new(
-                    base_dir,
-                    db_path,
-                    chain_id,
+                    config,
                     wasm_dir,
+                    broadcast_sender,
                     Some(db_cache),
                     vp_wasm_compilation_cache,
                     tx_wasm_compilation_cache,

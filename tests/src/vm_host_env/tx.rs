@@ -1,12 +1,14 @@
 use std::borrow::Borrow;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use anoma::ledger::gas::BlockGasMeter;
+use anoma::ledger::parameters::{self, EpochDuration};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::types::address::Address;
 use anoma::types::storage::Key;
+use anoma::types::time::DurationSecs;
 use anoma::types::{key, token};
 use anoma::vm::prefix_iter::PrefixIterators;
 use anoma::vm::wasm::{self, TxCache, VpCache};
@@ -29,7 +31,7 @@ pub struct TestTxEnv {
     pub storage: TestStorage,
     pub write_log: WriteLog,
     pub iterators: PrefixIterators<'static, MockDB>,
-    pub verifiers: HashSet<Address>,
+    pub verifiers: BTreeSet<Address>,
     pub gas_meter: BlockGasMeter,
     pub result_buffer: Option<Vec<u8>>,
     pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
@@ -49,7 +51,7 @@ impl Default for TestTxEnv {
             write_log: WriteLog::default(),
             iterators: PrefixIterators::default(),
             gas_meter: BlockGasMeter::default(),
-            verifiers: HashSet::default(),
+            verifiers: BTreeSet::default(),
             result_buffer: None,
             vp_wasm_cache,
             vp_cache_dir,
@@ -60,8 +62,31 @@ impl Default for TestTxEnv {
 }
 
 impl TestTxEnv {
-    pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
+    pub fn all_touched_storage_keys(&self) -> BTreeSet<Key> {
         self.write_log.get_keys()
+    }
+
+    pub fn init_parameters(
+        &mut self,
+        epoch_duration: Option<EpochDuration>,
+        vp_whitelist: Option<Vec<String>>,
+        tx_whitelist: Option<Vec<String>>,
+    ) {
+        let _ = parameters::update_epoch_parameter(
+            &mut self.storage,
+            &epoch_duration.unwrap_or(EpochDuration {
+                min_num_of_blocks: 1,
+                min_duration: DurationSecs(5),
+            }),
+        );
+        let _ = parameters::update_tx_whitelist_parameter(
+            &mut self.storage,
+            tx_whitelist.unwrap_or_default(),
+        );
+        let _ = parameters::update_vp_whitelist_parameter(
+            &mut self.storage,
+            vp_whitelist.unwrap_or_default(),
+        );
     }
 
     /// Fake accounts existence by initializating their VP storage.
@@ -78,6 +103,17 @@ impl TestTxEnv {
                 .write(&key, vp_code)
                 .expect("Unable to write VP");
         }
+    }
+
+    pub fn commit_tx_and_block(&mut self) {
+        self.write_log.commit_tx();
+        self.write_log
+            .commit_block(&mut self.storage)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
+        self.iterators = PrefixIterators::default();
+        self.verifiers = BTreeSet::default();
+        self.gas_meter = BlockGasMeter::default();
     }
 
     /// Credit tokens to the target account.
@@ -208,6 +244,12 @@ mod native_tx_host_env {
         val_ptr: u64,
         val_len: u64
     ));
+    native_host_fn!(tx_write_temp(
+        key_ptr: u64,
+        key_len: u64,
+        val_ptr: u64,
+        val_len: u64
+    ));
     native_host_fn!(tx_delete(key_ptr: u64, key_len: u64));
     native_host_fn!(tx_iter_prefix(prefix_ptr: u64, prefix_len: u64) -> u64);
     native_host_fn!(tx_iter_next(iter_id: u64) -> i64);
@@ -226,6 +268,7 @@ mod native_tx_host_env {
     native_host_fn!(tx_emit_ibc_event(event_ptr: u64, event_len: u64));
     native_host_fn!(tx_get_chain_id(result_ptr: u64));
     native_host_fn!(tx_get_block_height() -> u64);
+    native_host_fn!(tx_get_block_time() -> i64);
     native_host_fn!(tx_get_block_hash(result_ptr: u64));
     native_host_fn!(tx_get_block_epoch() -> u64);
     native_host_fn!(tx_log_string(str_ptr: u64, str_len: u64));

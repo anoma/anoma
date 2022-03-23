@@ -230,8 +230,16 @@ impl WasmMemory {
         &mut self,
         exports: &wasmer::Exports,
     ) -> std::result::Result<(), HostEnvInitError> {
-        let memory = exports.get_memory("memory")?;
-        if !self.inner.initialize(memory.clone()) {
+        // "`TxEnv` holds a reference to the Wasm `Memory`, which itself
+        // internally holds a reference to the instance which owns that
+        // memory. However the instance itself also holds a reference to
+        // the `TxEnv` when it is instantiated, thus creating a circular
+        // reference.
+        // You can work around this by using `get_with_generics_weak` which
+        // creates a weak reference to the `Instance` internally."
+        // <https://github.com/wasmerio/wasmer/issues/2780#issuecomment-1054452629>
+        let memory = exports.get_with_generics_weak("memory")?;
+        if !self.inner.initialize(memory) {
             tracing::error!("wasm memory is already initialized");
         }
         Ok(())

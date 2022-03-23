@@ -52,8 +52,8 @@ pub fn transaction(_attr: TokenStream, input: TokenStream) -> TokenStream {
 /// fn validate_tx(
 ///     tx_data: Vec<u8>,
 ///     addr: Address,
-///     keys_changed: HashSet<storage::Key>,
-///     verifiers: HashSet<Address>
+///     keys_changed: BTreeSet<storage::Key>,
+///     verifiers: BTreeSet<Address>
 /// ) -> bool
 /// ```
 #[proc_macro_attribute]
@@ -103,7 +103,7 @@ pub fn validity_predicate(
                     keys_changed_len as _,
                 )
             };
-            let keys_changed: HashSet<storage::Key> = HashSet::try_from_slice(slice).unwrap();
+            let keys_changed: BTreeSet<storage::Key> = BTreeSet::try_from_slice(slice).unwrap();
 
             let slice = unsafe {
                 core::slice::from_raw_parts(
@@ -111,7 +111,7 @@ pub fn validity_predicate(
                     verifiers_len as _,
                 )
             };
-            let verifiers: HashSet<Address> = HashSet::try_from_slice(slice).unwrap();
+            let verifiers: BTreeSet<Address> = BTreeSet::try_from_slice(slice).unwrap();
 
             // run validation with the concrete type(s)
             if #ident(tx_data, addr, keys_changed, verifiers) {

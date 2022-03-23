@@ -9,6 +9,7 @@ use anoma::ledger::pos::{GenesisValidator, PosParams};
 use anoma::types::address::Address;
 #[cfg(not(feature = "dev"))]
 use anoma::types::chain::ChainId;
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
 use anoma::types::key::*;
 use anoma::types::time::DateTimeUtc;
 use anoma::types::{storage, token};
@@ -27,6 +28,7 @@ pub mod genesis_config {
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
     use anoma::types::address::Address;
+    use anoma::types::key::dkg_session_keys::DkgPublicKey;
     use anoma::types::key::*;
     use anoma::types::time::Rfc3339String;
     use anoma::types::{storage, token};
@@ -55,7 +57,13 @@ pub mod genesis_config {
         }
 
         pub fn to_public_key(&self) -> Result<common::PublicKey, HexKeyError> {
-            let key = common::PublicKey::from_str(&self.0)?;
+            let key = common::PublicKey::from_str(&self.0)
+                .map_err(HexKeyError::InvalidPublicKey)?;
+            Ok(key)
+        }
+
+        pub fn to_dkg_public_key(&self) -> Result<DkgPublicKey, HexKeyError> {
+            let key = DkgPublicKey::from_str(&self.0)?;
             Ok(key)
         }
     }
@@ -113,6 +121,11 @@ pub mod genesis_config {
         pub account_public_key: Option<HexString>,
         // Public key for staking reward account. (default: generate)
         pub staking_reward_public_key: Option<HexString>,
+        // Public protocol signing key for validator account. (default:
+        // generate)
+        pub protocol_public_key: Option<HexString>,
+        // Public DKG session key for validator account. (default: generate)
+        pub dkg_public_key: Option<HexString>,
         // Validator address (default: generate).
         pub address: Option<String>,
         // Staking reward account address (default: generate).
@@ -178,6 +191,15 @@ pub mod genesis_config {
         // Minimum duration of an epoch (in seconds).
         // TODO: this is i64 because datetime wants it
         pub min_duration: i64,
+        // Maximum duration per block (in seconds).
+        // TODO: this is i64 because datetime wants it
+        pub max_expected_time_per_block: i64,
+        // Hashes of whitelisted vps array. `None` value or an empty array
+        // disables whitelisting.
+        pub vp_whitelist: Option<Vec<String>>,
+        // Hashes of whitelisted txs array. `None` value or an empty array
+        // disables whitelisting.
+        pub tx_whitelist: Option<Vec<String>>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -252,6 +274,18 @@ pub mod genesis_config {
                 .as_ref()
                 .unwrap()
                 .to_public_key()
+                .unwrap(),
+            protocol_key: config
+                .protocol_public_key
+                .as_ref()
+                .unwrap()
+                .to_public_key()
+                .unwrap(),
+            dkg_public_key: config
+                .dkg_public_key
+                .as_ref()
+                .unwrap()
+                .to_dkg_public_key()
                 .unwrap(),
             non_staked_balance: token::Amount::whole(config.non_staked_balance),
             validator_vp_code_path: validator_vp_config.filename.to_owned(),
@@ -451,6 +485,12 @@ pub mod genesis_config {
                 )
                 .into(),
             },
+            max_expected_time_per_block: anoma::types::time::Duration::seconds(
+                config.parameters.max_expected_time_per_block,
+            )
+            .into(),
+            vp_whitelist: config.parameters.vp_whitelist.unwrap_or_default(),
+            tx_whitelist: config.parameters.tx_whitelist.unwrap_or_default(),
         };
 
         let pos_params = PosParams {
@@ -542,6 +582,11 @@ pub struct Validator {
     /// this key on a transaction signature.
     /// Note that this is distinct from consensus key used in the PoS system.
     pub account_key: common::PublicKey,
+    /// Public key associated with validator account used for signing protocol
+    /// transactions
+    pub protocol_key: common::PublicKey,
+    /// The public DKG session key used during the DKG protocol
+    pub dkg_public_key: DkgPublicKey,
     /// These tokens are no staked and hence do not contribute to the
     /// validator's voting power
     pub non_staked_balance: token::Amount,
@@ -636,6 +681,7 @@ pub fn genesis() -> Genesis {
         common::SecretKey::try_from_sk(&ed_staking_reward_keypair).unwrap();
     let address = wallet::defaults::validator_address();
     let staking_reward_address = Address::decode("atest1v4ehgw36xcersvee8qerxd35x9prsw2xg5erxv6pxfpygd2x89z5xsf5xvmnysejgv6rwd2rnj2avt").unwrap();
+    let (protocol_keypair, dkg_keypair) = wallet::defaults::validator_keys();
     let validator = Validator {
         pos_data: GenesisValidator {
             address,
@@ -645,6 +691,8 @@ pub fn genesis() -> Genesis {
             staking_reward_key: staking_reward_keypair.ref_to(),
         },
         account_key: account_keypair.ref_to(),
+        protocol_key: protocol_keypair.ref_to(),
+        dkg_public_key: dkg_keypair.public(),
         non_staked_balance: token::Amount::whole(100_000),
         // TODO replace with https://github.com/anoma/anoma/issues/25)
         validator_vp_code_path: vp_user_path.into(),
@@ -657,6 +705,9 @@ pub fn genesis() -> Genesis {
             min_num_of_blocks: 10,
             min_duration: anoma::types::time::Duration::minutes(1).into(),
         },
+        max_expected_time_per_block: anoma::types::time::DurationSecs(30),
+        vp_whitelist: vec![],
+        tx_whitelist: vec![],
     };
     let albert = EstablishedAccount {
         address: wallet::defaults::albert_address(),
@@ -745,6 +796,8 @@ pub mod tests {
     use rand::prelude::ThreadRng;
     use rand::thread_rng;
 
+    use crate::wallet;
+
     /// Run `cargo test gen_genesis_validator -- --nocapture` to generate a
     /// new genesis validator address, staking reward address and keypair.
     #[test]
@@ -758,9 +811,13 @@ pub mod tests {
         let staking_reward_keypair: common::SecretKey =
             ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap();
         let srkp_arr = staking_reward_keypair.try_to_vec().unwrap();
+        let (protocol_keypair, dkg_keypair) =
+            wallet::defaults::validator_keys();
         println!("address: {}", address);
         println!("staking_reward_address: {}", staking_reward_address);
         println!("keypair: {:?}", kp_arr);
         println!("staking_reward_keypair: {:?}", srkp_arr);
+        println!("protocol_keypair: {:?}", protocol_keypair);
+        println!("dkg_keypair: {:?}", dkg_keypair.try_to_vec().unwrap());
     }
 }

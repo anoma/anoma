@@ -1,73 +1,5 @@
 //! IBC validity predicate for connection module
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::{
-    ConnectionEnd, Counterparty, State,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::context::ConnectionReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::error::Error as Ics03Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::handler::verify::verify_proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
-#[cfg(feature = "ABCI")]
-use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::{
-    ConnectionEnd, Counterparty, State,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::context::ConnectionReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::error::Error as Ics03Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::handler::verify::verify_proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{ClientId, ConnectionId};
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -80,7 +12,23 @@ use super::super::storage::{
     is_connection_counter_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics02_client::client_consensus::AnyConsensusState;
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics03_connection::connection::{
+    ConnectionEnd, Counterparty, State,
+};
+use crate::ibc::core::ics03_connection::context::ConnectionReader;
+use crate::ibc::core::ics03_connection::error::Error as Ics03Error;
+use crate::ibc::core::ics03_connection::handler::verify::verify_proofs;
+use crate::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+use crate::ibc::core::ics23_commitment::commitment::CommitmentPrefix;
+use crate::ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
 use crate::ledger::storage::{self, StorageHasher};
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::{BlockHeight, Epoch, Key};
 use crate::vm::WasmCacheAccess;
@@ -264,13 +212,14 @@ where
             State::Init,
             counterpart_client_id,
             Counterparty::new(client_id, None, self.commitment_prefix()),
-            conn.versions(),
+            conn.versions().to_vec(),
             conn.delay_period(),
         );
 
         match verify_proofs(
             self,
             msg.client_state.clone(),
+            msg.proofs.height(),
             &conn,
             &expected_conn,
             &msg.proofs,
@@ -294,11 +243,20 @@ where
         }
 
         // counterpart connection ID check
-        if let Some(counterpart_conn_id) = conn.counterparty().connection_id() {
-            if *counterpart_conn_id != msg.counterparty_connection_id {
+        match conn.counterparty().connection_id() {
+            Some(counterpart_conn_id) => {
+                if *counterpart_conn_id != msg.counterparty_connection_id {
+                    return Err(Error::InvalidConnection(format!(
+                        "The counterpart connection ID mismatched: ID {}",
+                        counterpart_conn_id
+                    )));
+                }
+            }
+            None => {
                 return Err(Error::InvalidConnection(format!(
-                    "The counterpart connection ID mismatched: ID {}",
-                    counterpart_conn_id
+                    "The connection doesn't have the counterpart connection \
+                     ID: ID {}",
+                    conn_id
                 )));
             }
         }
@@ -312,13 +270,14 @@ where
                 Some(conn_id.clone()),
                 self.commitment_prefix(),
             ),
-            conn.versions(),
+            conn.versions().to_vec(),
             conn.delay_period(),
         );
 
         match verify_proofs(
             self,
             msg.client_state.clone(),
+            msg.proofs.height(),
             &conn,
             &expected_conn,
             &msg.proofs,
@@ -343,11 +302,18 @@ where
                 Some(conn_id.clone()),
                 self.commitment_prefix(),
             ),
-            conn.versions(),
+            conn.versions().to_vec(),
             conn.delay_period(),
         );
 
-        match verify_proofs(self, None, &conn, &expected_conn, &msg.proofs) {
+        match verify_proofs(
+            self,
+            None,
+            msg.proofs.height(),
+            &conn,
+            &expected_conn,
+            &msg.proofs,
+        ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
         }
@@ -407,9 +373,7 @@ where
     }
 
     fn host_current_height(&self) -> Height {
-        let epoch = self.ctx.storage.get_current_epoch().0.0;
-        let height = self.ctx.storage.get_block_height().0.0;
-        Height::new(epoch, height)
+        self.host_height()
     }
 
     fn host_oldest_height(&self) -> Height {
@@ -433,13 +397,10 @@ where
 
     fn host_consensus_state(
         &self,
-        _height: Height,
+        height: Height,
     ) -> Ics03Result<AnyConsensusState> {
-        let header = match self.ctx.storage.get_block_header().0 {
-            Some(h) => h,
-            None => return Err(Ics03Error::implementation_specific()),
-        };
-        Ok(TmConsensusState::from(header).wrap_any())
+        ClientReader::host_consensus_state(self, height)
+            .map_err(Ics03Error::ics02_client)
     }
 
     fn connection_counter(&self) -> Ics03Result<u64> {
