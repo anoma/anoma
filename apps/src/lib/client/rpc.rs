@@ -212,6 +212,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
         if details {
             let content_key = gov_storage::get_content_key(id);
             let grace_epoch_key = gov_storage::get_grace_epoch_key(id);
+
             let content = query_storage_value::<HashMap<String, String>>(
                 client,
                 &content_key,
@@ -232,32 +233,14 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
         } else {
             println!("Proposal: {}", id);
             println!("{:4}Author: {}", "", author);
-            if start_epoch > current_epoch {
-                println!("{:4}Start Epoch: {}", "", start_epoch);
-                println!("{:4}Status: pending", "");
-            } else if start_epoch <= current_epoch && current_epoch <= end_epoch
-            {
-                println!("{:4}End Epoch: {}", "", end_epoch);
-                println!("{:4}Status: on-going", "");
-                println!(
-                    "{:4}Result: {}",
-                    "",
-                    compute_tally(client, start_epoch, id).await
-                );
-            } else {
-                println!("{:4}Status: done", "");
-                println!(
-                    "{:4}Result: {}",
-                    "",
-                    compute_tally(client, start_epoch, id).await
-                );
-            }
+            println!("{:4}Start Epoch: {}", "", start_epoch);
+            println!("{:4}End Epoch: {}", "", end_epoch);
         }
 
         Some(())
     }
 
-    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
     match args.proposal_id {
         Some(id) => {
             if print_proposal(&client, id, true).await.is_none() {
