@@ -116,6 +116,7 @@ pub mod tx {
         // separately
         if let Some(shielded) = shielded {
             let masp_addr = masp();
+            tx::insert_verifier(&masp_addr);
             let head_tx_key = Key::from(masp_addr.to_db_key())
                 .push(&HEAD_TX_KEY.to_owned())
                 .expect("Cannot obtain a storage key");

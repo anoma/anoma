@@ -1649,7 +1649,6 @@ where
     Ok(HostEnvResult::from(tx.verify_sig(&pk, &sig).is_ok()).to_i64())
 }
 
-#[cfg(feature = "masp")]
 /// Verify a ShieldedTransaction.
 pub fn vp_verify_masp<MEM, DB, H, EVAL, CA>(
     env: &VpEnv<MEM, DB, H, EVAL, CA>,
@@ -1663,7 +1662,7 @@ where
     EVAL: VpEvaluator,
     CA: WasmCacheAccess,
 {
-    use crate::types::masp::*;
+    use crate::types::token::Transfer;
     use masp_primitives::transaction::Transaction;
     let gas_meter = unsafe { env.ctx.gas_meter.get() };
     let (tx_bytes, gas) = env
@@ -1671,13 +1670,11 @@ where
         .read_bytes(tx_ptr, tx_len as _)
         .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
     vp_env::add_gas(gas_meter, gas)?;
-    let shielded_tx: Transaction = BorshDeserialize::try_from_slice(tx_bytes.as_slice()).unwrap();
-    // Placeholder parameters
-    let parameters: PreparedVerifyingKey<Bls12> =
-        crate::ledger::masp::load_groth_params().1;
+    let full_tx: Transfer =
+        BorshDeserialize::try_from_slice(tx_bytes.as_slice()).unwrap();
+    let shielded_tx: Transaction = full_tx.shielded.unwrap();
     Ok(HostEnvResult::from(crate::ledger::masp::verify_shielded_tx(
         &shielded_tx,
-        &parameters,
     ))
     .to_i64())
 }

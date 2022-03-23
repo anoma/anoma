@@ -3,12 +3,6 @@
 pub mod vp_masp {
     use anoma_vp_prelude::*;
 
-    #[derive(BorshDeserialize,BorshSerialize)]
-    pub struct AddressedBlob {
-        address: Address,
-        blob: Vec<u8>,
-    }
-
     #[validity_predicate]
     fn validate_tx(
         tx_data: Vec<u8>,
@@ -23,18 +17,14 @@ pub mod vp_masp {
           verifiers,
         );
 
-        if !keys_changed.is_empty() {
-            // no actual balance changes for now
-            return false;
-        }
-
         let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-        let addressed_blob =
-            AddressedBlob::try_from_slice(&signed.data.unwrap()[..]).unwrap();
+            SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let data = signed.data.as_ref().unwrap().clone();
+        let _transfer =
+            token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
 
         // Call out to host environment for crypto verification
-        verify_masp(addressed_blob.blob)
+        verify_masp(data)
     }
 }
 

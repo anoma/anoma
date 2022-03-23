@@ -71,6 +71,7 @@ dependencies = [
  "clru",
  "derivative",
  "ed25519-consensus",
+ "getrandom",
  "group",
  "hex",
  "ibc",
@@ -159,8 +160,13 @@ dependencies = [
  "anoma",
  "anoma_macros",
  "bellman",
+ "bls12_381",
  "borsh",
+ "ff",
+ "getrandom",
+ "jubjub",
  "masp_primitives",
+ "masp_proofs",
 ]
 
 [[package]]
