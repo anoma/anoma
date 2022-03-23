@@ -583,13 +583,6 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             );
             safe_exit(1);
         }
-
-        let data = init_proposal_data
-            .try_to_vec()
-            .expect("Encoding proposal data shouldn't fail");
-        let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
-        let tx = Tx::new(tx_code, Some(data));
-
         let min_proposal_funds_key = gov_storage::get_min_proposal_fund_key();
         let min_proposal_funds: Amount =
             rpc::query_storage_value(&client, &min_proposal_funds_key)
