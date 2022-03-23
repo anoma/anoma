@@ -277,11 +277,8 @@ where
         } else {
             BlockHeight(self.storage.last_height.0)
         };
-        let epoch = if let Some(epoch) = self
-            .storage
-            .block
-            .pred_epochs
-            .get_epoch(height)
+        let epoch = if let Some(epoch) =
+            self.storage.block.pred_epochs.get_epoch(height)
         {
             epoch
         } else {
@@ -337,9 +334,9 @@ mod test_process_proposal {
     #[cfg(not(feature = "ABCI"))]
     use crate::node::ledger::ethereum_node::ethereum_types::EthereumHeader;
     use crate::node::ledger::shell::test_utils::*;
-    use crate::node::ledger::shims::abcipp_shim_types::shim::request::ProcessProposal;
     #[cfg(not(feature = "ABCI"))]
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::FinalizeBlock;
+    use crate::node::ledger::shims::abcipp_shim_types::shim::request::ProcessProposal;
 
     /// Test that if a wrapper tx is not signed, it is rejected
     /// by [`process_proposal`].

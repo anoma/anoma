@@ -267,6 +267,7 @@ dependencies = [
  "fs_extra",
  "hex",
  "itertools 0.10.3",
+ "jsonpath_lib",
  "libp2p",
  "pretty_assertions",
  "prost 0.9.0",

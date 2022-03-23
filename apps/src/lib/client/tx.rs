@@ -1089,7 +1089,7 @@ pub struct TxResponse {
 /// Searches for custom events emitted from the ledger and converts
 /// them back to thin wrapper around a hashmap for further parsing.
 #[cfg(not(feature = "ABCI"))]
-fn parse(
+pub fn parse(
     json: serde_json::Value,
     event_type: TmEventType,
     tx_hash: &str,

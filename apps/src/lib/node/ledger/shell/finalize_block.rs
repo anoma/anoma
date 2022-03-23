@@ -178,8 +178,13 @@ where
                             let mut event =
                                 Event::new_tx_event(&tx_type, height.0);
                             event["log"] = format!(
-                                "Collected an verified vote extensions from \
-                                 {} validators.",
+                                "Collected and verified vote extensions from \
+                                 {} validator(s).",
+                                votes.len()
+                            );
+                            tracing::info!(
+                                "Collected and verified vote extensions from \
+                                 {} validator(s).",
                                 votes.len()
                             );
                             event

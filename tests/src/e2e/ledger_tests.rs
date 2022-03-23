@@ -932,3 +932,22 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 
     Ok(())
 }
+
+
+/// Check tht an Ethereum node is started with the ledger and
+/// that validators are voting on and adding headers to their
+/// vote extensions.
+#[cfg(all(not(feature = "ABCI"), not(feature = "eth-fullnode")))]
+#[test]
+fn test_ethereum_headers_in_vote_extensions() -> Result<()> {
+    let test = setup::single_node_net()?;
+    let mut ledger =
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
+
+    ledger.exp_string("Anoma ledger node started")?;
+    ledger.exp_string("started node")?;
+    ledger.exp_string(
+        "Collected and verified vote extensions from 1 validator(s).",
+    )?;
+    Ok(())
+}

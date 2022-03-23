@@ -108,6 +108,7 @@ dependencies = [
  "anoma_vm_env",
  "chrono",
  "concat-idents",
+ "jsonpath_lib",
  "prost",
  "serde_json",
  "sha2 0.9.9",
@@ -1288,6 +1289,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "jsonpath_lib"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eaa63191d68230cccb81c5aa23abd53ed64d83337cacbb25a7b8c7979523774f"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "keccak"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2179,6 +2191,7 @@ version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e8d9fa5c3b304765ce1fd9c4c8a3de2c8db365a5b91be52f186efc675681d95"
 dependencies = [
+ "indexmap",
  "itoa",
  "ryu",
  "serde",

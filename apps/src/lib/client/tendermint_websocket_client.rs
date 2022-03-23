@@ -169,8 +169,8 @@ mod rpc_types {
 }
 
 pub struct WebSocketAddress {
-    host: String,
-    port: u16,
+    pub host: String,
+    pub port: u16,
 }
 
 impl TryFrom<Address> for WebSocketAddress {

@@ -50,8 +50,7 @@ mod prepare_block {
                             .sign(&protocol_key.ref_to(), protocol_key)
                         })
                         .unwrap()
-                        .try_to_vec()
-                        .unwrap(),
+                        .to_bytes(),
                 ];
 
                 // filter in half of the new txs from Tendermint, only keeping
