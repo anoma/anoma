@@ -212,7 +212,6 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
         if details {
             let content_key = gov_storage::get_content_key(id);
             let grace_epoch_key = gov_storage::get_grace_epoch_key(id);
-
             let content = query_storage_value::<HashMap<String, String>>(
                 client,
                 &content_key,
