@@ -1225,7 +1225,6 @@ fn proposal_submission() -> Result<()> {
     ];
 
     let mut client = run!(test, Bin::Client, query_proposal, Some(15))?;
-    client.exp_string("Status: done")?;
     client.exp_string("Result: passed")?;
     client.assert_success();
 

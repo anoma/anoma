@@ -229,6 +229,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
             println!("{:4}Start Epoch: {}", "", start_epoch);
             println!("{:4}End Epoch: {}", "", end_epoch);
             println!("{:4}Grace Epoch: {}", "", grace_epoch);
+            println!("{:4}Result: {}", "", compute_tally(client, start_epoch, id).await);
         } else {
             println!("Proposal: {}", id);
             println!("{:4}Author: {}", "", author);
