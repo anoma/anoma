@@ -9,11 +9,7 @@
 //! To keep the temporary files created by a test, use env var
 //! `ANOMA_E2E_KEEP_TEMP=true`.
 
-<<<<<<< HEAD
 use std::fs::{self, OpenOptions};
-=======
-use std::fs::{OpenOptions, self};
->>>>>>> [feat]: added offline tally
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;
