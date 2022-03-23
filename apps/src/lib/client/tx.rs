@@ -665,8 +665,7 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
         let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
         let tx = Tx::new(tx_code, Some(data));
 
-        process_tx(ctx, &args.tx, tx, Some(&signer)).await;
-
+        process_tx(ctx, &args.tx, tx, Some(signer)).await;
     }
 }
 
