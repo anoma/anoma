@@ -795,28 +795,6 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
-    pub struct QueryProposal(pub args::QueryProposal);
-
-    impl SubCmd for QueryProposal {
-        const CMD: &'static str = "query-proposal";
-
-        fn parse(matches: &ArgMatches) -> Option<Self>
-        where
-            Self: Sized,
-        {
-            matches.subcommand_matches(Self::CMD).map(|matches| {
-                QueryProposal(args::QueryProposal::parse(matches))
-            })
-        }
-
-        fn def() -> App {
-            App::new(Self::CMD)
-                .about("List all proposals yet to be tallied.")
-                .add_args::<args::QueryProposal>()
-        }
-    }
-
-    #[derive(Clone, Debug)]
     pub struct TxCustom(pub args::TxCustom);
 
     impl SubCmd for TxCustom {
@@ -1412,7 +1390,6 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
-    const PROPOSAL_OFFLINE: ArgFlag = flag("offline");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const PROPOSAL_OFFLINE: ArgFlag = flag("offline");

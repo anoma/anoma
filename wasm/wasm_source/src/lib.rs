@@ -7,8 +7,6 @@ pub mod tx_ibc;
 #[cfg(feature = "tx_init_account")]
 pub mod tx_init_account;
 #[cfg(feature = "tx_init_nft")]
-pub mod tx_init_proposal;
-#[cfg(feature = "tx_init_proposal")]
 pub mod tx_init_nft;
 #[cfg(feature = "tx_init_proposal")]
 pub mod tx_init_proposal;

@@ -392,6 +392,22 @@ pub fn get_committing_proposals_key(id: u64, epoch: u64) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Get proposal vote prefix key
+pub fn get_proposal_prefix_key(id: u64) -> Key {
+    proposal_prefix()
+        .push(&id.to_string())
+        .expect("Cannot obtain a storage key")
+        .push(&PROPOSAL_VOTE.to_owned())
+        .expect("Cannot obtain a storage key")
+}
+
+/// Get proposal code key
+pub fn get_vote_proposal_key(id: u64, address: Address) -> Key {
+    get_proposal_prefix_key(id)
+        .push(&address)
+        .expect("Cannot obtain a storage key")
+}
+
 /// Get proposal id from key
 pub fn get_id(key: &Key) -> Option<u64> {
     match key.get_at(2) {

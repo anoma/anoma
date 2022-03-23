@@ -345,15 +345,6 @@ where
                             post_funds >= min_funds_parameter
                                 && post_balance == post_funds
                         }
-                        (
-                            Some(min_funds_parameter),
-                            None,
-                            Some(post_balance),
-                            Some(post_funds),
-                        ) => {
-                            post_funds >= min_funds_parameter
-                                && post_balance == post_funds
-                        }
                         _ => false,
                     }
                 }
@@ -484,26 +475,6 @@ where
     (true, post_counter - pre_counter)
 }
 
-fn get_id(key: &Key) -> Option<u64> {
-    match key.get_at(2) {
-        Some(id) => match id {
-            DbKeySeg::AddressSeg(_) => None,
-            DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
-        },
-        None => None,
-    }
-}
-
-fn get_address(key: &Key) -> Option<Address> {
-    match key.get_at(4) {
-        Some(addr) => match addr {
-            DbKeySeg::AddressSeg(res) => Some(res.clone()),
-            DbKeySeg::StringSeg(_) => None,
-        },
-        None => None,
-    }
-}
-
 fn read<T, DB, H, CA>(
     context: &Ctx<DB, H, CA>,
     key: &Key,
@@ -529,6 +500,73 @@ where
         Err(err) => Err(Error::NativeVpError(err)),
     }
 }
+
+fn is_validator<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    epoch: Epoch,
+    verifiers: &BTreeSet<Address>,
+    address: &Address,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let validator_set_key = pos_storage::validator_set_key();
+    let pre_validator_set: pos_storage::ValidatorSets =
+        read(context, &validator_set_key, ReadType::PRE).unwrap();
+    let validator_set = pre_validator_set.get(epoch);
+
+    match validator_set {
+        Some(set) => {
+            set.active.iter().any(|weighted_validator| {
+                weighted_validator.address.eq(address)
+            }) && verifiers.contains(address)
+        }
+        None => false,
+    }
+}
+
+fn is_delegator<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    epoch: Epoch,
+    verifiers: &BTreeSet<Address>,
+    address: &Address,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let bonds_prefix_key = pos_storage::bonds_for_source_prefix(address);
+    let mut bonds_iter = context.iter_prefix(&bonds_prefix_key).unwrap();
+    loop {
+        let next = context.iter_pre_next(&mut bonds_iter).unwrap();
+        if let Some((_, data)) = next {
+            let epoched_bond =
+                pos_storage::Bonds::try_from_slice(&data[..]).unwrap();
+            if epoched_bond.get(epoch).is_some() && verifiers.contains(address)
+            {
+                return true;
+            }
+        } else {
+            break;
+        }
+    }
+    false
+}
+
+fn is_valid_validator_voting_period(
+    current_epoch: Epoch,
+    voting_start_epoch: Epoch,
+    voting_end_epoch: Epoch,
+) -> bool {
+    voting_start_epoch < voting_end_epoch
+        && current_epoch
+            <= voting_start_epoch
+                + ((voting_end_epoch - voting_start_epoch) * 2) / 3
+}
+
 #[allow(clippy::upper_case_acronyms)]
 enum KeyType {
     #[allow(clippy::upper_case_acronyms)]
