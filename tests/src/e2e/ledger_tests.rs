@@ -947,9 +947,8 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 7. Check invalid proposal was not accepted
 /// 8. Query token balance (funds shall not be submitted)
 /// 9. Send a yay vote from a validator
-/// 10. Delegate some token and send a nay vote
-/// 11. Send a yay vote from a normal user
-/// 12. Query the proposal and check the result
+/// 10. Send a yay vote from a normal user
+/// 11. Query the proposal and check the result
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -1193,7 +1192,7 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
-    // 11. Send a yay vote from a non-validator/non-delegator user
+    // 10. Send a yay vote from a non-validator/non-delegator user
     let submit_proposal_vote = vec![
         "vote-proposal",
         "--proposal-id",
@@ -1210,7 +1209,7 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Transaction is invalid.")?;
     client.assert_success();
 
-    // 12. Query the proposal and check the result
+    // 11. Query the proposal and check the result
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     while epoch.0 <= 9 {
         sleep(1);

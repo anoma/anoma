@@ -670,69 +670,6 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
     }
 }
 
-pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
-    let signer = if let Some(addr) = &args.tx.signer {
-        addr
-    } else {
-        eprintln!("Missing mandatory argument --signer.");
-        safe_exit(1)
-    };
-
-    if args.offline {
-        let signer = ctx.get(signer);
-        let proposal_file_path =
-            args.proposal_data.expect("Proposal file should exist.");
-        let file = File::open(&proposal_file_path).expect("File must exist.");
-        let proposal: OfflineProposal =
-            serde_json::from_reader(file).expect("JSON was not well-formatted");
-        if !proposal.check_signature() {
-            eprintln!("Proposal signature mismatch!");
-            safe_exit(1)
-        }
-
-        let public_key =
-            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
-                .await
-                .expect("Public key should exist.");
-        let signing_key = signing::find_keypair(
-            &mut ctx.wallet,
-            &signer,
-            args.tx.ledger_address.clone(),
-        )
-        .await;
-        let offline_vote =
-            OfflineVote::new(&proposal, args.vote, public_key, &signing_key);
-
-        let proposal_vote_filename =
-            format!("proposal-vote-{}", &signer.to_string());
-        let out = File::create(&proposal_vote_filename).unwrap();
-        match serde_json::to_writer_pretty(out, &offline_vote) {
-            Ok(_) => {
-                println!("Proposal vote created: {}.", proposal_vote_filename);
-            }
-            Err(e) => {
-                eprintln!("Error while creating proposal vote file: {}.", e);
-                safe_exit(1)
-            }
-        }
-    } else {
-        let voter_address = ctx.get(signer);
-        let tx_data = VoteProposalData {
-            id: args.proposal_id.unwrap(),
-            vote: args.vote,
-            voter: voter_address,
-        };
-
-        let data = tx_data
-            .try_to_vec()
-            .expect("Encoding proposal data shouldn't fail");
-        let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
-        let tx = Tx::new(tx_code, Some(data));
-
-        process_tx(ctx, &args.tx, tx, Some(signer)).await;
-    }
-}
-
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
