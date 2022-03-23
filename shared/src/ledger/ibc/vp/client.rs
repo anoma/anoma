@@ -32,7 +32,7 @@ use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
-use crate::types::storage::Key;
+use crate::types::storage::{BlockHeight, Key};
 use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
@@ -558,13 +558,13 @@ where
 
     fn host_consensus_state(
         &self,
-        _height: Height,
+        height: Height,
     ) -> Ics02Result<AnyConsensusState> {
-        ClientReader::pending_host_consensus_state(self)
-    }
-
-    fn pending_host_consensus_state(&self) -> Ics02Result<AnyConsensusState> {
-        let (header, gas) = self.ctx.storage.get_block_header();
+        let (header, gas) = self
+            .ctx
+            .storage
+            .get_block_header(Some(BlockHeight(height.revision_height)))
+            .map_err(|_| Ics02Error::implementation_specific())?;
         self.ctx
             .gas_meter
             .borrow_mut()
@@ -574,6 +574,17 @@ where
             Some(h) => Ok(TmConsensusState::from(h).wrap_any()),
             None => Err(Ics02Error::missing_raw_header()),
         }
+    }
+
+    fn pending_host_consensus_state(&self) -> Ics02Result<AnyConsensusState> {
+        let (block_height, gas) = self.ctx.storage.get_block_height();
+        self.ctx
+            .gas_meter
+            .borrow_mut()
+            .add(gas)
+            .map_err(|_| Ics02Error::implementation_specific())?;
+        let height = Height::new(0, block_height.0);
+        ClientReader::host_consensus_state(self, height)
     }
 
     fn client_counter(&self) -> Ics02Result<u64> {

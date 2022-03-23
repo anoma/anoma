@@ -45,6 +45,7 @@ color-eyre = "0.5.11"
 escargot = {version = "0.5.7"} # , features = ["print"]}
 eyre = "0.6.5"
 fs_extra = "1.2.0"
+hex = "0.4.3"
 itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
