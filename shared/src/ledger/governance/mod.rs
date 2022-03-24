@@ -4,6 +4,8 @@
 pub mod parameters;
 /// governance storage
 pub mod storage;
+/// utility function
+pub mod utils;
 
 use std::collections::BTreeSet;
 

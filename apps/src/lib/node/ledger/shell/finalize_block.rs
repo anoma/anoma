@@ -1,5 +1,7 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
+use anoma::ledger::governance::utils::compute_tally;
+use anoma::types::governance::TallyResult;
 use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
@@ -15,6 +17,7 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 use tendermint_stable::block::Header;
 
 use super::*;
+use anoma::ledger::governance::storage as gov_storage;
 
 impl<D, H> Shell<D, H>
 where
@@ -49,6 +52,40 @@ where
         // begin the next block and check if a new epoch began
         let (height, new_epoch) =
             self.update_state(req.header, req.hash, req.byzantine_validators);
+        
+        if new_epoch {
+            let proposals_key = gov_storage::get_commiting_proposals_prefix(self.storage.last_epoch.0);
+            let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
+            for (key, _, _) in proposal_iter {
+                let key = Key::from_str(key.as_str()).expect("Key should be parsable");
+                let proposal_id = gov_storage::get_commit_proposal_id(&key);
+                if let Some(id) = proposal_id {
+                    let tally_result = compute_tally(&self.storage, id);
+                    if let Ok(tally_result) = tally_result {
+                        match tally_result {
+                            (TallyResult::Passed, Some(code)) => {
+                                let tx = Tx::new(code, None);
+                                let tx_type = process_tx(tx);
+                                if let Ok(tx_type) = tx_type {
+                                    let tx_result = protocol::apply_tx(tx_type, 0, &mut BlockGasMeter::default(), &mut self.write_log, &self.storage, &mut self.vp_wasm_cache, &mut self.tx_wasm_cache);
+                                    if let Ok(tx_result) = tx_result {
+                                        ()
+                                    } else {
+                                        ()
+                                    }
+                                } else {
+                                    ()
+                                }
+                            },
+                            (TallyResult::Passed, None) => todo!(),
+                            _ => todo!()
+                        }
+                    }
+                } else {
+                    continue
+                }
+            }
+        }
 
         for processed_tx in &req.txs {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
