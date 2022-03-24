@@ -73,7 +73,6 @@ use crate::client::tendermint_websocket_client::{
 #[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
-use crate::std::fs::File;
 use masp_primitives::transaction::TxId;
 use anoma::types::token::{HEAD_TX_KEY, TX_KEY_PREFIX};
 use anoma::types::storage::Key;

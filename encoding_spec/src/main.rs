@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let signed_tx_data_schema = SignedTxData::schema_container();
     let init_account_schema = transaction::InitAccount::schema_container();
     let init_validator_schema = transaction::InitValidator::schema_container();
-    let token_transfer_schema = token::Transfer::schema_container();
+    // let token_transfer_schema = token::Transfer::schema_container();
     let update_vp_schema = transaction::UpdateVp::schema_container();
     let pos_bond_schema = pos::Bond::schema_container();
     let pos_withdraw_schema = pos::Withdraw::schema_container();
@@ -94,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     definitions.extend(signed_tx_data_schema.definitions);
     definitions.extend(init_account_schema.definitions);
     definitions.extend(init_validator_schema.definitions);
-    definitions.extend(token_transfer_schema.definitions);
+    // definitions.extend(token_transfer_schema.definitions);
     definitions.extend(update_vp_schema.definitions);
     definitions.extend(pos_bond_schema.definitions);
     definitions.extend(pos_withdraw_schema.definitions);
@@ -176,6 +176,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ).with_rust_doc_link("https://docs.anoma.network/master/rustdoc/anoma/types/transaction/struct.InitValidator.html");
     tables.push(init_validator_table);
 
+    /*
     let token_transfer_definition = definitions
         .remove(&token_transfer_schema.declaration)
         .unwrap();
@@ -184,6 +185,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         token_transfer_definition,
     ).with_rust_doc_link("https://docs.anoma.network/master/rustdoc/anoma/types/token/struct.Transfer.html");
     tables.push(token_transfer_table);
+    */
 
     let update_vp_definition =
         definitions.remove(&update_vp_schema.declaration).unwrap();
