@@ -6,6 +6,8 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use anoma::types::key::SchemeType;
+use itertools::Either;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
 use anoma::types::{address, token};
@@ -206,11 +208,10 @@ const TENDERMINT_NODE_ID_LENGTH: usize = 20;
 
 /// Derive node ID from public key
 fn id_from_pk<PK: PublicKey>(pk: &PK) -> Result<TendermintNodeId,  anoma::types::key::ParsePublicKeyError> {
-    let pk_bytes = ed25519::PublicKey::try_from_pk(pk).map(|pk| {
-        pk.try_to_vec()
-    }).or_else(|_err| {secp256k1::PublicKey::try_from_pk(pk).map(|pk| {
-        pk.try_to_vec()
-    })})?;
+    let pk_bytes = ed25519::PublicKey::try_from_pk(pk)
+        .map(|pk| pk.try_to_vec())
+        .or_else(|_err| secp256k1::PublicKey::try_from_pk(pk)
+                 .map(|pk| pk.try_to_vec()))?;
     let digest = Sha256::digest(pk_bytes.unwrap().as_slice());
     let mut bytes = [0u8; TENDERMINT_NODE_ID_LENGTH];
     bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
@@ -388,22 +389,34 @@ pub fn init_network(
         let consensus_key_alias = format!("{}-consensus-key", name);
         println!("Generating validator {} consensus key...", name);
         let (_alias, consensus_keypair) =
-            wallet.gen_key(Some(consensus_key_alias), unsafe_dont_encrypt);
+            wallet.gen_key(
+                SchemeType::Ed25519Consensus,
+                Some(consensus_key_alias),
+                unsafe_dont_encrypt
+            );
         let account_key_alias = format!("{}-account-key", name);
         println!("Generating validator {} account key...", name);
         let (_alias, account_keypair) =
-            wallet.gen_key(Some(account_key_alias), unsafe_dont_encrypt);
+            wallet.gen_key(
+                SchemeType::Ed25519Consensus,
+                Some(account_key_alias),
+                unsafe_dont_encrypt
+            );
         let reward_key_alias = format!("{}-reward-key", name);
         println!(
             "Generating validator {} staking reward account key...",
             name
         );
         let (_alias, reward_keypair) =
-            wallet.gen_key(Some(reward_key_alias), unsafe_dont_encrypt);
+            wallet.gen_key(
+                SchemeType::Ed25519Consensus,
+                Some(reward_key_alias),
+                unsafe_dont_encrypt
+            );
         println!("Generating validator {} protocol signing key...", name);
         println!("Generating validator {} DKG session keypair...", name);
         let validator_keys = wallet
-            .gen_validator_keys(None)
+            .gen_validator_keys(Either::Left(SchemeType::Ed25519Consensus))
             .expect("Generating new validator keys should not fail");
         // Add the validator public keys to genesis config
         config.consensus_public_key = Some(genesis_config::HexString(
@@ -463,6 +476,7 @@ pub fn init_network(
                         let mut matchmaker = matchmaker.clone();
 
                         init_established_account(
+                            SchemeType::Ed25519Consensus,
                             account,
                             &mut wallet,
                             &mut matchmaker,
@@ -526,6 +540,7 @@ pub fn init_network(
                 }
                 None => {
                     init_established_account(
+                        SchemeType::Ed25519Consensus,
                         name,
                         &mut wallet,
                         config,
@@ -557,7 +572,11 @@ pub fn init_network(
                     name
                 );
                 let (_alias, keypair) =
-                    wallet.gen_key(Some(name.clone()), unsafe_dont_encrypt);
+                    wallet.gen_key(
+                        SchemeType::Ed25519Consensus,
+                        Some(name.clone()),
+                        unsafe_dont_encrypt,
+                    );
                 let public_key =
                     genesis_config::HexString(keypair.ref_to().to_string());
                 config.public_key = Some(public_key);
@@ -831,6 +850,7 @@ pub fn init_network(
 }
 
 fn init_established_account(
+    scheme_type: SchemeType,
     name: impl AsRef<str>,
     wallet: &mut Wallet,
     config: &mut genesis_config::EstablishedAccountConfig,
@@ -844,6 +864,7 @@ fn init_established_account(
     if config.public_key.is_none() {
         println!("Generating established account {} key...", name.as_ref());
         let (_alias, keypair) = wallet.gen_key(
+            scheme_type,
             Some(format!("{}-key", name.as_ref())),
             unsafe_dont_encrypt,
         );
@@ -914,20 +935,26 @@ fn init_genesis_validator_aux(
 
     println!("Generating validator account key...");
     let (validator_key_alias, validator_key) = wallet.gen_key(
+        SchemeType::Ed25519Consensus,
         Some(format!("{}-validator-key", alias)),
         unsafe_dont_encrypt,
     );
     println!("Generating consensus key...");
     let (consensus_key_alias, consensus_key) = wallet.gen_key(
+        SchemeType::Ed25519Consensus,
         Some(format!("{}-consensus-key", alias)),
         unsafe_dont_encrypt,
     );
     println!("Generating staking reward account key...");
     let (rewards_key_alias, rewards_key) = wallet
-        .gen_key(Some(format!("{}-rewards-key", alias)), unsafe_dont_encrypt);
+        .gen_key(
+            SchemeType::Ed25519Consensus,
+            Some(format!("{}-rewards-key", alias)),
+            unsafe_dont_encrypt
+        );
 
     println!("Generating protocol key and DKG session key...");
-    let validator_keys = wallet.gen_validator_keys(None).unwrap();
+    let validator_keys = wallet.gen_validator_keys(Either::Left(SchemeType::Ed25519Consensus)).unwrap();
     let protocol_key = validator_keys.get_protocol_keypair().ref_to();
     let dkg_public_key = validator_keys
         .dkg_keypair

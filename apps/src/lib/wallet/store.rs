@@ -15,6 +15,7 @@ use ark_std::rand::SeedableRng;
 use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use itertools::Either;
 
 use super::alias::Alias;
 use super::keys::StoredKeypair;
@@ -263,12 +264,17 @@ impl Store {
         &self.addresses
     }
 
-    fn generate_keypair() -> common::SecretKey {
+    fn generate_keypair(scheme_type: SchemeType) -> common::SecretKey {
         use rand::rngs::OsRng;
         let mut csprng = OsRng {};
-        ed25519::SigScheme::generate(&mut csprng)
-            .try_to_sk()
-            .unwrap()
+        match scheme_type {
+            SchemeType::Ed25519Consensus =>
+                ed25519::SigScheme::generate(&mut csprng).try_to_sk(),
+            SchemeType::Secp256k1 =>
+                secp256k1::SigScheme::generate(&mut csprng).try_to_sk(),
+            SchemeType::Common =>
+                common::SigScheme::generate(&mut csprng).try_to_sk(),
+        }.unwrap()
     }
 
     /// Generate a new keypair and insert it into the store with the provided
@@ -278,10 +284,11 @@ impl Store {
     /// pointer to the key.
     pub fn gen_key(
         &mut self,
+        scheme_type: SchemeType,
         alias: Option<String>,
         password: Option<String>,
     ) -> (Alias, Rc<common::SecretKey>) {
-        let keypair = Self::generate_keypair();
+        let keypair = Self::generate_keypair(scheme_type);
         let pkh: PublicKeyHash = PublicKeyHash::from(&keypair.ref_to());
         let (keypair_to_store, raw_keypair) =
             StoredKeypair::new(keypair, password);
@@ -306,10 +313,10 @@ impl Store {
     ///
     /// Note that this removes the validator data.
     pub fn gen_validator_keys(
-        protocol_keypair: Option<common::SecretKey>,
+        protocol_keypair: Either<SchemeType, common::SecretKey>,
     ) -> ValidatorKeys {
         let protocol_keypair =
-            protocol_keypair.unwrap_or_else(Self::generate_keypair);
+            protocol_keypair.right_or_else(Self::generate_keypair);
         let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
             &mut StdRng::from_entropy(),
         );
@@ -473,7 +480,7 @@ mod test_wallet {
     #[test]
     fn test_toml_roundtrip() {
         let mut store = Store::new();
-        let validator_keys = Store::gen_validator_keys(None);
+        let validator_keys = Store::gen_validator_keys(Either::Left(SchemeType::Ed25519Consensus));
         store.add_validator_data(
             Address::decode("atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5").unwrap(),
             validator_keys

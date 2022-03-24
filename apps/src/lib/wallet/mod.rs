@@ -12,6 +12,7 @@ use anoma::types::address::Address;
 use anoma::types::key::*;
 pub use store::wallet_file;
 use thiserror::Error;
+use itertools::Either;
 
 use self::alias::Alias;
 pub use self::keys::{DecryptionError, StoredKeypair};
@@ -87,6 +88,7 @@ impl Wallet {
     /// key.
     pub fn gen_key(
         &mut self,
+        scheme_type: SchemeType,
         alias: Option<String>,
         unsafe_dont_encrypt: bool,
     ) -> (String, Rc<common::SecretKey>) {
@@ -109,7 +111,7 @@ impl Wallet {
             eprintln!("Your two inputs do not match!");
             cli::safe_exit(1)
         }
-        let (alias, key) = self.store.gen_key(alias, password);
+        let (alias, key) = self.store.gen_key(scheme_type, alias, password);
         // Cache the newly added key
         self.decrypted_key_cache.insert(alias.clone(), key.clone());
         (alias.into(), key)
@@ -121,9 +123,9 @@ impl Wallet {
     /// we should re-use a keypair already in the wallet
     pub fn gen_validator_keys(
         &mut self,
-        protocol_pk: Option<common::PublicKey>,
+        protocol_pk: Either<SchemeType, common::PublicKey>,
     ) -> Result<ValidatorKeys, FindKeyError> {
-        let protocol_keypair = protocol_pk.map(|pk| {
+        let protocol_keypair = protocol_pk.map_right(|pk| {
             self.find_key_by_pkh(&PublicKeyHash::from(&pk))
                 .ok()
                 .or_else(|| {
@@ -135,9 +137,9 @@ impl Wallet {
                 .ok_or(FindKeyError::KeyNotFound)
         });
         match protocol_keypair {
-            Some(Err(err)) => Err(err),
+            Either::Right(Err(err)) => Err(err),
             other => {
-                Ok(Store::gen_validator_keys(other.map(|res| {
+                Ok(Store::gen_validator_keys(other.map_right(|res| {
                     Rc::get_mut(&mut res.unwrap()).unwrap().clone()
                 })))
             }

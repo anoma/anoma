@@ -127,7 +127,7 @@ pub trait TryFromRef<T: ?Sized>: Sized {
 }
 
 /// Type capturing signature scheme IDs
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum SchemeType {
     /// Type identifier for Ed25519-consensus
     Ed25519Consensus,
@@ -135,6 +135,19 @@ pub enum SchemeType {
     Secp256k1,
     /// Type identifier for Common
     Common,
+}
+
+impl FromStr for SchemeType {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input.to_lowercase().as_str() {
+            "ed25519" => Ok(Self::Ed25519Consensus),
+            "secp256k1" => Ok(Self::Secp256k1),
+            "common" => Ok(Self::Common),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Represents a signature
