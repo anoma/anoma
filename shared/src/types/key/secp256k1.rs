@@ -6,6 +6,7 @@ use std::hash::{Hash, Hasher};
 use std::io::{ErrorKind, Write};
 use std::str::FromStr;
 
+use sha2::{Digest, Sha256};
 use borsh::{BorshDeserialize, BorshSerialize, BorshSchema};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
@@ -383,7 +384,8 @@ impl super::SigScheme for SigScheme {
 
     /// Sign the data with a key.
     fn sign(keypair: &SecretKey, data: impl AsRef<[u8]>) -> Signature {
-        let message_to_sign = libsecp256k1::Message::parse_slice(data.as_ref())
+        let hash = Sha256::digest(data.as_ref());
+        let message_to_sign = libsecp256k1::Message::parse_slice(hash.as_ref())
             .expect("Message encoding shouldn't fail");
         Signature(libsecp256k1::sign(&message_to_sign, &keypair.0).0)
     }
@@ -397,7 +399,8 @@ impl super::SigScheme for SigScheme {
         let bytes = &data
             .try_to_vec()
             .map_err(VerifySigError::DataEncodingError)?[..];
-        let message = &libsecp256k1::Message::parse_slice(bytes)
+        let hash = Sha256::digest(bytes.as_ref());
+        let message = &libsecp256k1::Message::parse_slice(hash.as_ref())
             .expect("Error parsing given data");
         let check = libsecp256k1::verify(message, &sig.0, &pk.0);
         match check {
@@ -415,7 +418,8 @@ impl super::SigScheme for SigScheme {
         data: &[u8],
         sig: &Signature,
     ) -> Result<(), VerifySigError> {
-        let message = &libsecp256k1::Message::parse_slice(data)
+        let hash = Sha256::digest(data.as_ref());
+        let message = &libsecp256k1::Message::parse_slice(hash.as_ref())
             .expect("Error parsing raw data");
         let check = libsecp256k1::verify(message, &sig.0, &pk.0);
         match check {
