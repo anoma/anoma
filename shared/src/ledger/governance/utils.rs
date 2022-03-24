@@ -23,6 +23,26 @@ pub enum Error {
     InvalidProposal(u64),
 }
 
+pub struct ProposalEvent {
+    pub event_type: String,
+    pub attributes: HashMap<String, String>
+}
+
+impl ProposalEvent {
+    pub fn new(event_type: String, tally: TallyResult, id: u64, has_proposal_code: bool, proposal_code_exit_status: bool) -> Self {
+        let attributes = HashMap::from([
+            ("tally_result".to_string(), tally.to_string()), 
+            ("proposal_id".to_string(), id.to_string()),
+            ("has_proposal_code".to_string(), (!has_proposal_code as u64).to_string()),
+            ("proposal_code_exit_status".to_string(), (!proposal_code_exit_status as u64).to_string())
+        ]);
+        Self {
+            event_type,
+            attributes
+        }
+    }
+}
+
 type Result<T> = std::result::Result<T, Error>;
 
 /// Return a proposal result and his associated proposal code (if any)
@@ -119,7 +139,12 @@ where
             }
 
             if yay_total_tokens / total_tokens >= 0.66 {
-                return Ok((TallyResult::Passed, Some(Vec::new())))
+                let proposal_code = gov_storage::get_proposal_code_key(proposal_id);
+                let (proposal_code_bytes, _) = storage
+                    .read(&proposal_code)
+                    .expect("Key should be defined");
+
+                return Ok((TallyResult::Passed, proposal_code_bytes))
             } else {
                 return Ok((TallyResult::Rejected, None))
             }
@@ -151,11 +176,15 @@ where
     let (epoched_bonds_bytes, _) = storage
         .read(&bond_key)
         .expect("Should be able to read key.");
-    match (epoched_bonds_bytes, slashes_bytes) {
-        (Some(epoched_bonds_bytes), Some(slashes_bytes)) => {
+    match epoched_bonds_bytes.clone() {
+        Some(epoched_bonds_bytes) => {
             let epoched_bonds =
                 Bonds::try_from_slice(&epoched_bonds_bytes[..]).ok();
-            let slashes = Slashes::try_from_slice(&slashes_bytes[..]).ok();
+            let slashes = if let Some(slashes_bytes) = slashes_bytes {
+                Slashes::try_from_slice(&slashes_bytes[..]).ok()
+            } else {
+                Some(Slashes::default())
+            };
             match (epoched_bonds, slashes) {
                 (Some(epoched_bonds), Some(_slashes)) => {
                     let mut delegated_amount: token::Amount = 0.into();
@@ -171,10 +200,16 @@ where
                     }
                     Some(delegated_amount)
                 }
-                _ => None,
+                _ => {
+                    println!("bond: inner fail");
+                    return None
+                }
             }
         }
-        _ => None,
+        _ => {
+            println!("bond: outer fail {:?}, {:?}", epoched_bonds_bytes, slashes_bytes);
+            None
+        }
     }
 }
 

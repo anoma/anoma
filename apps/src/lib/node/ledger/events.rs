@@ -5,6 +5,8 @@ use std::ops::{Index, IndexMut};
 use anoma::types::ibc::IbcEvent;
 use anoma::types::transaction::{hash_tx, TxType};
 use borsh::BorshSerialize;
+use anoma::ledger::governance::utils::ProposalEvent;
+
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::EventAttribute;
 #[cfg(feature = "ABCI")]
@@ -28,7 +30,7 @@ pub enum EventType {
     // The IBC transaction was applied during block finalization
     Ibc(String),
     // The proposal that has been executed
-    Proposal(String)
+    Proposal
 }
 
 #[cfg(not(feature = "ABCI"))]
@@ -51,7 +53,7 @@ impl Display for EventType {
             EventType::Accepted => write!(f, "accepted"),
             EventType::Applied => write!(f, "applied"),
             EventType::Ibc(t) => write!(f, "{}", t),
-            EventType::Proposal(id) => write!(f, "proposal {}", id)
+            EventType::Proposal => write!(f, "proposal")
         }?;
         Ok(())
     }
@@ -136,6 +138,17 @@ impl From<IbcEvent> for Event {
         }
     }
 }
+
+impl From<ProposalEvent> for Event {
+    fn from(proposal_event: ProposalEvent) -> Self {
+        Self {
+            event_type: EventType::Proposal,
+            attributes: proposal_event.attributes
+        }
+    }
+}
+
+
 
 #[cfg(not(feature = "ABCI"))]
 /// Convert our custom event into the necessary tendermint proto type

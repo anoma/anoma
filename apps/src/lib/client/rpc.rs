@@ -264,11 +264,9 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
             println!("{:4}Start Epoch: {}", "", start_epoch);
             println!("{:4}End Epoch: {}", "", end_epoch);
             if start_epoch > current_epoch {
-                println!("{:4}Start Epoch: {}", "", start_epoch);
                 println!("{:4}Status: pending", "");
             } else if start_epoch <= current_epoch && current_epoch <= end_epoch
             {
-                println!("{:4}End Epoch: {}", "", end_epoch);
                 println!("{:4}Status: on-going", "");
             } else {
                 println!("{:4}Status: done", "");
