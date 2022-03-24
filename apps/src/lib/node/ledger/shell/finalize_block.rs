@@ -61,8 +61,8 @@ where
                 tx
             } else {
                 tracing::error!(
-                    "Internal logic error: FinalizeBlock received a tx that \
-                     could not be deserialized to a Tx type"
+                    "FinalizeBlock received a tx that could not be deserialized \
+                     to a Tx type. This is likely a protocol transaction."
                 );
                 continue;
             };
