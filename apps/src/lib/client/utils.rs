@@ -970,6 +970,13 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
+pub fn download_params() {
+    masp_proofs::download_parameters().unwrap_or_else(|err| {
+        eprintln!("Failed to download MASP parameters: {}", err);
+        cli::safe_exit(1)
+    });
+}
+
 async fn download_file(url: impl AsRef<str>) -> Vec<u8> {
     let url = url.as_ref();
     reqwest::get(url)
