@@ -645,6 +645,15 @@ pub mod constants {
     pub const DAEWON: &str = "Daewon";
     pub const MATCHMAKER_KEY: &str = "matchmaker-key";
 
+    // Shielded spending and viewing keys and payment addresses
+    pub const A_SPENDING_KEY: &str = "AA";
+    pub const B_SPENDING_KEY: &str = "BB";
+    pub const AA_PAYMENT_ADDRESS: &str = "7e3b7eb284869b247b592000da154295ceba361df27179aa896407893765606fb70d1385e2e0d23e2305d3";
+    pub const AB_PAYMENT_ADDRESS: &str = "c22bd2a654d911ce4cbe98884359ab2dda81380cae4ec425a95724d1186981f1e6d107f544f6d6fbf1b415";
+    pub const AB_VIEWING_KEY: &str = "e4ceb8d40a71220962b0379e76e3b37d84dfc17038f4caf30adae0966a10af1e9ea8ba9a639fb0badddaa532ce908d28fe341d8d7fb1bec4ac74d4b36cdea61d16b3dfc074cf3372c2bb2ccd97e50604fd7af435aefee0473b3b1413c70864a7";
+    pub const BB_PAYMENT_ADDRESS: &str = "544c1c52f8873c60ad0cbd486a0dad6ab9d756d47976228d21113f5c5b061f2a8c7b16e3202f2eed73f370";
+    pub const AA_VIEWING_KEY: &str = "628a9956322f3f7d20b19801d9b4a8f3cb4b8b756a26ef2477feb5264be7b808c920996f37a79433d08e27fefcda0b6736c296b1073734a4ee35d11368f2b52ef14d7c1749cc8119ecc8a894f696992453f2dd78ef1e9d74172b2a5ef7cc8c50";
+
     // Fungible token addresses
     pub const XAN: &str = "XAN";
     pub const BTC: &str = "BTC";

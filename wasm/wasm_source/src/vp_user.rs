@@ -15,7 +15,7 @@
 use anoma_vp_prelude::intent::{
     Exchange, FungibleTokenIntent, IntentTransfers,
 };
-use anoma_vp_prelude::*;
+use anoma_vp_prelude::{*, address::masp};
 use once_cell::unsync::Lazy;
 use rust_decimal::prelude::*;
 
@@ -25,6 +25,7 @@ enum KeyType<'a> {
     InvalidIntentSet(&'a Address),
     Nft(&'a Address),
     Vp(&'a Address),
+    Masp,
     Unknown,
 }
 
@@ -40,6 +41,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
             Self::Nft(address)
         } else if let Some(address) = key.is_validity_predicate() {
             Self::Vp(address)
+        } else if token::is_masp_key(key) {
+            Self::Masp
         } else {
             Self::Unknown
         }
@@ -90,7 +93,7 @@ fn validate_tx(
                         read_post(&key).unwrap_or_default();
                     let change = post.change() - pre.change();
                     // debit has to signed, credit doesn't
-                    let valid = change >= 0 || *valid_sig || *valid_intent;
+                    let valid = change >= 0 || addr == masp() || *valid_sig || *valid_intent;
                     debug_log!(
                         "token key: {}, change: {}, valid_sig: {}, \
                          valid_intent: {}, valid modification: {}",
@@ -169,6 +172,9 @@ fn validate_tx(
                 } else {
                     true
                 }
+            }
+            KeyType::Masp => {
+                true
             }
             KeyType::Unknown => *valid_sig,
         };
@@ -376,7 +382,7 @@ mod tests {
         // Initialize VP environment from a transaction
         let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(&source, address, &token, amount);
+            tx_host_env::token::transfer(&source, address, &token, amount, &None);
         });
 
         let tx_data: Vec<u8> = vec![];
@@ -407,7 +413,7 @@ mod tests {
         // Initialize VP environment from a transaction
         let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(address, &target, &token, amount);
+            tx_host_env::token::transfer(address, &target, &token, amount, &None);
         });
 
         let tx_data: Vec<u8> = vec![];
@@ -443,7 +449,7 @@ mod tests {
         let mut vp_env =
             init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
                 // Apply transfer in a transaction
-                tx_host_env::token::transfer(address, &target, &token, amount);
+                tx_host_env::token::transfer(address, &target, &token, amount, &None);
             });
 
         let tx = vp_env.tx.clone();
@@ -479,7 +485,7 @@ mod tests {
         let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
             tx_host_env::insert_verifier(address);
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(&source, &target, &token, amount);
+            tx_host_env::token::transfer(&source, &target, &token, amount, &None);
         });
 
         let tx_data: Vec<u8> = vec![];

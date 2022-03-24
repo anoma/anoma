@@ -317,12 +317,14 @@ mod tests {
                     target: albert_addr.clone(),
                     token: Address::from_str(BTC).unwrap(),
                     amount: token::Amount::from(100),
+                    shielded: None,
                 },
                 token::Transfer {
                     source: albert_addr,
                     target: bertha_addr,
                     token: Address::from_str(XAN).unwrap(),
                     amount: token::Amount::from(1),
+                    shielded: None,
                 },
             ]
             .into_iter(),
@@ -425,12 +427,14 @@ mod tests {
                     target: albert_addr.clone(),
                     token: Address::from_str(BTC).unwrap(),
                     amount: token::Amount::from(100),
+                    shielded: None,
                 },
                 token::Transfer {
                     source: albert_addr,
                     target: bertha_addr,
                     token: Address::from_str(XAN).unwrap(),
                     amount: token::Amount::from(1),
+                    shielded: None,
                 },
             ]
             .into_iter(),

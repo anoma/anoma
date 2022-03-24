@@ -1289,6 +1289,7 @@ pub mod args {
     use tendermint_config_abci::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
+    use anoma::types::address::masp;
 
     use super::context::{WalletAddress, WalletKeypair, WalletPublicKey};
     use super::utils::*;
@@ -1368,9 +1369,12 @@ pub mod args {
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
+    const SOURCE_DEFAULT: ArgDefaultFromCtx<WalletAddress> =
+        arg_default_from_ctx("source", DefaultFn(|| masp().encode()));
     const SPENDING_KEY: Arg<ExtendedSpendingKey> = arg("spending-key");
     const SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = SPENDING_KEY.opt();
-    const TARGET: Arg<WalletAddress> = arg("target");
+    const TARGET_DEFAULT: ArgDefaultFromCtx<WalletAddress> =
+        arg_default_from_ctx("target", DefaultFn(|| masp().encode()));
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
@@ -1528,8 +1532,8 @@ pub mod args {
     impl Args for TxTransfer {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
-            let source = SOURCE.parse(matches);
-            let target = TARGET.parse(matches);
+            let source = SOURCE_DEFAULT.parse(matches);
+            let target = TARGET_DEFAULT.parse(matches);
             let token = TOKEN.parse(matches);
             let amount = AMOUNT.parse(matches);
             let spending_key = SPENDING_KEY_OPT.parse(matches);
@@ -1547,11 +1551,11 @@ pub mod args {
 
         fn def(app: App) -> App {
             app.add_args::<Tx>()
-                .arg(SOURCE.def().about(
+                .arg(SOURCE_DEFAULT.def().about(
                     "The source account address. The source's key is used to \
                      produce the signature.",
                 ))
-                .arg(TARGET.def().about("The target account address."))
+                .arg(TARGET_DEFAULT.def().about("The target account address."))
                 .arg(TOKEN.def().about("The transfer token."))
                 .arg(AMOUNT.def().about("The amount to transfer in decimal."))
                 .arg(SPENDING_KEY_OPT.def().about(
@@ -2444,21 +2448,28 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct MaspPayAddrGen {
         /// Spending Key
-        pub spending_key: ExtendedSpendingKey,
+        pub spending_key: Option<ExtendedSpendingKey>,
+        /// Viewing key
+        pub viewing_key: Option<FullViewingKey>,
     }
 
     impl Args for MaspPayAddrGen {
         fn parse(matches: &ArgMatches) -> Self {
-            let spending_key = SPENDING_KEY.parse(matches);
+            let spending_key = SPENDING_KEY_OPT.parse(matches);
+            let viewing_key = VIEWING_KEY_OPT.parse(matches);
             Self {
-                spending_key
+                spending_key,
+                viewing_key,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(SPENDING_KEY.def().about(
+            app.arg(SPENDING_KEY_OPT.def().about(
                 "The spending key."
             ))
+                .arg(VIEWING_KEY_OPT.def().about(
+                    "The viewing key."
+                ))
         }
     }
 

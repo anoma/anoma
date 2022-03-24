@@ -75,10 +75,11 @@ use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
 use crate::std::fs::File;
 use masp_primitives::transaction::TxId;
-use anoma::types::token::HEAD_TX_KEY;
+use anoma::types::token::{HEAD_TX_KEY, TX_KEY_PREFIX};
 use anoma::types::storage::Key;
 use crate::client::rpc::query_storage_value;
 use anoma::types::storage::KeySeg;
+use anoma::types::address::masp;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -420,7 +421,7 @@ pub async fn fetch_shielded_transfers(
 ) -> Vec<Transaction> {
     let client = HttpClient::new(ledger_address.clone()).unwrap();
     // The address of the MASP account
-    let masp_addr = Address::decode("atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p").unwrap();
+    let masp_addr = masp();
     // Construct the key where last transaction pointer is stored
     let head_tx_key = Key::from(masp_addr.to_db_key())
         .push(&HEAD_TX_KEY.to_owned())
@@ -436,7 +437,7 @@ pub async fn fetch_shielded_transfers(
     while let Some(head_txid) = head_txid_opt {
         // Construct the key for where the current transaction is stored
         let current_tx_key = Key::from(masp_addr.to_db_key())
-            .push(&("tx-".to_owned() + &head_txid.to_string()))
+            .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
             .expect("Cannot obtain a storage key");
         // Obtain the current transaction and a pointer to the next
         let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
@@ -560,7 +561,6 @@ fn scan_tx(
 async fn gen_shielded_transfer(
     ctx: &Context,
     args: &args::TxTransfer,
-    balance: token::Amount,
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
     // No shielded components are needed when neither source nor destination
     // are shielded
@@ -625,9 +625,6 @@ async fn gen_shielded_transfer(
             )?;
         }
     } else {
-        // Otherwise the input must be entirely transparent. So model the source
-        // address' balance as the input UTXO
-        let balance: u64 = balance.into();
         // We add a dummy UTXO to our transaction, but only the source of the
         // parent Transfer object is used to validate fund availability
         let secp_sk = secp256k1::SecretKey::from_slice(&[0xcd; 32]).expect("secret key");
@@ -640,18 +637,10 @@ async fn gen_shielded_transfer(
             OutPoint::new([0u8; 32], 0),
             TxOut {
                 asset_type,
-                value: balance,
+                value: amt,
                 script_pubkey: script
             }
         )?;
-        // If there is change leftover send it back to this transparent input
-        if balance > amt {
-            builder.add_transparent_output(
-                &TransparentAddress::PublicKey([0u8; 20]),
-                asset_type,
-                balance - amt
-            )?;
-        }
     }
     // Now handle the outputs of this transaction
     // If there is a shielded output
@@ -659,8 +648,13 @@ async fn gen_shielded_transfer(
         let ovk_opt = args.spending_key.as_ref().map(|x| x.expsk.ovk);
         builder.add_sapling_output(ovk_opt, pa.clone(), asset_type, amt, memo)?;
     } else {
+        // Embed the transparent target address into the shielded transaction so
+        // that it can be signed 
+        let target = ctx.get(&args.target);
+        let target_enc = target.try_to_vec().expect("target address encoding");
+        let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(target_enc.as_ref()));
         builder.add_transparent_output(
-            &TransparentAddress::PublicKey([0u8; 20]),
+            &TransparentAddress::PublicKey(hash.into()),
             asset_type,
             amt
         )?;
@@ -715,7 +709,7 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
             // Get note associated with this ID
             let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
             // Finally add value to multi-asset accumulator
-            val_acc += Amount::from_u64(note.asset_type, note.value)
+            val_acc += Amount::from(note.asset_type, note.value)
                 .expect("found note with invalid value or asset type");
         }
     }
@@ -724,6 +718,16 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
 
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let source = ctx.get(&args.source);
+    let target = ctx.get(&args.target);
+    if (source == masp()) != args.spending_key.is_some() {
+        // A spending key implies a transparent transfer from the MASP address
+        eprintln!("Must either specify source address or a spending key");
+        safe_exit(1)
+    } else if (target == masp()) != args.payment_address.is_some() {
+        // A payment address implies a transparent transfer to the MASP address
+        eprintln!("Must either specify target address or a payment address");
+        safe_exit(1)
+    }
     // Check that the source address exists on chain
     let source_exists =
         rpc::known_address(&source, args.tx.ledger_address.clone()).await;
@@ -733,7 +737,6 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             safe_exit(1)
         }
     }
-    let target = ctx.get(&args.target);
     // Check that the target address exists on chain
     let target_exists =
         rpc::known_address(&target, args.tx.ledger_address.clone()).await;
@@ -756,7 +759,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     // Check source balance
     let balance_key = token::balance_key(&token, &source);
     let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
-    let balance = match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
+    match rpc::query_storage_value::<token::Amount>(client, balance_key).await {
         Some(balance) => {
             if balance < args.amount {
                 eprintln!(
@@ -769,7 +772,6 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
                     safe_exit(1)
                 }
             }
-            balance
         }
         None => {
             eprintln!(
@@ -779,26 +781,35 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             if !args.tx.force {
                 safe_exit(1)
             }
-            0.into()
         }
     };
     
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
+    let masp_addr = masp();
+    // The non-MASP entity, if any, will be signer for shielded transactions
+    let default_signer =
+        if source == masp_addr && target == masp_addr {
+            None
+        } else if source == masp_addr {
+            Some(&args.target)
+        } else {
+            Some(&args.source)
+        };
     let transfer = token::Transfer {
         source,
         target,
         token,
         amount: args.amount,
-        shielded: gen_shielded_transfer(&ctx, &args, balance).await.unwrap().map(|x| x.0),
+        shielded: gen_shielded_transfer(&ctx, &args).await.unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer
         .try_to_vec()
         .expect("Encoding tx data shouldn't fail");
-
+    
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
+        sign_tx(ctx, tx, &args.tx, default_signer).await;
     process_tx(ctx, &args.tx, tx, &keypair).await;
 }
 
