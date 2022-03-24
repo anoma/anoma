@@ -933,7 +933,6 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
     Ok(())
 }
 
-
 /// Check tht an Ethereum node is started with the ledger and
 /// that validators are voting on and adding headers to their
 /// vote extensions.
