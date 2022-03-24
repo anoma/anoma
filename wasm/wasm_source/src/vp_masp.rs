@@ -31,6 +31,7 @@ pub mod vp_masp {
 #[cfg(test)]
 mod tests {
     use anoma_test::log::test;
+    use anoma_vp_prelude::*;
 
     #[test]
     fn test_good_tx() {
