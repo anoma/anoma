@@ -1,6 +1,6 @@
 //! Types used for PoS system transactions
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
 use crate::types::address::Address;
@@ -14,6 +14,7 @@ use crate::types::token;
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Hash,
     Eq,
     Serialize,
@@ -39,6 +40,7 @@ pub type Unbond = Bond;
     PartialEq,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Hash,
     Eq,
     Serialize,

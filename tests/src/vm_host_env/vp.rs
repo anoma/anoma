@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use anoma::ledger::gas::VpGasMeter;
 use anoma::ledger::storage::mockdb::MockDB;
@@ -32,8 +32,8 @@ pub struct TestVpEnv {
     pub iterators: PrefixIterators<'static, MockDB>,
     pub gas_meter: VpGasMeter,
     pub tx: Tx,
-    pub keys_changed: HashSet<storage::Key>,
-    pub verifiers: HashSet<Address>,
+    pub keys_changed: BTreeSet<storage::Key>,
+    pub verifiers: BTreeSet<Address>,
     pub eval_runner: native_vp_host_env::VpEval,
     pub result_buffer: Option<Vec<u8>>,
     pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
@@ -57,8 +57,8 @@ impl Default for TestVpEnv {
             iterators: PrefixIterators::default(),
             gas_meter: VpGasMeter::new(0),
             tx: Tx::new(vec![], None),
-            keys_changed: HashSet::default(),
-            verifiers: HashSet::default(),
+            keys_changed: BTreeSet::default(),
+            verifiers: BTreeSet::default(),
             eval_runner,
             result_buffer: None,
             vp_wasm_cache,
@@ -68,14 +68,14 @@ impl Default for TestVpEnv {
 }
 
 impl TestVpEnv {
-    pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
+    pub fn all_touched_storage_keys(&self) -> BTreeSet<Key> {
         self.write_log.get_keys()
     }
 
-    pub fn get_verifiers(&self) -> HashSet<Address> {
-        let mut verifiers: HashSet<Address> = self
+    pub fn get_verifiers(&self) -> BTreeSet<Address> {
+        let mut verifiers: BTreeSet<Address> = self
             .write_log
-            .verifiers_changed_keys(&HashSet::default())
+            .verifiers_changed_keys(&BTreeSet::default())
             .keys()
             .cloned()
             .collect();
@@ -278,6 +278,7 @@ mod native_vp_host_env {
     native_host_fn!(vp_get_chain_id(result_ptr: u64));
     native_host_fn!(vp_get_block_height() -> u64);
     native_host_fn!(vp_get_block_hash(result_ptr: u64));
+    native_host_fn!(vp_get_tx_code_hash(result_ptr: u64));
     native_host_fn!(vp_get_block_epoch() -> u64);
     native_host_fn!(vp_verify_tx_signature(
             pk_ptr: u64,

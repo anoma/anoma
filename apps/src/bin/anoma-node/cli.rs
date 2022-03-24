@@ -6,11 +6,13 @@ use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
     let (cmd, mut ctx) = cli::anoma_node_cli();
+    if let Some(mode) = ctx.global_args.mode.clone() {
+        ctx.config.ledger.tendermint.tendermint_mode = mode;
+    }
     match cmd {
         cmds::AnomaNode::Ledger(sub) => match sub {
             cmds::Ledger::Run(_) => {
-                let wasm_dir =
-                    ctx.config.ledger.chain_dir().join(&ctx.config.wasm_dir);
+                let wasm_dir = ctx.wasm_dir();
                 ledger::run(ctx.config.ledger, wasm_dir);
             }
             cmds::Ledger::Reset(_) => {
@@ -48,8 +50,8 @@ pub fn main() -> Result<()> {
             let tx_signing_key = ctx.get_cached(&tx_signing_key);
             let tx_source_address = ctx.get(&tx_source_address);
 
+            let wasm_dir = ctx.wasm_dir();
             let config = ctx.config;
-            let wasm_dir = config.ledger.chain_dir().join(&config.wasm_dir);
             let mut mm_config = config.matchmaker;
             if matchmaker_path.is_some() {
                 mm_config.matchmaker_path = matchmaker_path;

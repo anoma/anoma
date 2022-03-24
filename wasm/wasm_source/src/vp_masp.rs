@@ -7,8 +7,8 @@ pub mod vp_masp {
     fn validate_tx(
         tx_data: Vec<u8>,
         addr: Address,
-        keys_changed: HashSet<storage::Key>,
-        verifiers: HashSet<Address>,
+        keys_changed: BTreeSet<storage::Key>,
+        verifiers: BTreeSet<Address>,
     ) -> bool {
         debug_log!("vp_masp called with {} bytes data, address {}, keys_changed {:?}, verifiers {:?}",
           tx_data.len(),

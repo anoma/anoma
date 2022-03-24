@@ -1,9 +1,7 @@
 //! IBC integration
 
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 pub mod handler;
 pub mod storage;
-#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 pub mod vp;
 
 use storage::{

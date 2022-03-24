@@ -207,7 +207,7 @@ fn key_list(
 fn key_export(ctx: Context, args::KeyExport { alias }: args::KeyExport) {
     let mut wallet = ctx.wallet;
     wallet
-        .find_key(alias.clone().to_lowercase())
+        .find_key(alias.to_lowercase())
         .map(|keypair| {
             let file_data = keypair
                 .try_to_vec()

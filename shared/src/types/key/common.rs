@@ -3,7 +3,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
@@ -26,6 +26,7 @@ use super::{
     Deserialize,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub enum PublicKey {
     /// Encapsulate Ed25519 public keys
@@ -71,11 +72,50 @@ impl FromStr for PublicKey {
 }
 
 /// Secret key
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize, BorshSchema)]
 #[allow(clippy::large_enum_variant)]
 pub enum SecretKey {
     /// Encapsulate Ed25519 secret keys
     Ed25519(ed25519::SecretKey),
+}
+
+impl Serialize for SecretKey {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        // String encoded, because toml doesn't support enums
+        match self {
+            ed25519_sk @ SecretKey::Ed25519(_) => {
+                let keypair_string =
+                    format!("{}{}", "ED25519_SK_PREFIX", ed25519_sk);
+                Serialize::serialize(&keypair_string, serializer)
+            }
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for SecretKey {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let keypair_string: String =
+            serde::Deserialize::deserialize(deserializer)
+                .map_err(D::Error::custom)?;
+        if let Some(raw) = keypair_string.strip_prefix("ED25519_SK_PREFIX") {
+            SecretKey::from_str(raw).map_err(D::Error::custom)
+        } else {
+            Err(D::Error::custom(
+                "Could not deserialize SecretKey do to invalid prefix",
+            ))
+        }
+    }
 }
 
 impl super::SecretKey for SecretKey {
@@ -138,6 +178,7 @@ impl FromStr for SecretKey {
     Deserialize,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
 )]
 pub enum Signature {
     /// Encapsulate Ed25519 signatures
@@ -172,6 +213,7 @@ impl super::Signature for Signature {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,

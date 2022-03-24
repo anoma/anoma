@@ -230,8 +230,16 @@ impl WasmMemory {
         &mut self,
         exports: &wasmer::Exports,
     ) -> std::result::Result<(), HostEnvInitError> {
-        let memory = exports.get_memory("memory")?;
-        if !self.inner.initialize(memory.clone()) {
+        // "`TxEnv` holds a reference to the Wasm `Memory`, which itself
+        // internally holds a reference to the instance which owns that
+        // memory. However the instance itself also holds a reference to
+        // the `TxEnv` when it is instantiated, thus creating a circular
+        // reference.
+        // You can work around this by using `get_with_generics_weak` which
+        // creates a weak reference to the `Instance` internally."
+        // <https://github.com/wasmerio/wasmer/issues/2780#issuecomment-1054452629>
+        let memory = exports.get_with_generics_weak("memory")?;
+        if !self.inner.initialize(memory) {
             tracing::error!("wasm memory is already initialized");
         }
         Ok(())
@@ -275,8 +283,7 @@ impl VmMemory for WasmMemory {
     }
 }
 
-// TODO wasmer 2.x
-// #[derive(loupe::MemoryUsage)]
+#[derive(loupe::MemoryUsage)]
 /// A custom [`Tunables`] to set a WASM memory limits.
 ///
 /// Adapted from <https://github.com/wasmerio/wasmer/blob/29d7b4a5f1c401d9a1e95086ed85878c8407ec16/examples/tunables_limit_memory.rs>.
@@ -436,10 +443,7 @@ pub mod tests {
 
         // Any compiler and any engine do the job here
         let compiler = Cranelift::default();
-        // TODO wasmer 2.x
-        // let engine =
-        // wasmer_engine_universal::Universal::new(compiler).engine();
-        let engine = wasmer_engine_jit::JIT::new(compiler).engine();
+        let engine = wasmer_engine_universal::Universal::new(compiler).engine();
 
         let base = BaseTunables::for_target(&Target::default());
         let limit = Pages(24);

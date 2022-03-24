@@ -2,121 +2,38 @@
 use std::convert::TryFrom;
 use std::fmt::{self, Display, Formatter};
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::misbehavior::MsgSubmitAnyMisbehaviour;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::ClientMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::ConnectionMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::Receipt;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::error::Error as Ics26Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::downcast;
-#[cfg(feature = "ABCI")]
-use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::misbehavior::MsgSubmitAnyMisbehaviour;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::ClientMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::ConnectionMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::timeout::MsgTimeout;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::Receipt;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::error::Error as Ics26Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::downcast;
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::ibc::core::channel::v1::Acknowledgement;
-#[cfg(feature = "ABCI")]
-use ibc_proto_abci::ibc::core::channel::v1::acknowledgement::Response;
-#[cfg(feature = "ABCI")]
-use ibc_proto_abci::ibc::core::channel::v1::Acknowledgement;
 use prost::Message;
 use prost_types::Any;
 use thiserror::Error;
+
+use crate::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+use crate::ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
+use crate::ibc::core::ics02_client::msgs::misbehavior::MsgSubmitAnyMisbehaviour;
+use crate::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+use crate::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+use crate::ibc::core::ics02_client::msgs::ClientMsg;
+use crate::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+use crate::ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
+use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+use crate::ibc::core::ics03_connection::msgs::ConnectionMsg;
+use crate::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use crate::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
+use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+use crate::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
+use crate::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+use crate::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+use crate::ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
+use crate::ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
+use crate::ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
+use crate::ibc::core::ics04_channel::packet::Receipt;
+use crate::ibc::core::ics26_routing::error::Error as Ics26Error;
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::downcast;
+use crate::ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
+use crate::ibc_proto::ibc::core::channel::v1::Acknowledgement;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]

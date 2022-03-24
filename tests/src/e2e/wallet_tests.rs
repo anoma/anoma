@@ -61,7 +61,10 @@ fn wallet_encrypted_key_cmds() -> Result<()> {
 
     // 3. key list
     let mut cmd = run!(test, Bin::Wallet, &["key", "list"], Some(20))?;
-    cmd.exp_string(&format!("Alias \"{}\" (encrypted):", key_alias.to_lowercase()))?;
+    cmd.exp_string(&format!(
+        "Alias \"{}\" (encrypted):",
+        key_alias.to_lowercase()
+    ))?;
 
     Ok(())
 }

@@ -8,7 +8,7 @@ use std::hash::Hash;
 use std::num::TryFromIntError;
 use std::ops::{Add, AddAssign, Mul, Sub};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use crate::epoched::{
     Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen,
@@ -56,6 +56,7 @@ pub type TotalVotingPowers =
     Hash,
     BorshDeserialize,
     BorshSerialize,
+    BorshSchema,
 )]
 pub struct Epoch(u64);
 
@@ -72,6 +73,7 @@ pub struct Epoch(u64);
     Hash,
     BorshDeserialize,
     BorshSerialize,
+    BorshSchema,
 )]
 pub struct VotingPower(u64);
 
@@ -88,6 +90,7 @@ pub struct VotingPower(u64);
     Hash,
     BorshDeserialize,
     BorshSerialize,
+    BorshSchema,
 )]
 pub struct VotingPowerDelta(i64);
 
@@ -96,6 +99,7 @@ pub struct VotingPowerDelta(i64);
     Debug,
     Clone,
     BorshSerialize,
+    BorshSchema,
     BorshDeserialize,
     PartialEq,
     Eq,
@@ -145,10 +149,21 @@ pub struct ActiveValidator<PK> {
     Hash,
     BorshDeserialize,
     BorshSerialize,
+    BorshSchema,
 )]
 pub struct BondId<Address>
 where
-    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshSerialize
+        + BorshSchema
+        + BorshDeserialize,
 {
     /// (Un)bond's source address is the owner of the bonded tokens.
     pub source: Address,
@@ -166,6 +181,7 @@ where
     Ord,
     BorshDeserialize,
     BorshSerialize,
+    BorshSchema,
 )]
 pub struct WeightedValidator<Address>
 where
@@ -177,6 +193,7 @@ where
         + Ord
         + Hash
         + BorshDeserialize
+        + BorshSchema
         + BorshSerialize,
 {
     /// The `voting_power` field must be on top, because lexicographic ordering
@@ -199,6 +216,7 @@ where
         + Ord
         + Hash
         + BorshDeserialize
+        + BorshSchema
         + BorshSerialize,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -220,6 +238,7 @@ where
     Ord,
     BorshDeserialize,
     BorshSerialize,
+    BorshSchema,
 )]
 pub struct ValidatorSet<Address>
 where
@@ -231,6 +250,7 @@ where
         + Ord
         + Hash
         + BorshDeserialize
+        + BorshSchema
         + BorshSerialize,
 {
     /// Active validator set with maximum size equal to `max_validator_slots`
@@ -242,7 +262,14 @@ where
 
 /// Validator's state.
 #[derive(
-    Debug, Clone, Copy, BorshDeserialize, BorshSerialize, PartialEq, Eq,
+    Debug,
+    Clone,
+    Copy,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
+    PartialEq,
+    Eq,
 )]
 pub enum ValidatorState {
     /// Inactive validator may not participate in the consensus.
@@ -257,7 +284,9 @@ pub enum ValidatorState {
 
 /// A bond is validator's self-bond or a delegation from a regular account to a
 /// validator.
-#[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Debug, Clone, Default, BorshDeserialize, BorshSerialize, BorshSchema,
+)]
 pub struct Bond<Token: Default> {
     /// A key is a the epoch set for the bond. This is used in unbonding, where
     /// it's needed for slash epoch range check.
@@ -271,7 +300,9 @@ pub struct Bond<Token: Default> {
 
 /// An unbond contains unbonded tokens from a validator's self-bond or a
 /// delegation from a regular account to a validator.
-#[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Debug, Clone, Default, BorshDeserialize, BorshSerialize, BorshSchema,
+)]
 pub struct Unbond<Token: Default> {
     /// A key is a pair of the epoch of the bond from which a unbond was
     /// created the epoch of unbonding. This is needed for slash epoch range
@@ -281,7 +312,7 @@ pub struct Unbond<Token: Default> {
 
 /// A slash applied to validator, to punish byzantine behavior by removing
 /// their staked tokens at and before the epoch of the slash.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub struct Slash {
     /// Epoch at which the slashable event occurred.
     pub epoch: Epoch,
@@ -298,7 +329,7 @@ pub struct Slash {
 pub type Slashes = Vec<Slash>;
 
 /// A type of slashsable event.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub enum SlashType {
     /// Duplicate block vote.
     DuplicateVote,
@@ -308,7 +339,7 @@ pub enum SlashType {
 
 /// ‱ (Parts per ten thousand). This can be multiplied by any type that
 /// implements [`Into<u64>`] or [`Into<i128>`].
-#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub struct BasisPoints(u64);
 
 impl VotingPower {
@@ -459,7 +490,17 @@ impl Display for Epoch {
 
 impl<Address> Display for BondId<Address>
 where
-    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshSerialize
+        + BorshDeserialize
+        + BorshSchema,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

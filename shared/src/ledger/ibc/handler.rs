@@ -2,229 +2,82 @@
 
 use std::str::FromStr;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(not(feature = "ABCI"))]
-use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::{AnyClientState, ClientState};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_type::ClientType;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::events::{
-    Attributes as ClientAttributes, CreateClient, UpdateClient, UpgradeClient,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::header::{AnyHeader, Header};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::msgs::ClientMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::{
-    ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::events::{
-    Attributes as ConnectionAttributes, OpenAck as ConnOpenAck,
-    OpenConfirm as ConnOpenConfirm, OpenInit as ConnOpenInit,
-    OpenTry as ConnOpenTry,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::msgs::ConnectionMsg;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::events::{
-    AcknowledgePacket, Attributes as ChannelAttributes,
-    CloseConfirm as ChanCloseConfirm, CloseInit as ChanCloseInit,
-    OpenAck as ChanOpenAck, OpenConfirm as ChanOpenConfirm,
-    OpenInit as ChanOpenInit, OpenTry as ChanOpenTry, SendPacket,
-    TimeoutPacket, WriteAcknowledgement,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::error::ValidationError as Ics24Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::events::IbcEvent;
-#[cfg(not(feature = "ABCI"))]
-use ibc::mock::client_state::{MockClientState, MockConsensusState};
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Timestamp;
-#[cfg(feature = "ABCI")]
-use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(feature = "ABCI")]
-use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::{
-    AnyConsensusState, ConsensusState,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_type::ClientType;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::events::{
-    Attributes as ClientAttributes, CreateClient, UpdateClient, UpgradeClient,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::header::{AnyHeader, Header};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::msgs::ClientMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::{
-    ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::events::{
-    Attributes as ConnectionAttributes, OpenAck as ConnOpenAck,
-    OpenConfirm as ConnOpenConfirm, OpenInit as ConnOpenInit,
-    OpenTry as ConnOpenTry,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::msgs::ConnectionMsg;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{
-    ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::events::{
-    AcknowledgePacket, Attributes as ChannelAttributes,
-    CloseConfirm as ChanCloseConfirm, CloseInit as ChanCloseInit,
-    OpenAck as ChanOpenAck, OpenConfirm as ChanOpenConfirm,
-    OpenInit as ChanOpenInit, OpenTry as ChanOpenTry, SendPacket,
-    TimeoutPacket, WriteAcknowledgement,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::timeout::MsgTimeout;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::error::ValidationError as Ics24Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::events::IbcEvent;
-#[cfg(feature = "ABCI")]
-use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::Time;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Error as ProtoError;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Error as ProtoError;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::Time;
 use thiserror::Error;
 
+use crate::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+use crate::ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+use crate::ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
+use crate::ibc::core::ics02_client::client_state::{
+    AnyClientState, ClientState,
+};
+use crate::ibc::core::ics02_client::client_type::ClientType;
+use crate::ibc::core::ics02_client::events::{
+    Attributes as ClientAttributes, CreateClient, UpdateClient, UpgradeClient,
+};
+use crate::ibc::core::ics02_client::header::{AnyHeader, Header};
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
+use crate::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+use crate::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+use crate::ibc::core::ics02_client::msgs::ClientMsg;
+use crate::ibc::core::ics03_connection::connection::{
+    ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
+};
+use crate::ibc::core::ics03_connection::events::{
+    Attributes as ConnectionAttributes, OpenAck as ConnOpenAck,
+    OpenConfirm as ConnOpenConfirm, OpenInit as ConnOpenInit,
+    OpenTry as ConnOpenTry,
+};
+use crate::ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+use crate::ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
+use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+use crate::ibc::core::ics03_connection::msgs::ConnectionMsg;
+use crate::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
+};
+use crate::ibc::core::ics04_channel::events::{
+    AcknowledgePacket, Attributes as ChannelAttributes,
+    CloseConfirm as ChanCloseConfirm, CloseInit as ChanCloseInit,
+    OpenAck as ChanOpenAck, OpenConfirm as ChanOpenConfirm,
+    OpenInit as ChanOpenInit, OpenTry as ChanOpenTry, SendPacket,
+    TimeoutPacket, WriteAcknowledgement,
+};
+use crate::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use crate::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
+use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+use crate::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
+use crate::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+use crate::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+use crate::ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
+use crate::ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
+use crate::ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
+use crate::ibc::core::ics04_channel::packet::{Packet, Sequence};
+use crate::ibc::core::ics23_commitment::commitment::CommitmentPrefix;
+use crate::ibc::core::ics24_host::error::ValidationError as Ics24Error;
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::events::IbcEvent;
+#[cfg(any(feature = "ibc-mocks-abci", feature = "ibc-mocks"))]
+use crate::ibc::mock::client_state::{MockClientState, MockConsensusState};
+use crate::ibc::timestamp::Timestamp;
 use crate::ledger::ibc::storage;
+use crate::tendermint::Time;
+use crate::tendermint_proto::{Error as ProtoError, Protobuf};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::data::{
     Error as IbcDataError, FungibleTokenPacketData, IbcMessage, PacketAck,
     PacketReceipt,
 };
 use crate::types::ibc::IbcEvent as AnomaIbcEvent;
-use crate::types::storage::{BlockHeight, Epoch, Key};
+use crate::types::storage::{BlockHeight, Key};
 use crate::types::time::Rfc3339String;
 use crate::types::token::{self, Amount};
 
@@ -290,7 +143,7 @@ pub trait IbcActions {
     );
 
     /// Get the current height of this chain
-    fn get_height(&self) -> (Epoch, BlockHeight);
+    fn get_height(&self) -> BlockHeight;
 
     /// Get the current time of the tendermint header of this chain
     fn get_header_time(&self) -> Rfc3339String;
@@ -889,8 +742,8 @@ pub trait IbcActions {
             time.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let (epoch, height) = self.get_height();
-        let height = Height::new(epoch.0, height.0);
+        // the revision number is always 0
+        let height = Height::new(0, self.get_height().0);
         let height_key = storage::client_update_height_key(client_id);
         // write the current height as u64
         self.write_ibc_data(
@@ -1126,10 +979,12 @@ pub fn update_client(
                 let new_consensus_state = TmConsensusState::from(h).wrap_any();
                 Ok((new_client_state, new_consensus_state))
             }
+            #[cfg(any(feature = "ibc-mocks-abci", feature = "ibc-mocks"))]
             _ => Err(Error::ClientUpdate(
                 "The header type is mismatched".to_owned(),
             )),
         },
+        #[cfg(any(feature = "ibc-mocks-abci", feature = "ibc-mocks"))]
         AnyClientState::Mock(_) => match header {
             AnyHeader::Mock(h) => Ok((
                 MockClientState::new(h).wrap_any(),
