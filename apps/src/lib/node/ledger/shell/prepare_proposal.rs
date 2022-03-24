@@ -120,7 +120,7 @@ mod prepare_block {
             let block_data = shell.prepare_proposal(req).block_data;
             assert_eq!(block_data.len(), 1);
             let vote_extensions =
-                Tx::try_from_slice(&block_data[0][..]).expect("Test failed");
+                Tx::try_from(&block_data[0][..]).expect("Test failed");
 
             assert!(matches!(
                 process_tx(vote_extensions).expect("Test failed"),
@@ -170,7 +170,7 @@ mod prepare_block {
             let block_data = shell.prepare_proposal(req).block_data;
             assert_eq!(block_data.len(), 1);
             let vote_extensions =
-                Tx::try_from_slice(&block_data[0][..]).expect("Test failed");
+                Tx::try_from(&block_data[0][..]).expect("Test failed");
 
             assert!(matches!(
                 process_tx(vote_extensions).expect("Test failed"),
@@ -237,7 +237,7 @@ mod prepare_block {
             let mut block_data = shell.prepare_proposal(req).block_data;
             let vote_extensions = block_data.remove(0);
             let vote_extensions =
-                Tx::try_from_slice(&vote_extensions[..]).expect("Test failed");
+                Tx::try_from(&vote_extensions[..]).expect("Test failed");
 
             assert!(matches!(
                 process_tx(vote_extensions).expect("Test failed"),
