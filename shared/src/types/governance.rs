@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::fmt::{self, Display};
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -111,7 +112,7 @@ pub struct Proposal {
     /// The epoch from which this changes are executed
     pub grace_epoch: Epoch,
     /// The code containing the storage changes
-    pub proposal_code: Option<Vec<u8>>,
+    pub proposal_code_path: Option<String>,
 }
 
 impl Display for Proposal {
@@ -131,6 +132,15 @@ impl TryFrom<Proposal> for InitProposalData {
     type Error = ProposalError;
 
     fn try_from(proposal: Proposal) -> Result<Self, Self::Error> {
+        let proposal_code = if let Some(path) = proposal.proposal_code_path {
+            match std::fs::read(path) {
+                Ok(bytes) => Some(bytes),
+                Err(_) => return Err(Self::Error::InvalidProposalData)
+            }
+        } else {
+            None
+        };
+
         Ok(InitProposalData {
             id: proposal.id,
             content: proposal.content.try_to_vec().unwrap(),
@@ -138,7 +148,7 @@ impl TryFrom<Proposal> for InitProposalData {
             voting_start_epoch: proposal.voting_start_epoch,
             voting_end_epoch: proposal.voting_end_epoch,
             grace_epoch: proposal.grace_epoch,
-            proposal_code: proposal.proposal_code,
+            proposal_code: proposal_code
         })
     }
 }

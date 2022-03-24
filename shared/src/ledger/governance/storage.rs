@@ -401,13 +401,18 @@ pub fn get_proposal_code_key(id: u64) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
-/// Get the committing proposal key
-pub fn get_committing_proposals_key(id: u64, epoch: u64) -> Key {
+/// Get the proposal committing key prefix
+pub fn get_commiting_proposals_prefix(epoch: u64) -> Key {
     proposal_prefix()
         .push(&PROPOSAL_COMMITTING_EPOCH.to_owned())
         .expect("Cannot obtain a storage key")
         .push(&epoch.to_string())
         .expect("Cannot obtain a storage key")
+}
+
+/// Get the committing proposal key
+pub fn get_committing_proposals_key(id: u64, epoch: u64) -> Key {
+    get_commiting_proposals_prefix(epoch)
         .push(&id.to_string())
         .expect("Cannot obtain a storage key")
 }
