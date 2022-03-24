@@ -1,6 +1,6 @@
 //! MASP verification wrappers.
 
-use std::{env, fs::File, ops::Deref};
+use std::{fs::File, ops::Deref};
 
 use bellman::groth16::{prepare_verifying_key, PreparedVerifyingKey};
 use bls12_381::Bls12;
@@ -20,9 +20,10 @@ pub fn load_spend_params() -> (
     bellman::groth16::Parameters<Bls12>,
     bellman::groth16::PreparedVerifyingKey<Bls12>,
 ) {
-    let homedir = env::var("HOME").unwrap();
+    let params_dir = masp_proofs::default_params_folder().unwrap();
+    let spend_path = params_dir.join("masp-spend.params");
     let param_f =
-        File::open(homedir + "/.masp-params/masp-spend.params").unwrap();
+        File::open(spend_path).unwrap();
     let params = bellman::groth16::Parameters::read(&param_f, false).unwrap();
     let vk = prepare_verifying_key(&params.vk);
     (params, vk)
@@ -33,9 +34,10 @@ pub fn load_output_params() -> (
     bellman::groth16::Parameters<Bls12>,
     bellman::groth16::PreparedVerifyingKey<Bls12>,
 ) {
-    let homedir = env::var("HOME").unwrap();
+    let params_dir = masp_proofs::default_params_folder().unwrap();
+    let output_path = params_dir.join("masp-output.params");
     let param_f =
-        File::open(homedir + "/.masp-params/masp-output.params").unwrap();
+        File::open(output_path).unwrap();
     let params = bellman::groth16::Parameters::read(&param_f, false).unwrap();
     let vk = prepare_verifying_key(&params.vk);
     (params, vk)
