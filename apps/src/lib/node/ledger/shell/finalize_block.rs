@@ -1,14 +1,12 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use std::cell::{RefCell, Cell};
-use std::sync::Arc;
+use std::cell::RefCell;
 
 use anoma::ledger::governance::{storage as gov_storage, ADDRESS as gov_address};
 use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
 use anoma::types::governance::TallyResult;
 use anoma::types::storage::BlockHash;
 
-use anoma::types::token::Amount;
 use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
@@ -65,9 +63,10 @@ where
             let proposals_key = gov_storage::get_commiting_proposals_prefix(
                 self.storage.last_epoch.0,
             );
-            let store_ref = RefCell::new(&mut self.storage);
-            let store_borrow = store_ref.borrow_mut();
-    
+            let store_ref = Rc::new(RefCell::new(&mut self.storage));
+            let store_clone = Rc::clone(&store_ref);
+            let store_borrow = store_clone.borrow();
+
             let (proposal_iter, _) = store_borrow.iter_prefix(&proposals_key);
             for (key, _, _) in proposal_iter {
                 let key = Key::from_str(key.as_str())
@@ -75,7 +74,7 @@ where
                 let proposal_id = gov_storage::get_commit_proposal_id(&key);
                 if let Some(id) = proposal_id {
                     let proposal_funds_key = gov_storage::get_funds_key(id);
-                    let (proposal_funds_bytes, _) = &store_borrow.read(&proposal_funds_key).expect("Should be able to read key.");
+                    let (proposal_funds_bytes, _) = store_borrow.read(&proposal_funds_key).expect("Should be able to read key.");
                     let funds = if let Some(funds_bytes) = proposal_funds_bytes {
                         match token::Amount::try_from_slice(&funds_bytes[..]).ok() {
                             Some(funds) => funds,
@@ -128,7 +127,9 @@ where
                                             } else {
                                                 continue
                                             };
-                                            store_borrow.transfer(&m1t(), funds, &gov_address, &proposal_author);
+                                            let store_clone_mut = Rc::clone(&store_ref);
+                                            let mut store_borrow_mut = store_clone_mut.borrow_mut();
+                                            store_borrow_mut.transfer(&m1t(), funds, &gov_address, &proposal_author);
                                         } else {
                                             let proposal_event: Event =
                                                 ProposalEvent::new(
