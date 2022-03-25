@@ -1,7 +1,6 @@
 //! Shell methods for querying state
 use std::cmp::max;
-
-use anoma::ledger::parameters::EpochDuration;
+use anoma::ledger::parameters::parameters::EpochDuration;
 use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
 use anoma::types::key;

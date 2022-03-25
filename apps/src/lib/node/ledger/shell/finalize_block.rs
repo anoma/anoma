@@ -1,9 +1,16 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
+use anoma::ledger::governance::{
+    storage as gov_storage, ADDRESS as gov_address,
+};
+use anoma::ledger::treasury::ADDRESS as treasury_address;
+use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
 use anoma::types::storage::BlockHash;
+
+use anoma::types::token::Amount;
+use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -55,65 +62,89 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         if new_epoch {
-            let proposals_key = gov_storage::get_commiting_proposals_prefix(
-                self.storage.last_epoch.0,
-            );
-            let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
-            for (key, _, _) in proposal_iter {
-                let key = Key::from_str(key.as_str())
-                    .expect("Key should be parsable");
-                let proposal_id = gov_storage::get_commit_proposal_id(&key);
-                if let Some(id) = proposal_id {
-                    let tally_result = compute_tally(&self.storage, id);
-                    if let Ok(tally_result) = tally_result {
-                        match tally_result {
-                            (TallyResult::Passed, Some(code)) => {
-                                let tx = Tx::new(code, None);
-                                let tx_type = TxType::Decrypted(
-                                    DecryptedTx::Decrypted(tx),
-                                );
-                                let tx_result = protocol::apply_tx(
-                                    tx_type,
-                                    0,
-                                    &mut BlockGasMeter::default(),
-                                    &mut self.write_log,
-                                    &self.storage,
-                                    &mut self.vp_wasm_cache,
-                                    &mut self.tx_wasm_cache,
-                                );
-                                match tx_result {
-                                    Ok(res) => {
-                                        if res.is_accepted() {
-                                            let proposal_event: Event =
-                                                ProposalEvent::new(
-                                                    EventType::Proposal
-                                                        .to_string(),
-                                                    TallyResult::Passed,
-                                                    id,
-                                                    true,
-                                                    true,
-                                                )
-                                                .into();
-                                            response
-                                                .events
-                                                .push(proposal_event.into());
+            for id in self.proposal_data.clone() {
+                println!("Executing: {}", id);
+                let proposal_funds_key = gov_storage::get_funds_key(id);
+                let (proposal_funds_bytes, _) = self
+                    .storage
+                    .read(&proposal_funds_key)
+                    .expect("Should be able to read key.");
+                let funds = if let Some(funds_bytes) = proposal_funds_bytes {
+                    match token::Amount::try_from_slice(&funds_bytes[..]).ok() {
+                        Some(funds) => funds,
+                        None => continue,
+                    }
+                } else {
+                    continue;
+                };
+                let tally_result = compute_tally(&self.storage, id);
+                if let Ok(tally_result) = tally_result {
+                    match tally_result {
+                        (TallyResult::Passed, Some(code)) => {
+                            println!("tally okay + code ");
+                            let tx = Tx::new(code, None);
+                            let tx_type =
+                                TxType::Decrypted(DecryptedTx::Decrypted(tx));
+                            let tx_result = protocol::apply_tx(
+                                tx_type,
+                                0,
+                                &mut BlockGasMeter::default(),
+                                &mut self.write_log,
+                                &self.storage,
+                                &mut self.vp_wasm_cache,
+                                &mut self.tx_wasm_cache,
+                            );
+                            match tx_result {
+                                Ok(tx_result) => {
+                                    if tx_result.is_accepted() {
+                                        let proposal_event: Event =
+                                            ProposalEvent::new(
+                                                EventType::Proposal.to_string(),
+                                                TallyResult::Passed,
+                                                id,
+                                                true,
+                                                true,
+                                            )
+                                            .into();
+                                        response
+                                            .events
+                                            .push(proposal_event.into());
+
+                                        let author_key =
+                                            gov_storage::get_author_key(id);
+                                        let (proposal_author_bytes, _) = self
+                                            .storage
+                                            .read(&author_key)
+                                            .expect(
+                                                "Should be able to read key.",
+                                            );
+                                        let proposal_author = if let Some(
+                                            proposal_author_bytes,
+                                        ) =
+                                            proposal_author_bytes
+                                        {
+                                            match Address::try_from_slice(
+                                                &proposal_author_bytes[..],
+                                            )
+                                            .ok()
+                                            {
+                                                Some(address) => address,
+                                                None => continue,
+                                            }
                                         } else {
-                                            let proposal_event: Event =
-                                                ProposalEvent::new(
-                                                    EventType::Proposal
-                                                        .to_string(),
-                                                    TallyResult::Passed,
-                                                    id,
-                                                    true,
-                                                    false,
-                                                )
-                                                .into();
-                                            response
-                                                .events
-                                                .push(proposal_event.into());
-                                        }
-                                    }
-                                    Err(_e) => {
+                                            continue;
+                                        };
+                                        println!(
+                                            "transfering funds...: {}",
+                                            id
+                                        );
+                                        self.storage.transfer(
+                                            &m1t(),
+                                            funds,
+                                            &gov_address,
+                                            &proposal_author,
+                                        );
+                                    } else {
                                         let proposal_event: Event =
                                             ProposalEvent::new(
                                                 EventType::Proposal.to_string(),
@@ -126,35 +157,89 @@ where
                                         response
                                             .events
                                             .push(proposal_event.into());
+                                        self.storage.transfer(
+                                            &m1t(),
+                                            funds,
+                                            &gov_address,
+                                            &treasury_address,
+                                        );
                                     }
                                 }
-                            }
-                            (TallyResult::Passed, None) => {
-                                let proposal_event: Event = ProposalEvent::new(
-                                    EventType::Proposal.to_string(),
-                                    TallyResult::Passed,
-                                    id,
-                                    false,
-                                    false,
-                                )
-                                .into();
-                                response.events.push(proposal_event.into());
-                            }
-                            _ => {
-                                let proposal_event: Event = ProposalEvent::new(
-                                    EventType::Proposal.to_string(),
-                                    TallyResult::Rejected,
-                                    id,
-                                    false,
-                                    false,
-                                )
-                                .into();
-                                response.events.push(proposal_event.into())
+                                Err(_e) => {
+                                    let proposal_event: Event =
+                                        ProposalEvent::new(
+                                            EventType::Proposal.to_string(),
+                                            TallyResult::Passed,
+                                            id,
+                                            true,
+                                            false,
+                                        )
+                                        .into();
+                                    response.events.push(proposal_event.into());
+                                    self.storage.transfer(
+                                        &m1t(),
+                                        funds,
+                                        &gov_address,
+                                        &treasury_address,
+                                    );
+                                }
                             }
                         }
+                        (TallyResult::Passed, None) => {
+                            let author_key = gov_storage::get_author_key(id);
+                            let (proposal_author_bytes, _) = self
+                                .storage
+                                .read(&author_key)
+                                .expect("Should be able to read key.");
+                            let proposal_author =
+                                if let Some(proposal_author_bytes) =
+                                    proposal_author_bytes
+                                {
+                                    match Address::try_from_slice(
+                                        &proposal_author_bytes[..],
+                                    )
+                                    .ok()
+                                    {
+                                        Some(address) => address,
+                                        None => continue,
+                                    }
+                                } else {
+                                    continue;
+                                };
+                            let proposal_event: Event = ProposalEvent::new(
+                                EventType::Proposal.to_string(),
+                                TallyResult::Passed,
+                                id,
+                                false,
+                                false,
+                            )
+                            .into();
+                            response.events.push(proposal_event.into());
+                            self.storage.transfer(
+                                &m1t(),
+                                funds,
+                                &gov_address,
+                                &proposal_author,
+                            );
+                        }
+                        _ => {
+                            let proposal_event: Event = ProposalEvent::new(
+                                EventType::Proposal.to_string(),
+                                TallyResult::Rejected,
+                                id,
+                                false,
+                                false,
+                            )
+                            .into();
+                            response.events.push(proposal_event.into());
+                            self.storage.transfer(
+                                &m1t(),
+                                funds,
+                                &gov_address,
+                                &treasury_address,
+                            );
+                        }
                     }
-                } else {
-                    continue;
                 }
             }
         }
@@ -443,7 +528,7 @@ where
 
         // Update evidence parameters
         let (epoch_duration, _gas) =
-            parameters::read_epoch_parameter(&self.storage)
+            parameters::parameters::read_epoch_parameter(&self.storage)
                 .expect("Couldn't read epoch duration parameters");
         let pos_params = self.storage.read_pos_params();
         let evidence_params =
