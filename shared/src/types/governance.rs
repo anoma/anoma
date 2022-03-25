@@ -2,7 +2,6 @@
 
 use std::collections::BTreeMap;
 use std::fmt::{self, Display};
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -135,7 +134,7 @@ impl TryFrom<Proposal> for InitProposalData {
         let proposal_code = if let Some(path) = proposal.proposal_code_path {
             match std::fs::read(path) {
                 Ok(bytes) => Some(bytes),
-                Err(_) => return Err(Self::Error::InvalidProposalData)
+                Err(_) => return Err(Self::Error::InvalidProposalData),
             }
         } else {
             None
@@ -148,7 +147,7 @@ impl TryFrom<Proposal> for InitProposalData {
             voting_start_epoch: proposal.voting_start_epoch,
             voting_end_epoch: proposal.voting_end_epoch,
             grace_epoch: proposal.grace_epoch,
-            proposal_code: proposal_code
+            proposal_code,
         })
     }
 }

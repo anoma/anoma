@@ -1,5 +1,6 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
+use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
 use anoma::types::governance::TallyResult;
 use anoma::types::storage::BlockHash;
@@ -16,10 +17,8 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 
-use crate::node::ledger::events::EventType;
-
 use super::*;
-use anoma::ledger::governance::storage as gov_storage;
+use crate::node::ledger::events::EventType;
 
 impl<D, H> Shell<D, H>
 where
@@ -54,60 +53,108 @@ where
         // begin the next block and check if a new epoch began
         let (height, new_epoch) =
             self.update_state(req.header, req.hash, req.byzantine_validators);
-        
+
         if new_epoch {
-            println!("new_epoch");
-            let proposals_key = gov_storage::get_commiting_proposals_prefix(self.storage.last_epoch.0);
+            let proposals_key = gov_storage::get_commiting_proposals_prefix(
+                self.storage.last_epoch.0,
+            );
             let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
             for (key, _, _) in proposal_iter {
-                println!("new_epoch: {}", key);
-                let key = Key::from_str(key.as_str()).expect("Key should be parsable");
+                let key = Key::from_str(key.as_str())
+                    .expect("Key should be parsable");
                 let proposal_id = gov_storage::get_commit_proposal_id(&key);
                 if let Some(id) = proposal_id {
-                    println!("proposal_id: {}", id);
                     let tally_result = compute_tally(&self.storage, id);
                     if let Ok(tally_result) = tally_result {
                         match tally_result {
                             (TallyResult::Passed, Some(code)) => {
-                                println!("tally okay: {}", id);
                                 let tx = Tx::new(code, None);
-                                let tx_type = process_tx(tx);
-                                if let Ok(tx_type) = tx_type {
-                                    let tx_result = protocol::apply_tx(tx_type, 0, &mut BlockGasMeter::default(), &mut self.write_log, &self.storage, &mut self.vp_wasm_cache, &mut self.tx_wasm_cache);
-                                    if let Ok(tx_result) = tx_result {
-                                        if tx_result.is_accepted() {
-                                            println!("proposal  accepted: {}", id);
-                                            let proposal_event: Event = ProposalEvent::new(EventType::Proposal.to_string(), TallyResult::Passed, id, true, true).into();
-                                            response.events.push(proposal_event.into());
+                                let tx_type = TxType::Decrypted(
+                                    DecryptedTx::Decrypted(tx),
+                                );
+                                let tx_result = protocol::apply_tx(
+                                    tx_type,
+                                    0,
+                                    &mut BlockGasMeter::default(),
+                                    &mut self.write_log,
+                                    &self.storage,
+                                    &mut self.vp_wasm_cache,
+                                    &mut self.tx_wasm_cache,
+                                );
+                                match tx_result {
+                                    Ok(res) => {
+                                        if res.is_accepted() {
+                                            let proposal_event: Event =
+                                                ProposalEvent::new(
+                                                    EventType::Proposal
+                                                        .to_string(),
+                                                    TallyResult::Passed,
+                                                    id,
+                                                    true,
+                                                    true,
+                                                )
+                                                .into();
+                                            response
+                                                .events
+                                                .push(proposal_event.into());
                                         } else {
-                                            println!("proposal  rejected: {}", id);
-                                            let proposal_event: Event = ProposalEvent::new(EventType::Proposal.to_string(), TallyResult::Passed, id, true, false).into();
-                                            response.events.push(proposal_event.into());
+                                            let proposal_event: Event =
+                                                ProposalEvent::new(
+                                                    EventType::Proposal
+                                                        .to_string(),
+                                                    TallyResult::Passed,
+                                                    id,
+                                                    true,
+                                                    false,
+                                                )
+                                                .into();
+                                            response
+                                                .events
+                                                .push(proposal_event.into());
                                         }
-                                    } else {
-                                        println!("proposal execution error: {}", id);
-                                        let proposal_event: Event = ProposalEvent::new(EventType::Proposal.to_string(), TallyResult::Passed, id, true, false).into();
-                                        response.events.push(proposal_event.into());
                                     }
-                                } else {
-                                    let proposal_event: Event = ProposalEvent::new(EventType::Proposal.to_string(), TallyResult::Passed, id, true, false).into();
-                                    response.events.push(proposal_event.into());
+                                    Err(_e) => {
+                                        let proposal_event: Event =
+                                            ProposalEvent::new(
+                                                EventType::Proposal.to_string(),
+                                                TallyResult::Passed,
+                                                id,
+                                                true,
+                                                false,
+                                            )
+                                            .into();
+                                        response
+                                            .events
+                                            .push(proposal_event.into());
+                                    }
                                 }
-                            },
+                            }
                             (TallyResult::Passed, None) => {
-                                println!("proposal without code: {}", id);
-                                let proposal_event: Event = ProposalEvent::new(EventType::Proposal.to_string(), TallyResult::Passed, id, false, false).into();
+                                let proposal_event: Event = ProposalEvent::new(
+                                    EventType::Proposal.to_string(),
+                                    TallyResult::Passed,
+                                    id,
+                                    false,
+                                    false,
+                                )
+                                .into();
                                 response.events.push(proposal_event.into());
-                            },
+                            }
                             _ => {
-                                println!("tally obestemmiekay: {}", id);
-                                let proposal_event: Event = ProposalEvent::new(EventType::Proposal.to_string(), TallyResult::Rejected, id, false, false).into();
+                                let proposal_event: Event = ProposalEvent::new(
+                                    EventType::Proposal.to_string(),
+                                    TallyResult::Rejected,
+                                    id,
+                                    false,
+                                    false,
+                                )
+                                .into();
                                 response.events.push(proposal_event.into())
                             }
                         }
                     }
                 } else {
-                    continue
+                    continue;
                 }
             }
         }
