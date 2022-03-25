@@ -203,6 +203,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
     async fn print_proposal(
         client: &HttpClient,
         id: u64,
+        current_epoch: Epoch,
         details: bool,
     ) -> Option<()> {
         let author_key = gov_storage::get_author_key(id);
@@ -238,8 +239,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
             println!("{:4}Grace Epoch: {}", "", grace_epoch);
             if start_epoch > current_epoch {
                 println!("{:4}Status: pending", "");
-            } else if start_epoch <= current_epoch
-                && current_epoch <= end_epoch
+            } else if start_epoch <= current_epoch && current_epoch <= end_epoch
             {
                 println!("{:4}Status: on-going", "");
             } else {

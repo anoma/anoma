@@ -79,6 +79,7 @@ where
         };
 
         let result = keys_changed.iter().all(|key| {
+            println!("{}", key);
             let proposal_id = gov_storage::get_id(key);
 
             let key_type: KeyType = key.into();
@@ -182,9 +183,11 @@ where
                     .ok();
                     let has_pre_proposal_code =
                         self.ctx.has_key_pre(&proposal_code_key).ok();
-                    let post_proposal_code: Option<Vec<u8>> =
-                        read(&self.ctx, &proposal_code_key, ReadType::POST)
-                            .ok();
+                    let post_proposal_code = read_bytes(
+                        &self.ctx,
+                        &proposal_code_key,
+                        ReadType::POST,
+                    );
                     match (
                         has_pre_proposal_code,
                         post_proposal_code,
@@ -500,6 +503,27 @@ where
             None => Err(Error::NativeVpNonExistingKeyError(key.to_string())),
         },
         Err(err) => Err(Error::NativeVpError(err)),
+    }
+}
+
+fn read_bytes<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    key: &Key,
+    read_type: ReadType,
+) -> Option<Vec<u8>>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let storage_result = match read_type {
+        ReadType::PRE => context.read_pre(key),
+        ReadType::POST => context.read_post(key),
+    };
+
+    match storage_result {
+        Ok(value) => value,
+        Err(_err) => None,
     }
 }
 

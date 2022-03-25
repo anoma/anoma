@@ -449,8 +449,8 @@ pub fn get_commit_proposal_id(key: &Key) -> Option<u64> {
         Some(id) => match id {
             DbKeySeg::AddressSeg(_) => None,
             DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
-        }
-        None => None
+        },
+        None => None,
     }
 }
 

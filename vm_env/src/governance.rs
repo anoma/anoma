@@ -39,7 +39,7 @@ pub mod tx {
 
         if let Some(proposal_code) = data.proposal_code {
             let proposal_code_key = storage::get_proposal_code_key(proposal_id);
-            tx::write(&proposal_code_key.to_string(), proposal_code);
+            tx::write_bytes(&proposal_code_key.to_string(), proposal_code);
         }
 
         tx::write(&counter_key.to_string(), proposal_id + 1);

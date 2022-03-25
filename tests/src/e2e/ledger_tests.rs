@@ -1369,7 +1369,7 @@ fn proposal_offline() -> Result<()> {
     let tally_offline = vec![
         "query-proposal-result",
         "--data-path",
-        &proposal_data_folder.to_str().unwrap(),
+        proposal_data_folder.to_str().unwrap(),
         "--offline",
         "--ledger-address",
         &validator_one_rpc,

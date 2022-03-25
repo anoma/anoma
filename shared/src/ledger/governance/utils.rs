@@ -15,30 +15,49 @@ use crate::types::governance::{ProposalVote, TallyResult};
 use crate::types::storage::{Epoch, Key};
 use crate::types::token;
 
+/// Proposal errors
 #[derive(Error, Debug)]
 pub enum Error {
+    /// Invalid validator set deserialization
     #[error("Invalid validator set")]
     InvalidValidatorSet,
+    /// Invalid proposal field deserialization
     #[error("Invalid proposal {0}")]
     InvalidProposal(u64),
 }
 
+/// Proposal event definition
 pub struct ProposalEvent {
+    /// Proposal event type
     pub event_type: String,
-    pub attributes: HashMap<String, String>
+    /// Proposal event attributes
+    pub attributes: HashMap<String, String>,
 }
 
 impl ProposalEvent {
-    pub fn new(event_type: String, tally: TallyResult, id: u64, has_proposal_code: bool, proposal_code_exit_status: bool) -> Self {
+    /// Create a proposal event
+    pub fn new(
+        event_type: String,
+        tally: TallyResult,
+        id: u64,
+        has_proposal_code: bool,
+        proposal_code_exit_status: bool,
+    ) -> Self {
         let attributes = HashMap::from([
-            ("tally_result".to_string(), tally.to_string()), 
+            ("tally_result".to_string(), tally.to_string()),
             ("proposal_id".to_string(), id.to_string()),
-            ("has_proposal_code".to_string(), (!has_proposal_code as u64).to_string()),
-            ("proposal_code_exit_status".to_string(), (!proposal_code_exit_status as u64).to_string())
+            (
+                "has_proposal_code".to_string(),
+                (!has_proposal_code as u64).to_string(),
+            ),
+            (
+                "proposal_code_exit_status".to_string(),
+                (!proposal_code_exit_status as u64).to_string(),
+            ),
         ]);
         Self {
             event_type,
-            attributes
+            attributes,
         }
     }
 }
@@ -139,17 +158,18 @@ where
             }
 
             if yay_total_tokens / total_tokens >= 0.66 {
-                let proposal_code = gov_storage::get_proposal_code_key(proposal_id);
+                let proposal_code =
+                    gov_storage::get_proposal_code_key(proposal_id);
                 let (proposal_code_bytes, _) = storage
                     .read(&proposal_code)
-                    .expect("Key should be defined");
+                    .expect("Should be able to read from storage.");
 
-                return Ok((TallyResult::Passed, proposal_code_bytes))
+                Ok((TallyResult::Passed, proposal_code_bytes))
             } else {
-                return Ok((TallyResult::Rejected, None))
+                Ok((TallyResult::Rejected, None))
             }
         }
-        Err(e) => return Err(e),
+        Err(e) => Err(e),
     }
 }
 
@@ -164,7 +184,7 @@ where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
-    let slashes_key = pos::validator_slashes_key(&validator);
+    let slashes_key = pos::validator_slashes_key(validator);
     let bond_key = pos::bond_key(&BondId {
         source: delegator.clone(),
         validator: validator.clone(),
@@ -194,7 +214,7 @@ where
                         {
                             let epoch_start: Epoch = (*start_epoch).into();
                             if epoch >= epoch_start {
-                                delegated_amount += amount.clone();
+                                delegated_amount += *amount;
                             }
                         }
                     }
@@ -202,12 +222,15 @@ where
                 }
                 _ => {
                     println!("bond: inner fail");
-                    return None
+                    None
                 }
             }
         }
         _ => {
-            println!("bond: outer fail {:?}, {:?}", epoched_bonds_bytes, slashes_bytes);
+            println!(
+                "bond: outer fail {:?}, {:?}",
+                epoched_bonds_bytes, slashes_bytes
+            );
             None
         }
     }
@@ -245,8 +268,7 @@ where
                     let active_validators = validator_set
                         .active
                         .iter()
-                        .map(|validator| validator.address.clone())
-                        .collect::<Vec<Address>>();
+                        .map(|validator| validator.address.clone());
                     for (key, value_bytes, _) in votes {
                         let vote =
                             ProposalVote::try_from_slice(&value_bytes[..]).ok();
@@ -266,14 +288,14 @@ where
                             continue;
                         }
                     }
-                    return Ok((validator_voters, delegator_voters));
+                    Ok((validator_voters, delegator_voters))
                 } else {
-                    return Err(Error::InvalidValidatorSet);
+                    Err(Error::InvalidValidatorSet)
                 }
             } else {
-                return Err(Error::InvalidValidatorSet);
+                Err(Error::InvalidValidatorSet)
             }
         }
-        None => return Err(Error::InvalidValidatorSet),
+        None => Err(Error::InvalidValidatorSet),
     }
 }
