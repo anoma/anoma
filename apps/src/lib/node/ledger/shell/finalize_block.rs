@@ -1,9 +1,15 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::ledger::governance::storage as gov_storage;
+use std::cell::{RefCell, Cell};
+use std::sync::Arc;
+
+use anoma::ledger::governance::{storage as gov_storage, ADDRESS as gov_address};
 use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
 use anoma::types::governance::TallyResult;
 use anoma::types::storage::BlockHash;
+
+use anoma::types::token::Amount;
+use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -18,6 +24,7 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 use tendermint_stable::block::Header;
 
 use super::*;
+use anoma::types::address::{xan as m1t, Address};
 use crate::node::ledger::events::EventType;
 
 impl<D, H> Shell<D, H>
@@ -58,13 +65,26 @@ where
             let proposals_key = gov_storage::get_commiting_proposals_prefix(
                 self.storage.last_epoch.0,
             );
-            let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
+            let store_ref = RefCell::new(&mut self.storage);
+            let store_borrow = store_ref.borrow_mut();
+    
+            let (proposal_iter, _) = store_borrow.iter_prefix(&proposals_key);
             for (key, _, _) in proposal_iter {
                 let key = Key::from_str(key.as_str())
                     .expect("Key should be parsable");
                 let proposal_id = gov_storage::get_commit_proposal_id(&key);
                 if let Some(id) = proposal_id {
-                    let tally_result = compute_tally(&self.storage, id);
+                    let proposal_funds_key = gov_storage::get_funds_key(id);
+                    let (proposal_funds_bytes, _) = &store_borrow.read(&proposal_funds_key).expect("Should be able to read key.");
+                    let funds = if let Some(funds_bytes) = proposal_funds_bytes {
+                        match token::Amount::try_from_slice(&funds_bytes[..]).ok() {
+                            Some(funds) => funds,
+                            None => continue,
+                        }
+                    } else {
+                        continue
+                    };
+                    let tally_result = compute_tally(*store_borrow, id);
                     if let Ok(tally_result) = tally_result {
                         match tally_result {
                             (TallyResult::Passed, Some(code)) => {
@@ -77,13 +97,13 @@ where
                                     0,
                                     &mut BlockGasMeter::default(),
                                     &mut self.write_log,
-                                    &self.storage,
+                                    *store_borrow,
                                     &mut self.vp_wasm_cache,
                                     &mut self.tx_wasm_cache,
                                 );
                                 match tx_result {
-                                    Ok(res) => {
-                                        if res.is_accepted() {
+                                    Ok(tx_result) => {
+                                        if tx_result.is_accepted() {
                                             let proposal_event: Event =
                                                 ProposalEvent::new(
                                                     EventType::Proposal
@@ -97,6 +117,18 @@ where
                                             response
                                                 .events
                                                 .push(proposal_event.into());
+                                            
+                                            let author_key = gov_storage::get_author_key(id);
+                                            let (proposal_author_bytes, _) = store_borrow.read(&author_key).expect("Should be able to read key.");
+                                            let proposal_author = if let Some(proposal_author_bytes) = proposal_author_bytes {
+                                                match Address::try_from_slice(&proposal_author_bytes[..]).ok() {
+                                                    Some(address) => address,
+                                                    None => continue,
+                                                }
+                                            } else {
+                                                continue
+                                            };
+                                            store_borrow.transfer(&m1t(), funds, &gov_address, &proposal_author);
                                         } else {
                                             let proposal_event: Event =
                                                 ProposalEvent::new(
@@ -111,6 +143,7 @@ where
                                             response
                                                 .events
                                                 .push(proposal_event.into());
+                                            //TODO: send money to treasury
                                         }
                                     }
                                     Err(_e) => {
@@ -126,6 +159,7 @@ where
                                         response
                                             .events
                                             .push(proposal_event.into());
+                                        //TODO: send money to treasury
                                     }
                                 }
                             }
@@ -139,6 +173,7 @@ where
                                 )
                                 .into();
                                 response.events.push(proposal_event.into());
+                                // send money back
                             }
                             _ => {
                                 let proposal_event: Event = ProposalEvent::new(
@@ -150,10 +185,12 @@ where
                                 )
                                 .into();
                                 response.events.push(proposal_event.into())
+                                //TODO: send money to treasury
                             }
                         }
                     }
                 } else {
+                    // here happends only if we are not able to read and convert a proposal id to u64. This should never happen.
                     continue;
                 }
             }
