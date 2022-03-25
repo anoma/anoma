@@ -265,7 +265,7 @@ where
             if let Some(epoched_validator_set) = epoched_validator_set {
                 let validator_set = epoched_validator_set.get(epoch);
                 if let Some(validator_set) = validator_set {
-                    let active_validators = validator_set
+                    let mut active_validators = validator_set
                         .active
                         .iter()
                         .map(|validator| validator.address.clone());
