@@ -1,11 +1,11 @@
 #[cfg(not(feature = "ABCI"))]
 mod extend_votes {
+    use anoma::types::ethereum_headers::SignedEthereumHeader;
     use anoma::types::transaction::protocol::VoteExtension;
     use borsh::{BorshDeserialize, BorshSerialize};
     use tendermint_proto::types::Vote;
 
     use super::super::*;
-    use crate::node::ledger::ethereum_node::ethereum_types::SignedEthereumHeader;
 
     #[derive(BorshSerialize, BorshDeserialize)]
     pub struct VoteExtensionData {

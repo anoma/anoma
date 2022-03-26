@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::ffi::OsString;
 
-use anoma::types::hash::Hash;
-use ethereum_types::EthereumHeader;
+use anoma::types::ethereum_headers::EthereumHeader;
 #[cfg(feature = "eth-fullnode")]
 use futures_lite::{Stream, StreamExt};
 use thiserror::Error;
 use tokio::sync::mpsc::UnboundedSender;
-use web3::types::{BlockHeader, Log, H160};
+use web3::types::{Log, H160};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -266,7 +265,7 @@ pub mod ethereum_poller {
     use futures::task::{Context, Poll};
     use web3::api::{EthSubscribe, Namespace, SubscriptionStream};
     use web3::transports::ws::WebSocket;
-    use web3::types::FilterBuilder;
+    use web3::types::{BlockHeader, FilterBuilder};
 
     use super::*;
 
@@ -293,6 +292,7 @@ pub mod ethereum_poller {
         /// Starts a new set of subscription streams.
         ///  * `url` should point to the websocket endpoint of the ethereum
         ///    fullnode
+
         ///  * `smart_contract_addresses` are the address of smart contracts
         ///    whose logs we wish to see
         ///
@@ -388,6 +388,7 @@ pub use ethereum_poller::EthereumPoller;
 /// Used for testing
 #[cfg(not(feature = "eth-fullnode"))]
 mod mock_eth_poller {
+    use anoma::types::hash::Hash;
     use rand::Rng;
 
     use super::*;
@@ -397,6 +398,7 @@ mod mock_eth_poller {
     pub struct MockEthereumPoller {
         /// used so that parent hash is correct in mocked Ethereum header
         pub last_hash: Hash,
+
         /// used so that block number is correct in mocked Ethereum header
         pub last_number: u64,
     }
@@ -429,6 +431,9 @@ mod mock_eth_poller {
                 hash: self.last_hash.clone(),
                 parent_hash,
                 number: self.last_number,
+                difficulty: 0.into(),
+                nonce: Default::default(),
+                mix_hash: Hash([0; 32]),
                 state_root: Hash([0; 32]),
                 transactions_root: Hash([0; 32]),
             };
@@ -471,100 +476,6 @@ pub mod ethereum_channel {
                     return Err(Error::TerminatedSubscription) as Result<()>;
                 }
             };
-        }
-    }
-}
-
-pub mod ethereum_types {
-    use std::convert::TryFrom;
-
-    #[cfg(not(feature = "ABCI"))]
-    use anoma::proto::Signed;
-    #[cfg(not(feature = "ABCI"))]
-    use anoma::types::key::*;
-    use borsh::{BorshDeserialize, BorshSerialize};
-
-    use super::*;
-
-    #[derive(BorshSerialize, BorshDeserialize)]
-    /// Pared down information from an Ethereum block header.
-    /// Should only represent headers of mined blocks.
-    pub struct EthereumHeader {
-        /// Hash of the block
-        pub hash: Hash,
-        /// Hash of the parent
-        pub parent_hash: Hash,
-        /// Block number
-        pub number: u64,
-        /// State root hash
-        pub state_root: Hash,
-        /// Transactions root hash
-        pub transactions_root: Hash,
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    impl EthereumHeader {
-        pub fn sign(
-            self,
-            signing_key: &common::SecretKey,
-        ) -> SignedEthereumHeader {
-            let sig = common::SigScheme::sign(
-                signing_key,
-                &self.try_to_vec().unwrap(),
-            );
-            SignedEthereumHeader {
-                public_key: signing_key.ref_to(),
-                signed_header: Signed { data: self, sig },
-            }
-        }
-    }
-
-    impl TryFrom<BlockHeader> for EthereumHeader {
-        type Error = Error;
-
-        fn try_from(header: BlockHeader) -> Result<Self> {
-            Ok(EthereumHeader {
-                hash: header
-                    .hash
-                    .map(|h| Hash(h.0))
-                    .ok_or(Error::InvalidHeader)?,
-                parent_hash: Hash(header.parent_hash.0),
-                number: header
-                    .number
-                    .map(|num| num.as_u64())
-                    .ok_or(Error::InvalidHeader)?,
-                state_root: Hash(header.state_root.0),
-                transactions_root: Hash(header.transactions_root.0),
-            })
-        }
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    #[derive(BorshSerialize, BorshDeserialize)]
-    /// A verifiable signed instance of the EthereumHeader.
-    pub struct SignedEthereumHeader {
-        pub public_key: common::PublicKey,
-        pub signed_header: Signed<EthereumHeader>,
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    impl SignedEthereumHeader {
-        /// Check that validity of the signature
-        pub fn verify_signature(
-            &self,
-        ) -> std::result::Result<(), VerifySigError> {
-            let Signed { data, sig } = &self.signed_header;
-            common::SigScheme::verify_signature_raw(
-                &self.public_key,
-                &data.try_to_vec().unwrap(),
-                sig,
-            )
-        }
-
-        /// Get the Ethereum header out and return it
-        pub fn extract_header(self) -> EthereumHeader {
-            let Signed { data, .. } = self.signed_header;
-            data
         }
     }
 }

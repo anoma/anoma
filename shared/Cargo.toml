@@ -68,11 +68,13 @@ ark-ec = {version = "0.3", optional = true}
 ark-serialize = "0.3"
 bech32 = "0.8.0"
 borsh = "0.9.0"
+byteorder = { version = "1", default-features = false }
 chrono = "0.4.19"
 # Using unreleased commit on top of version 0.5.0 that adds Sync to the CLruCache
 clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 derivative = "2.2.0"
 ed25519-consensus = "1.2.0"
+ethereum-types = "0.13.1"
 ferveo = {optional = true, git = "https://github.com/anoma/ferveo"}
 ferveo-common = {git = "https://github.com/anoma/ferveo"}
 hex = "0.4.3"
@@ -93,10 +95,12 @@ pwasm-utils = {version = "0.18.0", optional = true}
 rand = {version = "0.8", optional = true}
 # TODO proptest rexports the RngCore trait but the re-implementations only work for version `0.8`. *sigh*
 rand_core = {version = "0.6", optional = true}
+rlp = { version = "0.5", default-features = false }
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_json = "1.0.62"
 sha2 = "0.9.3"
+sha3 = { version = "0.10", default-features = false }
 # We switch off "blake2b" because it cannot be compiled to wasm
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", default-features = false, features = ["std", "borsh"]}
 tempfile = {version = "3.2.0", optional = true}
@@ -106,6 +110,7 @@ tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch =
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 thiserror = "1.0.30"
+tokio = {version = "1.8.2", features = ["sync"]}
 tracing = "0.1.30"
 wasmer = {version = "=2.2.0", optional = true}
 wasmer-cache = {version = "=2.2.0", optional = true}
@@ -114,10 +119,12 @@ wasmer-engine-dylib = {version = "=2.2.0", optional = true}
 wasmer-engine-universal = {version = "=2.2.0", optional = true}
 wasmer-vm = {version = "2.2.0", optional = true}
 wasmparser = "0.83.0"
+web3 = "0.18.0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
 byte-unit = "4.0.13"
+hex-literal = "0.3"
 pretty_assertions = "0.7.2"
 proptest = "1.0.0"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}

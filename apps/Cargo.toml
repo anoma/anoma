@@ -83,6 +83,7 @@ config = "0.11.0"
 derivative = "2.2.0"
 directories = "4.0.1"
 ed25519-consensus = "1.2.0"
+ethash = "0.4.0"
 ferveo = {git = "https://github.com/anoma/ferveo"}
 ferveo-common = {git = "https://github.com/anoma/ferveo"}
 futures-lite = "1.12.0"

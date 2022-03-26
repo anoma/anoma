@@ -3,6 +3,7 @@
 pub mod address;
 pub mod chain;
 pub mod dylib;
+pub mod ethereum_headers;
 pub mod hash;
 pub mod ibc;
 pub mod intent;

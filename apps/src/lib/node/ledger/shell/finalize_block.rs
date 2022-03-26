@@ -1,5 +1,7 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
+#[cfg(not(feature = "ABCI"))]
+use anoma::types::ethereum_headers::EthereumHeader;
 use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
 use anoma::types::transaction::protocol::{ProtocolTxType, VoteExtension};
@@ -17,8 +19,6 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 use tendermint_stable::block::Header;
 
 use super::*;
-#[cfg(not(feature = "ABCI"))]
-use crate::node::ledger::ethereum_node::ethereum_types::EthereumHeader;
 #[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::shell::vote_extensions::VoteExtensionData;
 

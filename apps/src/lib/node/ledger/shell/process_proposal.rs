@@ -314,6 +314,8 @@ where
 mod test_process_proposal {
     use anoma::proto::SignedTxData;
     use anoma::types::address::xan;
+    #[cfg(not(feature = "ABCI"))]
+    use anoma::types::ethereum_headers::EthereumHeader;
     use anoma::types::hash::Hash;
     use anoma::types::key::*;
     use anoma::types::storage::Epoch;
@@ -331,8 +333,6 @@ mod test_process_proposal {
     use tendermint_proto_abci::google::protobuf::Timestamp;
 
     use super::*;
-    #[cfg(not(feature = "ABCI"))]
-    use crate::node::ledger::ethereum_node::ethereum_types::EthereumHeader;
     use crate::node::ledger::shell::test_utils::*;
     #[cfg(not(feature = "ABCI"))]
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::FinalizeBlock;
@@ -829,6 +829,9 @@ mod test_process_proposal {
             hash: Hash([0; 32]),
             parent_hash: Hash([0; 32]),
             number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
             state_root: Hash([0; 32]),
             transactions_root: Hash([0; 32]),
         }
@@ -856,6 +859,9 @@ mod test_process_proposal {
             hash: Hash([0; 32]),
             parent_hash: Hash([0; 32]),
             number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
             state_root: Hash([0; 32]),
             transactions_root: Hash([0; 32]),
         }
