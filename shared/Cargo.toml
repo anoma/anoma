@@ -9,7 +9,7 @@ version = "0.5.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["ABCI", "ibc-vp-abci"]
+default = ["ABCI", "ethereum-headers", "ibc-vp-abci"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
 dev = []
 ferveo-tpke = [
@@ -50,6 +50,7 @@ testing = [
   "tempfile",
 ]
 wasm-runtime = [
+  "ethereum-headers",
   "loupe",
   "parity-wasm",
   "pwasm-utils",
@@ -59,6 +60,12 @@ wasm-runtime = [
   "wasmer-engine-universal",
   "wasmer-vm",
   "wasmer",
+]
+
+ethereum-headers = [
+  "ethereum-types",
+  "rlp",
+  "web3",
 ]
 
 [dependencies]
@@ -74,7 +81,7 @@ chrono = "0.4.19"
 clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 derivative = "2.2.0"
 ed25519-consensus = "1.2.0"
-ethereum-types = "0.13.1"
+ethereum-types = {version = "0.13.1", optional = true}
 ferveo = {optional = true, git = "https://github.com/anoma/ferveo"}
 ferveo-common = {git = "https://github.com/anoma/ferveo"}
 hex = "0.4.3"
@@ -95,7 +102,7 @@ pwasm-utils = {version = "0.18.0", optional = true}
 rand = {version = "0.8", optional = true}
 # TODO proptest rexports the RngCore trait but the re-implementations only work for version `0.8`. *sigh*
 rand_core = {version = "0.6", optional = true}
-rlp = { version = "0.5", default-features = false }
+rlp = { version = "0.5", default-features = false, optional = true }
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_json = "1.0.62"
@@ -119,7 +126,7 @@ wasmer-engine-dylib = {version = "=2.2.0", optional = true}
 wasmer-engine-universal = {version = "=2.2.0", optional = true}
 wasmer-vm = {version = "2.2.0", optional = true}
 wasmparser = "0.83.0"
-web3 = "0.18.0"
+web3 = {version = "0.18.0", optional = true}
 
 [dev-dependencies]
 assert_matches = "1.5.0"
