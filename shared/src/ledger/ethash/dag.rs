@@ -1,3 +1,6 @@
+//! Tooling for creating a pseudo-random cache
+//! necessary for verifying Ethereum headers.
+
 #[cfg(feature = "ethereum-headers")]
 #[allow(missing_docs)]
 pub mod dag_cache {
