@@ -27,7 +27,7 @@ pub mod genesis_config {
     use std::str::FromStr;
 
     use anoma::ledger::governance::parameters::GovParams;
-    use anoma::ledger::parameters::{Parameters, EpochDuration};
+    use anoma::ledger::parameters::{EpochDuration, Parameters};
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
     use anoma::ledger::treasury::parameters::TreasuryParams;
@@ -713,7 +713,7 @@ pub fn genesis(base_dir: impl AsRef<Path>, chain_id: &ChainId) -> Genesis {
 }
 #[cfg(feature = "dev")]
 pub fn genesis() -> Genesis {
-    use anoma::ledger::parameters::parameters::EpochDuration;
+    use anoma::ledger::parameters::EpochDuration;
     use anoma::types::address;
 
     use crate::wallet;

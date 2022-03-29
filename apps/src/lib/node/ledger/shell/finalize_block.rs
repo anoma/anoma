@@ -64,18 +64,22 @@ where
         if new_epoch {
             for id in self.proposal_data.clone() {
                 let proposal_funds_key = gov_storage::get_funds_key(id);
-                let (proposal_funds_bytes, _) = self
+
+                let funds = self
                     .storage
                     .read(&proposal_funds_key)
-                    .expect("Should be able to read key.");
-                let funds = if let Some(funds_bytes) = proposal_funds_bytes {
-                    match token::Amount::try_from_slice(&funds_bytes[..]).ok() {
-                        Some(funds) => funds,
-                        None => continue,
-                    }
-                } else {
-                    continue;
-                };
+                    .map(|(bytes, _gas)| {
+                        if let Some(bytes) = bytes {
+                            match token::Amount::try_from_slice(&bytes[..]) {
+                                Ok(amount) => amount,
+                                Err(_) => token::Amount::default(),
+                            }
+                        } else {
+                            token::Amount::default()
+                        }
+                    })
+                    .map_err(|e| Error::BadProposal(e.to_string()))?;
+
                 let tally_result = compute_tally(&self.storage, id);
                 if let Ok(tally_result) = tally_result {
                     match tally_result {
@@ -95,6 +99,31 @@ where
                             match tx_result {
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
+                                        let author_key =
+                                            gov_storage::get_author_key(id);
+                                        self.storage
+                                            .read(&author_key)
+                                            .map(|(bytes, _gas)| {
+                                                if let Some(bytes) = bytes {
+                                                    if let Ok(address) =
+                                                        Address::try_from_slice(
+                                                            &bytes[..],
+                                                        )
+                                                    {
+                                                        self.storage.transfer(
+                                                            &m1t(),
+                                                            funds,
+                                                            &gov_address,
+                                                            &address,
+                                                        );
+                                                    }
+                                                }
+                                            })
+                                            .map_err(|e| {
+                                                Error::BadProposal(
+                                                    e.to_string(),
+                                                )
+                                            })?;
                                         let proposal_event: Event =
                                             ProposalEvent::new(
                                                 EventType::Proposal.to_string(),
@@ -107,38 +136,13 @@ where
                                         response
                                             .events
                                             .push(proposal_event.into());
-
-                                        let author_key =
-                                            gov_storage::get_author_key(id);
-                                        let (proposal_author_bytes, _) = self
-                                            .storage
-                                            .read(&author_key)
-                                            .expect(
-                                                "Should be able to read key.",
-                                            );
-                                        let proposal_author = if let Some(
-                                            proposal_author_bytes,
-                                        ) =
-                                            proposal_author_bytes
-                                        {
-                                            match Address::try_from_slice(
-                                                &proposal_author_bytes[..],
-                                            )
-                                            .ok()
-                                            {
-                                                Some(address) => address,
-                                                None => continue,
-                                            }
-                                        } else {
-                                            continue;
-                                        };
+                                    } else {
                                         self.storage.transfer(
                                             &m1t(),
                                             funds,
                                             &gov_address,
-                                            &proposal_author,
+                                            &treasury_address,
                                         );
-                                    } else {
                                         let proposal_event: Event =
                                             ProposalEvent::new(
                                                 EventType::Proposal.to_string(),
@@ -151,15 +155,15 @@ where
                                         response
                                             .events
                                             .push(proposal_event.into());
-                                        self.storage.transfer(
-                                            &m1t(),
-                                            funds,
-                                            &gov_address,
-                                            &treasury_address,
-                                        );
                                     }
                                 }
                                 Err(_e) => {
+                                    self.storage.transfer(
+                                        &m1t(),
+                                        funds,
+                                        &gov_address,
+                                        &treasury_address,
+                                    );
                                     let proposal_event: Event =
                                         ProposalEvent::new(
                                             EventType::Proposal.to_string(),
@@ -170,36 +174,31 @@ where
                                         )
                                         .into();
                                     response.events.push(proposal_event.into());
-                                    self.storage.transfer(
-                                        &m1t(),
-                                        funds,
-                                        &gov_address,
-                                        &treasury_address,
-                                    );
                                 }
                             }
                         }
                         (TallyResult::Passed, None) => {
                             let author_key = gov_storage::get_author_key(id);
-                            let (proposal_author_bytes, _) = self
-                                .storage
+                            self.storage
                                 .read(&author_key)
-                                .expect("Should be able to read key.");
-                            let proposal_author =
-                                if let Some(proposal_author_bytes) =
-                                    proposal_author_bytes
-                                {
-                                    match Address::try_from_slice(
-                                        &proposal_author_bytes[..],
-                                    )
-                                    .ok()
-                                    {
-                                        Some(address) => address,
-                                        None => continue,
+                                .map(|(bytes, _gas)| {
+                                    if let Some(bytes) = bytes {
+                                        if let Ok(address) =
+                                            Address::try_from_slice(&bytes[..])
+                                        {
+                                            self.storage.transfer(
+                                                &m1t(),
+                                                funds,
+                                                &gov_address,
+                                                &address,
+                                            );
+                                        }
                                     }
-                                } else {
-                                    continue;
-                                };
+                                })
+                                .map_err(|e| {
+                                    Error::BadProposal(e.to_string())
+                                })?;
+
                             let proposal_event: Event = ProposalEvent::new(
                                 EventType::Proposal.to_string(),
                                 TallyResult::Passed,
@@ -209,14 +208,15 @@ where
                             )
                             .into();
                             response.events.push(proposal_event.into());
+                        }
+                        _ => {
                             self.storage.transfer(
                                 &m1t(),
                                 funds,
                                 &gov_address,
-                                &proposal_author,
+                                &treasury_address,
                             );
-                        }
-                        _ => {
+
                             let proposal_event: Event = ProposalEvent::new(
                                 EventType::Proposal.to_string(),
                                 TallyResult::Rejected,
@@ -226,12 +226,6 @@ where
                             )
                             .into();
                             response.events.push(proposal_event.into());
-                            self.storage.transfer(
-                                &m1t(),
-                                funds,
-                                &gov_address,
-                                &treasury_address,
-                            );
                         }
                     }
                 }

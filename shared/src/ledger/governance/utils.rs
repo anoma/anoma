@@ -74,11 +74,14 @@ where
     H: StorageHasher + Sync + 'static,
 {
     let start_epoch_key = gov_storage::get_voting_start_epoch_key(proposal_id);
-    let (start_epoch_bytes, _) = storage
+
+    let start_epoch_bytes = storage
         .read(&start_epoch_key)
-        .expect("Key should be defined");
-    let start_epoch = if let Some(start_epoch_bytes) = start_epoch_bytes {
-        Epoch::try_from_slice(&start_epoch_bytes[..])
+        .map(|(bytes, _gas)| bytes)
+        .map_err(|_e| Error::InvalidProposal(proposal_id))?;
+
+    let start_epoch = if let Some(bytes) = start_epoch_bytes {
+        Epoch::try_from_slice(&bytes[..])
             .map_err(|_| Error::InvalidProposal(proposal_id))
     } else {
         Err(Error::InvalidProposal(proposal_id))
@@ -272,20 +275,19 @@ where
                     for (key, value_bytes, _) in votes {
                         let vote =
                             ProposalVote::try_from_slice(&value_bytes[..]).ok();
-                        if let Some(vote) = vote {
-                            let key = Key::from_str(key.as_str())
-                                .expect("Key shoould be parsable");
-                            let voter_addr = gov_storage::get_address(&key)
-                                .expect(
-                                    "Should be able to get address from key",
-                                );
-                            if active_validators.contains(&voter_addr) {
-                                validator_voters.insert(voter_addr, vote);
-                            } else {
-                                delegator_voters.insert(voter_addr, vote);
+                        let key = Key::from_str(key.as_str());
+                        match (key, vote) {
+                            (Ok(key), Some(vote)) => {
+                                let voter_addr = gov_storage::get_address(&key);
+                                if let Some(address) = voter_addr {
+                                    if active_validators.contains(&address) {
+                                        validator_voters.insert(address, vote);
+                                    } else {
+                                        delegator_voters.insert(address, vote);
+                                    }
+                                }
                             }
-                        } else {
-                            continue;
+                            _ => continue,
                         }
                     }
                     Ok((validator_voters, delegator_voters))

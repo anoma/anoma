@@ -3,18 +3,17 @@ pub mod storage;
 
 use std::collections::BTreeSet;
 
-use borsh::{BorshSerialize, BorshDeserialize, BorshSchema};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
+use super::storage::types::{decode, encode};
+use super::storage::{types, Storage};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::Key;
 use crate::types::time::DurationSecs;
 use crate::vm::WasmCacheAccess;
-
-use super::storage::types::{encode, decode};
-use super::storage::{types, Storage};
 
 const ADDRESS: Address = Address::Internal(InternalAddress::Parameters);
 
@@ -47,7 +46,7 @@ where
 {
     type Error = Error;
 
-    const ADDR: InternalAddress =  InternalAddress::Parameters;
+    const ADDR: InternalAddress = InternalAddress::Parameters;
 
     fn validate_tx(
         &self,
@@ -132,19 +131,17 @@ pub struct EpochDuration {
 
 impl Parameters {
     /// Initialize parameters in storage in the genesis block.
-    pub fn init_storage<DB, H>(
-        &self, 
-        storage: &mut Storage<DB, H>,
-    ) where
+    pub fn init_storage<DB, H>(&self, storage: &mut Storage<DB, H>)
+    where
         DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
         H: ledger_storage::StorageHasher,
     {
         // write epoch parameters
         let epoch_key = storage::get_epoch_storage_key();
         let epoch_value = encode(&self.epoch_duration);
-        storage
-            .write(&epoch_key, epoch_value)
-            .expect("Epoch parameters must be initialized in the genesis block");
+        storage.write(&epoch_key, epoch_value).expect(
+            "Epoch parameters must be initialized in the genesis block",
+        );
 
         // write vp whitelist parameter
         let vp_whitelist_key = storage::get_vp_whitelist_storage_key();
@@ -161,7 +158,8 @@ impl Parameters {
         );
 
         // write tx whitelist parameter
-        let max_expected_time_per_block_key = storage::get_max_expected_time_per_block_key();
+        let max_expected_time_per_block_key =
+            storage::get_max_expected_time_per_block_key();
         let max_expected_time_per_block_value =
             encode(&self.max_expected_time_per_block);
         storage
@@ -170,8 +168,8 @@ impl Parameters {
                 max_expected_time_per_block_value,
             )
             .expect(
-                "Max expected time per block parameters must be initialized in \
-                the genesis block",
+                "Max expected time per block parameters must be initialized \
+                 in the genesis block",
             );
     }
 }
@@ -303,7 +301,8 @@ where
         decode(value.ok_or(ReadError::ParametersMissing)?)
             .map_err(ReadError::StorageTypeError)?;
 
-    let max_expected_time_per_block_key = storage::get_max_expected_time_per_block_key();
+    let max_expected_time_per_block_key =
+        storage::get_max_expected_time_per_block_key();
     let (value, gas_time) = storage
         .read(&max_expected_time_per_block_key)
         .map_err(ReadError::StorageError)?;
