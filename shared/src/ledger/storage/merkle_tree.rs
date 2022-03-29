@@ -7,8 +7,7 @@ use std::str::FromStr;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ics23::commitment_proof::Proof as Ics23Proof;
 use ics23::{
-    CommitmentProof, ExistenceProof, HashOp, LeafOp, LengthOp,
-    NonExistenceProof, ProofSpec,
+    CommitmentProof, ExistenceProof, HashOp, LeafOp, LengthOp, ProofSpec,
 };
 use prost::Message;
 use sha2::{Digest, Sha256};
@@ -273,18 +272,7 @@ impl<H: StorageHasher + Default> MerkleTree<H> {
         // Get a proof of the sub tree
         let hashed_sub_key = H::hash(&sub_key.to_string());
         let cp = subtree.non_membership_proof(&hashed_sub_key)?;
-        // Replace the key with the non-hashed key for the verification
-        let sub_proof = match cp.proof.expect("The proof should exist") {
-            Ics23Proof::Nonexist(nep) => CommitmentProof {
-                proof: Some(Ics23Proof::Nonexist(NonExistenceProof {
-                    key: sub_key.to_string().as_bytes().to_vec(),
-                    ..nep
-                })),
-            },
-            // the proof should have a NonExistenceProof
-            _ => unreachable!(),
-        };
-        self.get_proof(key, sub_proof)
+        self.get_proof(key, cp)
     }
 
     /// Get the Tendermint proof with the base proof
