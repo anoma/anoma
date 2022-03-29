@@ -2,107 +2,7 @@
 
 use core::time::Duration;
 
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::client_state::AnyClientState;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::context::ClientReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::connection::ConnectionEnd;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::context::ConnectionReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::context::ChannelReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Receipt, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::capabilities::Capability;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics05_port::context::PortReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(not(feature = "ABCI"))]
-use ibc::proofs::Proofs;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Timestamp;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::client_state::AnyClientState;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::context::ClientReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::connection::ConnectionEnd;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::context::ConnectionReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::context::ChannelReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::handler::verify::verify_channel_proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Receipt, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::capabilities::Capability;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics05_port::context::PortReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{
-    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
-};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
-#[cfg(feature = "ABCI")]
-use ibc_abci::proofs::Proofs;
-#[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::Time;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::Time;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -117,9 +17,38 @@ use super::super::storage::{
     port_channel_id, receipt_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
+use crate::ibc::core::ics02_client::client_consensus::AnyConsensusState;
+use crate::ibc::core::ics02_client::client_state::AnyClientState;
+use crate::ibc::core::ics02_client::context::ClientReader;
+use crate::ibc::core::ics02_client::height::Height;
+use crate::ibc::core::ics03_connection::connection::ConnectionEnd;
+use crate::ibc::core::ics03_connection::context::ConnectionReader;
+use crate::ibc::core::ics03_connection::error::Error as Ics03Error;
+use crate::ibc::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty, State,
+};
+use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics04_channel::error::Error as Ics04Error;
+use crate::ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
+use crate::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+use crate::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+use crate::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+use crate::ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
+use crate::ibc::core::ics04_channel::packet::{Receipt, Sequence};
+use crate::ibc::core::ics05_port::capabilities::Capability;
+use crate::ibc::core::ics05_port::context::PortReader;
+use crate::ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
+use crate::ibc::proofs::Proofs;
+use crate::ibc::timestamp::Timestamp;
 use crate::ledger::native_vp::Error as NativeVpError;
 use crate::ledger::parameters;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
+use crate::tendermint::Time;
+use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{
     Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt,
 };
@@ -279,7 +208,7 @@ where
     fn validate_version(&self, channel: &ChannelEnd) -> Result<()> {
         let connection = self.connection_from_channel(channel)?;
         let versions = connection.versions();
-        let version = match versions.as_slice() {
+        let version = match versions {
             [version] => version,
             _ => {
                 return Err(Error::InvalidVersion(
@@ -436,11 +365,11 @@ where
         let expected_my_side =
             Counterparty::new(port_channel_id.port_id.clone(), None);
         self.verify_proofs(
-            msg.proofs().height(),
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Init,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -459,7 +388,7 @@ where
             channel,
             expected_my_side,
             State::TryOpen,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -478,7 +407,7 @@ where
             channel,
             expected_my_side,
             State::Open,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -493,11 +422,11 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
-            msg.proofs().height(),
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Closed,
-            msg.proofs(),
+            &msg.proofs,
         )
     }
 
@@ -807,10 +736,10 @@ where
         &self,
         port_id: &PortId,
     ) -> Ics04Result<Capability> {
-        let cap = self
+        let (_, cap) = self
             .lookup_module_by_port(port_id)
             .map_err(|_| Ics04Error::no_port_capability(port_id.clone()))?;
-        if self.authenticate(&cap, port_id) {
+        if self.authenticate(port_id.clone(), &cap) {
             Ok(cap)
         } else {
             Err(Ics04Error::invalid_port_capability())
@@ -916,11 +845,19 @@ where
         ClientReader::host_height(self)
     }
 
-    fn host_timestamp(&self) -> Timestamp {
-        match self.ctx.storage.get_block_header().0 {
-            Some(h) => h.time.into(),
-            None => Timestamp::none(),
-        }
+    fn host_consensus_state(
+        &self,
+        height: Height,
+    ) -> Ics04Result<AnyConsensusState> {
+        ClientReader::host_consensus_state(self, height).map_err(|e| {
+            Ics04Error::ics03_connection(Ics03Error::ics02_client(e))
+        })
+    }
+
+    fn pending_host_consensus_state(&self) -> Ics04Result<AnyConsensusState> {
+        ClientReader::pending_host_consensus_state(self).map_err(|e| {
+            Ics04Error::ics03_connection(Ics03Error::ics02_client(e))
+        })
     }
 
     fn client_update_time(

@@ -4,37 +4,42 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma"
 resolver = "2"
-version = "0.4.0"
+version = "0.5.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["ABCI"]
+default = ["ABCI", "ibc-vp-abci"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
 dev = []
 ferveo-tpke = [
+  "ferveo",
   "tpke",
-  "ark-bls12-381",
   "ark-ec",
-  "ark-serialize",
   "rand_core",
   "rand",
 ]
 # for integration tests and test utilies
 ibc-vp = [
   "ibc",
-  "ibc-proto",
 ]
 ibc-vp-abci = [
   "ibc-abci",
-  "ibc-proto-abci",
+]
+ibc-mocks = [
+  "ibc/mocks",
+]
+ibc-mocks-abci = [
+  "ibc-abci/mocks",
 ]
 # for integration tests and test utilies
 ABCI = [
+  "ibc-proto-abci",
   "tendermint-stable",
   "tendermint-proto-abci",
 ]
 ABCI-plus-plus = [
+  "ibc-proto",
   "tendermint",
   "tendermint-proto",
 ]
@@ -45,26 +50,22 @@ testing = [
   "tempfile",
 ]
 wasm-runtime = [
+  "loupe",
   "parity-wasm",
   "pwasm-utils",
   "wasmer-cache",
   "wasmer-compiler-singlepass",
-  "wasmer-compiler-cranelift",
-  "wasmer-engine-jit",
+  "wasmer-engine-dylib",
+  "wasmer-engine-universal",
   "wasmer-vm",
   "wasmer",
-
-  # TODO wasmer 2.x
-  # "loupe",
-  # "wasmer-engine-dylib",
-  # "wasmer-engine-universal",
 ]
 
 [dependencies]
 anoma_proof_of_stake = {path = "../proof_of_stake"}
-ark-bls12-381 = {version = "0.3", optional = true}
+ark-bls12-381 = {version = "0.3"}
 ark-ec = {version = "0.3", optional = true}
-ark-serialize = {version = "0.3", optional = true}
+ark-serialize = "0.3"
 bech32 = "0.8.0"
 borsh = "0.9.0"
 chrono = "0.4.19"
@@ -72,16 +73,18 @@ chrono = "0.4.19"
 clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 derivative = "2.2.0"
 ed25519-consensus = "1.2.0"
+ferveo = {optional = true, git = "https://github.com/anoma/ferveo"}
+ferveo-common = {git = "https://github.com/anoma/ferveo"}
 hex = "0.4.3"
-tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/workspace-cleanup"}
-# TODO temp fork for borsh coding
-# Also, using the same version of tendermint-rs as we do here.
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", features = ["mocks"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", features = ["mocks"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo"}
+# TODO using the same version of tendermint-rs as we do here.
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_abcipp_v0.23.5", default-features = false, optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_tm_v0.23.5", default-features = false, optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_abcipp_v0.23.5", default-features = false, optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/v0.12.0_tm_v0.23.5", default-features = false, optional = true}
 ics23 = "0.6.7"
 itertools = "0.10.0"
+loupe = {version = "0.1.3", optional = true}
 parity-wasm = {version = "0.42.2", optional = true}
 proptest = {version = "1.0.0", optional = true}
 prost = "0.9.0"
@@ -103,14 +106,15 @@ tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch =
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 thiserror = "1.0.30"
-tracing = "0.1.29"
-wasmer = {version = "=1.0.2", optional = true}
-wasmer-cache = {version = "=1.0.2", optional = true}
-wasmer-compiler-cranelift = {version = "=1.0.2", optional = true}
-wasmer-compiler-singlepass = {version = "=1.0.2", optional = true}
-wasmer-engine-jit = {version = "=1.0.2", optional = true}
-wasmer-vm = {version = "=1.0.2", optional = true}
-wasmparser = "0.81.0"
+tracing = "0.1.30"
+wasmer = {version = "=2.2.0", optional = true}
+wasmer-cache = {version = "=2.2.0", optional = true}
+wasmer-compiler-singlepass = {version = "=2.2.0", optional = true}
+wasmer-engine-dylib = {version = "=2.2.0", optional = true}
+wasmer-engine-universal = {version = "=2.2.0", optional = true}
+wasmer-vm = {version = "2.2.0", optional = true}
+wasmparser = "0.83.0"
+
 jubjub = { version = "0.8"}
 bls12_381 = { version = "0.6"}
 #libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
@@ -119,23 +123,13 @@ masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-tr
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = { version = "0.11" }
 
-# TODO wasmer 2.x
-# loupe = {version = "0.1.3", optional = true}
-# wasmer = {version = "=2.1.0", optional = true}
-# wasmer-cache = {version = "=2.1.0", optional = true}
-# wasmer-compiler-cranelift = {version = "=2.1.0", optional = true}
-# wasmer-compiler-singlepass = {version = "=2.1.0", optional = true}
-# wasmer-engine-dylib = {version = "=2.1.0", optional = true}
-# wasmer-engine-universal = {version = "=2.1.0", optional = true}
-# wasmer-vm = {version = "=2.1.0", optional = true}
-
 [dev-dependencies]
 assert_matches = "1.5.0"
 byte-unit = "4.0.13"
 pretty_assertions = "0.7.2"
 proptest = "1.0.0"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
-tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
+tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
 [build-dependencies]
 tonic-build = "0.6.0"

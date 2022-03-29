@@ -12,7 +12,7 @@ use anoma::ledger::pos::{
 };
 use anoma::types::address::Address;
 use anoma::types::key::*;
-use anoma::types::storage::Epoch;
+use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
@@ -49,6 +49,7 @@ use crate::client::tx::load_shielded_context;
 use crate::client::tx::compute_shielded_balance;
 use crate::client::tx::to_viewing_key;
 use crate::node::ledger::rpc::{Path, PrefixValue};
+use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
 pub async fn query_epoch(args: args::Query) -> Epoch {
@@ -1186,6 +1187,7 @@ pub async fn query_tx_response(
     // Summarize the transaction results that we were searching for
     let result = TxResponse {
         info: event_map["info"].to_string(),
+        log: event_map["log"].to_string(),
         height: event_map["height"].to_string(),
         hash: event_map["hash"].to_string(),
         code: event_map["code"].to_string(),

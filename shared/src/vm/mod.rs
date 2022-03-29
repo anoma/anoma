@@ -27,6 +27,11 @@ const UNTRUSTED_WASM_FEATURES: WasmFeatures = WasmFeatures {
     multi_memory: false,
     exceptions: false,
     memory64: false,
+    mutable_global: false,
+    saturating_float_to_int: false,
+    sign_extension: false,
+    relaxed_simd: false,
+    extended_const: false,
 };
 
 #[allow(missing_docs)]

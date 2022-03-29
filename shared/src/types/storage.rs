@@ -5,7 +5,7 @@ use std::num::ParseIntError;
 use std::ops::Add;
 use std::str::FromStr;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -163,6 +163,7 @@ impl core::fmt::Debug for BlockHash {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Debug,
     Eq,
     PartialEq,
@@ -349,6 +350,7 @@ pub trait KeySeg {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Debug,
     Eq,
     PartialEq,
@@ -461,6 +463,7 @@ impl KeySeg for Address {
     Hash,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     Serialize,
     Deserialize,
 )]
@@ -631,6 +634,15 @@ impl TxQueue {
     pub fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }
+}
+
+/// A value of a storage prefix iterator.
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize, BorshSchema)]
+pub struct PrefixValue {
+    /// Storage key
+    pub key: Key,
+    /// Raw value bytes
+    pub value: Vec<u8>,
 }
 
 #[cfg(test)]

@@ -5,11 +5,7 @@ use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-#[cfg(not(feature = "ABCI"))]
-use anoma::types::transaction::{hash_tx as hash_tx_bytes, Hash};
 use async_trait::async_trait;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::abci::transaction;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address;
 #[cfg(feature = "ABCI")]
@@ -454,12 +450,6 @@ impl Client for TendermintWebsocketClient {
             };
         }
     }
-}
-
-#[cfg(not(feature = "ABCI"))]
-pub fn hash_tx(tx_bytes: &[u8]) -> transaction::Hash {
-    let Hash(hash_bytes) = hash_tx_bytes(tx_bytes);
-    transaction::Hash::new(hash_bytes)
 }
 
 fn get_id(req_json: &str) -> Result<String, Error> {

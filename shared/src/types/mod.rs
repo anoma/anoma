@@ -3,6 +3,7 @@
 pub mod address;
 pub mod chain;
 pub mod dylib;
+pub mod hash;
 pub mod ibc;
 pub mod intent;
 pub mod internal;

@@ -730,6 +730,8 @@ mod tests {
             let mut parameters = Parameters {
                 epoch_duration: epoch_duration.clone(),
                 max_expected_time_per_block: Duration::seconds(max_expected_time_per_block).into(),
+                vp_whitelist: vec![],
+                tx_whitelist: vec![]
             };
             parameters::init_genesis_storage(&mut storage, &parameters);
 
@@ -769,7 +771,8 @@ mod tests {
                 Duration::seconds(min_duration + min_duration_delta).into();
             parameters.max_expected_time_per_block =
                 Duration::seconds(max_expected_time_per_block + max_time_per_block_delta).into();
-            parameters::update(&mut storage, &parameters).unwrap();
+            parameters::update_max_expected_time_per_block_parameter(&mut storage, &parameters.max_expected_time_per_block).unwrap();
+            parameters::update_epoch_parameter(&mut storage, &parameters.epoch_duration).unwrap();
 
             // Test for 2.
             let epoch_before = storage.last_epoch;

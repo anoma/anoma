@@ -50,6 +50,7 @@ impl Serialize for StoredKeypair {
         }
     }
 }
+
 impl<'de> Deserialize<'de> for StoredKeypair {
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where

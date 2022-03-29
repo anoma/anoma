@@ -8,7 +8,7 @@ use std::str::FromStr;
 use std::string;
 
 use bech32::{self, FromBase32, ToBase32, Variant};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -30,6 +30,20 @@ pub(crate) const HASH_LEN: usize = 40;
 
 /// An address string before bech32m encoding must be this size.
 pub const FIXED_LEN_STRING_BYTES: usize = 45;
+
+/// Internal IBC address
+pub const IBC: Address = Address::Internal(InternalAddress::Ibc);
+/// Internal IBC token burn address
+pub const IBC_BURN: Address = Address::Internal(InternalAddress::IbcBurn);
+/// Internal IBC token mint address
+pub const IBC_MINT: Address = Address::Internal(InternalAddress::IbcMint);
+/// Internal ledger parameters address
+pub const PARAMETERS: Address = Address::Internal(InternalAddress::Parameters);
+/// Internal PoS address
+pub const POS: Address = Address::Internal(InternalAddress::PoS);
+/// Internal PoS slash pool address
+pub const POS_SLASH_POOL: Address =
+    Address::Internal(InternalAddress::PosSlashPool);
 
 /// Raw strings used to produce internal addresses. All the strings must begin
 /// with `PREFIX_INTERNAL` and be `FIXED_LEN_STRING_BYTES` characters long.
@@ -87,6 +101,7 @@ pub type Result<T> = std::result::Result<T, Error>;
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,
@@ -302,6 +317,7 @@ impl FromStr for Address {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,
@@ -354,6 +370,7 @@ impl EstablishedAddressGen {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,
@@ -382,6 +399,7 @@ impl From<&key::common::PublicKey> for Address {
     Clone,
     BorshSerialize,
     BorshDeserialize,
+    BorshSchema,
     PartialEq,
     Eq,
     PartialOrd,

@@ -4,11 +4,10 @@
 #[cfg(feature = "ferveo-tpke")]
 pub mod wrapper_tx {
     use std::convert::TryFrom;
-    use std::io::Write;
 
     pub use ark_bls12_381::Bls12_381 as EllipticCurve;
     pub use ark_ec::{AffineCurve, PairingEngine};
-    use borsh::{BorshDeserialize, BorshSerialize};
+    use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
     use serde::{Deserialize, Serialize};
     use thiserror::Error;
 
@@ -18,7 +17,9 @@ pub mod wrapper_tx {
     use crate::types::storage::Epoch;
     use crate::types::token::Amount;
     use crate::types::transaction::encrypted::EncryptedTx;
-    use crate::types::transaction::{hash_tx, Hash, TxType};
+    use crate::types::transaction::{
+        hash_tx, EncryptionKey, Hash, TxError, TxType,
+    };
 
     /// TODO: Determine a sane number for this
     const GAS_LIMIT_RESOLUTION: u64 = 1_000_000;
@@ -36,12 +37,6 @@ pub mod wrapper_tx {
         InvalidTx,
         #[error("The given Tx data did not contain a valid WrapperTx")]
         InvalidWrapperTx,
-        #[error("Expected signed WrapperTx data")]
-        Unsigned,
-        #[error("{0}")]
-        SigError(VerifySigError),
-        #[error("Unable to deserialize the Tx data: {0}")]
-        Deserialization(String),
         #[error(
             "Attempted to sign WrapperTx with keypair whose public key \
              differs from that in the WrapperTx"
@@ -56,6 +51,7 @@ pub mod wrapper_tx {
         PartialEq,
         BorshSerialize,
         BorshDeserialize,
+        BorshSchema,
         Serialize,
         Deserialize,
     )]
@@ -73,7 +69,16 @@ pub mod wrapper_tx {
     ///
     /// This struct only stores the multiple of GAS_LIMIT_RESOLUTION,
     /// not the raw amount
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        BorshSerialize,
+        BorshDeserialize,
+        BorshSchema,
+    )]
     #[serde(from = "u64")]
     #[serde(into = "u64")]
     pub struct GasLimit {
@@ -144,24 +149,17 @@ pub mod wrapper_tx {
         }
     }
 
-    impl borsh::ser::BorshSerialize for GasLimit {
-        fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-            BorshSerialize::serialize(&u64::from(self), writer)
-        }
-    }
-
-    impl borsh::BorshDeserialize for GasLimit {
-        fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-            let raw: u64 = BorshDeserialize::deserialize(buf)?;
-            Ok(GasLimit::from(raw))
-        }
-    }
-
     /// A transaction with an encrypted payload as well
     /// as some non-encrypted metadata for inclusion
     /// and / or verification purposes
     #[derive(
-        Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+        Debug,
+        Clone,
+        BorshSerialize,
+        BorshDeserialize,
+        BorshSchema,
+        Serialize,
+        Deserialize,
     )]
     pub struct WrapperTx {
         /// The fee to be payed for including the tx
@@ -172,9 +170,9 @@ pub mod wrapper_tx {
         /// which decryption key will be used
         pub epoch: Epoch,
         /// Max amount of gas that can be used when executing the inner tx
-        gas_limit: GasLimit,
+        pub gas_limit: GasLimit,
         /// the encrypted payload
-        inner_tx: EncryptedTx,
+        pub inner_tx: EncryptedTx,
         /// sha-2 hash of the inner transaction acting as a commitment
         /// the contents of the encrypted payload
         pub tx_hash: Hash,
@@ -191,10 +189,9 @@ pub mod wrapper_tx {
             epoch: Epoch,
             gas_limit: GasLimit,
             tx: Tx,
+            encryption_key: EncryptionKey,
         ) -> WrapperTx {
-            // TODO: Look up current public key from storage
-            let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
-            let inner_tx = EncryptedTx::encrypt(&tx.to_bytes(), pubkey);
+            let inner_tx = EncryptedTx::encrypt(&tx.to_bytes(), encryption_key);
             Self {
                 fee,
                 pk: keypair.ref_to(),
@@ -256,6 +253,21 @@ pub mod wrapper_tx {
                 ),
             )
             .sign(keypair))
+        }
+
+        /// Validate the signature of a wrapper tx
+        pub fn validate_sig(
+            &self,
+            signed_data: [u8; 32],
+            sig: &common::Signature,
+        ) -> Result<(), TxError> {
+            common::SigScheme::verify_signature(&self.pk, &signed_data, sig)
+                .map_err(|err| {
+                    TxError::SigError(format!(
+                        "WrapperTx signature verification failed: {}",
+                        err
+                    ))
+                })
         }
     }
 
@@ -354,6 +366,7 @@ pub mod wrapper_tx {
                 Epoch(0),
                 0.into(),
                 tx.clone(),
+                Default::default(),
             );
             assert!(wrapper.validate_ciphertext());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
@@ -379,6 +392,7 @@ pub mod wrapper_tx {
                 Epoch(0),
                 0.into(),
                 tx,
+                Default::default(),
             );
             // give a incorrect commitment to the decrypted contents of the tx
             wrapper.tx_hash = Hash([0u8; 32]);
@@ -410,6 +424,7 @@ pub mod wrapper_tx {
                 Epoch(0),
                 0.into(),
                 tx,
+                Default::default(),
             )
             .sign(&keypair)
             .expect("Test failed");
@@ -433,8 +448,10 @@ pub mod wrapper_tx {
                 Tx::new("Give me all the money".as_bytes().to_owned(), None);
 
             // We replace the inner tx with a malicious one
-            wrapper.inner_tx =
-                EncryptedTx::encrypt(&malicious.to_bytes(), pubkey);
+            wrapper.inner_tx = EncryptedTx::encrypt(
+                &malicious.to_bytes(),
+                EncryptionKey(pubkey),
+            );
 
             // We change the commitment appropriately
             wrapper.tx_hash = hash_tx(&malicious.to_bytes());
@@ -460,7 +477,7 @@ pub mod wrapper_tx {
             // check that the try from method also fails
             let err = crate::types::transaction::process_tx(tx)
                 .expect_err("Test failed");
-            assert_matches!(err, WrapperTxErr::SigError(_));
+            assert_matches!(err, TxError::SigError(_));
         }
     }
 }

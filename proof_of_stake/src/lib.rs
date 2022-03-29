@@ -26,7 +26,7 @@ use std::hash::Hash;
 use std::num::TryFromIntError;
 use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use epoched::{
     DynEpochOffset, EpochOffset, Epoched, EpochedDelta, OffsetPipelineLen,
 };
@@ -54,7 +54,8 @@ pub trait PosReadOnly {
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize;
+        + BorshSerialize
+        + BorshSchema;
     /// Token amount type
     type TokenAmount: Display
         + Debug
@@ -70,7 +71,8 @@ pub trait PosReadOnly {
         + Into<Self::TokenChange>
         + SubAssign
         + BorshDeserialize
-        + BorshSerialize;
+        + BorshSerialize
+        + BorshSchema;
     /// Token change type
     type TokenChange: Display
         + Debug
@@ -83,9 +85,14 @@ pub trait PosReadOnly {
         + Into<i128>
         + Neg<Output = Self::TokenChange>
         + BorshDeserialize
-        + BorshSerialize;
+        + BorshSerialize
+        + BorshSchema;
     /// Cryptographic public key type
-    type PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize;
+    type PublicKey: Debug
+        + Clone
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema;
 
     /// Address of the PoS account
     const POS_ADDRESS: Self::Address;
@@ -476,7 +483,8 @@ pub trait PosBase {
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize;
+        + BorshSerialize
+        + BorshSchema;
     /// Token amount type
     type TokenAmount: 'static
         + Display
@@ -493,7 +501,8 @@ pub trait PosBase {
         + Into<Self::TokenChange>
         + SubAssign
         + BorshDeserialize
-        + BorshSerialize;
+        + BorshSerialize
+        + BorshSchema;
     /// Token change type
     type TokenChange: 'static
         + Display
@@ -509,9 +518,15 @@ pub trait PosBase {
         + Into<i128>
         + Neg<Output = Self::TokenChange>
         + BorshDeserialize
-        + BorshSerialize;
+        + BorshSerialize
+        + BorshSchema;
     /// Cryptographic public key type
-    type PublicKey: 'static + Debug + Clone + BorshDeserialize + BorshSerialize;
+    type PublicKey: 'static
+        + Debug
+        + Clone
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema;
 
     /// Address of the PoS account
     const POS_ADDRESS: Self::Address;
@@ -933,7 +948,15 @@ pub enum UnbondError<Address: Display + Debug, TokenAmount: Display + Debug> {
 #[derive(Error, Debug)]
 pub enum WithdrawError<Address>
 where
-    Address: Display + Debug + Clone + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
 {
     #[error("No unbond could be found for {0}")]
     NoUnbondFound(BondId<Address>),
@@ -973,20 +996,23 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Debug
         + Default
         + Clone
         + Add<Output = TokenAmount>
         + AddAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Debug
         + Copy
         + Add<Output = TokenChange>
         + BorshDeserialize
-        + BorshSerialize,
-    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
 {
     validators: Validators,
     /// Active and inactive validator sets
@@ -1004,20 +1030,23 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Debug
         + Default
         + Clone
         + Add<Output = TokenAmount>
         + AddAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Debug
         + Copy
         + Add<Output = TokenChange>
         + BorshDeserialize
-        + BorshSerialize,
-    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
 {
     address: Address,
     staking_reward_address: Address,
@@ -1059,7 +1088,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: 'a
         + Debug
         + Default
@@ -1069,15 +1099,17 @@ where
         + AddAssign
         + Into<u64>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: 'a
         + Debug
         + Copy
         + Add<Output = TokenChange>
         + From<TokenAmount>
         + BorshDeserialize
-        + BorshSerialize,
-    PK: 'a + Debug + Clone + BorshDeserialize + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
+    PK: 'a + Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
 {
     // Accumulate the validator set and total voting power
     let mut active: BTreeSet<WeightedValidator<Address>> = BTreeSet::default();
@@ -1186,7 +1218,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Display
         + Debug
         + Copy
@@ -1198,7 +1231,8 @@ where
         + Into<i128>
         + PartialOrd
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     let current_stake: TokenChange =
         total_deltas.get(current_epoch).unwrap_or_default();
@@ -1252,14 +1286,15 @@ where
 
 struct BecomeValidatorData<PK, TokenChange>
 where
-    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
     TokenChange: Default
         + Debug
         + Clone
         + Copy
         + Add<Output = TokenChange>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     consensus_key: ValidatorConsensusKeys<PK>,
     state: ValidatorStates,
@@ -1276,15 +1311,22 @@ fn become_validator<Address, PK, TokenChange>(
     current_epoch: Epoch,
 ) -> BecomeValidatorData<PK, TokenChange>
 where
-    Address: Debug + Clone + Ord + Hash + BorshDeserialize + BorshSerialize,
-    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
+    Address: Debug
+        + Clone
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize + BorshSchema,
     TokenChange: Default
         + Debug
         + Clone
         + Copy
         + Add<Output = TokenChange>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     let consensus_key =
         Epoched::init(consensus_key.clone(), current_epoch, params);
@@ -1341,13 +1383,15 @@ where
         + Add<Output = TokenAmount>
         + AddAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Debug
         + Clone
         + Copy
         + Add<Output = TokenChange>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     pub bond: Bonds<TokenAmount>,
     pub validator_total_deltas: ValidatorTotalDeltas<TokenChange>,
@@ -1378,7 +1422,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Display
         + Debug
         + Default
@@ -1389,7 +1434,8 @@ where
         + AddAssign
         + Into<u64>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Display
         + Debug
         + Default
@@ -1401,7 +1447,8 @@ where
         + From<TokenAmount>
         + Into<i128>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     if amount == TokenAmount::default() {
         return Err(BondError::ZeroAmount);
@@ -1515,7 +1562,8 @@ where
         + Add<Output = TokenAmount>
         + AddAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     pub unbond: Unbonds<TokenAmount>,
 }
@@ -1545,7 +1593,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Display
         + Debug
         + Default
@@ -1558,7 +1607,8 @@ where
         + From<u64>
         + SubAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Display
         + Debug
         + Default
@@ -1570,7 +1620,8 @@ where
         + Neg<Output = TokenChange>
         + Into<i128>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     if amount == TokenAmount::default() {
         return Err(UnbondError::ZeroAmount);
@@ -1700,7 +1751,8 @@ fn update_validator_set<Address, TokenChange>(
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenChange: Display
         + Default
         + Debug
@@ -1710,7 +1762,8 @@ fn update_validator_set<Address, TokenChange>(
         + Sub
         + Into<i128>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     validator_set.update_from_offset(
         |validator_set, epoch| {
@@ -1808,7 +1861,8 @@ where
         + Sub
         + Into<i128>
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     let change_offset = change_offset.value(params);
     let start_epoch = current_epoch + change_offset;
@@ -1858,7 +1912,8 @@ where
         + Add<Output = TokenAmount>
         + AddAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     pub unbond: Unbonds<TokenAmount>,
     pub withdrawn: TokenAmount,
@@ -1883,7 +1938,8 @@ where
         + Ord
         + Hash
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
     TokenAmount: Display
         + Debug
         + Default
@@ -1896,7 +1952,8 @@ where
         + From<u64>
         + SubAssign
         + BorshDeserialize
-        + BorshSerialize,
+        + BorshSerialize
+        + BorshSchema,
 {
     let mut unbond =
         unbond.ok_or_else(|| WithdrawError::NoUnbondFound(bond_id.clone()))?;

@@ -26,7 +26,17 @@ pub const DEFAULT_CHAIN_ID: &str = "anoma-internal.000000000000000";
 
 /// Chain ID
 #[derive(
-    Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize,
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
+    BorshSerialize,
+    BorshDeserialize,
+    PartialOrd,
+    Ord,
+    PartialEq,
+    Eq,
+    Hash,
 )]
 #[serde(transparent)]
 pub struct ChainId(String);

@@ -5,29 +5,21 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_tests"
 resolver = "2"
-version = "0.4.0"
+version = "0.5.0"
 
 [features]
 default = ["wasm-runtime", "ABCI"]
 wasm-runtime = ["anoma/wasm-runtime"]
 
 ABCI = [
-  "ibc-abci",
-  "ibc-proto-abci",
-  "tendermint-stable",
-  "tendermint-proto-abci",
   "anoma/ABCI",
-  "anoma/ibc-vp-abci",
+  "anoma/ibc-mocks-abci",
   "anoma_vm_env/ABCI",
 ]
 
 ABCI-plus-plus = [
-  "ibc",
-  "ibc-proto",
-  "tendermint",
-  "tendermint-proto",
   "anoma/ABCI-plus-plus",
-  "anoma/ibc-vp",
+  "anoma/ibc-mocks",
   "anoma_vm_env/ABCI-plus-plus",
 ]
 
@@ -36,23 +28,13 @@ anoma = {path = "../shared", default-features = false, features = ["testing"]}
 anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
-# TODO using the same version of tendermint-rs as we do here.
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", features = ["mocks"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", features = ["mocks"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 prost = "0.9.0"
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tempfile = "3.2.0"
-# temporarily using fork work-around
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tracing = "0.1.26"
-tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
+tracing = "0.1.30"
+tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}

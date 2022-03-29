@@ -1,12 +1,15 @@
 //! Shell methods for querying state
 use std::cmp::max;
 
-use anoma::ledger::parameters::Parameters;
+use anoma::ledger::parameters::EpochDuration;
 use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
-use anoma::types::storage::Key;
+use anoma::types::key;
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
+use anoma::types::storage::{Key, PrefixValue};
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
+use ferveo_common::TendermintValidator;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::{ProofOp, ProofOps};
 #[cfg(not(feature = "ABCI"))]
@@ -22,7 +25,6 @@ use tendermint_proto_abci::types::EvidenceParams;
 
 use super::*;
 use crate::node::ledger::response;
-use crate::node::ledger::rpc::PrefixValue;
 
 impl<D, H> Shell<D, H>
 where
@@ -237,17 +239,15 @@ where
 
     pub fn get_evidence_params(
         &self,
-        protocol_params: &Parameters,
+        epoch_duration: &EpochDuration,
         pos_params: &PosParams,
     ) -> EvidenceParams {
         // Minimum number of epochs before tokens are unbonded and can be
         // withdrawn
         let len_before_unbonded = max(pos_params.unbonding_len as i64 - 1, 0);
         let max_age_num_blocks: i64 =
-            protocol_params.epoch_duration.min_num_of_blocks as i64
-                * len_before_unbonded;
-        let min_duration_secs =
-            protocol_params.epoch_duration.min_duration.0 as i64;
+            epoch_duration.min_num_of_blocks as i64 * len_before_unbonded;
+        let min_duration_secs = epoch_duration.min_duration.0 as i64;
         let max_age_duration = Some(protobuf::Duration {
             seconds: min_duration_secs * len_before_unbonded,
             nanos: 0,
@@ -257,5 +257,54 @@ where
             max_age_duration,
             ..EvidenceParams::default()
         }
+    }
+
+    /// Lookup data about a validator from their protocol signing key
+    #[allow(dead_code)]
+    pub fn get_validator_from_protocol_pk(
+        &self,
+        pk: &key::common::PublicKey,
+    ) -> Option<TendermintValidator<EllipticCurve>> {
+        let pk_bytes = pk
+            .try_to_vec()
+            .expect("Serializing public key should not fail");
+        // get the current epoch
+        let (current_epoch, _) = self.storage.get_current_epoch();
+        // get the active validator set
+        self.storage
+            .read_validator_set()
+            .get(current_epoch)
+            .expect("Validators for the next epoch should be known")
+            .active
+            .iter()
+            .find(|validator| {
+                let pk_key = key::protocol_pk_key(&validator.address);
+                match self.storage.read(&pk_key) {
+                    Ok((Some(bytes), _)) => bytes == pk_bytes,
+                    _ => false,
+                }
+            })
+            .map(|validator| {
+                let dkg_key =
+                    key::dkg_session_keys::dkg_pk_key(&validator.address);
+                let bytes = self
+                    .storage
+                    .read(&dkg_key)
+                    .expect("Validator should have public dkg key")
+                    .0
+                    .expect("Validator should have public dkg key");
+                let dkg_publickey =
+                    &<DkgPublicKey as BorshDeserialize>::deserialize(
+                        &mut bytes.as_ref(),
+                    )
+                    .expect(
+                        "DKG public key in storage should be deserializable",
+                    );
+                TendermintValidator {
+                    power: validator.voting_power.into(),
+                    address: validator.address.to_string(),
+                    public_key: dkg_publickey.into(),
+                }
+            })
     }
 }

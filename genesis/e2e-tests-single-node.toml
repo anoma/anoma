@@ -151,6 +151,10 @@ min_num_of_blocks = 4
 min_duration = 1
 # Maximum expected time per block (in seconds).
 max_expected_time_per_block = 30
+# vp whitelist
+vp_whitelist = []
+# tx whitelist
+tx_whitelist = []
 
 # Proof of stake parameters.
 [pos_params]

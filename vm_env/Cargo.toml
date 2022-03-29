@@ -4,17 +4,19 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_vm_env"
 resolver = "2"
-version = "0.4.0"
+version = "0.5.0"
 
 [features]
 default = ["ABCI"]
 
 ABCI = [
   "anoma/ABCI",
+  "anoma/ibc-vp-abci",
 ]
 
 ABCI-plus-plus = [
   "anoma/ABCI-plus-plus",
+  "anoma/ibc-vp",
 ]
 
 [dependencies]
@@ -28,3 +30,4 @@ masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/mas
 masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = { version = "0.11" }
+hex = "0.4.3"

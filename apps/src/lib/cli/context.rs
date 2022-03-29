@@ -144,12 +144,29 @@ impl Context {
             .map(|from_context| from_context.arg_from_mut_ctx(self))
     }
 
+    /// Get the wasm directory configured for the chain.
+    ///
+    /// Note that in "dev" build, this may be the root `wasm` dir.
+    pub fn wasm_dir(&self) -> PathBuf {
+        let wasm_dir =
+            self.config.ledger.chain_dir().join(&self.config.wasm_dir);
+
+        // In dev-mode with dev chain (the default), load wasm directly from the
+        // root wasm dir instead of the chain dir
+        #[cfg(feature = "dev")]
+        let wasm_dir =
+            if self.global_config.default_chain_id == ChainId::default() {
+                "wasm".into()
+            } else {
+                wasm_dir
+            };
+
+        wasm_dir
+    }
+
     /// Read the given WASM file from the WASM directory or an absolute path.
     pub fn read_wasm(&self, file_name: impl AsRef<Path>) -> Vec<u8> {
-        wasm_loader::read_wasm(
-            self.config.ledger.chain_dir().join(&self.config.wasm_dir),
-            file_name,
-        )
+        wasm_loader::read_wasm(self.wasm_dir(), file_name)
     }
 }
 

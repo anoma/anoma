@@ -71,17 +71,13 @@ impl TendermintMode {
     }
 }
 
-impl From<Option<String>> for TendermintMode {
-    fn from(opt: Option<String>) -> Self {
-        if let Some(mode) = opt {
-            match mode.as_str() {
-                "full" => TendermintMode::Full,
-                "validator" => TendermintMode::Validator,
-                "seed" => TendermintMode::Seed,
-                _ => panic!("Unrecognized mode"),
-            }
-        } else {
-            TendermintMode::Validator
+impl From<String> for TendermintMode {
+    fn from(mode: String) -> Self {
+        match mode.as_str() {
+            "full" => TendermintMode::Full,
+            "validator" => TendermintMode::Validator,
+            "seed" => TendermintMode::Seed,
+            _ => panic!("Unrecognized mode"),
         }
     }
 }
@@ -319,7 +315,7 @@ impl Config {
     pub fn load(
         base_dir: impl AsRef<Path>,
         chain_id: &ChainId,
-        mode: TendermintMode,
+        mode: Option<TendermintMode>,
     ) -> Self {
         let base_dir = base_dir.as_ref();
         match Self::read(base_dir, chain_id, mode) {
@@ -344,10 +340,11 @@ impl Config {
     pub fn read(
         base_dir: &Path,
         chain_id: &ChainId,
-        mode: TendermintMode,
+        mode: Option<TendermintMode>,
     ) -> Result<Self> {
         let file_path = Self::file_path(base_dir, chain_id);
         let file_name = file_path.to_str().expect("Expected UTF-8 file path");
+        let mode = mode.unwrap_or(TendermintMode::Validator);
         if !file_path.exists() {
             return Self::generate(base_dir, chain_id, mode, true);
         };
