@@ -4266,9 +4266,9 @@ dependencies = [
 
 [[package]]
 name = "native-tls"
-version = "0.2.8"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48ba9f7719b5a0f42f338907614285fb5fd70e53858141f69898a1fb7203b24d"
+checksum = "fd7e2f3618557f980e0b17e8856252eee3c97fa12c54dff0ca290fb6266ca4a9"
 dependencies = [
  "lazy_static 1.4.0",
  "libc",
@@ -4797,9 +4797,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "pathdiff"
@@ -5858,7 +5858,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
- "semver 1.0.6",
+ "semver 1.0.7",
 ]
 
 [[package]]
@@ -6085,9 +6085,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4a3381e03edd24287172047536f20cabde766e2cd3e65e6b00fb3af51c4f38d"
+checksum = "d65bd28f48be7196d222d95b9243287f48d27aca604e08497513019ff0502cc4"
 
 [[package]]
 name = "semver-parser"
@@ -6589,9 +6589,9 @@ checksum = "734676eb262c623cec13c3155096e08d1f8f29adce39ba17948b18dad1e54142"
 
 [[package]]
 name = "syn"
-version = "1.0.89"
+version = "1.0.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea297be220d52398dcc07ce15a209fce436d361735ac1db700cab3b6cdfb9f54"
+checksum = "704df27628939572cd88d33f171cd6f896f4eaca85252c6e0a72d8d8287ee86f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6664,7 +6664,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#2885a565a23f6e4dff37bb8fff1eef47dd5176f7"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#457302704e2bd33b0cc012c58b62c174080269d0"
 dependencies = [
  "async-trait",
  "bytes 1.1.0",
@@ -6720,7 +6720,7 @@ dependencies = [
 [[package]]
 name = "tendermint-config"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#2885a565a23f6e4dff37bb8fff1eef47dd5176f7"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#457302704e2bd33b0cc012c58b62c174080269d0"
 dependencies = [
  "flex-error",
  "serde 1.0.136",
@@ -6746,7 +6746,7 @@ dependencies = [
 [[package]]
 name = "tendermint-light-client-verifier"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#2885a565a23f6e4dff37bb8fff1eef47dd5176f7"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#457302704e2bd33b0cc012c58b62c174080269d0"
 dependencies = [
  "derive_more",
  "flex-error",
@@ -6772,7 +6772,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#2885a565a23f6e4dff37bb8fff1eef47dd5176f7"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#457302704e2bd33b0cc012c58b62c174080269d0"
 dependencies = [
  "bytes 1.1.0",
  "flex-error",
@@ -6806,7 +6806,7 @@ dependencies = [
 [[package]]
 name = "tendermint-rpc"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#2885a565a23f6e4dff37bb8fff1eef47dd5176f7"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#457302704e2bd33b0cc012c58b62c174080269d0"
 dependencies = [
  "async-trait",
  "async-tungstenite",
@@ -6872,7 +6872,7 @@ dependencies = [
 [[package]]
 name = "tendermint-testgen"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#2885a565a23f6e4dff37bb8fff1eef47dd5176f7"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-16.03.2022#457302704e2bd33b0cc012c58b62c174080269d0"
 dependencies = [
  "ed25519-dalek",
  "gumdrop",
@@ -7245,14 +7245,13 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64910e1b9c1901aaf5375561e35b9c057d95ff41a44ede043a03e09279eabaf1"
+checksum = "0edfdeb067411dba2044da6d1cb2df793dd35add7888d73c16e3381ded401764"
 dependencies = [
  "bytes 1.1.0",
  "futures-core",
  "futures-sink",
- "log 0.4.16",
  "pin-project-lite 0.2.8",
  "tokio",
 ]
@@ -7324,7 +7323,7 @@ dependencies = [
  "rand 0.8.5",
  "slab",
  "tokio",
- "tokio-util 0.7.0",
+ "tokio-util 0.7.1",
  "tower-layer",
  "tower-service",
  "tracing 0.1.32",
