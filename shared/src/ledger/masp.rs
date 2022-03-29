@@ -23,7 +23,10 @@ pub fn load_spend_params() -> (
     let params_dir = masp_proofs::default_params_folder().unwrap();
     let spend_path = params_dir.join("masp-spend.params");
     if !spend_path.exists() {
+        #[cfg(feature = "masp_proofs/download-params")]
         masp_proofs::download_parameters().expect("MASP parameters not present or downloadable");
+        #[cfg(not(feature = "masp_proofs/download-params"))]
+        panic!("MASP parameters not present or downloadable");
     }
     let param_f =
         File::open(spend_path).unwrap();
@@ -40,7 +43,10 @@ pub fn load_output_params() -> (
     let params_dir = masp_proofs::default_params_folder().unwrap();
     let output_path = params_dir.join("masp-output.params");
     if !output_path.exists() {
+        #[cfg(feature = "masp_proofs/download-params")]
         masp_proofs::download_parameters().expect("MASP parameters not present or downloadable");
+        #[cfg(not(feature = "masp_proofs/download-params"))]
+        panic!("MASP parameters not present or downloadable");
     }
     let param_f =
         File::open(output_path).unwrap();
