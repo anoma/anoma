@@ -443,6 +443,17 @@ pub fn get_id(key: &Key) -> Option<u64> {
     }
 }
 
+/// Get the committing epoch from a proposal committing key
+pub fn get_commit_epoch(key: &Key) -> Option<u64> {
+    match key.get_at(3) {
+        Some(id) => match id {
+            DbKeySeg::AddressSeg(_) => None,
+            DbKeySeg::StringSeg(res) => res.parse::<u64>().ok(),
+        },
+        None => None,
+    }
+}
+
 /// Get the proposal id from a proposal committing key
 pub fn get_commit_proposal_id(key: &Key) -> Option<u64> {
     match key.get_at(4) {

@@ -65,10 +65,24 @@ impl Shell {
         let proposals_key = gov_storage::get_commiting_proposals_prefix(
             self.storage.last_epoch.0,
         );
+
         self.proposal_data.clear();
         let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
         for (key, _, _) in proposal_iter {
-            let key = Key::from_str(key.as_str()).expect("Key should be parsable");
+            let key =
+                Key::from_str(key.as_str()).expect("Key should be parsable");
+            if gov_storage::get_commit_epoch(&key).unwrap()
+                != self.storage.last_epoch.0
+            {
+                // NOTE: `iter_prefix` iterate over the matching prefix. In this
+                // case  a proposal with grace_epoch 110 will be
+                // matched by prefixes  1, 11 and 110. Thus we
+                // have to skip to the next iteration of
+                //  the cycle for all the prefixes that don't actually match
+                //  the desired epoch.
+                continue;
+            }
+
             let proposal_id = gov_storage::get_commit_proposal_id(&key);
             if let Some(id) = proposal_id {
                 self.proposal_data.insert(id);
