@@ -61,7 +61,6 @@ where
 
         if new_epoch {
             for id in self.proposal_data.clone() {
-                println!("Executing: {}", id);
                 let proposal_funds_key = gov_storage::get_funds_key(id);
                 let (proposal_funds_bytes, _) = self
                     .storage
@@ -79,7 +78,6 @@ where
                 if let Ok(tally_result) = tally_result {
                     match tally_result {
                         (TallyResult::Passed, Some(code)) => {
-                            println!("tally okay + code ");
                             let tx = Tx::new(code, None);
                             let tx_type =
                                 TxType::Decrypted(DecryptedTx::Decrypted(tx));
@@ -132,10 +130,6 @@ where
                                         } else {
                                             continue;
                                         };
-                                        println!(
-                                            "transfering funds...: {}",
-                                            id
-                                        );
                                         self.storage.transfer(
                                             &m1t(),
                                             funds,
