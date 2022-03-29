@@ -1510,7 +1510,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.12.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/getrandom-no-js#cf732fc7f7e1dd71085a28c397fc416afca24db1"
 dependencies = [
  "bytes",
  "derive_more",
@@ -1537,7 +1537,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.16.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/getrandom-no-js#cf732fc7f7e1dd71085a28c397fc416afca24db1"
 dependencies = [
  "bytes",
  "prost",
@@ -2940,7 +2940,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/getrandom-no-js#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2968,7 +2968,7 @@ dependencies = [
 [[package]]
 name = "tendermint-config"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/getrandom-no-js#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "flex-error",
  "serde",
@@ -2981,7 +2981,7 @@ dependencies = [
 [[package]]
 name = "tendermint-light-client-verifier"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/getrandom-no-js#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "derive_more",
  "flex-error",
@@ -2994,7 +2994,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/getrandom-no-js#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "bytes",
  "flex-error",
@@ -3011,7 +3011,7 @@ dependencies = [
 [[package]]
 name = "tendermint-rpc"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/getrandom-no-js#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "bytes",
  "flex-error",
@@ -3035,7 +3035,7 @@ dependencies = [
 [[package]]
 name = "tendermint-testgen"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/getrandom-no-js#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "ed25519-dalek",
  "gumdrop",
