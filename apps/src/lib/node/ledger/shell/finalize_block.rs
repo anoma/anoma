@@ -520,7 +520,7 @@ where
 
         // Update evidence parameters
         let (epoch_duration, _gas) =
-            parameters::parameters::read_epoch_parameter(&self.storage)
+            parameters::read_epoch_parameter(&self.storage)
                 .expect("Couldn't read epoch duration parameters");
         let pos_params = self.storage.read_pos_params();
         let evidence_params =

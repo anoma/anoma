@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use anoma::ledger::governance::parameters::GovParams;
-use anoma::ledger::parameters::parameters::Parameters;
+use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::{GenesisValidator, PosParams};
 use anoma::ledger::treasury::parameters::TreasuryParams;
 use anoma::types::address::Address;
@@ -27,7 +27,7 @@ pub mod genesis_config {
     use std::str::FromStr;
 
     use anoma::ledger::governance::parameters::GovParams;
-    use anoma::ledger::parameters::parameters::{Parameters, EpochDuration};
+    use anoma::ledger::parameters::{Parameters, EpochDuration};
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
     use anoma::ledger::treasury::parameters::TreasuryParams;

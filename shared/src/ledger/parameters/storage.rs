@@ -1,3 +1,4 @@
+//! Parameters storage
 use crate::types::storage::{Key, DbKeySeg};
 
 use super::ADDRESS;
