@@ -92,6 +92,7 @@ dependencies = [
  "ed25519-consensus",
  "ferveo",
  "ferveo-common",
+ "ff",
  "group-threshold-cryptography",
  "hex",
  "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_abcipp_v0.23.5)",
@@ -100,7 +101,10 @@ dependencies = [
  "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
  "ics23",
  "itertools 0.10.3",
+ "jubjub",
  "loupe",
+ "masp_primitives",
+ "masp_proofs",
  "parity-wasm",
  "pretty_assertions",
  "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -161,6 +165,7 @@ dependencies = [
  "eyre",
  "ferveo",
  "ferveo-common",
+ "ff",
  "file-lock",
  "flate2",
  "futures 0.3.19",
@@ -302,7 +307,11 @@ dependencies = [
  "bellman",
  "bls12_381",
  "borsh",
+ "ff",
  "hex",
+ "jubjub",
+ "masp_primitives",
+ "masp_proofs",
 ]
 
 [[package]]
@@ -932,12 +941,12 @@ dependencies = [
 
 [[package]]
 name = "blake2b_simd"
-version = "1.0.0"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72936ee4afc7f8f736d1c38383b56480b5497b4617b4a77bdbf1d2ababc76127"
+checksum = "afa748e348ad3be8263be728124b24a24f268266f6f5d58af9d75f6a40b5c587"
 dependencies = [
  "arrayref",
- "arrayvec 0.7.2",
+ "arrayvec 0.5.2",
  "constant_time_eq",
 ]
 
@@ -1269,6 +1278,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "cipher",
  "cpufeatures",
+ "zeroize",
 ]
 
 [[package]]
@@ -1279,6 +1289,19 @@ checksum = "b6547abe025f4027edacd9edaa357aded014eecec42a5070d9b885c3c334aba2"
 dependencies = [
  "aead",
  "chacha20 0.7.3",
+ "cipher",
+ "poly1305",
+ "zeroize",
+]
+
+[[package]]
+name = "chacha20poly1305"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b84ed6d1d5f7aa9bdde921a5090e0ca4d934d250ea3b402a5fab3a994e28a2a"
+dependencies = [
+ "aead",
+ "chacha20 0.8.1",
  "cipher",
  "poly1305",
  "zeroize",
@@ -2194,7 +2217,7 @@ dependencies = [
  "ark-std",
  "bincode",
  "blake2 0.10.4",
- "blake2b_simd",
+ "blake2b_simd 1.0.0",
  "borsh",
  "digest 0.10.3",
  "ed25519-dalek",
@@ -2227,6 +2250,17 @@ dependencies = [
  "ark-std",
  "serde 1.0.136",
  "serde_bytes",
+]
+
+[[package]]
+name = "ff"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2958d04124b9f27f175eaeb9a9f383d026098aa837eadd8ba22c11f13a05b9e"
+dependencies = [
+ "bitvec",
+ "rand_core 0.6.3",
+ "subtle 2.4.1",
 ]
 
 [[package]]
@@ -2664,7 +2698,7 @@ dependencies = [
  "ark-poly",
  "ark-serialize",
  "ark-std",
- "blake2b_simd",
+ "blake2b_simd 1.0.0",
  "chacha20 0.8.1",
  "hex",
  "itertools 0.10.3",
@@ -3998,6 +4032,61 @@ dependencies = [
 ]
 
 [[package]]
+name = "masp_primitives"
+version = "0.5.0"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#a7f7b5f1f70efb9dbd00bcba99363878b9ce717c"
+dependencies = [
+ "aes",
+ "bip0039",
+ "bitvec",
+ "blake2b_simd 1.0.0",
+ "blake2s_simd 1.0.0",
+ "bls12_381",
+ "borsh",
+ "byteorder",
+ "chacha20poly1305 0.9.0",
+ "crypto_api_chachapoly",
+ "ff",
+ "fpe",
+ "group",
+ "hex",
+ "incrementalmerkletree",
+ "jubjub",
+ "lazy_static 1.4.0",
+ "rand 0.8.4",
+ "rand_core 0.6.3",
+ "ripemd160",
+ "secp256k1",
+ "serde 1.0.136",
+ "sha2 0.9.9",
+ "subtle 2.4.1",
+ "zcash_encoding",
+ "zcash_primitives",
+]
+
+[[package]]
+name = "masp_proofs"
+version = "0.5.0"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#a7f7b5f1f70efb9dbd00bcba99363878b9ce717c"
+dependencies = [
+ "bellman",
+ "blake2b_simd 1.0.0",
+ "bls12_381",
+ "byteorder",
+ "directories",
+ "ff",
+ "group",
+ "itertools 0.10.3",
+ "jubjub",
+ "lazy_static 1.4.0",
+ "masp_primitives",
+ "rand_core 0.6.3",
+ "wagyu-zcash-parameters",
+ "zcash_primitives",
+ "zcash_proofs",
+]
+
+[[package]]
 name = "match_cfg"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4064,6 +4153,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg 1.0.1",
+]
+
+[[package]]
+name = "memuse"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f69d25cd7528769ad3d897e99eb942774bff8b23165012af490351a44c5b583b"
+dependencies = [
+ "nonempty",
 ]
 
 [[package]]
@@ -6058,6 +6156,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c107b6f4780854c8b126e228ea8869f4d7b71260f962fefb57b996b8959ba6b"
 
 [[package]]
+name = "secp256k1"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d03ceae636d0fed5bae6a7f4f664354c5f4fcedf6eef053fef17e49f837d0a"
+dependencies = [
+ "secp256k1-sys",
+]
+
+[[package]]
+name = "secp256k1-sys"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "957da2573cde917463ece3570eab4a0b3f19de6f1646cde62e6fd3868f566036"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "security-framework"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6380,7 +6496,7 @@ checksum = "6142f7c25e94f6fd25a32c3348ec230df9109b463f59c8c7acc4bd34936babb7"
 dependencies = [
  "aes-gcm",
  "blake2 0.9.2",
- "chacha20poly1305",
+ "chacha20poly1305 0.8.2",
  "rand 0.8.4",
  "rand_core 0.6.3",
  "ring",

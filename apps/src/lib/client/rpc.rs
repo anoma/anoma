@@ -48,7 +48,6 @@ use crate::client::tx::TxResponse;
 use crate::client::tx::load_shielded_context;
 use crate::client::tx::compute_shielded_balance;
 use crate::client::tx::to_viewing_key;
-use crate::node::ledger::rpc::{Path, PrefixValue};
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
