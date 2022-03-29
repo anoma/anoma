@@ -46,7 +46,7 @@ use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ibc::proofs::Proofs;
 use crate::ibc::timestamp::Timestamp;
 use crate::ledger::native_vp::Error as NativeVpError;
-use crate::ledger::parameters::parameters;
+use crate::ledger::parameters;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::tendermint::Time;
 use crate::tendermint_proto::Protobuf;

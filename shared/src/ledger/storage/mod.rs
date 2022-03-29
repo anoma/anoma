@@ -27,7 +27,7 @@ use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
 
 use crate::ledger::gas::MIN_STORAGE_GAS;
-use crate::ledger::parameters::parameters::EpochDuration;
+use crate::ledger::parameters::EpochDuration;
 use crate::ledger::storage::merkle_tree::{
     Error as MerkleTreeError, MerkleRoot,
 };
@@ -44,8 +44,8 @@ use crate::types::storage::{
 };
 use crate::types::time::DateTimeUtc;
 
-use super::parameters::parameters;
-use super::parameters::parameters::Parameters;
+use super::parameters;
+use super::parameters::Parameters;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -697,7 +697,7 @@ mod tests {
 
     use super::testing::*;
     use super::*;
-    use crate::ledger::parameters::parameters::Parameters;
+    use crate::ledger::parameters::{Parameters, self};
     use crate::types::time::{self, Duration};
 
     prop_compose! {

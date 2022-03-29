@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::collections::BTreeSet;
 
 use anoma::ledger::gas::BlockGasMeter;
-use anoma::ledger::parameters::parameters::{EpochDuration, self};
+use anoma::ledger::parameters::{EpochDuration, self};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::write_log::WriteLog;

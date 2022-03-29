@@ -953,6 +953,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 9. Send a yay vote from a validator
 /// 10. Send a yay vote from a normal user
 /// 11. Query the proposal and check the result
+/// 12. Wait proposal grace and check proposal author funds
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -1012,7 +1013,7 @@ fn proposal_submission() -> Result<()> {
             "author": albert,
             "voting_start_epoch": 3,
             "voting_end_epoch": 9,
-            "grace_epoch": 30
+            "grace_epoch": 15
         }
     );
     generate_proposal_json(
@@ -1214,6 +1215,46 @@ fn proposal_submission() -> Result<()> {
 
     let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
     client.exp_string("Transaction is invalid.")?;
+    client.assert_success();
+
+    // 11. Query the proposal and check the result
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 <= 9 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    let query_proposal = vec![
+        "query-proposal",
+        "--proposal-id",
+        "0",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_proposal, Some(15))?;
+    client.exp_string("Result: passed")?;
+    client.assert_success();
+
+    // 12. Wait proposal grace and check proposal author funds
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 < 17 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    let query_balance_args = vec![
+        "balance",
+        "--owner",
+        ALBERT,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(30))?;
+    client.exp_string("XAN: 1000000")?;
     client.assert_success();
 
     Ok(())

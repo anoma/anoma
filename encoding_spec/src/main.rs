@@ -13,7 +13,7 @@
 use std::collections::HashSet;
 use std::io::Write;
 
-use anoma::ledger::parameters::parameters::Parameters;
+use anoma::ledger::parameters::Parameters;
 use anoma::proto::SignedTxData;
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::{PublicKey, Signature};
