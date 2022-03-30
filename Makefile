@@ -128,8 +128,6 @@ test: test-unit test-e2e test-wasm
 
 test-e2e:
 	RUST_BACKTRACE=1 $(cargo) test e2e \
-		--no-default-features \
-		--features "wasm-runtime ABCI" \
 		-- --test-threads=1
 
 test-e2e-abci-plus-plus:
