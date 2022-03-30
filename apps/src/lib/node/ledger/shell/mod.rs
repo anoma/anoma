@@ -103,6 +103,8 @@ pub enum Error {
     TowerServer(String),
     #[error("{0}")]
     Broadcaster(tokio::sync::mpsc::error::TryRecvError),
+    #[error("Error executing proposal {0}")]
+    BadProposal(String),
 }
 
 /// The different error codes that the ledger may
