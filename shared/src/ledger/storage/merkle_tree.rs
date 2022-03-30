@@ -610,10 +610,8 @@ mod test {
         // Check the base root
         assert_eq!(sub_root, tree.root().0);
 
-        // Delete the pos key
+        // Delete the pos key and verify non-existence proof for it
         tree.delete(&pos_key).unwrap();
-        assert!(tree.has_key(&ibc_key).unwrap());
-        assert!(!tree.has_key(&pos_key).unwrap());
 
         let nep = tree.get_non_existence_proof(&pos_key).unwrap();
         let subtree_nep = nep.ops.get(0).unwrap();
@@ -663,13 +661,13 @@ mod test {
             };
         let basetree_root =
             ics23::calculate_existence_root(&basetree_ics23_ep).unwrap();
-        let verify_basetree_res = ics23::verify_membership(
+        let basetree_verification_res = ics23::verify_membership(
             &basetree_ep_commitment_proof,
             specs.get(1).unwrap(),
             &basetree_root,
             store_type.to_string().as_bytes(),
             &subtree_root,
         );
-        assert!(verify_basetree_res);
+        assert!(basetree_verification_res);
     }
 }
