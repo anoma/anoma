@@ -103,7 +103,7 @@ This command will create a `proposal` file same directory where the command was 
 
 To vote an offline proposal use the following command:
 ```shell
-anoma client vote-proposal --data-path proposal --vote yay --signer albert --offline
+anoma client vote-proposal --data-path proposal --vote yay --signer validator --offline
 ```
 
 This command will create a `proposal-vote-${address}` file (where address is the `--signer` address).
