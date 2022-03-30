@@ -26,6 +26,8 @@ use tendermint_stable::block::Header;
 use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
 
+use super::parameters;
+use super::parameters::Parameters;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::EpochDuration;
 use crate::ledger::storage::merkle_tree::{
@@ -43,9 +45,6 @@ use crate::types::storage::{
     BlockHash, BlockHeight, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
-
-use super::parameters;
-use super::parameters::Parameters;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -697,7 +696,7 @@ mod tests {
 
     use super::testing::*;
     use super::*;
-    use crate::ledger::parameters::{Parameters, self};
+    use crate::ledger::parameters::{self, Parameters};
     use crate::types::time::{self, Duration};
 
     prop_compose! {

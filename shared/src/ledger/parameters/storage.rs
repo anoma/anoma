@@ -1,7 +1,6 @@
 //! Parameters storage
-use crate::types::storage::{Key, DbKeySeg};
-
 use super::ADDRESS;
+use crate::types::storage::{DbKeySeg, Key};
 
 const EPOCH_DURATION_KEY: &str = "epoch_duration";
 const VP_WHITELIST_KEY: &str = "vp_whitelist";

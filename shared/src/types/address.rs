@@ -183,9 +183,7 @@ impl Address {
                     InternalAddress::Governance => {
                         internal::GOVERNANCE.to_string()
                     }
-                    InternalAddress::Treasury => {
-                        internal::TREASURY.to_string()
-                    },
+                    InternalAddress::Treasury => internal::TREASURY.to_string(),
                     InternalAddress::IbcEscrow(hash) => {
                         format!("{}::{}", PREFIX_INTERNAL, hash)
                     }
