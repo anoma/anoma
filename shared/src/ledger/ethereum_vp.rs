@@ -1,7 +1,7 @@
 //! The native validity predicate for verifying the Ethereum
 //! headers to be included
 
-#[cfg(all(feature = "ethereum-headers", feature = "ferveo-tpke"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ethereum-headers"))]
 #[allow(missing_docs)]
 pub mod ethereum_headers_vp {
     use std::collections::BTreeSet;
@@ -77,5 +77,5 @@ pub mod ethereum_headers_vp {
     }
 }
 
-#[cfg(all(feature = "ethereum-headers", feature = "ferveo-tpke"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ethereum-headers"))]
 pub use ethereum_headers_vp::*;

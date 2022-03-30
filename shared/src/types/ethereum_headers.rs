@@ -12,10 +12,8 @@ pub mod eth_header_types {
     use thiserror::Error;
     use web3::types::BlockHeader;
 
-    #[cfg(not(feature = "ABCI"))]
     use crate::proto::Signed;
     use crate::types::hash::Hash;
-    #[cfg(not(feature = "ABCI"))]
     use crate::types::key::*;
 
     /// Errors in transforming types related to Ethereum headers
@@ -172,7 +170,6 @@ pub mod eth_header_types {
         }
     }
 
-    #[cfg(not(feature = "ABCI"))]
     #[derive(BorshSerialize, BorshDeserialize)]
     /// A verifiable signed instance of the EthereumHeader.
     pub struct SignedEthereumHeader {

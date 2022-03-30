@@ -64,6 +64,7 @@ wasm-runtime = [
 
 ethereum-headers = [
   "ethereum-types",
+  "ferveo-tpke",
   "rlp",
   "web3",
 ]

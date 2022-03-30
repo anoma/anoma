@@ -634,9 +634,9 @@ mod test_utils {
     use anoma::types::chain::ChainId;
     use anoma::types::key::*;
     use anoma::types::storage::{BlockHash, Epoch};
+    use anoma::types::transaction::Fee;
     #[cfg(not(feature = "ABCI"))]
     use anoma::types::vote_extensions::VoteExtension;
-    use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::block::{header::Version, Header};

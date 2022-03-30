@@ -1,6 +1,6 @@
 //! Anoma native vote extensions types
 
-#[cfg(all(not(feature = "ABCI"), feature = "ethereum-headers"))]
+#[cfg(feature = "ethereum-headers")]
 mod vote_exts {
     use std::convert::TryFrom;
 
@@ -17,6 +17,7 @@ mod vote_exts {
         pub self_authenticating_data: Vec<u8>,
     }
 
+    #[cfg(not(feature = "ABCI"))]
     impl From<tendermint_proto::types::VoteExtension> for VoteExtension {
         fn from(ext: tendermint_proto::types::VoteExtension) -> Self {
             Self {
@@ -49,6 +50,7 @@ mod vote_exts {
         }
     }
 
+    #[cfg(not(feature = "ABCI"))]
     impl TryFrom<tendermint_proto::types::VoteExtension> for VoteExtensionData {
         type Error = std::io::Error;
 
@@ -60,5 +62,5 @@ mod vote_exts {
     }
 }
 
-#[cfg(all(not(feature = "ABCI"), feature = "ethereum-headers"))]
+#[cfg(feature = "ethereum-headers")]
 pub use vote_exts::*;

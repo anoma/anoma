@@ -338,7 +338,7 @@ where
                                 .map_err(Error::IbcTokenNativeVpError);
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
                             result
-                        },
+                        }
                         InternalAddress::EthereumState => {
                             todo!()
                         }

@@ -23,7 +23,7 @@ pub struct UpdateDkgSessionKey {
     pub dkg_public_key: Vec<u8>,
 }
 
-#[cfg(feature = "ferveo-tpke")]
+#[cfg(feature = "ethereum-headers")]
 mod protocol_txs {
     use std::io::{ErrorKind, Write};
     use std::path::Path;
