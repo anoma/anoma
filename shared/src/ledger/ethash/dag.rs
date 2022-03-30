@@ -141,8 +141,8 @@ pub mod dag_cache {
                 && self.next_cache.is_none()
                 && !self.is_valid_for(number + self.update_ahead)
             {
-                let epoch =
-                    ((number + self.update_ahead) / EPOCH_LENGTH as u64) as usize;
+                let epoch = ((number + self.update_ahead) / EPOCH_LENGTH as u64)
+                    as usize;
                 self.update = Some(BackgroundTask::new(move || {
                     let cache_size = get_cache_size(epoch);
                     let mut cache: Vec<u8> = vec![0; cache_size];
@@ -262,6 +262,8 @@ pub mod dag_cache {
 
     #[cfg(test)]
     mod tests {
+        use std::path::PathBuf;
+
         use borsh::BorshDeserialize;
         use ethereum_types::{H256, H64, U256};
         use hex_literal::*;
@@ -270,7 +272,20 @@ pub mod dag_cache {
         use crate::types::ethereum_headers::{Difficulty, EthereumHeader};
         use crate::types::hash::Hash;
 
-        const DAG_PATH: &str = "/home/r2d2/Projects/anoma/shared/src/ledger/ethash/test_data/eth_pseudo_cache";
+        const DAG_PATH: &str =
+            "shared/src/ledger/ethash/test_data/eth_pseudo_cache";
+        /// Gets the absolute path to the serialized test data
+        pub fn path_to_test_data() -> PathBuf {
+            let mut current_path = std::env::current_dir()
+                .expect("Current directory should exist")
+                .canonicalize()
+                .expect("Current directory should exist");
+            while current_path.file_name().unwrap() != "shared" {
+                current_path.pop();
+            }
+            current_path.pop();
+            current_path.join(DAG_PATH)
+        }
 
         /// Test that verifying an Ethereum header works, even if it is
         /// for an epoch whose cache is not in memory.
@@ -310,9 +325,9 @@ pub mod dag_cache {
         fn test_ethereum_in_current_epoch() {
             // LightDAG::new(8996777, 0, 0);
             let mut light_dag: LightDAG = BorshDeserialize::try_from_slice(
-                std::fs::read(DAG_PATH)
+                std::fs::read(path_to_test_data())
                     .expect("Test failed")
-                    .as_slice()
+                    .as_slice(),
             )
             .expect("Test failed");
             let header = EthereumHeader {
@@ -339,7 +354,7 @@ pub mod dag_cache {
             assert!(time_taken.as_secs() <= 5);
 
             // We now test that update is a no-op here.
-            let old_epoch = light_dag.epoch.clone();
+            let old_epoch = light_dag.epoch;
             light_dag.update(8996777);
             assert_eq!(light_dag.epoch, old_epoch);
             assert!(light_dag.update.is_none());
@@ -348,16 +363,16 @@ pub mod dag_cache {
             assert!(light_dag.update.is_none());
         }
 
-        /// Test that update advances to the next epoch if it sees a header in the next
-        /// epoch. The current epoch should move to the previous epoch and can still
-        /// be used to verify headers.
+        /// Test that update advances to the next epoch if it sees a header in
+        /// the next epoch. The current epoch should move to the
+        /// previous epoch and can still be used to verify headers.
         #[test]
         fn test_ethereum_in_previous_epoch() {
             // LightDAG::new(8996777, 0, 0);
             let mut light_dag: LightDAG = BorshDeserialize::try_from_slice(
-                std::fs::read(DAG_PATH)
+                std::fs::read(path_to_test_data())
                     .expect("Test failed")
-                    .as_slice()
+                    .as_slice(),
             )
             .expect("Test failed");
             light_dag.keep_previous = 4000;
@@ -383,7 +398,7 @@ pub mod dag_cache {
             assert!(!light_dag.cache.cache.is_empty());
             assert!(light_dag.next_cache.is_none());
             assert!(light_dag.update.is_none());
-            let old_epoch = light_dag.epoch.clone();
+            let old_epoch = light_dag.epoch;
 
             light_dag.update(9000000);
             // post-update
@@ -415,9 +430,9 @@ pub mod dag_cache {
         fn test_drop_old_cache() {
             // LightDAG::new(8996777, 0, 0);
             let mut light_dag: LightDAG = BorshDeserialize::try_from_slice(
-                std::fs::read(DAG_PATH)
+                std::fs::read(path_to_test_data())
                     .expect("Test failed")
-                    .as_slice()
+                    .as_slice(),
             )
             .expect("Test failed");
             light_dag.keep_previous = 1;
@@ -427,7 +442,7 @@ pub mod dag_cache {
             assert!(!light_dag.cache.cache.is_empty());
             assert!(light_dag.next_cache.is_none());
             assert!(light_dag.update.is_none());
-            let old_epoch = light_dag.epoch.clone();
+            let old_epoch = light_dag.epoch;
 
             light_dag.update(9000000);
             // post-update
@@ -446,16 +461,16 @@ pub mod dag_cache {
             assert!(light_dag.update.is_some());
         }
 
-        /// Test that at `update_ahead` blocks prior to a new epoch, a background
-        /// process begins computing the next cache. This should eventually be
-        /// stored in the `next_cache` field
+        /// Test that at `update_ahead` blocks prior to a new epoch, a
+        /// background process begins computing the next cache. This
+        /// should eventually be stored in the `next_cache` field
         #[test]
         fn test_background_process() {
             // LightDAG::new(8996777, 0, 0);
             let mut light_dag: LightDAG = BorshDeserialize::try_from_slice(
-                std::fs::read(DAG_PATH)
+                std::fs::read(path_to_test_data())
                     .expect("Test failed")
-                    .as_slice()
+                    .as_slice(),
             )
             .expect("Test failed");
             // set the pipeline length to something realistic
