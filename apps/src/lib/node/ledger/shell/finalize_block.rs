@@ -4,7 +4,9 @@
 use anoma::types::ethereum_headers::EthereumHeader;
 use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
-use anoma::types::transaction::protocol::{ProtocolTxType, VoteExtension};
+use anoma::types::transaction::protocol::ProtocolTxType;
+#[cfg(not(feature = "ABCI"))]
+use anoma::types::vote_extensions::{VoteExtension, VoteExtensionData};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -19,8 +21,6 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 use tendermint_stable::block::Header;
 
 use super::*;
-#[cfg(not(feature = "ABCI"))]
-use crate::node::ledger::shell::vote_extensions::VoteExtensionData;
 
 impl<D, H> Shell<D, H>
 where

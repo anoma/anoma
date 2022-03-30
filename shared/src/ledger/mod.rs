@@ -1,6 +1,7 @@
 //! The ledger modules
 
 pub mod ethash;
+pub mod ethereum_vp;
 pub mod gas;
 pub mod ibc;
 pub mod native_vp;

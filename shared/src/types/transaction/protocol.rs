@@ -36,27 +36,9 @@ mod protocol_txs {
     use crate::proto::Tx;
     use crate::types::key::*;
     use crate::types::transaction::{EllipticCurve, TxError, TxType};
+    use crate::types::vote_extensions::VoteExtension;
 
     const TX_NEW_DKG_KP_WASM: &str = "tx_update_dkg_session_keypair.wasm";
-
-    /// Convert Tendermint vote extensions to an Anoma native type
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
-    pub struct VoteExtension {
-        /// Data whose authenticity if given by a validator signature
-        pub signed_data: Vec<u8>,
-        /// Data that can be self-authenticated
-        pub self_authenticating_data: Vec<u8>,
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    impl From<tendermint_proto::types::VoteExtension> for VoteExtension {
-        fn from(ext: tendermint_proto::types::VoteExtension) -> Self {
-            Self {
-                signed_data: ext.app_data_to_sign,
-                self_authenticating_data: ext.app_data_self_authenticating,
-            }
-        }
-    }
 
     #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     /// Txs sent by validators as part of internal protocols

@@ -1,44 +1,10 @@
 #[cfg(not(feature = "ABCI"))]
 mod extend_votes {
     use anoma::types::ethereum_headers::SignedEthereumHeader;
-    use anoma::types::transaction::protocol::VoteExtension;
-    use borsh::{BorshDeserialize, BorshSerialize};
+    use anoma::types::vote_extensions::VoteExtensionData;
     use tendermint_proto::types::Vote;
 
     use super::super::*;
-
-    #[derive(BorshSerialize, BorshDeserialize)]
-    pub struct VoteExtensionData {
-        pub ethereum_headers: Vec<SignedEthereumHeader>,
-    }
-
-    impl TryFrom<VoteExtension> for VoteExtensionData {
-        type Error = Error;
-
-        fn try_from(ext: VoteExtension) -> Result<Self> {
-            BorshDeserialize::try_from_slice(&ext.signed_data[..])
-                .map_err(Error::VoteExtDecoding)
-        }
-    }
-
-    impl TryFrom<&VoteExtension> for VoteExtensionData {
-        type Error = Error;
-
-        fn try_from(ext: &VoteExtension) -> Result<Self> {
-            BorshDeserialize::try_from_slice(&ext.signed_data[..])
-                .map_err(Error::VoteExtDecoding)
-        }
-    }
-
-    impl TryFrom<tendermint_proto::types::VoteExtension> for VoteExtensionData {
-        type Error = Error;
-
-        fn try_from(
-            ext: tendermint_proto::types::VoteExtension,
-        ) -> Result<Self> {
-            Self::try_from(VoteExtension::from(ext))
-        }
-    }
 
     impl<D, H> Shell<D, H>
     where

@@ -635,7 +635,7 @@ mod test_utils {
     use anoma::types::key::*;
     use anoma::types::storage::{BlockHash, Epoch};
     #[cfg(not(feature = "ABCI"))]
-    use anoma::types::transaction::protocol::VoteExtension;
+    use anoma::types::vote_extensions::VoteExtension;
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]

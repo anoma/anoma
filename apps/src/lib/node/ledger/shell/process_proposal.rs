@@ -2,12 +2,9 @@
 //! and [`RevertProposal`] ABCI++ methods for the Shell
 use anoma::types::transaction::protocol::ProtocolTxType;
 #[cfg(not(feature = "ABCI"))]
-use anoma::types::transaction::protocol::VoteExtension;
+use anoma::types::vote_extensions::{VoteExtension, VoteExtensionData};
 
 use super::*;
-#[cfg(not(feature = "ABCI"))]
-use crate::node::ledger::shell::vote_extensions::VoteExtensionData;
-use crate::std::option::Option::None;
 
 impl<D, H> Shell<D, H>
 where

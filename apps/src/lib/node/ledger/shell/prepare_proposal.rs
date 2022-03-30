@@ -2,7 +2,8 @@
 
 #[cfg(not(feature = "ABCI"))]
 mod prepare_block {
-    use anoma::types::transaction::protocol::{ProtocolTxType, VoteExtension};
+    use anoma::types::transaction::protocol::ProtocolTxType;
+    use anoma::types::vote_extensions::VoteExtension;
 
     use super::super::*;
     use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;

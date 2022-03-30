@@ -61,6 +61,8 @@ mod internal {
         "ano::IBC Burn Address                        ";
     pub const IBC_MINT: &str =
         "ano::IBC Mint Address                        ";
+    pub const ETHEREUM_STATE: &str =
+        "ano::Ethereum State Address                  ";
 }
 
 /// Fixed-length address strings prefix for established addresses.
@@ -181,6 +183,7 @@ impl Address {
                     }
                     InternalAddress::IbcBurn => internal::IBC_BURN.to_string(),
                     InternalAddress::IbcMint => internal::IBC_MINT.to_string(),
+                    InternalAddress::EthereumState => internal::ETHEREUM_STATE.to_string(),
                 };
                 debug_assert_eq!(string.len(), FIXED_LEN_STRING_BYTES);
                 string
@@ -423,6 +426,8 @@ pub enum InternalAddress {
     IbcBurn,
     /// Mint tokens from this address with IBC token transfer
     IbcMint,
+    /// Include and verify Ethereum headers
+    EthereumState,
 }
 
 impl InternalAddress {
@@ -449,6 +454,7 @@ impl Display for InternalAddress {
                 Self::IbcEscrow(hash) => format!("IbcEscrow: {}", hash),
                 Self::IbcBurn => "IbcBurn".to_string(),
                 Self::IbcMint => "IbcMint".to_string(),
+                Self::EthereumState => "EthereumState".to_string(),
             }
         )
     }
@@ -683,8 +689,9 @@ pub mod testing {
             InternalAddress::Parameters => {}
             InternalAddress::IbcEscrow(_) => {}
             InternalAddress::IbcBurn => {}
-            InternalAddress::IbcMint => {} /* Add new addresses in the
-                                            * `prop_oneof` below. */
+            InternalAddress::IbcMint => {}
+            InternalAddress::EthereumState => {} /* Add new addresses in the
+                                                  * `prop_oneof` below. */
         };
         prop_oneof![
             Just(InternalAddress::PoS),
@@ -695,6 +702,7 @@ pub mod testing {
                 .prop_map(|(p, c)| InternalAddress::ibc_escrow_address(p, c)),
             Just(InternalAddress::IbcBurn),
             Just(InternalAddress::IbcMint),
+            Just(InternalAddress::EthereumState),
         ]
     }
 

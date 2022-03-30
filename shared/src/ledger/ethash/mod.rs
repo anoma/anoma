@@ -1,7 +1,7 @@
 //! This was taken from https://github.com/rust-ethereum/ethash
 //! Apache-2 licensed Ethash implementation.
 
-mod dag;
+mod eth_cache;
 mod miller_rabin;
 
 /// The reference algorithm used is from https://github.com/ethereum/wiki/wiki/Ethash
@@ -16,7 +16,7 @@ pub mod ethash_algorithm {
     use ethereum_types::{H256, H512, H64, U256};
     use sha3::{Digest, Keccak256, Keccak512};
 
-    pub use super::dag::LightDAG;
+    pub use super::eth_cache::EthVerifier;
     use super::miller_rabin::is_prime;
 
     /// 2 to the power of 30
