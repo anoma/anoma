@@ -574,6 +574,7 @@ mod test {
         let pos_val = [2u8; 8].to_vec();
         tree.update(&pos_key, pos_val).unwrap();
         let pos_val2 = [3u8; 8].to_vec();
+        // to prevent the subtree from being empty after deletion
         tree.update(&pos_key2, pos_val2).unwrap();
 
         let specs = tree.proof_specs();
