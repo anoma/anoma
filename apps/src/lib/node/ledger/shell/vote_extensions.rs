@@ -46,6 +46,7 @@ mod extend_votes {
         H: StorageHasher + Sync + 'static,
     {
         /// INVARIANT: This method must be stateless.
+        /// It uses mutable `self` only to receive eth headers.
         pub fn extend_vote(
             &mut self,
             _req: request::ExtendVote,
