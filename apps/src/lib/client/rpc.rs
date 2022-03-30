@@ -280,7 +280,10 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
     let current_epoch = query_epoch(args.query.clone()).await;
     match args.proposal_id {
         Some(id) => {
-            if print_proposal(&client, id, current_epoch, true).await.is_none() {
+            if print_proposal(&client, id, current_epoch, true)
+                .await
+                .is_none()
+            {
                 eprintln!("No valid proposal was found with id {}", id)
             }
         }
@@ -292,7 +295,10 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                     .unwrap();
 
             for id in 0..last_proposal_id {
-                if print_proposal(&client, id, current_epoch, false).await.is_none() {
+                if print_proposal(&client, id, current_epoch, false)
+                    .await
+                    .is_none()
+                {
                     eprintln!("No valid proposal was found with id {}", id)
                 };
             }
@@ -1108,7 +1114,6 @@ pub async fn is_delegator(
         }
     }
 }
-
 
 /// Check if the address exists on chain. Established address exists if it has a
 /// stored validity predicate. Implicit and internal addresses always return
