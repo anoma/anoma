@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use anoma_proof_of_stake::types::Slashes;
+use anoma_proof_of_stake::types::{Slashes, ValidatorSet};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
 use thiserror::Error;
@@ -91,32 +91,38 @@ where
         Ok(start_epoch) => {
             let mut bond_data: HashMap<Address, (Address, token::Amount)> =
                 HashMap::new();
-            let (validator_voters, delegator_voters) =
+            let (validator_voters, delegator_voters, validator_set) =
                 get_votes(storage, proposal_id, start_epoch)?;
             for validator_addr in validator_voters.keys() {
-                let bond_amount = get_bond_amount_at(
+                match get_bond_amount_at(
                     storage,
                     validator_addr,
                     validator_addr,
                     start_epoch,
-                )
-                .expect("Bond should be definied.");
-                bond_data.insert(
-                    validator_addr.clone(),
-                    (validator_addr.clone(), bond_amount),
-                );
+                ) {
+                    Some(amount) => {
+                        bond_data.insert(
+                            validator_addr.clone(),
+                            (validator_addr.clone(), amount),
+                        );
+                    }
+                    None => continue,
+                };
                 for delegator_addr in delegator_voters.keys() {
-                    let bond_amount = get_bond_amount_at(
+                    match get_bond_amount_at(
                         storage,
                         delegator_addr,
                         validator_addr,
                         start_epoch,
-                    )
-                    .expect("Bond should be definied.");
-                    bond_data.insert(
-                        delegator_addr.clone(),
-                        (validator_addr.clone(), bond_amount),
-                    );
+                    ) {
+                        Some(amount) => {
+                            bond_data.insert(
+                                delegator_addr.clone(),
+                                (validator_addr.clone(), amount),
+                            );
+                        }
+                        None => continue,
+                    };
                 }
             }
 
@@ -144,18 +150,36 @@ where
             }
 
             for (addr, vote) in delegator_voters {
+                // here we check delegator votes in the case the corrisponding
+                // validator didn't vote
                 if !bond_data.contains_key(&addr) {
                     if vote.is_yay() {
-                        yay_total_tokens += bond_data.get(&addr).unwrap().1;
+                        for validator_addr in &validator_set {
+                            if bond_data.contains_key(validator_addr) {
+                                continue;
+                            }
+                            match get_bond_amount_at(
+                                storage,
+                                &addr,
+                                validator_addr,
+                                start_epoch,
+                            ) {
+                                Some(amount) => yay_total_tokens += amount,
+                                None => continue,
+                            };
+                        }
                     }
                 } else {
-                    let delegator_data = bond_data.get(&addr).unwrap();
+                    let (validator_addr, amount) =
+                        bond_data.get(&addr).unwrap();
                     let validator_vote =
-                        validator_voters.get(&delegator_data.0).unwrap();
+                        validator_voters.get(validator_addr).unwrap();
                     if validator_vote.is_yay() && validator_vote.ne(&vote) {
-                        yay_total_tokens -= delegator_data.1;
-                    } else {
-                        yay_total_tokens += delegator_data.1;
+                        yay_total_tokens -= *amount;
+                    } else if !validator_vote.is_yay()
+                        && validator_vote.ne(&vote)
+                    {
+                        yay_total_tokens += *amount;
                     }
                 }
             }
@@ -223,19 +247,10 @@ where
                     }
                     Some(delegated_amount)
                 }
-                _ => {
-                    println!("bond: inner fail");
-                    None
-                }
+                _ => None,
             }
         }
-        _ => {
-            println!(
-                "bond: outer fail {:?}, {:?}",
-                epoched_bonds_bytes, slashes_bytes
-            );
-            None
-        }
+        _ => None,
     }
 }
 
@@ -246,6 +261,7 @@ fn get_votes<D, H>(
 ) -> Result<(
     HashMap<Address, ProposalVote>,
     HashMap<Address, ProposalVote>,
+    Vec<Address>,
 )>
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
@@ -290,7 +306,11 @@ where
                             _ => continue,
                         }
                     }
-                    Ok((validator_voters, delegator_voters))
+                    Ok((
+                        validator_voters,
+                        delegator_voters,
+                        active_validators.collect(),
+                    ))
                 } else {
                     Err(Error::InvalidValidatorSet)
                 }
