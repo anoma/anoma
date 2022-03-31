@@ -224,7 +224,8 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
             if balance[&asset_type] == 0 {
                 println!("No {} balance found for given key", currency_code);
             } else {
-                println!("{}: {}", currency_code, balance[&asset_type]);
+                let asset_value = token::Amount::from(balance[&asset_type] as u64);
+                println!("{}: {}", currency_code, asset_value);
             }
         },
         // Here the user wants to know all possible token balances
@@ -240,11 +241,13 @@ pub async fn query_shielded_balance(ctx: Context, args: args::QueryBalance) {
                 let asset_value = balance[&asset_type];
                 if asset_value > 0 {
                     balance -= balance.project(asset_type);
+                    let asset_value = token::Amount::from(asset_value as u64);
                     println!("{}: {}", currency_code, asset_value);
                     found_any = true;
                 }
             }
             for (asset_type, value) in balance.components() {
+                let value = token::Amount::from(*value as u64);
                 println!("{}: {}", asset_type, value);
                 found_any = true;
             }
