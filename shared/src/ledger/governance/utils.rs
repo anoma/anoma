@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use anoma_proof_of_stake::types::{Slashes, ValidatorSet};
+use anoma_proof_of_stake::types::Slashes;
 use borsh::BorshDeserialize;
 use itertools::Itertools;
 use thiserror::Error;

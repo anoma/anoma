@@ -1659,7 +1659,7 @@ pub async fn compute_tally(
                     if bond_data.contains_key(validator_addr) {
                         continue;
                     }
-                    let bond_amount = match get_bond_amount_at(
+                    match get_bond_amount_at(
                         client,
                         addr,
                         validator_addr,
