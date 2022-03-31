@@ -68,7 +68,7 @@ where
 
     fn validate_tx(
         &self,
-        _tx_data: &[u8],
+        tx_data: &[u8],
         keys_changed: &BTreeSet<Key>,
         verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
@@ -431,7 +431,13 @@ where
                         _ => false,
                     }
                 }
-                (KeyType::PARAMETER, _) => false,
+                (KeyType::PARAMETER, _) => {
+                    let proposal_id = u64::try_from_slice(tx_data).ok();
+                    match proposal_id {
+                        Some(id) => is_proposal_accepted(&self.ctx, id),
+                        _ => false,
+                    }
+                }
                 (KeyType::UNKNOWN_GOVERNANCE, _) => false,
                 (KeyType::UNKNOWN, _) => true,
                 _ => false,
@@ -486,6 +492,23 @@ where
         Ok(value) => value,
         Err(_err) => None,
     }
+}
+
+/// Check if a proposal id is beign executed
+pub fn is_proposal_accepted<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    proposal_id: u64,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let proposal_execution_key =
+        gov_storage::get_proposal_execution_key(proposal_id);
+    context
+        .has_key_pre(&proposal_execution_key)
+        .unwrap_or(false)
 }
 
 fn is_valid_key_set<DB, H, CA>(
@@ -680,6 +703,7 @@ impl From<&Key> for KeyType {
         }
     }
 }
+
 #[allow(clippy::upper_case_acronyms)]
 enum ReadType {
     #[allow(clippy::upper_case_acronyms)]

@@ -26,6 +26,7 @@ use super::{
     validator_total_deltas_key, validator_voting_power_key, BondId, Bonds,
     Unbonds, ValidatorConsensusKeys, ValidatorSets, ValidatorTotalDeltas,
 };
+use crate::ledger::governance::is_proposal_accepted;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::pos::{
     is_validator_address_raw_hash_key, is_validator_consensus_key_key,
@@ -107,8 +108,11 @@ where
         let current_epoch = self.ctx.get_block_epoch()?;
         for key in keys_changed {
             if is_params_key(key) {
-                // TODO parameters changes are not yet implemented
-                return Ok(false);
+                let proposal_id = u64::try_from_slice(_tx_data).ok();
+                match proposal_id {
+                    Some(id) => return Ok(is_proposal_accepted(&self.ctx, id)),
+                    _ => return Ok(false),
+                }
             } else if let Some(owner) = key.is_validity_predicate() {
                 let has_pre = self.ctx.has_key_pre(key)?;
                 let has_post = self.ctx.has_key_post(key)?;
