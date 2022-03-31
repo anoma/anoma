@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use anoma_proof_of_stake::types::Slashes;
+use anoma_proof_of_stake::types::{Slashes, Slash};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
 use thiserror::Error;
@@ -233,15 +233,14 @@ where
                 Some(Slashes::default())
             };
             match (epoched_bonds, slashes) {
-                (Some(epoched_bonds), Some(_slashes)) => {
+                (Some(epoched_bonds), Some(slashes)) => {
                     let mut delegated_amount: token::Amount = 0.into();
                     for bond in epoched_bonds.iter() {
-                        for (start_epoch, amount) in
-                            bond.deltas.iter().sorted_unstable()
-                        {
-                            let epoch_start: Epoch = (*start_epoch).into();
-                            if epoch >= epoch_start {
-                                delegated_amount += *amount;
+                        for (start_epoch, &(mut delta)) in bond.deltas.iter().sorted() {
+                            let start_epoch = Epoch::from(*start_epoch);
+                            delta = apply_slashes(&slashes, delta, start_epoch);
+                            if epoch <= start_epoch {
+                                delegated_amount += delta;
                             }
                         }
                     }
@@ -254,7 +253,18 @@ where
     }
 }
 
-#[allow(clippy::typecomplexity)]
+fn apply_slashes(slashes: &[Slash], mut delta: token::Amount, epoch_start: Epoch) -> token::Amount {
+    for slash in slashes {
+        if Epoch::from(slash.epoch) >= epoch_start {
+            let raw_delta: u64 = delta.into();
+            let current_slashed = token::Amount::from(slash.rate * raw_delta);
+            delta -= current_slashed;
+        }
+    }
+    delta
+}
+
+#[allow(clippy::type_complexity)]
 fn get_votes<D, H>(
     storage: &Storage<D, H>,
     proposal_id: u64,
