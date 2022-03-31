@@ -10,7 +10,7 @@ use anoma_apps::wallet::DecryptionError;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
-use rand_core::OsRng;
+use rand_core::{OsRng, RngCore};
 use masp_primitives::keys::FullViewingKey;
 use anoma_apps::client::tx::find_valid_diversifier;
 
@@ -40,6 +40,9 @@ pub fn main() -> Result<()> {
             }
         },
         cmds::AnomaWallet::Masp(sub) => match sub {
+            cmds::WalletMasp::GenSpendKey(cmds::MaspGenSpendKey(args)) => {
+                spending_key_gen(ctx, args);
+            }
             cmds::WalletMasp::GenPayAddr(cmds::MaspGenPayAddr(args)) => {
                 payment_address_gen(ctx, args)
             }
@@ -49,6 +52,20 @@ pub fn main() -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// Generate a spending key.
+fn spending_key_gen(
+    _ctx: Context,
+    args::MaspSpendKeyGen {
+    }: args::MaspSpendKeyGen,
+) {
+    let mut spend_key = [0; 32];
+    OsRng.fill_bytes(&mut spend_key);
+    println!(
+        "Successfully generated the following spending key: {}",
+        hex::encode(&spend_key)
+    );
 }
 
 /// Generate a shielded payment address from the given key.
