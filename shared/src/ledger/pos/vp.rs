@@ -108,10 +108,10 @@ where
         let current_epoch = self.ctx.get_block_epoch()?;
         for key in keys_changed {
             if is_params_key(key) {
-                let proposal_id = u64::try_from_slice(&_tx_data[..]).ok();
+                let proposal_id = u64::try_from_slice(_tx_data).ok();
                 match proposal_id {
                     Some(id) => return Ok(is_proposal_accepted(&self.ctx, id)),
-                    _ => return Ok(false)
+                    _ => return Ok(false),
                 }
             } else if let Some(owner) = key.is_validity_predicate() {
                 let has_pre = self.ctx.has_key_pre(key)?;

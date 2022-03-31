@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
+use self::storage as parameter_storage;
 use super::governance::is_proposal_accepted;
 use super::storage::types::{decode, encode};
 use super::storage::{types, Storage};
@@ -15,7 +16,6 @@ use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::Key;
 use crate::types::time::DurationSecs;
 use crate::vm::WasmCacheAccess;
-use self::storage as parameter_storage;
 
 const ADDRESS: Address = Address::Internal(InternalAddress::Parameters);
 
@@ -57,16 +57,15 @@ where
         _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
         let result = keys_changed.iter().all(|key| {
-
             let key_type: KeyType = key.into();
             match key_type {
                 KeyType::PARAMETER => {
-                    let proposal_id = u64::try_from_slice(&tx_data[..]).ok();
+                    let proposal_id = u64::try_from_slice(tx_data).ok();
                     match proposal_id {
-                        Some(id) => return is_proposal_accepted(&self.ctx, id),
-                        _ => return false
+                        Some(id) => is_proposal_accepted(&self.ctx, id),
+                        _ => false,
                     }
-                },
+                }
                 KeyType::UNKNOWN_PARAMETER => false,
                 KeyType::UNKNOWN => true,
             }

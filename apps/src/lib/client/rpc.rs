@@ -490,7 +490,7 @@ pub async fn query_proposal_result(
                         )
                         .await
                         .keys()
-                        .map(|addr| addr.clone())
+                        .cloned()
                         .collect();
                         println!(
                             "{:4}Result: {}",
@@ -1587,7 +1587,7 @@ pub async fn get_votes(
         (
             delegator_voters,
             validator_voters,
-            active_validators.keys().map(|addr| addr.clone()).collect(),
+            active_validators.keys().cloned().collect(),
         )
     } else {
         (HashMap::new(), HashMap::new(), Vec::new())
@@ -1697,7 +1697,7 @@ pub async fn get_bond_amount_at(
     validator: &Address,
     epoch: Epoch,
 ) -> Option<token::Amount> {
-    let slashes_key = pos::validator_slashes_key(&validator);
+    let slashes_key = pos::validator_slashes_key(validator);
     let slashes = query_storage_value::<pos::Slashes>(client, &slashes_key)
         .await
         .unwrap_or_default();

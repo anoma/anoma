@@ -950,6 +950,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 10. Send a yay vote from a normal user
 /// 11. Query the proposal and check the result
 /// 12. Wait proposal grace and check proposal author funds
+/// 13. Check governance address funds are 0
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -1248,6 +1249,21 @@ fn proposal_submission() -> Result<()> {
 
     let mut client = run!(test, Bin::Client, query_balance_args, Some(30))?;
     client.exp_string("XAN: 1000000")?;
+    client.assert_success();
+
+    // 13. Check if governance funds are 0
+    let query_balance_args = vec![
+        "balance",
+        "--owner",
+        GOVERNANCE_ADDRESS,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(30))?;
+    client.exp_string("XAN: 0")?;
     client.assert_success();
 
     Ok(())

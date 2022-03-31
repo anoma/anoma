@@ -85,10 +85,16 @@ where
                             let tx = Tx::new(code, None);
                             let tx_type =
                                 TxType::Decrypted(DecryptedTx::Decrypted(tx));
-                            let pending_execution_key = gov_storage::get_proposal_execution_key(id);
-                            // in order to filter if the vp has been triggered by the protocol or by a transaction,
-                            // we set the following key in a protected storage space as a flag. After the execution, we delete it.
-                            self.storage.write(&pending_execution_key, "").expect("Should be able to write to storage.");
+                            let pending_execution_key =
+                                gov_storage::get_proposal_execution_key(id);
+                            // in order to filter if the vp has been triggered
+                            // by the protocol or by a transaction,
+                            // we set the following key in a protected storage
+                            // space as a flag. After the execution, we delete
+                            // it.
+                            self.storage
+                                .write(&pending_execution_key, "")
+                                .expect("Should be able to write to storage.");
                             let tx_result = protocol::apply_tx(
                                 tx_type,
                                 0,
@@ -98,7 +104,9 @@ where
                                 &mut self.vp_wasm_cache,
                                 &mut self.tx_wasm_cache,
                             );
-                            self.storage.delete(&pending_execution_key).expect("Should be able to delete the storage.");
+                            self.storage.delete(&pending_execution_key).expect(
+                                "Should be able to delete the storage.",
+                            );
                             match tx_result {
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
