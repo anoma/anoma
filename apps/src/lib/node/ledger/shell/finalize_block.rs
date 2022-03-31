@@ -62,7 +62,7 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         if new_epoch {
-            for id in self.proposal_data.clone() {
+            for id in std::mem::take(&mut self.proposal_data) {
                 let proposal_funds_key = gov_storage::get_funds_key(id);
 
                 let funds = self

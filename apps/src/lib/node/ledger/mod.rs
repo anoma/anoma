@@ -66,7 +66,6 @@ impl Shell {
             self.storage.last_epoch.0,
         );
 
-        self.proposal_data.clear();
         let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
         for (key, _, _) in proposal_iter {
             let key =

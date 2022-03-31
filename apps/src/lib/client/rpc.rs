@@ -243,8 +243,8 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
             {
                 println!("{:4}Status: on-going", "");
             } else {
-                let (delegator_voters, validator_voters) =
-                    get_votes(&client, start_epoch, id).await;
+                let (delegator_voters, validator_voters, active_validators) =
+                    get_votes(client, start_epoch, id).await;
                 println!("{:4}Status: done", "");
                 println!(
                     "{:4}Result: {}",
@@ -253,7 +253,8 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                         client,
                         start_epoch,
                         &delegator_voters,
-                        &validator_voters
+                        &validator_voters,
+                        &active_validators
                     )
                     .await
                 );
@@ -334,8 +335,11 @@ pub async fn query_proposal_result(
             match (start_epoch, end_epoch) {
                 (Some(start_epoch), Some(end_epoch)) => {
                     if current_epoch > end_epoch {
-                        let (delegator_voters, validator_voters) =
-                            get_votes(&client, start_epoch, id).await;
+                        let (
+                            delegator_voters,
+                            validator_voters,
+                            active_validators,
+                        ) = get_votes(&client, start_epoch, id).await;
                         println!("Proposal: {}", id);
                         println!(
                             "{:4}Result: {}",
@@ -344,7 +348,8 @@ pub async fn query_proposal_result(
                                 &client,
                                 start_epoch,
                                 &delegator_voters,
-                                &validator_voters
+                                &validator_voters,
+                                &active_validators
                             )
                             .await
                         );
@@ -478,6 +483,14 @@ pub async fn query_proposal_result(
                                 );
                             }
                         }
+                        let active_validators = get_all_active_validators(
+                            &client,
+                            proposal.tally_epoch,
+                        )
+                        .await
+                        .keys()
+                        .map(|addr| addr.clone())
+                        .collect();
                         println!(
                             "{:4}Result: {}",
                             "",
@@ -485,7 +498,8 @@ pub async fn query_proposal_result(
                                 &client,
                                 current_epoch,
                                 &delegator_voters,
-                                &validator_voters
+                                &validator_voters,
+                                &active_validators
                             )
                             .await
                         );
@@ -1546,6 +1560,7 @@ pub async fn get_votes(
 ) -> (
     HashMap<Address, ProposalVote>,
     HashMap<Address, ProposalVote>,
+    Vec<Address>,
 ) {
     let active_validators = get_all_active_validators(client, epoch).await;
     let vote_prefix_key = gov_storage::get_proposal_prefix_key(proposal_id);
@@ -1569,9 +1584,13 @@ pub async fn get_votes(
             },
         );
 
-        (delegator_voters, validator_voters)
+        (
+            delegator_voters,
+            validator_voters,
+            active_validators.keys().map(|addr| addr.clone()).collect(),
+        )
     } else {
-        (HashMap::new(), HashMap::new())
+        (HashMap::new(), HashMap::new(), Vec::new())
     }
 }
 
@@ -1580,18 +1599,15 @@ pub async fn compute_tally(
     epoch: Epoch,
     delegator_voters: &HashMap<Address, ProposalVote>,
     validator_voters: &HashMap<Address, ProposalVote>,
+    active_validators: &Vec<Address>,
 ) -> TallyResult {
     let mut bond_data: HashMap<Address, (Address, token::Amount)> =
         HashMap::new();
     for validator_addr in validator_voters.keys() {
-        let bond_amount = get_bond_amount_at(
-            client,
-            validator_addr.clone(),
-            validator_addr.clone(),
-            epoch,
-        )
-        .await
-        .expect("Validator self-bond must exist.");
+        let bond_amount =
+            get_bond_amount_at(client, validator_addr, validator_addr, epoch)
+                .await
+                .expect("Validator self-bond must exist.");
         bond_data.insert(
             validator_addr.clone(),
             (validator_addr.clone(), bond_amount),
@@ -1599,8 +1615,8 @@ pub async fn compute_tally(
         for delegator_addr in delegator_voters.keys() {
             match get_bond_amount_at(
                 client,
-                delegator_addr.clone(),
-                validator_addr.clone(),
+                delegator_addr,
+                validator_addr,
                 epoch,
             )
             .await
@@ -1639,7 +1655,22 @@ pub async fn compute_tally(
     for (addr, vote) in delegator_voters {
         if !bond_data.contains_key(&addr) {
             if vote.is_yay() {
-                yay_votes_tokens += bond_data.get(&addr).unwrap().1;
+                for validator_addr in active_validators {
+                    if bond_data.contains_key(validator_addr) {
+                        continue;
+                    }
+                    match get_bond_amount_at(
+                        client,
+                        addr,
+                        validator_addr,
+                        epoch,
+                    )
+                    .await
+                    {
+                        Some(amount) => yay_votes_tokens += amount,
+                        None => continue,
+                    };
+                }
             }
         } else {
             let delegator_data = bond_data.get(&addr).unwrap();
@@ -1653,18 +1684,18 @@ pub async fn compute_tally(
         }
     }
 
-        if 3 * yay_votes_tokens >= 2 * total_stacked_tokens {
-            TallyResult::Passed
-        } else {
-            TallyResult::Rejected
-        }
+    if 3 * yay_votes_tokens >= 2 * total_stacked_tokens {
+        TallyResult::Passed
+    } else {
+        TallyResult::Rejected
     }
+    
 }
 
 pub async fn get_bond_amount_at(
     client: &HttpClient,
-    delegator: Address,
-    validator: Address,
+    delegator: &Address,
+    validator: &Address,
     epoch: Epoch,
 ) -> Option<token::Amount> {
     let slashes_key = pos::validator_slashes_key(&validator);
@@ -1672,8 +1703,8 @@ pub async fn get_bond_amount_at(
         .await
         .unwrap_or_default();
     let bond_key = pos::bond_key(&BondId {
-        source: delegator,
-        validator,
+        source: delegator.clone(),
+        validator: validator.clone(),
     });
     let epoched_bonds = query_storage_value::<Bonds>(client, &bond_key).await;
     match epoched_bonds {

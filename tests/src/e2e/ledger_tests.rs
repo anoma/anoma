@@ -1238,7 +1238,7 @@ fn proposal_submission() -> Result<()> {
 
     // 12. Wait proposal grace and check proposal author funds
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 < 17 {
+    while epoch.0 < 18 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
