@@ -4,7 +4,7 @@ use std::fs::File;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
-use anoma::types::address::Address;
+use anoma::types::address::{Address, btc};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
@@ -812,19 +812,22 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let masp_addr = masp();
     // The non-MASP entity, if any, will be signer for shielded transactions
-    let default_signer =
+    // Also, if the transaction is shielded, redact the amount and token types
+    // by setting the transparent value to 0 and token type to a constant. This
+    // has no side-effect because transaction is to self.
+    let (default_signer, amount, token) =
         if source == masp_addr && target == masp_addr {
-            None
+            (None, 0.into(), btc())
         } else if source == masp_addr {
-            Some(&args.target)
+            (Some(&args.target), args.amount, token)
         } else {
-            Some(&args.source)
+            (Some(&args.source), args.amount, token)
         };
     let transfer = token::Transfer {
         source,
         target,
         token,
-        amount: args.amount,
+        amount,
         shielded: gen_shielded_transfer(&ctx, &args).await.unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
