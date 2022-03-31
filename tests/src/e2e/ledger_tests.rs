@@ -633,7 +633,7 @@ fn masp_txs_and_queries() -> Result<()> {
             AB_VIEWING_KEY,
             "--ledger-address",
             &validator_one_rpc
-        ], "BTC: 20000000"),
+        ], "BTC: 20"),
 
         // 21. Assert balance at SK(B) is 10 BTC
         (vec![
@@ -642,7 +642,7 @@ fn masp_txs_and_queries() -> Result<()> {
             B_SPENDING_KEY,
             "--ledger-address",
             &validator_one_rpc
-        ], "BTC: 20000000"),
+        ], "BTC: 20"),
         
         
         // 22. Send 10 BTC from SK(B) to Bertha
