@@ -20,6 +20,11 @@ pub fn is_max_funds_transfer_key(key: &Key) -> bool {
     }
 }
 
+/// Check if key is any parameter key
+pub fn is_parameter_key(key: &Key) -> bool {
+    is_max_funds_transfer_key(key)
+}
+
 /// Get key of max funds transfer parameter
 pub fn get_max_transferable_fund_key() -> Key {
     Key::from(ADDRESS.to_db_key())

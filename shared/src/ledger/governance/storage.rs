@@ -19,6 +19,7 @@ const MIN_PROPOSAL_PERIOD_KEY: &str = "min_period";
 const MAX_PROPOSAL_CONTENT_SIZE_KEY: &str = "max_content";
 const MIN_GRACE_EPOCH_KEY: &str = "min_grace_epoch";
 const COUNTER_KEY: &str = "counter";
+const PENDING_PROPOSAL: &str = "pending";
 
 /// Check if key is inside governance address space
 pub fn is_governance_key(key: &Key) -> bool {
@@ -429,6 +430,15 @@ pub fn get_proposal_prefix_key(id: u64) -> Key {
 pub fn get_vote_proposal_key(id: u64, address: Address) -> Key {
     get_proposal_prefix_key(id)
         .push(&address)
+        .expect("Cannot obtain a storage key")
+}
+
+/// Get the proposal execution key
+pub fn get_proposal_execution_key(id: u64) -> Key {
+    Key::from(ADDRESS.to_db_key())
+        .push(&PENDING_PROPOSAL.to_owned())
+        .expect("Cannot obtain a storage key")
+        .push(&id.to_string())
         .expect("Cannot obtain a storage key")
 }
 

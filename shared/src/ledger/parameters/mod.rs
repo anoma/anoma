@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
+use super::governance::is_proposal_accepted;
 use super::storage::types::{decode, encode};
 use super::storage::{types, Storage};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
@@ -14,6 +15,7 @@ use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::Key;
 use crate::types::time::DurationSecs;
 use crate::vm::WasmCacheAccess;
+use self::storage as parameter_storage;
 
 const ADDRESS: Address = Address::Internal(InternalAddress::Parameters);
 
@@ -50,11 +52,26 @@ where
 
     fn validate_tx(
         &self,
-        _tx_data: &[u8],
-        _keys_changed: &BTreeSet<Key>,
+        tx_data: &[u8],
+        keys_changed: &BTreeSet<Key>,
         _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
-        Ok(false)
+        let result = keys_changed.iter().all(|key| {
+
+            let key_type: KeyType = key.into();
+            match key_type {
+                KeyType::PARAMETER => {
+                    let proposal_id = u64::try_from_slice(&tx_data[..]).ok();
+                    match proposal_id {
+                        Some(id) => return is_proposal_accepted(&self.ctx, id),
+                        _ => return false
+                    }
+                },
+                KeyType::UNKNOWN_PARAMETER => false,
+                KeyType::UNKNOWN => true,
+            }
+        });
+        Ok(result)
     }
 }
 
@@ -319,4 +336,27 @@ where
         },
         gas_epoch + gas_tx + gas_vp + gas_time,
     ))
+}
+
+#[allow(clippy::upper_case_acronyms)]
+enum KeyType {
+    #[allow(clippy::upper_case_acronyms)]
+    PARAMETER,
+    #[allow(clippy::upper_case_acronyms)]
+    #[allow(non_camel_case_types)]
+    UNKNOWN_PARAMETER,
+    #[allow(clippy::upper_case_acronyms)]
+    UNKNOWN,
+}
+
+impl From<&Key> for KeyType {
+    fn from(value: &Key) -> Self {
+        if parameter_storage::is_protocol_parameter_key(value) {
+            KeyType::PARAMETER
+        } else if parameter_storage::is_parameter_key(value) {
+            KeyType::UNKNOWN_PARAMETER
+        } else {
+            KeyType::UNKNOWN
+        }
+    }
 }
