@@ -147,7 +147,9 @@
                     <main>
                         <h1 id="internal-testnet-1"><a class="header" href="#internal-testnet-1">Internal Testnet 1</a></h1>
 <p><em>Last updated on <strong>3/30/2022</strong> by <strong>Alexandre Roque</strong></em></p>
-<p>Current chain id <code>anoma-masp-0.3.51d2f83a8412b95</code> and branch <code>tomas/masp-wasm-build-fixes</code></p>
+<p>Current chain id <code>anoma-masp-0.3.51d2f83a8412b95</code> and branch
+<code>internal/testnet-n1</code> (commit
+<code>0184e64e044366ec370d1431ddf4691b4bd3a5b4</code>)</p>
 <h2 id="run-masp-testnet"><a class="header" href="#run-masp-testnet">Run MASP Testnet</a></h2>
 <p><strong>NOTE</strong> Check the <a href="#prerequisites">prerequisities</a> before trying to start a node from binaries.</p>
 <ul>
@@ -170,17 +172,64 @@ cd anoma-v0.5.0-49-g0184e64e0-Linux-x86_64
 ./anomac utils join-network --chain-id anoma-masp-0.3.51d2f83a8412b95
 ./anoma ledger
 </code></pre>
-<h2 id="try-masp-commands"><a class="header" href="#try-masp-commands">Try MASP commands</a></h2>
-<ul>
-<li>Transparent to shielded payment: <code>anomac transfer --source Bertha --amount 50 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005</code></li>
-<li>Shielded to transparent payment: <code>anomac transfer --target Bertha --amount 45 --token BTC --spending-key AA</code></li>
-<li>View shielded balance using spending key: <code>anomac balance --spending-key AA</code></li>
-<li>View shielded balance using viewing key: <code>anomac balance --viewing-key 628a9956322f3f7d20b19801d9b4a8f3cb4b8b756a26ef2477feb5264be7b808c920996f37a79433d08e27fefcda0b6736c296b1073734a4ee35d11368f2b52ef14d7c1749cc8119ecc8a894f696992453f2dd78ef1e9d74172b2a5ef7cc8c50</code></li>
-<li>Derive view key from spending key: <code>anomaw masp derive-view-key --spending-key AA</code></li>
-<li>Generate payment address from spending key: <code>anomaw masp gen-payment-addr --spending-key AA</code></li>
-<li>Generate payment address from viewing key: <code>anomaw masp gen-payment-addr --viewing-key 628a9956322f3f7d20b19801d9b4a8f3cb4b8b756a26ef2477feb5264be7b808c920996f37a79433d08e27fefcda0b6736c296b1073734a4ee35d11368f2b52ef14d7c1749cc8119ecc8a894f696992453f2dd78ef1e9d74172b2a5ef7cc8c50</code></li>
-<li>Shielded to shielded payment: <code>anomac transfer --spending-key AA --amount 5 --token BTC --payment-address 9cb63488b1d6ef25f069b6eb5bba2eee3dcf22bc10b2063a1fbcb91964341d75837bdce3e2fe3ec9c1e005 --signer Albert</code></li>
-</ul>
+<h2 id="using-shielded-transfers"><a class="header" href="#using-shielded-transfers">Using shielded transfers</a></h2>
+<p>Shielded balances are owned by a particular spending key. In this
+testnet, spending keys are just arbitrary hexadecimal strings, provided
+on the command line.</p>
+<p>To try out shielded transfers, you will first need an ordinary
+transparent account with some token balance. Example commands for that:</p>
+<pre><code>anomaw address gen --alias my-implicit
+anomac init-account --source my-implicit --public-key my-implicit --alias my-established
+anomac transfer --token btc --amount 1000 --source faucet --target my-established --signer my-established
+</code></pre>
+<p>The testnet tokens which the faucet can provide you are named <code>XAN</code>,
+<code>BTC</code>, <code>ETH</code>, <code>DOT</code>, <code>Schnitzel</code>, <code>Apfel</code>, and <code>Kartoffel</code>. The faucet
+will transfer these in increments of 1000 at a time.</p>
+<p>Once you have an ordinary transparent account with some tokens, you
+should select a spending key to hold your shielded balances. This is
+just some hexadecimal string, like <code>1234</code>, <code>abcd</code>, or
+<code>030cdcc0a43765d4645e22adbf9944b58c646d162c9a08890a08cc49a9580c9e</code>. Try
+to select one that is unique to you (i.e., probably don't use <code>1234</code>);
+you could randomly generate one with e.g. <code>openssl rand -hex 32</code>. The
+wallet does not yet support spending keys, so make a note of yours
+somewhere.</p>
+<p>Shielded transfers work with the <code>anomac transfer</code> command, but either
+<code>--source</code>, <code>--target</code>, or both are replaced. <code>--source</code> may be replaced
+with <code>--spending-key</code> to spend a shielded balance, but if you are
+following along, you don't have a shielded balance to spend yet.
+<code>--target</code> may be replaced with <code>--payment-address</code> to create a shielded
+balance.</p>
+<p>To create a payment address from your spending key, use:</p>
+<pre><code>anomaw masp gen-payment-addr --spending-key [your spending key]
+</code></pre>
+<p>This will generate a different payment address each time you run it.
+Payment addresses can be reused or discarded as you like, and can't be
+correlated with one another.</p>
+<p>Once you have a payment address, transfer a balance from your
+transparent account to your shielded spending key with something like:</p>
+<pre><code>anomac transfer --source my-established --payment-address [your payment address] --token btc --amount 100
+</code></pre>
+<p>Once this transfer goes through, you can view your spending key's
+balance:</p>
+<pre><code>anomac balance --spending-key [your spending key]
+</code></pre>
+<p>However, your spending key is the secret key to all your shielded
+balances, and you may not want to use it just to view balances. For this
+purpose, you can derive the viewing key:</p>
+<pre><code>anomaw masp derive-view-key --spending-key [your spending key]
+anomac balance --viewing-key [your viewing key]
+</code></pre>
+<p>The viewing key can also be used to generate payment addresses, with
+e.g. <code>anomaw masp gen-payment-addr --viewing-key [your viewing key]</code>.</p>
+<p>Now that you have a shielded balance, it can either be transferred to a
+different shielded payment address (shielded to shielded):</p>
+<pre><code>anomac transfer --spending-key [your spending key] --payment-address [someone's payment address] --token btc --amount 50 --signer my-established
+</code></pre>
+<p>or to a transparent account (shielded to transparent):</p>
+<pre><code>anomac transfer --spending-key [your spending key] --target [some transparent account] --token btc --amount 50 --signer my-established
+</code></pre>
+<p>Note that for both of these types of transfer, <code>--signer</code> must be
+specified. However, any transparent account can sign these transactions.</p>
 <h2 id="hardware-requirements"><a class="header" href="#hardware-requirements">Hardware Requirements</a></h2>
 <p>This section covers the minimum and recommended hardware requirements for engaging with the Namada as a validator node.</p>
 <h3 id="minimal-hardware-requirements"><a class="header" href="#minimal-hardware-requirements">Minimal Hardware Requirements</a></h3>
