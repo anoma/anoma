@@ -223,7 +223,7 @@ where
     let (epoched_bonds_bytes, _) = storage
         .read(&bond_key)
         .expect("Should be able to read key.");
-    match epoched_bonds_bytes.clone() {
+    match epoched_bonds_bytes {
         Some(epoched_bonds_bytes) => {
             let epoched_bonds =
                 Bonds::try_from_slice(&epoched_bonds_bytes[..]).ok();
@@ -254,6 +254,7 @@ where
     }
 }
 
+#[allow(clippy::typecomplexity)]
 fn get_votes<D, H>(
     storage: &Storage<D, H>,
     proposal_id: u64,
