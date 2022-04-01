@@ -82,7 +82,7 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
 pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
     // Query the balances of shielded or transparent account types depending on
     // the CLI arguments
-    match (&args.owner, args.viewing_key, &args.spending_key) {
+    match (&args.owner, &args.viewing_key, &args.spending_key) {
         (None, Some(_viewing_key), None) => query_shielded_balance(ctx, args).await,
         (None, None, Some(_spending_key)) => query_shielded_balance(ctx, args).await,
         (_, None, None) => query_transparent_balance(ctx, args).await,
@@ -190,7 +190,7 @@ pub async fn query_shielded_balance(mut ctx: Context, args: args::QueryBalance) 
     // Viewing keys are used to query shielded balances. If a spending key is
     // provided, then convert to a viewing key first.
     let viewing_key = match (args.viewing_key, args.spending_key) {
-        (Some(viewing_key), None) => viewing_key.vk,
+        (Some(viewing_key), None) => ctx.get_cached(&viewing_key).vk,
         (None, Some(spending_key)) => to_viewing_key(&ctx.get_cached(&spending_key)),
         _ => {
             eprintln!("Either a viewing key or a spending key must be specified");

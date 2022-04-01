@@ -20,6 +20,7 @@ pub use self::store::{ValidatorData, ValidatorKeys};
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
 use masp_primitives::zip32::ExtendedSpendingKey;
+use masp_primitives::keys::FullViewingKey;
 
 #[derive(Debug)]
 pub struct Wallet {
@@ -210,6 +211,14 @@ impl Wallet {
             .ok_or(FindKeyError::KeyNotFound)
     }
 
+    pub fn find_viewing_key(
+        &mut self,
+        alias: impl AsRef<str>,
+    ) -> Result<&FullViewingKey, FindKeyError> {
+        self.store.find_viewing_key(alias.as_ref())
+            .ok_or(FindKeyError::KeyNotFound)
+    }
+
     /// Find the stored key by a public key.
     /// If the key is encrypted, will prompt for password from stdin.
     /// Any keys that are decrypted are stored in and read from a cache to avoid
@@ -343,6 +352,16 @@ impl Wallet {
     ) -> Option<String> {
         self.store
             .insert_keypair(alias.into(), keypair, pkh)
+            .map(Into::into)
+    }
+
+    pub fn insert_viewing_key(
+        &mut self,
+        alias: String,
+        view_key: FullViewingKey,
+    ) -> Option<String> {
+        self.store
+            .insert_viewing_key(alias.into(), view_key)
             .map(Into::into)
     }
 }

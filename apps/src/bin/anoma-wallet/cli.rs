@@ -65,7 +65,7 @@ fn spending_key_gen(
     let (alias, _key) = wallet.gen_spending_key(alias);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
-        "Successfully added a key and an address with alias: \"{}\"",
+        "Successfully added a spending key with alias: \"{}\"",
         alias
     );
 }
@@ -79,7 +79,7 @@ fn payment_address_gen(
     }: args::MaspPayAddrGen,
 ) {
     let viewing_key = match (spending_key, viewing_key) {
-        (None, Some(viewing_key)) => viewing_key.vk,
+        (None, Some(viewing_key)) => ctx.get_cached(&viewing_key).vk,
         (Some(spending_key), None) => ctx.get_cached(&spending_key).expsk
             .proof_generation_key()
             .to_viewing_key(),
@@ -102,16 +102,22 @@ fn payment_address_gen(
 fn viewing_key_derive(
     mut ctx: Context,
     args::MaspViewKeyDerive {
+        alias,
         spending_key,
     }: args::MaspViewKeyDerive,
 ) {
     let fvk = FullViewingKey::from_expanded_spending_key(
         &ctx.get_cached(&spending_key).expsk,
     );
+    let mut wallet = ctx.wallet;
+    let alias = wallet.insert_viewing_key(alias, fvk).unwrap_or_else(|| {
+        eprintln!("Viewing key not added");
+        cli::safe_exit(1);
+    });
+    wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
-        "Successfully derived the following viewing key from the \
-         given spending key: {}",
-        fvk
+        "Successfully derived a viewing key with the following alias: {}",
+        alias
     );
 }
 

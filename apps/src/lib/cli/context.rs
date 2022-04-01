@@ -10,6 +10,7 @@ use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
 use masp_primitives::zip32::ExtendedSpendingKey;
+use masp_primitives::keys::FullViewingKey;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -29,6 +30,8 @@ pub const ENV_VAR_WASM_DIR: &str = "ANOMA_WASM_DIR";
 pub type WalletAddress = FromContext<Address>;
 
 pub type WalletSpendingKey = FromContext<ExtendedSpendingKey>;
+
+pub type WalletViewingKey = FromContext<FullViewingKey>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
@@ -311,6 +314,15 @@ impl ArgFromMutContext for ExtendedSpendingKey {
         let raw = raw.as_ref();
         FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
             ctx.wallet.find_spending_key(raw).unwrap().clone()
+        })
+    }
+}
+
+impl ArgFromMutContext for FullViewingKey {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+        let raw = raw.as_ref();
+        FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
+            ctx.wallet.find_viewing_key(raw).unwrap().clone()
         })
     }
 }

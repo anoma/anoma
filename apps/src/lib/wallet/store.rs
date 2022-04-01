@@ -226,6 +226,13 @@ impl Store {
         self.spend_keys.get(&alias.into())
     }
 
+    pub fn find_viewing_key(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&FullViewingKey> {
+        self.view_keys.get(&alias.into())
+    }
+
     /// Find the stored key by a public key.
     pub fn find_key_by_pk(
         &self,
@@ -426,6 +433,28 @@ impl Store {
             }
         }
         self.spend_keys.insert(alias.clone(), spendkey);
+        Some(alias)
+    }
+
+    pub fn insert_viewing_key(
+        &mut self,
+        alias: Alias,
+        viewkey: FullViewingKey,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            eprintln!("Empty alias given.");
+            return None;
+        }
+        if self.view_keys.contains_key(&alias) {
+            match show_overwrite_confirmation(&alias, "a key") {
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_viewing_key(new_alias, viewkey);
+                }
+                ConfirmationResponse::Skip => return None,
+            }
+        }
+        self.view_keys.insert(alias.clone(), viewkey);
         Some(alias)
     }
 

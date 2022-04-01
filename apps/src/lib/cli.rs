@@ -1301,7 +1301,6 @@ pub mod args {
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
     use masp_primitives::primitives::PaymentAddress;
-    use masp_primitives::keys::FullViewingKey;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
@@ -1313,7 +1312,7 @@ pub mod args {
     use tendermint_stable::Timeout;
     use anoma::types::address::masp;
 
-    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey};
+    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey, WalletViewingKey};
     use super::utils::*;
     use super::ArgMatches;
     use crate::config;
@@ -1415,8 +1414,8 @@ pub mod args {
         arg_opt("consensus-key");
     const VALIDATOR_CODE_PATH: ArgOpt<PathBuf> = arg_opt("validator-code-path");
     const VALUE: ArgOpt<String> = arg_opt("value");
-    const VIEWING_KEY: Arg<FullViewingKey> = arg("viewing-key");
-    const VIEWING_KEY_OPT: ArgOpt<FullViewingKey> = VIEWING_KEY.opt();
+    const VIEWING_KEY: Arg<WalletViewingKey> = arg("viewing-key");
+    const VIEWING_KEY_OPT: ArgOpt<WalletViewingKey> = VIEWING_KEY.opt();
     const WASM_CHECKSUMS_PATH: Arg<PathBuf> = arg("wasm-checksums-path");
     const WASM_DIR: ArgOpt<PathBuf> = arg_opt("wasm-dir");
 
@@ -1935,7 +1934,7 @@ pub mod args {
         /// The spending key being queried
         pub spending_key: Option<WalletSpendingKey>,
         /// The full viewing key being queries
-        pub viewing_key: Option<FullViewingKey>,
+        pub viewing_key: Option<WalletViewingKey>,
         /// Address of a token
         pub token: Option<WalletAddress>,
     }
@@ -2501,7 +2500,7 @@ pub mod args {
         /// Spending Key
         pub spending_key: Option<WalletSpendingKey>,
         /// Viewing key
-        pub viewing_key: Option<FullViewingKey>,
+        pub viewing_key: Option<WalletViewingKey>,
     }
 
     impl Args for MaspPayAddrGen {
@@ -2527,20 +2526,28 @@ pub mod args {
     /// MASP generate payment address arguments
     #[derive(Clone, Debug)]
     pub struct MaspViewKeyDerive {
+        /// Key alias
+        pub alias: String,
         /// Spending Key
         pub spending_key: WalletSpendingKey,
     }
 
     impl Args for MaspViewKeyDerive {
         fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
             let spending_key = SPENDING_KEY.parse(matches);
             Self {
-                spending_key
+                alias,
+                spending_key,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(SPENDING_KEY.def().about(
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("An alias to be associated with the viewing key."),
+            ).arg(SPENDING_KEY.def().about(
                 "The spending key."
             ))
         }
