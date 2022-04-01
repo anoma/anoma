@@ -262,6 +262,8 @@ pub mod pipelined_eth_cache {
 
     #[cfg(test)]
     mod tests {
+        use std::path::PathBuf;
+
         use borsh::BorshDeserialize;
         use ethereum_types::{H256, H64, U256};
         use hex_literal::*;
@@ -270,8 +272,21 @@ pub mod pipelined_eth_cache {
         use crate::types::ethereum_headers::{Difficulty, EthereumHeader};
         use crate::types::hash::Hash;
 
-        const DAG_PATH: &str = "/home/r2d2/Projects/anoma/shared/src/ledger/\
-                                ethash/test_data/eth_pseudo_cache";
+        const DAG_PATH: &str =
+            "shared/src/ledger/ethash/test_data/eth_pseudo_cache";
+
+        /// Gets the absolute path to the serialized test data
+        pub fn path_to_test_data() -> PathBuf {
+            let mut current_path = std::env::current_dir()
+                .expect("Current directory should exist")
+                .canonicalize()
+                .expect("Current directory should exist");
+            while current_path.file_name().unwrap() != "shared" {
+                current_path.pop();
+            }
+            current_path.pop();
+            current_path.join(DAG_PATH)
+        }
 
         /// Test that verifying an Ethereum header works, even if it is
         /// for an epoch whose cache is not in memory.
@@ -312,7 +327,9 @@ pub mod pipelined_eth_cache {
             // EthVerifier::new(8996777, 0, 0);
             let mut eth_verifier: EthVerifier =
                 BorshDeserialize::try_from_slice(
-                    std::fs::read(DAG_PATH).expect("Test failed").as_slice(),
+                    std::fs::read(path_to_test_data())
+                        .expect("Test failed")
+                        .as_slice(),
                 )
                 .expect("Test failed");
             let header = EthereumHeader {
@@ -356,7 +373,9 @@ pub mod pipelined_eth_cache {
             // EthVerifier::new(8996777, 0, 0);
             let mut eth_verifier: EthVerifier =
                 BorshDeserialize::try_from_slice(
-                    std::fs::read(DAG_PATH).expect("Test failed").as_slice(),
+                    std::fs::read(path_to_test_data())
+                        .expect("Test failed")
+                        .as_slice(),
                 )
                 .expect("Test failed");
             eth_verifier.keep_previous = 4000;
@@ -415,7 +434,9 @@ pub mod pipelined_eth_cache {
             // EthVerifier::new(8996777, 0, 0);
             let mut eth_verifier: EthVerifier =
                 BorshDeserialize::try_from_slice(
-                    std::fs::read(DAG_PATH).expect("Test failed").as_slice(),
+                    std::fs::read(path_to_test_data())
+                        .expect("Test failed")
+                        .as_slice(),
                 )
                 .expect("Test failed");
             eth_verifier.keep_previous = 1;
@@ -452,7 +473,9 @@ pub mod pipelined_eth_cache {
             // EthVerifier::new(8996777, 0, 0);
             let mut eth_verifier: EthVerifier =
                 BorshDeserialize::try_from_slice(
-                    std::fs::read(DAG_PATH).expect("Test failed").as_slice(),
+                    std::fs::read(path_to_test_data())
+                        .expect("Test failed")
+                        .as_slice(),
                 )
                 .expect("Test failed");
             // set the pipeline length to something realistic

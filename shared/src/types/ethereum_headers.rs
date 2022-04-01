@@ -7,14 +7,16 @@
 pub mod eth_header_types {
     use std::convert::TryFrom;
 
-    use borsh::{BorshDeserialize, BorshSerialize};
+    use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
     use ethereum_types::{H256, H64, U256};
     use thiserror::Error;
     use web3::types::BlockHeader;
 
-    use crate::proto::Signed;
+    use crate::proto::{MultiSigned, Signed};
+    use crate::types::address::Address;
     use crate::types::hash::Hash;
     use crate::types::key::*;
+    use crate::types::transaction::hash_tx;
 
     /// Errors in transforming types related to Ethereum headers
     #[derive(Error, Debug)]
@@ -22,12 +24,14 @@ pub mod eth_header_types {
         /// Error for an invalid Ethereum header.
         #[error("Encountered an invalid Ethereum header")]
         InvalidHeader,
+        #[error("Could not combine Signed headers due to incompatibility")]
+        IncompatibleHeaders,
     }
 
     type Result<T> = std::result::Result<T, Error>;
 
     /// The difficulty of an Ethereum block
-    #[derive(BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     pub struct Difficulty([u64; 4]);
 
     impl From<U256> for Difficulty {
@@ -55,7 +59,7 @@ pub mod eth_header_types {
     }
 
     /// The nonce found by mining an Ethereum block
-    #[derive(BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     pub struct Nonce([u8; 8]);
 
     impl Default for Nonce {
@@ -100,7 +104,7 @@ pub mod eth_header_types {
         }
     }
 
-    #[derive(BorshSerialize, BorshDeserialize)]
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
     /// Pared down information from an Ethereum block header.
     /// Should only represent headers of mined blocks.
     pub struct EthereumHeader {
@@ -128,15 +132,15 @@ pub mod eth_header_types {
         /// the signed data.
         pub fn sign(
             self,
+            voting_power: u64,
+            address: Address,
+            height: u64,
             signing_key: &common::SecretKey,
         ) -> SignedEthereumHeader {
-            let sig = common::SigScheme::sign(
-                signing_key,
-                &self.try_to_vec().unwrap(),
-            );
             SignedEthereumHeader {
-                public_key: signing_key.ref_to(),
-                signed_header: Signed { data: self, sig },
+                voting_power,
+                address,
+                signed_header: Signed::new(signing_key, (self, height)),
             }
         }
     }
@@ -170,33 +174,139 @@ pub mod eth_header_types {
         }
     }
 
-    #[derive(BorshSerialize, BorshDeserialize)]
-    /// A verifiable signed instance of the EthereumHeader.
-    pub struct SignedEthereumHeader {
-        /// The public key use to verify the signature
-        pub public_key: common::PublicKey,
-        /// A signed Ethereum header
-        pub signed_header: Signed<EthereumHeader>,
+    /// A uniform interface for signed and multi-signed ethereum headers
+    pub trait SignedHeader {
+        /// Get the sum of all the voting power of validators who have
+        /// signed this header.
+        fn get_voting_power(&self) -> u64;
+        /// Get the address of the validators who have signed this data
+        fn get_addresses(&self) -> Vec<&Address>;
+        /// Get the height of the block that this data was created
+        /// as part of a vote extension
+        fn get_height(&self) -> u64;
+        /// Check that validity of the signatures
+        fn verify_signatures(
+            &self,
+            public_keys: &[common::PublicKey],
+        ) -> std::result::Result<(), VerifySigError>;
+        /// Get the hash of the inner signed Ethereum header
+        fn hash(&self) -> Hash;
     }
 
-    #[cfg(not(feature = "ABCI"))]
-    impl SignedEthereumHeader {
-        /// Check that validity of the signature
-        pub fn verify_signature(
-            &self,
-        ) -> std::result::Result<(), VerifySigError> {
-            let Signed { data, sig } = &self.signed_header;
-            common::SigScheme::verify_signature_raw(
-                &self.public_key,
-                &data.try_to_vec().unwrap(),
-                sig,
-            )
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+    /// A verifiable signed instance of the EthereumHeader.
+    pub struct SignedEthereumHeader {
+        /// Voting power of the signing validator
+        pub voting_power: u64,
+        /// Address of the signing validator
+        pub address: Address,
+        /// A signed Ethereum header and the block height
+        /// that this header appeared in a vote extension.
+        /// This guards against replays.
+        pub signed_header: Signed<(EthereumHeader, u64)>,
+    }
+
+    impl SignedHeader for SignedEthereumHeader {
+        fn get_voting_power(&self) -> u64 {
+            self.voting_power
         }
 
-        /// Get the Ethereum header out and return it
-        pub fn extract_header(self) -> EthereumHeader {
-            let Signed { data, .. } = self.signed_header;
-            data
+        fn get_addresses(&self) -> Vec<&Address> {
+            vec![&self.address]
+        }
+
+        fn get_height(&self) -> u64 {
+            let Signed {
+                data: (_, height), ..
+            } = self.signed_header;
+            height
+        }
+
+        fn verify_signatures(
+            &self,
+            public_keys: &[common::PublicKey],
+        ) -> std::result::Result<(), VerifySigError> {
+            self.signed_header.verify(&public_keys[0])
+        }
+
+        fn hash(&self) -> Hash {
+            let Signed { data, .. } = &self.signed_header;
+            hash_tx(&data.try_to_vec().unwrap())
+        }
+    }
+
+    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+    /// An EthereumHeader with multiple validator signatures.
+    pub struct MultiSignedEthHeader {
+        /// Voting power of all signing validators
+        pub voting_power: u64,
+        /// Address of the signing validators
+        pub signers: Vec<Address>,
+        /// A multi-signed Ethereum header and the block height
+        /// that these headers appeared in a vote extension.
+        /// This guards against replays.
+        pub signed_header: MultiSigned<(EthereumHeader, u64)>,
+    }
+
+    impl From<SignedEthereumHeader> for MultiSignedEthHeader {
+        fn from(
+            SignedEthereumHeader {
+                voting_power,
+                address,
+                signed_header,
+            }: SignedEthereumHeader,
+        ) -> Self {
+            Self {
+                voting_power,
+                signers: vec![address],
+                signed_header: signed_header.into(),
+            }
+        }
+    }
+
+    impl MultiSignedEthHeader {
+        /// Add a new signature for the same (block header, block height)
+        /// to this instance.
+        pub fn add(&mut self, other: SignedEthereumHeader) -> Result<()> {
+            if self.hash() == other.hash()
+                && self.get_height() == other.get_height()
+            {
+                self.voting_power += other.voting_power;
+                self.signers.push(other.address);
+                self.signed_header.sigs.push(other.signed_header.sig);
+                Ok(())
+            } else {
+                Err(Error::IncompatibleHeaders)
+            }
+        }
+    }
+
+    impl SignedHeader for MultiSignedEthHeader {
+        fn get_voting_power(&self) -> u64 {
+            self.voting_power
+        }
+
+        fn get_addresses(&self) -> Vec<&Address> {
+            self.signers.iter().collect()
+        }
+
+        fn get_height(&self) -> u64 {
+            let MultiSigned {
+                data: (_, height), ..
+            } = self.signed_header;
+            height
+        }
+
+        fn verify_signatures(
+            &self,
+            public_keys: &[common::PublicKey],
+        ) -> std::result::Result<(), VerifySigError> {
+            self.signed_header.verify(public_keys)
+        }
+
+        fn hash(&self) -> Hash {
+            let MultiSigned { data, .. } = &self.signed_header;
+            hash_tx(&data.try_to_vec().unwrap())
         }
     }
 }

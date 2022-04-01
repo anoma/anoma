@@ -1,8 +1,10 @@
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
+use borsh::schema::{Declaration, Definition};
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use prost::Message;
 use serde::{Deserialize, Serialize};
@@ -93,6 +95,28 @@ where
     }
 }
 
+impl<T> BorshSchema for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + BorshSchema,
+{
+    fn add_definitions_recursively(
+        definitions: &mut HashMap<Declaration, Definition>,
+    ) {
+        let fields = borsh::schema::Fields::NamedFields(borsh::maybestd::vec![
+            ("data".to_string(), T::declaration()),
+            ("sig".to_string(), <common::Signature>::declaration())
+        ]);
+        let definition = borsh::schema::Definition::Struct { fields };
+        Self::add_definition(Self::declaration(), definition, definitions);
+        T::add_definitions_recursively(definitions);
+        <common::Signature>::add_definitions_recursively(definitions);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        format!("Signed<{}>", T::declaration())
+    }
+}
+
 impl<T> Signed<T>
 where
     T: BorshSerialize + BorshDeserialize,
@@ -117,6 +141,123 @@ where
             .try_to_vec()
             .expect("Encoding data for verifying signature shouldn't fail");
         common::SigScheme::verify_signature_raw(pk, &bytes, &self.sig)
+    }
+}
+
+/// A generic mulit-signed data wrapper for Borsh encode-able data.
+#[derive(
+    Clone, Debug, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+)]
+pub struct MultiSigned<T: BorshSerialize + BorshDeserialize> {
+    /// Arbitrary data to be signed
+    pub data: T,
+    /// The signature of the data
+    pub sigs: Vec<common::Signature>,
+}
+
+impl<T> PartialEq for MultiSigned<T>
+where
+    T: BorshSerialize + BorshDeserialize + PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data && self.sigs == other.sigs
+    }
+}
+
+impl<T> Eq for MultiSigned<T> where
+    T: BorshSerialize + BorshDeserialize + Eq + PartialEq
+{
+}
+
+impl<T> Hash for MultiSigned<T>
+where
+    T: BorshSerialize + BorshDeserialize + Hash,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+        self.sigs.hash(state);
+    }
+}
+
+impl<T> PartialOrd for MultiSigned<T>
+where
+    T: BorshSerialize + BorshDeserialize + PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.data.partial_cmp(&other.data)
+    }
+}
+
+impl<T> From<Signed<T>> for MultiSigned<T>
+where
+    T: BorshSerialize + BorshDeserialize,
+{
+    fn from(Signed::<T> { data, sig }: Signed<T>) -> Self {
+        Self {
+            data,
+            sigs: vec![sig],
+        }
+    }
+}
+
+impl<T> BorshSchema for MultiSigned<T>
+where
+    T: BorshSerialize + BorshDeserialize + BorshSchema,
+{
+    fn add_definitions_recursively(
+        definitions: &mut HashMap<Declaration, Definition>,
+    ) {
+        let fields = borsh::schema::Fields::NamedFields(borsh::maybestd::vec![
+            ("data".to_string(), T::declaration()),
+            ("sigs".to_string(), <Vec<common::Signature>>::declaration())
+        ]);
+        let definition = borsh::schema::Definition::Struct { fields };
+        Self::add_definition(Self::declaration(), definition, definitions);
+        T::add_definitions_recursively(definitions);
+        <Vec<common::Signature>>::add_definitions_recursively(definitions);
+    }
+
+    fn declaration() -> borsh::schema::Declaration {
+        format!("MultiSigned<{}>", T::declaration())
+    }
+}
+
+impl<T> MultiSigned<T>
+where
+    T: BorshSerialize + BorshDeserialize,
+{
+    /// Initialize a new multi-signed data.
+    pub fn new(keypair: &common::SecretKey, data: T) -> Self {
+        let to_sign = data
+            .try_to_vec()
+            .expect("Encoding data for signing shouldn't fail");
+        let sigs = vec![common::SigScheme::sign(keypair, &to_sign)];
+        Self { data, sigs }
+    }
+
+    /// Verify that the data has been signed by the secret key
+    /// counterpart of the given public keys. **Public keys and
+    /// signatures must be in same order**
+    pub fn verify(
+        &self,
+        pks: &[common::PublicKey],
+    ) -> std::result::Result<(), VerifySigError> {
+        let bytes = self
+            .data
+            .try_to_vec()
+            .expect("Encoding data for verifying signature shouldn't fail");
+        for (pk, sig) in pks.iter().zip(&self.sigs) {
+            common::SigScheme::verify_signature_raw(pk, &bytes, sig)?;
+        }
+        Ok(())
+    }
+
+    /// Add a new signature to the data.
+    pub fn add_sig(&mut self, keypair: &common::SecretKey) {
+        let to_sign = self.data
+            .try_to_vec()
+            .expect("Encoding data for signing shouldn't fail");
+        self.sigs.push(common::SigScheme::sign(keypair, &to_sign));
     }
 }
 

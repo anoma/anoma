@@ -1,6 +1,7 @@
 #[cfg(not(feature = "ABCI"))]
 mod extend_votes {
-    use anoma::types::ethereum_headers::SignedEthereumHeader;
+    use anoma::ledger::pos::anoma_proof_of_stake::types::VotingPower;
+    use anoma::types::ethereum_headers::{SignedEthereumHeader, SignedHeader};
     use anoma::types::vote_extensions::VoteExtensionData;
     use tendermint_proto::types::Vote;
 
@@ -49,7 +50,7 @@ mod extend_votes {
                 {
                     return if ethereum_headers
                         .iter()
-                        .all(|header| header.verify_signature().is_ok())
+                        .all(|header| self.validate_ethereum_header(header))
                     {
                         response::VerifyVoteExtension { result: 0 }
                     } else {
@@ -65,6 +66,9 @@ mod extend_votes {
         /// all the headers and logs contained therein.
         pub fn new_ethereum_headers(&mut self) -> Vec<SignedEthereumHeader> {
             let mut header_buffer = vec![];
+            let voting_power = self.get_validator_voting_power();
+            let address =
+                self.mode.get_validator_address().cloned();
             if let ShellMode::Validator {
                 ref mut ethereum_recv,
                 data:
@@ -78,9 +82,16 @@ mod extend_votes {
                 ..
             } = &mut self.mode
             {
+                let (voting_power, address) =
+                    (voting_power.unwrap(), address.unwrap());
                 while let Ok(eth_result) = ethereum_recv.try_recv() {
                     if let Some(header) = eth_result.new_header {
-                        header_buffer.push(header.sign(protocol_keypair));
+                        header_buffer.push(header.sign(
+                            voting_power,
+                            address.clone(),
+                            self.storage.last_height.0 + 1,
+                            protocol_keypair,
+                        ));
                     }
                     if let Some(err) = eth_result.error {
                         tracing::error!(
@@ -92,6 +103,58 @@ mod extend_votes {
             }
             header_buffer
         }
+
+        /// Verify that each ethereum header in a vote extension was signed by
+        /// a validator in the correct epoch, the stated voting power is
+        /// correct, and the signature is correct.
+        #[cfg(not(feature = "ABCI"))]
+        pub fn validate_ethereum_header(
+            &self,
+            header: &impl SignedHeader,
+        ) -> bool {
+            // This should come from a vote extension sent during the
+            // finalization of the last committed block.
+            if self.storage.last_height.0 != header.get_height() {
+                return false;
+            }
+            // a committed block was validated by the validator set of the epoch
+            // the previously committed block belonged to.
+            let height = if self.storage.last_height.0 > 0 {
+                BlockHeight(self.storage.last_height.0 - 1)
+            } else {
+                BlockHeight(self.storage.last_height.0)
+            };
+            let epoch = if let Some(epoch) =
+                self.storage.block.pred_epochs.get_epoch(height)
+            {
+                epoch
+            } else {
+                return false;
+            };
+            // Look up the sum of voting power and public keys of addresses of
+            // those that have signed this header.
+            let (voting_power, public_keys) = header
+                .get_addresses()
+                .iter()
+                .filter_map(|addr| {
+                    self.get_validator_from_address(addr, Some(epoch))
+                })
+                .fold(
+                    (VotingPower::from(0), vec![]),
+                    |(total_power, mut keys), (power, pk)| {
+                        keys.push(pk);
+                        (total_power + power, keys)
+                    },
+                );
+            // check that we found all the public keys
+            if public_keys.len() != header.get_addresses().len() {
+                return false;
+            }
+            // check the sum of voting power and signatures are valid
+            voting_power == VotingPower::from(header.get_voting_power())
+                && header.verify_signatures(&public_keys).is_ok()
+        }
+
     }
 }
 
@@ -102,11 +165,20 @@ pub use extend_votes::*;
 mod test_vote_extensions {
     use std::convert::TryFrom;
 
+    use anoma::types::ethereum_headers::{EthereumHeader, MultiSignedEthHeader};
+    use anoma::types::hash::Hash;
+    use anoma::types::key::*;
+    use anoma::ledger::pos::{self, anoma_proof_of_stake::PosBase};
+    use anoma::types::storage::Epoch;
+    use anoma::types::vote_extensions::{VoteExtension, VoteExtensionData};
     use tendermint_proto::types::Vote;
     use tower_abci::request;
 
     use super::*;
     use crate::node::ledger::shell::test_utils::*;
+    use crate::node::ledger::shims::abcipp_shim_types::shim::request::FinalizeBlock;
+
+
 
     /// Test that we successfully receive ethereum headers
     /// from the channel to fullnode process
@@ -121,7 +193,7 @@ mod test_vote_extensions {
         // a header is sent every 2 seconds.
         // We should receive at least 2 headers as such
         std::thread::sleep(std::time::Duration::from_secs(5));
-        let headers = shell.shell.new_ethereum_headers();
+        let headers = shell.new_ethereum_headers();
         assert!(headers.len() > 1);
     }
 
@@ -157,7 +229,99 @@ mod test_vote_extensions {
             vote_extension: Some(vote_extension),
         };
         let req = request::VerifyVoteExtension { vote: Some(vote) };
-        let res = shell.shell.verify_vote_extension(req);
+        let res = shell.verify_vote_extension(req);
         assert_eq!(res.result, 0);
+    }
+
+    #[cfg(not(feature = "ABCI"))]
+    /// Test that Ethereum headers signed by a non-validator is rejected
+    #[test]
+    fn test_eth_headers_must_be_signed_by_validator() {
+        let (shell, _) = setup();
+        let signing_key = gen_keypair();
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let signed_header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+            .sign(
+                voting_power,
+                address,
+                shell.storage.last_height.0 + 1,
+                &signing_key
+            );
+        assert!(!shell.validate_ethereum_header(&signed_header));
+        assert!(!shell.validate_ethereum_header(&MultiSignedEthHeader::from(signed_header)));
+    }
+
+    #[cfg(not(feature = "ABCI"))]
+    /// Test that validation of vote extensions cast during the previous
+    /// block are accepted for the current block. This should pass even
+    /// if the epoch changed resulting in a change to the validator set.
+    #[test]
+    fn test_validate_vote_extensions() {
+        let (mut shell, _) = setup();
+        let protocol_key = shell.mode.get_protocol_key().unwrap().clone();
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let signed_header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0 + 1,
+            &protocol_key
+        );
+        assert_eq!(shell.storage.get_current_epoch().0.0, 0);
+        // We make a change so that there are no
+        // validators in the next epoch
+        let mut current_validators = shell.storage.read_validator_set();
+        current_validators.data.insert(
+            1,
+            Some(pos::types::ValidatorSet {
+                active: Default::default(),
+                inactive: Default::default(),
+            }),
+        );
+        shell.storage.write_validator_set(&current_validators);
+        // we advance forward to the next epoch
+        let mut req = FinalizeBlock::default();
+        req.header.height = 11u32.into();
+        req.header.time = tendermint::time::Time::now();
+        shell.finalize_block(req).expect("Test failed");
+        shell.commit();
+
+        assert!(
+            shell
+                .get_validator_from_protocol_pk(&protocol_key.ref_to(), None)
+                .is_none()
+        );
+        let prev_epoch = Epoch(shell.storage.get_current_epoch().0.0 - 1);
+        assert!(
+            shell
+                .shell
+                .get_validator_from_protocol_pk(
+                    &protocol_key.ref_to(),
+                    Some(prev_epoch)
+                )
+                .is_some()
+        );
+        assert!(shell.validate_ethereum_header(&signed_header));
+        assert!(shell.validate_ethereum_header(&MultiSignedEthHeader::from(signed_header)));
     }
 }

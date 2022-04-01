@@ -387,6 +387,20 @@ where
         response
     }
 
+    /// Get the voting power of this node if it is a validator. Else return None
+    pub fn get_validator_voting_power(&self) -> Option<u64> {
+        if let Some(secret_key) = self.mode.get_protocol_key() {
+            match self
+                .get_validator_from_protocol_pk(&secret_key.ref_to(), None)
+            {
+                Some(validator) => Some(validator.power),
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
     /// Apply PoS slashes from the evidence
     fn slash(&mut self) {
         if !self.byzantine_validators.is_empty() {
@@ -624,6 +638,7 @@ where
 /// for the shell
 #[cfg(test)]
 mod test_utils {
+    use std::ops::{Deref, DerefMut};
     use std::path::PathBuf;
     #[cfg(all(not(feature = "ABCI"), not(feature = "eth-fullnode")))]
     use std::thread::JoinHandle;
@@ -635,8 +650,6 @@ mod test_utils {
     use anoma::types::key::*;
     use anoma::types::storage::{BlockHash, Epoch};
     use anoma::types::transaction::Fee;
-    #[cfg(not(feature = "ABCI"))]
-    use anoma::types::vote_extensions::VoteExtension;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::block::{header::Version, Header};
@@ -644,7 +657,7 @@ mod test_utils {
     use tendermint::{Hash, Time};
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::{
-        Event as TmEvent, RequestInitChain, ResponsePrepareProposal,
+        Event as TmEvent, RequestInitChain,
     };
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::google::protobuf::Timestamp;
@@ -694,6 +707,20 @@ mod test_utils {
         pub shell: Shell<MockDB, Sha256Hasher>,
     }
 
+    impl Deref for TestShell {
+        type Target = Shell<MockDB, Sha256Hasher>;
+
+        fn deref(&self) -> &Self::Target {
+            &self.shell
+        }
+    }
+
+    impl DerefMut for TestShell {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.shell
+        }
+    }
+
     impl TestShell {
         /// Returns a new shell paired with a broadcast receiver, which will
         /// receives any protocol txs sent by the shell.
@@ -731,15 +758,6 @@ mod test_utils {
                 .expect("Test shell failed to initialize");
         }
 
-        /// Forward the prepare proposal request and return the response
-        #[cfg(not(feature = "ABCI"))]
-        pub fn prepare_proposal(
-            &mut self,
-            req: RequestPrepareProposal,
-        ) -> ResponsePrepareProposal {
-            self.shell.prepare_proposal(req)
-        }
-
         /// Forward a ProcessProposal request and extract the relevant
         /// response data to return
         pub fn process_proposal(
@@ -754,13 +772,6 @@ mod test_utils {
             {
                 self.shell.process_and_decode_proposal(req)
             }
-        }
-
-        /// Forward an aggregation of vote extensions to the shell's
-        /// validation function
-        #[cfg(not(feature = "ABCI"))]
-        pub fn validate_vote_extensions(&self, exts: &[VoteExtension]) -> bool {
-            self.shell.validate_vote_extensions(exts)
         }
 
         /// Forward a FinalizeBlock request return a vector of
@@ -781,18 +792,6 @@ mod test_utils {
         pub fn enqueue_tx(&mut self, wrapper: WrapperTx) {
             self.shell.storage.tx_queue.push(wrapper);
             self.shell.reset_tx_queue_iter();
-        }
-
-        #[cfg(not(feature = "ABCI"))]
-        /// Get the next wrapper tx to be decoded
-        pub fn next_wrapper(&mut self) -> Option<&WrapperTx> {
-            self.shell.next_wrapper()
-        }
-
-        #[cfg(feature = "ABCI")]
-        /// Get the next wrapper tx to be decoded
-        pub fn next_wrapper(&mut self) -> Option<WrapperTx> {
-            self.shell.next_wrapper()
         }
     }
 

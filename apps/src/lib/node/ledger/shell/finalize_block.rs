@@ -1,12 +1,8 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-#[cfg(not(feature = "ABCI"))]
-use anoma::types::ethereum_headers::EthereumHeader;
 use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
 use anoma::types::transaction::protocol::ProtocolTxType;
-#[cfg(not(feature = "ABCI"))]
-use anoma::types::vote_extensions::{VoteExtension, VoteExtensionData};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -174,21 +170,8 @@ where
                 TxType::Protocol(_protocol_tx) => {
                     #[cfg(not(feature = "ABCI"))]
                     match &_protocol_tx.tx {
-                        ProtocolTxType::VoteExtensions(votes) => {
-                            self.update_ethereum_headers(votes.clone());
-                            let mut event =
-                                Event::new_tx_event(&tx_type, height.0);
-                            event["log"] = format!(
-                                "Collected and verified vote extensions from \
-                                 {} validator(s).",
-                                votes.len()
-                            );
-                            tracing::info!(
-                                "Collected and verified vote extensions from \
-                                 {} validator(s).",
-                                votes.len()
-                            );
-                            event
+                        ProtocolTxType::EthereumHeaders(_) => {
+                            Event::new_tx_event(&tx_type, height.0)
                         }
                         _ => {
                             continue;
@@ -376,21 +359,6 @@ where
             evidence: Some(evidence_params),
             ..response.consensus_param_updates.take().unwrap_or_default()
         });
-    }
-
-    #[cfg(not(feature = "ABCI"))]
-    /// Extract the Ethereum headers from the vote extensions.
-    /// Call the native vp that adds these headers to its storage.
-    fn update_ethereum_headers(&mut self, exts: Vec<VoteExtension>) {
-        for VoteExtensionData { ethereum_headers } in exts
-            .into_iter()
-            .filter_map(|v| VoteExtensionData::try_from(v).ok())
-        {
-            let _headers: Vec<EthereumHeader> = ethereum_headers
-                .into_iter()
-                .map(|signed| signed.extract_header())
-                .collect();
-        }
     }
 }
 

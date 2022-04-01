@@ -60,6 +60,24 @@ mod vote_exts {
             Self::try_from(VoteExtension::from(ext))
         }
     }
+
+    #[cfg(not(feature = "ABCI"))]
+    impl TryFrom<tendermint_proto::types::Vote> for VoteExtensionData {
+        type Error = std::io::Error;
+
+        fn try_from(
+            vote: tendermint_proto::types::Vote,
+        ) -> Result<Self, Self::Error> {
+            if let Some(ext) = vote.vote_extension {
+                Self::try_from(VoteExtension::from(ext))
+            } else {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "No vote extension in vote",
+                ))
+            }
+        }
+    }
 }
 
 #[cfg(feature = "ethereum-headers")]

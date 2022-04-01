@@ -2,8 +2,14 @@
 
 #[cfg(not(feature = "ABCI"))]
 mod prepare_block {
+    use std::collections::hash_map::Entry;
+    use std::collections::HashMap;
+
+    use anoma::types::ethereum_headers::{
+        MultiSignedEthHeader, SignedHeader,
+    };
     use anoma::types::transaction::protocol::ProtocolTxType;
-    use anoma::types::vote_extensions::VoteExtension;
+    use anoma::types::vote_extensions::VoteExtensionData;
 
     use super::super::*;
     use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;
@@ -34,25 +40,14 @@ mod prepare_block {
                 // TODO: This should not be hardcoded
                 let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
 
-                // Add the vote extensions in as a protocol tx
-                let mut txs: Vec<TxBytes> = vec![
-                    self.mode
-                        .get_protocol_key()
-                        .map(|protocol_key| {
-                            ProtocolTxType::VoteExtensions(
-                                req.votes
-                                    .into_iter()
-                                    .filter_map(|vote| {
-                                        vote.vote_extension
-                                            .map(VoteExtension::from)
-                                    })
-                                    .collect(),
-                            )
-                            .sign(&protocol_key.ref_to(), protocol_key)
-                        })
-                        .unwrap()
-                        .to_bytes(),
-                ];
+                // Add the vote extensions in as protocol txs
+                let mut txs: Vec<TxBytes> = self
+                    .mode
+                    .get_protocol_key()
+                    .map(|protocol_key| {
+                        self.prepare_ethereum_headers(req.votes, protocol_key)
+                    })
+                    .unwrap();
 
                 // filter in half of the new txs from Tendermint, only keeping
                 // wrappers
@@ -91,14 +86,59 @@ mod prepare_block {
             };
             response::PrepareProposal { block_data: txs }
         }
+
+        /// Extract ethereum headers from vote extensions. Create a
+        /// protocol tx for each header correctly signed by a number of
+        /// valid validators. The correctness of the headers will be handled
+        /// by the validity predicate.
+        fn prepare_ethereum_headers(
+            &self,
+            votes: Vec<tendermint_proto::types::Vote>,
+            signing_key: &common::SecretKey,
+        ) -> Vec<TxBytes> {
+            votes
+                .into_iter()
+                // extract vote extension data from vote
+                .filter_map(|vote| {
+                    VoteExtensionData::try_from(vote)
+                        .ok()
+                        .map(|data| data.ethereum_headers)
+                })
+                // flatten into a list of signed ethereum headers
+                .flatten()
+                // remove those headers that aren't properly signed by
+                // validators
+                .filter(|header| self.validate_ethereum_header(header))
+                // group equivalent headers together
+                .fold(HashMap::new(), |mut headers, header| {
+                    if let Entry::Vacant(e) = headers.entry(header.hash()) {
+                        e.insert(MultiSignedEthHeader::from(header));
+                    } else {
+                        headers
+                            .get_mut(&header.hash())
+                            .unwrap()
+                            .add(header)
+                            .unwrap();
+                    }
+                    headers
+                })
+                .drain()
+                // put each multi-signed header into a separate signed
+                // transaction
+                .map(|(_, header)| {
+                    ProtocolTxType::EthereumHeaders(header)
+                        .sign(&signing_key.ref_to(), signing_key)
+                        .to_bytes()
+                })
+                .collect()
+        }
     }
 
     #[cfg(test)]
     mod test_prepare_proposal {
         use anoma::types::address::xan;
         use anoma::types::storage::Epoch;
-        use anoma::types::transaction::protocol::ProtocolTx;
-        use anoma::types::transaction::{process_tx, Fee};
+        use anoma::types::transaction::Fee;
 
         use super::*;
         use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
@@ -119,17 +159,7 @@ mod prepare_block {
                 votes: vec![],
             };
             let block_data = shell.prepare_proposal(req).block_data;
-            assert_eq!(block_data.len(), 1);
-            let vote_extensions =
-                Tx::try_from(&block_data[0][..]).expect("Test failed");
-
-            assert!(matches!(
-                process_tx(vote_extensions).expect("Test failed"),
-                TxType::Protocol(ProtocolTx {
-                    tx: ProtocolTxType::VoteExtensions(_),
-                    ..
-                })
-            ));
+            assert_eq!(block_data.len(), 0);
         }
 
         /// Test that if an error is encountered while
@@ -169,17 +199,7 @@ mod prepare_block {
                 votes: vec![],
             };
             let block_data = shell.prepare_proposal(req).block_data;
-            assert_eq!(block_data.len(), 1);
-            let vote_extensions =
-                Tx::try_from(&block_data[0][..]).expect("Test failed");
-
-            assert!(matches!(
-                process_tx(vote_extensions).expect("Test failed"),
-                TxType::Protocol(ProtocolTx {
-                    tx: ProtocolTxType::VoteExtensions(_),
-                    ..
-                })
-            ));
+            assert_eq!(block_data.len(), 0);
         }
 
         /// Test that the decrypted txs are included
@@ -235,18 +255,7 @@ mod prepare_block {
                 .map(|tx| tx.data.clone().expect("Test failed"))
                 .collect();
 
-            let mut block_data = shell.prepare_proposal(req).block_data;
-            let vote_extensions = block_data.remove(0);
-            let vote_extensions =
-                Tx::try_from(&vote_extensions[..]).expect("Test failed");
-
-            assert!(matches!(
-                process_tx(vote_extensions).expect("Test failed"),
-                TxType::Protocol(ProtocolTx {
-                    tx: ProtocolTxType::VoteExtensions(_),
-                    ..
-                })
-            ));
+            let block_data = shell.prepare_proposal(req).block_data;
 
             let received: Vec<Vec<u8>> = block_data
                 .iter()

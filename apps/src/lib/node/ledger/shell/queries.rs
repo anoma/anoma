@@ -2,6 +2,7 @@
 use std::cmp::max;
 
 use anoma::ledger::parameters::EpochDuration;
+use anoma::ledger::pos::anoma_proof_of_stake::types::VotingPower;
 use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
 use anoma::types::key;
@@ -306,6 +307,40 @@ where
                     address: validator.address.to_string(),
                     public_key: dkg_publickey.into(),
                 }
+            })
+    }
+
+    /// Lookup data about a validator from their address
+    #[allow(dead_code)]
+    pub fn get_validator_from_address(
+        &self,
+        address: &Address,
+        epoch: Option<Epoch>,
+    ) -> Option<(VotingPower, common::PublicKey)> {
+        // get the current epoch
+        let epoch = epoch.unwrap_or_else(|| self.storage.get_current_epoch().0);
+        // get the active validator set
+        self.storage
+            .read_validator_set()
+            .get(epoch)
+            .expect("Validators for the next epoch should be known")
+            .active
+            .iter()
+            .find(|validator| address == &validator.address)
+            .map(|validator| {
+                let protocol_pk_key = key::protocol_pk_key(&validator.address);
+                let bytes = self
+                    .storage
+                    .read(&protocol_pk_key)
+                    .expect("Validator should have public protocol key")
+                    .0
+                    .expect("Validator should have public protocol key");
+                let protocol_pk: common::PublicKey =
+                    BorshDeserialize::deserialize(&mut bytes.as_ref()).expect(
+                        "Protocol public key in storage should be \
+                         deserializable",
+                    );
+                (validator.voting_power, protocol_pk)
             })
     }
 }

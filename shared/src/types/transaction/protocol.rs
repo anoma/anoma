@@ -34,9 +34,9 @@ mod protocol_txs {
 
     use super::*;
     use crate::proto::Tx;
+    use crate::types::ethereum_headers::MultiSignedEthHeader;
     use crate::types::key::*;
     use crate::types::transaction::{EllipticCurve, TxError, TxType};
-    use crate::types::vote_extensions::VoteExtension;
 
     const TX_NEW_DKG_KP_WASM: &str = "tx_update_dkg_session_keypair.wasm";
 
@@ -78,8 +78,9 @@ mod protocol_txs {
         DKG(DkgMessage),
         /// Tx requesting a new DKG session keypair
         NewDkgKeypair(Tx),
-        /// Aggregation of Vote Extension data from previous block
-        VoteExtensions(Vec<VoteExtension>),
+        /// Aggregation of Ethereum headers from vote
+        /// extension data from previous block
+        EthereumHeaders(MultiSignedEthHeader),
     }
 
     impl ProtocolTxType {
