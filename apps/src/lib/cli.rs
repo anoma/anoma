@@ -1300,7 +1300,6 @@ pub mod args {
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
-    use masp_primitives::primitives::PaymentAddress;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
@@ -1312,7 +1311,7 @@ pub mod args {
     use tendermint_stable::Timeout;
     use anoma::types::address::masp;
 
-    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey, WalletViewingKey};
+    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey, WalletViewingKey, WalletPaymentAddr};
     use super::utils::*;
     use super::ArgMatches;
     use crate::config;
@@ -1378,7 +1377,7 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
-    const PAYMENT_ADDRESS_OPT: ArgOpt<PaymentAddress> = arg_opt("payment-address");
+    const PAYMENT_ADDRESS_OPT: ArgOpt<WalletPaymentAddr> = arg_opt("payment-address");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
@@ -1548,7 +1547,7 @@ pub mod args {
         /// Spending key for shielded transactions
         pub spending_key: Option<WalletSpendingKey>,
         /// Payment address for shielded transactions
-        pub payment_address: Option<PaymentAddress>,
+        pub payment_address: Option<WalletPaymentAddr>,
     }
 
     impl Args for TxTransfer {
@@ -2497,6 +2496,8 @@ pub mod args {
     /// MASP generate payment address arguments
     #[derive(Clone, Debug)]
     pub struct MaspPayAddrGen {
+        /// Key alias
+        pub alias: String,
         /// Spending Key
         pub spending_key: Option<WalletSpendingKey>,
         /// Viewing key
@@ -2505,16 +2506,22 @@ pub mod args {
 
     impl Args for MaspPayAddrGen {
         fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
             let spending_key = SPENDING_KEY_OPT.parse(matches);
             let viewing_key = VIEWING_KEY_OPT.parse(matches);
             Self {
+                alias,
                 spending_key,
                 viewing_key,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(SPENDING_KEY_OPT.def().about(
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("An alias to be associated with the payment address."),
+            ).arg(SPENDING_KEY_OPT.def().about(
                 "The spending key."
             ))
                 .arg(VIEWING_KEY_OPT.def().about(

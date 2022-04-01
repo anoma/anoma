@@ -233,6 +233,13 @@ impl Store {
         self.view_keys.get(&alias.into())
     }
 
+    pub fn find_payment_addr(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&PaymentAddress> {
+        self.payment_addrs.get(&alias.into())
+    }
+
     /// Find the stored key by a public key.
     pub fn find_key_by_pk(
         &self,
@@ -424,7 +431,7 @@ impl Store {
             return None;
         }
         if self.spend_keys.contains_key(&alias) {
-            match show_overwrite_confirmation(&alias, "a key") {
+            match show_overwrite_confirmation(&alias, "a spending key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
                     return self.insert_spending_key(new_alias, spendkey);
@@ -446,7 +453,7 @@ impl Store {
             return None;
         }
         if self.view_keys.contains_key(&alias) {
-            match show_overwrite_confirmation(&alias, "a key") {
+            match show_overwrite_confirmation(&alias, "a viewing key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
                     return self.insert_viewing_key(new_alias, viewkey);
@@ -455,6 +462,28 @@ impl Store {
             }
         }
         self.view_keys.insert(alias.clone(), viewkey);
+        Some(alias)
+    }
+
+    pub fn insert_payment_addr(
+        &mut self,
+        alias: Alias,
+        payment_addr: PaymentAddress,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            eprintln!("Empty alias given.");
+            return None;
+        }
+        if self.view_keys.contains_key(&alias) {
+            match show_overwrite_confirmation(&alias, "a payment address") {
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_payment_addr(new_alias, payment_addr);
+                }
+                ConfirmationResponse::Skip => return None,
+            }
+        }
+        self.payment_addrs.insert(alias.clone(), payment_addr);
         Some(alias)
     }
 

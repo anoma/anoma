@@ -671,9 +671,9 @@ async fn gen_shielded_transfer(
     }
     // Now handle the outputs of this transaction
     // If there is a shielded output
-    if let Some(pa) = args.payment_address {
+    if let Some(pa) = &args.payment_address {
         let ovk_opt = args.spending_key.as_ref().map(|x| ctx.get_cached(&x).expsk.ovk);
-        builder.add_sapling_output(ovk_opt, pa.clone(), asset_type, amt, memo)?;
+        builder.add_sapling_output(ovk_opt, ctx.get(&pa), asset_type, amt, memo)?;
     } else {
         // Embed the transparent target address into the shielded transaction so
         // that it can be signed 

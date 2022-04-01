@@ -74,6 +74,7 @@ fn spending_key_gen(
 fn payment_address_gen(
     mut ctx: Context,
     args::MaspPayAddrGen {
+        alias,
         spending_key,
         viewing_key,
     }: args::MaspPayAddrGen,
@@ -90,11 +91,16 @@ fn payment_address_gen(
         }
     };
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
-    let pay_addr = viewing_key.to_payment_address(div);
+    let payment_addr = viewing_key.to_payment_address(div).expect("a PaymentAddress");
+    let mut wallet = ctx.wallet;
+    let alias = wallet.insert_payment_addr(alias, payment_addr).unwrap_or_else(|| {
+        eprintln!("Payment address not added");
+        cli::safe_exit(1);
+    });
+    wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
-        "Successfully generated the following payment address from the \
-         given key: {}",
-        pay_addr.unwrap()
+        "Successfully generated a payment address with the following alias: {}",
+        alias,
     );
 }
 
@@ -117,7 +123,7 @@ fn viewing_key_derive(
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully derived a viewing key with the following alias: {}",
-        alias
+        alias,
     );
 }
 

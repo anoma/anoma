@@ -21,6 +21,7 @@ use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
 use masp_primitives::zip32::ExtendedSpendingKey;
 use masp_primitives::keys::FullViewingKey;
+use masp_primitives::primitives::PaymentAddress;
 
 #[derive(Debug)]
 pub struct Wallet {
@@ -219,6 +220,13 @@ impl Wallet {
             .ok_or(FindKeyError::KeyNotFound)
     }
 
+    pub fn find_payment_addr(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&PaymentAddress> {
+        self.store.find_payment_addr(alias.as_ref())
+    }
+
     /// Find the stored key by a public key.
     /// If the key is encrypted, will prompt for password from stdin.
     /// Any keys that are decrypted are stored in and read from a cache to avoid
@@ -362,6 +370,16 @@ impl Wallet {
     ) -> Option<String> {
         self.store
             .insert_viewing_key(alias.into(), view_key)
+            .map(Into::into)
+    }
+
+    pub fn insert_payment_addr(
+        &mut self,
+        alias: String,
+        payment_addr: PaymentAddress,
+    ) -> Option<String> {
+        self.store
+            .insert_payment_addr(alias.into(), payment_addr)
             .map(Into::into)
     }
 }
