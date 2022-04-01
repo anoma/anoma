@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["init_proposal","A proposal creation transaction."]]});

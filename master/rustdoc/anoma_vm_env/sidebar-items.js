@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["ibc","IBC functions for transactions."],["imports",""],["intent",""],["key",""],["nft",""],["proof_of_stake","Proof of Stake system integration with functions for transactions"],["token",""],["tx_prelude",""],["vp_prelude",""]]});
+initSidebarItems({"mod":[["governance",""],["ibc","IBC functions for transactions."],["imports",""],["intent",""],["key",""],["nft",""],["proof_of_stake","Proof of Stake system integration with functions for transactions"],["token",""],["tx_prelude",""],["vp_prelude",""]]});

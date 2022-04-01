@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["InitProposalData","A tx data type to hold proposal data"]]});

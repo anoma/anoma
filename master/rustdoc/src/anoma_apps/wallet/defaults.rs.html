@@ -233,9 +233,11 @@
 <span id="232">232</span>
 <span id="233">233</span>
 <span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Default addresses and keys.</span>
 
-<span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">governance</span>, <span class="ident">pos</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
@@ -255,6 +257,7 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">Address</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
         (<span class="string">&quot;pos&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::ADDRESS</span>),
         (<span class="string">&quot;pos_slash_pool&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::SLASH_POOL_ADDRESS</span>),
+        (<span class="string">&quot;governance&quot;</span>.<span class="ident">into</span>(), <span class="ident">governance::ADDRESS</span>),
     ];
     <span class="comment">// Genesis validators</span>
     <span class="kw">let</span> <span class="ident">validator_addresses</span> <span class="op">=</span>
@@ -306,7 +309,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">dev</span> {
-    <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>;
+    <span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">governance</span>, <span class="ident">pos</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::key::dkg_session_keys::DkgKeypair</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
@@ -350,6 +353,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Alias</span>, <span class="ident">Address</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[
             (<span class="string">&quot;pos&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::ADDRESS</span>),
             (<span class="string">&quot;pos_slash_pool&quot;</span>.<span class="ident">into</span>(), <span class="ident">pos::SLASH_POOL_ADDRESS</span>),
+            (<span class="string">&quot;governance&quot;</span>.<span class="ident">into</span>(), <span class="ident">governance::ADDRESS</span>),
             (<span class="string">&quot;matchmaker&quot;</span>.<span class="ident">into</span>(), <span class="ident">matchmaker_address</span>()),
             (<span class="string">&quot;validator&quot;</span>.<span class="ident">into</span>(), <span class="ident">validator_address</span>()),
             (<span class="string">&quot;albert&quot;</span>.<span class="ident">into</span>(), <span class="ident">albert_address</span>()),

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["GovParams","Governance parameter structure"]]});

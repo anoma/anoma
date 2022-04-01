@@ -822,12 +822,47 @@
 <span id="821">821</span>
 <span id="822">822</span>
 <span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
+<span class="kw">use</span> <span class="ident">anoma::ledger::governance::parameters::GovParams</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::parameters::Parameters</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="ident">GenesisValidator</span>, <span class="ident">PosParams</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
@@ -848,6 +883,7 @@
     <span class="kw">use</span> <span class="ident">std::path::Path</span>;
     <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
+    <span class="kw">use</span> <span class="ident">anoma::ledger::governance::parameters::GovParams</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::parameters</span>::{<span class="ident">EpochDuration</span>, <span class="ident">Parameters</span>};
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos::types::BasisPoints</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="ident">GenesisValidator</span>, <span class="ident">PosParams</span>};
@@ -933,8 +969,29 @@
         <span class="kw">pub</span> <span class="ident">parameters</span>: <span class="ident">ParametersConfig</span>,
         <span class="comment">// PoS parameters</span>
         <span class="kw">pub</span> <span class="ident">pos_params</span>: <span class="ident">PosParamsConfig</span>,
+        <span class="comment">// Governance parameters</span>
+        <span class="kw">pub</span> <span class="ident">gov_params</span>: <span class="ident">GovernanceParamasConfig</span>,
         <span class="comment">// Wasm definitions</span>
         <span class="kw">pub</span> <span class="ident">wasm</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">WasmConfig</span><span class="op">&gt;</span>,
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GovernanceParamasConfig</span> {
+        <span class="comment">// Min funds to stake to submit a proposal</span>
+        <span class="comment">// XXX: u64 doesn&#39;t work with toml-rs!</span>
+        <span class="kw">pub</span> <span class="ident">min_proposal_fund</span>: <span class="ident">u64</span>,
+        <span class="comment">// Maximum size of proposal in kibibytes (KiB)</span>
+        <span class="comment">// XXX: u64 doesn&#39;t work with toml-rs!</span>
+        <span class="kw">pub</span> <span class="ident">max_proposal_code_size</span>: <span class="ident">u64</span>,
+        <span class="comment">// Proposal period length in epoch</span>
+        <span class="comment">// XXX: u64 doesn&#39;t work with toml-rs!</span>
+        <span class="kw">pub</span> <span class="ident">min_proposal_period</span>: <span class="ident">u64</span>,
+        <span class="comment">// Maximum number of characters in the proposal content</span>
+        <span class="comment">// XXX: u64 doesn&#39;t work with toml-rs!</span>
+        <span class="kw">pub</span> <span class="ident">max_proposal_content_size</span>: <span class="ident">u64</span>,
+        <span class="comment">// Minimum number of epoch between end and grace epoch</span>
+        <span class="comment">// XXX: u64 doesn&#39;t work with toml-rs!</span>
+        <span class="kw">pub</span> <span class="ident">min_grace_epoch</span>: <span class="ident">u64</span>,
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
@@ -1317,6 +1374,14 @@
             <span class="ident">tx_whitelist</span>: <span class="ident">config</span>.<span class="ident">parameters</span>.<span class="ident">tx_whitelist</span>.<span class="ident">unwrap_or_default</span>(),
         };
 
+        <span class="kw">let</span> <span class="ident">gov_params</span> <span class="op">=</span> <span class="ident">GovParams</span> {
+            <span class="ident">min_proposal_fund</span>: <span class="number">500</span>,
+            <span class="ident">max_proposal_code_size</span>: <span class="number">300</span>,
+            <span class="ident">min_proposal_period</span>: <span class="number">3</span>,
+            <span class="ident">max_proposal_content_size</span>: <span class="number">10_000</span>,
+            <span class="ident">min_proposal_grace_epochs</span>: <span class="number">6</span>,
+        };
+
         <span class="kw">let</span> <span class="ident">pos_params</span> <span class="op">=</span> <span class="ident">PosParams</span> {
             <span class="ident">max_validator_slots</span>: <span class="ident">config</span>.<span class="ident">pos_params</span>.<span class="ident">max_validator_slots</span>,
             <span class="ident">pipeline_len</span>: <span class="ident">config</span>.<span class="ident">pos_params</span>.<span class="ident">pipeline_len</span>,
@@ -1342,6 +1407,7 @@
             <span class="ident">implicit_accounts</span>: <span class="ident">implicit_accounts</span>.<span class="ident">into_values</span>().<span class="ident">collect</span>(),
             <span class="ident">parameters</span>,
             <span class="ident">pos_params</span>,
+            <span class="ident">gov_params</span>,
         };
         <span class="ident">genesis</span>.<span class="ident">init</span>();
         <span class="ident">genesis</span>
@@ -1375,6 +1441,7 @@
     <span class="kw">pub</span> <span class="ident">implicit_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ImplicitAccount</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">parameters</span>: <span class="ident">Parameters</span>,
     <span class="kw">pub</span> <span class="ident">pos_params</span>: <span class="ident">PosParams</span>,
+    <span class="kw">pub</span> <span class="ident">gov_params</span>: <span class="ident">GovParams</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Genesis</span> {
@@ -1609,6 +1676,7 @@
         <span class="ident">token_accounts</span>,
         <span class="ident">parameters</span>,
         <span class="ident">pos_params</span>: <span class="ident">PosParams::default</span>(),
+        <span class="ident">gov_params</span>: <span class="ident">GovParams::default</span>(),
     }
 }
 

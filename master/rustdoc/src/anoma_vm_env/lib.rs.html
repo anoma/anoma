@@ -45,6 +45,9 @@
 <span id="44">44</span>
 <span id="45">45</span>
 <span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This crate contains library code for wasm. Some of the code is re-exported</span>
 <span class="doccomment">//! from the `shared` crate.</span>
 
@@ -53,6 +56,7 @@
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::broken_intra_doc_links</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::private_intra_doc_links</span>)]</span>
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">governance</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ibc</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">imports</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">intent</span>;
@@ -62,11 +66,13 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">token</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx_prelude</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::governance::storage</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Signed</span>, <span class="ident">SignedTxData</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_macros::transaction</span>;
 
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::governance::tx</span> <span class="kw">as</span> <span class="ident">governance</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ibc</span>::{<span class="ident">Ibc</span>, <span class="ident">IbcActions</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::tx</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::intent::tx</span> <span class="kw">as</span> <span class="ident">intent</span>;

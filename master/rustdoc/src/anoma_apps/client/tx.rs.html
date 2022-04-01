@@ -1207,16 +1207,91 @@
 <span id="1206">1206</span>
 <span id="1207">1207</span>
 <span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
+<span id="1222">1222</span>
+<span id="1223">1223</span>
+<span id="1224">1224</span>
+<span id="1225">1225</span>
+<span id="1226">1226</span>
+<span id="1227">1227</span>
+<span id="1228">1228</span>
+<span id="1229">1229</span>
+<span id="1230">1230</span>
+<span id="1231">1231</span>
+<span id="1232">1232</span>
+<span id="1233">1233</span>
+<span id="1234">1234</span>
+<span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
+<span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
+<span id="1277">1277</span>
+<span id="1278">1278</span>
+<span id="1279">1279</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
 
+<span class="kw">use</span> <span class="ident">anoma::ledger::governance::storage</span> <span class="kw">as</span> <span class="ident">gov_storage</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="ident">BondId</span>, <span class="ident">Bonds</span>, <span class="ident">Unbonds</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">xan</span> <span class="kw">as</span> <span class="ident">m1t</span>, <span class="ident">Address</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::governance</span>::{<span class="ident">OfflineProposal</span>, <span class="ident">Proposal</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::nft</span>::{<span class="self">self</span>, <span class="ident">Nft</span>, <span class="ident">NftToken</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::transaction::governance::InitProposalData</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::transaction::nft</span>::{<span class="ident">CreateNft</span>, <span class="ident">MintNft</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{
     <span class="ident">hash_tx</span>, <span class="ident">pos</span>, <span class="ident">Fee</span>, <span class="ident">InitAccount</span>, <span class="ident">InitValidator</span>, <span class="ident">UpdateVp</span>, <span class="ident">WrapperTx</span>,
@@ -1257,6 +1332,7 @@
 
 <span class="kw">const</span> <span class="ident">TX_INIT_ACCOUNT_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_account.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_INIT_VALIDATOR_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_validator.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_INIT_PROPOSAL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_proposal.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_update_vp.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_transfer.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_INIT_NFT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_nft.wasm&quot;</span>;
@@ -1616,7 +1692,8 @@
     <span class="comment">// Check source balance</span>
     <span class="kw">let</span> <span class="ident">balance_key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">source</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">balance_key</span>).<span class="kw">await</span> {
+    <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">balance_key</span>).<span class="kw">await</span>
+    {
         <span class="prelude-val">Some</span>(<span class="ident">balance</span>) =&gt; {
             <span class="kw">if</span> <span class="ident">balance</span> <span class="op">&lt;</span> <span class="ident">args</span>.<span class="ident">amount</span> {
                 <span class="macro">eprintln!</span>(
@@ -1696,18 +1773,16 @@
 
     <span class="kw">let</span> <span class="ident">nft_creator_key</span> <span class="op">=</span> <span class="ident">nft::get_creator_key</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_address</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">nft_creator_address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>(
-        <span class="ident">client</span>,
-        <span class="ident">nft_creator_key</span>,
-    )
-    .<span class="kw">await</span>
-    {
-        <span class="prelude-val">Some</span>(<span class="ident">addr</span>) =&gt; <span class="ident">addr</span>,
-        <span class="prelude-val">None</span> =&gt; {
-            <span class="macro">eprintln!</span>(<span class="string">&quot;No creator key found for {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_address</span>);
-            <span class="ident">safe_exit</span>(<span class="number">1</span>);
-        }
-    };
+    <span class="kw">let</span> <span class="ident">nft_creator_address</span> <span class="op">=</span>
+        <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">nft_creator_key</span>)
+            .<span class="kw">await</span>
+        {
+            <span class="prelude-val">Some</span>(<span class="ident">addr</span>) =&gt; <span class="ident">addr</span>,
+            <span class="prelude-val">None</span> =&gt; {
+                <span class="macro">eprintln!</span>(<span class="string">&quot;No creator key found for {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">nft_address</span>);
+                <span class="ident">safe_exit</span>(<span class="number">1</span>);
+            }
+        };
 
     <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">WalletAddress::new</span>(<span class="ident">nft_creator_address</span>.<span class="ident">to_string</span>()));
 
@@ -1725,6 +1800,74 @@
 
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
     <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="ident">signer</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span>;
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_init_proposal</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::InitProposal</span>) {
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">proposal_data</span>).<span class="ident">expect</span>(<span class="string">&quot;File must exist.&quot;</span>);
+    <span class="kw">let</span> <span class="ident">proposal</span>: <span class="ident">Proposal</span> <span class="op">=</span>
+        <span class="ident">serde_json::from_reader</span>(<span class="ident">file</span>).<span class="ident">expect</span>(<span class="string">&quot;JSON was not well-formatted&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">WalletAddress::new</span>(<span class="ident">proposal</span>.<span class="ident">clone</span>().<span class="ident">author</span>.<span class="ident">to_string</span>());
+    <span class="kw">let</span> <span class="ident">tx_data</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InitProposalData</span>, <span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">proposal</span>.<span class="ident">clone</span>().<span class="ident">try_into</span>();
+
+    <span class="kw">let</span> <span class="ident">init_proposal_data</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span> <span class="ident">tx_data</span> {
+        <span class="ident">data</span>
+    } <span class="kw">else</span> {
+        <span class="macro">eprintln!</span>(<span class="string">&quot;Invalid data for init proposal transaction.&quot;</span>);
+        <span class="ident">safe_exit</span>(<span class="number">1</span>)
+    };
+
+    <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">offline</span> {
+        <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">signer</span>);
+        <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
+            <span class="kw-2">&amp;mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
+            <span class="kw-2">&amp;</span><span class="ident">signer</span>,
+            <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
+        )
+        .<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">offline_proposal</span> <span class="op">=</span> <span class="ident">OfflineProposal::new</span>(<span class="ident">proposal</span>, <span class="kw-2">&amp;</span><span class="ident">signing_key</span>);
+        <span class="kw">let</span> <span class="ident">proposal_filename</span> <span class="op">=</span> <span class="string">&quot;proposal&quot;</span>.<span class="ident">to_string</span>();
+        <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="kw-2">&amp;</span><span class="ident">proposal_filename</span>).<span class="ident">unwrap</span>();
+        <span class="kw">match</span> <span class="ident">serde_json::to_writer_pretty</span>(<span class="ident">out</span>, <span class="kw-2">&amp;</span><span class="ident">offline_proposal</span>) {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                <span class="macro">println!</span>(<span class="string">&quot;Proposal created: {}.&quot;</span>, <span class="ident">proposal_filename</span>);
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                <span class="macro">eprintln!</span>(<span class="string">&quot;Error while creating proposal file: {}.&quot;</span>, <span class="ident">e</span>);
+                <span class="ident">safe_exit</span>(<span class="number">1</span>)
+            }
+        }
+    } <span class="kw">else</span> {
+        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">min_proposal_funds_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_min_proposal_fund_key</span>();
+        <span class="kw">let</span> <span class="ident">min_proposal_funds</span>: <span class="ident">Amount</span> <span class="op">=</span>
+            <span class="ident">rpc::query_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">min_proposal_funds_key</span>)
+                .<span class="kw">await</span>
+                .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">rpc::get_token_balance</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">m1t</span>(), <span class="kw-2">&amp;</span><span class="ident">proposal</span>.<span class="ident">author</span>)
+            .<span class="kw">await</span>
+            .<span class="ident">unwrap_or_default</span>();
+        <span class="kw">if</span> <span class="ident">balance</span> <span class="op">&lt;</span> <span class="ident">min_proposal_funds</span> {
+            <span class="macro">eprintln!</span>(
+                <span class="string">&quot;Address {} doesn&#39;t have enough funds.&quot;</span>,
+                <span class="kw-2">&amp;</span><span class="ident">proposal</span>.<span class="ident">author</span>
+            );
+            <span class="ident">safe_exit</span>(<span class="number">1</span>);
+        }
+
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">init_proposal_data</span>
+            .<span class="ident">try_to_vec</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Encoding proposal data shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_INIT_PROPOSAL</span>);
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+
+        <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">signer</span>)).<span class="kw">await</span>;
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_vote_proposal</span>(<span class="ident">_ctx</span>: <span class="ident">Context</span>, <span class="ident">_args</span>: <span class="ident">args::VoteProposal</span>) {
+    <span class="comment">//</span>
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_bond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Bond</span>) {
@@ -1758,7 +1901,8 @@
     <span class="kw">let</span> <span class="ident">bond_source</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
     <span class="kw">let</span> <span class="ident">balance_key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">address::xan</span>(), <span class="ident">bond_source</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">balance_key</span>).<span class="kw">await</span> {
+    <span class="kw">match</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">balance_key</span>).<span class="kw">await</span>
+    {
         <span class="prelude-val">Some</span>(<span class="ident">balance</span>) =&gt; {
             <span class="kw">if</span> <span class="ident">balance</span> <span class="op">&lt;</span> <span class="ident">args</span>.<span class="ident">amount</span> {
                 <span class="macro">eprintln!</span>(
@@ -1818,8 +1962,7 @@
     };
     <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">ledger::pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
-        <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Bonds</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">bond_key</span>).<span class="kw">await</span>;
     <span class="kw">match</span> <span class="ident">bonds</span> {
         <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bond_amount</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
@@ -1891,8 +2034,7 @@
     };
     <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">ledger::pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span>
-        <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Unbonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">rpc::query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Unbonds</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">bond_key</span>).<span class="kw">await</span>;
     <span class="kw">match</span> <span class="ident">unbonds</span> {
         <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unbonded_amount</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();

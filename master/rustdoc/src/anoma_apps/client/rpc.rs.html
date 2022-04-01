@@ -1178,12 +1178,90 @@
 <span id="1177">1177</span>
 <span id="1178">1178</span>
 <span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
+<span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
+<span id="1222">1222</span>
+<span id="1223">1223</span>
+<span id="1224">1224</span>
+<span id="1225">1225</span>
+<span id="1226">1226</span>
+<span id="1227">1227</span>
+<span id="1228">1228</span>
+<span id="1229">1229</span>
+<span id="1230">1230</span>
+<span id="1231">1231</span>
+<span id="1232">1232</span>
+<span id="1233">1233</span>
+<span id="1234">1234</span>
+<span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Client RPC queries</span>
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="self">self</span>, <span class="ident">Write</span>};
 
+<span class="kw">use</span> <span class="ident">anoma::ledger::governance::storage</span> <span class="kw">as</span> <span class="ident">gov_storage</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos::types</span>::{
     <span class="ident">Epoch</span> <span class="kw">as</span> <span class="ident">PosEpoch</span>, <span class="ident">VotingPower</span>, <span class="ident">WeightedValidator</span>,
 };
@@ -1193,6 +1271,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">Epoch</span>, <span class="ident">PrefixValue</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="ident">balance_key</span>, <span class="ident">Amount</span>};
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">storage</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
@@ -1289,7 +1368,7 @@
                 .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">Cow::Borrowed</span>(<span class="kw-2">*</span><span class="ident">c</span>))
                 .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Cow::Owned</span>(<span class="ident">token</span>.<span class="ident">to_string</span>()));
-            <span class="kw">match</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span> {
+            <span class="kw">match</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="kw">await</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">balance</span>) =&gt; {
                     <span class="macro">println!</span>(<span class="string">&quot;{}: {}&quot;</span>, <span class="ident">currency_code</span>, <span class="ident">balance</span>);
                 }
@@ -1304,8 +1383,7 @@
             <span class="kw">for</span> (<span class="ident">token</span>, <span class="ident">currency_code</span>) <span class="kw">in</span> <span class="ident">tokens</span> {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">owner</span>);
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">balance</span>) <span class="op">=</span>
-                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">key</span>)
-                        .<span class="kw">await</span>
+                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="kw">await</span>
                 {
                     <span class="macro">println!</span>(<span class="string">&quot;{}: {}&quot;</span>, <span class="ident">currency_code</span>, <span class="ident">balance</span>);
                     <span class="ident">found_any</span> <span class="op">=</span> <span class="bool-val">true</span>;
@@ -1368,6 +1446,88 @@
     }
 }
 
+<span class="doccomment">/// Query Proposals</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_proposal</span>(<span class="ident">_ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryProposal</span>) {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">print_proposal</span>(
+        <span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="ident">HttpClient</span>,
+        <span class="ident">id</span>: <span class="ident">u64</span>,
+        <span class="ident">details</span>: <span class="ident">bool</span>,
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">author_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_author_key</span>(<span class="ident">id</span>);
+        <span class="kw">let</span> <span class="ident">start_epoch_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_voting_start_epoch_key</span>(<span class="ident">id</span>);
+        <span class="kw">let</span> <span class="ident">end_epoch_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_voting_end_epoch_key</span>(<span class="ident">id</span>);
+
+        <span class="kw">let</span> <span class="ident">author</span> <span class="op">=</span>
+            <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">author_key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">start_epoch</span> <span class="op">=</span>
+            <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">start_epoch_key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">end_epoch</span> <span class="op">=</span>
+            <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">end_epoch_key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">if</span> <span class="ident">details</span> {
+            <span class="kw">let</span> <span class="ident">content_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_content_key</span>(<span class="ident">id</span>);
+            <span class="kw">let</span> <span class="ident">grace_epoch_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_grace_epoch_key</span>(<span class="ident">id</span>);
+
+            <span class="kw">let</span> <span class="ident">content</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+                <span class="ident">client</span>,
+                <span class="kw-2">&amp;</span><span class="ident">content_key</span>,
+            )
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">grace_epoch</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">grace_epoch_key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+
+            <span class="macro">println!</span>(<span class="string">&quot;Proposal: {}&quot;</span>, <span class="ident">id</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}Author: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">author</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}Content:&quot;</span>, <span class="string">&quot;&quot;</span>);
+            <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">content</span> {
+                <span class="macro">println!</span>(<span class="string">&quot;{:8}{}: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">key</span>, <span class="ident">value</span>);
+            }
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}Start Epoch: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">start_epoch</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}End Epoch: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">end_epoch</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}Grace Epoch: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">grace_epoch</span>);
+        } <span class="kw">else</span> {
+            <span class="macro">println!</span>(<span class="string">&quot;Proposal: {}&quot;</span>, <span class="ident">id</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}Author: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">author</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}Start Epoch: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">start_epoch</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;{:4}End Epoch: {}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="ident">end_epoch</span>);
+        }
+
+        <span class="prelude-val">Some</span>(())
+    }
+
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
+    <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">proposal_id</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">id</span>) =&gt; {
+            <span class="kw">if</span> <span class="ident">print_proposal</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="ident">id</span>, <span class="bool-val">true</span>).<span class="kw">await</span>.<span class="ident">is_none</span>() {
+                <span class="macro">eprintln!</span>(<span class="string">&quot;No valid proposal was found with id {}&quot;</span>, <span class="ident">id</span>)
+            }
+        }
+        <span class="prelude-val">None</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">last_proposal_id_key</span> <span class="op">=</span> <span class="ident">gov_storage::get_counter_key</span>();
+            <span class="kw">let</span> <span class="ident">last_proposal_id</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">last_proposal_id_key</span>)
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap</span>();
+
+            <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">last_proposal_id</span> {
+                <span class="kw">if</span> <span class="ident">print_proposal</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="ident">id</span>, <span class="bool-val">false</span>).<span class="kw">await</span>.<span class="ident">is_none</span>() {
+                    <span class="macro">eprintln!</span>(<span class="string">&quot;No valid proposal was found with id {}&quot;</span>, <span class="ident">id</span>)
+                };
+            }
+        }
+    }
+}
+
+<span class="doccomment">/// Query token amount of owner.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_token_balance</span>(
+    <span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="ident">HttpClient</span>,
+    <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+    <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Amount</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">balance_key</span> <span class="op">=</span> <span class="ident">balance_key</span>(<span class="ident">token</span>, <span class="ident">owner</span>);
+    <span class="ident">query_storage_value</span>(<span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">balance_key</span>).<span class="kw">await</span>
+}
+
 <span class="doccomment">/// Query PoS bond(s)</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_bonds</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryBonds</span>) {
     <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="ident">query_epoch</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
@@ -1380,18 +1540,16 @@
             <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> };
             <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
             <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
-                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
-                    .<span class="kw">await</span>;
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">bond_key</span>).<span class="kw">await</span>;
             <span class="comment">// Find owner&#39;s unbonded delegations from the given</span>
             <span class="comment">// validator</span>
             <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
             <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span>
-                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">unbond_key</span>)
-                    .<span class="kw">await</span>;
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">unbond_key</span>).<span class="kw">await</span>;
             <span class="comment">// Find validator&#39;s slashes, if any</span>
             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span> <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>);
             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">slashes_key</span>)
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>)
                     .<span class="kw">await</span>
                     .<span class="ident">unwrap_or_default</span>();
 
@@ -1441,17 +1599,15 @@
             };
             <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
             <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
-                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
-                    .<span class="kw">await</span>;
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">bond_key</span>).<span class="kw">await</span>;
             <span class="comment">// Find validator&#39;s unbonded self-bonds</span>
             <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
             <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span>
-                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">unbond_key</span>)
-                    .<span class="kw">await</span>;
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">unbond_key</span>).<span class="kw">await</span>;
             <span class="comment">// Find validator&#39;s slashes, if any</span>
             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span> <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>);
             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">slashes_key</span>)
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>)
                     .<span class="kw">await</span>
                     .<span class="ident">unwrap_or_default</span>();
 
@@ -1509,8 +1665,8 @@
                             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
                                 <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                <span class="ident">slashes_key</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">client</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>,
                             )
                             .<span class="kw">await</span>
                             .<span class="ident">unwrap_or_default</span>();
@@ -1560,8 +1716,8 @@
                             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
                                 <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                <span class="ident">slashes_key</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">client</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>,
                             )
                             .<span class="kw">await</span>
                             .<span class="ident">unwrap_or_default</span>();
@@ -1628,8 +1784,8 @@
                             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
                                 <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                <span class="ident">slashes_key</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">client</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>,
                             )
                             .<span class="kw">await</span>
                             .<span class="ident">unwrap_or_default</span>();
@@ -1679,8 +1835,8 @@
                             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
                                 <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                <span class="ident">slashes_key</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">client</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>,
                             )
                             .<span class="kw">await</span>
                             .<span class="ident">unwrap_or_default</span>();
@@ -1737,12 +1893,10 @@
 
     <span class="comment">// Find the validator set</span>
     <span class="kw">let</span> <span class="ident">validator_set_key</span> <span class="op">=</span> <span class="ident">pos::validator_set_key</span>();
-    <span class="kw">let</span> <span class="ident">validator_sets</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::ValidatorSets</span><span class="op">&gt;</span>(
-        <span class="ident">client</span>.<span class="ident">clone</span>(),
-        <span class="ident">validator_set_key</span>,
-    )
-    .<span class="kw">await</span>
-    .<span class="ident">expect</span>(<span class="string">&quot;Validator set should always be set&quot;</span>);
+    <span class="kw">let</span> <span class="ident">validator_sets</span> <span class="op">=</span>
+        <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::ValidatorSets</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">validator_set_key</span>)
+            .<span class="kw">await</span>
+            .<span class="ident">expect</span>(<span class="string">&quot;Validator set should always be set&quot;</span>);
     <span class="kw">let</span> <span class="ident">validator_set</span> <span class="op">=</span> <span class="ident">validator_sets</span>
         .<span class="ident">get</span>(<span class="ident">epoch</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Validator set should be always set in the current epoch&quot;</span>);
@@ -1753,8 +1907,8 @@
             <span class="kw">let</span> <span class="ident">voting_power_key</span> <span class="op">=</span> <span class="ident">pos::validator_voting_power_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
             <span class="kw">let</span> <span class="ident">voting_powers</span> <span class="op">=</span>
                 <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::ValidatorVotingPowers</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">voting_power_key</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">client</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">voting_power_key</span>,
                 )
                 .<span class="kw">await</span>;
             <span class="kw">match</span> <span class="ident">voting_powers</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>)) {
@@ -1816,8 +1970,8 @@
     }
     <span class="kw">let</span> <span class="ident">total_voting_power_key</span> <span class="op">=</span> <span class="ident">pos::total_voting_power_key</span>();
     <span class="kw">let</span> <span class="ident">total_voting_powers</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::TotalVotingPowers</span><span class="op">&gt;</span>(
-        <span class="ident">client</span>,
-        <span class="ident">total_voting_power_key</span>,
+        <span class="kw-2">&amp;</span><span class="ident">client</span>,
+        <span class="kw-2">&amp;</span><span class="ident">total_voting_power_key</span>,
     )
     .<span class="kw">await</span>
     .<span class="ident">expect</span>(<span class="string">&quot;Total voting power should always be set&quot;</span>);
@@ -1835,11 +1989,9 @@
             <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
             <span class="comment">// Find slashes for the given validator</span>
             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span> <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                <span class="ident">client</span>.<span class="ident">clone</span>(),
-                <span class="ident">slashes_key</span>,
-            )
-            .<span class="kw">await</span>;
+            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">slashes_key</span>)
+                    .<span class="kw">await</span>;
             <span class="kw">match</span> <span class="ident">slashes</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">slashes</span>) =&gt; {
                     <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
@@ -1919,7 +2071,7 @@
 ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">common::PublicKey</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">pk_key</span>(<span class="ident">address</span>);
-    <span class="ident">query_storage_value</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>
+    <span class="ident">query_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="kw">await</span>
 }
 
 <span class="doccomment">/// Check if the given address is a known validator.</span>
@@ -1932,7 +2084,7 @@
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">pos::validator_state_key</span>(<span class="ident">address</span>);
     <span class="comment">// We do not need to decode it</span>
     <span class="kw">let</span> <span class="ident">state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">pos::ValidatorStates</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">query_storage_value</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>;
+        <span class="ident">query_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="kw">await</span>;
     <span class="comment">// If there is, then the address is a validator</span>
     <span class="ident">state</span>.<span class="ident">is_some</span>()
 }
@@ -2088,13 +2240,13 @@
 
 <span class="doccomment">/// Query a storage value and decode it with [`BorshDeserialize`].</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_storage_value</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-    <span class="ident">client</span>: <span class="ident">HttpClient</span>,
-    <span class="ident">key</span>: <span class="ident">storage::Key</span>,
+    <span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="ident">HttpClient</span>,
+    <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">storage::Key</span>,
 ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">BorshDeserialize</span>,
 {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Value</span>(<span class="ident">key</span>);
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Value</span>(<span class="ident">key</span>.<span class="ident">to_owned</span>());
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
         .<span class="ident">abci_query</span>(<span class="prelude-val">Some</span>(<span class="ident">path</span>.<span class="ident">into</span>()), <span class="ident">data</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)

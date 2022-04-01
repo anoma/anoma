@@ -881,6 +881,11 @@
 <span id="880">880</span>
 <span id="881">881</span>
 <span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -1112,6 +1117,11 @@
             }
         }
         <span class="ident">addresses</span>
+    }
+
+    <span class="doccomment">/// Return the segment at the index parameter</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">DbKeySeg</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="ident">index</span>)
     }
 
     <span class="doccomment">/// Returns the length</span>

@@ -536,6 +536,8 @@
 <span id="535">535</span>
 <span id="536">536</span>
 <span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Types that are used in transactions.</span>
 
 <span class="doccomment">/// txs that contain decrypted payloads or assertions of</span>
@@ -543,6 +545,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">decrypted</span>;
 <span class="doccomment">/// tools for encrypted data</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">encrypted</span>;
+<span class="doccomment">/// txs to manage governance</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">governance</span>;
 <span class="doccomment">/// txs to manage nfts</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">nft</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pos</span>;
@@ -551,7 +555,7 @@
 <span class="doccomment">/// wrapper txs with encrypted payloads</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wrapper</span>;
 
-<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashSet</span>};
+<span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSchema</span>, <span class="ident">BorshSerialize</span>};
@@ -604,9 +608,9 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpsResult</span> {
     <span class="doccomment">/// The addresses whose VPs accepted the transaction</span>
-    <span class="kw">pub</span> <span class="ident">accepted_vps</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">accepted_vps</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The addresses whose VPs rejected the transaction</span>
-    <span class="kw">pub</span> <span class="ident">rejected_vps</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">rejected_vps</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The total gas used by all the VPs</span>
     <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">VpsGas</span>,
     <span class="doccomment">/// Errors occurred in any of the VPs, if any</span>
