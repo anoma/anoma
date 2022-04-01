@@ -9,6 +9,7 @@ use std::str::FromStr;
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
+use masp_primitives::zip32::ExtendedSpendingKey;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -26,6 +27,8 @@ pub const ENV_VAR_WASM_DIR: &str = "ANOMA_WASM_DIR";
 /// A raw address (bech32m encoding) or an alias of an address that may be found
 /// in the wallet
 pub type WalletAddress = FromContext<Address>;
+
+pub type WalletSpendingKey = FromContext<ExtendedSpendingKey>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
@@ -299,6 +302,15 @@ impl ArgFromMutContext for common::PublicKey {
                     let key = ctx.wallet.find_key(raw).unwrap();
                     key.ref_to()
                 })
+        })
+    }
+}
+
+impl ArgFromMutContext for ExtendedSpendingKey {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+        let raw = raw.as_ref();
+        FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
+            ctx.wallet.find_spending_key(raw).unwrap().clone()
         })
     }
 }

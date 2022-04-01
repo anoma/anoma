@@ -1300,7 +1300,6 @@ pub mod args {
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
-    use masp_primitives::zip32::ExtendedSpendingKey;
     use masp_primitives::primitives::PaymentAddress;
     use masp_primitives::keys::FullViewingKey;
     use serde::Deserialize;
@@ -1314,7 +1313,7 @@ pub mod args {
     use tendermint_stable::Timeout;
     use anoma::types::address::masp;
 
-    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey};
+    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey};
     use super::utils::*;
     use super::ArgMatches;
     use crate::config;
@@ -1395,8 +1394,8 @@ pub mod args {
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
     const SOURCE_DEFAULT: ArgDefaultFromCtx<WalletAddress> =
         arg_default_from_ctx("source", DefaultFn(|| masp().encode()));
-    const SPENDING_KEY: Arg<ExtendedSpendingKey> = arg("spending-key");
-    const SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = SPENDING_KEY.opt();
+    const SPENDING_KEY: Arg<WalletSpendingKey> = arg("spending-key");
+    const SPENDING_KEY_OPT: ArgOpt<WalletSpendingKey> = SPENDING_KEY.opt();
     const TARGET_DEFAULT: ArgDefaultFromCtx<WalletAddress> =
         arg_default_from_ctx("target", DefaultFn(|| masp().encode()));
     const TO_STDOUT: ArgFlag = flag("stdout");
@@ -1548,7 +1547,7 @@ pub mod args {
         /// Transferred token amount
         pub amount: token::Amount,
         /// Spending key for shielded transactions
-        pub spending_key: Option<ExtendedSpendingKey>,
+        pub spending_key: Option<WalletSpendingKey>,
         /// Payment address for shielded transactions
         pub payment_address: Option<PaymentAddress>,
     }
@@ -1934,7 +1933,7 @@ pub mod args {
         /// Address of an owner
         pub owner: Option<WalletAddress>,
         /// The spending key being queried
-        pub spending_key: Option<ExtendedSpendingKey>,
+        pub spending_key: Option<WalletSpendingKey>,
         /// The full viewing key being queries
         pub viewing_key: Option<FullViewingKey>,
         /// Address of a token
@@ -2477,14 +2476,22 @@ pub mod args {
 
     /// MASP generate spending key arguments
     #[derive(Clone, Debug)]
-    pub struct MaspSpendKeyGen {}
+    pub struct MaspSpendKeyGen {
+        /// Key alias
+        pub alias: String,
+    }
 
     impl Args for MaspSpendKeyGen {
-        fn parse(_matches: &ArgMatches) -> Self {
-            Self {}
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            Self { alias }
         }
         fn def(app: App) -> App {
-            app
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("An alias to be associated with the spending key."),
+            )
         }
     }
 
@@ -2492,7 +2499,7 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct MaspPayAddrGen {
         /// Spending Key
-        pub spending_key: Option<ExtendedSpendingKey>,
+        pub spending_key: Option<WalletSpendingKey>,
         /// Viewing key
         pub viewing_key: Option<FullViewingKey>,
     }
@@ -2521,7 +2528,7 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct MaspViewKeyDerive {
         /// Spending Key
-        pub spending_key: ExtendedSpendingKey,
+        pub spending_key: WalletSpendingKey,
     }
 
     impl Args for MaspViewKeyDerive {

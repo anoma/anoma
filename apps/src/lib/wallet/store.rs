@@ -15,6 +15,9 @@ use ark_std::rand::SeedableRng;
 use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use masp_primitives::primitives::PaymentAddress;
+use masp_primitives::zip32::ExtendedSpendingKey;
+use masp_primitives::keys::FullViewingKey;
 
 use super::alias::Alias;
 use super::keys::StoredKeypair;
@@ -49,6 +52,12 @@ pub struct ValidatorData {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
+    /// Known viewing keys
+    view_keys: HashMap<Alias, FullViewingKey>,
+    /// Known spending keys
+    spend_keys: HashMap<Alias, ExtendedSpendingKey>,
+    /// Known payment addresses
+    payment_addrs: HashMap<Alias, PaymentAddress>,
     /// Cryptographic keypairs
     keys: HashMap<Alias, StoredKeypair>,
     /// Anoma address book
@@ -210,6 +219,13 @@ impl Store {
             })
     }
 
+    pub fn find_spending_key(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&ExtendedSpendingKey> {
+        self.spend_keys.get(&alias.into())
+    }
+
     /// Find the stored key by a public key.
     pub fn find_key_by_pk(
         &self,
@@ -271,6 +287,13 @@ impl Store {
             .unwrap()
     }
 
+    fn generate_spending_key() -> ExtendedSpendingKey {
+        use rand::rngs::OsRng;
+        let mut spend_key = [0; 32];
+        OsRng.fill_bytes(&mut spend_key);
+        ExtendedSpendingKey::master(spend_key.as_ref())
+    }
+
     /// Generate a new keypair and insert it into the store with the provided
     /// alias. If none provided, the alias will be the public key hash.
     /// If no password is provided, the keypair will be stored raw without
@@ -299,6 +322,22 @@ impl Store {
             cli::safe_exit(1);
         }
         (alias, raw_keypair)
+    }
+
+    pub fn gen_spending_key(
+        &mut self,
+        alias: String,
+    ) -> (Alias, ExtendedSpendingKey) {
+        let spendkey = Self::generate_spending_key();
+        let alias = Alias::from(alias);
+        if self
+            .insert_spending_key(alias.clone(), spendkey)
+            .is_none()
+        {
+            eprintln!("Action cancelled, no changes persisted.");
+            cli::safe_exit(1);
+        }
+        (alias, spendkey)
     }
 
     /// Generate keypair for signing protocol txs and for the DKG
@@ -365,6 +404,28 @@ impl Store {
         }
         self.keys.insert(alias.clone(), keypair);
         self.pkhs.insert(pkh, alias.clone());
+        Some(alias)
+    }
+
+    pub fn insert_spending_key(
+        &mut self,
+        alias: Alias,
+        spendkey: ExtendedSpendingKey,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            eprintln!("Empty alias given.");
+            return None;
+        }
+        if self.spend_keys.contains_key(&alias) {
+            match show_overwrite_confirmation(&alias, "a key") {
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_spending_key(new_alias, spendkey);
+                }
+                ConfirmationResponse::Skip => return None,
+            }
+        }
+        self.spend_keys.insert(alias.clone(), spendkey);
         Some(alias)
     }
 

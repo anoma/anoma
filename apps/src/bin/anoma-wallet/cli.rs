@@ -10,7 +10,7 @@ use anoma_apps::wallet::DecryptionError;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
-use rand_core::{OsRng, RngCore};
+use rand_core::OsRng;
 use masp_primitives::keys::FullViewingKey;
 use anoma_apps::client::tx::find_valid_diversifier;
 
@@ -56,21 +56,23 @@ pub fn main() -> Result<()> {
 
 /// Generate a spending key.
 fn spending_key_gen(
-    _ctx: Context,
+    ctx: Context,
     args::MaspSpendKeyGen {
+        alias,
     }: args::MaspSpendKeyGen,
 ) {
-    let mut spend_key = [0; 32];
-    OsRng.fill_bytes(&mut spend_key);
+    let mut wallet = ctx.wallet;
+    let (alias, _key) = wallet.gen_spending_key(alias);
+    wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
-        "Successfully generated the following spending key: {}",
-        hex::encode(&spend_key)
+        "Successfully added a key and an address with alias: \"{}\"",
+        alias
     );
 }
 
 /// Generate a shielded payment address from the given key.
 fn payment_address_gen(
-    _ctx: Context,
+    mut ctx: Context,
     args::MaspPayAddrGen {
         spending_key,
         viewing_key,
@@ -78,7 +80,7 @@ fn payment_address_gen(
 ) {
     let viewing_key = match (spending_key, viewing_key) {
         (None, Some(viewing_key)) => viewing_key.vk,
-        (Some(spending_key), None) => spending_key.expsk
+        (Some(spending_key), None) => ctx.get_cached(&spending_key).expsk
             .proof_generation_key()
             .to_viewing_key(),
         _ => {
@@ -98,12 +100,14 @@ fn payment_address_gen(
 
 /// Derive a full viewing key from the given spending key.
 fn viewing_key_derive(
-    _ctx: Context,
+    mut ctx: Context,
     args::MaspViewKeyDerive {
         spending_key,
     }: args::MaspViewKeyDerive,
 ) {
-    let fvk = FullViewingKey::from_expanded_spending_key(&spending_key.expsk);
+    let fvk = FullViewingKey::from_expanded_spending_key(
+        &ctx.get_cached(&spending_key).expsk,
+    );
     println!(
         "Successfully derived the following viewing key from the \
          given spending key: {}",

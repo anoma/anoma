@@ -584,7 +584,7 @@ fn scan_tx(
 /// Transfer object.
 
 async fn gen_shielded_transfer(
-    ctx: &Context,
+    ctx: &mut Context,
     args: &args::TxTransfer,
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
     // No shielded components are needed when neither source nor destination
@@ -593,7 +593,8 @@ async fn gen_shielded_transfer(
         return Ok(None);
     }
     // We want to fund our transaction solely from supplied spending key
-    let spending_keys = args.spending_key.clone().into_iter().collect();
+    let spending_key = args.spending_key.as_ref().map(|x| ctx.get_cached(&x));
+    let spending_keys = spending_key.clone().into_iter().collect();
     // Load the current shielded context given the spending key we possess
     let tx_ctx = load_shielded_context(
         &args.tx.ledger_address,
@@ -615,6 +616,7 @@ async fn gen_shielded_transfer(
     builder.set_fee(Amount::zero())?;
     // If there are shielded inputs
     if let Some(sk) = &args.spending_key {
+        let sk = ctx.get_cached(&sk);
         let mut val_acc = 0;
         // Retrieve the notes that can be spent by this key
         if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk)) {
@@ -670,7 +672,7 @@ async fn gen_shielded_transfer(
     // Now handle the outputs of this transaction
     // If there is a shielded output
     if let Some(pa) = args.payment_address {
-        let ovk_opt = args.spending_key.as_ref().map(|x| x.expsk.ovk);
+        let ovk_opt = args.spending_key.as_ref().map(|x| ctx.get_cached(&x).expsk.ovk);
         builder.add_sapling_output(ovk_opt, pa.clone(), asset_type, amt, memo)?;
     } else {
         // Embed the transparent target address into the shielded transaction so
@@ -741,7 +743,7 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
     Some(val_acc)
 }
 
-pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
+pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
     let source = ctx.get(&args.source);
     let target = ctx.get(&args.target);
     if (source == masp()) != args.spending_key.is_some() {
@@ -828,7 +830,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
         target,
         token,
         amount,
-        shielded: gen_shielded_transfer(&ctx, &args).await.unwrap().map(|x| x.0),
+        shielded: gen_shielded_transfer(&mut ctx, &args).await.unwrap().map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer

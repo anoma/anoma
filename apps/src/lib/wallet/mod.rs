@@ -19,6 +19,7 @@ use self::store::Store;
 pub use self::store::{ValidatorData, ValidatorKeys};
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
+use masp_primitives::zip32::ExtendedSpendingKey;
 
 #[derive(Debug)]
 pub struct Wallet {
@@ -115,6 +116,15 @@ impl Wallet {
         (alias.into(), key)
     }
 
+    pub fn gen_spending_key(
+        &mut self,
+        alias: String,
+    ) -> (String, ExtendedSpendingKey) {
+        println!("Warning: The spending key will NOT be encrypted.");
+        let (alias, key) = self.store.gen_spending_key(alias);
+        (alias.into(), key)
+    }
+
     /// Generate keypair
     /// for signing protocol txs and for the DKG (which will also be stored)
     /// A protocol keypair may be optionally provided, indicating that
@@ -190,6 +200,14 @@ impl Wallet {
             stored_key,
             alias_pkh_or_pk.into(),
         )
+    }
+
+    pub fn find_spending_key(
+        &mut self,
+        alias: impl AsRef<str>,
+    ) -> Result<&ExtendedSpendingKey, FindKeyError> {
+        self.store.find_spending_key(alias.as_ref())
+            .ok_or(FindKeyError::KeyNotFound)
     }
 
     /// Find the stored key by a public key.
