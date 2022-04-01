@@ -4,6 +4,7 @@ use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
 use anoma::ledger::governance::{
     storage as gov_storage, ADDRESS as gov_address,
 };
+use anoma::ledger::storage::types::encode;
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
@@ -82,7 +83,8 @@ where
                 if let Ok(tally_result) = tally_result {
                     match tally_result {
                         (TallyResult::Passed, Some(code)) => {
-                            let tx = Tx::new(code, None);
+                            tracing::info!("Executing proposal code");
+                            let tx = Tx::new(code, Some(encode(&id)));
                             let tx_type =
                                 TxType::Decrypted(DecryptedTx::Decrypted(tx));
                             let pending_execution_key =
@@ -110,6 +112,10 @@ where
                             match tx_result {
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
+                                        self.write_log.commit_tx();
+                                        println!("{:?}", tx_result.vps_result.accepted_vps);
+                                        println!("{:?}", tx_result.vps_result.rejected_vps);
+                                        tracing::info!("Proposal code okay :(");
                                         let author_key =
                                             gov_storage::get_author_key(id);
                                         self.storage
@@ -148,6 +154,9 @@ where
                                             .events
                                             .push(proposal_event.into());
                                     } else {
+                                        println!("{:?}", tx_result.vps_result.accepted_vps);
+                                        println!("{:?}", tx_result.vps_result.rejected_vps);
+                                        tracing::info!("Proposal code not okay :(");
                                         self.storage.transfer(
                                             &m1t(),
                                             funds,

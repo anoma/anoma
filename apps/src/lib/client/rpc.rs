@@ -520,6 +520,25 @@ pub async fn query_proposal_result(
     }
 }
 
+pub async fn query_protocol_parameters(ctx: Context, args: args::QueryProtocolParameters) {
+    // pos_params
+    // treasury_params
+    // params
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
+    let gov_params_key = vec![
+        ("Max. proposal code size", gov_storage::get_max_proposal_code_size_key()),
+        ("Max. proposal content size", gov_storage::get_max_proposal_content_key()),
+        ("Min. proposal locked funds", gov_storage::get_min_proposal_fund_key()),
+        ("Min. proposal grace epoch", gov_storage::get_min_proposal_grace_epoch_key()),
+        ("Min. proposal duration", gov_storage::get_min_proposal_period_key())
+    ];
+
+    for param_data in gov_params_key {
+        let param_value = query_storage_value::<u64>(&client, &param_data.1).await.expect("Parameter should be definied.");
+        println!("{}: {}", param_data.0, param_value);
+    }
+}
+
 /// Query PoS bond(s)
 pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
     let epoch = query_epoch(args.query.clone()).await;

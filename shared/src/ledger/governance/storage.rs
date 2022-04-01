@@ -242,7 +242,7 @@ pub fn is_min_proposal_period_key(key: &Key) -> bool {
 }
 
 /// Check if key is a min grace epoch key
-pub fn is_min_grace_epoch_key(key: &Key) -> bool {
+pub fn is_commit_proposal_key(key: &Key) -> bool {
     match &key.segments[..] {
         [
             DbKeySeg::AddressSeg(addr),
@@ -260,8 +260,10 @@ pub fn is_min_grace_epoch_key(key: &Key) -> bool {
     }
 }
 
+// #atest1v9hx7w36gahhvetjdeskucm9yqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpq5a20qt/proposal/epoch/12/0
+
 /// Check if key is a commit proposal key
-pub fn is_commit_proposal_key(key: &Key) -> bool {
+pub fn is_min_grace_epoch_key(key: &Key) -> bool {
     match &key.segments[..] {
         [
             DbKeySeg::AddressSeg(addr),

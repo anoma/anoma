@@ -20,7 +20,9 @@ pub mod tx_prelude {
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
+    pub use anoma::types::storage::Key;
     pub use anoma_macros::transaction;
+    pub use anoma::ledger::storage::types::encode;
 
     pub use crate::governance::tx as governance;
     pub use crate::ibc::{Ibc, IbcActions};
@@ -39,6 +41,7 @@ pub mod vp_prelude {
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
     pub use anoma::types::*;
+    pub use anoma::types::storage::Key;
     pub use anoma_macros::validity_predicate;
 
     pub use crate::imports::vp::*;
