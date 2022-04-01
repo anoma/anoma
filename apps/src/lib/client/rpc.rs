@@ -254,7 +254,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                         start_epoch,
                         &delegator_voters,
                         &validator_voters,
-                        &active_validators
+                        active_validators
                     )
                     .await
                 );
@@ -350,7 +350,7 @@ pub async fn query_proposal_result(
                                 start_epoch,
                                 &delegator_voters,
                                 &validator_voters,
-                                &active_validators
+                                active_validators
                             )
                             .await
                         );
@@ -500,7 +500,7 @@ pub async fn query_proposal_result(
                                 current_epoch,
                                 &delegator_voters,
                                 &validator_voters,
-                                &active_validators
+                                active_validators
                             )
                             .await
                         );
@@ -1599,7 +1599,7 @@ pub async fn compute_tally(
     epoch: Epoch,
     delegator_voters: &HashMap<Address, ProposalVote>,
     validator_voters: &HashMap<Address, ProposalVote>,
-    active_validators: &Vec<Address>,
+    active_validators: Vec<Address>,
 ) -> TallyResult {
     let mut bond_data: HashMap<Address, (Address, token::Amount)> =
         HashMap::new();
@@ -1655,14 +1655,14 @@ pub async fn compute_tally(
     for (addr, vote) in delegator_voters {
         if !bond_data.contains_key(addr) {
             if vote.is_yay() {
-                for validator_addr in active_validators {
-                    if bond_data.contains_key(validator_addr) {
+                for validator_addr in active_validators.clone() {
+                    if bond_data.contains_key(&validator_addr) {
                         continue;
                     }
                     match get_bond_amount_at(
                         client,
                         addr,
-                        validator_addr,
+                        &validator_addr,
                         epoch,
                     )
                     .await
