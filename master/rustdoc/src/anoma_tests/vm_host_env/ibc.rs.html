@@ -684,6 +684,7 @@
 <span id="683">683</span>
 <span id="684">684</span>
 <span id="685">685</span>
+<span id="686">686</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::time::Duration</span>;
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeSet</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -744,7 +745,6 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp</span>::{<span class="ident">Ibc</span>, <span class="ident">IbcToken</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::native_vp</span>::{<span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
-<span class="kw">use</span> <span class="ident">anoma::ledger::storage::testing::TestStorage</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::Sha256Hasher</span>;
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma::tendermint::account::Id</span> <span class="kw">as</span> <span class="ident">TmAccountId</span>;
@@ -924,14 +924,16 @@
     )
 }
 
-<span class="doccomment">/// Initialize the test storage</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_storage</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TestStorage</span>) -&gt; (<span class="ident">Address</span>, <span class="ident">Address</span>) {
-    <span class="ident">init_genesis_storage</span>(<span class="ident">storage</span>);
-    <span class="comment">// block header to check timeout timestamp</span>
-    <span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">tm_dummy_header</span>()).<span class="ident">unwrap</span>();
-    <span class="ident">storage</span>
-        .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">1</span>))
-        .<span class="ident">unwrap</span>();
+<span class="doccomment">/// Initialize the test storage. Requires initialized [`tx_host_env::ENV`].</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_storage</span>() -&gt; (<span class="ident">Address</span>, <span class="ident">Address</span>) {
+    <span class="ident">tx_host_env::with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
+        <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
+        <span class="comment">// block header to check timeout timestamp</span>
+        <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">set_header</span>(<span class="ident">tm_dummy_header</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">env</span>.<span class="ident">storage</span>
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">1</span>))
+            .<span class="ident">unwrap</span>();
+    });
 
     <span class="comment">// initialize a token</span>
     <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);

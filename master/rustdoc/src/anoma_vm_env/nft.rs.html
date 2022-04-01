@@ -193,7 +193,6 @@
 <span id="192">192</span>
 <span id="193">193</span>
 <span id="194">194</span>
-<span id="195">195</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anoma::types::nft</span>;
 
 <span class="doccomment">/// Tx imports and functions.</span>
@@ -293,8 +292,7 @@
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::nft</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::tx</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::vp</span>::{<span class="self">self</span>};
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::vp</span>;
 
     <span class="kw">enum</span> <span class="ident">KeyType</span> {
         <span class="ident">Metadata</span>(<span class="ident">Address</span>, <span class="ident">String</span>),
@@ -361,7 +359,7 @@
         <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">creator_key</span> <span class="op">=</span> <span class="ident">get_creator_key</span>(<span class="ident">nft_address</span>).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">creator_address</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">tx::read</span>(<span class="ident">creator_key</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">creator_address</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">vp::read_pre</span>(<span class="ident">creator_key</span>).<span class="ident">unwrap</span>();
         <span class="ident">verifiers</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">creator_address</span>)
     }
 

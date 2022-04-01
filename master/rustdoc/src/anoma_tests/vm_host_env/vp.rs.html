@@ -295,6 +295,58 @@
 <span id="294">294</span>
 <span id="295">295</span>
 <span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::BTreeSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
@@ -309,7 +361,7 @@
 <span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="self">self</span>, <span class="ident">WasmCacheRwAccess</span>};
 <span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tx</span>::{<span class="ident">init_tx_env</span>, <span class="ident">TestTxEnv</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tx</span>::{<span class="ident">tx_host_env</span>, <span class="ident">TestTxEnv</span>};
 
 <span class="doccomment">/// This module combines the native host function implementations from</span>
 <span class="doccomment">/// `native_vp_host_env` with the functions exposed to the vp wasm</span>
@@ -370,96 +422,14 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_verifiers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+        <span class="kw">let</span> <span class="ident">verifiers</span>: <span class="ident">BTreeSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">write_log</span>
-            .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">BTreeSet::default</span>())
+            .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">verifiers</span>)
             .<span class="ident">keys</span>()
             .<span class="ident">cloned</span>()
             .<span class="ident">collect</span>();
-        <span class="ident">verifiers</span>.<span class="ident">extend</span>(<span class="self">self</span>.<span class="ident">verifiers</span>.<span class="ident">clone</span>());
         <span class="ident">verifiers</span>
     }
-}
-
-<span class="doccomment">/// Initialize the host environment inside the [`vp_host_env`] module by running</span>
-<span class="doccomment">/// a transaction. The transaction is expected to modify the storage sub-space</span>
-<span class="doccomment">/// of the given address `addr` or to add it to the set of verifiers using</span>
-<span class="doccomment">/// [`super::tx::tx_host_env::insert_verifier`].</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vp_env_from_tx</span>(
-    <span class="ident">addr</span>: <span class="ident">Address</span>,
-    <span class="kw-2">mut</span> <span class="ident">tx_env</span>: <span class="ident">TestTxEnv</span>,
-    <span class="kw-2">mut</span> <span class="ident">apply_tx</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">Address</span>),
-) -&gt; <span class="ident">TestVpEnv</span> {
-    <span class="comment">// Write an empty validity predicate for the address, because it&#39;s used to</span>
-    <span class="comment">// check if the address exists when we write into its storage</span>
-    <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
-    <span class="ident">tx_env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>, <span class="macro">vec!</span>[]).<span class="ident">unwrap</span>();
-
-    <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tx_env</span>);
-    <span class="ident">apply_tx</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
-
-    <span class="kw">let</span> <span class="ident">verifiers_from_tx</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">verifiers</span>;
-    <span class="kw">let</span> <span class="ident">verifiers_changed_keys</span> <span class="op">=</span>
-        <span class="ident">tx_env</span>.<span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="ident">verifiers_from_tx</span>);
-    <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>
-        .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
-        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="macro">panic!</span>(
-                <span class="string">&quot;The VP for the given address has not been triggered by the \
-                 transaction, {:#?}&quot;</span>,
-                <span class="ident">verifiers_changed_keys</span>
-            )
-        })
-        .<span class="ident">to_owned</span>();
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vp_env</span> <span class="op">=</span> <span class="ident">TestVpEnv</span> {
-        <span class="ident">addr</span>,
-        <span class="ident">storage</span>: <span class="ident">tx_env</span>.<span class="ident">storage</span>,
-        <span class="ident">write_log</span>: <span class="ident">tx_env</span>.<span class="ident">write_log</span>,
-        <span class="ident">keys_changed</span>,
-        <span class="ident">verifiers</span>,
-        ..<span class="ident">Default::default</span>()
-    };
-
-    <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;mut</span> <span class="ident">vp_env</span>);
-    <span class="ident">vp_env</span>
-}
-
-<span class="doccomment">/// Initialize the host environment inside the [`vp_host_env`] module.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vp_env</span>(
-    <span class="ident">TestVpEnv</span> {
-        <span class="ident">addr</span>,
-        <span class="ident">storage</span>,
-        <span class="ident">write_log</span>,
-        <span class="ident">iterators</span>,
-        <span class="ident">gas_meter</span>,
-        <span class="ident">tx</span>,
-        <span class="ident">keys_changed</span>,
-        <span class="ident">verifiers</span>,
-        <span class="ident">eval_runner</span>,
-        <span class="ident">result_buffer</span>,
-        <span class="ident">vp_wasm_cache</span>,
-        <span class="ident">vp_cache_dir</span>: <span class="kw">_</span>,
-    }: <span class="kw-2">&amp;mut</span> <span class="ident">TestVpEnv</span>,
-) {
-    <span class="ident">vp_host_env::ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
-        <span class="kw-2">*</span><span class="ident">env</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>({
-            <span class="ident">vm::host_env::testing::vp_env</span>(
-                <span class="ident">addr</span>,
-                <span class="ident">storage</span>,
-                <span class="ident">write_log</span>,
-                <span class="ident">iterators</span>,
-                <span class="ident">gas_meter</span>,
-                <span class="ident">tx</span>,
-                <span class="ident">verifiers</span>,
-                <span class="ident">result_buffer</span>,
-                <span class="ident">keys_changed</span>,
-                <span class="ident">eval_runner</span>,
-                <span class="ident">vp_wasm_cache</span>,
-            )
-        })
-    });
 }
 
 <span class="doccomment">/// This module allows to test code with vp host environment functions.</span>
@@ -469,10 +439,10 @@
 <span class="kw">mod</span> <span class="ident">native_vp_host_env</span> {
 
     <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
+    <span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
 
     <span class="kw">use</span> <span class="ident">anoma::ledger::storage::Sha256Hasher</span>;
     <span class="kw">use</span> <span class="ident">anoma::vm::host_env</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">anoma::vm::memory::testing::NativeMemory</span>;
     <span class="kw">use</span> <span class="ident">anoma::vm::WasmCacheRwAccess</span>;
     <span class="comment">// TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)</span>
     <span class="kw">use</span> <span class="ident">concat_idents::concat_idents</span>;
@@ -488,17 +458,103 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpEval</span>;
 
-    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TestVpEnv</span> <span class="op">=</span> <span class="ident">VpEnv</span><span class="op">&lt;</span>
-        <span class="lifetime">&#39;static</span>,
-        <span class="ident">NativeMemory</span>,
-        <span class="ident">MockDB</span>,
-        <span class="ident">Sha256Hasher</span>,
-        <span class="ident">VpEval</span>,
-        <span class="ident">WasmCacheRwAccess</span>,
-    <span class="op">&gt;</span>;
-
     <span class="macro">thread_local!</span> {
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TestVpEnv</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
+        <span class="doccomment">/// A [`TestVpEnv`] that can be used for VP host env functions calls</span>
+        <span class="doccomment">/// that implements the WASM host environment in native environment.</span>
+        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">TestVpEnv</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
+    }
+
+    <span class="doccomment">/// Initialize the VP environment in [`ENV`]. This will be used in the</span>
+    <span class="doccomment">/// host env function calls via macro `native_host_fn!`.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
+        <span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">test_env</span> <span class="op">=</span> <span class="ident">TestVpEnv::default</span>();
+            <span class="kw-2">*</span><span class="ident">env</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Box::pin</span>(<span class="ident">test_env</span>));
+        });
+    }
+
+    <span class="doccomment">/// Set the VP host environment in [`ENV`] from the given [`TestVpEnv`].</span>
+    <span class="doccomment">/// This will be used in the host env function calls via</span>
+    <span class="doccomment">/// macro `native_host_fn!`.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="ident">test_env</span>: <span class="ident">TestVpEnv</span>) {
+        <span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
+            <span class="kw-2">*</span><span class="ident">env</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Box::pin</span>(<span class="ident">test_env</span>));
+        });
+    }
+
+    <span class="doccomment">/// Mutably borrow the [`TestVpEnv`] from [`ENV`]. The [`ENV`] must be</span>
+    <span class="doccomment">/// initialized.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;mut</span> <span class="ident">TestVpEnv</span>) -&gt; <span class="ident">T</span>) -&gt; <span class="ident">T</span> {
+        <span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">borrow_mut</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>
+                .<span class="ident">as_mut</span>()
+                .<span class="ident">expect</span>(
+                    <span class="string">&quot;Did you forget to initialize the ENV? (e.g. call to \
+                     `vp_host_env::init()`)&quot;</span>,
+                )
+                .<span class="ident">as_mut</span>();
+            <span class="ident">f</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">env</span>)
+        })
+    }
+
+    <span class="doccomment">/// Take the [`TestVpEnv`] out of [`ENV`]. The [`ENV`] must be initialized.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take</span>() -&gt; <span class="ident">TestVpEnv</span> {
+        <span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">borrow_mut</span>();
+            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">take</span>().<span class="ident">expect</span>(
+                <span class="string">&quot;Did you forget to initialize the ENV? (e.g. call to \
+                 `vp_host_env::init()`)&quot;</span>,
+            );
+            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">Pin::into_inner</span>(<span class="ident">env</span>);
+            <span class="kw-2">*</span><span class="ident">env</span>
+        })
+    }
+
+    <span class="doccomment">/// Initialize the VP host environment in [`ENV`] by running a transaction.</span>
+    <span class="doccomment">/// The transaction is expected to modify the storage sub-space of the given</span>
+    <span class="doccomment">/// address `addr` or to add it to the set of verifiers using</span>
+    <span class="doccomment">/// [`tx_host_env::insert_verifier`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_from_tx</span>(
+        <span class="ident">addr</span>: <span class="ident">Address</span>,
+        <span class="kw-2">mut</span> <span class="ident">tx_env</span>: <span class="ident">TestTxEnv</span>,
+        <span class="kw-2">mut</span> <span class="ident">apply_tx</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">Address</span>),
+    ) {
+        <span class="comment">// Write an empty validity predicate for the address, because it&#39;s used</span>
+        <span class="comment">// to check if the address exists when we write into its storage</span>
+        <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
+        <span class="ident">tx_env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>, <span class="macro">vec!</span>[]).<span class="ident">unwrap</span>();
+
+        <span class="ident">tx_host_env::set</span>(<span class="ident">tx_env</span>);
+        <span class="ident">apply_tx</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
+
+        <span class="kw">let</span> <span class="ident">tx_env</span> <span class="op">=</span> <span class="ident">tx_host_env::take</span>();
+        <span class="kw">let</span> <span class="ident">verifiers_from_tx</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">verifiers</span>;
+        <span class="kw">let</span> <span class="ident">verifiers_changed_keys</span> <span class="op">=</span>
+            <span class="ident">tx_env</span>.<span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="ident">verifiers_from_tx</span>);
+        <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>
+            .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="macro">panic!</span>(
+                    <span class="string">&quot;The VP for the given address has not been triggered by \
+                     the transaction, {:#?}&quot;</span>,
+                    <span class="ident">verifiers_changed_keys</span>
+                )
+            })
+            .<span class="ident">to_owned</span>();
+
+        <span class="kw">let</span> <span class="ident">vp_env</span> <span class="op">=</span> <span class="ident">TestVpEnv</span> {
+            <span class="ident">addr</span>,
+            <span class="ident">storage</span>: <span class="ident">tx_env</span>.<span class="ident">storage</span>,
+            <span class="ident">write_log</span>: <span class="ident">tx_env</span>.<span class="ident">write_log</span>,
+            <span class="ident">keys_changed</span>,
+            <span class="ident">verifiers</span>,
+            ..<span class="ident">Default::default</span>()
+        };
+
+        <span class="ident">set</span>(<span class="ident">vp_env</span>);
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
@@ -530,10 +586,34 @@
                 <span class="macro">concat_idents!</span>(<span class="ident">extern_fn_name</span> <span class="op">=</span> <span class="ident">anoma</span>, <span class="kw">_</span>, <span class="macro-nonterminal">$</span><span class="kw">fn</span> {
                     <span class="attribute">#[<span class="macro-nonterminal">no_mangle</span>]</span>
                     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">extern_fn_name</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>: <span class="macro-nonterminal">$</span><span class="kw">type</span>),<span class="op">*</span> ) {
-                        <span class="macro-nonterminal">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
-                            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">borrow_mut</span>();
-                            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Did you forget to
-    initialize the ENV?&quot;</span>);
+                        <span class="macro-nonterminal">with</span>(<span class="op">|</span><span class="ident">TestVpEnv</span> {
+                                <span class="ident">addr</span>,
+                                <span class="ident">storage</span>,
+                                <span class="ident">write_log</span>,
+                                <span class="ident">iterators</span>,
+                                <span class="ident">gas_meter</span>,
+                                <span class="ident">tx</span>,
+                                <span class="ident">keys_changed</span>,
+                                <span class="ident">verifiers</span>,
+                                <span class="ident">eval_runner</span>,
+                                <span class="ident">result_buffer</span>,
+                                <span class="ident">vp_wasm_cache</span>,
+                                <span class="ident">vp_cache_dir</span>: <span class="kw">_</span>,
+                            }: <span class="kw-2">&amp;mut</span> <span class="ident">TestVpEnv</span><span class="op">|</span> {
+
+                            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">vm::host_env::testing::vp_env</span>(
+                                <span class="ident">addr</span>,
+                                <span class="ident">storage</span>,
+                                <span class="ident">write_log</span>,
+                                <span class="ident">iterators</span>,
+                                <span class="ident">gas_meter</span>,
+                                <span class="ident">tx</span>,
+                                <span class="ident">verifiers</span>,
+                                <span class="ident">result_buffer</span>,
+                                <span class="ident">keys_changed</span>,
+                                <span class="ident">eval_runner</span>,
+                                <span class="ident">vp_wasm_cache</span>,
+                            );
 
                             <span class="comment">// Call the `host_env` function and unwrap any</span>
                             <span class="comment">// runtime errors</span>
@@ -548,10 +628,34 @@
                 <span class="macro">concat_idents!</span>(<span class="ident">extern_fn_name</span> <span class="op">=</span> <span class="ident">anoma</span>, <span class="kw">_</span>, <span class="macro-nonterminal">$</span><span class="kw">fn</span> {
                     <span class="attribute">#[<span class="macro-nonterminal">no_mangle</span>]</span>
                     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">extern_fn_name</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>: <span class="macro-nonterminal">$</span><span class="kw">type</span>),<span class="op">*</span> ) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret</span> {
-                        <span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
-                            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">borrow_mut</span>();
-                            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Did you forget to
-    initialize the ENV?&quot;</span>);
+                        <span class="ident">with</span>(<span class="op">|</span><span class="ident">TestVpEnv</span> {
+                                <span class="ident">addr</span>,
+                                <span class="ident">storage</span>,
+                                <span class="ident">write_log</span>,
+                                <span class="ident">iterators</span>,
+                                <span class="ident">gas_meter</span>,
+                                <span class="ident">tx</span>,
+                                <span class="ident">keys_changed</span>,
+                                <span class="ident">verifiers</span>,
+                                <span class="ident">eval_runner</span>,
+                                <span class="ident">result_buffer</span>,
+                                <span class="ident">vp_wasm_cache</span>,
+                                <span class="ident">vp_cache_dir</span>: <span class="kw">_</span>,
+                            }: <span class="kw-2">&amp;mut</span> <span class="ident">TestVpEnv</span><span class="op">|</span> {
+
+                            <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">vm::host_env::testing::vp_env</span>(
+                                <span class="ident">addr</span>,
+                                <span class="ident">storage</span>,
+                                <span class="ident">write_log</span>,
+                                <span class="ident">iterators</span>,
+                                <span class="ident">gas_meter</span>,
+                                <span class="ident">tx</span>,
+                                <span class="ident">verifiers</span>,
+                                <span class="ident">result_buffer</span>,
+                                <span class="ident">keys_changed</span>,
+                                <span class="ident">eval_runner</span>,
+                                <span class="ident">vp_wasm_cache</span>,
+                            );
 
                             <span class="comment">// Call the `host_env` function and unwrap any</span>
                             <span class="comment">// runtime errors</span>
