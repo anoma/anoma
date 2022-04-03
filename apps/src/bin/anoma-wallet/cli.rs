@@ -52,9 +52,36 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::AddAddrKey(cmds::MaspAddAddrKey(args)) => {
                 address_key_add(ctx, args)
             }
+            cmds::WalletMasp::ListPayAddrs(cmds::MaspListPayAddrs(args)) => {
+                payment_addresses_list(ctx, args)
+            }
         }
     }
     Ok(())
+}
+
+/// List payment addresses.
+fn payment_addresses_list(
+    ctx: Context,
+    args::MaspPayAddrsList {
+    }: args::MaspPayAddrsList,
+) {
+    let wallet = ctx.wallet;
+    let known_addresses = wallet.get_payment_addrs();
+    if known_addresses.is_empty() {
+        println!(
+            "No known payment addresses. Try `masp gen-payment-addr --alias my-addr` to \
+             generate a new payment address."
+        );
+    } else {
+        let stdout = io::stdout();
+        let mut w = stdout.lock();
+        writeln!(w, "Known payment addresses:").unwrap();
+        for (alias, address) in sorted(known_addresses) {
+            writeln!(w, "  \"{}\": {}", alias, address)
+                .unwrap();
+        }
+    }
 }
 
 /// Generate a spending key.

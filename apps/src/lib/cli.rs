@@ -448,6 +448,7 @@ pub mod cmds {
         DeriveViewKey(MaspDeriveViewKey),
         GenSpendKey(MaspGenSpendKey),
         AddAddrKey(MaspAddAddrKey),
+        ListPayAddrs(MaspListPayAddrs),
     }
 
     impl SubCmd for WalletMasp {
@@ -459,7 +460,8 @@ pub mod cmds {
                 let derivevk = SubCmd::parse(matches).map(Self::DeriveViewKey);
                 let gensk = SubCmd::parse(matches).map(Self::GenSpendKey);
                 let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
-                gensk.or(derivevk).or(genpa).or(addak)
+                let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
+                gensk.or(derivevk).or(genpa).or(addak).or(listpa)
             })
         }
 
@@ -475,6 +477,27 @@ pub mod cmds {
                 .subcommand(MaspDeriveViewKey::def())
                 .subcommand(MaspGenPayAddr::def())
                 .subcommand(MaspAddAddrKey::def())
+                .subcommand(MaspListPayAddrs::def())
+        }
+    }
+
+    /// List all known payment addresses
+    #[derive(Clone, Debug)]
+    pub struct MaspListPayAddrs(pub args::MaspPayAddrsList);
+
+    impl SubCmd for MaspListPayAddrs {
+        const CMD: &'static str = "list-payment-addrs";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MaspListPayAddrs(args::MaspPayAddrsList::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Lists all payment addresses in the wallet")
+                .add_args::<args::MaspPayAddrsList>()
         }
     }
 
@@ -2503,6 +2526,16 @@ pub mod args {
         }
     }
 
+    /// MASP list payment addresses arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspPayAddrsList;
+
+    impl Args for MaspPayAddrsList {
+        fn parse(_matches: &ArgMatches) -> Self { Self }
+
+        fn def(app: App) -> App { app }
+    }
+
     /// MASP add key or address arguments
     #[derive(Clone, Debug)]
     pub struct MaspAddrKeyAdd {
@@ -2524,6 +2557,7 @@ pub mod args {
             let payment_addr = RAW_PAYMENT_ADDRESS_OPT.parse(matches);
             Self { alias, viewing_key, spending_key, payment_addr }
         }
+        
         fn def(app: App) -> App {
             app.arg(
                 ALIAS

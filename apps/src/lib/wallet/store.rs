@@ -293,6 +293,11 @@ impl Store {
         &self.addresses
     }
 
+    /// Get all know payment addresses by their alias.
+    pub fn get_payment_addrs(&self) -> &HashMap<Alias, PaymentAddress> {
+        &self.payment_addrs
+    }
+
     fn generate_keypair() -> common::SecretKey {
         use rand::rngs::OsRng;
         let mut csprng = OsRng {};

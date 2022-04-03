@@ -335,6 +335,15 @@ impl Wallet {
             .collect()
     }
 
+    /// Get all known payment addresses by their alias
+    pub fn get_payment_addrs(&self) -> HashMap<String, PaymentAddress> {
+        self.store
+            .get_payment_addrs()
+            .iter()
+            .map(|(alias, value)| (alias.into(), value.clone()))
+            .collect()
+    }
+
     /// Add a new address with the given alias. If the alias is already used,
     /// will ask whether the existing alias should be replaced, a different
     /// alias is desired, or the alias creation should be cancelled. Return
