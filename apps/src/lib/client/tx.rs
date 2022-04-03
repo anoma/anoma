@@ -63,6 +63,7 @@ use sha2::Digest;
 use group::cofactor::CofactorGroup;
 use masp_primitives::zip32::ExtendedFullViewingKey;
 use masp_primitives::asset_type::AssetType;
+use masp_primitives::keys::FullViewingKey;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -409,8 +410,8 @@ pub async fn submit_init_validator(
 
 /// Make a ViewingKey that can view notes encrypted by given ExtendedSpendingKey
 
-pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> ViewingKey {
-    ExtendedFullViewingKey::from(esk).fvk.vk
+pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> FullViewingKey {
+    ExtendedFullViewingKey::from(esk).fvk
 }
 
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
@@ -619,7 +620,7 @@ async fn gen_shielded_transfer(
         let sk = ctx.get_cached(&sk);
         let mut val_acc = 0;
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk)) {
+        if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk).vk) {
             for note_idx in avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
@@ -705,7 +706,7 @@ pub async fn load_shielded_context(
     let mut tx_ctx = TxContext::default();
     // Load the viewing keys corresponding to given spending keys into context
     for esk in sks {
-        let vk = to_viewing_key(esk);
+        let vk = to_viewing_key(esk).vk;
         tx_ctx.vks.entry(vk.into()).or_insert(HashSet::new());
     }
     for vk in fvks {
