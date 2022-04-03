@@ -52,8 +52,8 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::AddAddrKey(cmds::MaspAddAddrKey(args)) => {
                 address_key_add(ctx, args)
             }
-            cmds::WalletMasp::ListPayAddrs(cmds::MaspListPayAddrs(args)) => {
-                payment_addresses_list(ctx, args)
+            cmds::WalletMasp::ListPayAddrs(cmds::MaspListPayAddrs) => {
+                payment_addresses_list(ctx)
             }
         }
     }
@@ -63,8 +63,6 @@ pub fn main() -> Result<()> {
 /// List payment addresses.
 fn payment_addresses_list(
     ctx: Context,
-    args::MaspPayAddrsList {
-    }: args::MaspPayAddrsList,
 ) {
     let wallet = ctx.wallet;
     let known_addresses = wallet.get_payment_addrs();

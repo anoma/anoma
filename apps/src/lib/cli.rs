@@ -483,21 +483,19 @@ pub mod cmds {
 
     /// List all known payment addresses
     #[derive(Clone, Debug)]
-    pub struct MaspListPayAddrs(pub args::MaspPayAddrsList);
+    pub struct MaspListPayAddrs;
 
     impl SubCmd for MaspListPayAddrs {
         const CMD: &'static str = "list-payment-addrs";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches.subcommand_matches(Self::CMD).map(|matches| {
-                MaspListPayAddrs(args::MaspPayAddrsList::parse(matches))
-            })
+            matches.subcommand_matches(Self::CMD)
+                .map(|_matches| MaspListPayAddrs)
         }
 
         fn def() -> App {
             App::new(Self::CMD)
                 .about("Lists all payment addresses in the wallet")
-                .add_args::<args::MaspPayAddrsList>()
         }
     }
 
@@ -2524,16 +2522,6 @@ pub mod args {
             let ledger_address = LEDGER_ADDRESS_DEFAULT.parse(matches);
             Self { ledger_address }
         }
-    }
-
-    /// MASP list payment addresses arguments
-    #[derive(Clone, Debug)]
-    pub struct MaspPayAddrsList;
-
-    impl Args for MaspPayAddrsList {
-        fn parse(_matches: &ArgMatches) -> Self { Self }
-
-        fn def(app: App) -> App { app }
     }
 
     /// MASP add key or address arguments
