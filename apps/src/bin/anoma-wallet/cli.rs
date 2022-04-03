@@ -142,27 +142,33 @@ fn address_key_add(
 ) {
     let (alias, typ) = match (viewing_key, spending_key, payment_addr) {
         (Some(viewing_key), None, None) => {
-            let fvk = ctx.get_cached(&viewing_key);
-            let alias = ctx.wallet.insert_viewing_key(alias, fvk).unwrap_or_else(|| {
-                eprintln!("Viewing key not added");
-                cli::safe_exit(1);
-            });
+            let alias = ctx
+                .wallet
+                .insert_viewing_key(alias, viewing_key)
+                .unwrap_or_else(|| {
+                    eprintln!("Viewing key not added");
+                    cli::safe_exit(1);
+                });
             (alias, "viewing key")
         },
         (None, Some(spending_key), None) => {
-            let sk = ctx.get_cached(&spending_key);
-            let alias = ctx.wallet.insert_spending_key(alias, sk).unwrap_or_else(|| {
-                eprintln!("Spending key not added");
-                cli::safe_exit(1);
-            });
+            let alias = ctx
+                .wallet
+                .insert_spending_key(alias, spending_key)
+                .unwrap_or_else(|| {
+                    eprintln!("Spending key not added");
+                    cli::safe_exit(1);
+                });
             (alias, "spending key")
         },
         (None, None, Some(payment_addr)) => {
-            let pa = ctx.get(&payment_addr);
-            let alias = ctx.wallet.insert_payment_addr(alias, pa).unwrap_or_else(|| {
-                eprintln!("Payment address not added");
-                cli::safe_exit(1);
-            });
+            let alias = ctx
+                .wallet
+                .insert_payment_addr(alias, payment_addr)
+                .unwrap_or_else(|| {
+                    eprintln!("Payment address not added");
+                    cli::safe_exit(1);
+                });
             (alias, "payment address")
         },
         _ => {

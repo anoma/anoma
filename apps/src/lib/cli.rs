@@ -1335,6 +1335,9 @@ pub mod args {
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
     use anoma::types::address::masp;
+    use masp_primitives::keys::FullViewingKey;
+    use masp_primitives::zip32::ExtendedSpendingKey;
+    use masp_primitives::primitives::PaymentAddress;
 
     use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey, WalletViewingKey, WalletPaymentAddr};
     use super::utils::*;
@@ -1406,7 +1409,10 @@ pub mod args {
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
+    const RAW_PAYMENT_ADDRESS_OPT: ArgOpt<PaymentAddress> = arg_opt("payment-address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
+    const RAW_SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = arg_opt("spending-key");
+    const RAW_VIEWING_KEY_OPT: ArgOpt<FullViewingKey> = arg_opt("viewing-key");
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
@@ -2503,19 +2509,19 @@ pub mod args {
         /// Key alias
         pub alias: String,
         /// Viewing key
-        pub viewing_key: Option<WalletViewingKey>,
+        pub viewing_key: Option<FullViewingKey>,
         /// Spending key
-        pub spending_key: Option<WalletSpendingKey>,
+        pub spending_key: Option<ExtendedSpendingKey>,
         /// Payment address
-        pub payment_addr: Option<WalletPaymentAddr>,
+        pub payment_addr: Option<PaymentAddress>,
     }
 
     impl Args for MaspAddrKeyAdd {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
-            let viewing_key = VIEWING_KEY_OPT.parse(matches);
-            let spending_key = SPENDING_KEY_OPT.parse(matches);
-            let payment_addr = PAYMENT_ADDRESS_OPT.parse(matches);
+            let viewing_key = RAW_VIEWING_KEY_OPT.parse(matches);
+            let spending_key = RAW_SPENDING_KEY_OPT.parse(matches);
+            let payment_addr = RAW_PAYMENT_ADDRESS_OPT.parse(matches);
             Self { alias, viewing_key, spending_key, payment_addr }
         }
         fn def(app: App) -> App {
