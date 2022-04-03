@@ -447,6 +447,7 @@ pub mod cmds {
         GenPayAddr(MaspGenPayAddr),
         DeriveViewKey(MaspDeriveViewKey),
         GenSpendKey(MaspGenSpendKey),
+        AddAddrKey(MaspAddAddrKey),
     }
 
     impl SubCmd for WalletMasp {
@@ -457,7 +458,8 @@ pub mod cmds {
                 let genpa = SubCmd::parse(matches).map(Self::GenPayAddr);
                 let derivevk = SubCmd::parse(matches).map(Self::DeriveViewKey);
                 let gensk = SubCmd::parse(matches).map(Self::GenSpendKey);
-                gensk.or(derivevk).or(genpa)
+                let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
+                gensk.or(derivevk).or(genpa).or(addak)
             })
         }
 
@@ -472,6 +474,29 @@ pub mod cmds {
                 .subcommand(MaspGenSpendKey::def())
                 .subcommand(MaspDeriveViewKey::def())
                 .subcommand(MaspGenPayAddr::def())
+                .subcommand(MaspAddAddrKey::def())
+        }
+    }
+
+    /// Add a key or an address
+    #[derive(Clone, Debug)]
+    pub struct MaspAddAddrKey(pub args::MaspAddrKeyAdd);
+
+    impl SubCmd for MaspAddAddrKey {
+        const CMD: &'static str = "add";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MaspAddAddrKey(args::MaspAddrKeyAdd::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about(
+                    "Adds the given payment address or key to the wallet",
+                )
+                .add_args::<args::MaspAddrKeyAdd>()
         }
     }
 
@@ -489,7 +514,7 @@ pub mod cmds {
         }
 
         fn def() -> App {
-            App::new(Self::CMD).about("Generates a spending key")
+            App::new(Self::CMD).about("Generates a random spending key")
                 .add_args::<args::MaspSpendKeyGen>()
         }
     }
@@ -2469,6 +2494,44 @@ pub mod args {
         fn parse(matches: &ArgMatches) -> Self {
             let ledger_address = LEDGER_ADDRESS_DEFAULT.parse(matches);
             Self { ledger_address }
+        }
+    }
+
+    /// MASP add key or address arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspAddrKeyAdd {
+        /// Key alias
+        pub alias: String,
+        /// Viewing key
+        pub viewing_key: Option<WalletViewingKey>,
+        /// Spending key
+        pub spending_key: Option<WalletSpendingKey>,
+        /// Payment address
+        pub payment_addr: Option<WalletPaymentAddr>,
+    }
+
+    impl Args for MaspAddrKeyAdd {
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            let viewing_key = VIEWING_KEY_OPT.parse(matches);
+            let spending_key = SPENDING_KEY_OPT.parse(matches);
+            let payment_addr = PAYMENT_ADDRESS_OPT.parse(matches);
+            Self { alias, viewing_key, spending_key, payment_addr }
+        }
+        fn def(app: App) -> App {
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("An alias to be associated with the new entry."),
+            ).arg(SPENDING_KEY_OPT.def().about(
+                "The spending key."
+            ))
+                .arg(VIEWING_KEY_OPT.def().about(
+                    "The viewing key."
+                ))
+                .arg(PAYMENT_ADDRESS_OPT.def().about(
+                    "The payment address."
+                ))
         }
     }
 

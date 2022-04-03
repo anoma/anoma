@@ -49,6 +49,9 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::DeriveViewKey(cmds::MaspDeriveViewKey(args)) => {
                 viewing_key_derive(ctx, args)
             }
+            cmds::WalletMasp::AddAddrKey(cmds::MaspAddAddrKey(args)) => {
+                address_key_add(ctx, args)
+            }
         }
     }
     Ok(())
@@ -123,6 +126,55 @@ fn viewing_key_derive(
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully derived a viewing key with the following alias: {}",
+        alias,
+    );
+}
+
+/// Add a viewing key, spending key, or payment address to wallet.
+fn address_key_add(
+    mut ctx: Context,
+    args::MaspAddrKeyAdd {
+        alias,
+        viewing_key,
+        spending_key,
+        payment_addr,
+    }: args::MaspAddrKeyAdd,
+) {
+    let (alias, typ) = match (viewing_key, spending_key, payment_addr) {
+        (Some(viewing_key), None, None) => {
+            let fvk = ctx.get_cached(&viewing_key);
+            let alias = ctx.wallet.insert_viewing_key(alias, fvk).unwrap_or_else(|| {
+                eprintln!("Viewing key not added");
+                cli::safe_exit(1);
+            });
+            (alias, "viewing key")
+        },
+        (None, Some(spending_key), None) => {
+            let sk = ctx.get_cached(&spending_key);
+            let alias = ctx.wallet.insert_spending_key(alias, sk).unwrap_or_else(|| {
+                eprintln!("Spending key not added");
+                cli::safe_exit(1);
+            });
+            (alias, "spending key")
+        },
+        (None, None, Some(payment_addr)) => {
+            let pa = ctx.get(&payment_addr);
+            let alias = ctx.wallet.insert_payment_addr(alias, pa).unwrap_or_else(|| {
+                eprintln!("Payment address not added");
+                cli::safe_exit(1);
+            });
+            (alias, "payment address")
+        },
+        _ => {
+            eprintln!("Either a payment address, viewing key, or spending key \
+                       to add must be specified.");
+            cli::safe_exit(1);
+        }
+    };
+    ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
+    println!(
+        "Successfully added a {} with the following alias to wallet: {}",
+        typ,
         alias,
     );
 }

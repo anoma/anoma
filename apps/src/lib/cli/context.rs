@@ -316,7 +316,10 @@ impl ArgFromMutContext for ExtendedSpendingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
-            ctx.wallet.find_spending_key(raw).unwrap().clone()
+            ctx.wallet.find_spending_key(raw).unwrap_or_else(|_find_err| {
+                eprintln!("Unknown spending key {}", raw);
+                safe_exit(1)
+            }).clone()
         })
     }
 }
@@ -325,7 +328,10 @@ impl ArgFromMutContext for FullViewingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
-            ctx.wallet.find_viewing_key(raw).unwrap().clone()
+            ctx.wallet.find_viewing_key(raw).unwrap_or_else(|_find_err| {
+                eprintln!("Unknown viewing key {}", raw);
+                safe_exit(1)
+            }).clone()
         })
     }
 }
@@ -334,7 +340,10 @@ impl ArgFromContext for PaymentAddress {
     fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
-            ctx.wallet.find_payment_addr(raw).unwrap().clone()
+            ctx.wallet.find_payment_addr(raw).unwrap_or_else(|| {
+                eprintln!("Unknown payment address {}", raw);
+                safe_exit(1)
+            }).clone()
         })
     }
 }

@@ -474,7 +474,7 @@ impl Store {
             eprintln!("Empty alias given.");
             return None;
         }
-        if self.view_keys.contains_key(&alias) {
+        if self.payment_addrs.contains_key(&alias) {
             match show_overwrite_confirmation(&alias, "a payment address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {

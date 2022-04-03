@@ -373,6 +373,16 @@ impl Wallet {
             .map(Into::into)
     }
 
+    pub fn insert_spending_key(
+        &mut self,
+        alias: String,
+        spend_key: ExtendedSpendingKey,
+    ) -> Option<String> {
+        self.store
+            .insert_spending_key(alias.into(), spend_key)
+            .map(Into::into)
+    }
+
     pub fn insert_payment_addr(
         &mut self,
         alias: String,
