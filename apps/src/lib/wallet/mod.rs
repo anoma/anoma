@@ -344,6 +344,15 @@ impl Wallet {
             .collect()
     }
 
+    /// Get all known viewing keys by their alias
+    pub fn get_viewing_keys(&self) -> HashMap<String, FullViewingKey> {
+        self.store
+            .get_viewing_keys()
+            .iter()
+            .map(|(alias, value)| (alias.into(), value.clone()))
+            .collect()
+    }
+
     /// Add a new address with the given alias. If the alias is already used,
     /// will ask whether the existing alias should be replaced, a different
     /// alias is desired, or the alias creation should be cancelled. Return

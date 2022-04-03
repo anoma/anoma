@@ -293,9 +293,14 @@ impl Store {
         &self.addresses
     }
 
-    /// Get all know payment addresses by their alias.
+    /// Get all known payment addresses by their alias.
     pub fn get_payment_addrs(&self) -> &HashMap<Alias, PaymentAddress> {
         &self.payment_addrs
+    }
+
+    /// Get all known viewing keys by their alias.
+    pub fn get_viewing_keys(&self) -> &HashMap<Alias, FullViewingKey> {
+        &self.view_keys
     }
 
     fn generate_keypair() -> common::SecretKey {

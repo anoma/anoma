@@ -55,9 +55,34 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::ListPayAddrs(cmds::MaspListPayAddrs) => {
                 payment_addresses_list(ctx)
             }
+            cmds::WalletMasp::ListViewKeys(cmds::MaspListViewKeys) => {
+                viewing_keys_list(ctx)
+            }
         }
     }
     Ok(())
+}
+
+/// List viewing keys.
+fn viewing_keys_list(
+    ctx: Context,
+) {
+    let wallet = ctx.wallet;
+    let known_keys = wallet.get_viewing_keys();
+    if known_keys.is_empty() {
+        println!(
+            "No known viewing keys. Try `masp add --alias my-addr --viewing-key ...` to \
+             add a new viewing key to the wallet."
+        );
+    } else {
+        let stdout = io::stdout();
+        let mut w = stdout.lock();
+        writeln!(w, "Known viewing keys:").unwrap();
+        for (alias, key) in known_keys {
+            writeln!(w, "  \"{}\": {}", alias, key)
+                .unwrap();
+        }
+    }
 }
 
 /// List payment addresses.

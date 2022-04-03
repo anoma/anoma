@@ -449,6 +449,7 @@ pub mod cmds {
         GenSpendKey(MaspGenSpendKey),
         AddAddrKey(MaspAddAddrKey),
         ListPayAddrs(MaspListPayAddrs),
+        ListViewKeys(MaspListViewKeys),
     }
 
     impl SubCmd for WalletMasp {
@@ -461,7 +462,8 @@ pub mod cmds {
                 let gensk = SubCmd::parse(matches).map(Self::GenSpendKey);
                 let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
                 let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
-                gensk.or(derivevk).or(genpa).or(addak).or(listpa)
+                let listvk = SubCmd::parse(matches).map(Self::ListViewKeys);
+                gensk.or(derivevk).or(genpa).or(addak).or(listpa).or(listvk)
             })
         }
 
@@ -478,6 +480,25 @@ pub mod cmds {
                 .subcommand(MaspGenPayAddr::def())
                 .subcommand(MaspAddAddrKey::def())
                 .subcommand(MaspListPayAddrs::def())
+                .subcommand(MaspListViewKeys::def())
+        }
+    }
+
+    /// List all known viewing keys
+    #[derive(Clone, Debug)]
+    pub struct MaspListViewKeys;
+
+    impl SubCmd for MaspListViewKeys {
+        const CMD: &'static str = "list-viewing-keys";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD)
+                .map(|_matches| MaspListViewKeys)
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Lists all viewing keys in the wallet")
         }
     }
 
