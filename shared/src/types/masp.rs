@@ -6,7 +6,7 @@ use std::io::{Error, ErrorKind};
 
 use bech32::{FromBase32, ToBase32};
 
-use crate::types::address::{DecodeError, BECH32M_VARIANT};
+use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, masp};
 
 /// human-readable part of Bech32m encoded address
 // TODO use "a" for live network
@@ -265,5 +265,33 @@ impl<'de> serde::Deserialize<'de> for ExtendedSpendingKey {
         use serde::de::Error;
         let encoded: String = serde::Deserialize::deserialize(deserializer)?;
         Self::from_str(&encoded).map_err(D::Error::custom)
+    }
+}
+
+/// Represents a source of funds for a transfer
+#[derive(Debug, Clone)]
+pub enum TransferSource {
+    /// A transfer coming from a transparent address
+    Address(Address),
+    /// A transfer coming from a shielded address
+    ExtendedSpendingKey(ExtendedSpendingKey),
+}
+
+impl TransferSource {
+    /// Get the transparent address that this source would effectively draw from
+    pub fn effective_address(&self) -> Address {
+        match self {
+            Self::Address(x) => x.clone(),
+            // An ExtendedSpendingKey for a source effectively means that
+            // assets will be drawn from the MASP
+            Self::ExtendedSpendingKey(_) => masp(),
+        }
+    }
+    /// Get the contained ExtendedSpendingKey contained, if any
+    pub fn spending_key(&self) -> Option<ExtendedSpendingKey> {
+        match self {
+            Self::ExtendedSpendingKey(x) => Some(*x),
+            _ => None,
+        }
     }
 }

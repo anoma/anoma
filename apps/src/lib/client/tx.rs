@@ -590,11 +590,12 @@ async fn gen_shielded_transfer(
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
     // No shielded components are needed when neither source nor destination
     // are shielded
-    if args.spending_key.is_none() && args.payment_address.is_none() {
+    let spending_key = ctx.get_cached(&args.source).spending_key();
+    if spending_key.is_none() && args.payment_address.is_none() {
         return Ok(None);
     }
     // We want to fund our transaction solely from supplied spending key
-    let spending_key = args.spending_key.as_ref().map(|x| ctx.get_cached(&x).into());
+    let spending_key = spending_key.map(|x| x.into());
     let spending_keys = spending_key.clone().into_iter().collect();
     // Load the current shielded context given the spending key we possess
     let tx_ctx = load_shielded_context(
@@ -616,8 +617,8 @@ async fn gen_shielded_transfer(
     // Transaction fees will be taken care of in the wrapper Transfer
     builder.set_fee(Amount::zero())?;
     // If there are shielded inputs
-    if let Some(sk) = &args.spending_key {
-        let sk = ctx.get_cached(&sk).into();
+    if let Some(sk) = spending_key {
+        let sk = sk.into();
         let mut val_acc = 0;
         // Retrieve the notes that can be spent by this key
         if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk).vk) {
@@ -673,10 +674,8 @@ async fn gen_shielded_transfer(
     // Now handle the outputs of this transaction
     // If there is a shielded output
     if let Some(pa) = &args.payment_address {
-        let ovk_opt = args
-            .spending_key
-            .as_ref()
-            .map(|x| ExtendedSpendingKey::from(ctx.get_cached(&x)).expsk.ovk);
+        let ovk_opt = spending_key
+            .map(|x| ExtendedSpendingKey::from(x).expsk.ovk);
         builder.add_sapling_output(ovk_opt, ctx.get(&pa).into(), asset_type, amt, memo)?;
     } else {
         // Embed the transparent target address into the shielded transaction so
@@ -748,13 +747,9 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
 }
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
-    let source = ctx.get(&args.source);
+    let source = ctx.get_cached(&args.source).effective_address();
     let target = ctx.get(&args.target);
-    if (source == masp()) != args.spending_key.is_some() {
-        // A spending key implies a transparent transfer from the MASP address
-        eprintln!("Must either specify source address or a spending key");
-        safe_exit(1)
-    } else if (target == masp()) != args.payment_address.is_some() {
+    if (target == masp()) != args.payment_address.is_some() {
         // A payment address implies a transparent transfer to the MASP address
         eprintln!("Must either specify target address or a payment address");
         safe_exit(1)
@@ -825,9 +820,9 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         if source == masp_addr && target == masp_addr {
             (None, 0.into(), btc())
         } else if source == masp_addr {
-            (Some(&args.target), args.amount, token)
+            (Some(args.target.clone()), args.amount, token)
         } else {
-            (Some(&args.source), args.amount, token)
+            (Some(args.source.to_address()), args.amount, token)
         };
     let transfer = token::Transfer {
         source,
@@ -842,7 +837,7 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         .expect("Encoding tx data shouldn't fail");
     
     let tx = Tx::new(tx_code, Some(data));
-    process_tx(ctx, &args.tx, tx, default_signer).await;
+    process_tx(ctx, &args.tx, tx, default_signer.as_ref()).await;
 }
 
 pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {

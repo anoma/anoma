@@ -9,7 +9,7 @@ use std::str::FromStr;
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
-use anoma::types::masp::{FullViewingKey, PaymentAddress, ExtendedSpendingKey};
+use anoma::types::masp::*;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -33,6 +33,8 @@ pub type WalletSpendingKey = FromContext<ExtendedSpendingKey>;
 pub type WalletPaymentAddr = FromContext<PaymentAddress>;
 
 pub type WalletViewingKey = FromContext<FullViewingKey>;
+
+pub type WalletTransferSource = FromContext<TransferSource>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
@@ -225,6 +227,27 @@ impl<T> FromContext<T> {
     }
 }
 
+impl FromContext<TransferSource> {
+    /// Converts this TransferSource argument to an Address. Call this function
+    /// only when certain that raw represents an Address.
+    pub fn to_address(&self) -> FromContext<Address> {
+        return FromContext::<Address> {
+            raw: self.raw.clone(),
+            phantom: PhantomData,
+        }
+    }
+
+    /// Converts this TransferSource argument to an ExtendedSpendingKey. Call
+    /// this function only when certain that raw represents an
+    /// ExtendedSpendingKey.
+    pub fn to_spending_key(&self) -> FromContext<ExtendedSpendingKey> {
+        return FromContext::<ExtendedSpendingKey> {
+            raw: self.raw.clone(),
+            phantom: PhantomData,
+        }
+    }
+}
+
 impl<T> FromContext<T>
 where
     T: ArgFromContext,
@@ -256,21 +279,22 @@ pub trait ArgFromMutContext: Sized {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self;
 }
 
+fn address_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Address, String> {
+    let raw = raw.as_ref();
+    // An address can be either raw (bech32m encoding)
+    FromStr::from_str(raw)
+    // Or it can be an alias that may be found in the wallet
+        .or_else(|_| {
+            ctx.wallet
+                .find_address(raw)
+                .cloned()
+                .ok_or_else(|| format!("Unknown address {}", raw))
+        })
+}
+
 impl ArgFromContext for Address {
     fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
-        let raw = raw.as_ref();
-        // An address can be either raw (bech32m encoding)
-        FromStr::from_str(raw)
-            // Or it can be an alias that may be found in the wallet
-            .unwrap_or_else(|_| {
-                ctx.wallet
-                    .find_address(raw)
-                    .unwrap_or_else(|| {
-                        eprintln!("Unknown address {}", raw);
-                        safe_exit(1)
-                    })
-                    .clone()
-            })
+        address_from_ctx(ctx, raw).unwrap()
     }
 }
 
@@ -310,15 +334,18 @@ impl ArgFromMutContext for common::PublicKey {
     }
 }
 
+fn spending_key_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<ExtendedSpendingKey, String> {
+    let raw = raw.as_ref();
+    FromStr::from_str(raw).or_else(|_parse_err| {
+        ctx.wallet.find_spending_key(raw).map(Clone::clone).map_err(|_find_err| {
+            format!("Unknown spending key {}", raw)
+        })
+    })
+}
+
 impl ArgFromMutContext for ExtendedSpendingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
-        let raw = raw.as_ref();
-        FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
-            ctx.wallet.find_spending_key(raw).unwrap_or_else(|_find_err| {
-                eprintln!("Unknown spending key {}", raw);
-                safe_exit(1)
-            }).clone()
-        })
+        spending_key_from_mut_ctx(ctx, raw).unwrap()
     }
 }
 
@@ -343,5 +370,15 @@ impl ArgFromContext for PaymentAddress {
                 safe_exit(1)
             }).clone()
         })
+    }
+}
+
+impl ArgFromMutContext for TransferSource {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+        let raw = raw.as_ref();
+        address_from_ctx(ctx, raw).map(Self::Address)
+            .or_else(|_| spending_key_from_mut_ctx(ctx, raw)
+                     .map(Self::ExtendedSpendingKey))
+            .unwrap()
     }
 }
