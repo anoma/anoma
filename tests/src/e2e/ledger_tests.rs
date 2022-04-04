@@ -955,6 +955,12 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
 
+    let anomac_help = vec!["--help"];
+
+    let mut client = run!(test, Bin::Client, anomac_help, Some(40))?;
+    client.exp_string("Anoma client command line interface.")?;
+    client.assert_success();
+
     // 1. Run the ledger node
     let mut ledger =
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
@@ -994,6 +1000,7 @@ fn proposal_submission() -> Result<()> {
     let valid_proposal_json_path =
         test.base_dir.path().join("valid_proposal.json");
     let proposal_code = wasm_abs_path(TX_PROPOSAL_CODE);
+
     let albert = find_address(&test, ALBERT)?;
     let valid_proposal_json = json!(
         {
@@ -1009,10 +1016,10 @@ fn proposal_submission() -> Result<()> {
                 "requires": "2"
             },
             "author": albert,
-            "voting_start_epoch": 3,
-            "voting_end_epoch": 9,
-            "grace_epoch": 15,
-            "proposal_code": proposal_code.to_str()
+            "voting_start_epoch": 6,
+            "voting_end_epoch": 18,
+            "grace_epoch": 24,
+            "proposal_code_path": proposal_code.to_str().unwrap()
         }
     );
 
@@ -1030,7 +1037,7 @@ fn proposal_submission() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, submit_proposal_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, submit_proposal_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -1043,7 +1050,7 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, proposal_query_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, proposal_query_args, Some(40))?;
     client.exp_string("Proposal: 0")?;
     client.assert_success();
 
@@ -1058,7 +1065,7 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, query_balance_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(40))?;
     client.exp_string("XAN: 999500")?;
     client.assert_success();
 
@@ -1073,7 +1080,7 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, query_balance_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(40))?;
     client.exp_string("XAN: 500")?;
     client.assert_success();
 
@@ -1090,10 +1097,25 @@ fn proposal_submission() -> Result<()> {
                 "discussions-to": "www.github.com/anoma/aip/1",
                 "created": "2022-03-10T08:54:37Z",
                 "license": "MIT",
-                "abstract": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida eros. Nullam sed ex justo. Ut at placerat ipsum, sit amet rhoncus libero. Sed blandit non purus non suscipit. Phasellus sed quam nec augue bibendum bibendum ut vitae urna. Sed odio diam, ornare nec sapien eget, congue viverra enim.",
-                "motivation": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices.",
-                "details": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida eros.",
-                "requires": "2"
+                "abstract": "Ut convallis eleifend orci vel venenatis. Duis
+    vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit
+    ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum
+    fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra
+    varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida
+    eros. Nullam sed ex justo. Ut at placerat ipsum, sit amet rhoncus libero.
+    Sed blandit non purus non suscipit. Phasellus sed quam nec augue bibendum
+    bibendum ut vitae urna. Sed odio diam, ornare nec sapien eget, congue
+    viverra enim.",
+                "motivation": "Ut convallis eleifend orci vel venenatis. Duis
+    vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit
+    ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum
+    fermentum. Morbi aliquet purus at sollicitudin ultrices.",
+                "details": "Ut convallis eleifend orci vel venenatis. Duis
+    vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit
+    ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum
+    fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra
+    varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida
+    eros.",             "requires": "2"
             },
             "author": albert,
             "voting_start_epoch": 9999,
@@ -1113,7 +1135,7 @@ fn proposal_submission() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, submit_proposal_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, submit_proposal_args, Some(40))?;
     client.exp_string("Transaction is invalid.")?;
     client.assert_success();
 
@@ -1126,7 +1148,7 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, proposal_query_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, proposal_query_args, Some(40))?;
     client.exp_string("No valid proposal was found with id 1")?;
     client.assert_success();
 
@@ -1141,13 +1163,13 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, query_balance_args, Some(15))?;
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(40))?;
     client.exp_string("XAN: 999500")?;
     client.assert_success();
 
     // 9. Send a yay vote from a validator
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 < 3 {
+    while epoch.0 <= 7 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
@@ -1174,12 +1196,6 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
-    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 <= 6 {
-        sleep(1);
-        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    }
-
     let submit_proposal_vote_delagator = vec![
         "vote-proposal",
         "--proposal-id",
@@ -1193,7 +1209,7 @@ fn proposal_submission() -> Result<()> {
     ];
 
     let mut client =
-        run!(test, Bin::Client, submit_proposal_vote_delagator, Some(15))?;
+        run!(test, Bin::Client, submit_proposal_vote_delagator, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -1216,13 +1232,13 @@ fn proposal_submission() -> Result<()> {
 
     // 11. Query the proposal and check the result
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 <= 9 {
+    while epoch.0 <= 19 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
 
     let query_proposal = vec![
-        "query-proposal",
+        "query-proposal-result",
         "--proposal-id",
         "0",
         "--ledger-address",
@@ -1235,7 +1251,7 @@ fn proposal_submission() -> Result<()> {
 
     // 12. Wait proposal grace and check proposal author funds
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 < 18 {
+    while epoch.0 <= 25 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }

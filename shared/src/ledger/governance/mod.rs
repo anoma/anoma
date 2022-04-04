@@ -437,7 +437,6 @@ where
 {
     let proposal_execution_key =
         gov_storage::get_proposal_execution_key(proposal_id);
-    println!("id 2: {:?}", proposal_id);
     context
         .has_key_pre(&proposal_execution_key)
         .unwrap_or(false)

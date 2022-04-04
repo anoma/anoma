@@ -529,7 +529,7 @@ pub mod genesis_config {
 
         let gov_params = GovParams {
             min_proposal_fund: 500,
-            max_proposal_code_size: 300,
+            max_proposal_code_size: 300000,
             min_proposal_period: 3,
             max_proposal_content_size: 10_000,
             min_proposal_grace_epochs: 6,
@@ -753,7 +753,7 @@ pub fn genesis() -> Genesis {
     let parameters = Parameters {
         epoch_duration: EpochDuration {
             min_num_of_blocks: 10,
-            min_duration: anoma::types::time::Duration::seconds(15).into(),
+            min_duration: anoma::types::time::Duration::seconds(60).into(),
         },
         max_expected_time_per_block: anoma::types::time::DurationSecs(30),
         vp_whitelist: vec![],

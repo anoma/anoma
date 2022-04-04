@@ -62,13 +62,13 @@ impl GovParams {
                 &max_proposal_code_size_key,
                 encode(&self.max_proposal_code_size),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let min_proposal_period_key =
             gov_storage::get_min_proposal_period_key();
         storage
             .write(&min_proposal_period_key, encode(&self.min_proposal_period))
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let max_proposal_content_size_key =
             gov_storage::get_max_proposal_content_key();
@@ -77,7 +77,7 @@ impl GovParams {
                 &max_proposal_content_size_key,
                 encode(&self.max_proposal_content_size),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let min_proposal_grace_epoch_key =
             gov_storage::get_min_proposal_grace_epoch_key();
@@ -86,7 +86,7 @@ impl GovParams {
                 &min_proposal_grace_epoch_key,
                 encode(&self.min_proposal_grace_epochs),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let min_proposal_grace_epoch_key =
             gov_storage::get_min_proposal_grace_epoch_key();
@@ -95,7 +95,7 @@ impl GovParams {
                 &min_proposal_grace_epoch_key,
                 encode(&self.min_proposal_grace_epochs),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let min_proposal_grace_epoch_key =
             gov_storage::get_min_proposal_grace_epoch_key();
@@ -104,9 +104,11 @@ impl GovParams {
                 &min_proposal_grace_epoch_key,
                 encode(&self.min_proposal_grace_epochs),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let counter_key = gov_storage::get_counter_key();
-        storage.write(&counter_key, encode(&u64::MIN)).unwrap();
+        storage
+            .write(&counter_key, encode(&u64::MIN))
+            .expect("Should be able to write to storage");
     }
 }

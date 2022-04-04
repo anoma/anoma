@@ -83,7 +83,6 @@ where
                 if let Ok(tally_result) = tally_result {
                     match tally_result {
                         (TallyResult::Passed, Some(code)) => {
-                            tracing::info!("Executing proposal code");
                             let tx = Tx::new(code, Some(encode(&id)));
                             let tx_type =
                                 TxType::Decrypted(DecryptedTx::Decrypted(tx));
@@ -113,32 +112,41 @@ where
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
                                         self.write_log.commit_tx();
-                                        tracing::info!("Proposal code okay");
                                         let author_key =
                                             gov_storage::get_author_key(id);
-                                        self.storage
+                                        let author = self
+                                            .storage
                                             .read(&author_key)
                                             .map(|(bytes, _gas)| {
                                                 if let Some(bytes) = bytes {
-                                                    if let Ok(address) =
-                                                        Address::try_from_slice(
-                                                            &bytes[..],
-                                                        )
-                                                    {
-                                                        self.storage.transfer(
-                                                            &m1t(),
-                                                            funds,
-                                                            &gov_address,
-                                                            &address,
-                                                        );
-                                                    }
+                                                    Address::try_from_slice(
+                                                        &bytes[..],
+                                                    )
+                                                    .ok()
+                                                } else {
+                                                    None
                                                 }
                                             })
-                                            .map_err(|e| {
-                                                Error::BadProposal(
-                                                    e.to_string(),
-                                                )
-                                            })?;
+                                            .unwrap_or(None);
+                                        // if the author address is decodable,
+                                        // we trasfer the funds back
+                                        // otherwise we move them to treasury
+                                        if let Some(address) = author {
+                                            self.storage.transfer(
+                                                &m1t(),
+                                                funds,
+                                                &gov_address,
+                                                &address,
+                                            );
+                                        } else {
+                                            // Move funds to Treasury
+                                            self.storage.transfer(
+                                                &m1t(),
+                                                funds,
+                                                &gov_address,
+                                                &treasury_address,
+                                            );
+                                        };
                                         let proposal_event: Event =
                                             ProposalEvent::new(
                                                 EventType::Proposal.to_string(),
@@ -152,9 +160,6 @@ where
                                             .events
                                             .push(proposal_event.into());
                                     } else {
-                                        tracing::info!(
-                                            "Proposal code not okay :("
-                                        );
                                         self.storage.transfer(
                                             &m1t(),
                                             funds,
