@@ -591,7 +591,8 @@ async fn gen_shielded_transfer(
     // No shielded components are needed when neither source nor destination
     // are shielded
     let spending_key = ctx.get_cached(&args.source).spending_key();
-    if spending_key.is_none() && args.payment_address.is_none() {
+    let payment_address = ctx.get(&args.target).payment_address();
+    if spending_key.is_none() && payment_address.is_none() {
         return Ok(None);
     }
     // We want to fund our transaction solely from supplied spending key
@@ -673,15 +674,19 @@ async fn gen_shielded_transfer(
     }
     // Now handle the outputs of this transaction
     // If there is a shielded output
-    if let Some(pa) = &args.payment_address {
+    if let Some(pa) = payment_address {
         let ovk_opt = spending_key
             .map(|x| ExtendedSpendingKey::from(x).expsk.ovk);
-        builder.add_sapling_output(ovk_opt, ctx.get(&pa).into(), asset_type, amt, memo)?;
+        builder.add_sapling_output(ovk_opt, pa.into(), asset_type, amt, memo)?;
     } else {
         // Embed the transparent target address into the shielded transaction so
         // that it can be signed 
         let target = ctx.get(&args.target);
-        let target_enc = target.try_to_vec().expect("target address encoding");
+        let target_enc = target
+            .address()
+            .expect("target address should be transparent")
+            .try_to_vec()
+            .expect("target address encoding");
         let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(target_enc.as_ref()));
         builder.add_transparent_output(
             &TransparentAddress::PublicKey(hash.into()),
@@ -748,12 +753,7 @@ pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<A
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
     let source = ctx.get_cached(&args.source).effective_address();
-    let target = ctx.get(&args.target);
-    if (target == masp()) != args.payment_address.is_some() {
-        // A payment address implies a transparent transfer to the MASP address
-        eprintln!("Must either specify target address or a payment address");
-        safe_exit(1)
-    }
+    let target = ctx.get(&args.target).effective_address();
     // Check that the source address exists on chain
     let source_exists =
         rpc::known_address(&source, args.tx.ledger_address.clone()).await;
@@ -820,7 +820,7 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         if source == masp_addr && target == masp_addr {
             (None, 0.into(), btc())
         } else if source == masp_addr {
-            (Some(args.target.clone()), args.amount, token)
+            (Some(args.target.to_address()), args.amount, token)
         } else {
             (Some(args.source.to_address()), args.amount, token)
         };

@@ -36,6 +36,8 @@ pub type WalletViewingKey = FromContext<FullViewingKey>;
 
 pub type WalletTransferSource = FromContext<TransferSource>;
 
+pub type WalletTransferTarget = FromContext<TransferTarget>;
+
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
 pub type WalletKeypair = FromContext<Rc<common::SecretKey>>;
@@ -248,6 +250,26 @@ impl FromContext<TransferSource> {
     }
 }
 
+impl FromContext<TransferTarget> {
+    /// Converts this TransferTarget argument to an Address. Call this function
+    /// only when certain that raw represents an Address.
+    pub fn to_address(&self) -> FromContext<Address> {
+        return FromContext::<Address> {
+            raw: self.raw.clone(),
+            phantom: PhantomData,
+        }
+    }
+
+    /// Converts this TransferTarget argument to a PaymentAddress. Call this
+    /// function only when certain that raw represents a PaymentAddress.
+    pub fn to_payment_address(&self) -> FromContext<PaymentAddress> {
+        return FromContext::<PaymentAddress> {
+            raw: self.raw.clone(),
+            phantom: PhantomData,
+        }
+    }
+}
+
 impl<T> FromContext<T>
 where
     T: ArgFromContext,
@@ -361,15 +383,18 @@ impl ArgFromMutContext for FullViewingKey {
     }
 }
 
+fn payment_addr_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<PaymentAddress, String> {
+    let raw = raw.as_ref();
+    FromStr::from_str(raw).or_else(|_parse_err| {
+        ctx.wallet.find_payment_addr(raw).cloned().ok_or_else(|| {
+            format!("Unknown payment address {}", raw)
+        })
+    })
+}
+
 impl ArgFromContext for PaymentAddress {
     fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
-        let raw = raw.as_ref();
-        FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
-            ctx.wallet.find_payment_addr(raw).unwrap_or_else(|| {
-                eprintln!("Unknown payment address {}", raw);
-                safe_exit(1)
-            }).clone()
-        })
+        payment_addr_from_ctx(ctx, raw).unwrap()
     }
 }
 
@@ -379,6 +404,16 @@ impl ArgFromMutContext for TransferSource {
         address_from_ctx(ctx, raw).map(Self::Address)
             .or_else(|_| spending_key_from_mut_ctx(ctx, raw)
                      .map(Self::ExtendedSpendingKey))
+            .unwrap()
+    }
+}
+
+impl ArgFromContext for TransferTarget {
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
+        let raw = raw.as_ref();
+        address_from_ctx(ctx, raw).map(Self::Address)
+            .or_else(|_| payment_addr_from_ctx(ctx, raw)
+                     .map(Self::PaymentAddress))
             .unwrap()
     }
 }

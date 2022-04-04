@@ -1379,7 +1379,7 @@ pub mod args {
     use anoma::types::address::masp;
     use anoma::types::masp::{FullViewingKey, ExtendedSpendingKey, PaymentAddress};
 
-    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey, WalletViewingKey, WalletPaymentAddr, WalletTransferSource};
+    use super::context::*;
     use super::utils::*;
     use super::ArgMatches;
     use crate::config;
@@ -1471,6 +1471,7 @@ pub mod args {
     const TOPIC_OPT: ArgOpt<String> = arg_opt("topic");
     const TOPIC: Arg<String> = arg("topic");
     const TRANSFER_SOURCE: Arg<WalletTransferSource> = arg("source");
+    const TRANSFER_TARGET: Arg<WalletTransferTarget> = arg("target");
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
     const TX_HASH: Arg<String> = arg("tx-hash");
     const UNSAFE_DONT_ENCRYPT: ArgFlag = flag("unsafe-dont-encrypt");
@@ -1609,30 +1610,26 @@ pub mod args {
         /// Transfer source address
         pub source: WalletTransferSource,
         /// Transfer target address
-        pub target: WalletAddress,
+        pub target: WalletTransferTarget,
         /// Transferred token address
         pub token: WalletAddress,
         /// Transferred token amount
         pub amount: token::Amount,
-        /// Payment address for shielded transactions
-        pub payment_address: Option<WalletPaymentAddr>,
     }
 
     impl Args for TxTransfer {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
             let source = TRANSFER_SOURCE.parse(matches);
-            let target = TARGET_DEFAULT.parse(matches);
+            let target = TRANSFER_TARGET.parse(matches);
             let token = TOKEN.parse(matches);
             let amount = AMOUNT.parse(matches);
-            let payment_address = PAYMENT_ADDRESS_OPT.parse(matches);
             Self {
                 tx,
                 source,
                 target,
                 token,
                 amount,
-                payment_address,
             }
         }
 
@@ -1645,9 +1642,6 @@ pub mod args {
                 .arg(TARGET_DEFAULT.def().about("The target account address."))
                 .arg(TOKEN.def().about("The transfer token."))
                 .arg(AMOUNT.def().about("The amount to transfer in decimal."))
-                .arg(PAYMENT_ADDRESS_OPT.def().about(
-                    "The payment address for shielded transactions.",
-                ))
         }
     }
 

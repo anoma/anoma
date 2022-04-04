@@ -295,3 +295,38 @@ impl TransferSource {
         }
     }
 }
+
+/// Represents a target for the funds of a transfer
+#[derive(Debug, Clone)]
+pub enum TransferTarget {
+    /// A transfer going to a transparent address
+    Address(Address),
+    /// A transfer going to a shielded address
+    PaymentAddress(PaymentAddress),
+}
+
+impl TransferTarget {
+    /// Get the transparent address that this target would effectively go to
+    pub fn effective_address(&self) -> Address {
+        match self {
+            Self::Address(x) => x.clone(),
+            // An ExtendedSpendingKey for a source effectively means that
+            // assets will be drawn from the MASP
+            Self::PaymentAddress(_) => masp(),
+        }
+    }
+    /// Get the contained PaymentAddress contained, if any
+    pub fn payment_address(&self) -> Option<PaymentAddress> {
+        match self {
+            Self::PaymentAddress(x) => Some(*x),
+            _ => None,
+        }
+    }
+    /// Get the contained Address contained, if any
+    pub fn address(&self) -> Option<Address> {
+        match self {
+            Self::Address(x) => Some(x.clone()),
+            _ => None,
+        }
+    }
+}
