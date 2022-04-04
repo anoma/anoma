@@ -643,7 +643,7 @@ impl From<&Key> for KeyType {
             KeyType::GRACE_EPOCH
         } else if gov_storage::is_start_epoch_key(value) {
             KeyType::START_EPOCH
-        } else if gov_storage::is_min_grace_epoch_key(value) {
+        } else if gov_storage::is_commit_proposal_key(value) {
             KeyType::PROPOSAL_COMMIT
         } else if gov_storage::is_end_epoch_key(value) {
             KeyType::END_EPOCH

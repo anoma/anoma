@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use anoma_proof_of_stake::types::{Slashes, Slash};
+use anoma_proof_of_stake::types::{Slash, Slashes};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
 use thiserror::Error;
@@ -236,7 +236,9 @@ where
                 (Some(epoched_bonds), Some(slashes)) => {
                     let mut delegated_amount: token::Amount = 0.into();
                     for bond in epoched_bonds.iter() {
-                        for (start_epoch, &(mut delta)) in bond.deltas.iter().sorted() {
+                        for (start_epoch, &(mut delta)) in
+                            bond.deltas.iter().sorted()
+                        {
                             let start_epoch = Epoch::from(*start_epoch);
                             delta = apply_slashes(&slashes, delta, start_epoch);
                             if epoch <= start_epoch {
@@ -253,7 +255,11 @@ where
     }
 }
 
-fn apply_slashes(slashes: &[Slash], mut delta: token::Amount, epoch_start: Epoch) -> token::Amount {
+fn apply_slashes(
+    slashes: &[Slash],
+    mut delta: token::Amount,
+    epoch_start: Epoch,
+) -> token::Amount {
     for slash in slashes {
         if Epoch::from(slash.epoch) >= epoch_start {
             let raw_delta: u64 = delta.into();
