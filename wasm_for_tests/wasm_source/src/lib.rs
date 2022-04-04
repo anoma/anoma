@@ -29,8 +29,17 @@ pub mod main {
 
     #[transaction]
     fn apply_tx(_tx_data: Vec<u8>) {
+        // governance
         let target_key = storage::get_min_proposal_grace_epoch_key();
         write(&target_key.to_string(), 9_u64);
+
+        // treasury
+        let target_key = treasury_storage::get_max_transferable_fund_key();
+        write(&target_key.to_string(), token::Amount::whole(20_000));
+
+        // parameters
+        let target_key = parameters_storage::get_tx_whitelist_storage_key();
+        write(&target_key.to_string(), vec!["hash"]);
     }
 }
 

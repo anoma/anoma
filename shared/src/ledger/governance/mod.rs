@@ -431,9 +431,7 @@ where
                     }
                 }
                 (KeyType::PARAMETER, _) => {
-                    println!("tx_data: {:?}", tx_data);
                     let proposal_id = u64::try_from_slice(tx_data).ok();
-                    println!("id: {:?}", proposal_id);
                     match proposal_id {
                         Some(id) => is_proposal_accepted(&self.ctx, id),
                         _ => false,
@@ -507,7 +505,6 @@ where
 {
     let proposal_execution_key =
         gov_storage::get_proposal_execution_key(proposal_id);
-    println!("id 2: {:?}", proposal_id);
     context
         .has_key_pre(&proposal_execution_key)
         .unwrap_or(false)

@@ -82,7 +82,7 @@ impl GovParams {
                 &max_proposal_content_size_key,
                 encode(max_proposal_content_size),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let min_proposal_grace_epoch_key =
             gov_storage::get_min_proposal_grace_epoch_key();
@@ -91,9 +91,11 @@ impl GovParams {
                 &min_proposal_grace_epoch_key,
                 encode(min_proposal_grace_epochs),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let counter_key = gov_storage::get_counter_key();
-        storage.write(&counter_key, encode(&u64::MIN)).unwrap();
+        storage
+            .write(&counter_key, encode(&u64::MIN))
+            .expect("Should be able to write to storage");
     }
 }
