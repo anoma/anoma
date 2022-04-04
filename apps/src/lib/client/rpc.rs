@@ -236,7 +236,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                 .map(|c| Cow::Borrowed(*c))
                 .unwrap_or_else(|| Cow::Owned(token.to_string()));
             if balance[&asset_type] == 0 {
-                println!("No {} balance found for given key", currency_code);
+                println!("No shielded {} balance found for given key", currency_code);
             } else {
                 let asset_value = token::Amount::from(balance[&asset_type] as u64);
                 println!("{}: {}", currency_code, asset_value);
@@ -262,7 +262,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             let mut readable_tokens = HashSet::new();
             // Print those balances corresponding to human-readable token names
             for (token, currency_code) in tokens {
-                println!("Token {}:", currency_code);
+                println!("Shielded Token {}:", currency_code);
                 // Compute the unique asset identifier from the token address
                 let asset_type = AssetType::new(
                     token.try_to_vec().expect("token addresses should serialize").as_ref()
@@ -278,14 +278,14 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                     }
                 }
                 if !found_any {
-                    println!("No {} balance found for any wallet key", currency_code);
+                    println!("No shielded {} balance found for any wallet key", currency_code);
                 }
             }
             // Print those balances that do not correspond to human-readable
             // token names
             for (asset_type, balances) in balances {
                 if !readable_tokens.contains(&asset_type) {
-                    println!("{}:", asset_type);
+                    println!("Shielded Token {}:", asset_type);
                     let mut found_any = false;
                     for (fvk, value) in balances {
                         let value = token::Amount::from(value as u64);
@@ -293,7 +293,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                         found_any = true;
                     }
                     if !found_any {
-                        println!("No {} balance found for any wallet key", asset_type);
+                        println!("No shielded {} balance found for any wallet key", asset_type);
                     }
                 }
             }
@@ -310,7 +310,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                 .get(&token)
                 .map(|c| Cow::Borrowed(*c))
                 .unwrap_or_else(|| Cow::Owned(token.to_string()));
-            println!("Token {}:", currency_code);
+            println!("Shielded Token {}:", currency_code);
             let mut found_any = false;
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
@@ -323,10 +323,10 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                 }
             }
             if !found_any {
-                println!("No {} balance found for any wallet key", currency_code);
+                println!("No shielded {} balance found for any wallet key", currency_code);
             }
         }
-        // Here the user wants to know all possible token balances
+        // Here the user wants to know all possible token balances for a key
         (None, true) => {
             // Query the multi-asset balance at the given spending key
             let mut balance = compute_shielded_balance(&shielded_ctx, &viewing_keys[0].vk)

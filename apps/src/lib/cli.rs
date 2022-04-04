@@ -547,7 +547,7 @@ pub mod cmds {
     pub struct MaspGenSpendKey(pub args::MaspSpendKeyGen);
 
     impl SubCmd for MaspGenSpendKey {
-        const CMD: &'static str = "gen-spend-key";
+        const CMD: &'static str = "gen-spending-key";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).map(|matches| {
@@ -588,7 +588,7 @@ pub mod cmds {
     pub struct MaspDeriveViewKey(pub args::MaspViewKeyDerive);
 
     impl SubCmd for MaspDeriveViewKey {
-        const CMD: &'static str = "derive-view-key";
+        const CMD: &'static str = "derive-viewing-key";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).map(|matches| {
