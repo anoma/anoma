@@ -194,9 +194,10 @@ pub async fn query_transparent_balance(ctx: &Context, args: args::QueryBalance) 
 
 /// Query token shielded balance(s)
 pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance) {
+    // Used to control whether balances for all keys or a specific key are printed
+    let key_specified = args.viewing_key.is_some() || args.spending_key.is_some();
     // Viewing keys are used to query shielded balances. If a spending key is
     // provided, then convert to a viewing key first.
-    let key_specified = args.viewing_key.is_some() || args.spending_key.is_some();
     let viewing_keys = match (args.viewing_key, args.spending_key) {
         (Some(viewing_key), None) => vec![ctx.get_cached(&viewing_key)],
         (None, Some(spending_key)) =>
