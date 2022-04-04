@@ -1,5 +1,6 @@
 //! Types definitions.
 
+pub mod masp;
 pub mod address;
 pub mod chain;
 pub mod dylib;

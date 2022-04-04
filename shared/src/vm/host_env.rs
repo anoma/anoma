@@ -58,7 +58,7 @@ pub enum TxRuntimeError {
     #[error("Encoding error: {0}")]
     EncodingError(std::io::Error),
     #[error("Address error: {0}")]
-    AddressError(address::Error),
+    AddressError(address::DecodeError),
     #[error("Numeric conversion error: {0}")]
     NumConversionError(TryFromIntError),
     #[error("Memory error: {0}")]
