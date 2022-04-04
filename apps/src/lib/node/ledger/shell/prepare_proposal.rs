@@ -5,9 +5,7 @@ mod prepare_block {
     use std::collections::hash_map::Entry;
     use std::collections::HashMap;
 
-    use anoma::types::ethereum_headers::{
-        MultiSignedEthHeader, SignedHeader,
-    };
+    use anoma::types::ethereum_headers::{MultiSignedEthHeader, SignedHeader};
     use anoma::types::transaction::protocol::ProtocolTxType;
     use anoma::types::vote_extensions::VoteExtensionData;
 
@@ -108,7 +106,12 @@ mod prepare_block {
                 .flatten()
                 // remove those headers that aren't properly signed by
                 // validators
-                .filter(|header| self.validate_ethereum_header(header))
+                .filter(|header| {
+                    self.validate_ethereum_header(
+                        self.storage.last_height.0,
+                        header,
+                    )
+                })
                 // group equivalent headers together
                 .fold(HashMap::new(), |mut headers, header| {
                     if let Entry::Vacant(e) = headers.entry(header.hash()) {
@@ -137,11 +140,16 @@ mod prepare_block {
     #[cfg(test)]
     mod test_prepare_proposal {
         use anoma::types::address::xan;
+        use anoma::types::ethereum_headers::EthereumHeader;
+        use anoma::types::hash::Hash;
         use anoma::types::storage::Epoch;
+        use anoma::types::transaction::protocol::ProtocolTx;
         use anoma::types::transaction::Fee;
 
         use super::*;
-        use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
+        use crate::node::ledger::shell::test_utils::{
+            gen_keypair, setup, TestShell,
+        };
 
         /// Test that if a tx from the mempool is not a
         /// WrapperTx type, it is not included in the
@@ -268,6 +276,136 @@ mod prepare_block {
                 .collect();
             // check that the order of the txs is correct
             assert_eq!(received, expected_txs);
+        }
+
+        /// Check that the protocol txs are made correctly from ethereum
+        /// headers. They should
+        /// 1. Remove invalidly signed headers.
+        /// 2. Group headers with the same hash together
+        /// 3. Headers that don't have the same hash should be separate
+        #[test]
+        fn test_prepare_ethereum_headers() {
+            let (shell, _) = setup();
+            let signing_key =
+                shell.mode.get_protocol_key().expect("Test failed");
+            let address = shell.mode.get_validator_address().unwrap().clone();
+            let voting_power = shell.get_validator_voting_power().unwrap();
+
+            // we will submit two copies of this header which should get
+            // combined into a single multi-signed header in a protocol tx
+            let header_1 = EthereumHeader {
+                hash: Hash([0; 32]),
+                parent_hash: Hash([0; 32]),
+                number: 0u64,
+                difficulty: 0.into(),
+                mix_hash: Hash([0; 32]),
+                nonce: Default::default(),
+                state_root: Hash([0; 32]),
+                transactions_root: Hash([0; 32]),
+            };
+
+            // This is an invalid header that should appear in no protocol tx
+            let incorrect = header_1.clone().sign(
+                voting_power,
+                crate::wallet::defaults::bertha_address(),
+                shell.storage.last_height.0,
+                signing_key,
+            );
+
+            let signed_1 = header_1.clone().sign(
+                voting_power,
+                address.clone(),
+                shell.storage.last_height.0,
+                signing_key,
+            );
+
+            // This is a separate header that should appear by itself in
+            // in a protocol tx.
+            let header_2 = EthereumHeader {
+                hash: Hash([1; 32]),
+                parent_hash: Hash([0; 32]),
+                number: 0u64,
+                difficulty: 0.into(),
+                mix_hash: Hash([0; 32]),
+                nonce: Default::default(),
+                state_root: Hash([0; 32]),
+                transactions_root: Hash([0; 32]),
+            };
+
+            let signed_2 = header_2.clone().sign(
+                voting_power,
+                address.clone(),
+                shell.storage.last_height.0,
+                signing_key,
+            );
+
+            let vote_extension = VoteExtensionData {
+                ethereum_headers: vec![
+                    signed_1.clone(),
+                    incorrect,
+                    signed_1,
+                    signed_2,
+                ],
+            }
+            .try_to_vec()
+            .ok()
+            .map(|bytes| tendermint_proto::types::VoteExtension {
+                app_data_to_sign: bytes,
+                app_data_self_authenticating: vec![],
+            });
+
+            let vote = tendermint_proto::types::Vote {
+                r#type: 0,
+                height: 0,
+                round: 0,
+                block_id: None,
+                timestamp: None,
+                validator_address: vec![],
+                validator_index: 0,
+                signature: vec![],
+                vote_extension,
+            };
+
+            let protocol_txs = shell.prepare_ethereum_headers(
+                vec![vote],
+                shell.mode.get_protocol_key().unwrap(),
+            );
+            assert_eq!(protocol_txs.len(), 2);
+            for protocol_tx in protocol_txs {
+                let tx = Tx::try_from(protocol_tx.as_slice())
+                    .expect("Test failed");
+                match process_tx(tx) {
+                    Ok(TxType::Protocol(ProtocolTx {
+                        tx: ProtocolTxType::EthereumHeaders(tx),
+                        ..
+                    })) => {
+                        let height = shell.storage.last_height.0;
+                        if (&header_1, height)
+                            == (
+                                &tx.signed_header.data.0,
+                                tx.signed_header.data.1,
+                            )
+                        {
+                            assert_eq!(tx.voting_power, 2 * voting_power);
+                            assert_eq!(
+                                tx.signers,
+                                vec![address.clone(), address.clone()]
+                            )
+                        } else if (&header_2, height)
+                            == (
+                                &tx.signed_header.data.0,
+                                tx.signed_header.data.1,
+                            )
+                        {
+                            assert_eq!(tx.voting_power, voting_power);
+                            assert_eq!(tx.signers, vec![address.clone()])
+                        } else {
+                            panic!("Test failed");
+                        }
+                    }
+                    _ => panic!("Test failed"),
+                }
+            }
         }
     }
 }

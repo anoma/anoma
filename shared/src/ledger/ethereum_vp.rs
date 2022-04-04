@@ -78,16 +78,15 @@ pub mod ethereum_headers_vp {
             keys_changed: &BTreeSet<Key>,
             verifiers: &BTreeSet<Address>,
         ) -> Result<bool> {
-            let header =
-                if let Ok(Ok(TxType::Protocol(ProtocolTx {
-                    tx: ProtocolTxType::EthereumHeaders(header),
-                    ..
-                }))) = Tx::try_from(tx_data).map(process_tx)
-                {
-                    header
-                } else {
-                    return Ok(false);
-                };
+            let header = if let Ok(Ok(TxType::Protocol(ProtocolTx {
+                tx: ProtocolTxType::EthereumHeaders(header),
+                ..
+            }))) = Tx::try_from(tx_data).map(process_tx)
+            {
+                header
+            } else {
+                return Ok(false);
+            };
             Ok(true)
         }
     }

@@ -73,10 +73,20 @@ where
                 },
                 TxType::Protocol(protocol_tx) => match &protocol_tx.tx {
                     ProtocolTxType::EthereumHeaders(_header) => {
-                        // TODO! check that 2 / 3 of voting power is behind valid headers
-                        // TODO! currently blocked by shim implementation
+                        // TODO! check that 2 / 3 of voting power is behind
+                        // TODO! valid headers. Currently blocked by shim
+                        // TODO! implementation
                         #[cfg(not(feature = "ABCI"))]
-                        if self.validate_ethereum_header(_header) {
+                        if self.validate_ethereum_header(
+                            self.storage.last_height.0,
+                            _header,
+                        ) && self
+                            .get_validator_from_protocol_pk(
+                                &protocol_tx.pk,
+                                None,
+                            )
+                            .is_some()
+                        {
                             TxResult {
                                 code: ErrorCodes::Ok.into(),
                                 info: "Process proposal accepted this \
@@ -278,6 +288,7 @@ where
 mod test_process_proposal {
     use anoma::proto::SignedTxData;
     use anoma::types::address::xan;
+    use anoma::types::ethereum_headers::EthereumHeader;
     use anoma::types::hash::Hash;
     use anoma::types::key::*;
     use anoma::types::storage::Epoch;
@@ -777,5 +788,119 @@ mod test_process_proposal {
         {
             assert_eq!(response.tx, tx.to_bytes());
         }
+    }
+
+    /// Test that a valid protocol tx is accepted
+    #[test]
+    fn test_protocol_tx_accepted() {
+        let (mut shell, _) = setup();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0,
+            signing_key,
+        );
+        let tx = ProtocolTxType::EthereumHeaders(header.into())
+            .sign(&signing_key.ref_to(), signing_key)
+            .to_bytes();
+        let request = ProcessProposal { tx };
+        let response = shell.process_proposal(request);
+        #[cfg(not(feature = "ABCI"))]
+        assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
+        #[cfg(feature = "ABCI")]
+        assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
+        #[cfg(feature = "ABCI")]
+        assert_eq!(
+            response.result.info,
+            String::from(
+                "Protocol transactions are a fun new feature that is coming \
+                 soon to a blockchain near you. Patience."
+            ),
+        )
+    }
+
+    /// Test that an unsigned protocol tx are rejected
+    #[test]
+    fn test_unsigned_protocol_tx_rejected() {
+        let (mut shell, _) = setup();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0,
+            signing_key,
+        );
+
+        let tx = Tx::new(
+            vec![],
+            Some(
+                ProtocolTxType::EthereumHeaders(header.into())
+                    .try_to_vec()
+                    .expect("Test failed"),
+            ),
+        )
+        .to_bytes();
+        let request = ProcessProposal { tx };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
+    }
+
+    /// Test that a protocol tx signed by someone other
+    /// than a current validator is rejected
+    #[test]
+    fn test_protocol_tx_must_be_signed_by_validator() {
+        let (mut shell, _) = setup();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0,
+            signing_key,
+        );
+
+        let other_key = gen_keypair();
+        let tx = ProtocolTxType::EthereumHeaders(header.into())
+            .sign(&other_key.ref_to(), &other_key)
+            .to_bytes();
+        let request = ProcessProposal { tx };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
     }
 }

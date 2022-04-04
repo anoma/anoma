@@ -254,7 +254,8 @@ where
 
     /// Add a new signature to the data.
     pub fn add_sig(&mut self, keypair: &common::SecretKey) {
-        let to_sign = self.data
+        let to_sign = self
+            .data
             .try_to_vec()
             .expect("Encoding data for signing shouldn't fail");
         self.sigs.push(common::SigScheme::sign(keypair, &to_sign));

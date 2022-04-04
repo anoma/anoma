@@ -237,6 +237,9 @@ impl Address {
                 internal::IBC_MINT => {
                     Ok(Address::Internal(InternalAddress::IbcMint))
                 }
+                internal::ETHEREUM_STATE => {
+                    Ok(Address::Internal(InternalAddress::EthereumState))
+                }
                 _ if raw.len() == HASH_LEN => Ok(Address::Internal(
                     InternalAddress::IbcEscrow(raw.to_string()),
                 )),

@@ -48,10 +48,12 @@ mod extend_votes {
                 if let Ok(VoteExtensionData { ethereum_headers }) =
                     VoteExtensionData::try_from(ext)
                 {
-                    return if ethereum_headers
-                        .iter()
-                        .all(|header| self.validate_ethereum_header(header))
-                    {
+                    return if ethereum_headers.iter().all(|header| {
+                        self.validate_ethereum_header(
+                            self.storage.last_height.0 + 1,
+                            header,
+                        )
+                    }) {
                         response::VerifyVoteExtension { result: 0 }
                     } else {
                         response::VerifyVoteExtension { result: 1 }
@@ -67,8 +69,7 @@ mod extend_votes {
         pub fn new_ethereum_headers(&mut self) -> Vec<SignedEthereumHeader> {
             let mut header_buffer = vec![];
             let voting_power = self.get_validator_voting_power();
-            let address =
-                self.mode.get_validator_address().cloned();
+            let address = self.mode.get_validator_address().cloned();
             if let ShellMode::Validator {
                 ref mut ethereum_recv,
                 data:
@@ -110,11 +111,12 @@ mod extend_votes {
         #[cfg(not(feature = "ABCI"))]
         pub fn validate_ethereum_header(
             &self,
+            block_number: u64,
             header: &impl SignedHeader,
         ) -> bool {
             // This should come from a vote extension sent during the
             // finalization of the last committed block.
-            if self.storage.last_height.0 != header.get_height() {
+            if block_number != header.get_height() {
                 return false;
             }
             // a committed block was validated by the validator set of the epoch
@@ -154,7 +156,6 @@ mod extend_votes {
             voting_power == VotingPower::from(header.get_voting_power())
                 && header.verify_signatures(&public_keys).is_ok()
         }
-
     }
 }
 
@@ -165,20 +166,20 @@ pub use extend_votes::*;
 mod test_vote_extensions {
     use std::convert::TryFrom;
 
-    use anoma::types::ethereum_headers::{EthereumHeader, MultiSignedEthHeader};
+    use anoma::ledger::pos;
+    use anoma::ledger::pos::anoma_proof_of_stake::PosBase;
+    use anoma::types::ethereum_headers::{
+        EthereumHeader, MultiSignedEthHeader,
+    };
     use anoma::types::hash::Hash;
     use anoma::types::key::*;
-    use anoma::ledger::pos::{self, anoma_proof_of_stake::PosBase};
     use anoma::types::storage::Epoch;
-    use anoma::types::vote_extensions::{VoteExtension, VoteExtensionData};
+    use anoma::types::vote_extensions::VoteExtensionData;
     use tendermint_proto::types::Vote;
     use tower_abci::request;
 
-    use super::*;
     use crate::node::ledger::shell::test_utils::*;
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::FinalizeBlock;
-
-
 
     /// Test that we successfully receive ethereum headers
     /// from the channel to fullnode process
@@ -251,14 +252,20 @@ mod test_vote_extensions {
             state_root: Hash([0; 32]),
             transactions_root: Hash([0; 32]),
         }
-            .sign(
-                voting_power,
-                address,
-                shell.storage.last_height.0 + 1,
-                &signing_key
-            );
-        assert!(!shell.validate_ethereum_header(&signed_header));
-        assert!(!shell.validate_ethereum_header(&MultiSignedEthHeader::from(signed_header)));
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0 + 1,
+            &signing_key,
+        );
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &signed_header
+        ));
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &MultiSignedEthHeader::from(signed_header)
+        ));
     }
 
     #[cfg(not(feature = "ABCI"))]
@@ -271,6 +278,7 @@ mod test_vote_extensions {
         let protocol_key = shell.mode.get_protocol_key().unwrap().clone();
         let address = shell.mode.get_validator_address().unwrap().clone();
         let voting_power = shell.get_validator_voting_power().unwrap();
+        let height = shell.storage.last_height.0 + 1;
         let signed_header = EthereumHeader {
             hash: Hash([0; 32]),
             parent_hash: Hash([0; 32]),
@@ -281,12 +289,7 @@ mod test_vote_extensions {
             state_root: Hash([0; 32]),
             transactions_root: Hash([0; 32]),
         }
-        .sign(
-            voting_power,
-            address,
-            shell.storage.last_height.0 + 1,
-            &protocol_key
-        );
+        .sign(voting_power, address, height, &protocol_key);
         assert_eq!(shell.storage.get_current_epoch().0.0, 0);
         // We make a change so that there are no
         // validators in the next epoch
@@ -321,7 +324,114 @@ mod test_vote_extensions {
                 )
                 .is_some()
         );
-        assert!(shell.validate_ethereum_header(&signed_header));
-        assert!(shell.validate_ethereum_header(&MultiSignedEthHeader::from(signed_header)));
+        assert!(shell.validate_ethereum_header(height, &signed_header));
+        assert!(shell.validate_ethereum_header(
+            height,
+            &MultiSignedEthHeader::from(signed_header)
+        ));
+    }
+
+    /// Test that if the sum of voting powers is not correct,
+    /// the signed headers are rejected
+    #[test]
+    fn reject_incorrect_voting_power() {
+        let (shell, _) = setup();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = 99;
+        let header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0 + 1,
+            &signing_key,
+        );
+
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &header
+        ));
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &MultiSignedEthHeader::from(header)
+        ));
+    }
+
+    /// Test that that a header that incorrectly labels what block it was
+    /// included in a vote extension on is rejected
+    #[test]
+    fn reject_incorrect_block_number() {
+        let (shell, _) = setup();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
+            shell.storage.last_height.0,
+            &signing_key,
+        );
+
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &header
+        ));
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &MultiSignedEthHeader::from(header)
+        ));
+    }
+
+    /// Test that that a header with an incorrect address
+    /// included in a vote extension is rejected
+    #[test]
+    fn reject_incorrect_address() {
+        let (shell, _) = setup();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let header = EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            crate::wallet::defaults::bertha_address(),
+            shell.storage.last_height.0 + 1,
+            &signing_key,
+        );
+
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &header
+        ));
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &MultiSignedEthHeader::from(header)
+        ));
     }
 }

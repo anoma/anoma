@@ -31,7 +31,9 @@ pub mod eth_header_types {
     type Result<T> = std::result::Result<T, Error>;
 
     /// The difficulty of an Ethereum block
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+    #[derive(
+        Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq,
+    )]
     pub struct Difficulty([u64; 4]);
 
     impl From<U256> for Difficulty {
@@ -59,7 +61,9 @@ pub mod eth_header_types {
     }
 
     /// The nonce found by mining an Ethereum block
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+    #[derive(
+        Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq,
+    )]
     pub struct Nonce([u8; 8]);
 
     impl Default for Nonce {
@@ -104,7 +108,9 @@ pub mod eth_header_types {
         }
     }
 
-    #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+    #[derive(
+        Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq,
+    )]
     /// Pared down information from an Ethereum block header.
     /// Should only represent headers of mined blocks.
     pub struct EthereumHeader {
@@ -126,7 +132,6 @@ pub mod eth_header_types {
         pub transactions_root: Hash,
     }
 
-    #[cfg(not(feature = "ABCI"))]
     impl EthereumHeader {
         /// Create a signature for the Ethereum header and return
         /// the signed data.

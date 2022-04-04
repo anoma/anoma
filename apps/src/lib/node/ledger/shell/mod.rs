@@ -387,7 +387,9 @@ where
         response
     }
 
+
     /// Get the voting power of this node if it is a validator. Else return None
+    #[allow(dead_code)]
     pub fn get_validator_voting_power(&self) -> Option<u64> {
         if let Some(secret_key) = self.mode.get_protocol_key() {
             match self
@@ -656,9 +658,7 @@ mod test_utils {
     #[cfg(not(feature = "ABCI"))]
     use tendermint::{Hash, Time};
     #[cfg(not(feature = "ABCI"))]
-    use tendermint_proto::abci::{
-        Event as TmEvent, RequestInitChain,
-    };
+    use tendermint_proto::abci::{Event as TmEvent, RequestInitChain};
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::google::protobuf::Timestamp;
     #[cfg(feature = "ABCI")]
