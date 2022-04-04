@@ -113,8 +113,6 @@ where
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
                                         self.write_log.commit_tx();
-                                        println!("{:?}", tx_result.vps_result.accepted_vps);
-                                        println!("{:?}", tx_result.vps_result.rejected_vps);
                                         tracing::info!("Proposal code okay :(");
                                         let author_key =
                                             gov_storage::get_author_key(id);
@@ -154,8 +152,6 @@ where
                                             .events
                                             .push(proposal_event.into());
                                     } else {
-                                        println!("{:?}", tx_result.vps_result.accepted_vps);
-                                        println!("{:?}", tx_result.vps_result.rejected_vps);
                                         tracing::info!("Proposal code not okay :(");
                                         self.storage.transfer(
                                             &m1t(),

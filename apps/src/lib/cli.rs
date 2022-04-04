@@ -1998,7 +1998,7 @@ pub mod args {
         }
 
         fn def(app: App) -> App {
-            app.add_args::<Tx>().arg(
+            app.add_args::<Query>().arg(
                 OPTIONAL_PROPOSAL_ID.def().about("The proposal identifier."),
             )
         }
@@ -2075,7 +2075,7 @@ pub mod args {
         }
 
         fn def(app: App) -> App {
-            app
+            app.add_args::<Query>()
         }
     }
 

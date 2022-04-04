@@ -520,10 +520,7 @@ pub async fn query_proposal_result(
     }
 }
 
-pub async fn query_protocol_parameters(ctx: Context, args: args::QueryProtocolParameters) {
-    // pos_params
-    // treasury_params
-    // params
+pub async fn query_protocol_parameters(_ctx: Context, args: args::QueryProtocolParameters) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
     let gov_params_key = vec![
         ("Max. proposal code size", gov_storage::get_max_proposal_code_size_key()),
@@ -534,6 +531,7 @@ pub async fn query_protocol_parameters(ctx: Context, args: args::QueryProtocolPa
     ];
 
     for param_data in gov_params_key {
+        
         let param_value = query_storage_value::<u64>(&client, &param_data.1).await.expect("Parameter should be definied.");
         println!("{}: {}", param_data.0, param_value);
     }

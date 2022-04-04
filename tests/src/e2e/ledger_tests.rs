@@ -520,7 +520,7 @@ fn pos_bonds() -> Result<()> {
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
-    // 2. Submit a self-bond for the genesis validator
+    // 2. Submit a self-bond for the gepnesis validator
     let tx_args = vec![
         "bond",
         "--validator",
@@ -993,6 +993,7 @@ fn proposal_submission() -> Result<()> {
     // 2. Submit valid proposal
     let valid_proposal_json_path =
         test.base_dir.path().join("valid_proposal.json");
+    let proposal_code = wasm_abs_path(VP_ALWAYS_TRUE_WASM);
     let albert = find_address(&test, ALBERT)?;
     let valid_proposal_json = json!(
         {
@@ -1010,9 +1011,11 @@ fn proposal_submission() -> Result<()> {
             "author": albert,
             "voting_start_epoch": 3,
             "voting_end_epoch": 9,
-            "grace_epoch": 15
+            "grace_epoch": 15,
+            "proposal_code": proposal_code.to_str()
         }
     );
+
     generate_proposal_json(
         valid_proposal_json_path.clone(),
         valid_proposal_json,
@@ -1095,7 +1098,8 @@ fn proposal_submission() -> Result<()> {
             "author": albert,
             "voting_start_epoch": 9999,
             "voting_end_epoch": 10000,
-            "grace_epoch": 10009
+            "grace_epoch": 10009,
+            
         }
     );
     generate_proposal_json(
@@ -1264,6 +1268,17 @@ fn proposal_submission() -> Result<()> {
 
     let mut client = run!(test, Bin::Client, query_balance_args, Some(30))?;
     client.exp_string("XAN: 0")?;
+    client.assert_success();
+
+    // 14. Query parameters
+    let query_protocol_parameters = vec![
+        "query-protocol-parameters",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_protocol_parameters, Some(30))?;
+    client.exp_string("Min. proposal grace epoch: 9")?;
     client.assert_success();
 
     Ok(())
