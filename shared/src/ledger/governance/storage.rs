@@ -19,6 +19,7 @@ const MIN_PROPOSAL_PERIOD_KEY: &str = "min_period";
 const MAX_PROPOSAL_CONTENT_SIZE_KEY: &str = "max_content";
 const MIN_GRACE_EPOCH_KEY: &str = "min_grace_epoch";
 const COUNTER_KEY: &str = "counter";
+const PENDING_PROPOSAL: &str = "pending";
 
 /// Check if key is inside governance address space
 pub fn is_governance_key(key: &Key) -> bool {
@@ -242,7 +243,7 @@ pub fn is_min_proposal_period_key(key: &Key) -> bool {
 }
 
 /// Check if key is a min grace epoch key
-pub fn is_min_grace_epoch_key(key: &Key) -> bool {
+pub fn is_commit_proposal_key(key: &Key) -> bool {
     match &key.segments[..] {
         [
             DbKeySeg::AddressSeg(addr),
@@ -260,8 +261,10 @@ pub fn is_min_grace_epoch_key(key: &Key) -> bool {
     }
 }
 
+// #atest1v9hx7w36gahhvetjdeskucm9yqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpq5a20qt/proposal/epoch/12/0
+
 /// Check if key is a commit proposal key
-pub fn is_commit_proposal_key(key: &Key) -> bool {
+pub fn is_min_grace_epoch_key(key: &Key) -> bool {
     match &key.segments[..] {
         [
             DbKeySeg::AddressSeg(addr),
@@ -436,6 +439,15 @@ pub fn get_vote_proposal_key(
         .push(&delegation_address)
         .expect("Cannot obtain a storage key")
         .push(&voter_address)
+        .expect("Cannot obtain a storage key")
+}
+
+/// Get the proposal execution key
+pub fn get_proposal_execution_key(id: u64) -> Key {
+    Key::from(ADDRESS.to_db_key())
+        .push(&PENDING_PROPOSAL.to_owned())
+        .expect("Cannot obtain a storage key")
+        .push(&id.to_string())
         .expect("Cannot obtain a storage key")
 }
 

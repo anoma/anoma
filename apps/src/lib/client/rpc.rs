@@ -254,7 +254,7 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
                         start_epoch,
                         &delegator_voters,
                         &validator_voters,
-                        &active_validators
+                        &active_validators[..]
                     )
                     .await
                 );
@@ -349,7 +349,7 @@ pub async fn query_proposal_result(
                                 start_epoch,
                                 &delegator_voters,
                                 &validator_voters,
-                                &active_validators
+                                &active_validators[..]
                             )
                             .await
                         );
@@ -483,14 +483,15 @@ pub async fn query_proposal_result(
                                 );
                             }
                         }
-                        let active_validators = get_all_active_validators(
-                            &client,
-                            proposal.tally_epoch,
-                        )
-                        .await
-                        .keys()
-                        .map(|addr| addr.clone())
-                        .collect();
+                        let active_validators: Vec<Address> =
+                            get_all_active_validators(
+                                &client,
+                                proposal.tally_epoch,
+                            )
+                            .await
+                            .keys()
+                            .cloned()
+                            .collect();
                         println!(
                             "{:4}Result: {}",
                             "",
@@ -499,7 +500,7 @@ pub async fn query_proposal_result(
                                 current_epoch,
                                 &delegator_voters,
                                 &validator_voters,
-                                &active_validators
+                                &active_validators[..]
                             )
                             .await
                         );
@@ -1587,7 +1588,7 @@ pub async fn get_votes(
         (
             delegator_voters,
             validator_voters,
-            active_validators.keys().map(|addr| addr.clone()).collect(),
+            active_validators.keys().cloned().collect(),
         )
     } else {
         (HashMap::new(), HashMap::new(), Vec::new())
@@ -1599,7 +1600,7 @@ pub async fn compute_tally(
     epoch: Epoch,
     delegator_voters: &HashMap<Address, ProposalVote>,
     validator_voters: &HashMap<Address, ProposalVote>,
-    active_validators: &Vec<Address>,
+    active_validators: &[Address],
 ) -> TallyResult {
     let mut bond_data: HashMap<Address, (Address, token::Amount)> =
         HashMap::new();
@@ -1698,7 +1699,7 @@ pub async fn get_bond_amount_at(
     validator: &Address,
     epoch: Epoch,
 ) -> Option<token::Amount> {
-    let slashes_key = pos::validator_slashes_key(&validator);
+    let slashes_key = pos::validator_slashes_key(validator);
     let slashes = query_storage_value::<pos::Slashes>(client, &slashes_key)
         .await
         .unwrap_or_default();
