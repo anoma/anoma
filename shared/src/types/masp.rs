@@ -15,6 +15,7 @@ const PAYMENT_ADDRESS_HRP: &str = "patest";
 const EXTENDED_SPENDING_KEY_HRP: &str = "esktest";
 
 /// Wrapper for masp_primitive's FullViewingKey
+#[derive(Clone, Debug, Copy)]
 pub struct FullViewingKey(masp_primitives::keys::FullViewingKey);
 
 impl Display for FullViewingKey {
@@ -31,7 +32,7 @@ impl Display for FullViewingKey {
                 FULL_VIEWING_KEY_HRP
             )
         });
-        writeln!(f, "{encoded}")
+        write!(f, "{encoded}")
     }
 }
 
@@ -71,7 +72,32 @@ impl From<masp_primitives::keys::FullViewingKey> for FullViewingKey {
     }
 }
 
+impl serde::Serialize for FullViewingKey {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let encoded = self.to_string();
+        serde::Serialize::serialize(&encoded, serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for FullViewingKey {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let encoded: String = serde::Deserialize::deserialize(deserializer)?;
+        Self::from_str(&encoded).map_err(D::Error::custom)
+    }
+}
+
 /// Wrapper for masp_primitive's PaymentAddress
+#[derive(Clone, Debug, Copy, PartialOrd, Ord, Eq, PartialEq)]
 pub struct PaymentAddress(masp_primitives::primitives::PaymentAddress);
 
 impl From<PaymentAddress> for masp_primitives::primitives::PaymentAddress {
@@ -100,7 +126,7 @@ impl Display for PaymentAddress {
                 PAYMENT_ADDRESS_HRP
             )
         });
-        writeln!(f, "{encoded}")
+        write!(f, "{encoded}")
     }
 }
 
@@ -134,7 +160,32 @@ impl FromStr for PaymentAddress {
     }
 }
 
+impl serde::Serialize for PaymentAddress {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let encoded = self.to_string();
+        serde::Serialize::serialize(&encoded, serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for PaymentAddress {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let encoded: String = serde::Deserialize::deserialize(deserializer)?;
+        Self::from_str(&encoded).map_err(D::Error::custom)
+    }
+}
+
 /// Wrapper for masp_primitive's ExtendedSpendingKey
+#[derive(Clone, Debug, Copy)]
 pub struct ExtendedSpendingKey(masp_primitives::zip32::ExtendedSpendingKey);
 
 impl Display for ExtendedSpendingKey {
@@ -153,7 +204,7 @@ impl Display for ExtendedSpendingKey {
                 EXTENDED_SPENDING_KEY_HRP
             )
         });
-        writeln!(f, "{encoded}")
+        write!(f, "{encoded}")
     }
 }
 
@@ -190,5 +241,29 @@ impl From<ExtendedSpendingKey> for masp_primitives::zip32::ExtendedSpendingKey {
 impl From<masp_primitives::zip32::ExtendedSpendingKey> for ExtendedSpendingKey {
     fn from(key: masp_primitives::zip32::ExtendedSpendingKey) -> Self {
         Self(key)
+    }
+}
+
+impl serde::Serialize for ExtendedSpendingKey {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let encoded = self.to_string();
+        serde::Serialize::serialize(&encoded, serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ExtendedSpendingKey {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let encoded: String = serde::Deserialize::deserialize(deserializer)?;
+        Self::from_str(&encoded).map_err(D::Error::custom)
     }
 }

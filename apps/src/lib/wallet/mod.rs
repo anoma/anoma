@@ -12,6 +12,7 @@ use anoma::types::address::Address;
 use anoma::types::key::*;
 pub use store::wallet_file;
 use thiserror::Error;
+use anoma::types::masp::{PaymentAddress, FullViewingKey, ExtendedSpendingKey};
 
 use self::alias::Alias;
 pub use self::keys::{DecryptionError, StoredKeypair};
@@ -19,9 +20,6 @@ use self::store::Store;
 pub use self::store::{ValidatorData, ValidatorKeys};
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
-use masp_primitives::zip32::ExtendedSpendingKey;
-use masp_primitives::keys::FullViewingKey;
-use masp_primitives::primitives::PaymentAddress;
 
 #[derive(Debug)]
 pub struct Wallet {

@@ -15,9 +15,7 @@ use ark_std::rand::SeedableRng;
 use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use masp_primitives::primitives::PaymentAddress;
-use masp_primitives::zip32::ExtendedSpendingKey;
-use masp_primitives::keys::FullViewingKey;
+use anoma::types::masp::{PaymentAddress, ExtendedSpendingKey, FullViewingKey};
 
 use super::alias::Alias;
 use super::keys::StoredKeypair;
@@ -315,7 +313,7 @@ impl Store {
         use rand::rngs::OsRng;
         let mut spend_key = [0; 32];
         OsRng.fill_bytes(&mut spend_key);
-        ExtendedSpendingKey::master(spend_key.as_ref())
+        masp_primitives::zip32::ExtendedSpendingKey::master(spend_key.as_ref()).into()
     }
 
     /// Generate a new keypair and insert it into the store with the provided

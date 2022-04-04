@@ -1377,9 +1377,7 @@ pub mod args {
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
     use anoma::types::address::masp;
-    use masp_primitives::keys::FullViewingKey;
-    use masp_primitives::zip32::ExtendedSpendingKey;
-    use masp_primitives::primitives::PaymentAddress;
+    use anoma::types::masp::{FullViewingKey, ExtendedSpendingKey, PaymentAddress};
 
     use super::context::{WalletAddress, WalletKeypair, WalletPublicKey, WalletSpendingKey, WalletViewingKey, WalletPaymentAddr};
     use super::utils::*;

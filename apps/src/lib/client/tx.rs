@@ -594,7 +594,7 @@ async fn gen_shielded_transfer(
         return Ok(None);
     }
     // We want to fund our transaction solely from supplied spending key
-    let spending_key = args.spending_key.as_ref().map(|x| ctx.get_cached(&x));
+    let spending_key = args.spending_key.as_ref().map(|x| ctx.get_cached(&x).into());
     let spending_keys = spending_key.clone().into_iter().collect();
     // Load the current shielded context given the spending key we possess
     let tx_ctx = load_shielded_context(
@@ -617,7 +617,7 @@ async fn gen_shielded_transfer(
     builder.set_fee(Amount::zero())?;
     // If there are shielded inputs
     if let Some(sk) = &args.spending_key {
-        let sk = ctx.get_cached(&sk);
+        let sk = ctx.get_cached(&sk).into();
         let mut val_acc = 0;
         // Retrieve the notes that can be spent by this key
         if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk).vk) {
@@ -673,8 +673,11 @@ async fn gen_shielded_transfer(
     // Now handle the outputs of this transaction
     // If there is a shielded output
     if let Some(pa) = &args.payment_address {
-        let ovk_opt = args.spending_key.as_ref().map(|x| ctx.get_cached(&x).expsk.ovk);
-        builder.add_sapling_output(ovk_opt, ctx.get(&pa), asset_type, amt, memo)?;
+        let ovk_opt = args
+            .spending_key
+            .as_ref()
+            .map(|x| ExtendedSpendingKey::from(ctx.get_cached(&x)).expsk.ovk);
+        builder.add_sapling_output(ovk_opt, ctx.get(&pa).into(), asset_type, amt, memo)?;
     } else {
         // Embed the transparent target address into the shielded transaction so
         // that it can be signed 

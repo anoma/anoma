@@ -42,8 +42,8 @@ use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 use tendermint_stable::abci::Code;
 use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
-use masp_primitives::keys::FullViewingKey;
 use std::collections::{HashMap, HashSet};
+use masp_primitives::keys::FullViewingKey;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
@@ -201,12 +201,12 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
     let viewing_keys = match (args.viewing_key, args.spending_key) {
         (Some(viewing_key), None) => vec![ctx.get_cached(&viewing_key)],
         (None, Some(spending_key)) =>
-            vec![to_viewing_key(&ctx.get_cached(&spending_key))],
+            vec![to_viewing_key(&ctx.get_cached(&spending_key).into()).into()],
         (None, None) =>
             ctx.wallet
             .get_viewing_keys()
             .values()
-            .map(FullViewingKey::clone)
+            .map(|x| x.clone())
             .collect(),
         _ => {
             eprintln!("Either a viewing or spending key or neither must be specified");
@@ -217,7 +217,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
     let shielded_ctx = load_shielded_context(
         &args.query.ledger_address,
         &vec![],
-        &viewing_keys.iter().map(|fvk| fvk.vk).collect(),
+        &viewing_keys.iter().map(|fvk| FullViewingKey::from(*fvk).vk).collect(),
     ).await;
     // Map addresses to token names
     let tokens = address::tokens();
@@ -225,7 +225,8 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         // Here the user wants to know the balance for a specific token
         (Some(token), true) => {
             // Query the multi-asset balance at the given spending key
-            let balance = compute_shielded_balance(&shielded_ctx, &viewing_keys[0].vk)
+            let viewing_key = FullViewingKey::from(viewing_keys[0]).vk;
+            let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                 .expect("context should contain viewing key");
             // Compute the unique asset identifier from the token address
             let token = ctx.get(&token);
@@ -249,7 +250,8 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             let mut balances = HashMap::new();
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
-                let balance = compute_shielded_balance(&shielded_ctx, &fvk.vk)
+                let viewing_key = FullViewingKey::from(fvk).vk;
+                let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                     .expect("context should contain viewing key");
                 for (asset_type, value) in balance.components() {
                     if !balances.contains_key(asset_type) {
@@ -315,7 +317,8 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             let mut found_any = false;
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
-                let balance = compute_shielded_balance(&shielded_ctx, &fvk.vk)
+                let viewing_key = FullViewingKey::from(fvk).vk;
+                let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                     .expect("context should contain viewing key");
                 if balance[&asset_type] != 0 {
                     let asset_value = token::Amount::from(balance[&asset_type] as u64);
@@ -330,7 +333,8 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         // Here the user wants to know all possible token balances for a key
         (None, true) => {
             // Query the multi-asset balance at the given spending key
-            let mut balance = compute_shielded_balance(&shielded_ctx, &viewing_keys[0].vk)
+            let viewing_key = FullViewingKey::from(viewing_keys[0]).vk;
+            let mut balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                 .expect("context should contain viewing key");
             let mut found_any = false;
             // Print those balances corresponding to human-readable token names

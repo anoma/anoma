@@ -9,9 +9,7 @@ use std::str::FromStr;
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
-use masp_primitives::zip32::ExtendedSpendingKey;
-use masp_primitives::keys::FullViewingKey;
-use masp_primitives::primitives::PaymentAddress;
+use anoma::types::masp::{FullViewingKey, PaymentAddress, ExtendedSpendingKey};
 
 use super::args;
 use crate::cli::safe_exit;
