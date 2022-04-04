@@ -2070,7 +2070,7 @@ pub mod args {
         }
 
         fn def(app: App) -> App {
-            app
+            app.add_args::<Query>()
         }
     }
 

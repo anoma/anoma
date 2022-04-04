@@ -437,12 +437,9 @@ pub async fn query_proposal_result(
 }
 
 pub async fn query_protocol_parameters(
-    ctx: Context,
+    _ctx: Context,
     args: args::QueryProtocolParameters,
 ) {
-    // pos_params
-    // treasury_params
-    // params
     let client = HttpClient::new(args.query.ledger_address).unwrap();
     let gov_params_key = vec![
         (

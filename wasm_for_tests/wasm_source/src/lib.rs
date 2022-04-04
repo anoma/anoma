@@ -30,7 +30,7 @@ pub mod main {
     #[transaction]
     fn apply_tx(_tx_data: Vec<u8>) {
         let target_key = storage::get_min_proposal_grace_epoch_key();
-        write(&target_key.to_string(), encode(&9));
+        write(&target_key.to_string(), 9_u64);
     }
 }
 

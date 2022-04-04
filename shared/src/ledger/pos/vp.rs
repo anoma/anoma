@@ -96,7 +96,7 @@ where
 
     fn validate_tx(
         &self,
-        _tx_data: &[u8],
+        tx_data: &[u8],
         keys_changed: &BTreeSet<Key>,
         verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
@@ -108,7 +108,7 @@ where
         let current_epoch = self.ctx.get_block_epoch()?;
         for key in keys_changed {
             if is_params_key(key) {
-                let proposal_id = u64::try_from_slice(_tx_data).ok();
+                let proposal_id = u64::try_from_slice(tx_data).ok();
                 match proposal_id {
                     Some(id) => return Ok(is_proposal_accepted(&self.ctx, id)),
                     _ => return Ok(false),
