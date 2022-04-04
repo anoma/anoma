@@ -839,7 +839,9 @@ pub mod cmds {
             Self: Sized,
         {
             matches.subcommand_matches(Self::CMD).map(|matches| {
-                QueryProtocolParameters(args::QueryProtocolParameters::parse(matches))
+                QueryProtocolParameters(args::QueryProtocolParameters::parse(
+                    matches,
+                ))
             })
         }
 
@@ -2062,16 +2064,14 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct QueryProtocolParameters {
         /// Common query args
-        pub query: Query
+        pub query: Query,
     }
 
     impl Args for QueryProtocolParameters {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
 
-            Self {
-                query
-            }
+            Self { query }
         }
 
         fn def(app: App) -> App {

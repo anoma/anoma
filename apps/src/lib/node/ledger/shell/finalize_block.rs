@@ -113,7 +113,7 @@ where
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
                                         self.write_log.commit_tx();
-                                        tracing::info!("Proposal code okay :(");
+                                        tracing::info!("Proposal code okay");
                                         let author_key =
                                             gov_storage::get_author_key(id);
                                         self.storage
@@ -152,7 +152,9 @@ where
                                             .events
                                             .push(proposal_event.into());
                                     } else {
-                                        tracing::info!("Proposal code not okay :(");
+                                        tracing::info!(
+                                            "Proposal code not okay :("
+                                        );
                                         self.storage.transfer(
                                             &m1t(),
                                             funds,

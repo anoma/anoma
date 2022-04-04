@@ -80,7 +80,6 @@ where
 
         let result = keys_changed.iter().all(|key| {
             let proposal_id = gov_storage::get_id(key);
-            println!("{}", key);
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
                 (KeyType::VOTE, Some(proposal_id)) => {
@@ -411,9 +410,7 @@ where
                     }
                 }
                 (KeyType::PARAMETER, _) => {
-                    println!("tx_data: {:?}", tx_data);
                     let proposal_id = u64::try_from_slice(tx_data).ok();
-                    println!("id: {:?}", proposal_id);
                     match proposal_id {
                         Some(id) => is_proposal_accepted(&self.ctx, id),
                         _ => false,

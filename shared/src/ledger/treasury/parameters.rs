@@ -44,6 +44,4 @@ impl TreasuryParams {
             .write(&max_proposal_fund_transfer_key, encode(&amount))
             .unwrap();
     }
-
-    
 }

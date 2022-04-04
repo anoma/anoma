@@ -993,7 +993,7 @@ fn proposal_submission() -> Result<()> {
     // 2. Submit valid proposal
     let valid_proposal_json_path =
         test.base_dir.path().join("valid_proposal.json");
-    let proposal_code = wasm_abs_path(VP_ALWAYS_TRUE_WASM);
+    let proposal_code = wasm_abs_path(TX_PROPOSAL_CODE);
     let albert = find_address(&test, ALBERT)?;
     let valid_proposal_json = json!(
         {
@@ -1099,7 +1099,6 @@ fn proposal_submission() -> Result<()> {
             "voting_start_epoch": 9999,
             "voting_end_epoch": 10000,
             "grace_epoch": 10009,
-            
         }
     );
     generate_proposal_json(
@@ -1277,8 +1276,9 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, query_protocol_parameters, Some(30))?;
-    client.exp_string("Min. proposal grace epoch: 9")?;
+    let mut client =
+        run!(test, Bin::Client, query_protocol_parameters, Some(30))?;
+    client.exp_regex(".*Min. proposal grace epoch: 9.*")?;
     client.assert_success();
 
     Ok(())
