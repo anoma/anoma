@@ -10,6 +10,7 @@ use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
 use anoma::types::masp::*;
+use crate::client::tx::to_viewing_key;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -380,9 +381,14 @@ impl ArgFromMutContext for FullViewingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
         FromStr::from_str(raw).or_else(|_parse_err| {
-            ctx.wallet.find_viewing_key(raw).map(Clone::clone).map_err(|_find_err| {
-                format!("Unknown viewing key {}", raw)
-            })
+            ctx.wallet.find_viewing_key(raw).map(Clone::clone)
+                .or_else(|_parse_err| {
+                    ExtendedSpendingKey::arg_from_mut_ctx(ctx, raw)
+                        .map(|x| to_viewing_key(&x.into()).into())
+                        .map_err(|_find_err| {
+                            format!("Unknown viewing key {}", raw)
+                        })
+                })
         })
     }
 }
