@@ -60,9 +60,41 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::ListViewKeys(cmds::MaspListViewKeys) => {
                 viewing_keys_list(ctx)
             }
+            cmds::WalletMasp::ListSpendKeys(cmds::MaspListSpendKeys(args)) => {
+                spending_keys_list(ctx, args)
+            }
         }
     }
     Ok(())
+}
+
+/// List spending keys.
+fn spending_keys_list(
+    ctx: Context,
+    args::SpendKeysList {
+        unsafe_show_secret,
+    }: args::SpendKeysList,
+) {
+    let wallet = ctx.wallet;
+    let known_keys = wallet.get_spending_keys();
+    if known_keys.is_empty() {
+        println!(
+            "No known spending keys. Try `masp add --alias my-addr --value ...` to \
+             add a new spending key to the wallet."
+        );
+    } else {
+        let stdout = io::stdout();
+        let mut w = stdout.lock();
+        writeln!(w, "Known spending keys:").unwrap();
+        for (alias, key) in known_keys {
+            write!(w, "  \"{}\"", alias).unwrap();
+            if unsafe_show_secret {
+                writeln!(w, ": {}", key)
+            } else {
+                writeln!(w, "")
+            }.unwrap();
+        }
+    }
 }
 
 /// List viewing keys.
@@ -73,7 +105,7 @@ fn viewing_keys_list(
     let known_keys = wallet.get_viewing_keys();
     if known_keys.is_empty() {
         println!(
-            "No known viewing keys. Try `masp add --alias my-addr --viewing-key ...` to \
+            "No known viewing keys. Try `masp add --alias my-addr --value ...` to \
              add a new viewing key to the wallet."
         );
     } else {

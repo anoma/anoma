@@ -450,6 +450,7 @@ pub mod cmds {
         AddAddrKey(MaspAddAddrKey),
         ListPayAddrs(MaspListPayAddrs),
         ListViewKeys(MaspListViewKeys),
+        ListSpendKeys(MaspListSpendKeys),
     }
 
     impl SubCmd for WalletMasp {
@@ -463,7 +464,8 @@ pub mod cmds {
                 let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
                 let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
                 let listvk = SubCmd::parse(matches).map(Self::ListViewKeys);
-                gensk.or(derivevk).or(genpa).or(addak).or(listpa).or(listvk)
+                let listsk = SubCmd::parse(matches).map(Self::ListSpendKeys);
+                gensk.or(derivevk).or(genpa).or(addak).or(listpa).or(listvk).or(listsk)
             })
         }
 
@@ -481,6 +483,26 @@ pub mod cmds {
                 .subcommand(MaspAddAddrKey::def())
                 .subcommand(MaspListPayAddrs::def())
                 .subcommand(MaspListViewKeys::def())
+                .subcommand(MaspListSpendKeys::def())
+        }
+    }
+
+    /// List all known spending keys
+    #[derive(Clone, Debug)]
+    pub struct MaspListSpendKeys(pub args::SpendKeysList);
+
+    impl SubCmd for MaspListSpendKeys {
+        const CMD: &'static str = "list-spending-keys";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD)
+                .map(|matches| Self(args::SpendKeysList::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Lists all spending keys in the wallet")
+                .add_args::<args::SpendKeysList>()
         }
     }
 
@@ -2691,6 +2713,29 @@ pub mod args {
                     .def()
                     .about("UNSAFE: Print the secret key."),
             )
+        }
+    }
+
+    /// Wallet list spending keys arguments
+    #[derive(Clone, Debug)]
+    pub struct SpendKeysList {
+        pub unsafe_show_secret: bool,
+    }
+
+    impl Args for SpendKeysList {
+        fn parse(matches: &ArgMatches) -> Self {
+            let unsafe_show_secret = UNSAFE_SHOW_SECRET.parse(matches);
+            Self {
+                unsafe_show_secret,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(
+                    UNSAFE_SHOW_SECRET
+                        .def()
+                        .about("UNSAFE: Print the spending key values."),
+                )
         }
     }
 

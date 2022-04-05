@@ -301,6 +301,11 @@ impl Store {
         &self.view_keys
     }
 
+    /// Get all known spending keys by their alias.
+    pub fn get_spending_keys(&self) -> &HashMap<Alias, ExtendedSpendingKey> {
+        &self.spend_keys
+    }
+
     fn generate_keypair() -> common::SecretKey {
         use rand::rngs::OsRng;
         let mut csprng = OsRng {};
