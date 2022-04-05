@@ -314,27 +314,19 @@ fn ledger_txs_and_queries() -> Result<()> {
 
 /// In this test we:
 /// 1. Run the ledger node
-/// 2. Attempt to underspecify both source and target
-/// 3. Attempt to underspecify source
-/// 4. Attempt to underspecify target
-/// 5. Attempt to overspecify source
-/// 6. Attempt to overspecify target
-/// 7. Attempt to overspecify both source and target
-/// 8. Attempt to overspecify source and underspecify target
-/// 9. Attempt to underspecify source and overspecify target
-/// 10. Attempt to spend 10 BTC at SK(A) to PA(B)
-/// 11. Attempt to spend 15 BTC at SK(A) to Bertha
-/// 12. Send 20 BTC from Albert to PA(A)
-/// 13. Attempt to spend 10 ETH at SK(A) to PA(B)
-/// 14. Spend 7 BTC at SK(A) to PA(B)
-/// 15. Spend 7 BTC at SK(A) to PA(B)
-/// 16. Attempt to spend 7 BTC at SK(A) to PA(B)
-/// 17. Spend 6 BTC at SK(A) to PA(B)
-/// 18. Assert balance at VK(A) is 0
-/// 19. Assert balance at SK(A) is 0
-/// 20. Assert balance at VK(B) is 10 BTC
-/// 21. Assert balance at SK(B) is 10 BTC
-/// 22. Send 10 BTC from SK(B) to Bertha
+/// 2. Attempt to spend 10 BTC at SK(A) to PA(B)
+/// 3. Attempt to spend 15 BTC at SK(A) to Bertha
+/// 4. Send 20 BTC from Albert to PA(A)
+/// 5. Attempt to spend 10 ETH at SK(A) to PA(B)
+/// 6. Spend 7 BTC at SK(A) to PA(B)
+/// 7. Spend 7 BTC at SK(A) to PA(B)
+/// 8. Attempt to spend 7 BTC at SK(A) to PA(B)
+/// 9. Spend 6 BTC at SK(A) to PA(B)
+/// 10. Assert balance at VK(A) is 0
+/// 11. Assert balance at SK(A) is 0
+/// 12. Assert balance at VK(B) is 10 BTC
+/// 13. Assert balance at SK(B) is 10 BTC
+/// 14. Send 10 BTC from SK(B) to Bertha
 
 #[test]
 fn masp_txs_and_queries() -> Result<()> {
@@ -354,140 +346,12 @@ fn masp_txs_and_queries() -> Result<()> {
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     let txs_args = vec![
-        // 2. Attempt to underspecify both source and target
-        (vec![
-            "transfer",
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify source address or a spending key"),
-        // 3. Attempt to underspecify source
-        (vec![
-            "transfer",
-            "--payment-address",
-            AB_PAYMENT_ADDRESS,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify source address or a spending key"),
-        // 4. Attempt to underspecify target
-        (vec![
-            "transfer",
-            "--spending-key",
-            A_SPENDING_KEY,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify target address or a payment address"),
-        // 5. Attempt to overspecify source
+        // 2. Attempt to spend 10 BTC at SK(A) to PA(B)
         (vec![
             "transfer",
             "--source",
-            ALBERT,
-            "--spending-key",
             A_SPENDING_KEY,
-            "--payment-address",
-            AB_PAYMENT_ADDRESS,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify source address or a spending key"),
-        // 6. Attempt to overspecify target
-        (vec![
-            "transfer",
-            "--spending-key",
-            A_SPENDING_KEY,
-            "--payment-address",
-            AB_PAYMENT_ADDRESS,
             "--target",
-            BERTHA,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify target address or a payment address"),
-        // 7. Attempt to overspecify both source and target
-        (vec![
-            "transfer",
-            "--source",
-            ALBERT,
-            "--spending-key",
-            A_SPENDING_KEY,
-            "--payment-address",
-            AB_PAYMENT_ADDRESS,
-            "--target",
-            BERTHA,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify source address or a spending key"),
-        // 8. Attempt to overspecify source and underspecify target
-        (vec![
-            "transfer",
-            "--source",
-            ALBERT,
-            "--spending-key",
-            A_SPENDING_KEY,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify source address or a spending key"),
-        // 9. Attempt to underspecify source and overspecify target
-        (vec![
-            "transfer",
-            "--payment-address",
-            AB_PAYMENT_ADDRESS,
-            "--target",
-            BERTHA,
-            "--token",
-            BTC,
-            "--amount",
-            "10",
-            "--signer",
-            ALBERT,
-            "--ledger-address",
-            &validator_one_rpc
-        ], "Must either specify source address or a spending key"),
-        // 10. Attempt to spend 10 BTC at SK(A) to PA(B)
-        (vec![
-            "transfer",
-            "--spending-key",
-            A_SPENDING_KEY,
-            "--payment-address",
             AB_PAYMENT_ADDRESS,
             "--token",
             BTC,
@@ -498,10 +362,10 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "No balance found"),
-        // 11. Attempt to spend 15 BTC at SK(A) to Bertha
+        // 3. Attempt to spend 15 BTC at SK(A) to Bertha
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             A_SPENDING_KEY,
             "--target",
             BERTHA,
@@ -512,12 +376,12 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "No balance found"),
-        // 12. Send 20 BTC from Albert to PA(A)
+        // 4. Send 20 BTC from Albert to PA(A)
         (vec![
             "transfer",
             "--source",
             ALBERT,
-            "--payment-address",
+            "--target",
             AA_PAYMENT_ADDRESS,
             "--token",
             BTC,
@@ -526,12 +390,12 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "Transaction is valid"),
-        // 13. Attempt to spend 10 ETH at SK(A) to PA(B)
+        // 5. Attempt to spend 10 ETH at SK(A) to PA(B)
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             A_SPENDING_KEY,
-            "--payment-address",
+            "--target",
             AB_PAYMENT_ADDRESS,
             "--token",
             ETH,
@@ -542,12 +406,12 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "No balance found"),
-        // 14. Spend 7 BTC at SK(A) to PA(B)
+        // 6. Spend 7 BTC at SK(A) to PA(B)
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             A_SPENDING_KEY,
-            "--payment-address",
+            "--target",
             AB_PAYMENT_ADDRESS,
             "--token",
             BTC,
@@ -558,12 +422,12 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "Transaction is valid"),
-        // 15. Spend 7 BTC at SK(A) to PA(B)
+        // 7. Spend 7 BTC at SK(A) to PA(B)
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             A_SPENDING_KEY,
-            "--payment-address",
+            "--target",
             BB_PAYMENT_ADDRESS,
             "--token",
             BTC,
@@ -574,12 +438,12 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "Transaction is valid"),
-        // 16. Attempt to spend 7 BTC at SK(A) to PA(B)
+        // 8. Attempt to spend 7 BTC at SK(A) to PA(B)
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             A_SPENDING_KEY,
-            "--payment-address",
+            "--target",
             BB_PAYMENT_ADDRESS,
             "--token",
             BTC,
@@ -590,12 +454,12 @@ fn masp_txs_and_queries() -> Result<()> {
             "--ledger-address",
             &validator_one_rpc
         ], "ChangeIsNegative"),
-        // 17. Spend 6 BTC at SK(A) to PA(B)
+        // 9. Spend 6 BTC at SK(A) to PA(B)
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             A_SPENDING_KEY,
-            "--payment-address",
+            "--target",
             BB_PAYMENT_ADDRESS,
             "--token",
             BTC,
@@ -608,47 +472,47 @@ fn masp_txs_and_queries() -> Result<()> {
         ], "Transaction is valid"),
 
 
-        // 18. Assert balance at VK(A) is 0
+        // 10. Assert balance at VK(A) is 0
         (vec![
             "balance",
-            "--viewing-key",
+            "--owner",
             AA_VIEWING_KEY,
             "--ledger-address",
             &validator_one_rpc
         ], "No shielded balance found"),
 
-        // 19. Assert balance at SK(A) is 0
+        // 11. Assert balance at SK(A) is 0
         (vec![
             "balance",
-            "--spending-key",
+            "--owner",
             A_SPENDING_KEY,
             "--ledger-address",
             &validator_one_rpc
         ], "No shielded balance found"),
 
-        // 20. Assert balance at VK(B) is 10 BTC
+        // 12. Assert balance at VK(B) is 10 BTC
         (vec![
             "balance",
-            "--viewing-key",
+            "--owner",
             AB_VIEWING_KEY,
             "--ledger-address",
             &validator_one_rpc
         ], "BTC: 20"),
 
-        // 21. Assert balance at SK(B) is 10 BTC
+        // 13. Assert balance at SK(B) is 10 BTC
         (vec![
             "balance",
-            "--spending-key",
+            "--owner",
             B_SPENDING_KEY,
             "--ledger-address",
             &validator_one_rpc
         ], "BTC: 20"),
         
         
-        // 22. Send 10 BTC from SK(B) to Bertha
+        // 14. Send 10 BTC from SK(B) to Bertha
         (vec![
             "transfer",
-            "--spending-key",
+            "--source",
             B_SPENDING_KEY,
             "--target",
             BERTHA,

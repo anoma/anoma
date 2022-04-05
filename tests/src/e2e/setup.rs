@@ -664,13 +664,13 @@ pub mod constants {
     pub const MATCHMAKER_KEY: &str = "matchmaker-key";
 
     // Shielded spending and viewing keys and payment addresses
-    pub const A_SPENDING_KEY: &str = "AA";
-    pub const B_SPENDING_KEY: &str = "BB";
-    pub const AA_PAYMENT_ADDRESS: &str = "7e3b7eb284869b247b592000da154295ceba361df27179aa896407893765606fb70d1385e2e0d23e2305d3";
-    pub const AB_PAYMENT_ADDRESS: &str = "c22bd2a654d911ce4cbe98884359ab2dda81380cae4ec425a95724d1186981f1e6d107f544f6d6fbf1b415";
-    pub const AB_VIEWING_KEY: &str = "e4ceb8d40a71220962b0379e76e3b37d84dfc17038f4caf30adae0966a10af1e9ea8ba9a639fb0badddaa532ce908d28fe341d8d7fb1bec4ac74d4b36cdea61d16b3dfc074cf3372c2bb2ccd97e50604fd7af435aefee0473b3b1413c70864a7";
-    pub const BB_PAYMENT_ADDRESS: &str = "544c1c52f8873c60ad0cbd486a0dad6ab9d756d47976228d21113f5c5b061f2a8c7b16e3202f2eed73f370";
-    pub const AA_VIEWING_KEY: &str = "628a9956322f3f7d20b19801d9b4a8f3cb4b8b756a26ef2477feb5264be7b808c920996f37a79433d08e27fefcda0b6736c296b1073734a4ee35d11368f2b52ef14d7c1749cc8119ecc8a894f696992453f2dd78ef1e9d74172b2a5ef7cc8c50";
+    pub const A_SPENDING_KEY: &str = "esktest1qqqqqqqqqqqqqqpajlxdag4fm9da07ygygdek8t3g3ut24fdcccj4fej7dv25hpqgc5vums4m608h6w7hfrg7fd7l22xw7v3l0f24pk6u2dfrmgvd7vq35qu6zympq464gvjc5xnnwtacpmtznk7jkpp9dapp0t7zqxhj3qwmfaev2aqaj5qar73sy095sjp05yz6yfsemp2dxx90f845xrk9yq8x7kdthjjhmh9q60wgxjtfj0pk3k6ngjmnjpphyu5hd3jnywh3sgk90jnd";
+    pub const B_SPENDING_KEY: &str = "esktest1qqqqqqqqqqqqqqyz9tygpwd73usnnx5e6gp9ugh24pj49582uhgac55yr3e3v8j8pvcwcjucal50yjczjga3uxg7fvdly5xew44zpjzk2d3eprlkdgfsjw5r3cs7py27ry6z6ey7hpnhvzqjg86c3lxgzmqh3n7ryqceumgv9k9wugs92454fhjj5vs5dme3vg9aa9zjn7pcrglcrtfr4985wx7vqp8rv49qp6w5s00utkt93axexsagyxc6e8axf89vhggnde4aacg3xk074";
+    pub const AA_PAYMENT_ADDRESS: &str = "patest10qy6fuwef9leccl6dfm7wwlyd336x4y32hz62cnrvlrl6r5yk0jnw80kus33x34a5peg2xc4csn";
+    pub const AB_PAYMENT_ADDRESS: &str = "patest1uu0ju4znwrpyftrynsvqrhk5edz5dhscnqtf53yf87pdnlsklmzw84kw79ema5mut6v0y2zg266";
+    pub const AB_VIEWING_KEY: &str = "fvktest1w4dvt5evs6trmx8ym3crtxx4hsrr9e4tlte26j0mwyq77umn643yevw3c5xchw9a5unnt35wth23m372u52evgnq57qm63c9f48c09pd3thzyp24d92du54ry9rw7vtzp00fg55lswq687q66gaffar3hsqs0mcu";
+    pub const BB_PAYMENT_ADDRESS: &str = "patest142c53znegyz0wc4kcqu97c4mzzahq2zdc6fxp9dhe99jrlf3x2q3x6ds8zl4hsrehc3evmfyjmv";
+    pub const AA_VIEWING_KEY: &str = "fvktest1ejltkc8ptep0kg5vyzcrj3lfwgzty08fmkvnh3qfuw4fsq6msxuuuzqmjdayfggxl8fvhe9w3yl50ry5yfr7h43nhshs78ku3wd55e760wtzhg8v4q8gl5vpredyystapqk3zvxwc2nf33t6fadpsa3fqqwepq5h";
 
     // Fungible token addresses
     pub const XAN: &str = "XAN";
