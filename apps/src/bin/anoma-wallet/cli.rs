@@ -130,24 +130,10 @@ fn payment_address_gen(
     mut ctx: Context,
     args::MaspPayAddrGen {
         alias,
-        spending_key,
         viewing_key,
     }: args::MaspPayAddrGen,
 ) {
-    let viewing_key = match (spending_key, viewing_key) {
-        (None, Some(viewing_key)) =>
-            FullViewingKey::from(ctx.get_cached(&viewing_key)).vk,
-        (Some(spending_key), None) =>
-            ExtendedSpendingKey::from(ctx.get_cached(&spending_key))
-            .expsk
-            .proof_generation_key()
-            .to_viewing_key(),
-        _ => {
-            eprintln!("Either a viewing key or a spending key must be \
-                       provided");
-            return;
-        }
-    };
+    let viewing_key = FullViewingKey::from(ctx.get_cached(&viewing_key)).vk;
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
     let payment_addr = viewing_key.to_payment_address(div).expect("a PaymentAddress");
     let mut wallet = ctx.wallet;

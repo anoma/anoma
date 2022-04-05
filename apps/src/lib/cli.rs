@@ -1459,7 +1459,6 @@ pub mod args {
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
     const SPENDING_KEY: Arg<WalletSpendingKey> = arg("spending-key");
-    const SPENDING_KEY_OPT: ArgOpt<WalletSpendingKey> = SPENDING_KEY.opt();
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
@@ -1479,8 +1478,7 @@ pub mod args {
         arg_opt("consensus-key");
     const VALIDATOR_CODE_PATH: ArgOpt<PathBuf> = arg_opt("validator-code-path");
     const VALUE: ArgOpt<String> = arg_opt("value");
-    const VIEWING_KEY: Arg<WalletViewingKey> = arg("viewing-key");
-    const VIEWING_KEY_OPT: ArgOpt<WalletViewingKey> = VIEWING_KEY.opt();
+    const VIEWING_KEY: Arg<WalletViewingKey> = arg("key");
     const WASM_CHECKSUMS_PATH: Arg<PathBuf> = arg("wasm-checksums-path");
     const WASM_DIR: ArgOpt<PathBuf> = arg_opt("wasm-dir");
 
@@ -2005,16 +2003,6 @@ pub mod args {
                     BALANCE_OWNER
                         .def()
                         .about("The account address whose balance to query."),
-                )
-                .arg(
-                    SPENDING_KEY_OPT
-                        .def()
-                        .about("The spending key to query for unspent notes."),
-                )
-                .arg(
-                    VIEWING_KEY_OPT
-                        .def()
-                        .about("The viewing key to query for unspent notes."),
                 )
                 .arg(
                     TOKEN_OPT
@@ -2570,20 +2558,16 @@ pub mod args {
     pub struct MaspPayAddrGen {
         /// Key alias
         pub alias: String,
-        /// Spending Key
-        pub spending_key: Option<WalletSpendingKey>,
         /// Viewing key
-        pub viewing_key: Option<WalletViewingKey>,
+        pub viewing_key: WalletViewingKey,
     }
 
     impl Args for MaspPayAddrGen {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
-            let spending_key = SPENDING_KEY_OPT.parse(matches);
-            let viewing_key = VIEWING_KEY_OPT.parse(matches);
+            let viewing_key = VIEWING_KEY.parse(matches);
             Self {
                 alias,
-                spending_key,
                 viewing_key,
             }
         }
@@ -2593,12 +2577,9 @@ pub mod args {
                 ALIAS
                     .def()
                     .about("An alias to be associated with the payment address."),
-            ).arg(SPENDING_KEY_OPT.def().about(
-                "The spending key."
+            ).arg(VIEWING_KEY.def().about(
+                "The viewing key."
             ))
-                .arg(VIEWING_KEY_OPT.def().about(
-                    "The viewing key."
-                ))
         }
     }
 
