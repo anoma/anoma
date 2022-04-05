@@ -315,17 +315,44 @@ impl TransferTarget {
             Self::PaymentAddress(_) => masp(),
         }
     }
-    /// Get the contained PaymentAddress contained, if any
+    /// Get the contained PaymentAddress, if any
     pub fn payment_address(&self) -> Option<PaymentAddress> {
         match self {
             Self::PaymentAddress(x) => Some(*x),
             _ => None,
         }
     }
-    /// Get the contained Address contained, if any
+    /// Get the contained Address, if any
     pub fn address(&self) -> Option<Address> {
         match self {
             Self::Address(x) => Some(x.clone()),
+            _ => None,
+        }
+    }
+}
+
+/// Represents the owner of arbitrary funds
+#[derive(Debug, Clone)]
+pub enum BalanceOwner {
+    /// A balance stored at a transparent address
+    Address(Address),
+    /// A balance stored at a shielded address
+    FullViewingKey(FullViewingKey),
+}
+
+impl BalanceOwner {
+    /// Get the contained Address, if any
+    pub fn address(&self) -> Option<Address> {
+        match self {
+            Self::Address(x) => Some(x.clone()),
+            _ => None,
+        }
+    }
+
+    /// Get the contained FullViewingKey, if any
+    pub fn full_viewing_key(&self) -> Option<FullViewingKey> {
+        match self {
+            Self::FullViewingKey(x) => Some(*x),
             _ => None,
         }
     }

@@ -1376,7 +1376,6 @@ pub mod args {
     use tendermint_config_abci::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
-    use anoma::types::address::masp;
     use anoma::types::masp::{FullViewingKey, ExtendedSpendingKey, PaymentAddress};
 
     use super::context::*;
@@ -1390,6 +1389,7 @@ pub mod args {
     const ALIAS: Arg<String> = arg("alias");
     const ALLOW_DUPLICATE_IP: ArgFlag = flag("allow-duplicate-ip");
     const AMOUNT: Arg<token::Amount> = arg("amount");
+    const BALANCE_OWNER: ArgOpt<WalletBalanceOwner> = arg_opt("owner");
     const BASE_DIR: ArgDefault<PathBuf> = arg_default(
         "base-dir",
         DefaultFn(|| match env::var("ANOMA_BASE_DIR") {
@@ -1463,8 +1463,6 @@ pub mod args {
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
     const SPENDING_KEY: Arg<WalletSpendingKey> = arg("spending-key");
     const SPENDING_KEY_OPT: ArgOpt<WalletSpendingKey> = SPENDING_KEY.opt();
-    const TARGET_DEFAULT: ArgDefaultFromCtx<WalletAddress> =
-        arg_default_from_ctx("target", DefaultFn(|| masp().encode()));
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
@@ -1636,10 +1634,11 @@ pub mod args {
         fn def(app: App) -> App {
             app.add_args::<Tx>()
                 .arg(TRANSFER_SOURCE.def().about(
-                    "The source account address. The source's key is used to \
-                     produce the signature.",
+                    "The source account address. The source's key may be used \
+                     to produce the signature.",
                 ))
-                .arg(TARGET_DEFAULT.def().about("The target account address."))
+                .arg(TRANSFER_TARGET.def().about("The target account address. \
+                     The target's key may be used to produce the signature."))
                 .arg(TOKEN.def().about("The transfer token."))
                 .arg(AMOUNT.def().about("The amount to transfer in decimal."))
         }
@@ -1986,11 +1985,7 @@ pub mod args {
         /// Common query args
         pub query: Query,
         /// Address of an owner
-        pub owner: Option<WalletAddress>,
-        /// The spending key being queried
-        pub spending_key: Option<WalletSpendingKey>,
-        /// The full viewing key being queries
-        pub viewing_key: Option<WalletViewingKey>,
+        pub owner: Option<WalletBalanceOwner>,
         /// Address of a token
         pub token: Option<WalletAddress>,
     }
@@ -1998,15 +1993,11 @@ pub mod args {
     impl Args for QueryBalance {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
-            let owner = OWNER.parse(matches);
-            let spending_key = SPENDING_KEY_OPT.parse(matches);
-            let viewing_key = VIEWING_KEY_OPT.parse(matches);
+            let owner = BALANCE_OWNER.parse(matches);
             let token = TOKEN_OPT.parse(matches);
             Self {
                 query,
                 owner,
-                spending_key,
-                viewing_key,
                 token,
             }
         }
@@ -2014,7 +2005,7 @@ pub mod args {
         fn def(app: App) -> App {
             app.add_args::<Query>()
                 .arg(
-                    OWNER
+                    BALANCE_OWNER
                         .def()
                         .about("The account address whose balance to query."),
                 )

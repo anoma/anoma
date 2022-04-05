@@ -11,6 +11,7 @@ use anoma::ledger::pos::{
     self, is_validator_slashes_key, Bonds, Slash, Unbonds,
 };
 use anoma::types::address::Address;
+use anoma::types::masp::BalanceOwner;
 use anoma::types::key::*;
 use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::{address, storage, token};
@@ -49,7 +50,6 @@ use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
 use crate::client::tx::load_shielded_context;
 use crate::client::tx::compute_shielded_balance;
-use crate::client::tx::to_viewing_key;
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -84,30 +84,29 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
 pub async fn query_balance(mut ctx: Context, args: args::QueryBalance) {
     // Query the balances of shielded or transparent account types depending on
     // the CLI arguments
-    match (&args.owner, &args.viewing_key, &args.spending_key) {
-        (None, Some(_viewing_key), None) => query_shielded_balance(&mut ctx, args).await,
-        (None, None, Some(_spending_key)) => query_shielded_balance(&mut ctx, args).await,
-        (Some(_owner), None, None) => query_transparent_balance(&mut ctx, args).await,
-        (None, None, None) => {
+    match args.owner.as_ref().map(|x| ctx.get_cached(x)) {
+        Some(BalanceOwner::FullViewingKey(_viewing_key)) =>
+            query_shielded_balance(&mut ctx, args).await,
+        Some(BalanceOwner::Address(_owner)) =>
+            query_transparent_balance(&mut ctx, args).await,
+        None => {
             // Print shielded balance
             query_shielded_balance(&mut ctx, args.clone()).await;
             // Then print transparent balance
-            query_transparent_balance(&ctx, args).await;
-        }, _ => {
-            eprintln!("Of a viewing key, spending key, or address, at most one \
-                       can be specified");
+            query_transparent_balance(&mut ctx, args).await;
         }
     };
 }
 
 /// Query token balance(s)
-pub async fn query_transparent_balance(ctx: &Context, args: args::QueryBalance) {
+pub async fn query_transparent_balance(ctx: &mut Context, args: args::QueryBalance) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
     let tokens = address::tokens();
     match (args.token, args.owner) {
         (Some(token), Some(owner)) => {
             let token = ctx.get(&token);
-            let owner = ctx.get(&owner);
+            let owner = ctx.get_cached(&owner).address()
+                .expect("a transparent address");
             let key = token::balance_key(&token, &owner);
             let currency_code = tokens
                 .get(&token)
@@ -123,7 +122,8 @@ pub async fn query_transparent_balance(ctx: &Context, args: args::QueryBalance) 
             }
         }
         (None, Some(owner)) => {
-            let owner = ctx.get(&owner);
+            let owner = ctx.get_cached(&owner).address()
+                .expect("a transparent address");
             let mut found_any = false;
             for (token, currency_code) in tokens {
                 let key = token::balance_key(&token, &owner);
@@ -195,23 +195,17 @@ pub async fn query_transparent_balance(ctx: &Context, args: args::QueryBalance) 
 /// Query token shielded balance(s)
 pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance) {
     // Used to control whether balances for all keys or a specific key are printed
-    let key_specified = args.viewing_key.is_some() || args.spending_key.is_some();
+    let owner = args.owner.and_then(|x| ctx.get_cached(&x).full_viewing_key());
     // Viewing keys are used to query shielded balances. If a spending key is
     // provided, then convert to a viewing key first.
-    let viewing_keys = match (args.viewing_key, args.spending_key) {
-        (Some(viewing_key), None) => vec![ctx.get_cached(&viewing_key)],
-        (None, Some(spending_key)) =>
-            vec![to_viewing_key(&ctx.get_cached(&spending_key).into()).into()],
-        (None, None) =>
+    let viewing_keys = match owner {
+        Some(viewing_key) => vec![viewing_key],
+        None =>
             ctx.wallet
             .get_viewing_keys()
             .values()
             .map(|x| x.clone())
             .collect(),
-        _ => {
-            eprintln!("Either a viewing or spending key or neither must be specified");
-            return;
-        }
     };
     // Build up the context that will be queried for balances
     let shielded_ctx = load_shielded_context(
@@ -221,7 +215,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
     ).await;
     // Map addresses to token names
     let tokens = address::tokens();
-    match (args.token, key_specified) {
+    match (args.token, owner.is_some()) {
         // Here the user wants to know the balance for a specific token
         (Some(token), true) => {
             // Query the multi-asset balance at the given spending key

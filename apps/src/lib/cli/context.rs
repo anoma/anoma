@@ -56,6 +56,8 @@ pub type WalletKeypair = FromContext<Rc<common::SecretKey>>;
 /// alias of an public key that may be found in the wallet
 pub type WalletPublicKey = FromContext<common::PublicKey>;
 
+pub type WalletBalanceOwner = FromContext<BalanceOwner>;
+
 /// Command execution context
 #[derive(Debug)]
 pub struct Context {
@@ -411,5 +413,14 @@ impl ArgFromContext for TransferTarget {
         Address::arg_from_ctx(ctx, raw).map(Self::Address)
             .or_else(|_| PaymentAddress::arg_from_ctx(ctx, raw)
                      .map(Self::PaymentAddress))
+    }
+}
+
+impl ArgFromMutContext for BalanceOwner {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
+        let raw = raw.as_ref();
+        Address::arg_from_ctx(ctx, raw).map(Self::Address)
+            .or_else(|_| FullViewingKey::arg_from_mut_ctx(ctx, raw)
+                     .map(Self::FullViewingKey))
     }
 }
