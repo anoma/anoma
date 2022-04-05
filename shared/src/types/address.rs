@@ -81,12 +81,8 @@ pub enum DecodeError {
     UnexpectedBech32Prefix(String, String),
     #[error("Unexpected Bech32m variant {0:?}, expected {BECH32M_VARIANT:?}")]
     UnexpectedBech32Variant(bech32::Variant),
-    //#[error("Address must be encoded with utf-8")]
-    //NonUtf8Address(string::FromUtf8Error),
     #[error("Invalid address encoding")]
     InvalidInnerEncoding(std::io::Error),
-    //#[error("Unexpected address hash length {0}, expected {HASH_LEN}")]
-    //UnexpectedHashLength(usize),
 }
 
 /// Result of a function that may fail

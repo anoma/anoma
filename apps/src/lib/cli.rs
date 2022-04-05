@@ -1376,7 +1376,7 @@ pub mod args {
     use tendermint_config_abci::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
-    use anoma::types::masp::{FullViewingKey, ExtendedSpendingKey, PaymentAddress};
+    use anoma::types::masp::MaspValue;
 
     use super::context::*;
     use super::utils::*;
@@ -1438,6 +1438,7 @@ pub mod args {
         }));
     const LEDGER_ADDRESS: Arg<TendermintAddress> = arg("ledger-address");
     const LOCALHOST: ArgFlag = flag("localhost");
+    const MASP_VALUE: Arg<MaspValue> = arg("value");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
     const MODE: ArgOpt<String> = arg_opt("mode");
     const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
@@ -1445,14 +1446,10 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
-    const PAYMENT_ADDRESS_OPT: ArgOpt<WalletPaymentAddr> = arg_opt("payment-address");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
-    const RAW_PAYMENT_ADDRESS_OPT: ArgOpt<PaymentAddress> = arg_opt("payment-address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
-    const RAW_SPENDING_KEY_OPT: ArgOpt<ExtendedSpendingKey> = arg_opt("spending-key");
-    const RAW_VIEWING_KEY_OPT: ArgOpt<FullViewingKey> = arg_opt("viewing-key");
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
@@ -2525,21 +2522,15 @@ pub mod args {
     pub struct MaspAddrKeyAdd {
         /// Key alias
         pub alias: String,
-        /// Viewing key
-        pub viewing_key: Option<FullViewingKey>,
-        /// Spending key
-        pub spending_key: Option<ExtendedSpendingKey>,
-        /// Payment address
-        pub payment_addr: Option<PaymentAddress>,
+        /// Any MASP value
+        pub value: MaspValue,
     }
 
     impl Args for MaspAddrKeyAdd {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
-            let viewing_key = RAW_VIEWING_KEY_OPT.parse(matches);
-            let spending_key = RAW_SPENDING_KEY_OPT.parse(matches);
-            let payment_addr = RAW_PAYMENT_ADDRESS_OPT.parse(matches);
-            Self { alias, viewing_key, spending_key, payment_addr }
+            let value = MASP_VALUE.parse(matches);
+            Self { alias, value }
         }
         
         fn def(app: App) -> App {
@@ -2547,15 +2538,9 @@ pub mod args {
                 ALIAS
                     .def()
                     .about("An alias to be associated with the new entry."),
-            ).arg(SPENDING_KEY_OPT.def().about(
-                "The spending key."
+            ).arg(MASP_VALUE.def().about(
+                "A spending key, viewing key, or payment address."
             ))
-                .arg(VIEWING_KEY_OPT.def().about(
-                    "The viewing key."
-                ))
-                .arg(PAYMENT_ADDRESS_OPT.def().about(
-                    "The payment address."
-                ))
         }
     }
 

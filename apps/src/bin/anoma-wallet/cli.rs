@@ -14,6 +14,7 @@ use rand_core::OsRng;
 use masp_primitives::keys::FullViewingKey;
 use masp_primitives::zip32::ExtendedSpendingKey;
 use anoma_apps::client::tx::find_valid_diversifier;
+use anoma::types::masp::MaspValue;
 
 pub fn main() -> Result<()> {
     let (cmd, ctx) = cli::anoma_wallet_cli();
@@ -190,13 +191,11 @@ fn address_key_add(
     mut ctx: Context,
     args::MaspAddrKeyAdd {
         alias,
-        viewing_key,
-        spending_key,
-        payment_addr,
+        value,
     }: args::MaspAddrKeyAdd,
 ) {
-    let (alias, typ) = match (viewing_key, spending_key, payment_addr) {
-        (Some(viewing_key), None, None) => {
+    let (alias, typ) = match value {
+        MaspValue::FullViewingKey(viewing_key) => {
             let alias = ctx
                 .wallet
                 .insert_viewing_key(alias, viewing_key)
@@ -206,7 +205,7 @@ fn address_key_add(
                 });
             (alias, "viewing key")
         },
-        (None, Some(spending_key), None) => {
+        MaspValue::ExtendedSpendingKey(spending_key) => {
             let alias = ctx
                 .wallet
                 .insert_spending_key(alias, spending_key)
@@ -216,7 +215,7 @@ fn address_key_add(
                 });
             (alias, "spending key")
         },
-        (None, None, Some(payment_addr)) => {
+        MaspValue::PaymentAddress(payment_addr) => {
             let alias = ctx
                 .wallet
                 .insert_payment_addr(alias, payment_addr)
@@ -226,11 +225,6 @@ fn address_key_add(
                 });
             (alias, "payment address")
         },
-        _ => {
-            eprintln!("Either a payment address, viewing key, or spending key \
-                       to add must be specified.");
-            cli::safe_exit(1);
-        }
     };
     ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(

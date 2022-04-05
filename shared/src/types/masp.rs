@@ -357,3 +357,28 @@ impl BalanceOwner {
         }
     }
 }
+
+/// Represents any MASP value
+#[derive(Debug, Clone)]
+pub enum MaspValue {
+    /// A MASP PaymentAddress
+    PaymentAddress(PaymentAddress),
+    /// A MASP ExtendedSpendingKey
+    ExtendedSpendingKey(ExtendedSpendingKey),
+    /// A MASP FullViewingKey
+    FullViewingKey(FullViewingKey),
+}
+
+impl FromStr for MaspValue {
+    type Err = DecodeError;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Try to decode this value first as a PaymentAddress, then as an
+        // ExtendedSpendingKey, then as FullViewingKey
+        PaymentAddress::from_str(s).map(Self::PaymentAddress)
+            .or_else(|_err| ExtendedSpendingKey::from_str(s)
+                     .map(Self::ExtendedSpendingKey))
+            .or_else(|_err| FullViewingKey::from_str(s)
+                     .map(Self::FullViewingKey))
+    }
+}
