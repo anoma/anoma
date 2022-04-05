@@ -28,14 +28,24 @@ pub const ENV_VAR_WASM_DIR: &str = "ANOMA_WASM_DIR";
 /// in the wallet
 pub type WalletAddress = FromContext<Address>;
 
+/// A raw extended spending key (bech32m encoding) or an alias of an extended
+/// spending key in the wallet
 pub type WalletSpendingKey = FromContext<ExtendedSpendingKey>;
 
+/// A raw payment address (bech32m encoding) or an alias of a payment address
+/// in the wallet
 pub type WalletPaymentAddr = FromContext<PaymentAddress>;
 
+/// A raw full viewing key (bech32m encoding) or an alias of a full viewing key
+/// in the wallet
 pub type WalletViewingKey = FromContext<FullViewingKey>;
 
+/// A raw address or a raw extended spending key (bech32m encoding) or an alias
+/// of either in the wallet
 pub type WalletTransferSource = FromContext<TransferSource>;
 
+/// A raw address or a raw payment address (bech32m encoding) or an alias of
+/// either in the wallet
 pub type WalletTransferTarget = FromContext<TransferTarget>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
@@ -120,7 +130,7 @@ impl Context {
     where
         T: ArgFromContext,
     {
-        from_context.arg_from_ctx(self)
+        from_context.arg_from_ctx(self).unwrap()
     }
 
     /// Try to parse and/or look-up an optional value from the context.
@@ -130,7 +140,7 @@ impl Context {
     {
         from_context
             .as_ref()
-            .map(|from_context| from_context.arg_from_ctx(self))
+            .map(|from_context| from_context.arg_from_ctx(self).unwrap())
     }
 
     /// Parse and/or look-up the value from the context with cache.
@@ -138,7 +148,7 @@ impl Context {
     where
         T: ArgFromMutContext,
     {
-        from_context.arg_from_mut_ctx(self)
+        from_context.arg_from_mut_ctx(self).unwrap()
     }
 
     /// Try to parse and/or look-up an optional value from the context with
@@ -152,7 +162,7 @@ impl Context {
     {
         from_context
             .as_ref()
-            .map(|from_context| from_context.arg_from_mut_ctx(self))
+            .map(|from_context| from_context.arg_from_mut_ctx(self).unwrap())
     }
 
     /// Get the wasm directory configured for the chain.
@@ -275,7 +285,7 @@ where
     T: ArgFromContext,
 {
     /// Parse and/or look-up the value from the context.
-    fn arg_from_ctx(&self, ctx: &Context) -> T {
+    fn arg_from_ctx(&self, ctx: &Context) -> Result<T, String> {
         T::arg_from_ctx(ctx, &self.raw)
     }
 }
@@ -285,62 +295,57 @@ where
     T: ArgFromMutContext,
 {
     /// Parse and/or look-up the value from the mutable context.
-    fn arg_from_mut_ctx(&self, ctx: &mut Context) -> T {
+    fn arg_from_mut_ctx(&self, ctx: &mut Context) -> Result<T, String> {
         T::arg_from_mut_ctx(ctx, &self.raw)
     }
 }
 
 /// CLI argument that found via the [`Context`].
 pub trait ArgFromContext: Sized {
-    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self;
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Self, String>;
 }
 
 /// CLI argument that found via the [`Context`] and cached (as in case of an
 /// encrypted keypair that has been decrypted), hence using mutable context.
 pub trait ArgFromMutContext: Sized {
-    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self;
-}
-
-fn address_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Address, String> {
-    let raw = raw.as_ref();
-    // An address can be either raw (bech32m encoding)
-    FromStr::from_str(raw)
-    // Or it can be an alias that may be found in the wallet
-        .or_else(|_| {
-            ctx.wallet
-                .find_address(raw)
-                .cloned()
-                .ok_or_else(|| format!("Unknown address {}", raw))
-        })
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String>;
 }
 
 impl ArgFromContext for Address {
-    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
-        address_from_ctx(ctx, raw).unwrap()
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Self, String> {
+        let raw = raw.as_ref();
+        // An address can be either raw (bech32m encoding)
+        FromStr::from_str(raw)
+        // Or it can be an alias that may be found in the wallet
+            .or_else(|_| {
+                ctx.wallet
+                    .find_address(raw)
+                    .cloned()
+                    .ok_or_else(|| format!("Unknown address {}", raw))
+            })
     }
 }
 
 impl ArgFromMutContext for Rc<common::SecretKey> {
-    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
         // A keypair can be either a raw keypair in hex string
         FromStr::from_str(raw)
             .map(Rc::new)
-            .unwrap_or_else(|_parse_err| {
+            .or_else(|_parse_err| {
                 // Or it can be an alias
-                ctx.wallet.find_key(raw).unwrap_or_else(|_find_err| {
-                    eprintln!("Unknown key {}", raw);
-                    safe_exit(1)
+                ctx.wallet.find_key(raw).map_err(|_find_err| {
+                    format!("Unknown key {}", raw)
                 })
             })
     }
 }
 
 impl ArgFromMutContext for common::PublicKey {
-    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
         // A public key can be either a raw public key in hex string
-        FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
+        FromStr::from_str(raw).or_else(|_parse_err| {
             // Or it can be a public key hash in hex string
             FromStr::from_str(raw)
                 .map(|pkh: PublicKeyHash| {
@@ -348,72 +353,63 @@ impl ArgFromMutContext for common::PublicKey {
                     key.ref_to()
                 })
                 // Or it can be an alias that may be found in the wallet
-                .unwrap_or_else(|_parse_err| {
-                    let key = ctx.wallet.find_key(raw).unwrap();
-                    key.ref_to()
+                .or_else(|_parse_err| {
+                    ctx.wallet
+                        .find_key(raw)
+                        .map(|x| x.ref_to())
+                        .map_err(|x| x.to_string())
                 })
         })
     }
 }
 
-fn spending_key_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<ExtendedSpendingKey, String> {
-    let raw = raw.as_ref();
-    FromStr::from_str(raw).or_else(|_parse_err| {
-        ctx.wallet.find_spending_key(raw).map(Clone::clone).map_err(|_find_err| {
-            format!("Unknown spending key {}", raw)
-        })
-    })
-}
-
 impl ArgFromMutContext for ExtendedSpendingKey {
-    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
-        spending_key_from_mut_ctx(ctx, raw).unwrap()
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
+        let raw = raw.as_ref();
+        FromStr::from_str(raw).or_else(|_parse_err| {
+            ctx.wallet.find_spending_key(raw).map(Clone::clone).map_err(|_find_err| {
+                format!("Unknown spending key {}", raw)
+            })
+        })
     }
 }
 
 impl ArgFromMutContext for FullViewingKey {
-    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
-        FromStr::from_str(raw).unwrap_or_else(|_parse_err| {
-            ctx.wallet.find_viewing_key(raw).unwrap_or_else(|_find_err| {
-                eprintln!("Unknown viewing key {}", raw);
-                safe_exit(1)
-            }).clone()
+        FromStr::from_str(raw).or_else(|_parse_err| {
+            ctx.wallet.find_viewing_key(raw).map(Clone::clone).map_err(|_find_err| {
+                format!("Unknown viewing key {}", raw)
+            })
         })
     }
 }
 
-fn payment_addr_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<PaymentAddress, String> {
-    let raw = raw.as_ref();
-    FromStr::from_str(raw).or_else(|_parse_err| {
-        ctx.wallet.find_payment_addr(raw).cloned().ok_or_else(|| {
-            format!("Unknown payment address {}", raw)
-        })
-    })
-}
-
 impl ArgFromContext for PaymentAddress {
-    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
-        payment_addr_from_ctx(ctx, raw).unwrap()
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Self, String> {
+        let raw = raw.as_ref();
+        FromStr::from_str(raw).or_else(|_parse_err| {
+            ctx.wallet.find_payment_addr(raw).cloned().ok_or_else(|| {
+                format!("Unknown payment address {}", raw)
+            })
+        })
     }
 }
 
 impl ArgFromMutContext for TransferSource {
-    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
-        address_from_ctx(ctx, raw).map(Self::Address)
-            .or_else(|_| spending_key_from_mut_ctx(ctx, raw)
+        Address::arg_from_ctx(ctx, raw).map(Self::Address)
+            .or_else(|_| ExtendedSpendingKey::arg_from_mut_ctx(ctx, raw)
                      .map(Self::ExtendedSpendingKey))
-            .unwrap()
     }
 }
 
 impl ArgFromContext for TransferTarget {
-    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
-        address_from_ctx(ctx, raw).map(Self::Address)
-            .or_else(|_| payment_addr_from_ctx(ctx, raw)
+        Address::arg_from_ctx(ctx, raw).map(Self::Address)
+            .or_else(|_| PaymentAddress::arg_from_ctx(ctx, raw)
                      .map(Self::PaymentAddress))
-            .unwrap()
     }
 }
