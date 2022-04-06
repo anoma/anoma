@@ -117,3 +117,147 @@ where
         gas,
     )
 }
+
+#[cfg(all(test, feature = "dev"))]
+mod test_ethereum_bridge {
+    use super::*;
+
+    use anoma::ledger::storage::Sha256Hasher;
+    use anoma::ledger::storage::mockdb::MockDB;
+    use anoma::types::chain::ChainId;
+    use anoma::types::ethereum_headers::EthereumHeader;
+    use anoma::types::hash::Hash;
+    use anoma::types::time::DateTimeUtc;
+
+    use crate::config::genesis;
+    use crate::wallet::defaults::*;
+    use anoma::ledger::pos::validator_set_key;
+
+    /// This is not a meaningful default. It is
+    /// just for testing
+    fn default_eth_header() -> EthereumHeader {
+        EthereumHeader {
+            hash: Hash([0; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+    }
+
+
+    /// Start a new test shell and initialize it. Returns the shell paired with
+    /// a broadcast receiver, which will receives any protocol txs sent by the
+    /// shell.
+    fn setup() -> Storage<MockDB, Sha256Hasher> {
+        let mut storage = Storage::<MockDB, Sha256Hasher>::open(
+            std::path::Path::new(""),
+            ChainId::default(),
+            None
+        );
+        let genesis = genesis::genesis();
+        parameters::init_genesis_storage(
+            &mut storage,
+            &genesis.parameters,
+        );
+        // Depends on parameters being initialized
+        storage
+            .init_genesis_epoch(
+                0.into(),
+                DateTimeUtc::now(),
+                &genesis.parameters,
+            )
+            .expect("Test failed");
+        let (current_epoch, _gas) = storage.get_current_epoch();
+        pos::init_genesis_storage(
+            &mut storage,
+            &genesis.pos_params,
+            genesis
+                .validators
+                .iter()
+                .map(|validator| &validator.pos_data),
+            current_epoch,
+        );
+        storage
+    }
+
+    /// Test the case when as header is seen for the first time.
+    /// Thus, none of the keys exist in storage yet.
+    #[test]
+    fn test_new_header() {
+        let storage = setup();
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(
+                200,
+                validator_address(),
+                0,
+                &validator_keys().0,
+            ).into();
+        let EthereumHeaderUpdate {
+            header,
+            seen_by,
+            voting_power,
+            seen,
+        } = make_ethereum_header_data(header, &storage)
+            .0
+            .expect("Test failed");
+        assert_eq!(header, default_eth_header());
+        assert_eq!(seen_by, HashSet::from([validator_address()]));
+        assert_eq!(
+            Fraction::new(voting_power.0, voting_power.1),
+            Fraction::new(1u64, 1u64)
+        );
+        assert!(seen);
+    }
+
+    /// Test that the produced data ignores a
+    /// validator if they are marked as having seen
+    /// the header already.
+    #[test]
+    fn test_seen_by_validator_already() {
+        let mut storage = setup();
+
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(
+                100,
+                validator_address(),
+                0,
+                &validator_keys().0,
+            ).into();
+        let hash = header.hash();
+        // add validator to the seen_by list
+        storage.write(
+            &get_seen_by_key(&hash),
+            HashSet::from([validator_address()])
+                .try_to_vec()
+                .expect("Test failed")
+        )
+        .expect("Test failed");
+
+        // update the current voting power key
+        storage.write(
+            &get_voting_power_key(&hash),
+            (1u64, 3u64).try_to_vec().expect("Test failed")
+        )
+        .expect("Test failed");
+
+        let EthereumHeaderUpdate {
+            header,
+            seen_by,
+            voting_power,
+            seen,
+        } = make_ethereum_header_data(header, &storage)
+            .0
+            .expect("Test failed");
+        assert_eq!(header, default_eth_header());
+        assert_eq!(seen_by, HashSet::from([validator_address()]));
+        assert_eq!(
+            Fraction::new(voting_power.0, voting_power.1),
+            Fraction::new(1u64, 3u64)
+        );
+        assert!(!seen);
+    }
+}

@@ -642,7 +642,7 @@ where
 /// Helper functions and types for writing unit tests
 /// for the shell
 #[cfg(test)]
-mod test_utils {
+pub(super) mod test_utils {
     use std::ops::{Deref, DerefMut};
     use std::path::PathBuf;
     #[cfg(all(not(feature = "ABCI"), not(feature = "eth-fullnode")))]
