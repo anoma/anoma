@@ -1,4 +1,6 @@
 //! The ledger's protocol
+mod ethereum_bridge;
+
 use std::collections::BTreeSet;
 use std::panic;
 
@@ -12,11 +14,17 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
+use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
+use borsh::BorshSerialize;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
+
+use crate::node::ledger::protocol::ethereum_bridge::make_ethereum_header_data;
+use crate::wasm_loader;
+use crate::node::ledger::shell::Shell;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -26,8 +34,13 @@ pub enum Error {
     TxDecodingError(proto::Error),
     #[error("Transaction runner error: {0}")]
     TxRunnerError(vm::wasm::run::Error),
-    #[error("Txs must either be encrypted or a decryption of an encrypted tx")]
+    #[error(
+        "Txs must either be encrypted, a decryption of an encrypted tx, or a \
+         protocol tx"
+    )]
     TxTypeError,
+    #[error("Could not process an Ethereum header update tx because: {0}")]
+    EthereumHeaderTxError(String),
     #[error("Gas error: {0}")]
     GasError(gas::Error),
     #[error("Error executing VP for addresses: {0:?}")]
@@ -48,6 +61,37 @@ pub enum Error {
     AccessForbidden(InternalAddress),
 }
 
+pub(crate) struct ShellParams<'a, D, H, CA>
+where
+    D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
+    H: 'static + StorageHasher + Sync,
+    CA: 'static + WasmCacheAccess + Sync,
+{
+    pub block_gas_meter: &'a mut BlockGasMeter,
+    pub write_log: &'a mut WriteLog,
+    pub storage: &'a Storage<D, H>,
+    pub wasm_dir: &'a std::path::Path,
+    pub vp_wasm_cache: &'a mut VpCache<CA>,
+    pub tx_wasm_cache: &'a mut TxCache<CA>,
+}
+
+impl<'a, D, H> From<&'a mut Shell<D, H>> for ShellParams<'a, D, H, anoma::vm::WasmCacheRwAccess>
+where
+    D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
+    H: 'static + StorageHasher + Sync,
+{
+    fn from(shell: &'a mut Shell<D, H>) -> Self {
+        Self {
+            block_gas_meter: &mut shell.gas_meter,
+            write_log: &mut shell.write_log,
+            storage: &mut shell.storage,
+            wasm_dir: shell.wasm_dir.as_path(),
+            vp_wasm_cache: &mut shell.vp_wasm_cache,
+            tx_wasm_cache: &mut shell.tx_wasm_cache,
+        }
+    }
+}
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Apply a given transaction
@@ -57,14 +101,17 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// If the given tx is a successfully decrypted payload apply the necessary
 /// vps. Otherwise, we include the tx on chain with the gas charge added
 /// but no further validations.
-pub fn apply_tx<D, H, CA>(
+pub(crate) fn apply_tx<'a, D, H, CA>(
     tx: TxType,
     tx_length: usize,
-    block_gas_meter: &mut BlockGasMeter,
-    write_log: &mut WriteLog,
-    storage: &Storage<D, H>,
-    vp_wasm_cache: &mut VpCache<CA>,
-    tx_wasm_cache: &mut TxCache<CA>,
+    ShellParams {
+        block_gas_meter,
+        write_log,
+        storage,
+        wasm_dir,
+        vp_wasm_cache,
+        tx_wasm_cache,
+    }: ShellParams<'a, D, H, CA>
 ) -> Result<TxResult>
 where
     D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
@@ -78,6 +125,55 @@ where
     match tx {
         TxType::Raw(_) => Err(Error::TxTypeError),
         TxType::Decrypted(DecryptedTx::Decrypted(tx)) => {
+            let verifiers = execute_tx(
+                &tx,
+                storage,
+                block_gas_meter,
+                write_log,
+                vp_wasm_cache,
+                tx_wasm_cache,
+            )?;
+
+            let vps_result = check_vps(
+                &tx,
+                storage,
+                block_gas_meter,
+                write_log,
+                &verifiers,
+                vp_wasm_cache,
+            )?;
+
+            let gas_used = block_gas_meter
+                .finalize_transaction()
+                .map_err(Error::GasError)?;
+            let initialized_accounts = write_log.get_initialized_accounts();
+            let changed_keys = write_log.get_keys();
+            let ibc_event = write_log.take_ibc_event();
+
+            Ok(TxResult {
+                gas_used,
+                changed_keys,
+                vps_result,
+                initialized_accounts,
+                ibc_event,
+            })
+        }
+        TxType::Protocol(ProtocolTx {
+            tx: ProtocolTxType::EthereumHeaders(header),
+            ..
+        }) => {
+            // First we create the data to be written to storage
+            let (tx_data, gas) = make_ethereum_header_data(header, storage);
+            block_gas_meter.add(gas).map_err(Error::GasError)?;
+            let tx_data = tx_data?;
+            // We always use the same wasm code for this protocol tx
+            let code = wasm_loader::read_wasm(
+                &wasm_dir,
+                std::path::Path::new("tx_ethereum_headers"),
+            );
+            // Create the tx to submit to the protocol
+            let tx = Tx::new(code, Some(tx_data.try_to_vec().unwrap()));
+
             let verifiers = execute_tx(
                 &tx,
                 storage,

@@ -85,6 +85,7 @@ directories = "4.0.1"
 ed25519-consensus = "1.2.0"
 ferveo = {git = "https://github.com/anoma/ferveo"}
 ferveo-common = {git = "https://github.com/anoma/ferveo"}
+fraction = "0.10.0"
 futures-lite = "1.12.0"
 eyre = "0.6.5"
 flate2 = "1.0.22"

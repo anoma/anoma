@@ -213,9 +213,9 @@ where
     /// The persistent storage
     pub(super) storage: Storage<D, H>,
     /// Gas meter for the current block
-    gas_meter: BlockGasMeter,
+    pub(super) gas_meter: BlockGasMeter,
     /// Write log for the current block
-    write_log: WriteLog,
+    pub(super) write_log: WriteLog,
     /// Byzantine validators given from ABCI++ `prepare_proposal` are stored in
     /// this field. They will be slashed when we finalize the block.
     byzantine_validators: Vec<Evidence>,
@@ -223,14 +223,14 @@ where
     #[allow(dead_code)]
     base_dir: PathBuf,
     /// Path to the WASM directory for files used in the genesis block.
-    wasm_dir: PathBuf,
+    pub(super) wasm_dir: PathBuf,
     /// Information about the running shell instance
     #[allow(dead_code)]
     mode: ShellMode,
     /// VP WASM compilation cache
-    vp_wasm_cache: VpCache<WasmCacheRwAccess>,
+    pub(super) vp_wasm_cache: VpCache<WasmCacheRwAccess>,
     /// Tx WASM compilation cache
-    tx_wasm_cache: TxCache<WasmCacheRwAccess>,
+    pub(super) tx_wasm_cache: TxCache<WasmCacheRwAccess>,
 }
 
 impl<D, H> Shell<D, H>
@@ -386,7 +386,6 @@ where
 
         response
     }
-
 
     /// Get the voting power of this node if it is a validator. Else return None
     #[allow(dead_code)]
@@ -564,6 +563,7 @@ where
 
     /// Simulate validation and application of a transaction.
     fn dry_run_tx(&self, tx_bytes: &[u8]) -> response::Query {
+        use super::protocol::ShellParams;
         let mut response = response::Query::default();
         let mut gas_meter = BlockGasMeter::default();
         let mut write_log = WriteLog::default();
@@ -575,11 +575,14 @@ where
                 match protocol::apply_tx(
                     tx,
                     tx_bytes.len(),
-                    &mut gas_meter,
-                    &mut write_log,
-                    &self.storage,
-                    &mut vp_wasm_cache,
-                    &mut tx_wasm_cache,
+                    ShellParams {
+                        block_gas_meter: &mut gas_meter,
+                        write_log: &mut write_log,
+                        storage: &self.storage,
+                        wasm_dir: self.wasm_dir.as_path(),
+                        vp_wasm_cache: &mut vp_wasm_cache,
+                        tx_wasm_cache: &mut tx_wasm_cache,
+                    }
                 )
                 .map_err(Error::TxApply)
                 {

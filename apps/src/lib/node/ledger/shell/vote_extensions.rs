@@ -1,7 +1,8 @@
 #[cfg(not(feature = "ABCI"))]
 mod extend_votes {
-    use anoma::ledger::pos::anoma_proof_of_stake::types::VotingPower;
-    use anoma::types::ethereum_headers::{SignedEthereumHeader, SignedHeader};
+    use anoma::types::ethereum_headers::{
+        EpochPower, SignedEthereumHeader, SignedHeader,
+    };
     use anoma::types::vote_extensions::VoteExtensionData;
     use tendermint_proto::types::Vote;
 
@@ -119,41 +120,40 @@ mod extend_votes {
             if block_number != header.get_height() {
                 return false;
             }
-            // a committed block was validated by the validator set of the epoch
-            // the previously committed block belonged to.
-            let height = if self.storage.last_height.0 > 0 {
-                BlockHeight(self.storage.last_height.0 - 1)
-            } else {
-                BlockHeight(self.storage.last_height.0)
-            };
-            let epoch = if let Some(epoch) =
-                self.storage.block.pred_epochs.get_epoch(height)
-            {
-                epoch
-            } else {
-                return false;
-            };
-            // Look up the sum of voting power and public keys of addresses of
-            // those that have signed this header.
-            let (voting_power, public_keys) = header
-                .get_addresses()
-                .iter()
-                .filter_map(|addr| {
-                    self.get_validator_from_address(addr, Some(epoch))
-                })
-                .fold(
-                    (VotingPower::from(0), vec![]),
-                    |(total_power, mut keys), (power, pk)| {
-                        keys.push(pk);
-                        (total_power + power, keys)
+            // Get the public keys of each validator. Filter out those that
+            // inaccurately stated their voting power at a given block height
+            let public_keys: Vec<common::PublicKey> = header
+                .get_voting_powers()
+                .into_iter()
+                .filter_map(
+                    |EpochPower {
+                         validator,
+                         voting_power,
+                         block_height,
+                     }| {
+                        let epoch = self
+                            .storage
+                            .block
+                            .pred_epochs
+                            .get_epoch(block_height.into());
+                        if let Some((power, pk)) =
+                            self.get_validator_from_address(validator, epoch)
+                        {
+                            if u64::from(power) == voting_power {
+                                Some(pk)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
                     },
-                );
-            // check that we found all the public keys
-            if public_keys.len() != header.get_addresses().len() {
-                return false;
-            }
-            // check the sum of voting power and signatures are valid
-            voting_power == VotingPower::from(header.get_voting_power())
+                )
+                .collect();
+
+            // check that we found all the public keys and
+            // check that the signatures are valid
+            public_keys.len() == header.get_addresses().len()
                 && header.verify_signatures(&public_keys).is_ok()
         }
     }
@@ -331,8 +331,8 @@ mod test_vote_extensions {
         ));
     }
 
-    /// Test that if the sum of voting powers is not correct,
-    /// the signed headers are rejected
+    /// Test that if the declared voting power is not correct,
+    /// the signed header is rejected
     #[test]
     fn reject_incorrect_voting_power() {
         let (shell, _) = setup();

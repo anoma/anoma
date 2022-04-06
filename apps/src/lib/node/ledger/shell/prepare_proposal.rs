@@ -372,8 +372,8 @@ mod prepare_block {
             );
             assert_eq!(protocol_txs.len(), 2);
             for protocol_tx in protocol_txs {
-                let tx = Tx::try_from(protocol_tx.as_slice())
-                    .expect("Test failed");
+                let tx =
+                    Tx::try_from(protocol_tx.as_slice()).expect("Test failed");
                 match process_tx(tx) {
                     Ok(TxType::Protocol(ProtocolTx {
                         tx: ProtocolTxType::EthereumHeaders(tx),
@@ -386,19 +386,23 @@ mod prepare_block {
                                 tx.signed_header.data.1,
                             )
                         {
-                            assert_eq!(tx.voting_power, 2 * voting_power);
                             assert_eq!(
                                 tx.signers,
-                                vec![address.clone(), address.clone()]
-                            )
+                                vec![
+                                    (address.clone(), voting_power),
+                                    (address.clone(), voting_power)
+                                ]
+                            );
                         } else if (&header_2, height)
                             == (
                                 &tx.signed_header.data.0,
                                 tx.signed_header.data.1,
                             )
                         {
-                            assert_eq!(tx.voting_power, voting_power);
-                            assert_eq!(tx.signers, vec![address.clone()])
+                            assert_eq!(
+                                tx.signers,
+                                vec![(address.clone(), voting_power)]
+                            )
                         } else {
                             panic!("Test failed");
                         }

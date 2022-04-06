@@ -166,6 +166,7 @@ dependencies = [
  "ferveo-common",
  "file-lock",
  "flate2",
+ "fraction",
  "futures 0.3.21",
  "futures-lite",
  "git2",
@@ -376,7 +377,7 @@ dependencies = [
  "ark-serialize",
  "ark-std",
  "derivative",
- "num-bigint",
+ "num-bigint 0.4.3",
  "num-traits 0.2.14",
  "paste",
  "rustc_version 0.3.3",
@@ -399,7 +400,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db2fd794a08ccb318058009eefdf15bcaaaaf6f8161eb3345f907222bac38b20"
 dependencies = [
- "num-bigint",
+ "num-bigint 0.4.3",
  "num-traits 0.2.14",
  "quote",
  "syn",
@@ -2140,7 +2141,7 @@ dependencies = [
  "itertools 0.10.3",
  "measure_time",
  "miracl_core",
- "num",
+ "num 0.4.0",
  "rand 0.7.3",
  "rand 0.8.5",
  "serde 1.0.136",
@@ -2264,6 +2265,16 @@ checksum = "5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191"
 dependencies = [
  "matches",
  "percent-encoding 2.1.0",
+]
+
+[[package]]
+name = "fraction"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bb65943183b6b3cbf00f64c181e8178217e30194381b150e4f87ec59864c803"
+dependencies = [
+ "lazy_static 1.4.0",
+ "num 0.2.1",
 ]
 
 [[package]]
@@ -4400,15 +4411,40 @@ dependencies = [
 
 [[package]]
 name = "num"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8536030f9fea7127f841b45bb6243b27255787fb4eb83958aa1ef9d2fdc0c36"
+dependencies = [
+ "num-bigint 0.2.6",
+ "num-complex 0.2.4",
+ "num-integer",
+ "num-iter",
+ "num-rational 0.2.4",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
 dependencies = [
- "num-bigint",
+ "num-bigint 0.4.3",
  "num-complex 0.4.0",
  "num-integer",
  "num-iter",
- "num-rational",
+ "num-rational 0.4.0",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
+dependencies = [
+ "autocfg 1.1.0",
+ "num-integer",
  "num-traits 0.2.14",
 ]
 
@@ -4476,12 +4512,24 @@ dependencies = [
 
 [[package]]
 name = "num-rational"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
+dependencies = [
+ "autocfg 1.1.0",
+ "num-bigint 0.2.6",
+ "num-integer",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num-rational"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
 dependencies = [
  "autocfg 1.1.0",
- "num-bigint",
+ "num-bigint 0.4.3",
  "num-integer",
  "num-traits 0.2.14",
 ]

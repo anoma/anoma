@@ -9,11 +9,12 @@
 //!    The environment inputs are passed guest-to-host and outputs back from
 //!    host-to-guest.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashSet};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::types::address::Address;
+use crate::types::ethereum_headers::EthereumHeader;
 use crate::types::storage::Key;
 
 /// Input for validity predicate wasm module call
@@ -39,4 +40,18 @@ pub struct KeyVal {
     pub key: String,
     /// The value as arbitrary bytes
     pub val: Vec<u8>,
+}
+
+/// The struct updating an Ethereum header from the bridge.
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct EthereumHeaderUpdate {
+    /// The Ethereum header
+    pub header: EthereumHeader,
+    /// Set of validators who have seen this header
+    pub seen_by: HashSet<Address>,
+    /// The percentage of voting power that has seen this header
+    pub voting_power: (u64, u64),
+    /// Indicates if more than 2/3 of the staking validators have seen this
+    /// header
+    pub seen: bool,
 }

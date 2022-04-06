@@ -343,4 +343,26 @@ where
                 (validator.voting_power, protocol_pk)
             })
     }
+
+    /// Lookup the total voting power for an epoch
+    #[allow(dead_code)]
+    pub fn get_total_voting_power(
+        &self,
+        epoch: Option<Epoch>,
+    ) -> Option<VotingPower> {
+        // get the current epoch
+        let epoch = epoch.unwrap_or_else(|| self.storage.get_current_epoch().0);
+        // get the active validator set
+        self.storage
+            .read_validator_set()
+            .get(epoch)
+            .map(|validators| {
+                validators
+                    .active
+                    .iter()
+                    .map(|validator| u64::from(validator.voting_power))
+                    .sum::<u64>()
+                    .into()
+            })
+    }
 }
