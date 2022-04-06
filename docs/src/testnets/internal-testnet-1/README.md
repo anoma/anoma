@@ -1,31 +1,36 @@
 # Internal Testnet 1
+*Last updated on **2022-04-06** by **James Hiew***
 
-*Last updated on **3/30/2022** by **Alexandre Roque***
-
-Current chain id `anoma-masp-0.3.51d2f83a8412b95` and branch
-`internal/testnet-n1` (commit
-`0184e64e044366ec370d1431ddf4691b4bd3a5b4`)
-
-## Run MASP Testnet
-
-**NOTE** Check the [prerequisities](#prerequisites) before trying to start a node from binaries.
-
-- Download `masp-params.tar.gz` and `anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz` [from Google Drive](https://drive.google.com/drive/folders/1MM-HOkxDgcbgKbTn8E2xVHVKPhiKBI9C?usp=sharing)
-- Extract masp params file `masp-params.tar.gz`
-  - Linux: into home dir as follow `~/.masp-params`
-  - Mac OS: into `~/Library/Application Support/MASPParams`
-- Extract anoma file with prebuilt binaries `anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz`
-- Go to anoma folder `anoma-v0.5.0-49-g0184e64e0-Linux-x86_64`
-- Join chain-id `anoma-masp-0.3.51d2f83a8412b95` and start your node
-
-Executing the commands below should start a node:
+Latest values regarding the testnet that would be useful to have in your shell:
 
 ```bash
-cd ~ 
-tar -xvf masp-params.tar.gz
-tar -xvf anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz
-cd anoma-v0.5.0-49-g0184e64e0-Linux-x86_64
-./anomac utils join-network --chain-id anoma-masp-0.3.51d2f83a8412b95
+export ANOMA_TESTNET_CHAIN_ID='anoma-masp-0.3.51d2f83a8412b95'
+export ANOMA_TESTNET_BRANCH='internal/testnet-n1'
+export ANOMA_TESTNET_COMMIT='0184e64e044366ec370d1431ddf4691b4bd3a5b4'
+```
+
+## Getting the binaries
+Specific `anoma` binaries should be used when joining or interacting with the testnet.
+
+### Downloading prebuilt binaries
+There may be prebuilt binaries available for your OS and architecture [in Google Drive](https://drive.google.com/drive/folders/1MM-HOkxDgcbgKbTn8E2xVHVKPhiKBI9C?usp=sharing). If not, you will have to compile from source.
+
+### Compiling from source
+- Checkout the commit being used with the testnet -e.g. `git checkout $ANOMA_TESTNET_COMMIT`
+- Run `make package` which should result in an archive containing the binaries named like `anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz`
+
+## Downloading parameters
+- Download `masp-params.tar.gz` [from Google Drive](https://drive.google.com/drive/folders/1MM-HOkxDgcbgKbTn8E2xVHVKPhiKBI9C?usp=sharing)
+- Extract masp params file `masp-params.tar.gz`
+    - Linux: into home dir as follow `~/.masp-params`
+    - Mac OS: into `~/Library/Application Support/MASPParams`
+
+## Run MASP Testnet
+**NOTE** Check the [prerequisites](#prerequisites) before trying to start a node from binaries.
+
+Executing the commands below inside the folder with the testnet anoma binaries should start a node:
+```bash
+./anomac utils join-network --chain-id $ANOMA_TESTNET_CHAIN_ID
 ./anoma ledger
 ```
 
@@ -206,10 +211,10 @@ make install
 - Configure your node to join a network:
 
 ```
-./anomac utils join-network --chain-id=anoma-masp-0.3.51d2f83a8412b95
+./anomac utils join-network --chain-id=$ANOMA_TESTNET_CHAIN_ID
 ```
 
-This should output the following:
+This should output something like the following:
 
 ```
 Downloading config release from https://github.com/heliaxdev/anoma-network-config/releases/download/anoma-masp-0.3.51d2f83a8412b95/anoma-masp-0.3.51d2f83a8412b95.tar.gz ...
