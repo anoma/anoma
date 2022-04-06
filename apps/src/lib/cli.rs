@@ -451,6 +451,7 @@ pub mod cmds {
         ListPayAddrs(MaspListPayAddrs),
         ListViewKeys(MaspListViewKeys),
         ListSpendKeys(MaspListSpendKeys),
+        FindAddrKey(MaspFindAddrKey),
     }
 
     impl SubCmd for WalletMasp {
@@ -465,7 +466,9 @@ pub mod cmds {
                 let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
                 let listvk = SubCmd::parse(matches).map(Self::ListViewKeys);
                 let listsk = SubCmd::parse(matches).map(Self::ListSpendKeys);
-                gensk.or(derivevk).or(genpa).or(addak).or(listpa).or(listvk).or(listsk)
+                let findak = SubCmd::parse(matches).map(Self::FindAddrKey);
+                gensk.or(derivevk).or(genpa).or(addak).or(listpa).or(listvk)
+                    .or(listsk).or(findak)
             })
         }
 
@@ -484,6 +487,26 @@ pub mod cmds {
                 .subcommand(MaspListPayAddrs::def())
                 .subcommand(MaspListViewKeys::def())
                 .subcommand(MaspListSpendKeys::def())
+                .subcommand(MaspFindAddrKey::def())
+        }
+    }
+
+    /// Find the given shielded address or key
+    #[derive(Clone, Debug)]
+    pub struct MaspFindAddrKey(pub args::AddrKeyFind);
+
+    impl SubCmd for MaspFindAddrKey {
+        const CMD: &'static str = "find";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD)
+                .map(|matches| Self(args::AddrKeyFind::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Find the given shielded address or key in the wallet")
+                .add_args::<args::AddrKeyFind>()
         }
     }
 
@@ -2713,6 +2736,37 @@ pub mod args {
                     .def()
                     .about("UNSAFE: Print the secret key."),
             )
+        }
+    }
+
+    /// Wallet find shielded address or key arguments
+    #[derive(Clone, Debug)]
+    pub struct AddrKeyFind {
+        pub alias: String,
+        pub unsafe_show_secret: bool,
+    }
+
+    impl Args for AddrKeyFind {
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            let unsafe_show_secret = UNSAFE_SHOW_SECRET.parse(matches);
+            Self {
+                alias,
+                unsafe_show_secret,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("The alias that is to be found.")
+            )
+                .arg(
+                    UNSAFE_SHOW_SECRET
+                        .def()
+                        .about("UNSAFE: Print the spending key values."),
+                )
         }
     }
 

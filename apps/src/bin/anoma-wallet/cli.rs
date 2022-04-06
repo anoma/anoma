@@ -43,7 +43,7 @@ pub fn main() -> Result<()> {
         },
         cmds::AnomaWallet::Masp(sub) => match sub {
             cmds::WalletMasp::GenSpendKey(cmds::MaspGenSpendKey(args)) => {
-                spending_key_gen(ctx, args);
+                spending_key_gen(ctx, args)
             }
             cmds::WalletMasp::GenPayAddr(cmds::MaspGenPayAddr(args)) => {
                 payment_address_gen(ctx, args)
@@ -63,9 +63,45 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::ListSpendKeys(cmds::MaspListSpendKeys(args)) => {
                 spending_keys_list(ctx, args)
             }
+            cmds::WalletMasp::FindAddrKey(cmds::MaspFindAddrKey(args)) => {
+                address_key_find(ctx, args)
+            }
         }
     }
     Ok(())
+}
+
+/// Find shielded address or key
+fn address_key_find(
+    ctx: Context,
+    args::AddrKeyFind {
+        alias,
+        unsafe_show_secret,
+    }: args::AddrKeyFind,
+) {
+    let mut wallet = ctx.wallet;
+    if let Ok(spending_key) = wallet.find_spending_key(&alias) {
+        // First check if alias is a spending key
+        if unsafe_show_secret {
+            println!("Spending key: {}", spending_key);
+        } else {
+            println!("Spending key");
+        }
+    } else if let Ok(viewing_key) = wallet.find_viewing_key(&alias) {
+        // Failing that, check if alias is a viewing key
+        println!("Viewing key: {}", viewing_key);
+    } else if let Some(payment_addr) = wallet.find_payment_addr(&alias) {
+        // Failing that, check if alias is a payment address
+        println!("Payment address: {}", payment_addr);
+    } else {
+        // Otherwise alias cannot be referring to any shielded value
+        println!(
+            "No shielded address or key with alias {} found. Use the commands \
+             `masp list-payment-addrs`, `masp lists-spending-keys`, and \
+             `masp list-viewing-keys` to see all the known addresses and keys.",
+            alias.to_lowercase()
+        );
+    }
 }
 
 /// List spending keys.
