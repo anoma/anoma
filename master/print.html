@@ -842,16 +842,16 @@ struct MyMatchmaker;
 <h2 id="run-masp-testnet"><a class="header" href="#run-masp-testnet">Run MASP Testnet</a></h2>
 <p><strong>NOTE</strong> Check the <a href="testnets/internal-testnet-1/index.html#prerequisites">prerequisities</a> before trying to start a node from binaries.</p>
 <ul>
-<li>Download <code>masp-params.tar.gz</code> and <code>anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz</code> <a href="https://drive.google.com/drive/folders/1MM-HOkxDgcbgKbTn8E2xVHVKPhiKBI9C?usp=sharing">from Google Drive</a> </li>
-<li>Extract masp params file <code>masp-params.tar.gz</code> 
+<li>Download <code>masp-params.tar.gz</code> and <code>anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz</code> <a href="https://drive.google.com/drive/folders/1MM-HOkxDgcbgKbTn8E2xVHVKPhiKBI9C?usp=sharing">from Google Drive</a></li>
+<li>Extract masp params file <code>masp-params.tar.gz</code>
 <ul>
 <li>Linux: into home dir as follow <code>~/.masp-params</code></li>
-<li>Mac OS: into <code>~/Library/Application Support/MASPParam</code></li>
+<li>Mac OS: into <code>~/Library/Application Support/MASPParams</code></li>
 </ul>
 </li>
 <li>Extract anoma file with prebuilt binaries <code>anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz</code></li>
 <li>Go to anoma folder <code>anoma-v0.5.0-49-g0184e64e0-Linux-x86_64</code></li>
-<li>Join chain-id <code>anoma-masp-0.3.51d2f83a8412b95</code> and start your node </li>
+<li>Join chain-id <code>anoma-masp-0.3.51d2f83a8412b95</code> and start your node</li>
 </ul>
 <p>Executing the commands below should start a node:</p>
 <pre><code class="language-bash">cd ~ 
@@ -947,7 +947,7 @@ specified. However, any transparent account can sign these transactions.</p>
 <li>By default, the highest version of GLIBC for Ubuntu 18.04 should be 2.27. The best way to go for Ubuntu 18.04 is to build from source, but if you still want to upgrade to a higher version then follow one of the following points:
 <ul>
 <li>The second option is to migrate your application to a system that supports GLIBC higher than or equal to 2.29. This would mean a lot of work though. It seems Ubuntu 19.04 actually uses that version.</li>
-<li>The thired option would be to actually build your GLIBC from source using the version you want or need. I’ve researched it a bit and found a website which actually gives you the steps for you to build the package from source : http://www.linuxfromscratch.org/lfs/view/9.0-systemd/chapter05/glibc.html</li>
+<li>The thired option would be to actually build your GLIBC from source using the version you want or need. I’ve researched it a bit and found a website which actually gives you the steps for you to build the package from source : <a href="http://www.linuxfromscratch.org/lfs/view/9.0-systemd/chapter05/glibc.html">http://www.linuxfromscratch.org/lfs/view/9.0-systemd/chapter05/glibc.html</a></li>
 </ul>
 </li>
 </ul>
@@ -987,7 +987,7 @@ cd anoma-v0.3.1-Darwin-x86_64
 sudo apt-get install -y make git-core libssl-dev pkg-config libclang-12-dev
 </code></pre>
 <p>Clone the source code from the <a href="https://github.com/anoma/anoma">Github Anoma repo</a>, then build and install anoma with the following commands:</p>
-<pre><code>git clone https://github.com/anoma/anoma.git
+<pre><code>git clone https://github.com/anoma/anoma.git --single-branch --branch internal/testnet-n1
 cd anoma
 make install
 </code></pre>
@@ -995,11 +995,11 @@ make install
 <ul>
 <li>Configure your node to join a network:</li>
 </ul>
-<pre><code>./anomac utils join-network --chain-id=anoma-masp-0.1.52ff4afab144c26
+<pre><code>./anomac utils join-network --chain-id=anoma-masp-0.3.51d2f83a8412b95
 </code></pre>
 <p>This should output the following:</p>
-<pre><code>Downloading config release from https://github.com/heliaxdev/anoma-network-config/releases/download/anoma-masp-0.1.52ff4afab144c26/anoma-masp-0.1.52ff4afab144c26.tar.gz ...
-Successfully configured for chain ID anoma-masp-0.1.52ff4afab144c26
+<pre><code>Downloading config release from https://github.com/heliaxdev/anoma-network-config/releases/download/anoma-masp-0.3.51d2f83a8412b95/anoma-masp-0.3.51d2f83a8412b95.tar.gz ...
+Successfully configured for chain ID anoma-masp-0.3.51d2f83a8412b95
 </code></pre>
 <ul>
 <li>Run the ledger into a tmux session:</li>
