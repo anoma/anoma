@@ -1,6 +1,8 @@
 # Internal Testnet 1
 *Last updated on **2022-04-06** by **James Hiew***
 
+> TODO: warning here that the chain ID/commit/branch etc values can change
+
 Latest values regarding the testnet that would be useful to have in your shell:
 
 ```bash
@@ -16,6 +18,8 @@ Specific `anoma` binaries should be used when joining or interacting with the te
 There may be prebuilt binaries available for your OS and architecture [in Google Drive](https://drive.google.com/drive/folders/1MM-HOkxDgcbgKbTn8E2xVHVKPhiKBI9C?usp=sharing). If not, you will have to compile from source.
 
 ### Compiling from source
+> TODO: link out to compiling from source instructions rather than duplicating/putting too many instructions here
+
 - Checkout the commit being used with the testnet -e.g. `git checkout $ANOMA_TESTNET_COMMIT`
 - Run `make package` which should result in an archive containing the binaries named like `anoma-v0.5.0-49-g0184e64e0-Linux-x86_64.tar.gz`
 
