@@ -2,19 +2,26 @@
 
 ## Requirements
 
-* Building from source requires at least 16GB of ram available and 4 core cpu,
-* Free disk space of at least 60GB,
-* Intel i3 or better will suffice.
-* Tendermint 0.34.x pre-installed 
+### Running
+* Linux or macOS (at the moment, we are not supporting Windows)
+* At least 16GB of RAM available and 4 core CPU
+* Free disk space of at least 60GB
+* Intel i3 equivalent performance or better will suffice.
+* The correct version of [Tendermint](https://github.com/tendermint/tendermint) pre-installed 
 
-To install the correct version of Tendermint, download any of the pre-built binaries for versions 0.34.x [here](https://github.com/tendermint/tendermint/releases) and install it using the instructions on the [Tendermint guide](https://docs.tendermint.com/master/introduction/install.html), or use a script on the Anoma repo 
-`scripts/install/get_tendermint.sh` This is used by the `make install` command (if you’re installing from the source).
-
-At the moment we are not supporting windows.
-
-This guide also assumes that the user has a basic knowledge of the terminal and how commands are used.
+To install the correct version of Tendermint, download the pre-built binary for your OS and architecture from [here](https://github.com/tendermint/tendermint/releases) and install it on your $PATH, or use the script in the Anoma repo
+`scripts/install/get_tendermint.sh`. This is used by the `make install` command (if you’re installing from the source).
 
 ## About this guide
+This guide assumes that the user has a basic knowledge of the terminal and how commands are used.
+
+> ⚠️ The specific values used in this guide for these variables may become out of date. Check the release notes for the version of Anoma you are using for the most up-to-date values.
+
+```bash
+export ANOMA_LATEST_VERSION='0.5.0'
+export ANOMA_TENDERMINT_VERSION='0.34.13'
+export ANOMA_TESTNET_CHAIN_ID='anoma-testnet-1.2.bf0181d9f7e0'
+```
 
 * Commands start with `$`:  
   `$ this is a command do not copy the dollar sign!`
@@ -25,7 +32,9 @@ This guide also assumes that the user has a basic knowledge of the terminal and 
 
 ## Install Anoma
 
-To pull the latest Anoma executables on Linux (at time of writing, this is [Anoma v.0.3.1](https://github.com/anoma/anoma/releases/tag/v0.3.1)):
+> ⚠️ Prebuilt executables are currently only available for Linux on x86_64
+
+To pull the latest Anoma executables for Linux on x86_64:
 
 ```shell
 $ curl -LO https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.1-Linux-x86_64.tar.gz
@@ -55,7 +64,7 @@ Remember to replace `[platform]` with your platform (without brackets). This cou
 Still in the same directory as above
 
 ```shell
-$ ./anomac utils join-network --chain-id=anoma-testnet-1.2.bf0181d9f7e0
+$ ./anomac utils join-network --chain-id=$ANOMA_TESTNET_CHAIN_ID
 
 ➜ Downloading config release from https://github.com/heliaxdev/anoma-network-config/releases/download/anoma-testnet-1.2.bf0181d9f7e0/anoma-testnet-1.2.bf0181d9f7e0.tar.gz ...
 ➜ Successfully configured for chain ID anoma-testnet-1.2.bf0181d9f7e0
