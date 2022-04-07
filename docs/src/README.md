@@ -7,9 +7,6 @@ Welcome to Anoma's docs!
 - [Anoma's Whitepaper](https://anoma.network/papers/whitepaper.pdf)
 - [Anoma's Vision paper](https://anoma.network/papers/vision-paper.pdf)
 
-### Anoma's current testnet: Feigenbaum
-Feigenbaum is the name of Anoma's first public testnet. Find `feigenbaum` on [Github](https://github.com/anoma/anoma/releases).
-
 > ⚠️ Here lay dragons: this codebase is still experimental, try at your own risk!
 
 ## About the documentation
@@ -20,7 +17,7 @@ The three main sections of this book are:
 - [Exploration](./explore): documents the process of exploring the design and implementation space for Anoma
 - [Specifications](./specs): implementation independent technical specifications
 
-### The source
+#### The source
 
 This book is written using [mdBook](https://rust-lang.github.io/mdBook/) with [mdbook-mermaid](https://github.com/badboy/mdbook-mermaid) for diagrams, it currently lives in the [Anoma repo](https://github.com/anoma/anoma).
 
