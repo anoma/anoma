@@ -92,6 +92,8 @@ pub async fn run(
 #[cfg(feature = "eth-fullnode")]
 /// Tools for running a geth fullnode process
 pub mod eth_fullnode {
+    use std::convert::TryInto;
+
     use futures_lite::StreamExt;
     use tokio::process::{Child, Command};
     use tokio::sync::mpsc::UnboundedSender;
@@ -164,8 +166,12 @@ pub mod eth_fullnode {
 
             // we now wait for the full node to sync
             let websocket = WebSocket::new(url).await.map_err(Error::Web3)?;
-            let mut sync = EthSubscribe::new(websocket)
+            let mut sync = EthSubscribe::new(websocket.clone())
                 .subscribe_syncing()
+                .await
+                .map_err(Error::Web3)?;
+            let mut headers = EthSubscribe::new(websocket)
+                .subscribe_new_heads()
                 .await
                 .map_err(Error::Web3)?;
 
@@ -195,9 +201,25 @@ pub mod eth_fullnode {
                 }
             }
             let _ = sync.unsubscribe().await;
-            if sender.send(Default::default()).is_err() {
+            // send the latest block header seen to the ledger
+            // so that it knows which epoch Ethereum is in.
+            // Necessary for the ethash algorithm to verify headers
+            let header = loop {
+                if let Some(Ok(header)) = headers.next().await {
+                    break header;
+                }
+            };
+            let _ = headers.unsubscribe().await;
+            if sender
+                .send(EthPollResult {
+                    new_header: Some(header.try_into().unwrap()),
+                    ..Default::default()
+                })
+                .is_err()
+            {
                 panic!("The channel from the Ethereum unexpectedly dropped");
             }
+
             Ok(Self {
                 process: ethereum_node,
             })
@@ -231,17 +253,37 @@ pub use eth_fullnode::EthereumNode;
 #[cfg(not(feature = "eth-fullnode"))]
 /// tools for running a mock ethereum fullnode process
 pub mod mock_eth_fullnode {
+    use anoma::types::hash::Hash;
     use tokio::sync::mpsc::UnboundedSender;
 
-    use super::{EthPollResult, Result};
+    use super::{EthPollResult, EthereumHeader, Result};
 
     pub struct EthereumNode;
 
     impl EthereumNode {
         pub async fn new(
             _: &str,
-            _: &mut UnboundedSender<EthPollResult>,
+            sender: &mut UnboundedSender<EthPollResult>,
         ) -> Result<EthereumNode> {
+            let header = EthereumHeader {
+                hash: Hash([0; 32]),
+                parent_hash: Hash([0; 32]),
+                number: 0,
+                difficulty: 0.into(),
+                nonce: Default::default(),
+                mix_hash: Hash([0; 32]),
+                state_root: Hash([0; 32]),
+                transactions_root: Hash([0; 32]),
+            };
+            if sender
+                .send(EthPollResult {
+                    new_header: Some(header),
+                    ..Default::default()
+                })
+                .is_err()
+            {
+                panic!("The channel from the Ethereum unexpectedly dropped");
+            }
             Ok(Self {})
         }
 
@@ -405,12 +447,16 @@ mod mock_eth_poller {
 
     impl MockEthereumPoller {
         /// We start from a random hash and block number 0
+        /// We use a mock header verifier that checks the first
+        /// 10 bytes are all zero.
         pub async fn new(
             _url: &str,
             _smart_contract_addresses: Vec<Vec<H160>>,
         ) -> Result<Self> {
+            let mut hash = rand::thread_rng().gen::<[u8; 32]>();
+            let _ = (0..10).map(|i| hash[i] = 0).collect::<()>();
             Ok(Self {
-                last_hash: Hash(rand::thread_rng().gen::<[u8; 32]>()),
+                last_hash: Hash(hash),
                 last_number: 0,
             })
         }
@@ -419,13 +465,19 @@ mod mock_eth_poller {
         /// new random hash and increment the block number
         /// by 1.
         ///
+        /// We force the first 10 bytes of the random hash
+        /// to be zero. This is the criteria the mock verifier uses.
+        ///
         /// This way the parent_hash field is always the hash of
         /// the previously seen hash.
         ///
         /// We send a new header once every 2 seconds.
         pub async fn next(&mut self) -> Option<EthPollResult> {
             std::thread::sleep(std::time::Duration::from_secs(2));
-            let mut parent_hash = Hash(rand::thread_rng().gen::<[u8; 32]>());
+            let mut parent_hash = rand::thread_rng().gen::<[u8; 32]>();
+            let _ = (0..10).map(|i| parent_hash[i] = 0).collect::<()>();
+            let mut parent_hash = Hash(parent_hash);
+
             std::mem::swap(&mut self.last_hash, &mut parent_hash);
             let new_header = EthereumHeader {
                 hash: self.last_hash.clone(),

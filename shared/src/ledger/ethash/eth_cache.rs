@@ -4,6 +4,7 @@
 #[cfg(feature = "ethereum-headers")]
 #[allow(missing_docs)]
 pub mod pipelined_eth_cache {
+    use std::fmt::Debug;
     use std::thread::JoinHandle;
 
     use borsh::{BorshDeserialize, BorshSerialize};
@@ -14,8 +15,9 @@ pub mod pipelined_eth_cache {
         cross_boundary, get_cache_size, get_full_size, get_seedhash,
         hashimoto_light, make_cache,
     };
+    use crate::tendermint::consensus::state::fmt::Formatter;
     use crate::types::ethereum_headers::EthereumHeader;
-
+    use crate::types::hash::Hash;
     const EPOCH_LENGTH: usize = 30_000;
 
     /// A task that is run in a separate thread.
@@ -87,6 +89,32 @@ pub mod pipelined_eth_cache {
         #[borsh_skip]
         /// Background task to update the cache asynchronously
         update: Option<BackgroundTask<Cache>>,
+    }
+
+    impl Debug for EthVerifier {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("EthVerifier")
+                .field("epoch", &self.epoch)
+                .field(
+                    "previous_cache",
+                    if self.previous_cache.is_some() {
+                        &"Some"
+                    } else {
+                        &"None"
+                    },
+                )
+                .field("keep_previous", &self.keep_previous)
+                .field("update_ahead", &self.update_ahead)
+                .field(
+                    "next_cache",
+                    if self.next_cache.is_some() {
+                        &"Some"
+                    } else {
+                        &"None"
+                    },
+                )
+                .finish()
+        }
     }
 
     impl EthVerifier {
@@ -230,33 +258,58 @@ pub mod pipelined_eth_cache {
                 nonce,
                 mix_hash,
                 ..
-            }: EthereumHeader,
+            }: &EthereumHeader,
         ) -> bool {
             let epoch = (number / EPOCH_LENGTH as u64) as usize;
             let (mix, final_hash) = if epoch + 1 == self.epoch {
                 match self.previous_cache.as_ref() {
                     Some(Cache { full_size, cache }) => hashimoto_light(
-                        hash.into(),
-                        nonce.into(),
+                        hash.clone().into(),
+                        nonce.clone().into(),
                         *full_size,
                         cache,
                     ),
-                    None => {
-                        self.compute_slow(hash.into(), nonce.into(), number)
-                    }
+                    None => self.compute_slow(
+                        hash.clone().into(),
+                        nonce.clone().into(),
+                        *number,
+                    ),
                 }
             } else if epoch == self.epoch {
                 hashimoto_light(
-                    hash.into(),
-                    nonce.into(),
+                    hash.clone().into(),
+                    nonce.clone().into(),
                     self.cache.full_size,
                     &self.cache.cache,
                 )
             } else {
-                self.compute_slow(hash.into(), nonce.into(), number)
+                self.compute_slow(
+                    hash.clone().into(),
+                    nonce.clone().into(),
+                    *number,
+                )
             };
-            mix == H256::from(mix_hash)
-                && U256::from(final_hash.0) <= cross_boundary(difficulty.into())
+            &Hash::from(mix) == mix_hash
+                && U256::from(final_hash.0)
+                    <= cross_boundary(difficulty.clone().into())
+        }
+    }
+
+    #[derive(Debug, BorshSerialize, BorshDeserialize)]
+    pub struct MockVerifier;
+
+    impl MockVerifier {
+        pub fn new(_: u64, _: u64, _: u64) -> Self {
+            Self {}
+        }
+
+        pub fn update(&mut self, _: u64) {}
+
+        pub fn verify_header(
+            &self,
+            EthereumHeader { hash, .. }: &EthereumHeader,
+        ) -> bool {
+            hash.0.iter().take(10).all(|byte| byte == &0u8)
         }
     }
 
@@ -317,7 +370,7 @@ pub mod pipelined_eth_cache {
                 transactions_root: Hash([0; 32]),
             };
             // this should work even though the cache is not precomputed
-            assert!(light_dag.verify_header(header));
+            assert!(light_dag.verify_header(&header));
         }
 
         /// Test that verifying an Ethereum header in the same
@@ -351,7 +404,7 @@ pub mod pipelined_eth_cache {
             assert!(eth_verifier.is_valid_for(header.number));
             // Test that verification passes and is fast enough
             let start = std::time::Instant::now();
-            assert!(eth_verifier.verify_header(header));
+            assert!(eth_verifier.verify_header(&header));
             let time_taken = std::time::Instant::now() - start;
             assert!(time_taken.as_secs() <= 5);
 
@@ -413,7 +466,7 @@ pub mod pipelined_eth_cache {
 
             // Test that verification passes and is fast
             let start = std::time::Instant::now();
-            assert!(eth_verifier.verify_header(header));
+            assert!(eth_verifier.verify_header(&header));
             let time_taken = std::time::Instant::now() - start;
             assert!(time_taken.as_secs() <= 5);
 

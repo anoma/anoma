@@ -119,8 +119,12 @@ pub mod eth_header_types {
     }
 }
 
+use std::hash::Hasher;
+
 #[cfg(feature = "ethereum-headers")]
 pub use eth_header_types::*;
+
+use crate::tendermint::consensus::state::Ordering;
 
 /// Errors in transforming types related to Ethereum headers
 #[derive(Error, Debug)]
@@ -190,20 +194,42 @@ impl EthereumHeader {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
 /// Struct that represents the voting power
 /// of a validator at given block height
-pub struct EpochPower<'a> {
+pub struct EpochPower {
     /// Address of a validator
-    pub validator: &'a Address,
+    pub validator: Address,
     /// voting power of validator at block `block_height`
     pub voting_power: u64,
     /// The height of the block at which the validator has this voting power
     pub block_height: u64,
 }
 
+impl PartialOrd for EpochPower {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.validator.partial_cmp(&other.validator)
+    }
+}
+
+impl PartialEq for EpochPower {
+    fn eq(&self, other: &Self) -> bool {
+        self.validator.eq(&other.validator)
+    }
+}
+
+impl Eq for EpochPower {}
+
+impl core::hash::Hash for EpochPower {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        <str as core::hash::Hash>::hash(self.validator.encode().as_str(), state)
+    }
+}
+
 /// A uniform interface for signed and multi-signed ethereum headers
 pub trait SignedHeader {
+    /// Get a reference to the signed header
+    fn get_header(&self) -> &EthereumHeader;
     /// Get the voting power of validators at the given block
     /// height who have signed this header.
     fn get_voting_powers(&self) -> Vec<EpochPower>;
@@ -235,9 +261,16 @@ pub struct SignedEthereumHeader {
 }
 
 impl SignedHeader for SignedEthereumHeader {
+    fn get_header(&self) -> &EthereumHeader {
+        let Signed {
+            data: (header, _), ..
+        } = &self.signed_header;
+        header
+    }
+
     fn get_voting_powers(&self) -> Vec<EpochPower> {
         vec![EpochPower {
-            validator: &self.address,
+            validator: self.address.clone(),
             voting_power: self.voting_power,
             block_height: self.signed_header.data.1,
         }]
@@ -307,25 +340,19 @@ impl MultiSignedEthHeader {
             Err(Error::IncompatibleHeaders)
         }
     }
-
-    /// Get a reference to the signed header
-    pub fn get_header(&self) -> &EthereumHeader {
-        &self.signed_header.data.0
-    }
-
-    /// Extract the signed header
-    pub fn into_header(self) -> EthereumHeader {
-        self.signed_header.data.0
-    }
 }
 
 impl SignedHeader for MultiSignedEthHeader {
+    fn get_header(&self) -> &EthereumHeader {
+        &self.signed_header.data.0
+    }
+
     fn get_voting_powers(&self) -> Vec<EpochPower> {
         let height = self.signed_header.data.1;
         self.signers
             .iter()
             .map(|(addr, power)| EpochPower {
-                validator: addr,
+                validator: addr.clone(),
                 voting_power: *power,
                 block_height: height,
             })
@@ -355,7 +382,6 @@ impl SignedHeader for MultiSignedEthHeader {
         hash_tx(&data.try_to_vec().unwrap())
     }
 }
-
 
 #[cfg(test)]
 mod test_eth_headers {
@@ -391,7 +417,8 @@ mod test_eth_headers {
     /// Generate a random address
     fn gen_address() -> Address {
         let mut gen = EstablishedAddressGen::new("Random McRandomFace");
-        let random_bytes = (0..32).map(|_| rand::random::<u8>()).collect::<Vec<u8>>();
+        let random_bytes =
+            (0..32).map(|_| rand::random::<u8>()).collect::<Vec<u8>>();
         gen.generate_address(&mut random_bytes.as_slice())
     }
 
@@ -407,35 +434,42 @@ mod test_eth_headers {
         let voting_power_2 = 200;
 
         let mut header_1: MultiSignedEthHeader = EthereumHeader::default()
-            .sign(
-                voting_power_1,
-                address_1.clone(),
-                2,
-                &signing_key_1
-            )
+            .sign(voting_power_1, address_1.clone(), 2, &signing_key_1)
             .into();
 
-        let header_2 = EthereumHeader::default()
-            .sign(
-                voting_power_2,
-                address_2.clone(),
-                2,
-                &signing_key_2
-            );
+        let header_2 = EthereumHeader::default().sign(
+            voting_power_2,
+            address_2.clone(),
+            2,
+            &signing_key_2,
+        );
 
         header_1.add(header_2).expect("Test failed");
-        assert_eq!(header_1.signers, vec![(address_1.clone(), voting_power_1), (address_2.clone(), voting_power_2)]);
+        assert_eq!(
+            header_1.signers,
+            vec![
+                (address_1.clone(), voting_power_1),
+                (address_2.clone(), voting_power_2)
+            ]
+        );
         assert_eq!(header_1.signed_header.data, (EthereumHeader::default(), 2));
-        assert!(header_1.verify_signatures(&[signing_key_1.ref_to(), signing_key_2.ref_to()]).is_ok());
+        assert!(
+            header_1
+                .verify_signatures(&[
+                    signing_key_1.ref_to(),
+                    signing_key_2.ref_to()
+                ])
+                .is_ok()
+        );
 
         let expected = vec![
             EpochPower {
-                validator: &address_1,
+                validator: address_1.clone(),
                 voting_power: voting_power_1,
                 block_height: 2,
             },
             EpochPower {
-                validator: &address_2,
+                validator: address_2.clone(),
                 voting_power: voting_power_2,
                 block_height: 2,
             },
@@ -459,24 +493,25 @@ mod test_eth_headers {
         let voting_power_2 = 200;
 
         let mut header_1: MultiSignedEthHeader = EthereumHeader::default()
-            .sign(
-                voting_power_1,
-                address_1.clone(),
-                2,
-                &signing_key_1
-            )
+            .sign(voting_power_1, address_1, 2, &signing_key_1)
             .into();
 
-        let header_2 = EthereumHeader::default()
-            .sign(
-                voting_power_2,
-                address_2.clone(),
-                2,
-                &signing_key_2
-            );
+        let header_2 = EthereumHeader::default().sign(
+            voting_power_2,
+            address_2,
+            2,
+            &signing_key_2,
+        );
 
         header_1.add(header_2).expect("Test failed");
-        assert!(!header_1.verify_signatures(&[signing_key_2.ref_to(), signing_key_1.ref_to()]).is_ok());
+        assert!(
+            header_1
+                .verify_signatures(&[
+                    signing_key_2.ref_to(),
+                    signing_key_1.ref_to()
+                ])
+                .is_err()
+        );
     }
 
     /// Test that two distinct ethereum headers cannot be
@@ -491,23 +526,15 @@ mod test_eth_headers {
         let voting_power_2 = 200;
 
         let mut header_1: MultiSignedEthHeader = EthereumHeader::default()
-            .sign(
-                voting_power_1,
-                address_1.clone(),
-                2,
-                &signing_key_1
-            )
+            .sign(voting_power_1, address_1, 2, &signing_key_1)
             .into();
 
-        let mut header_2 = EthereumHeader::default();
-        header_2.difficulty = 1.into();
-        let header_2 = header_2
-            .sign(
-                voting_power_2,
-                address_2.clone(),
-                2,
-                &signing_key_2
-            );
+        let header_2 = EthereumHeader {
+            difficulty: 1.into(),
+            ..Default::default()
+        };
+        let header_2 =
+            header_2.sign(voting_power_2, address_2, 2, &signing_key_2);
 
         assert_ne!(header_1.hash(), header_2.hash());
         assert!(header_1.add(header_2).is_err());
@@ -526,23 +553,40 @@ mod test_eth_headers {
         let voting_power_2 = 200;
 
         let mut header_1: MultiSignedEthHeader = EthereumHeader::default()
-            .sign(
-                voting_power_1,
-                address_1.clone(),
-                2,
-                &signing_key_1
-            )
+            .sign(voting_power_1, address_1, 2, &signing_key_1)
             .into();
 
-        let header_2 = EthereumHeader::default()
-            .sign(
-                voting_power_2,
-                address_2.clone(),
-                3,
-                &signing_key_2
-            );
+        let header_2 = EthereumHeader::default().sign(
+            voting_power_2,
+            address_2,
+            3,
+            &signing_key_2,
+        );
 
         assert_ne!(header_1.hash(), header_2.hash());
         assert!(header_1.add(header_2).is_err());
+    }
+
+    /// Test that two instance of the `EpochPower` struct
+    /// with the same `validator` field hash to the same
+    /// value
+    #[test]
+    fn test_epoch_power_hash() {
+        use std::collections::HashSet;
+        let mut powers = HashSet::new();
+        let address = gen_address();
+        let power_1 = EpochPower {
+            validator: address.clone(),
+            voting_power: 100,
+            block_height: 2,
+        };
+        powers.insert(power_1.clone());
+        let power_2 = EpochPower {
+            validator: address,
+            voting_power: 200,
+            block_height: 11,
+        };
+        assert!(!powers.insert(power_2));
+        assert_eq!(powers, HashSet::from([power_1]));
     }
 }

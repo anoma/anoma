@@ -19,12 +19,13 @@ use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
 use borsh::BorshSerialize;
+use ethereum_bridge::ethereum_headers_vp::EthereumStateVp;
+use ethereum_bridge::make_ethereum_header_data;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
 
-use crate::node::ledger::protocol::ethereum_bridge::make_ethereum_header_data;
-use crate::wasm_loader;
 use crate::node::ledger::shell::Shell;
+use crate::wasm_loader;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -57,6 +58,8 @@ pub enum Error {
     ParametersNativeVpError(parameters::Error),
     #[error("IBC Token native VP: {0}")]
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
+    #[error("Ethereum state native VP rejected changes")]
+    EthereumStateVpError,
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
 }
@@ -75,7 +78,8 @@ where
     pub tx_wasm_cache: &'a mut TxCache<CA>,
 }
 
-impl<'a, D, H> From<&'a mut Shell<D, H>> for ShellParams<'a, D, H, anoma::vm::WasmCacheRwAccess>
+impl<'a, D, H> From<&'a mut Shell<D, H>>
+    for ShellParams<'a, D, H, anoma::vm::WasmCacheRwAccess>
 where
     D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
     H: 'static + StorageHasher + Sync,
@@ -111,7 +115,7 @@ pub(crate) fn apply_tx<'a, D, H, CA>(
         wasm_dir,
         vp_wasm_cache,
         tx_wasm_cache,
-    }: ShellParams<'a, D, H, CA>
+    }: ShellParams<'a, D, H, CA>,
 ) -> Result<TxResult>
 where
     D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
@@ -159,9 +163,11 @@ where
             })
         }
         TxType::Protocol(ProtocolTx {
-            tx: ProtocolTxType::EthereumHeaders(header),
+            tx: ProtocolTxType::EthereumHeaders(ref header),
             ..
         }) => {
+            // This is the transaction the vps will see
+            let tx_to_verify = Tx::from(tx.clone());
             // First we create the data to be written to storage
             let (tx_data, gas) = make_ethereum_header_data(header, storage);
             block_gas_meter.add(gas).map_err(Error::GasError)?;
@@ -172,10 +178,10 @@ where
                 std::path::Path::new("tx_ethereum_headers"),
             );
             // Create the tx to submit to the protocol
-            let tx = Tx::new(code, Some(tx_data.try_to_vec().unwrap()));
-
+            let tx_to_execute =
+                Tx::new(code, Some(tx_data.try_to_vec().unwrap()));
             let verifiers = execute_tx(
-                &tx,
+                &tx_to_execute,
                 storage,
                 block_gas_meter,
                 write_log,
@@ -184,7 +190,7 @@ where
             )?;
 
             let vps_result = check_vps(
-                &tx,
+                &tx_to_verify,
                 storage,
                 block_gas_meter,
                 write_log,
@@ -436,7 +442,12 @@ where
                             result
                         }
                         InternalAddress::EthereumState => {
-                            todo!()
+                            let eth_state = EthereumStateVp { ctx };
+                            let result = eth_state
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(|_| Error::EthereumStateVpError);
+                            gas_meter = eth_state.ctx.gas_meter.into_inner();
+                            result
                         }
                     };
 

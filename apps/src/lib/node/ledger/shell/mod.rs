@@ -20,6 +20,10 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
 
+#[cfg(feature = "eth-fullnode")]
+use anoma::ledger::ethash::EthVerifier;
+#[cfg(not(feature = "eth-fullnode"))]
+use anoma::ledger::ethash::MockVerifier as EthVerifier;
 use anoma::ledger::gas::BlockGasMeter;
 use anoma::ledger::pos::anoma_proof_of_stake::types::{
     ActiveValidator, ValidatorSetUpdate,
@@ -159,6 +163,7 @@ pub(super) enum ShellMode {
         data: ValidatorData,
         broadcast_sender: UnboundedSender<Vec<u8>>,
         ethereum_recv: UnboundedReceiver<EthPollResult>,
+        ethereum_verifier: EthVerifier,
     },
     Full,
     Seed,
@@ -187,6 +192,15 @@ impl ShellMode {
                     },
                 ..
             } => Some(protocol_keypair),
+            _ => None,
+        }
+    }
+
+    pub fn get_eth_verifier(&self) -> Option<&EthVerifier> {
+        match &self {
+            ShellMode::Validator {
+                ethereum_verifier, ..
+            } => Some(ethereum_verifier),
             _ => None,
         }
     }
@@ -240,6 +254,7 @@ where
 {
     /// Create a new shell from a path to a database and a chain id. Looks
     /// up the database with this data and tries to load the last state.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         config: config::Ledger,
         wasm_dir: PathBuf,
@@ -248,6 +263,7 @@ where
         db_cache: Option<&D::Cache>,
         vp_wasm_compilation_cache: u64,
         tx_wasm_compilation_cache: u64,
+        ethereum_height: Option<u64>,
     ) -> Self {
         let chain_id = config.chain_id;
         let db_path = config.shell.db_dir(&chain_id);
@@ -305,6 +321,10 @@ where
                 #[cfg(feature = "dev")]
                 {
                     let validator_keys = wallet::defaults::validator_keys();
+                    tracing::info!(
+                        "Generating the pseudo-random cache needed for the \
+                         ethash algorithm. This may take a couple of minutes."
+                    );
                     ShellMode::Validator {
                         data: wallet::ValidatorData {
                             address: wallet::defaults::validator_address(),
@@ -315,6 +335,14 @@ where
                         },
                         broadcast_sender,
                         ethereum_recv,
+                        ethereum_verifier: EthVerifier::new(
+                            ethereum_height.expect(
+                                "Running in validator mode; Ethereum full \
+                                 node should be running",
+                            ),
+                            50,
+                            200,
+                        ),
                     }
                 }
             }
@@ -582,7 +610,7 @@ where
                         wasm_dir: self.wasm_dir.as_path(),
                         vp_wasm_cache: &mut vp_wasm_cache,
                         tx_wasm_cache: &mut tx_wasm_cache,
-                    }
+                    },
                 )
                 .map_err(Error::TxApply)
                 {
@@ -748,6 +776,7 @@ pub(super) mod test_utils {
                         None,
                         vp_wasm_compilation_cache,
                         tx_wasm_compilation_cache,
+                        Some(0),
                     ),
                 },
                 receiver,
@@ -896,6 +925,7 @@ pub(super) mod test_utils {
             None,
             vp_wasm_compilation_cache,
             tx_wasm_compilation_cache,
+            Some(0),
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -955,6 +985,7 @@ pub(super) mod test_utils {
             None,
             vp_wasm_compilation_cache,
             tx_wasm_compilation_cache,
+            Some(0),
         );
         assert!(!shell.storage.tx_queue.is_empty());
     }

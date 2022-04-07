@@ -16,7 +16,7 @@ pub mod ethash_algorithm {
     use ethereum_types::{H256, H512, H64, U256};
     use sha3::{Digest, Keccak256, Keccak512};
 
-    pub use super::eth_cache::EthVerifier;
+    pub use super::eth_cache::{EthVerifier, MockVerifier};
     use super::miller_rabin::is_prime;
 
     /// 2 to the power of 30

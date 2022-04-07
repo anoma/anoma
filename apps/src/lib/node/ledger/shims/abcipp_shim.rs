@@ -38,6 +38,7 @@ pub struct AbcippShim {
 impl AbcippShim {
     /// Create a shell with a ABCI service that passes messages to and from the
     /// shell.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         config: config::Ledger,
         wasm_dir: PathBuf,
@@ -46,6 +47,7 @@ impl AbcippShim {
         db_cache: &rocksdb::Cache,
         vp_wasm_compilation_cache: u64,
         tx_wasm_compilation_cache: u64,
+        ethereum_height: Option<u64>,
     ) -> (Self, AbciService) {
         // We can use an unbounded channel here, because tower-abci limits the
         // the number of requests that can come in
@@ -60,6 +62,7 @@ impl AbcippShim {
                     Some(db_cache),
                     vp_wasm_compilation_cache,
                     tx_wasm_compilation_cache,
+                    ethereum_height,
                 ),
                 begin_block_request: None,
                 block_txs: vec![],

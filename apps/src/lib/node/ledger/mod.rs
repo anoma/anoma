@@ -285,7 +285,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let (broadcaster_sender, broadcaster_receiver) =
         tokio::sync::mpsc::unbounded_channel();
 
-    let (ethereum_node, broadcaster) = if matches!(
+    let (ethereum_node, ethereum_height, broadcaster) = if matches!(
         config.tendermint.tendermint_mode,
         TendermintMode::Validator
     ) {
@@ -316,7 +316,13 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             res
         });
         // wait for the Ethereum fullnode to finish syncing.
-        eth_relayer_receiver.recv().await.unwrap();
+        let ethereum_height = eth_relayer_receiver
+            .recv()
+            .await
+            .unwrap()
+            .new_header
+            .expect("A synced full node should return an Ethereum header")
+            .number;
 
         // Shutdown ethereum_node via a message to ensure that the child process
         // is properly cleaned-up.
@@ -335,6 +341,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
                 eth_abort_resp_send,
                 eth_abort_resp_recv,
             )),
+            Some(ethereum_height),
             Some((
                 tokio::spawn(async move {
                     // Construct a service for broadcasting protocol txs from
@@ -357,7 +364,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             )),
         )
     } else {
-        (None, None)
+        (None, None, None)
     };
 
     // Channel for signalling shut down to Tendermint process
@@ -399,6 +406,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         &db_cache,
         vp_wasm_compilation_cache,
         tx_wasm_compilation_cache,
+        ethereum_height,
     );
 
     // Start the ABCI server

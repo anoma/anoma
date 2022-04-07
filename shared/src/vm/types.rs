@@ -14,7 +14,7 @@ use std::collections::{BTreeSet, HashSet};
 use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::types::address::Address;
-use crate::types::ethereum_headers::EthereumHeader;
+use crate::types::ethereum_headers::{EpochPower, EthereumHeader};
 use crate::types::storage::Key;
 
 /// Input for validity predicate wasm module call
@@ -48,7 +48,8 @@ pub struct EthereumHeaderUpdate {
     /// The Ethereum header
     pub header: EthereumHeader,
     /// Set of validators who have seen this header
-    pub seen_by: HashSet<Address>,
+    /// and their voting power at a particular block height
+    pub seen_by: HashSet<EpochPower>,
     /// The percentage of voting power that has seen this header
     pub voting_power: (u64, u64),
     /// Indicates if more than 2/3 of the staking validators have seen this

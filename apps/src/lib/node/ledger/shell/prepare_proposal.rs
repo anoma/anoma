@@ -322,8 +322,8 @@ mod prepare_block {
             // This is a separate header that should appear by itself in
             // in a protocol tx.
             let header_2 = EthereumHeader {
-                hash: Hash([1; 32]),
-                parent_hash: Hash([0; 32]),
+                hash: Hash([0; 32]),
+                parent_hash: Hash([1; 32]),
                 number: 0u64,
                 difficulty: 0.into(),
                 mix_hash: Hash([0; 32]),

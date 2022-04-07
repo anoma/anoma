@@ -189,12 +189,8 @@ where
                 }
             };
 
-            match protocol::apply_tx(
-                tx_type,
-                tx_length,
-                self.into()
-            )
-            .map_err(Error::TxApply)
+            match protocol::apply_tx(tx_type, tx_length, self.into())
+                .map_err(Error::TxApply)
             {
                 Ok(result) => {
                     if result.is_accepted() {

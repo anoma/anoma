@@ -115,6 +115,10 @@ mod extend_votes {
             block_number: u64,
             header: &impl SignedHeader,
         ) -> bool {
+            let eth_verifier = match self.mode.get_eth_verifier() {
+                Some(verifier) => verifier,
+                _ => return false,
+            };
             // This should come from a vote extension sent during the
             // finalization of the last committed block.
             if block_number != header.get_height() {
@@ -137,7 +141,7 @@ mod extend_votes {
                             .pred_epochs
                             .get_epoch(block_height.into());
                         if let Some((power, pk)) =
-                            self.get_validator_from_address(validator, epoch)
+                            self.get_validator_from_address(&validator, epoch)
                         {
                             if u64::from(power) == voting_power {
                                 Some(pk)
@@ -155,6 +159,7 @@ mod extend_votes {
             // check that the signatures are valid
             public_keys.len() == header.get_addresses().len()
                 && header.verify_signatures(&public_keys).is_ok()
+                && eth_verifier.verify_header(header.get_header())
         }
     }
 }
@@ -421,6 +426,41 @@ mod test_vote_extensions {
         .sign(
             voting_power,
             crate::wallet::defaults::bertha_address(),
+            shell.storage.last_height.0 + 1,
+            &signing_key,
+        );
+
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &header
+        ));
+        assert!(!shell.validate_ethereum_header(
+            shell.storage.last_height.0 + 1,
+            &MultiSignedEthHeader::from(header)
+        ));
+    }
+
+    /// Test that the ethash algorithm is called on Ethereum headers
+    /// as part of validation
+    #[test]
+    fn test_eth_verifier_is_called() {
+        let (shell, _) = setup();
+        let address = shell.mode.get_validator_address().unwrap().clone();
+        let signing_key = shell.mode.get_protocol_key().expect("Test failed");
+        let voting_power = shell.get_validator_voting_power().unwrap();
+        let header = EthereumHeader {
+            hash: Hash([1; 32]),
+            parent_hash: Hash([0; 32]),
+            number: 0u64,
+            difficulty: 0.into(),
+            mix_hash: Hash([0; 32]),
+            nonce: Default::default(),
+            state_root: Hash([0; 32]),
+            transactions_root: Hash([0; 32]),
+        }
+        .sign(
+            voting_power,
+            address,
             shell.storage.last_height.0 + 1,
             &signing_key,
         );
