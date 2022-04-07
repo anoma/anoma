@@ -445,11 +445,9 @@ pub mod cmds {
     #[derive(Clone, Debug)]
     pub enum WalletMasp {
         GenPayAddr(MaspGenPayAddr),
-        DeriveViewKey(MaspDeriveViewKey),
         GenSpendKey(MaspGenSpendKey),
         AddAddrKey(MaspAddAddrKey),
         ListPayAddrs(MaspListPayAddrs),
-        ListViewKeys(MaspListViewKeys),
         ListSpendKeys(MaspListSpendKeys),
         FindAddrKey(MaspFindAddrKey),
     }
@@ -460,15 +458,12 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).and_then(|matches| {
                 let genpa = SubCmd::parse(matches).map(Self::GenPayAddr);
-                let derivevk = SubCmd::parse(matches).map(Self::DeriveViewKey);
                 let gensk = SubCmd::parse(matches).map(Self::GenSpendKey);
                 let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
                 let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
-                let listvk = SubCmd::parse(matches).map(Self::ListViewKeys);
                 let listsk = SubCmd::parse(matches).map(Self::ListSpendKeys);
                 let findak = SubCmd::parse(matches).map(Self::FindAddrKey);
-                gensk.or(derivevk).or(genpa).or(addak).or(listpa).or(listvk)
-                    .or(listsk).or(findak)
+                gensk.or(genpa).or(addak).or(listpa).or(listsk).or(findak)
             })
         }
 
@@ -481,11 +476,9 @@ pub mod cmds {
                 )
                 .setting(AppSettings::SubcommandRequiredElseHelp)
                 .subcommand(MaspGenSpendKey::def())
-                .subcommand(MaspDeriveViewKey::def())
                 .subcommand(MaspGenPayAddr::def())
                 .subcommand(MaspAddAddrKey::def())
                 .subcommand(MaspListPayAddrs::def())
-                .subcommand(MaspListViewKeys::def())
                 .subcommand(MaspListSpendKeys::def())
                 .subcommand(MaspFindAddrKey::def())
         }
@@ -510,12 +503,12 @@ pub mod cmds {
         }
     }
 
-    /// List all known spending keys
+    /// List all known shielded keys
     #[derive(Clone, Debug)]
     pub struct MaspListSpendKeys(pub args::SpendKeysList);
 
     impl SubCmd for MaspListSpendKeys {
-        const CMD: &'static str = "list-spending-keys";
+        const CMD: &'static str = "list-keys";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD)
@@ -524,26 +517,8 @@ pub mod cmds {
 
         fn def() -> App {
             App::new(Self::CMD)
-                .about("Lists all spending keys in the wallet")
+                .about("Lists all shielded keys in the wallet")
                 .add_args::<args::SpendKeysList>()
-        }
-    }
-
-    /// List all known viewing keys
-    #[derive(Clone, Debug)]
-    pub struct MaspListViewKeys;
-
-    impl SubCmd for MaspListViewKeys {
-        const CMD: &'static str = "list-viewing-keys";
-
-        fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches.subcommand_matches(Self::CMD)
-                .map(|_matches| MaspListViewKeys)
-        }
-
-        fn def() -> App {
-            App::new(Self::CMD)
-                .about("Lists all viewing keys in the wallet")
         }
     }
 
@@ -552,7 +527,7 @@ pub mod cmds {
     pub struct MaspListPayAddrs;
 
     impl SubCmd for MaspListPayAddrs {
-        const CMD: &'static str = "list-payment-addrs";
+        const CMD: &'static str = "list-addrs";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD)
@@ -592,7 +567,7 @@ pub mod cmds {
     pub struct MaspGenSpendKey(pub args::MaspSpendKeyGen);
 
     impl SubCmd for MaspGenSpendKey {
-        const CMD: &'static str = "gen-spending-key";
+        const CMD: &'static str = "gen-key";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).map(|matches| {
@@ -611,7 +586,7 @@ pub mod cmds {
     pub struct MaspGenPayAddr(pub args::MaspPayAddrGen);
 
     impl SubCmd for MaspGenPayAddr {
-        const CMD: &'static str = "gen-payment-addr";
+        const CMD: &'static str = "gen-addr";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).map(|matches| {
@@ -627,29 +602,7 @@ pub mod cmds {
                 .add_args::<args::MaspPayAddrGen>()
         }
     }
-
-    /// Generate a viewing key from a payment address
-    #[derive(Clone, Debug)]
-    pub struct MaspDeriveViewKey(pub args::MaspViewKeyDerive);
-
-    impl SubCmd for MaspDeriveViewKey {
-        const CMD: &'static str = "derive-viewing-key";
-
-        fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches.subcommand_matches(Self::CMD).map(|matches| {
-                MaspDeriveViewKey(args::MaspViewKeyDerive::parse(matches))
-            })
-        }
-
-        fn def() -> App {
-            App::new(Self::CMD)
-                .about(
-                    "Derives a viewing key from the given spending key",
-                )
-                .add_args::<args::MaspViewKeyDerive>()
-        }
-    }
-
+    
     #[derive(Clone, Debug)]
     pub enum WalletAddress {
         Gen(AddressGen),
@@ -1503,7 +1456,6 @@ pub mod args {
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
-    const SPENDING_KEY: Arg<WalletSpendingKey> = arg("spending-key");
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
@@ -2628,36 +2580,6 @@ pub mod args {
         }
     }
 
-    /// MASP generate payment address arguments
-    #[derive(Clone, Debug)]
-    pub struct MaspViewKeyDerive {
-        /// Key alias
-        pub alias: String,
-        /// Spending Key
-        pub spending_key: WalletSpendingKey,
-    }
-
-    impl Args for MaspViewKeyDerive {
-        fn parse(matches: &ArgMatches) -> Self {
-            let alias = ALIAS.parse(matches);
-            let spending_key = SPENDING_KEY.parse(matches);
-            Self {
-                alias,
-                spending_key,
-            }
-        }
-
-        fn def(app: App) -> App {
-            app.arg(
-                ALIAS
-                    .def()
-                    .about("An alias to be associated with the viewing key."),
-            ).arg(SPENDING_KEY.def().about(
-                "The spending key."
-            ))
-        }
-    }
-
     /// Wallet generate key and implicit address arguments
     #[derive(Clone, Debug)]
     pub struct KeyAndAddressGen {
@@ -2770,7 +2692,7 @@ pub mod args {
         }
     }
 
-    /// Wallet list spending keys arguments
+    /// Wallet list shielded keys arguments
     #[derive(Clone, Debug)]
     pub struct SpendKeysList {
         pub unsafe_show_secret: bool,

@@ -12,7 +12,6 @@ use color_eyre::eyre::Result;
 use itertools::sorted;
 use rand_core::OsRng;
 use masp_primitives::keys::FullViewingKey;
-use masp_primitives::zip32::ExtendedSpendingKey;
 use anoma_apps::client::tx::find_valid_diversifier;
 use anoma::types::masp::MaspValue;
 
@@ -48,17 +47,11 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::GenPayAddr(cmds::MaspGenPayAddr(args)) => {
                 payment_address_gen(ctx, args)
             }
-            cmds::WalletMasp::DeriveViewKey(cmds::MaspDeriveViewKey(args)) => {
-                viewing_key_derive(ctx, args)
-            }
             cmds::WalletMasp::AddAddrKey(cmds::MaspAddAddrKey(args)) => {
                 address_key_add(ctx, args)
             }
             cmds::WalletMasp::ListPayAddrs(cmds::MaspListPayAddrs) => {
                 payment_addresses_list(ctx)
-            }
-            cmds::WalletMasp::ListViewKeys(cmds::MaspListViewKeys) => {
-                viewing_keys_list(ctx)
             }
             cmds::WalletMasp::ListSpendKeys(cmds::MaspListSpendKeys(args)) => {
                 spending_keys_list(ctx, args)
@@ -80,16 +73,15 @@ fn address_key_find(
     }: args::AddrKeyFind,
 ) {
     let mut wallet = ctx.wallet;
-    if let Ok(spending_key) = wallet.find_spending_key(&alias) {
-        // First check if alias is a spending key
-        if unsafe_show_secret {
-            println!("Spending key: {}", spending_key);
-        } else {
-            println!("Spending key");
-        }
-    } else if let Ok(viewing_key) = wallet.find_viewing_key(&alias) {
-        // Failing that, check if alias is a viewing key
+    if let Ok(viewing_key) = wallet.find_viewing_key(&alias) {
+        // Check if alias is a viewing key
         println!("Viewing key: {}", viewing_key);
+        if unsafe_show_secret {
+            // Check if alias is also a spending key
+            if let Ok(spending_key) = wallet.find_spending_key(&alias) {
+                println!("Spending key: {}", spending_key);
+            }
+        }
     } else if let Some(payment_addr) = wallet.find_payment_addr(&alias) {
         // Failing that, check if alias is a payment address
         println!("Payment address: {}", payment_addr);
@@ -111,46 +103,27 @@ fn spending_keys_list(
         unsafe_show_secret,
     }: args::SpendKeysList,
 ) {
-    let wallet = ctx.wallet;
-    let known_keys = wallet.get_spending_keys();
-    if known_keys.is_empty() {
-        println!(
-            "No known spending keys. Try `masp add --alias my-addr --value ...` to \
-             add a new spending key to the wallet."
-        );
-    } else {
-        let stdout = io::stdout();
-        let mut w = stdout.lock();
-        writeln!(w, "Known spending keys:").unwrap();
-        for (alias, key) in known_keys {
-            write!(w, "  \"{}\"", alias).unwrap();
-            if unsafe_show_secret {
-                writeln!(w, ": {}", key)
-            } else {
-                writeln!(w, "")
-            }.unwrap();
-        }
-    }
-}
-
-/// List viewing keys.
-fn viewing_keys_list(
-    ctx: Context,
-) {
-    let wallet = ctx.wallet;
+    let mut wallet = ctx.wallet;
     let known_keys = wallet.get_viewing_keys();
     if known_keys.is_empty() {
         println!(
-            "No known viewing keys. Try `masp add --alias my-addr --value ...` to \
-             add a new viewing key to the wallet."
+            "No known keys. Try `masp add --alias my-addr --value ...` to add a \
+             new key to the wallet."
         );
     } else {
         let stdout = io::stdout();
         let mut w = stdout.lock();
-        writeln!(w, "Known viewing keys:").unwrap();
+        writeln!(w, "Known keys:").unwrap();
         for (alias, key) in known_keys {
-            writeln!(w, "  \"{}\": {}", alias, key)
-                .unwrap();
+            writeln!(w, "  \"{}\":", alias).unwrap();
+            writeln!(w, "    Viewing Key: {}", key).unwrap();
+            // A subset of viewing keys will have corresponding spending keys.
+            // Print those too if they are available and requested.
+            if unsafe_show_secret {
+                if let Ok(spending_key) = wallet.find_spending_key(alias) {
+                    writeln!(w, "    Spending Key: {}", spending_key).unwrap()
+                }
+            }
         }
     }
 }
@@ -212,30 +185,6 @@ fn payment_address_gen(
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully generated a payment address with the following alias: {}",
-        alias,
-    );
-}
-
-/// Derive a full viewing key from the given spending key.
-fn viewing_key_derive(
-    mut ctx: Context,
-    args::MaspViewKeyDerive {
-        alias,
-        spending_key,
-    }: args::MaspViewKeyDerive,
-) {
-    let fvk = FullViewingKey::from_expanded_spending_key(
-        &ExtendedSpendingKey::from(ctx.get_cached(&spending_key))
-            .expsk.into(),
-    );
-    let mut wallet = ctx.wallet;
-    let alias = wallet.insert_viewing_key(alias, fvk.into()).unwrap_or_else(|| {
-        eprintln!("Viewing key not added");
-        cli::safe_exit(1);
-    });
-    wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
-    println!(
-        "Successfully derived a viewing key with the following alias: {}",
         alias,
     );
 }
