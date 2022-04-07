@@ -74,12 +74,16 @@ dependencies = [
  "derivative",
  "ed25519-consensus",
  "ferveo-common",
+ "ff",
  "hex",
  "ibc",
  "ibc-proto",
  "ics23",
  "itertools",
+ "jubjub",
  "loupe",
+ "masp_primitives",
+ "masp_proofs",
  "parity-wasm",
  "proptest",
  "prost",
@@ -157,7 +161,11 @@ dependencies = [
  "bellman",
  "bls12_381",
  "borsh",
+ "ff",
  "hex",
+ "jubjub",
+ "masp_primitives",
+ "masp_proofs",
 ]
 
 [[package]]
@@ -292,6 +300,12 @@ checksum = "a4c527152e37cf757a3f78aae5a06fbeefdb07ccc535c980a3208ee3060dd544"
 
 [[package]]
 name = "arrayvec"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
@@ -366,6 +380,51 @@ name = "bech32"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
+
+[[package]]
+name = "bellman"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0944d18a9a37691b87733b39c9360c9950af9aa5f97e2455bc108d8eb64fc1c1"
+dependencies = [
+ "bitvec",
+ "blake2s_simd 0.5.11",
+ "byteorder",
+ "crossbeam-channel",
+ "ff",
+ "group",
+ "lazy_static",
+ "log",
+ "num_cpus",
+ "pairing",
+ "rand_core 0.6.3",
+ "rayon",
+ "subtle",
+]
+
+[[package]]
+name = "bigint"
+version = "4.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0e8c8a600052b52482eff2cf4d810e462fdff1f656ac1ecb6232132a1ed7def"
+dependencies = [
+ "byteorder",
+ "crunchy",
+]
+
+[[package]]
+name = "bip0039"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0830ae4cc96b0617cc912970c2b17e89456fecbf55e8eed53a956f37ab50c41"
+dependencies = [
+ "hmac",
+ "pbkdf2",
+ "rand",
+ "sha2 0.9.9",
+ "unicode-normalization",
+ "zeroize",
+]
 
 [[package]]
 name = "bit-set"
@@ -451,7 +510,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a08e53fc5a564bb15bfe6fae56bd71522205f1f91893f9c0116edad6496c183f"
 dependencies = [
  "arrayref",
- "arrayvec",
+ "arrayvec 0.7.2",
  "cc",
  "cfg-if 1.0.0",
  "constant_time_eq",
@@ -815,6 +874,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "crypto-mac"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1d1a86f49236c215f271d40892d5fc950490551400b02ef360692c29815c714"
+dependencies = [
+ "generic-array",
+ "subtle",
+]
+
+[[package]]
+name = "crypto_api"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f855e87e75a4799e18b8529178adcde6fd4f97c1449ff4821e747ff728bb102"
+
+[[package]]
+name = "crypto_api_chachapoly"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d930b6a026ce9d358a17f9c9046c55d90b14bb847f36b6ebb6b19365d4feffb8"
+dependencies = [
+ "crypto_api",
+]
+
+[[package]]
 name = "curve25519-dalek"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1094,6 +1178,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ff"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2958d04124b9f27f175eaeb9a9f383d026098aa837eadd8ba22c11f13a05b9e"
+dependencies = [
+ "bitvec",
+ "rand_core 0.6.3",
+ "subtle",
+]
+
+[[package]]
 name = "fixedbitset"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1223,10 +1318,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d39cd93900197114fa1fcb7ae84ca742095eed9442088988ae74fa744e930e77"
 dependencies = [
  "cfg-if 1.0.0",
- "js-sys",
  "libc",
  "wasi 0.10.0+wasi-snapshot-preview1",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1359,7 +1452,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
- "crypto-mac 0.11.1",
+ "crypto-mac",
  "digest 0.9.0",
 ]
 
@@ -1436,7 +1529,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.12.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
+source = "git+https://github.com/murisi/ibc-rs?branch=murisi/jsfix#70181ee29ba2b350930ff855db92683dbdef63e3"
 dependencies = [
  "bytes",
  "derive_more",
@@ -1463,7 +1556,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.16.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
+source = "git+https://github.com/murisi/ibc-rs?branch=murisi/jsfix#70181ee29ba2b350930ff855db92683dbdef63e3"
 dependencies = [
  "bytes",
  "prost",
@@ -1661,7 +1754,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#47d7b72a0656d993113b85c94cd3582eac52efb2"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#41d99815e04970067fbb5c9ef0838447658d27a8"
 dependencies = [
  "aes",
  "bip0039",
@@ -1692,7 +1785,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#47d7b72a0656d993113b85c94cd3582eac52efb2"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-transaction3#41d99815e04970067fbb5c9ef0838447658d27a8"
 dependencies = [
  "bellman",
  "blake2b_simd 1.0.0",
@@ -1997,7 +2090,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f05894bce6a1ba4be299d0c5f29563e08af2bc18bb7d48313113bed71e904739"
 dependencies = [
- "crypto-mac 0.11.1",
+ "crypto-mac",
  "password-hash",
 ]
 
@@ -2491,7 +2584,7 @@ version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d37baa70cf8662d2ba1c1868c5983dda16ef32b105cce41fb5c47e72936a90b3"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.7.2",
  "num-traits",
  "serde",
 ]
@@ -2865,7 +2958,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/murisi/tendermint-rs?branch=murisi/jsfix#d2615b9c8133c61b70d28ce7a34b51cbe623f1a4"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2893,7 +2986,7 @@ dependencies = [
 [[package]]
 name = "tendermint-config"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/murisi/tendermint-rs?branch=murisi/jsfix#d2615b9c8133c61b70d28ce7a34b51cbe623f1a4"
 dependencies = [
  "flex-error",
  "serde",
@@ -2906,7 +2999,7 @@ dependencies = [
 [[package]]
 name = "tendermint-light-client-verifier"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/murisi/tendermint-rs?branch=murisi/jsfix#d2615b9c8133c61b70d28ce7a34b51cbe623f1a4"
 dependencies = [
  "derive_more",
  "flex-error",
@@ -2919,7 +3012,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/murisi/tendermint-rs?branch=murisi/jsfix#d2615b9c8133c61b70d28ce7a34b51cbe623f1a4"
 dependencies = [
  "bytes",
  "flex-error",
@@ -2936,7 +3029,7 @@ dependencies = [
 [[package]]
 name = "tendermint-rpc"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/murisi/tendermint-rs?branch=murisi/jsfix#d2615b9c8133c61b70d28ce7a34b51cbe623f1a4"
 dependencies = [
  "bytes",
  "flex-error",
@@ -2960,7 +3053,7 @@ dependencies = [
 [[package]]
 name = "tendermint-testgen"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
+source = "git+https://github.com/murisi/tendermint-rs?branch=murisi/jsfix#d2615b9c8133c61b70d28ce7a34b51cbe623f1a4"
 dependencies = [
  "ed25519-dalek",
  "gumdrop",
@@ -3864,9 +3957,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.5.3"
+version = "1.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50344758e2f40e3a1fcfc8f6f91aa57b5f8ebd8d27919fe6451f15aaaf9ee608"
+checksum = "d68d9dcec5f9b43a30d38c49f91dfedfaac384cb8f085faca366c26207dd1619"
 dependencies = [
  "zeroize_derive",
 ]

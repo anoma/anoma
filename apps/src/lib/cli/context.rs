@@ -3,7 +3,6 @@
 use std::env;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
@@ -50,7 +49,7 @@ pub type WalletTransferTarget = FromContext<TransferTarget>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
-pub type WalletKeypair = FromContext<Rc<common::SecretKey>>;
+pub type WalletKeypair = FromContext<common::SecretKey>;
 
 /// A raw public key (hex encoding), a public key hash (also hex encoding) or an
 /// alias of an public key that may be found in the wallet
@@ -330,12 +329,11 @@ impl ArgFromContext for Address {
     }
 }
 
-impl ArgFromMutContext for Rc<common::SecretKey> {
+impl ArgFromMutContext for common::SecretKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
         // A keypair can be either a raw keypair in hex string
         FromStr::from_str(raw)
-            .map(Rc::new)
             .or_else(|_parse_err| {
                 // Or it can be an alias
                 ctx.wallet.find_key(raw).map_err(|_find_err| {
@@ -371,9 +369,10 @@ impl ArgFromMutContext for ExtendedSpendingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
         // Either the string is a raw extended spending key
-        FromStr::from_str(raw).or_else(|_parse_err| {
+        FromStr::from_str(raw)
+            .or_else(|_parse_err| {
             // Or it is a stored alias of one
-            ctx.wallet.find_spending_key(raw).map(Clone::clone).map_err(|_find_err| {
+            ctx.wallet.find_spending_key(raw).map_err(|_find_err| {
                 format!("Unknown spending key {}", raw)
             })
         })

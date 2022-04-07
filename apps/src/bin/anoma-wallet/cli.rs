@@ -155,10 +155,11 @@ fn spending_key_gen(
     ctx: Context,
     args::MaspSpendKeyGen {
         alias,
+        unsafe_dont_encrypt,
     }: args::MaspSpendKeyGen,
 ) {
     let mut wallet = ctx.wallet;
-    let (alias, _key) = wallet.gen_spending_key(alias);
+    let (alias, _key) = wallet.gen_spending_key(alias, unsafe_dont_encrypt);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully added a spending key with alias: \"{}\"",
@@ -195,6 +196,7 @@ fn address_key_add(
     args::MaspAddrKeyAdd {
         alias,
         value,
+        unsafe_dont_encrypt,
     }: args::MaspAddrKeyAdd,
 ) {
     let (alias, typ) = match value {
@@ -211,7 +213,11 @@ fn address_key_add(
         MaspValue::ExtendedSpendingKey(spending_key) => {
             let alias = ctx
                 .wallet
-                .insert_spending_key(alias, spending_key)
+                .encrypt_insert_spending_key(
+                    alias,
+                    spending_key,
+                    unsafe_dont_encrypt,
+                )
                 .unwrap_or_else(|| {
                     eprintln!("Spending key not added");
                     cli::safe_exit(1);

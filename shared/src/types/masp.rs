@@ -5,6 +5,7 @@ use std::str::FromStr;
 use std::io::{Error, ErrorKind};
 
 use bech32::{FromBase32, ToBase32};
+use borsh::{BorshSerialize, BorshDeserialize};
 
 use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, masp};
 
@@ -185,7 +186,7 @@ impl<'de> serde::Deserialize<'de> for PaymentAddress {
 }
 
 /// Wrapper for masp_primitive's ExtendedSpendingKey
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, BorshSerialize, BorshDeserialize)]
 pub struct ExtendedSpendingKey(masp_primitives::zip32::ExtendedSpendingKey);
 
 impl Display for ExtendedSpendingKey {

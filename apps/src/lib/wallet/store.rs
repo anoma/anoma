@@ -3,7 +3,6 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, ErrorKind, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::{Address, ImplicitAddress};
@@ -17,9 +16,9 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use anoma::types::masp::{PaymentAddress, ExtendedSpendingKey, FullViewingKey};
 
-use crate::client::tx::to_viewing_key;
 use super::alias::Alias;
 use super::keys::StoredKeypair;
+use crate::client::tx::to_viewing_key;
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
 
@@ -54,11 +53,11 @@ pub struct Store {
     /// Known viewing keys
     view_keys: HashMap<Alias, FullViewingKey>,
     /// Known spending keys
-    spend_keys: HashMap<Alias, ExtendedSpendingKey>,
+    spend_keys: HashMap<Alias, StoredKeypair<ExtendedSpendingKey>>,
     /// Known payment addresses
     payment_addrs: HashMap<Alias, PaymentAddress>,
     /// Cryptographic keypairs
-    keys: HashMap<Alias, StoredKeypair>,
+    keys: HashMap<Alias, StoredKeypair<common::SecretKey>>,
     /// Anoma address book
     addresses: HashMap<Alias, Address>,
     /// Known mappings of public key hashes to their aliases in the `keys`
@@ -201,7 +200,7 @@ impl Store {
     pub fn find_key(
         &self,
         alias_pkh_or_pk: impl AsRef<str>,
-    ) -> Option<&StoredKeypair> {
+    ) -> Option<&StoredKeypair<common::SecretKey>> {
         let alias_pkh_or_pk = alias_pkh_or_pk.as_ref();
         // Try to find by alias
         self.keys
@@ -221,7 +220,7 @@ impl Store {
     pub fn find_spending_key(
         &self,
         alias: impl AsRef<str>,
-    ) -> Option<&ExtendedSpendingKey> {
+    ) -> Option<&StoredKeypair<ExtendedSpendingKey>> {
         self.spend_keys.get(&alias.into())
     }
 
@@ -243,7 +242,7 @@ impl Store {
     pub fn find_key_by_pk(
         &self,
         pk: &common::PublicKey,
-    ) -> Option<&StoredKeypair> {
+    ) -> Option<&StoredKeypair<common::SecretKey>> {
         let pkh = PublicKeyHash::from(pk);
         self.find_key_by_pkh(&pkh)
     }
@@ -252,7 +251,7 @@ impl Store {
     pub fn find_key_by_pkh(
         &self,
         pkh: &PublicKeyHash,
-    ) -> Option<&StoredKeypair> {
+    ) -> Option<&StoredKeypair<common::SecretKey>> {
         let alias = self.pkhs.get(pkh)?;
         self.keys.get(alias)
     }
@@ -270,8 +269,8 @@ impl Store {
     /// Get all known keys by their alias, paired with PKH, if known.
     pub fn get_keys(
         &self,
-    ) -> HashMap<Alias, (&StoredKeypair, Option<&PublicKeyHash>)> {
-        let mut keys: HashMap<Alias, (&StoredKeypair, Option<&PublicKeyHash>)> =
+    ) -> HashMap<Alias, (&StoredKeypair<common::SecretKey>, Option<&PublicKeyHash>)> {
+        let mut keys: HashMap<Alias, (&StoredKeypair<common::SecretKey>, Option<&PublicKeyHash>)> =
             self.pkhs
                 .iter()
                 .filter_map(|(pkh, alias)| {
@@ -303,7 +302,7 @@ impl Store {
     }
 
     /// Get all known spending keys by their alias.
-    pub fn get_spending_keys(&self) -> &HashMap<Alias, ExtendedSpendingKey> {
+    pub fn get_spending_keys(&self) -> &HashMap<Alias, StoredKeypair<ExtendedSpendingKey>> {
         &self.spend_keys
     }
 
@@ -331,7 +330,7 @@ impl Store {
         &mut self,
         alias: Option<String>,
         password: Option<String>,
-    ) -> (Alias, Rc<common::SecretKey>) {
+    ) -> (Alias, common::SecretKey) {
         let keypair = Self::generate_keypair();
         let pkh: PublicKeyHash = PublicKeyHash::from(&keypair.ref_to());
         let (keypair_to_store, raw_keypair) =
@@ -355,11 +354,15 @@ impl Store {
     pub fn gen_spending_key(
         &mut self,
         alias: String,
+        password: Option<String>,
     ) -> (Alias, ExtendedSpendingKey) {
         let spendkey = Self::generate_spending_key();
+        let viewkey = to_viewing_key(&spendkey.into()).into();
+        let (spendkey_to_store, _raw_spendkey) =
+            StoredKeypair::new(spendkey, password);
         let alias = Alias::from(alias);
         if self
-            .insert_spending_key(alias.clone(), spendkey)
+            .insert_spending_key(alias.clone(), spendkey_to_store, viewkey)
             .is_none()
         {
             eprintln!("Action cancelled, no changes persisted.");
@@ -412,7 +415,7 @@ impl Store {
     pub(super) fn insert_keypair(
         &mut self,
         alias: Alias,
-        keypair: StoredKeypair,
+        keypair: StoredKeypair<common::SecretKey>,
         pkh: PublicKeyHash,
     ) -> Option<Alias> {
         if alias.is_empty() {
@@ -438,7 +441,8 @@ impl Store {
     pub fn insert_spending_key(
         &mut self,
         alias: Alias,
-        spendkey: ExtendedSpendingKey,
+        spendkey: StoredKeypair<ExtendedSpendingKey>,
+        viewkey: FullViewingKey,
     ) -> Option<Alias> {
         if alias.is_empty() {
             eprintln!("Empty alias given.");
@@ -448,7 +452,7 @@ impl Store {
             match show_overwrite_confirmation(&alias, "a spending key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
-                    return self.insert_spending_key(new_alias, spendkey);
+                    return self.insert_spending_key(new_alias, spendkey, viewkey);
                 }
                 ConfirmationResponse::Skip => return None,
             }
@@ -457,7 +461,7 @@ impl Store {
         // Simultaneously add the derived viewing key to ease balance viewing
         self.view_keys.insert(
             alias.clone(),
-            to_viewing_key(&spendkey.into()).into()
+            viewkey,
         );
         Some(alias)
     }

@@ -2509,13 +2509,16 @@ pub mod args {
         pub alias: String,
         /// Any MASP value
         pub value: MaspValue,
+        /// Don't encrypt the keypair
+        pub unsafe_dont_encrypt: bool,
     }
 
     impl Args for MaspAddrKeyAdd {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
             let value = MASP_VALUE.parse(matches);
-            Self { alias, value }
+            let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            Self { alias, value, unsafe_dont_encrypt }
         }
         
         fn def(app: App) -> App {
@@ -2526,6 +2529,10 @@ pub mod args {
             ).arg(MASP_VALUE.def().about(
                 "A spending key, viewing key, or payment address."
             ))
+                .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                    "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
+                     used in a live network.",
+                ))
         }
     }
 
@@ -2534,12 +2541,15 @@ pub mod args {
     pub struct MaspSpendKeyGen {
         /// Key alias
         pub alias: String,
+        /// Don't encrypt the keypair
+        pub unsafe_dont_encrypt: bool,
     }
 
     impl Args for MaspSpendKeyGen {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
-            Self { alias }
+            let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            Self { alias, unsafe_dont_encrypt }
         }
         fn def(app: App) -> App {
             app.arg(
@@ -2547,6 +2557,10 @@ pub mod args {
                     .def()
                     .about("An alias to be associated with the spending key."),
             )
+                .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                    "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
+                     used in a live network.",
+                ))
         }
     }
 

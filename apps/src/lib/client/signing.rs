@@ -1,8 +1,6 @@
 //! Helpers for making digital signatures using cryptographic keys from the
 //! wallet.
 
-use std::rc::Rc;
-
 use anoma::types::address::{Address, ImplicitAddress};
 use anoma::types::key::*;
 #[cfg(not(feature = "ABCI"))]
@@ -20,7 +18,7 @@ pub async fn find_keypair(
     wallet: &mut Wallet,
     addr: &Address,
     ledger_address: TendermintAddress,
-) -> Rc<common::SecretKey> {
+) -> common::SecretKey {
     match addr {
         Address::Established(_) => {
             println!(
