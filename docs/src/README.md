@@ -17,7 +17,7 @@ The three main sections of this book are:
 - [Exploration](./explore): documents the process of exploring the design and implementation space for Anoma
 - [Specifications](./specs): implementation independent technical specifications
 
-#### The source
+### The source
 
 This book is written using [mdBook](https://rust-lang.github.io/mdBook/) with [mdbook-mermaid](https://github.com/badboy/mdbook-mermaid) for diagrams, it currently lives in the [Anoma repo](https://github.com/anoma/anoma).
 
