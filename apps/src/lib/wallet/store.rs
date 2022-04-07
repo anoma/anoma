@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use anoma::types::masp::{PaymentAddress, ExtendedSpendingKey, FullViewingKey};
 
+use crate::client::tx::to_viewing_key;
 use super::alias::Alias;
 use super::keys::StoredKeypair;
 use crate::cli;
@@ -453,6 +454,11 @@ impl Store {
             }
         }
         self.spend_keys.insert(alias.clone(), spendkey);
+        // Simultaneously add the derived viewing key to ease balance viewing
+        self.view_keys.insert(
+            alias.clone(),
+            to_viewing_key(&spendkey.into()).into()
+        );
         Some(alias)
     }
 

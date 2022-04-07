@@ -10,7 +10,6 @@ use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
 use anoma::types::masp::*;
-use crate::client::tx::to_viewing_key;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -57,6 +56,8 @@ pub type WalletKeypair = FromContext<Rc<common::SecretKey>>;
 /// alias of an public key that may be found in the wallet
 pub type WalletPublicKey = FromContext<common::PublicKey>;
 
+/// A raw address or a raw full viewing key (bech32m encoding) or an alias of
+/// either in the wallet
 pub type WalletBalanceOwner = FromContext<BalanceOwner>;
 
 /// Command execution context
@@ -369,7 +370,9 @@ impl ArgFromMutContext for common::PublicKey {
 impl ArgFromMutContext for ExtendedSpendingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
+        // Either the string is a raw extended spending key
         FromStr::from_str(raw).or_else(|_parse_err| {
+            // Or it is a stored alias of one
             ctx.wallet.find_spending_key(raw).map(Clone::clone).map_err(|_find_err| {
                 format!("Unknown spending key {}", raw)
             })
@@ -380,14 +383,12 @@ impl ArgFromMutContext for ExtendedSpendingKey {
 impl ArgFromMutContext for FullViewingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
+        // Either the string is a raw full viewing key
         FromStr::from_str(raw).or_else(|_parse_err| {
+            // Or it is a stored alias of one
             ctx.wallet.find_viewing_key(raw).map(Clone::clone)
-                .or_else(|_parse_err| {
-                    ExtendedSpendingKey::arg_from_mut_ctx(ctx, raw)
-                        .map(|x| to_viewing_key(&x.into()).into())
-                        .map_err(|_find_err| {
-                            format!("Unknown viewing key {}", raw)
-                        })
+                .map_err(|_find_err| {
+                    format!("Unknown viewing key {}", raw)
                 })
         })
     }
@@ -396,7 +397,9 @@ impl ArgFromMutContext for FullViewingKey {
 impl ArgFromContext for PaymentAddress {
     fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
+        // Either the string is a payment address
         FromStr::from_str(raw).or_else(|_parse_err| {
+            // Or it is a stored alias of one
             ctx.wallet.find_payment_addr(raw).cloned().ok_or_else(|| {
                 format!("Unknown payment address {}", raw)
             })
@@ -407,6 +410,7 @@ impl ArgFromContext for PaymentAddress {
 impl ArgFromMutContext for TransferSource {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
+        // Either the string is a transparent address or a spending key
         Address::arg_from_ctx(ctx, raw).map(Self::Address)
             .or_else(|_| ExtendedSpendingKey::arg_from_mut_ctx(ctx, raw)
                      .map(Self::ExtendedSpendingKey))
@@ -416,6 +420,7 @@ impl ArgFromMutContext for TransferSource {
 impl ArgFromContext for TransferTarget {
     fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
+        // Either the string is a transparent address or a payment address
         Address::arg_from_ctx(ctx, raw).map(Self::Address)
             .or_else(|_| PaymentAddress::arg_from_ctx(ctx, raw)
                      .map(Self::PaymentAddress))
@@ -425,6 +430,7 @@ impl ArgFromContext for TransferTarget {
 impl ArgFromMutContext for BalanceOwner {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
+        // Either the string is a transparent address or a viewing key
         Address::arg_from_ctx(ctx, raw).map(Self::Address)
             .or_else(|_| FullViewingKey::arg_from_mut_ctx(ctx, raw)
                      .map(Self::FullViewingKey))
