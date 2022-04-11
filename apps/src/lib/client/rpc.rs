@@ -44,7 +44,7 @@ use tendermint_stable::abci::Code;
 use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
 use std::collections::{HashMap, HashSet};
-use masp_primitives::keys::FullViewingKey;
+use masp_primitives::zip32::ExtendedFullViewingKey;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
@@ -211,7 +211,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
     let shielded_ctx = load_shielded_context(
         &args.query.ledger_address,
         &vec![],
-        &viewing_keys.iter().map(|fvk| FullViewingKey::from(*fvk).vk).collect(),
+        &viewing_keys.iter().map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk).collect(),
     ).await;
     // Map addresses to token names
     let tokens = address::tokens();
@@ -219,7 +219,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         // Here the user wants to know the balance for a specific token
         (Some(token), true) => {
             // Query the multi-asset balance at the given spending key
-            let viewing_key = FullViewingKey::from(viewing_keys[0]).vk;
+            let viewing_key = ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
             let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                 .expect("context should contain viewing key");
             // Compute the unique asset identifier from the token address
@@ -244,7 +244,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             let mut balances = HashMap::new();
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
-                let viewing_key = FullViewingKey::from(fvk).vk;
+                let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
                 let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                     .expect("context should contain viewing key");
                 for (asset_type, value) in balance.components() {
@@ -311,7 +311,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             let mut found_any = false;
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
-                let viewing_key = FullViewingKey::from(fvk).vk;
+                let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
                 let balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                     .expect("context should contain viewing key");
                 if balance[&asset_type] != 0 {
@@ -327,7 +327,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         // Here the user wants to know all possible token balances for a key
         (None, true) => {
             // Query the multi-asset balance at the given spending key
-            let viewing_key = FullViewingKey::from(viewing_keys[0]).vk;
+            let viewing_key = ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
             let mut balance = compute_shielded_balance(&shielded_ctx, &viewing_key)
                 .expect("context should contain viewing key");
             let mut found_any = false;

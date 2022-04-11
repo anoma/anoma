@@ -11,17 +11,19 @@ use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, masp};
 
 /// human-readable part of Bech32m encoded address
 // TODO use "a" for live network
-const FULL_VIEWING_KEY_HRP: &str = "fvktest";
+const FULL_VIEWING_KEY_HRP: &str = "xfvktest";
 const PAYMENT_ADDRESS_HRP: &str = "patest";
-const EXTENDED_SPENDING_KEY_HRP: &str = "esktest";
+const EXTENDED_SPENDING_KEY_HRP: &str = "xsktest";
 
 /// Wrapper for masp_primitive's FullViewingKey
 #[derive(Clone, Debug, Copy)]
-pub struct FullViewingKey(masp_primitives::keys::FullViewingKey);
+pub struct ExtendedViewingKey(masp_primitives::zip32::ExtendedFullViewingKey);
 
-impl Display for FullViewingKey {
+impl Display for ExtendedViewingKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let bytes = self.0.to_bytes();
+        let mut bytes = [0; 169];
+        self.0.write(&mut bytes[..])
+            .expect("should be able to serialize an ExtendedFullViewingKey");
         let encoded = bech32::encode(
             FULL_VIEWING_KEY_HRP,
             bytes.to_base32(),
@@ -37,7 +39,7 @@ impl Display for FullViewingKey {
     }
 }
 
-impl FromStr for FullViewingKey {
+impl FromStr for ExtendedViewingKey {
     type Err = DecodeError;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
@@ -55,25 +57,25 @@ impl FromStr for FullViewingKey {
         }
         let bytes: Vec<u8> = FromBase32::from_base32(&base32)
             .map_err(DecodeError::DecodeBase32)?;
-        masp_primitives::keys::FullViewingKey::read(&mut &bytes[..])
+        masp_primitives::zip32::ExtendedFullViewingKey::read(&mut &bytes[..])
             .map_err(DecodeError::InvalidInnerEncoding)
             .map(Self)
     }
 }
 
-impl From<FullViewingKey> for masp_primitives::keys::FullViewingKey {
-    fn from(key: FullViewingKey) -> Self {
+impl From<ExtendedViewingKey> for masp_primitives::zip32::ExtendedFullViewingKey {
+    fn from(key: ExtendedViewingKey) -> Self {
         key.0
     }
 }
 
-impl From<masp_primitives::keys::FullViewingKey> for FullViewingKey {
-    fn from(key: masp_primitives::keys::FullViewingKey) -> Self {
+impl From<masp_primitives::zip32::ExtendedFullViewingKey> for ExtendedViewingKey {
+    fn from(key: masp_primitives::zip32::ExtendedFullViewingKey) -> Self {
         Self(key)
     }
 }
 
-impl serde::Serialize for FullViewingKey {
+impl serde::Serialize for ExtendedViewingKey {
     fn serialize<S>(
         &self,
         serializer: S,
@@ -86,7 +88,7 @@ impl serde::Serialize for FullViewingKey {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for FullViewingKey {
+impl<'de> serde::Deserialize<'de> for ExtendedViewingKey {
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -338,7 +340,7 @@ pub enum BalanceOwner {
     /// A balance stored at a transparent address
     Address(Address),
     /// A balance stored at a shielded address
-    FullViewingKey(FullViewingKey),
+    FullViewingKey(ExtendedViewingKey),
 }
 
 impl BalanceOwner {
@@ -351,7 +353,7 @@ impl BalanceOwner {
     }
 
     /// Get the contained FullViewingKey, if any
-    pub fn full_viewing_key(&self) -> Option<FullViewingKey> {
+    pub fn full_viewing_key(&self) -> Option<ExtendedViewingKey> {
         match self {
             Self::FullViewingKey(x) => Some(*x),
             _ => None,
@@ -367,7 +369,7 @@ pub enum MaspValue {
     /// A MASP ExtendedSpendingKey
     ExtendedSpendingKey(ExtendedSpendingKey),
     /// A MASP FullViewingKey
-    FullViewingKey(FullViewingKey),
+    FullViewingKey(ExtendedViewingKey),
 }
 
 impl FromStr for MaspValue {
@@ -379,7 +381,7 @@ impl FromStr for MaspValue {
         PaymentAddress::from_str(s).map(Self::PaymentAddress)
             .or_else(|_err| ExtendedSpendingKey::from_str(s)
                      .map(Self::ExtendedSpendingKey))
-            .or_else(|_err| FullViewingKey::from_str(s)
+            .or_else(|_err| ExtendedViewingKey::from_str(s)
                      .map(Self::FullViewingKey))
     }
 }

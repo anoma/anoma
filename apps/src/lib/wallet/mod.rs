@@ -9,12 +9,12 @@ use std::path::{Path, PathBuf};
 use std::{env, fs};
 use std::str::FromStr;
 
-use crate::client::tx::to_viewing_key;
+use masp_primitives::zip32::ExtendedFullViewingKey;
 use anoma::types::address::Address;
 use anoma::types::key::*;
 pub use store::wallet_file;
 use thiserror::Error;
-use anoma::types::masp::{PaymentAddress, FullViewingKey, ExtendedSpendingKey};
+use anoma::types::masp::{PaymentAddress, ExtendedViewingKey, ExtendedSpendingKey};
 
 use borsh::{BorshSerialize, BorshDeserialize};
 
@@ -244,7 +244,7 @@ impl Wallet {
     pub fn find_viewing_key(
         &mut self,
         alias: impl AsRef<str>,
-    ) -> Result<&FullViewingKey, FindKeyError> {
+    ) -> Result<&ExtendedViewingKey, FindKeyError> {
         self.store.find_viewing_key(alias.as_ref())
             .ok_or(FindKeyError::KeyNotFound)
     }
@@ -374,7 +374,7 @@ impl Wallet {
     }
 
     /// Get all known viewing keys by their alias
-    pub fn get_viewing_keys(&self) -> HashMap<String, FullViewingKey> {
+    pub fn get_viewing_keys(&self) -> HashMap<String, ExtendedViewingKey> {
         self.store
             .get_viewing_keys()
             .iter()
@@ -422,7 +422,7 @@ impl Wallet {
     pub fn insert_viewing_key(
         &mut self,
         alias: String,
-        view_key: FullViewingKey,
+        view_key: ExtendedViewingKey,
     ) -> Option<String> {
         self.store
             .insert_viewing_key(alias.into(), view_key)
@@ -433,7 +433,7 @@ impl Wallet {
         &mut self,
         alias: String,
         spend_key: StoredKeypair<ExtendedSpendingKey>,
-        viewkey: FullViewingKey,
+        viewkey: ExtendedViewingKey,
     ) -> Option<String> {
         self.store
             .insert_spending_key(alias.into(), spend_key, viewkey)
@@ -451,7 +451,7 @@ impl Wallet {
             .insert_spending_key(
                 alias.into(),
                 StoredKeypair::new(spend_key, password).0,
-                to_viewing_key(&spend_key.into()).into()
+                ExtendedFullViewingKey::from(&spend_key.into()).into()
             )
             .map(Into::into)
     }

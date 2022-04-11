@@ -37,7 +37,7 @@ pub type WalletPaymentAddr = FromContext<PaymentAddress>;
 
 /// A raw full viewing key (bech32m encoding) or an alias of a full viewing key
 /// in the wallet
-pub type WalletViewingKey = FromContext<FullViewingKey>;
+pub type WalletViewingKey = FromContext<ExtendedViewingKey>;
 
 /// A raw address or a raw extended spending key (bech32m encoding) or an alias
 /// of either in the wallet
@@ -379,7 +379,7 @@ impl ArgFromMutContext for ExtendedSpendingKey {
     }
 }
 
-impl ArgFromMutContext for FullViewingKey {
+impl ArgFromMutContext for ExtendedViewingKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Result<Self, String> {
         let raw = raw.as_ref();
         // Either the string is a raw full viewing key
@@ -431,7 +431,7 @@ impl ArgFromMutContext for BalanceOwner {
         let raw = raw.as_ref();
         // Either the string is a transparent address or a viewing key
         Address::arg_from_ctx(ctx, raw).map(Self::Address)
-            .or_else(|_| FullViewingKey::arg_from_mut_ctx(ctx, raw)
+            .or_else(|_| ExtendedViewingKey::arg_from_mut_ctx(ctx, raw)
                      .map(Self::FullViewingKey))
     }
 }

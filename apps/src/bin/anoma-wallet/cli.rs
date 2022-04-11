@@ -11,7 +11,7 @@ use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
 use rand_core::OsRng;
-use masp_primitives::keys::FullViewingKey;
+use masp_primitives::zip32::ExtendedFullViewingKey;
 use anoma_apps::client::tx::find_valid_diversifier;
 use anoma::types::masp::MaspValue;
 
@@ -214,7 +214,7 @@ fn payment_address_gen(
     }: args::MaspPayAddrGen,
 ) {
     let alias = alias.to_lowercase();
-    let viewing_key = FullViewingKey::from(ctx.get_cached(&viewing_key)).vk;
+    let viewing_key = ExtendedFullViewingKey::from(ctx.get_cached(&viewing_key)).fvk.vk;
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
     let payment_addr = viewing_key.to_payment_address(div).expect("a PaymentAddress");
     let mut wallet = ctx.wallet;

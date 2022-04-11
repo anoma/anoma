@@ -14,11 +14,11 @@ use ark_std::rand::SeedableRng;
 use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use anoma::types::masp::{PaymentAddress, ExtendedSpendingKey, FullViewingKey};
+use anoma::types::masp::{PaymentAddress, ExtendedSpendingKey, ExtendedViewingKey};
+use masp_primitives::zip32::ExtendedFullViewingKey;
 
 use super::alias::Alias;
 use super::keys::StoredKeypair;
-use crate::client::tx::to_viewing_key;
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
 
@@ -51,7 +51,7 @@ pub struct ValidatorData {
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
     /// Known viewing keys
-    view_keys: HashMap<Alias, FullViewingKey>,
+    view_keys: HashMap<Alias, ExtendedViewingKey>,
     /// Known spending keys
     spend_keys: HashMap<Alias, StoredKeypair<ExtendedSpendingKey>>,
     /// Known payment addresses
@@ -227,7 +227,7 @@ impl Store {
     pub fn find_viewing_key(
         &self,
         alias: impl AsRef<str>,
-    ) -> Option<&FullViewingKey> {
+    ) -> Option<&ExtendedViewingKey> {
         self.view_keys.get(&alias.into())
     }
 
@@ -297,7 +297,7 @@ impl Store {
     }
 
     /// Get all known viewing keys by their alias.
-    pub fn get_viewing_keys(&self) -> &HashMap<Alias, FullViewingKey> {
+    pub fn get_viewing_keys(&self) -> &HashMap<Alias, ExtendedViewingKey> {
         &self.view_keys
     }
 
@@ -358,7 +358,7 @@ impl Store {
         password: Option<String>,
     ) -> (Alias, ExtendedSpendingKey) {
         let spendkey = Self::generate_spending_key();
-        let viewkey = to_viewing_key(&spendkey.into()).into();
+        let viewkey = ExtendedFullViewingKey::from(&spendkey.into()).into();
         let (spendkey_to_store, _raw_spendkey) =
             StoredKeypair::new(spendkey, password);
         let alias = Alias::from(alias);
@@ -445,7 +445,7 @@ impl Store {
         &mut self,
         alias: Alias,
         spendkey: StoredKeypair<ExtendedSpendingKey>,
-        viewkey: FullViewingKey,
+        viewkey: ExtendedViewingKey,
     ) -> Option<Alias> {
         if alias.is_empty() {
             eprintln!("Empty alias given.");
@@ -474,7 +474,7 @@ impl Store {
     pub fn insert_viewing_key(
         &mut self,
         alias: Alias,
-        viewkey: FullViewingKey,
+        viewkey: ExtendedViewingKey,
     ) -> Option<Alias> {
         if alias.is_empty() {
             eprintln!("Empty alias given.");
