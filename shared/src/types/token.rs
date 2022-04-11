@@ -2,7 +2,7 @@
 
 use std::convert::TryFrom;
 use std::fmt::Display;
-use std::ops::{Add, AddAssign, Div, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -73,6 +73,10 @@ impl Amount {
     }
 
     /// Create amount from Change
+    ///
+    /// # Panics
+    ///
+    /// Panics if the change is negative or overflows `u64`.
     pub fn from_change(change: Change) -> Self {
         Self {
             micro: change as u64,
@@ -144,6 +148,15 @@ impl Add for Amount {
     }
 }
 
+impl Mul<Amount> for u64 {
+    type Output = Amount;
+
+    fn mul(mut self, rhs: Amount) -> Self::Output {
+        self *= rhs.micro;
+        Self::Output::from(self)
+    }
+}
+
 impl AddAssign for Amount {
     fn add_assign(&mut self, rhs: Self) {
         self.micro += rhs.micro
@@ -162,14 +175,6 @@ impl Sub for Amount {
 impl SubAssign for Amount {
     fn sub_assign(&mut self, rhs: Self) {
         self.micro -= rhs.micro
-    }
-}
-
-impl Div for Amount {
-    type Output = f64;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        self.micro as f64 / rhs.micro as f64
     }
 }
 

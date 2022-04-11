@@ -1282,12 +1282,6 @@ fn proposal_offline() -> Result<()> {
         valid_proposal_json,
     );
 
-    // "/Users/fraccaman/Heliax/anoma/target/debug/anomac" "--base-dir"
-    // "/var/folders/tx/hzkgqlc966b6w1qndl99dz6w0000gn/T/.tmpxLIdAc" "--mode"
-    // "full" "vote-proposal" "--data-path"
-    // "\"/Users/fraccaman/Heliax/anoma/proposal\"" "--vote" "yay" "--signer"
-    // "Albert" "--offline" "--ledger-address" "127.0.0.1:27657"
-
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     let offline_proposal_args = vec![
@@ -1342,8 +1336,3 @@ fn generate_proposal_json(
         .unwrap();
     serde_json::to_writer(intent_writer, &proposal_content).unwrap();
 }
-
-// --mode" "full" "vote-proposal" "--data-path"
-// "\"/Users/fraccaman/Heliax/anoma/proposal\"" "--vote" "yay" "--signer"
-// "Albert" "--offline" "--ledger-address" "127.0.0.1:27657" Unread output: The
-// application panicked (crashed).

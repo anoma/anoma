@@ -1359,7 +1359,7 @@ pub async fn compute_tally(
             }
         }
 
-        if yay_votes_tokens / total_stacked_tokens >= 0.66 {
+        if 3 * yay_votes_tokens >= 2 * total_stacked_tokens {
             TallyResult::Passed
         } else {
             TallyResult::Rejected
