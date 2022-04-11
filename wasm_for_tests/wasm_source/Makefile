@@ -14,6 +14,7 @@ wasms += vp_always_true
 wasms += vp_eval
 wasms += vp_memory_limit
 wasms += vp_read_storage_key
+wasms += tx_proposal_code
 
 
 # Build all wasms

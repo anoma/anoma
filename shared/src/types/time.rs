@@ -1,6 +1,7 @@
 //! Types for dealing with time and durations.
 
 use std::convert::{TryFrom, TryInto};
+use std::fmt::Display;
 use std::ops::{Add, Sub};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -52,6 +53,12 @@ impl From<std::time::Duration> for DurationSecs {
 impl From<DurationSecs> for std::time::Duration {
     fn from(duration_secs: DurationSecs) -> Self {
         std::time::Duration::new(duration_secs.0, 0)
+    }
+}
+
+impl Display for DurationSecs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

@@ -577,6 +577,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             rpc::query_storage_value(&client, &min_proposal_funds_key)
                 .await
                 .unwrap();
+
         let balance = rpc::get_token_balance(&client, &m1t(), &proposal.author)
             .await
             .unwrap_or_default();
@@ -592,25 +593,21 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             rpc::query_storage_value(&client, &min_proposal_funds_key)
                 .await
                 .unwrap();
+        if account_hash_enought_balance(
+            &client,
+            &proposal.author,
+            min_proposal_funds,
+        )
+        .await
+        {
+            let data = init_proposal_data
+                .try_to_vec()
+                .expect("Encoding proposal data shouldn't fail");
+            let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
+            let tx = Tx::new(tx_code, Some(data));
 
-        let balance = rpc::get_token_balance(&client, &m1t(), &proposal.author)
-            .await
-            .unwrap_or_default();
-        if balance < min_proposal_funds {
-            eprintln!(
-                "Address {} doesn't have enough funds.",
-                &proposal.author
-            );
-            safe_exit(1);
+            process_tx(ctx, &args.tx, tx, Some(&signer)).await;
         }
-
-        let data = init_proposal_data
-            .try_to_vec()
-            .expect("Encoding proposal data shouldn't fail");
-        let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
-        let tx = Tx::new(tx_code, Some(data));
-
-        process_tx(ctx, &args.tx, tx, Some(&signer)).await;
     }
 }
 
@@ -627,14 +624,15 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
         let proposal_file_path =
             args.proposal_data.expect("Proposal file should exist.");
         let file = File::open(&proposal_file_path).expect("File must exist.");
+
         let proposal: OfflineProposal =
             serde_json::from_reader(file).expect("JSON was not well-formatted");
-
-        let public_key =
-            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
-                .await
-                .expect("Public key should exist.");
-
+        let public_key = rpc::get_public_key(
+            &proposal.address,
+            args.tx.ledger_address.clone(),
+        )
+        .await
+        .expect("Public key should exist.");
         if !proposal.check_signature(&public_key) {
             eprintln!("Proposal signature mismatch!");
             safe_exit(1)
@@ -646,8 +644,12 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_vote =
-            OfflineVote::new(&proposal, args.vote, signer.clone(), &signing_key);
+        let offline_vote = OfflineVote::new(
+            &proposal,
+            args.vote,
+            signer.clone(),
+            &signing_key,
+        );
 
         let proposal_vote_filename =
             format!("proposal-vote-{}", &signer.to_string());
@@ -1022,6 +1024,27 @@ async fn process_tx(
                 );
                 safe_exit(1)
             }
+        }
+    }
+}
+
+async fn account_hash_enought_balance(
+    client: &HttpClient,
+    address: &Address,
+    min_amount: Amount,
+) -> bool {
+    let balance_key = token::balance_key(&m1t(), address);
+    match rpc::query_storage_value::<Amount>(client, &balance_key).await {
+        Some(amount) => {
+            if amount < min_amount {
+                eprintln!("Address {} doesn't have enough funds.", address);
+                safe_exit(1);
+            }
+            true
+        }
+        None => {
+            eprintln!("Can't find address {}.", address);
+            safe_exit(1);
         }
     }
 }

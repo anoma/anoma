@@ -93,6 +93,7 @@ where
                 HashMap::new();
             let (validator_voters, delegator_voters, validator_set) =
                 get_votes(storage, proposal_id, start_epoch)?;
+
             for validator_addr in validator_voters.keys() {
                 match get_bond_amount_at(
                     storage,
@@ -184,7 +185,7 @@ where
                 }
             }
 
-            if yay_total_tokens / total_tokens >= 0.66 {
+            if 3 * yay_total_tokens >= 2 * total_tokens {
                 let proposal_code =
                     gov_storage::get_proposal_code_key(proposal_id);
                 let (proposal_code_bytes, _) = storage
@@ -241,7 +242,7 @@ where
                         {
                             let start_epoch = Epoch::from(*start_epoch);
                             delta = apply_slashes(&slashes, delta, start_epoch);
-                            if epoch <= start_epoch {
+                            if epoch >= start_epoch {
                                 delegated_amount += delta;
                             }
                         }
@@ -301,10 +302,12 @@ where
             if let Some(epoched_validator_set) = epoched_validator_set {
                 let validator_set = epoched_validator_set.get(epoch);
                 if let Some(validator_set) = validator_set {
-                    let mut active_validators = validator_set
+                    let active_validators = validator_set
                         .active
                         .iter()
-                        .map(|validator| validator.address.clone());
+                        .map(|validator| validator.address.clone())
+                        .collect::<Vec<Address>>();
+
                     for (key, value_bytes, _) in votes {
                         let vote =
                             ProposalVote::try_from_slice(&value_bytes[..]).ok();
@@ -323,11 +326,7 @@ where
                             _ => continue,
                         }
                     }
-                    Ok((
-                        validator_voters,
-                        delegator_voters,
-                        active_validators.collect(),
-                    ))
+                    Ok((validator_voters, delegator_voters, active_validators))
                 } else {
                     Err(Error::InvalidValidatorSet)
                 }

@@ -4,6 +4,7 @@ use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
 use anoma::ledger::governance::{
     storage as gov_storage, ADDRESS as gov_address,
 };
+use anoma::ledger::storage::types::encode;
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
@@ -82,9 +83,19 @@ where
                 if let Ok(tally_result) = tally_result {
                     match tally_result {
                         (TallyResult::Passed, Some(code)) => {
-                            let tx = Tx::new(code, None);
+                            let tx = Tx::new(code, Some(encode(&id)));
                             let tx_type =
                                 TxType::Decrypted(DecryptedTx::Decrypted(tx));
+                            let pending_execution_key =
+                                gov_storage::get_proposal_execution_key(id);
+                            // in order to filter if the vp has been triggered
+                            // by the protocol or by a transaction,
+                            // we set the following key in a protected storage
+                            // space as a flag. After the execution, we delete
+                            // it.
+                            self.storage
+                                .write(&pending_execution_key, "")
+                                .expect("Should be able to write to storage.");
                             let tx_result = protocol::apply_tx(
                                 tx_type,
                                 0,
@@ -94,34 +105,48 @@ where
                                 &mut self.vp_wasm_cache,
                                 &mut self.tx_wasm_cache,
                             );
+                            self.storage.delete(&pending_execution_key).expect(
+                                "Should be able to delete the storage.",
+                            );
                             match tx_result {
                                 Ok(tx_result) => {
                                     if tx_result.is_accepted() {
+                                        self.write_log.commit_tx();
                                         let author_key =
                                             gov_storage::get_author_key(id);
-                                        self.storage
+                                        let author = self
+                                            .storage
                                             .read(&author_key)
                                             .map(|(bytes, _gas)| {
                                                 if let Some(bytes) = bytes {
-                                                    if let Ok(address) =
-                                                        Address::try_from_slice(
-                                                            &bytes[..],
-                                                        )
-                                                    {
-                                                        self.storage.transfer(
-                                                            &m1t(),
-                                                            funds,
-                                                            &gov_address,
-                                                            &address,
-                                                        );
-                                                    }
+                                                    Address::try_from_slice(
+                                                        &bytes[..],
+                                                    )
+                                                    .ok()
+                                                } else {
+                                                    None
                                                 }
                                             })
-                                            .map_err(|e| {
-                                                Error::BadProposal(
-                                                    e.to_string(),
-                                                )
-                                            })?;
+                                            .unwrap_or(None);
+                                        // if the author address is decodable,
+                                        // we trasfer the funds back
+                                        // otherwise we move them to treasury
+                                        if let Some(address) = author {
+                                            self.storage.transfer(
+                                                &m1t(),
+                                                funds,
+                                                &gov_address,
+                                                &address,
+                                            );
+                                        } else {
+                                            // Move funds to Treasury
+                                            self.storage.transfer(
+                                                &m1t(),
+                                                funds,
+                                                &gov_address,
+                                                &treasury_address,
+                                            );
+                                        };
                                         let proposal_event: Event =
                                             ProposalEvent::new(
                                                 EventType::Proposal.to_string(),

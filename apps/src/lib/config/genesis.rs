@@ -540,7 +540,9 @@ pub mod genesis_config {
         };
 
         let treasury_params = TreasuryParams {
-            max_proposal_fund_transfer: 10_000,
+            max_proposal_fund_transfer: config
+                .treasury_params
+                .max_proposal_fund_transfer,
         };
 
         let pos_params = PosParams {
@@ -757,7 +759,7 @@ pub fn genesis() -> Genesis {
     let parameters = Parameters {
         epoch_duration: EpochDuration {
             min_num_of_blocks: 10,
-            min_duration: anoma::types::time::Duration::minutes(1).into(),
+            min_duration: anoma::types::time::Duration::seconds(60).into(),
         },
         max_expected_time_per_block: anoma::types::time::DurationSecs(30),
         vp_whitelist: vec![],
