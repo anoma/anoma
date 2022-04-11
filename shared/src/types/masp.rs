@@ -11,9 +11,9 @@ use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, masp};
 
 /// human-readable part of Bech32m encoded address
 // TODO use "a" for live network
-const FULL_VIEWING_KEY_HRP: &str = "xfvktest";
+const EXT_FULL_VIEWING_KEY_HRP: &str = "xfvktest";
 const PAYMENT_ADDRESS_HRP: &str = "patest";
-const EXTENDED_SPENDING_KEY_HRP: &str = "xsktest";
+const EXT_SPENDING_KEY_HRP: &str = "xsktest";
 
 /// Wrapper for masp_primitive's FullViewingKey
 #[derive(Clone, Debug, Copy)]
@@ -25,14 +25,14 @@ impl Display for ExtendedViewingKey {
         self.0.write(&mut bytes[..])
             .expect("should be able to serialize an ExtendedFullViewingKey");
         let encoded = bech32::encode(
-            FULL_VIEWING_KEY_HRP,
+            EXT_FULL_VIEWING_KEY_HRP,
             bytes.to_base32(),
             BECH32M_VARIANT,
         )
         .unwrap_or_else(|_| {
             panic!(
                 "The human-readable part {} should never cause a failure",
-                FULL_VIEWING_KEY_HRP
+                EXT_FULL_VIEWING_KEY_HRP
             )
         });
         write!(f, "{encoded}")
@@ -45,10 +45,10 @@ impl FromStr for ExtendedViewingKey {
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         let (prefix, base32, variant) =
             bech32::decode(string).map_err(DecodeError::DecodeBech32)?;
-        if prefix != FULL_VIEWING_KEY_HRP {
+        if prefix != EXT_FULL_VIEWING_KEY_HRP {
             return Err(DecodeError::UnexpectedBech32Prefix(
                 prefix,
-                FULL_VIEWING_KEY_HRP.into(),
+                EXT_FULL_VIEWING_KEY_HRP.into(),
             ));
         }
         match variant {
@@ -197,14 +197,14 @@ impl Display for ExtendedSpendingKey {
         self.0.write(&mut &mut bytes[..])
             .expect("should be able to serialize an ExtendedSpendingKey");
         let encoded = bech32::encode(
-            EXTENDED_SPENDING_KEY_HRP,
+            EXT_SPENDING_KEY_HRP,
             bytes.to_base32(),
             BECH32M_VARIANT,
         )
         .unwrap_or_else(|_| {
             panic!(
                 "The human-readable part {} should never cause a failure",
-                EXTENDED_SPENDING_KEY_HRP
+                EXT_SPENDING_KEY_HRP
             )
         });
         write!(f, "{encoded}")
@@ -217,10 +217,10 @@ impl FromStr for ExtendedSpendingKey {
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         let (prefix, base32, variant) =
             bech32::decode(string).map_err(DecodeError::DecodeBech32)?;
-        if prefix != EXTENDED_SPENDING_KEY_HRP {
+        if prefix != EXT_SPENDING_KEY_HRP {
             return Err(DecodeError::UnexpectedBech32Prefix(
                 prefix,
-                EXTENDED_SPENDING_KEY_HRP.into(),
+                EXT_SPENDING_KEY_HRP.into(),
             ));
         }
         match variant {
