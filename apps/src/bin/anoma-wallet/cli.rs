@@ -6,7 +6,7 @@ use std::io::{self, Write};
 use anoma::types::key::*;
 use anoma_apps::cli;
 use anoma_apps::cli::{args, cmds, Context};
-use anoma_apps::wallet::DecryptionError;
+use anoma_apps::wallet::{DecryptionError, FindKeyError};
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
@@ -78,8 +78,12 @@ fn address_key_find(
         println!("Viewing key: {}", viewing_key);
         if unsafe_show_secret {
             // Check if alias is also a spending key
-            if let Ok(spending_key) = wallet.find_spending_key(&alias) {
-                println!("Spending key: {}", spending_key);
+            match wallet.find_spending_key(&alias) {
+                Ok(spending_key) =>
+                    println!("Spending key: {}", spending_key),
+                Err(FindKeyError::KeyNotFound) => {},
+                Err(err) =>
+                    eprintln!("{}", err),
             }
         }
     } else if let Some(payment_addr) = wallet.find_payment_addr(&alias) {
@@ -100,12 +104,14 @@ fn address_key_find(
 fn spending_keys_list(
     ctx: Context,
     args::SpendKeysList {
+        decrypt,
         unsafe_show_secret,
     }: args::SpendKeysList,
 ) {
-    let mut wallet = ctx.wallet;
-    let known_keys = wallet.get_viewing_keys();
-    if known_keys.is_empty() {
+    let wallet = ctx.wallet;
+    let known_view_keys = wallet.get_viewing_keys();
+    let known_spend_keys = wallet.get_spending_keys();
+    if known_view_keys.is_empty() {
         println!(
             "No known keys. Try `masp add --alias my-addr --value ...` to add a \
              new key to the wallet."
@@ -114,14 +120,44 @@ fn spending_keys_list(
         let stdout = io::stdout();
         let mut w = stdout.lock();
         writeln!(w, "Known keys:").unwrap();
-        for (alias, key) in known_keys {
-            writeln!(w, "  \"{}\":", alias).unwrap();
+        for (alias, key) in known_view_keys {
+            write!(w, "  Alias \"{}\"", alias).unwrap();
+            let spending_key_opt = known_spend_keys.get(&alias);
+            // If this alias is associated with a spending key, indicate whether
+            // or not the spending key is encrypted
+            if let Some(spending_key) = spending_key_opt {
+                if spending_key.is_encrypted() {
+                    writeln!(w, " (encrypted):")
+                } else {
+                    writeln!(w, " (not encrypted):")
+                }.unwrap();
+            } else {
+                writeln!(w, ":").unwrap();
+            }
+            // Always print the corresponding viewing key
             writeln!(w, "    Viewing Key: {}", key).unwrap();
             // A subset of viewing keys will have corresponding spending keys.
             // Print those too if they are available and requested.
             if unsafe_show_secret {
-                if let Ok(spending_key) = wallet.find_spending_key(alias) {
-                    writeln!(w, "    Spending Key: {}", spending_key).unwrap()
+                if let Some(spending_key) = spending_key_opt {
+                    match spending_key.get(decrypt) {
+                        // Here the spending key is unencrypted or successfully
+                        // decrypted
+                        Ok(spending_key) => {
+                            writeln!(w, "    Spending key: {}", spending_key).unwrap();
+                        }
+                        // Here the key is encrypted but decryption has not been
+                        // requested
+                        Err(DecryptionError::NotDecrypting) if !decrypt => {
+                            continue;
+                        }
+                        // Here the key is encrypted but incorrect password has
+                        // been provided
+                        Err(err) => {
+                            writeln!(w, "    Couldn't decrypt the spending key: {}", err)
+                                .unwrap();
+                        }
+                    }
                 }
             }
         }

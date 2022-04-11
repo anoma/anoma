@@ -2709,19 +2709,23 @@ pub mod args {
     /// Wallet list shielded keys arguments
     #[derive(Clone, Debug)]
     pub struct SpendKeysList {
+        pub decrypt: bool,
         pub unsafe_show_secret: bool,
     }
 
     impl Args for SpendKeysList {
         fn parse(matches: &ArgMatches) -> Self {
+            let decrypt = DECRYPT.parse(matches);
             let unsafe_show_secret = UNSAFE_SHOW_SECRET.parse(matches);
             Self {
+                decrypt,
                 unsafe_show_secret,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(
+            app.arg(DECRYPT.def().about("Decrypt keys that are encrypted."))
+                .arg(
                     UNSAFE_SHOW_SECRET
                         .def()
                         .about("UNSAFE: Print the spending key values."),
