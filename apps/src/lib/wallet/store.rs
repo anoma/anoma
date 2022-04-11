@@ -351,6 +351,7 @@ impl Store {
         (alias, raw_keypair)
     }
 
+    /// Generate a spending key similarly to how it's done for keypairs
     pub fn gen_spending_key(
         &mut self,
         alias: String,
@@ -424,7 +425,7 @@ impl Store {
                 alias = Into::<Alias>::into(pkh.to_string())
             );
         }
-        if self.keys.contains_key(&alias) {
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "a key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
@@ -433,11 +434,13 @@ impl Store {
                 ConfirmationResponse::Skip => return None,
             }
         }
+        self.remove_alias(&alias);
         self.keys.insert(alias.clone(), keypair);
         self.pkhs.insert(pkh, alias.clone());
         Some(alias)
     }
 
+    /// Insert spending keys similarly to how it's done for keypairs
     pub fn insert_spending_key(
         &mut self,
         alias: Alias,
@@ -448,7 +451,7 @@ impl Store {
             eprintln!("Empty alias given.");
             return None;
         }
-        if self.spend_keys.contains_key(&alias) {
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "a spending key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
@@ -457,6 +460,7 @@ impl Store {
                 ConfirmationResponse::Skip => return None,
             }
         }
+        self.remove_alias(&alias);
         self.spend_keys.insert(alias.clone(), spendkey);
         // Simultaneously add the derived viewing key to ease balance viewing
         self.view_keys.insert(
@@ -466,6 +470,7 @@ impl Store {
         Some(alias)
     }
 
+    /// Insert viewing keys similarly to how it's done for keypairs
     pub fn insert_viewing_key(
         &mut self,
         alias: Alias,
@@ -475,7 +480,7 @@ impl Store {
             eprintln!("Empty alias given.");
             return None;
         }
-        if self.view_keys.contains_key(&alias) {
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "a viewing key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
@@ -484,10 +489,31 @@ impl Store {
                 ConfirmationResponse::Skip => return None,
             }
         }
+        self.remove_alias(&alias);
         self.view_keys.insert(alias.clone(), viewkey);
         Some(alias)
     }
 
+    /// Check if any map of the wallet contains the given alias
+    fn contains_alias(&self, alias: &Alias) -> bool {
+        self.payment_addrs.contains_key(alias) ||
+            self.view_keys.contains_key(alias) ||
+            self.spend_keys.contains_key(alias) ||
+            self.keys.contains_key(alias) ||
+            self.addresses.contains_key(alias)
+    }
+
+    /// Completely remove the given alias from all maps in the wallet
+    fn remove_alias(&mut self, alias: &Alias) {
+        self.payment_addrs.remove(alias);
+        self.view_keys.remove(alias);
+        self.spend_keys.remove(alias);
+        self.keys.remove(alias);
+        self.addresses.remove(alias);
+        self.pkhs.retain(|_key, val| val != alias);
+    }
+
+    /// Insert payment addresses similarly to how it's done for keypairs
     pub fn insert_payment_addr(
         &mut self,
         alias: Alias,
@@ -497,7 +523,7 @@ impl Store {
             eprintln!("Empty alias given.");
             return None;
         }
-        if self.payment_addrs.contains_key(&alias) {
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "a payment address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
@@ -506,6 +532,7 @@ impl Store {
                 ConfirmationResponse::Skip => return None,
             }
         }
+        self.remove_alias(&alias);
         self.payment_addrs.insert(alias.clone(), payment_addr);
         Some(alias)
     }
@@ -525,7 +552,7 @@ impl Store {
                 alias = address.encode()
             );
         }
-        if self.addresses.contains_key(&alias) {
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "an address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
@@ -534,6 +561,7 @@ impl Store {
                 ConfirmationResponse::Skip => return None,
             }
         }
+        self.remove_alias(&alias);
         self.addresses.insert(alias.clone(), address);
         Some(alias)
     }
