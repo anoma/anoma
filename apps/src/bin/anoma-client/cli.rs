@@ -70,9 +70,11 @@ pub async fn main() -> Result<()> {
                 Sub::QueryRawBytes(QueryRawBytes(args)) => {
                     rpc::query_raw_bytes(ctx, args).await;
                 }
-
                 Sub::QueryProposal(QueryProposal(args)) => {
                     rpc::query_proposal(ctx, args).await;
+                }
+                Sub::QueryProposalResult(QueryProposalResult(args)) => {
+                    rpc::query_proposal_result(ctx, args).await;
                 }
                 // Gossip cmds
                 Sub::Intent(Intent(args)) => {

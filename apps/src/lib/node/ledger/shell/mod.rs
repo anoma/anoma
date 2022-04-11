@@ -12,6 +12,7 @@ mod prepare_proposal;
 mod process_proposal;
 mod queries;
 
+use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 use std::path::{Path, PathBuf};
@@ -102,6 +103,8 @@ pub enum Error {
     TowerServer(String),
     #[error("{0}")]
     Broadcaster(tokio::sync::mpsc::error::TryRecvError),
+    #[error("Error executing proposal {0}")]
+    BadProposal(String),
 }
 
 /// The different error codes that the ledger may
@@ -206,6 +209,8 @@ where
     vp_wasm_cache: VpCache<WasmCacheRwAccess>,
     /// Tx WASM compilation cache
     tx_wasm_cache: TxCache<WasmCacheRwAccess>,
+    /// Proposal execution tracking
+    pub proposal_data: HashSet<u64>,
 }
 
 impl<D, H> Shell<D, H>
@@ -311,6 +316,7 @@ where
                 tx_wasm_cache_dir,
                 tx_wasm_compilation_cache as usize,
             ),
+            proposal_data: HashSet::new(),
         }
     }
 

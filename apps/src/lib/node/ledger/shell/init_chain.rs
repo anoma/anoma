@@ -67,12 +67,9 @@ where
         let genesis_time: DateTimeUtc =
             (Utc.timestamp(ts.seconds, ts.nanos as u32)).into();
 
-        parameters::init_genesis_storage(
-            &mut self.storage,
-            &genesis.parameters,
-        );
-
+        genesis.parameters.init_storage(&mut self.storage);
         genesis.gov_params.init_storage(&mut self.storage);
+        genesis.treasury_params.init_storage(&mut self.storage);
 
         // Depends on parameters being initialized
         self.storage

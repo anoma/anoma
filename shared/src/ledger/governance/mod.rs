@@ -4,6 +4,8 @@
 pub mod parameters;
 /// governance storage
 pub mod storage;
+/// utility function
+pub mod utils;
 
 use std::collections::BTreeSet;
 
@@ -116,13 +118,13 @@ where
                                 &self.ctx,
                                 pre_voting_start_epoch,
                                 verifiers,
-                                voter,
+                                &voter,
                             );
                             let is_validator = is_validator(
                                 &self.ctx,
                                 pre_voting_start_epoch,
                                 verifiers,
-                                voter,
+                                &voter,
                             );
                             let is_valid_validator_voting_period =
                                 is_valid_validator_voting_period(
@@ -180,9 +182,11 @@ where
                     .ok();
                     let has_pre_proposal_code =
                         self.ctx.has_key_pre(&proposal_code_key).ok();
-                    let post_proposal_code: Option<Vec<u8>> =
-                        read(&self.ctx, &proposal_code_key, ReadType::POST)
-                            .ok();
+                    let post_proposal_code = read_bytes(
+                        &self.ctx,
+                        &proposal_code_key,
+                        ReadType::POST,
+                    );
                     match (
                         has_pre_proposal_code,
                         post_proposal_code,
@@ -501,6 +505,53 @@ where
     (true, post_counter - pre_counter)
 }
 
+fn read_bytes<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    key: &Key,
+    read_type: ReadType,
+) -> Option<Vec<u8>>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let storage_result = match read_type {
+        ReadType::PRE => context.read_pre(key),
+        ReadType::POST => context.read_post(key),
+    };
+
+    match storage_result {
+        Ok(value) => value,
+        Err(_err) => None,
+    }
+}
+
+fn is_validator<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    epoch: Epoch,
+    verifiers: &BTreeSet<Address>,
+    address: &Address,
+) -> bool
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let validator_set_key = pos_storage::validator_set_key();
+    let pre_validator_set: pos_storage::ValidatorSets =
+        read(context, &validator_set_key, ReadType::PRE).unwrap();
+    let validator_set = pre_validator_set.get(epoch);
+
+    match validator_set {
+        Some(set) => {
+            set.active.iter().any(|weighted_validator| {
+                weighted_validator.address.eq(address)
+            }) && verifiers.contains(address)
+        }
+        None => false,
+    }
+}
+
 fn is_delegator<DB, H, CA>(
     context: &Ctx<DB, H, CA>,
     epoch: Epoch,
@@ -539,32 +590,6 @@ fn is_valid_validator_voting_period(
         && current_epoch
             <= voting_start_epoch
                 + ((voting_end_epoch - voting_start_epoch) * 2) / 3
-}
-
-fn is_validator<DB, H, CA>(
-    context: &Ctx<DB, H, CA>,
-    epoch: Epoch,
-    verifiers: &BTreeSet<Address>,
-    address: &Address,
-) -> bool
-where
-    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
-    H: 'static + StorageHasher,
-    CA: 'static + WasmCacheAccess,
-{
-    let validator_set_key = pos_storage::validator_set_key();
-    let pre_validator_set: pos_storage::ValidatorSets =
-        read(context, &validator_set_key, ReadType::PRE).unwrap();
-    let validator_set = pre_validator_set.get(epoch);
-
-    match validator_set {
-        Some(set) => {
-            set.active.iter().any(|weighted_validator| {
-                weighted_validator.address.eq(address)
-            }) && verifiers.contains(address)
-        }
-        None => false,
-    }
 }
 
 #[allow(clippy::upper_case_acronyms)]
@@ -617,7 +642,7 @@ impl From<&Key> for KeyType {
             KeyType::GRACE_EPOCH
         } else if gov_storage::is_start_epoch_key(value) {
             KeyType::START_EPOCH
-        } else if gov_storage::is_min_grace_epoch_key(value) {
+        } else if gov_storage::is_commit_proposal_key(value) {
             KeyType::PROPOSAL_COMMIT
         } else if gov_storage::is_end_epoch_key(value) {
             KeyType::END_EPOCH
