@@ -73,6 +73,7 @@ fn address_key_find(
     }: args::AddrKeyFind,
 ) {
     let mut wallet = ctx.wallet;
+    let alias = alias.to_lowercase();
     if let Ok(viewing_key) = wallet.find_viewing_key(&alias) {
         // Check if alias is a viewing key
         println!("Viewing key: {}", viewing_key);
@@ -195,6 +196,7 @@ fn spending_key_gen(
     }: args::MaspSpendKeyGen,
 ) {
     let mut wallet = ctx.wallet;
+    let alias = alias.to_lowercase();
     let (alias, _key) = wallet.gen_spending_key(alias, unsafe_dont_encrypt);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
@@ -211,6 +213,7 @@ fn payment_address_gen(
         viewing_key,
     }: args::MaspPayAddrGen,
 ) {
+    let alias = alias.to_lowercase();
     let viewing_key = FullViewingKey::from(ctx.get_cached(&viewing_key)).vk;
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
     let payment_addr = viewing_key.to_payment_address(div).expect("a PaymentAddress");
@@ -235,6 +238,7 @@ fn address_key_add(
         unsafe_dont_encrypt,
     }: args::MaspAddrKeyAdd,
 ) {
+    let alias = alias.to_lowercase();
     let (alias, typ) = match value {
         MaspValue::FullViewingKey(viewing_key) => {
             let alias = ctx
