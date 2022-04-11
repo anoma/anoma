@@ -646,8 +646,12 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_vote =
-            OfflineVote::new(&proposal, args.vote, signer.clone(), &signing_key);
+        let offline_vote = OfflineVote::new(
+            &proposal,
+            args.vote,
+            signer.clone(),
+            &signing_key,
+        );
 
         let proposal_vote_filename =
             format!("proposal-vote-{}", &signer.to_string());
