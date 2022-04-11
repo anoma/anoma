@@ -1,1 +1,10 @@
-pre.mermaid {background: white;}
+pre.mermaid {
+	background: white;
+}
+
+footer {
+	font-size: 0.8em;
+	text-align: center;
+	border-top: 1px solid black;
+	padding: 10px 0;
+}
