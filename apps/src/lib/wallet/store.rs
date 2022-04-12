@@ -425,18 +425,33 @@ impl Store {
                 alias = Into::<Alias>::into(pkh.to_string())
             );
         }
+        // Addresses and keypairs can share aliases, so first remove any
+        // addresses sharing the same namesake before checking if alias has been
+        // used.
+        let counterpart_address = self.addresses.remove(&alias);
         if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "a key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
+                    // Restore the removed address in case the recursive prompt
+                    // terminates with a cancellation
+                    counterpart_address.map(|x| self.addresses.insert(alias.clone(), x));
                     return self.insert_keypair(new_alias, keypair, pkh);
                 }
-                ConfirmationResponse::Skip => return None,
+                ConfirmationResponse::Skip => {
+                    // Restore the removed address since this insertion action
+                    // has now been cancelled
+                    counterpart_address.map(|x| self.addresses.insert(alias.clone(), x));
+                    return None
+                },
             }
         }
         self.remove_alias(&alias);
         self.keys.insert(alias.clone(), keypair);
         self.pkhs.insert(pkh, alias.clone());
+        // Since it is intended for the inserted keypair to share its namesake
+        // with the pre-existing address
+        counterpart_address.map(|x| self.addresses.insert(alias.clone(), x));
         Some(alias)
     }
 
@@ -537,6 +552,18 @@ impl Store {
         Some(alias)
     }
 
+    /// Helper function to restore keypair given alias-keypair mapping and the
+    /// pkhs-alias mapping.
+    fn restore_keypair(
+        &mut self,
+        alias: Alias,
+        key: Option<StoredKeypair<common::SecretKey>>,
+        pkh: Option<PublicKeyHash>
+    ) {
+        key.map(|x| self.keys.insert(alias.clone(), x));
+        pkh.map(|x| self.pkhs.insert(x, alias.clone()));
+    }
+
     /// Insert a new address with the given alias. If the alias is already used,
     /// will prompt for overwrite/reselection confirmation, which when declined,
     /// the address won't be added. Return the selected alias if the address has
@@ -552,17 +579,38 @@ impl Store {
                 alias = address.encode()
             );
         }
+        // Addresses and keypairs can share aliases, so first remove any keys
+        // sharing the same namesake before checking if alias has been used.
+        let counterpart_key = self.keys.remove(&alias);
+        let mut counterpart_pkh = None;
+        self.pkhs.retain(|k, v| if v == &alias {
+            counterpart_pkh = Some(k.clone());
+            false
+        } else {
+            true
+        });
         if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "an address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
+                    // Restore the removed keypair in case the recursive prompt
+                    // terminates with a cancellation
+                    self.restore_keypair(alias, counterpart_key, counterpart_pkh);
                     return self.insert_address(new_alias, address);
                 }
-                ConfirmationResponse::Skip => return None,
+                ConfirmationResponse::Skip => {
+                    // Restore the removed keypair since this insertion action
+                    // has now been cancelled
+                    self.restore_keypair(alias, counterpart_key, counterpart_pkh);
+                    return None;
+                },
             }
         }
         self.remove_alias(&alias);
         self.addresses.insert(alias.clone(), address);
+        // Since it is intended for the inserted address to share its namesake
+        // with the pre-existing keypair
+        self.restore_keypair(alias.clone(), counterpart_key, counterpart_pkh);
         Some(alias)
     }
 
