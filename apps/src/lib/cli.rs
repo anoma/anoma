@@ -1991,7 +1991,7 @@ pub mod args {
     impl Args for QueryProposalResult {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
-            let proposal_id = OPTIONAL_PROPOSAL_ID.parse(matches);
+            let proposal_id = PROPOSAL_ID_OPT.parse(matches);
             let offline = PROPOSAL_OFFLINE.parse(matches);
             let proposal_folder = DATA_PATH_OPT.parse(matches);
 
@@ -2005,11 +2005,7 @@ pub mod args {
 
         fn def(app: App) -> App {
             app.add_args::<Tx>()
-                .arg(
-                    OPTIONAL_PROPOSAL_ID
-                        .def()
-                        .about("The proposal identifier."),
-                )
+                .arg(PROPOSAL_ID_OPT.def().about("The proposal identifier."))
                 .arg(
                     PROPOSAL_OFFLINE
                         .def()

@@ -9,7 +9,6 @@ use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
 use anoma::types::storage::BlockHash;
 
-use anoma::types::token::Amount;
 use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;

@@ -184,7 +184,7 @@ where
                 }
             }
 
-            if yay_total_tokens / total_tokens >= 0.66 {
+            if 3 * yay_total_tokens >= 2 * total_tokens {
                 let proposal_code =
                     gov_storage::get_proposal_code_key(proposal_id);
                 let (proposal_code_bytes, _) = storage
