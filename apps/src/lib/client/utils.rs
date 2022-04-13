@@ -44,12 +44,23 @@ pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 const RELEASE_PREFIX: &str =
     "https://github.com/heliaxdev/anoma-network-config/releases/download";
 
-/// Configure Anoma to join an existing network. The chain must be released in
-/// the <https://github.com/heliaxdev/anoma-network-config> repository.
 pub async fn join_network(
     global_args: args::Global,
     args::JoinNetwork { chain_id }: args::JoinNetwork,
 ) {
+    if let Err(error) = join_network_inner(global_args, args::JoinNetwork { chain_id }).await {
+        eprintln!("ERROR: {}", error);
+        tracing::error!("{}", error);  // TODO: show more info about the error here
+        cli::safe_exit(1);
+    }
+}
+
+/// Configure Anoma to join an existing network. The chain must be released in
+/// the <https://github.com/heliaxdev/anoma-network-config> repository.
+pub async fn join_network_inner(
+    global_args: args::Global,
+    args::JoinNetwork { chain_id }: args::JoinNetwork,
+) -> anyhow::Result<()> {
     use tokio::fs;
 
     let base_dir = &global_args.base_dir;
@@ -73,7 +84,7 @@ pub async fn join_network(
     if let Err(err) = fs::canonicalize(base_dir).await {
         if err.kind() == std::io::ErrorKind::NotFound {
             // If the base-dir doesn't exist yet, create it
-            fs::create_dir_all(base_dir).await.unwrap();
+            fs::create_dir_all(base_dir).await?;
         }
     } else {
         // If the base-dir exists, check if it's already got this chain ID
@@ -85,12 +96,12 @@ pub async fn join_network(
             cli::safe_exit(1);
         }
     }
-    let base_dir_full = fs::canonicalize(base_dir).await.unwrap();
+    let base_dir_full = fs::canonicalize(base_dir).await?;
 
     let release_filename = format!("{}.tar.gz", chain_id);
     let release_url =
         format!("{}/{}/{}", RELEASE_PREFIX, chain_id, release_filename);
-    let cwd = env::current_dir().unwrap();
+    let cwd = env::current_dir()?;
 
     // Read or download the release archive
     println!("Downloading config release from {} ...", release_url);
@@ -99,7 +110,7 @@ pub async fn join_network(
     // Decode and unpack the archive
     let mut decoder = GzDecoder::new(&release[..]);
     let mut tar = String::new();
-    decoder.read_to_string(&mut tar).unwrap();
+    decoder.read_to_string(&mut tar)?;
     let mut archive = tar::Archive::new(tar.as_bytes());
 
     // If the base-dir is non-default, unpack the archive into a temp dir inside
@@ -108,9 +119,9 @@ pub async fn join_network(
         if base_dir_full != cwd.join(config::DEFAULT_BASE_DIR) {
             (base_dir.clone(), true)
         } else {
-            (PathBuf::from_str(".").unwrap(), false)
+            (PathBuf::from_str(".")?, false)
         };
-    archive.unpack(&unpack_dir).unwrap();
+    archive.unpack(&unpack_dir)?;
 
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
@@ -128,8 +139,7 @@ pub async fn join_network(
                     .join(chain_id.as_str())
                     .join(config::DEFAULT_WASM_DIR),
             )
-            .await
-            .unwrap();
+            .await?;
         }
 
         // Move the chain dir
@@ -139,8 +149,7 @@ pub async fn join_network(
                 .join(chain_id.as_str()),
             base_dir_full.join(chain_id.as_str()),
         )
-        .await
-        .unwrap();
+        .await?;
 
         // Move the genesis file
         fs::rename(
@@ -149,8 +158,7 @@ pub async fn join_network(
                 .join(format!("{}.toml", chain_id.as_str())),
             base_dir_full.join(format!("{}.toml", chain_id.as_str())),
         )
-        .await
-        .unwrap();
+        .await?;
 
         // Move the global config
         fs::rename(
@@ -159,13 +167,11 @@ pub async fn join_network(
                 .join(config::global::FILENAME),
             base_dir_full.join(config::global::FILENAME),
         )
-        .await
-        .unwrap();
+        .await?;
 
         // Remove the default dir
         fs::remove_dir_all(unpack_dir.join(config::DEFAULT_BASE_DIR))
-            .await
-            .unwrap();
+            .await?;
     }
 
     // Move wasm-dir and update config if it's non-default
@@ -177,8 +183,7 @@ pub async fn join_network(
                     .join(config::DEFAULT_WASM_DIR),
                 base_dir_full.join(chain_id.as_str()).join(wasm_dir),
             )
-            .await
-            .unwrap();
+            .await?;
 
             // Update the config
             let wasm_dir = wasm_dir.clone();
@@ -191,14 +196,17 @@ pub async fn join_network(
                     global_args.mode.clone(),
                 );
                 config.wasm_dir = wasm_dir;
-                config.write(&base_dir, &chain_id, true).unwrap();
+                if let Err(error) = config.write(&base_dir, &chain_id, true) {
+                    // TODO: handle this in a factored out helper
+                    eprintln!("ERROR: {:?}", error);
+                };
             })
-            .await
-            .unwrap();
+            .await?;
         }
     }
 
     println!("Successfully configured for chain ID {}", chain_id);
+    Ok(())
 }
 
 /// Length of a Tendermint Node ID in bytes
