@@ -136,7 +136,6 @@ name = "anoma_apps"
 version = "0.5.0"
 dependencies = [
  "anoma",
- "anyhow",
  "ark-serialize",
  "ark-std",
  "async-std",
