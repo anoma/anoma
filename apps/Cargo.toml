@@ -65,6 +65,7 @@ testing = ["dev"]
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["wasm-runtime", "ferveo-tpke", "rand"]}
+anyhow = "*"
 ark-serialize = "0.3.0"
 ark-std = "0.3.0"
 async-std = {version = "1.9.0", features = ["unstable"]}
