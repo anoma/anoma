@@ -42,8 +42,23 @@ use crate::wasm_loader;
 pub const NET_ACCOUNTS_DIR: &str = "setup";
 pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 /// Github URL prefix of released Anoma network configs
-const RELEASE_PREFIX: &str =
+const DEFAULT_RELEASES_SERVER: &str =
     "https://github.com/heliaxdev/anoma-network-config/releases/download";
+
+/// Server serving release assets for Anoma chains
+struct ReleasesServer {
+    base_url: String,
+}
+
+impl ReleasesServer {
+    fn chain_tgz_url(&self, chain_id: &ChainId) -> String {
+        format!("{}/{}/{}.tar.gz", self.base_url, chain_id, chain_id)
+    }
+
+    fn masp_params_tgz_url(&self, chain_id: &ChainId) -> String {
+        format!("{}/{}/masp-params.tar.gz", self.base_url, chain_id)
+    }
+}
 
 /// Configure Anoma to join an existing network. The chain must be released in
 /// the <https://github.com/heliaxdev/anoma-network-config> repository.
@@ -88,36 +103,26 @@ pub async fn join_network(
     }
     let base_dir_full = fs::canonicalize(base_dir).await.unwrap();
 
-    let release_filename = format!("{}.tar.gz", chain_id);
-    let release_url =
-        format!("{}/{}/{}", RELEASE_PREFIX, chain_id, release_filename);
-    let cwd = env::current_dir().unwrap();
-
-    // Read or download the release archive
-    println!("Downloading config release from {} ...", release_url);
-    let release = match download_file(release_url).await {
-        Ok(contents) => contents,
-        Err(error) => {
-            eprintln!("Error downloading release: {}", error);
-            cli::safe_exit(1);
-        }
-    };
-
-    // Decode and unpack the archive
-    let mut decoder = GzDecoder::new(&release[..]);
-    let mut tar = String::new();
-    decoder.read_to_string(&mut tar).unwrap();
-    let mut archive = tar::Archive::new(tar.as_bytes());
-
     // If the base-dir is non-default, unpack the archive into a temp dir inside
     // first.
+    let cwd = env::current_dir().unwrap();
     let (unpack_dir, non_default_dir) =
         if base_dir_full != cwd.join(config::DEFAULT_BASE_DIR) {
             (base_dir.clone(), true)
         } else {
             (PathBuf::from_str(".").unwrap(), false)
         };
-    archive.unpack(&unpack_dir).unwrap();
+
+    // Download the release assets, extracting them into the unpack directory
+    let server = ReleasesServer{ base_url: DEFAULT_RELEASES_SERVER.to_string() };
+
+    let chain_tgz_url = server.chain_tgz_url(&chain_id);
+    println!("Downloading config release from {} ...", chain_tgz_url);
+    download_and_unpack(chain_tgz_url, &unpack_dir).await;
+
+    let masp_params_tgz_url = server.masp_params_tgz_url(&chain_id);
+    println!("Downloading MASP params from {} ...", masp_params_tgz_url);
+    download_and_unpack(masp_params_tgz_url, &unpack_dir).await;
 
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
@@ -174,6 +179,17 @@ pub async fn join_network(
             .await
             .unwrap();
     }
+
+    // Move the MASP params
+    fs::rename(
+        unpack_dir
+            .join(".masp-params"),
+        base_dir_full
+            .join(chain_id.as_str())
+            .join("masp"),
+    )
+        .await
+        .unwrap();
 
     // Move wasm-dir and update config if it's non-default
     if let Some(wasm_dir) = wasm_dir.as_ref() {
@@ -975,6 +991,37 @@ fn init_genesis_validator_aux(
     // TODO print in toml format after we have https://github.com/anoma/anoma/issues/425
     println!("Genesis validator config: {:#?}", genesis_validator);
     genesis_validator
+}
+
+async fn download_and_unpack(url: String, unpack_dir: &PathBuf) {
+    let contents = match download_file(url).await {
+        Ok(contents) => {
+            println!("Downloaded {} bytes", contents.len());
+            contents
+        },
+        Err(error) => {
+            eprintln!("Error downloading: {}", error);
+            cli::safe_exit(1);
+        }
+    };
+
+    // Decode and unpack the archive
+    let decoder = GzDecoder::new(&contents[..]);
+    let buf: Vec<u8> = decoder.bytes().map(|byte|
+        match byte {
+            Ok(byte) => byte,
+            Err(error) => {
+                eprintln!("Error decoding: {}", error);
+                cli::safe_exit(1);
+            }
+        }
+    ).collect();
+
+    let mut archive = tar::Archive::new(buf.as_slice());
+    if let Err(error) = archive.unpack(unpack_dir) {
+        eprintln!("Error unpacking: {}", error);
+        cli::safe_exit(1);
+    }
 }
 
 async fn download_file(url: impl AsRef<str>) -> reqwest::Result<Bytes> {
