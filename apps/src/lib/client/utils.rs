@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File, OpenOptions};
+use std::future::Future;
 use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
@@ -44,19 +45,19 @@ pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 const RELEASE_PREFIX: &str =
     "https://github.com/heliaxdev/anoma-network-config/releases/download";
 
-fn fatal_error(error: eyre::Error) {
-    eprintln!("ERROR: {}", error);
-    tracing::error!("{:?}", error);  // ?: is using {:?} the best way to pass the error to tracing?
-    cli::safe_exit(1);
+fn exit_if_error(result: eyre::Result<()>) {
+    if let Err(error) = result {
+        eprintln!("ERROR: {}", error);
+        tracing::error!("{:?}", error);  // ?: is using {:?} the best way to pass the error to tracing?
+        cli::safe_exit(1);
+    }
 }
 
 pub async fn join_network(
     global_args: args::Global,
     args::JoinNetwork { chain_id }: args::JoinNetwork,
 ) {
-    if let Err(error) = join_network_inner(global_args, args::JoinNetwork { chain_id }).await {
-        fatal_error(error);
-    }
+    exit_if_error(join_network_inner(global_args, args::JoinNetwork { chain_id }).await);
 }
 
 /// Configure Anoma to join an existing network. The chain must be released in
