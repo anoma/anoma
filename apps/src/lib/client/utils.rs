@@ -25,7 +25,6 @@ use tendermint_config::net::Address as TendermintAddress;
 use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::node::Id as TendermintNodeId;
-use thiserror::private::AsDynError;
 
 use crate::cli::context::ENV_VAR_WASM_DIR;
 use crate::cli::{self, args};
@@ -51,9 +50,16 @@ fn log_and_exit<E: std::error::Error>(error: E) {
     cli::safe_exit(1);
 }
 
-fn exit_if_error(result: eyre::Result<()>) {
+fn exit_if_error<E: AsRef<dyn std::error::Error>>(result: Result<(), E>) {
     if let Err(error) = result {
-        log_and_exit(error.as_dyn_error());
+        log_and_exit(error.as_ref());
+    }
+}
+
+// TODO: can this be combined with the above?
+fn exit_if_error2<E: std::error::Error>(result: Result<(), E>) {
+    if let Err(error) = result {
+        log_and_exit(error);
     }
 }
 
@@ -199,18 +205,15 @@ pub async fn join_network(
                         global_args.mode.clone(),
                     );
                     config.wasm_dir = wasm_dir;
-                    // TODO: use exit_if_error here?
-                    if let Err(error) = config.write(&base_dir, &chain_id, true) {
-                        eprintln!("ERROR: {:?}", error);
-                        log_and_exit(error);
-                    };
+
+                    exit_if_error2(config.write(&base_dir, &chain_id, true));
                 })
                     .await?;
             }
         }
 
         println!("Successfully configured for chain ID {}", chain_id);
-        Ok(())
+        eyre::Result::<()>::Ok(())
     }.await);
 }
 
