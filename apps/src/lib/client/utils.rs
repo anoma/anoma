@@ -25,6 +25,7 @@ use tendermint_config::net::Address as TendermintAddress;
 use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::node::Id as TendermintNodeId;
+use thiserror::private::AsDynError;
 
 use crate::cli::context::ENV_VAR_WASM_DIR;
 use crate::cli::{self, args};
@@ -44,11 +45,15 @@ pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 const RELEASE_PREFIX: &str =
     "https://github.com/heliaxdev/anoma-network-config/releases/download";
 
+fn log_and_exit<E: std::error::Error>(error: E) {
+    eprintln!("ERROR: {}", error);
+    tracing::error!("{:?}", error);  // ?: is using {:?} the best way to pass the error to tracing?
+    cli::safe_exit(1);
+}
+
 fn exit_if_error(result: eyre::Result<()>) {
     if let Err(error) = result {
-        eprintln!("ERROR: {}", error);
-        tracing::error!("{:?}", error);  // ?: is using {:?} the best way to pass the error to tracing?
-        cli::safe_exit(1);
+        log_and_exit(error.as_dyn_error());
     }
 }
 
@@ -194,9 +199,10 @@ pub async fn join_network(
                         global_args.mode.clone(),
                     );
                     config.wasm_dir = wasm_dir;
+                    // TODO: use exit_if_error here?
                     if let Err(error) = config.write(&base_dir, &chain_id, true) {
-                        // TODO: handle this in a factored out helper
                         eprintln!("ERROR: {:?}", error);
+                        log_and_exit(error);
                     };
                 })
                     .await?;
