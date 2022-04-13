@@ -50,14 +50,14 @@ fn log_and_exit<E: std::error::Error>(error: E) {
     cli::safe_exit(1);
 }
 
-fn exit_if_error<E: AsRef<dyn std::error::Error>>(result: Result<(), E>) {
+// TODO: can these two exit_if_error helpers be combined?
+fn exit_if_error_ref<E: AsRef<dyn std::error::Error>>(result: Result<(), E>) {
     if let Err(error) = result {
         log_and_exit(error.as_ref());
     }
 }
 
-// TODO: can this be combined with the above?
-fn exit_if_error2<E: std::error::Error>(result: Result<(), E>) {
+fn exit_if_error<E: std::error::Error>(result: Result<(), E>) {
     if let Err(error) = result {
         log_and_exit(error);
     }
@@ -69,7 +69,7 @@ pub async fn join_network(
     global_args: args::Global,
     args::JoinNetwork { chain_id }: args::JoinNetwork,
 ) {
-    exit_if_error(async {
+    exit_if_error_ref(async {
         use tokio::fs;
 
         let base_dir = &global_args.base_dir;
@@ -85,7 +85,7 @@ pub async fn join_network(
             if wasm_dir.is_absolute() {
                 eprintln!(
                     "The arg `--wasm-dir` cannot be an absolute path. It is \
-                 nested inside the chain directory."
+                    nested inside the chain directory."
                 );
                 cli::safe_exit(1);
             }
@@ -206,7 +206,7 @@ pub async fn join_network(
                     );
                     config.wasm_dir = wasm_dir;
 
-                    exit_if_error2(config.write(&base_dir, &chain_id, true));
+                    exit_if_error(config.write(&base_dir, &chain_id, true));
                 })
                     .await?;
             }
