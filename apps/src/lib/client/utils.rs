@@ -52,165 +52,160 @@ fn exit_if_error(result: eyre::Result<()>) {
     }
 }
 
+/// Configure Anoma to join an existing network. The chain must be released in
+/// the <https://github.com/heliaxdev/anoma-network-config> repository.
 pub async fn join_network(
     global_args: args::Global,
     args::JoinNetwork { chain_id }: args::JoinNetwork,
 ) {
-    exit_if_error(join_network_inner(global_args, args::JoinNetwork { chain_id }).await);
-}
+    exit_if_error(async {
+        use tokio::fs;
 
-/// Configure Anoma to join an existing network. The chain must be released in
-/// the <https://github.com/heliaxdev/anoma-network-config> repository.
-pub async fn join_network_inner(
-    global_args: args::Global,
-    args::JoinNetwork { chain_id }: args::JoinNetwork,
-) -> eyre::Result<()> {
-    use tokio::fs;
-
-    let base_dir = &global_args.base_dir;
-    let wasm_dir = global_args.wasm_dir.as_ref().cloned().or_else(|| {
-        if let Ok(wasm_dir) = env::var(ENV_VAR_WASM_DIR) {
-            let wasm_dir: PathBuf = wasm_dir.into();
-            Some(wasm_dir)
-        } else {
-            None
-        }
-    });
-    if let Some(wasm_dir) = wasm_dir.as_ref() {
-        if wasm_dir.is_absolute() {
-            eprintln!(
-                "The arg `--wasm-dir` cannot be an absolute path. It is \
+        let base_dir = &global_args.base_dir;
+        let wasm_dir = global_args.wasm_dir.as_ref().cloned().or_else(|| {
+            if let Ok(wasm_dir) = env::var(ENV_VAR_WASM_DIR) {
+                let wasm_dir: PathBuf = wasm_dir.into();
+                Some(wasm_dir)
+            } else {
+                None
+            }
+        });
+        if let Some(wasm_dir) = wasm_dir.as_ref() {
+            if wasm_dir.is_absolute() {
+                eprintln!(
+                    "The arg `--wasm-dir` cannot be an absolute path. It is \
                  nested inside the chain directory."
-            );
-            cli::safe_exit(1);
+                );
+                cli::safe_exit(1);
+            }
         }
-    }
-    if let Err(err) = fs::canonicalize(base_dir).await {
-        if err.kind() == std::io::ErrorKind::NotFound {
-            // If the base-dir doesn't exist yet, create it
-            fs::create_dir_all(base_dir).await?;
-        }
-    } else {
-        // If the base-dir exists, check if it's already got this chain ID
-        if fs::canonicalize(base_dir.join(chain_id.as_str()))
-            .await
-            .is_ok()
-        {
-            eprintln!("The chain directory for {} already exists.", chain_id);
-            cli::safe_exit(1);
-        }
-    }
-    let base_dir_full = fs::canonicalize(base_dir).await?;
-
-    let release_filename = format!("{}.tar.gz", chain_id);
-    let release_url =
-        format!("{}/{}/{}", RELEASE_PREFIX, chain_id, release_filename);
-    let cwd = env::current_dir()?;
-
-    // Read or download the release archive
-    println!("Downloading config release from {} ...", release_url);
-    let release = download_file(release_url).await;
-
-    // Decode and unpack the archive
-    let mut decoder = GzDecoder::new(&release[..]);
-    let mut tar = String::new();
-    decoder.read_to_string(&mut tar)?;
-    let mut archive = tar::Archive::new(tar.as_bytes());
-
-    // If the base-dir is non-default, unpack the archive into a temp dir inside
-    // first.
-    let (unpack_dir, non_default_dir) =
-        if base_dir_full != cwd.join(config::DEFAULT_BASE_DIR) {
-            (base_dir.clone(), true)
+        if let Err(err) = fs::canonicalize(base_dir).await {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                // If the base-dir doesn't exist yet, create it
+                fs::create_dir_all(base_dir).await?;
+            }
         } else {
-            (PathBuf::from_str(".")?, false)
-        };
-    archive.unpack(&unpack_dir)?;
+            // If the base-dir exists, check if it's already got this chain ID
+            if fs::canonicalize(base_dir.join(chain_id.as_str()))
+                .await
+                .is_ok()
+            {
+                eprintln!("The chain directory for {} already exists.", chain_id);
+                cli::safe_exit(1);
+            }
+        }
+        let base_dir_full = fs::canonicalize(base_dir).await?;
 
-    // Rename the base-dir from the default and rename wasm-dir, if non-default.
-    if non_default_dir {
-        // For compatibility for networks released with Anoma <= v0.4:
-        // The old releases include the WASM directory at root path of the
-        // archive. This has been moved into the chain directory, so if the
-        // WASM dir is found at the old path, we move it to the new path.
-        if let Ok(wasm_dir) =
+        let release_filename = format!("{}.tar.gz", chain_id);
+        let release_url =
+            format!("{}/{}/{}", RELEASE_PREFIX, chain_id, release_filename);
+        let cwd = env::current_dir()?;
+
+        // Read or download the release archive
+        println!("Downloading config release from {} ...", release_url);
+        let release = download_file(release_url).await;
+
+        // Decode and unpack the archive
+        let mut decoder = GzDecoder::new(&release[..]);
+        let mut tar = String::new();
+        decoder.read_to_string(&mut tar)?;
+        let mut archive = tar::Archive::new(tar.as_bytes());
+
+        // If the base-dir is non-default, unpack the archive into a temp dir inside
+        // first.
+        let (unpack_dir, non_default_dir) =
+            if base_dir_full != cwd.join(config::DEFAULT_BASE_DIR) {
+                (base_dir.clone(), true)
+            } else {
+                (PathBuf::from_str(".")?, false)
+            };
+        archive.unpack(&unpack_dir)?;
+
+        // Rename the base-dir from the default and rename wasm-dir, if non-default.
+        if non_default_dir {
+            // For compatibility for networks released with Anoma <= v0.4:
+            // The old releases include the WASM directory at root path of the
+            // archive. This has been moved into the chain directory, so if the
+            // WASM dir is found at the old path, we move it to the new path.
+            if let Ok(wasm_dir) =
             fs::canonicalize(unpack_dir.join(config::DEFAULT_WASM_DIR)).await
-        {
+            {
+                fs::rename(
+                    &wasm_dir,
+                    unpack_dir
+                        .join(config::DEFAULT_BASE_DIR)
+                        .join(chain_id.as_str())
+                        .join(config::DEFAULT_WASM_DIR),
+                )
+                    .await?;
+            }
+
+            // Move the chain dir
             fs::rename(
-                &wasm_dir,
                 unpack_dir
                     .join(config::DEFAULT_BASE_DIR)
-                    .join(chain_id.as_str())
-                    .join(config::DEFAULT_WASM_DIR),
+                    .join(chain_id.as_str()),
+                base_dir_full.join(chain_id.as_str()),
             )
-            .await?;
+                .await?;
+
+            // Move the genesis file
+            fs::rename(
+                unpack_dir
+                    .join(config::DEFAULT_BASE_DIR)
+                    .join(format!("{}.toml", chain_id.as_str())),
+                base_dir_full.join(format!("{}.toml", chain_id.as_str())),
+            )
+                .await?;
+
+            // Move the global config
+            fs::rename(
+                unpack_dir
+                    .join(config::DEFAULT_BASE_DIR)
+                    .join(config::global::FILENAME),
+                base_dir_full.join(config::global::FILENAME),
+            )
+                .await?;
+
+            // Remove the default dir
+            fs::remove_dir_all(unpack_dir.join(config::DEFAULT_BASE_DIR))
+                .await?;
         }
 
-        // Move the chain dir
-        fs::rename(
-            unpack_dir
-                .join(config::DEFAULT_BASE_DIR)
-                .join(chain_id.as_str()),
-            base_dir_full.join(chain_id.as_str()),
-        )
-        .await?;
+        // Move wasm-dir and update config if it's non-default
+        if let Some(wasm_dir) = wasm_dir.as_ref() {
+            if wasm_dir.to_string_lossy() != config::DEFAULT_WASM_DIR {
+                tokio::fs::rename(
+                    base_dir_full
+                        .join(chain_id.as_str())
+                        .join(config::DEFAULT_WASM_DIR),
+                    base_dir_full.join(chain_id.as_str()).join(wasm_dir),
+                )
+                    .await?;
 
-        // Move the genesis file
-        fs::rename(
-            unpack_dir
-                .join(config::DEFAULT_BASE_DIR)
-                .join(format!("{}.toml", chain_id.as_str())),
-            base_dir_full.join(format!("{}.toml", chain_id.as_str())),
-        )
-        .await?;
-
-        // Move the global config
-        fs::rename(
-            unpack_dir
-                .join(config::DEFAULT_BASE_DIR)
-                .join(config::global::FILENAME),
-            base_dir_full.join(config::global::FILENAME),
-        )
-        .await?;
-
-        // Remove the default dir
-        fs::remove_dir_all(unpack_dir.join(config::DEFAULT_BASE_DIR))
-            .await?;
-    }
-
-    // Move wasm-dir and update config if it's non-default
-    if let Some(wasm_dir) = wasm_dir.as_ref() {
-        if wasm_dir.to_string_lossy() != config::DEFAULT_WASM_DIR {
-            tokio::fs::rename(
-                base_dir_full
-                    .join(chain_id.as_str())
-                    .join(config::DEFAULT_WASM_DIR),
-                base_dir_full.join(chain_id.as_str()).join(wasm_dir),
-            )
-            .await?;
-
-            // Update the config
-            let wasm_dir = wasm_dir.clone();
-            let base_dir = base_dir.clone();
-            let chain_id = chain_id.clone();
-            tokio::task::spawn_blocking(move || {
-                let mut config = Config::load(
-                    &base_dir,
-                    &chain_id,
-                    global_args.mode.clone(),
-                );
-                config.wasm_dir = wasm_dir;
-                if let Err(error) = config.write(&base_dir, &chain_id, true) {
-                    // TODO: handle this in a factored out helper
-                    eprintln!("ERROR: {:?}", error);
-                };
-            })
-            .await?;
+                // Update the config
+                let wasm_dir = wasm_dir.clone();
+                let base_dir = base_dir.clone();
+                let chain_id = chain_id.clone();
+                tokio::task::spawn_blocking(move || {
+                    let mut config = Config::load(
+                        &base_dir,
+                        &chain_id,
+                        global_args.mode.clone(),
+                    );
+                    config.wasm_dir = wasm_dir;
+                    if let Err(error) = config.write(&base_dir, &chain_id, true) {
+                        // TODO: handle this in a factored out helper
+                        eprintln!("ERROR: {:?}", error);
+                    };
+                })
+                    .await?;
+            }
         }
-    }
 
-    println!("Successfully configured for chain ID {}", chain_id);
-    Ok(())
+        println!("Successfully configured for chain ID {}", chain_id);
+        Ok(())
+    }.await);
 }
 
 /// Length of a Tendermint Node ID in bytes
