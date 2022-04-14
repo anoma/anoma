@@ -64,6 +64,7 @@ use group::cofactor::CofactorGroup;
 use masp_primitives::zip32::ExtendedFullViewingKey;
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::keys::FullViewingKey;
+use zcash_primitives::merkle_tree::MerklePath;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -481,16 +482,24 @@ pub async fn fetch_shielded_transfers(
 
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
-
 pub struct TxContext {
+    /// Position of the next transactions to be processed
     tx_pos: usize,
+    /// The commitment tree produced by scanning all transactions up to tx_pos
     tree: CommitmentTree<Node>,
+    /// Maps viewing keys to applicable note positions
     vks: HashMap<ViewingKey, HashSet<usize>>,
+    /// Maps a nullifier to the note position to which it applies
     nf_map: HashMap<[u8; 32], usize>,
+    /// Maps note positions to their corresponding notes
     note_map: HashMap<usize, Note>,
+    /// Maps note positions to their corresponding memos
     memo_map: HashMap<usize, Memo>,
+    /// Maps note positions to the diversifier of their payment address
     div_map: HashMap<usize, Diversifier>,
+    /// Maps note positions to their witness (used to make merkle paths)
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
+    /// The set of note positions that have been spent
     spents: HashSet<usize>,
 }
 
@@ -513,67 +522,138 @@ impl Default for TxContext {
     }
 }
 
-/// Applies the given transaction to the supplied context. More precisely, the
-/// shielded transaction's outputs are added to the commitment tree. Newly
-/// discovered notes are associated to the supplied viewing keys. Note
-/// nullifiers are mapped to their originating notes. Note positions are
-/// associated to notes, memos, and diversifiers. And the set of notes that we
-/// have spent are updated. The witness map is maintained to make it easier to
-/// construct note merkle paths in other code. See
-/// https://zips.z.cash/protocol/protocol.pdf#scan
-
-fn scan_tx(
-    tx: &Transaction,
-    ctx: &mut TxContext,
-) -> Result<(), ()> {
-    // Listen for notes sent to our viewing keys
-    for so in &(*tx).shielded_outputs {
-        // Create merkle tree leaf node from note commitment
-        let node = Node::new(so.cmu.to_repr());
-        // Update each merkle tree in the witness map with the latest addition
-        for (_, witness) in ctx.witness_map.iter_mut() {
-            witness.append(node)?;
+impl TxContext {
+    /// Initialize a shielded transaction context that identifies notes
+    /// decryptable by any viewing key in the given set 
+    pub fn new(vks: &Vec<ViewingKey>) -> TxContext {
+        let mut ctx = Self::default();
+        for vk in vks {
+            ctx.vks.entry(*vk).or_insert(HashSet::new());
         }
-        let note_pos = ctx.tree.size();
-        ctx.tree.append(node)?;
-        // Finally, make it easier to construct merkle paths to this new note
-        let witness = IncrementalWitness::<Node>::from_tree(&ctx.tree);
-        ctx.witness_map.insert(note_pos, witness);
-        // Let's try to see if any of our viewing keys can decrypt latest note
-        for (vk, notes) in ctx.vks.iter_mut() {
-            let decres = try_sapling_note_decryption::<TestNetwork>(
-                0,
-                &vk.ivk().0,
-                &so.ephemeral_key.into_subgroup().unwrap(),
-                &so.cmu,
-                &so.enc_ciphertext
-            );
-            // So this current viewing key does decrypt this current note...
-            if let Some((note, pa, memo)) = decres {
-                // Add this note to list of notes decrypted by this viewing key
-                notes.insert(note_pos);
-                // Compute the nullifier now to quickly recognize when spent
-                let nf = note.nf(vk, note_pos.try_into().unwrap());
-                ctx.note_map.insert(note_pos, note);
-                ctx.memo_map.insert(note_pos, memo);
-                // The payment address' diversifier is required to spend note
-                ctx.div_map.insert(note_pos, *pa.diversifier());
-                ctx.nf_map.insert(nf.0.try_into().unwrap(), note_pos);
-                break;
+        ctx
+    }
+    
+    /// Return the position of the current transaction
+    pub fn tx_pos(&self) -> usize {
+        self.tx_pos
+    }
+    
+    /// Applies the given transaction to the supplied context. More precisely, the
+    /// shielded transaction's outputs are added to the commitment tree. Newly
+    /// discovered notes are associated to the supplied viewing keys. Note
+    /// nullifiers are mapped to their originating notes. Note positions are
+    /// associated to notes, memos, and diversifiers. And the set of notes that we
+    /// have spent are updated. The witness map is maintained to make it easier to
+    /// construct note merkle paths in other code. See
+    /// https://zips.z.cash/protocol/protocol.pdf#scan
+    pub fn scan_tx(
+        &mut self,
+        tx: &Transaction,
+    ) -> Result<(), ()> {
+        // Listen for notes sent to our viewing keys
+        for so in &(*tx).shielded_outputs {
+            // Create merkle tree leaf node from note commitment
+            let node = Node::new(so.cmu.to_repr());
+            // Update each merkle tree in the witness map with the latest addition
+            for (_, witness) in self.witness_map.iter_mut() {
+                witness.append(node)?;
+            }
+            let note_pos = self.tree.size();
+            self.tree.append(node)?;
+            // Finally, make it easier to construct merkle paths to this new note
+            let witness = IncrementalWitness::<Node>::from_tree(&self.tree);
+            self.witness_map.insert(note_pos, witness);
+            // Let's try to see if any of our viewing keys can decrypt latest note
+            for (vk, notes) in self.vks.iter_mut() {
+                let decres = try_sapling_note_decryption::<TestNetwork>(
+                    0,
+                    &vk.ivk().0,
+                    &so.ephemeral_key.into_subgroup().unwrap(),
+                    &so.cmu,
+                    &so.enc_ciphertext
+                );
+                // So this current viewing key does decrypt this current note...
+                if let Some((note, pa, memo)) = decres {
+                    // Add this note to list of notes decrypted by this viewing key
+                    notes.insert(note_pos);
+                    // Compute the nullifier now to quickly recognize when spent
+                    let nf = note.nf(vk, note_pos.try_into().unwrap());
+                    self.note_map.insert(note_pos, note);
+                    self.memo_map.insert(note_pos, memo);
+                    // The payment address' diversifier is required to spend note
+                    self.div_map.insert(note_pos, *pa.diversifier());
+                    self.nf_map.insert(nf.0.try_into().unwrap(), note_pos);
+                    break;
+                }
             }
         }
-    }
-    // Cancel out those of our notes that have been spent
-    for ss in &(*tx).shielded_spends {
-        // If the shielded spend's nullifier is in our map, then target note
-        // is rendered unusable
-        if let Some(note_pos) = ctx.nf_map.get(&ss.nullifier) {
-            ctx.spents.insert(*note_pos);
+        // Cancel out those of our notes that have been spent
+        for ss in &(*tx).shielded_spends {
+            // If the shielded spend's nullifier is in our map, then target note
+            // is rendered unusable
+            if let Some(note_pos) = self.nf_map.get(&ss.nullifier) {
+                self.spents.insert(*note_pos);
+            }
         }
+        // To avoid state corruption caused by accidentaly replaying transaction
+        self.tx_pos += 1;
+        Ok(())
     }
-    // To avoid state corruption caused by accidentaly replaying transaction
-    ctx.tx_pos += 1;
-    Ok(())
+
+    /// Compute the total unspent notes associated with the viewing key in the
+    /// context. If the key is not in the context, then we do not know the balance
+    /// and hence we return None.
+    pub fn compute_shielded_balance(&self, vk: &ViewingKey) -> Option<Amount> {
+        // Cannot query the balance of a key that's not in the map
+        if !self.vks.contains_key(vk) {
+            return None
+        }
+        let mut val_acc = Amount::zero();
+        // Retrieve the notes that can be spent by this key
+        if let Some(avail_notes) = self.vks.get(vk) {
+            for note_idx in avail_notes {
+                // Spent notes cannot contribute a new transaction's pool
+                if self.spents.contains(note_idx) { continue; }
+                // Get note associated with this ID
+                let note = self.note_map.get(note_idx).unwrap().clone();
+                // Finally add value to multi-asset accumulator
+                val_acc += Amount::from(note.asset_type, note.value)
+                    .expect("found note with invalid value or asset type");
+            }
+        }
+        Some(val_acc)
+    }
+
+    pub fn collect_unspent_notes(
+        &self,
+        vk: &ViewingKey,
+        amt: u64,
+        asset_type: AssetType
+    ) -> (u64, Vec<(Diversifier, Note, MerklePath<Node>)>) {
+        let mut val_acc = 0;
+        let mut notes = Vec::new();
+        // Retrieve the notes that can be spent by this key
+        if let Some(avail_notes) = self.vks.get(&vk) {
+            for note_idx in avail_notes {
+                // No more transaction inputs are required once we have met
+                // the target amount
+                if val_acc >= amt { break; }
+                // Spent notes cannot contribute a new transaction's pool
+                if self.spents.contains(note_idx) { continue; }
+                // Get note, merkle path, diversifier associated with this ID
+                let note = self.note_map.get(note_idx).unwrap().clone();
+                // Note with distinct asset type cannot be used as input to this
+                // transaction
+                if note.asset_type != asset_type { continue; }
+                let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
+                let diversifier = self.div_map.get(note_idx).unwrap();
+                val_acc += note.value;
+                // Commit this note to our transaction
+                notes.push((*diversifier, note, merkle_path));
+            }
+        }
+        (val_acc, notes)
+    }
 }
 
 /// Make shielded components to embed within a Transfer object. If no shielded
@@ -620,26 +700,15 @@ async fn gen_shielded_transfer(
     // If there are shielded inputs
     if let Some(sk) = spending_key {
         let sk = sk.into();
-        let mut val_acc = 0;
-        // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = tx_ctx.vks.get(&to_viewing_key(&sk).vk) {
-            for note_idx in avail_notes {
-                // No more transaction inputs are required once we have met
-                // the target amount
-                if val_acc >= amt { break; }
-                // Spent notes cannot contribute a new transaction's pool
-                if tx_ctx.spents.contains(note_idx) { continue; }
-                // Get note, merkle path, diversifier associated with this ID
-                let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
-                // Note with distinct asset type cannot be used as input to this
-                // transaction
-                if note.asset_type != asset_type { continue; }
-                let merkle_path = tx_ctx.witness_map.get(note_idx).unwrap().path().unwrap();
-                let diversifier = tx_ctx.div_map.get(note_idx).unwrap();
-                val_acc += note.value;
-                // Commit this note to our transaction
-                builder.add_sapling_spend(sk.clone(), *diversifier, note, merkle_path)?;
-            }
+        // Locate unspent notes that can help us meet the transaaction amount
+        let (val_acc, unspent_notes) = tx_ctx.collect_unspent_notes(
+            &to_viewing_key(&sk).vk,
+            amt,
+            asset_type
+        );
+        // Commit the notes found to our transaction
+        for (diversifier, note, merkle_path) in unspent_notes {
+            builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
         }
         // If there is change leftover send it back to this spending key
         if val_acc > amt {
@@ -710,45 +779,20 @@ pub async fn load_shielded_context(
 ) -> TxContext {
     // Load all transactions accepted until this point
     let txs = fetch_shielded_transfers(ledger_address).await;
-    let mut tx_ctx = TxContext::default();
     // Load the viewing keys corresponding to given spending keys into context
+    let mut vks = Vec::new();
     for esk in sks {
-        let vk = to_viewing_key(esk).vk;
-        tx_ctx.vks.entry(vk.into()).or_insert(HashSet::new());
+        vks.push(to_viewing_key(esk).vk.into());
     }
     for vk in fvks {
-        tx_ctx.vks.entry(*vk).or_insert(HashSet::new());
+        vks.push(*vk);
     }
     // Apply the loaded transactions to our context
-    while tx_ctx.tx_pos < txs.len() {
-        scan_tx(&txs[tx_ctx.tx_pos], &mut tx_ctx).expect("transaction scanned");
+    let mut tx_ctx = TxContext::new(&vks);
+    while tx_ctx.tx_pos() < txs.len() {
+        tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
     }
     tx_ctx
-}
-
-/// Compute the total unspent notes associated with the viewing key in the
-/// context. If the key is not in the context, then we do not know the balance
-/// and hence we return None.
-
-pub fn compute_shielded_balance(tx_ctx: &TxContext, vk: &ViewingKey) -> Option<Amount> {
-    // Cannot query the balance of a key that's not in the map
-    if !tx_ctx.vks.contains_key(vk) {
-        return None
-    }
-    let mut val_acc = Amount::zero();
-    // Retrieve the notes that can be spent by this key
-    if let Some(avail_notes) = tx_ctx.vks.get(vk) {
-        for note_idx in avail_notes {
-            // Spent notes cannot contribute a new transaction's pool
-            if tx_ctx.spents.contains(note_idx) { continue; }
-            // Get note associated with this ID
-            let note = tx_ctx.note_map.get(note_idx).unwrap().clone();
-            // Finally add value to multi-asset accumulator
-            val_acc += Amount::from(note.asset_type, note.value)
-                .expect("found note with invalid value or asset type");
-        }
-    }
-    Some(val_acc)
 }
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
