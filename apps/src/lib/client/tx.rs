@@ -624,6 +624,10 @@ impl TxContext {
         Some(val_acc)
     }
 
+    /// Collect enough unspent notes in this context to exceed the given amount
+    /// of the specified asset type. Return the total value accumulated plus
+    /// notes and the corresponding diversifiers/merkle paths that were used to
+    /// achieve the total value.
     pub fn collect_unspent_notes(
         &self,
         vk: &ViewingKey,
