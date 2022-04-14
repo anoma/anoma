@@ -152,6 +152,9 @@ pub mod genesis_config {
         /// not part of the gossipsub where intents are being propagated and
         /// hence cannot run matchmakers
         pub intent_gossip_seed: Option<bool>,
+        /// Tendermint node key is used to derive Tendermint node ID for node
+        /// authentication
+        pub tendermint_node_key: Option<HexString>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
