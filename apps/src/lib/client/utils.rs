@@ -6,9 +6,9 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use anoma::types::address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
-use anoma::types::{address, token};
 use borsh::BorshSerialize;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
@@ -29,9 +29,10 @@ use tendermint_stable::node::Id as TendermintNodeId;
 use crate::cli::context::ENV_VAR_WASM_DIR;
 use crate::cli::{self, args};
 use crate::config::genesis::genesis_config;
+use crate::config::genesis::genesis_config::HexString;
 use crate::config::global::GlobalConfig;
 use crate::config::{
-    self, genesis, Config, IntentGossiper, PeerAddress, TendermintMode,
+    self, Config, IntentGossiper, PeerAddress, TendermintMode,
 };
 use crate::node::gossip;
 use crate::node::ledger::tendermint_node;
@@ -838,11 +839,7 @@ pub fn init_genesis_validator(
 ) {
     let setup_dir = global_args.base_dir.join(PREGENESIS_DIR);
     let mut wallet = Wallet::load_or_new(&setup_dir);
-    init_genesis_validator_aux(
-        &mut wallet,
-        alias,
-        unsafe_dont_encrypt,
-    );
+    init_genesis_validator_aux(&mut wallet, alias, unsafe_dont_encrypt);
 }
 
 /// Initialize genesis validator's address, staking reward address,
@@ -918,32 +915,31 @@ fn init_genesis_validator_aux(
     println!("Protocol signing key {}", &protocol_key);
     println!("DKG public key {}", &dkg_public_key);
 
-    let genesis_validator = genesis::Validator {
-        pos_data: anoma::ledger::pos::GenesisValidator {
-            address: validator_address,
-            staking_reward_address: rewards_address,
-            tokens: token::Amount::whole(200_000),
-            consensus_key: consensus_key.ref_to(),
-            staking_reward_key: rewards_key.ref_to(),
-        },
-        account_key: validator_key.ref_to(),
-        protocol_key,
-        dkg_public_key,
-        non_staked_balance: token::Amount::whole(100_000),
-        // TODO replace with https://github.com/anoma/anoma/issues/25)
-        validator_vp_code_path: "wasm/vp_user.wasm".into(),
-        // TODO: very fake hash
-        validator_vp_sha256: [0; 32],
-        reward_vp_code_path: "wasm/vp_user.wasm".into(),
-        // TODO: very fake hash
-        reward_vp_sha256: [0; 32],
+    let validator_config = genesis_config::ValidatorConfig {
+        consensus_public_key: Some(HexString(
+            consensus_key.ref_to().to_string(),
+        )),
+        account_public_key: Some(HexString(validator_key.ref_to().to_string())),
+        staking_reward_public_key: Some(HexString(
+            rewards_key.ref_to().to_string(),
+        )),
+        protocol_public_key: Some(HexString(protocol_key.to_string())),
+        dkg_public_key: Some(HexString(dkg_public_key.to_string())),
+        address: None,
+        staking_reward_address: None,
+        tokens: 0,
+        non_staked_balance: 0,
+        validator_vp: None,
+        staking_reward_vp: None,
+        net_address: None,
+        matchmaker_account: None,
+        matchmaker_code: None,
+        matchmaker_tx: None,
+        intent_gossip_seed: None,
     };
-    println!("Validator account key {}", validator_key.ref_to());
-    println!("Consensus key {}", consensus_key.ref_to());
-    println!("Staking reward key {}", rewards_key.ref_to());
-    // TODO print in toml format after we have https://github.com/anoma/anoma/issues/425
-    println!("Genesis validator config: {:#?}", genesis_validator);
-    genesis_validator
+    // this prints the validator block in the same way as the genesis config TOML would look like
+    println!("[validator.{}]", validator_address_alias);
+    println!("{}", toml::to_string(&validator_config).unwrap());
 }
 
 async fn download_file(url: impl AsRef<str>) -> Vec<u8> {
