@@ -44,6 +44,9 @@ pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 const RELEASE_PREFIX: &str =
     "https://github.com/heliaxdev/anoma-network-config/releases/download";
 
+/// We do pregenesis validator set up in this directory
+const PREGENESIS_DIR: &str = "pregenesis";
+
 /// Configure Anoma to join an existing network. The chain must be released in
 /// the <https://github.com/heliaxdev/anoma-network-config> repository.
 pub async fn join_network(
@@ -830,20 +833,13 @@ pub fn init_genesis_validator(
     global_args: args::Global,
     args::InitGenesisValidator {
         alias,
-        chain_id,
         unsafe_dont_encrypt,
     }: args::InitGenesisValidator,
 ) {
-    let chain_dir = global_args.base_dir.join(chain_id.as_str());
-    let mut wallet = Wallet::load_or_new(&chain_dir);
-    let config = Config::load(
-        &global_args.base_dir,
-        &chain_id,
-        Some(TendermintMode::Validator),
-    );
+    let setup_dir = global_args.base_dir.join(PREGENESIS_DIR);
+    let mut wallet = Wallet::load_or_new(&setup_dir);
     init_genesis_validator_aux(
         &mut wallet,
-        &config,
         alias,
         unsafe_dont_encrypt,
     );
@@ -854,7 +850,6 @@ pub fn init_genesis_validator(
 /// it in the ledger's node.
 fn init_genesis_validator_aux(
     wallet: &mut Wallet,
-    config: &Config,
     alias: String,
     unsafe_dont_encrypt: bool,
 ) -> genesis::Validator {
@@ -903,14 +898,6 @@ fn init_genesis_validator_aux(
         .public();
     wallet.add_validator_data(validator_address.clone(), validator_keys);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
-
-    let tendermint_home = &config.ledger.tendermint_dir();
-    tendermint_node::write_validator_key(
-        tendermint_home,
-        &validator_address,
-        &consensus_key,
-    );
-    tendermint_node::write_validator_state(tendermint_home);
 
     println!();
     println!("The validator's addresses and keys were stored in the wallet:");

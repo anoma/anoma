@@ -2603,25 +2603,21 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct InitGenesisValidator {
         pub alias: String,
-        pub chain_id: ChainId,
         pub unsafe_dont_encrypt: bool,
     }
 
     impl Args for InitGenesisValidator {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
-            let chain_id = CHAIN_ID.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
             Self {
                 alias,
-                chain_id,
                 unsafe_dont_encrypt,
             }
         }
 
         fn def(app: App) -> App {
             app.arg(ALIAS.def().about("The validator address alias."))
-                .arg(CHAIN_ID.def().about("The chain ID."))
                 .arg(UNSAFE_DONT_ENCRYPT.def().about(
                     "UNSAFE: Do not encrypt the generated keypairs. Do not \
                      use this for keys used in a live network.",
