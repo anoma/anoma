@@ -2004,7 +2004,7 @@ pub mod args {
         }
 
         fn def(app: App) -> App {
-            app.add_args::<Tx>()
+            app.add_args::<Query>()
                 .arg(PROPOSAL_ID_OPT.def().about("The proposal identifier."))
                 .arg(
                     PROPOSAL_OFFLINE

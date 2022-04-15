@@ -94,20 +94,11 @@ where
             let (validator_voters, delegator_voters, validators) =
                 get_votes(storage, proposal_id, start_epoch);
             for validator_addr in validator_voters.keys() {
-                match get_bond_amount_at(
-                    storage,
-                    validator_addr,
-                    validator_addr,
-                    start_epoch,
-                ) {
-                    Some(amount) => {
-                        bond_data.insert(
-                            validator_addr.clone(),
-                            (validator_addr.clone(), amount),
-                        );
-                    }
-                    None => continue,
-                };
+                let validator_bond_amount = get_validator_stake(storage, start_epoch, validator_addr);
+                bond_data.insert(
+                    validator_addr.clone(),
+                    (validator_addr.clone(), validator_bond_amount),
+                );
                 for delegator_addr in delegator_voters.keys() {
                     match get_bond_amount_at(
                         storage,
@@ -340,24 +331,35 @@ where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
-    let mut total = token::Amount::from(0);
+    return validators.iter().fold(token::Amount::from(0), |mut acc, validator| {
+        acc += get_validator_stake(storage, epoch, validator);
+        acc
+    });
+}
 
-    for validator in validators {
-        let total_delta_key = pos::validator_total_deltas_key(validator);
-        let (total_delta_bytes, _) = storage
-            .read(&total_delta_key)
-            .expect("Validator delta should be defined.");
-        if let Some(total_delta_bytes) = total_delta_bytes {
-            let total_delta =
-                ValidatorTotalDeltas::try_from_slice(&total_delta_bytes[..])
-                    .ok();
-            if let Some(total_delta) = total_delta {
-                let epoched_total_delta = total_delta.get(epoch);
-                if let Some(epoched_total_delta) = epoched_total_delta {
-                    total += token::Amount::from_change(epoched_total_delta);
-                }
+fn get_validator_stake<D, H>(
+    storage: &Storage<D, H>,
+    epoch: Epoch,
+    validator: &Address,
+) -> token::Amount
+where
+    D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
+    H: StorageHasher + Sync + 'static,
+{
+    let total_delta_key = pos::validator_total_deltas_key(validator);
+    let (total_delta_bytes, _) = storage
+        .read(&total_delta_key)
+        .expect("Validator delta should be defined.");
+    if let Some(total_delta_bytes) = total_delta_bytes {
+        let total_delta =
+            ValidatorTotalDeltas::try_from_slice(&total_delta_bytes[..])
+                .ok();
+        if let Some(total_delta) = total_delta {
+            let epoched_total_delta = total_delta.get(epoch);
+            if let Some(epoched_total_delta) = epoched_total_delta {
+                return token::Amount::from_change(epoched_total_delta);
             }
         }
     }
-    total
+    return token::Amount::from(0);
 }

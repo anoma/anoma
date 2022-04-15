@@ -481,12 +481,7 @@ pub async fn query_proposal_result(
                                 );
                             }
                         }
-                        let all_validators: Vec<Address> =
-                            get_all_validators(&client, proposal.tally_epoch)
-                                .await
-                                .keys()
-                                .cloned()
-                                .collect();
+                        let all_validators = get_all_validators(&client, proposal.tally_epoch).await;
                         println!(
                             "{:4}Result: {}",
                             "",
@@ -1572,7 +1567,7 @@ pub async fn get_votes(
                 let address = gov_storage::get_voter_address(&key)
                     .expect("Vote key should contains an address.")
                     .clone();
-                if validators.contains_key(&address) {
+                if validators.contains(&address) {
                     validator_voters.insert(address, vote);
                 } else {
                     delegator_voters.insert(address, vote);
@@ -1584,13 +1579,13 @@ pub async fn get_votes(
         (
             delegator_voters,
             validator_voters,
-            validators.keys().cloned().collect(),
+            validators
         )
     } else {
         (
             HashMap::new(),
             HashMap::new(),
-            validators.keys().cloned().collect(),
+            validators
         )
     }
 }
@@ -1602,16 +1597,16 @@ pub async fn compute_tally(
     validator_voters: &HashMap<Address, ProposalVote>,
     validators: &[Address],
 ) -> TallyResult {
+    println!("val: {:?}", validator_voters);
+    println!("del: {:?}", delegator_voters);
+    println!("act: {:?}", active_validators);
     let mut bond_data: HashMap<Address, (Address, token::Amount)> =
         HashMap::new();
     for validator_addr in validator_voters.keys() {
-        let bond_amount =
-            get_bond_amount_at(client, validator_addr, validator_addr, epoch)
-                .await
-                .expect("Validator self-bond must exist.");
+        let total_validator_amount = get_validator_stake(&client, epoch, validator_addr).await;
         bond_data.insert(
             validator_addr.clone(),
-            (validator_addr.clone(), bond_amount),
+            (validator_addr.clone(), total_validator_amount),
         );
         for delegator_addr in delegator_voters.keys() {
             match get_bond_amount_at(
@@ -1644,7 +1639,7 @@ pub async fn compute_tally(
     }
 
     for (addr, vote) in delegator_voters {
-        if !bond_data.contains_key(&addr) {
+        if !bond_data.contains_key(addr) {
             if vote.is_yay() {
                 for validator_addr in validators {
                     if bond_data.contains_key(validator_addr) {
@@ -1664,16 +1659,19 @@ pub async fn compute_tally(
                 }
             }
         } else {
-            let delegator_data = bond_data.get(&addr).unwrap();
+            let delegator_data = bond_data.get(addr).unwrap();
             let validator_vote =
                 validator_voters.get(&delegator_data.0).unwrap();
-            if validator_vote.is_yay() && validator_vote.ne(&vote) {
+            if validator_vote.is_yay() && validator_vote.ne(vote) {
                 yay_votes_tokens -= delegator_data.1;
             } else {
                 yay_votes_tokens += delegator_data.1;
             }
         }
     }
+
+    println!("yay: {}", yay_votes_tokens);
+    println!("total: {}", total_stacked_tokens);
 
     if 3 * yay_votes_tokens >= 2 * total_stacked_tokens {
         TallyResult::Passed
@@ -1724,7 +1722,7 @@ pub async fn get_bond_amount_at(
 pub async fn get_all_validators(
     client: &HttpClient,
     epoch: Epoch,
-) -> HashMap<Address, VotingPower> {
+) -> Vec<Address> {
     let validator_set_key = pos::validator_set_key();
     let validator_sets =
         query_storage_value::<pos::ValidatorSets>(client, &validator_set_key)
@@ -1734,16 +1732,7 @@ pub async fn get_all_validators(
         .get(epoch)
         .expect("Validator set should be always set in the current epoch");
     let all_validators = validator_set.active.union(&validator_set.inactive);
-    all_validators.into_iter().fold(
-        HashMap::new(),
-        |mut acc, weighted_validator| {
-            acc.insert(
-                weighted_validator.address.clone(),
-                weighted_validator.voting_power,
-            );
-            acc
-        },
-    )
+    return all_validators.map(|validator| validator.address.clone()).collect();
 }
 
 pub async fn get_total_staked_tokes(
@@ -1754,18 +1743,28 @@ pub async fn get_total_staked_tokes(
     let mut total = Amount::from(0);
 
     for validator in validators {
-        let total_voting_power_key = pos::validator_total_deltas_key(validator);
-        let total_voting_power =
-            query_storage_value::<pos::ValidatorTotalDeltas>(
-                client,
-                &total_voting_power_key,
-            )
-            .await
-            .expect("Total deltas should be defined");
-        let epoched_total_voting_power = total_voting_power.get(epoch);
-        if let Some(epoched_total_voting_power) = epoched_total_voting_power {
-            total += token::Amount::from_change(epoched_total_voting_power)
-        }
+        total += get_validator_stake(&client, epoch, validator).await;
     }
     total
+}
+
+async fn get_validator_stake(
+    client: &HttpClient,
+    epoch: Epoch,
+    validator: &Address,
+) -> token::Amount {
+    let total_voting_power_key = pos::validator_total_deltas_key(validator);
+    let total_voting_power =
+        query_storage_value::<pos::ValidatorTotalDeltas>(
+            client,
+            &total_voting_power_key,
+        )
+        .await
+        .expect("Total deltas should be defined");
+    let epoched_total_voting_power = total_voting_power.get(epoch);
+    if let Some(epoched_total_voting_power) = epoched_total_voting_power {
+        return token::Amount::from_change(epoched_total_voting_power);
+    } else {
+        return token::Amount::from(0);
+    }
 }
