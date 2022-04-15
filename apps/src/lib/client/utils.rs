@@ -45,19 +45,11 @@ pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 /// Github URL prefix of released Anoma network configs
 const DEFAULT_RELEASES_SERVER: &str = "http://localhost:8000";
 
-/// Server serving release assets for Anoma chains
-struct ReleasesServer {
-    base_url: String,
-}
-
-impl ReleasesServer {
-    fn chain_tgz_url(&self, chain_id: &ChainId) -> String {
-        format!("{}/{}/{}.tar.gz", self.base_url, chain_id, chain_id)
-    }
-
-    fn masp_params_tgz_url(&self, chain_id: &ChainId) -> String {
-        format!("{}/{}/masp-params.tar.gz", self.base_url, chain_id)
-    }
+fn release_asset_urls(base_url: &str, chain_id: &ChainId) -> [String; 2] {
+    [
+        format!("{}/{}/{}.tar.gz", base_url, chain_id, chain_id),
+        format!("{}/{}/masp-params.tar.gz", base_url, chain_id)
+    ]
 }
 
 /// Configure Anoma to join an existing network. The chain must be released in
@@ -113,26 +105,13 @@ pub async fn join_network(
             (PathBuf::from_str(".").unwrap(), false)
         };
 
-    // Download the release assets, extracting them into the unpack directory
-    let server = ReleasesServer {
-        base_url: DEFAULT_RELEASES_SERVER.to_string(),
-    };
-
-    let chain_tgz_url = server.chain_tgz_url(&chain_id);
-    println!("Downloading config release from {} ...", chain_tgz_url);
-    if let Err(error) = download_and_unpack(chain_tgz_url, &unpack_dir).await {
-        eprintln!("Couldn't download: {}", error);
-        cli::safe_exit(1);
-    };
-
-    let masp_params_tgz_url = server.masp_params_tgz_url(&chain_id);
-    println!("Downloading MASP params from {} ...", masp_params_tgz_url);
-    if let Err(error) =
-        download_and_unpack(masp_params_tgz_url, &unpack_dir).await
-    {
-        eprintln!("Couldn't download: {}", error);
-        cli::safe_exit(1);
-    };
+    for url in release_asset_urls(DEFAULT_RELEASES_SERVER, &chain_id) {
+        println!("Downloading {} ...", url);
+        if let Err(error) = download_and_unpack(url, &unpack_dir).await {
+            eprintln!("Couldn't download: {}", error);
+            cli::safe_exit(1);
+        };
+    }
 
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
