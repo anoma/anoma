@@ -216,7 +216,12 @@ fn id_from_pk(pk: &ed25519::PublicKey) -> TendermintNodeId {
     TendermintNodeId::new(bytes)
 }
 
-/// Initialize a new test network with the given validators and faucet accounts.
+/// Initialize a new test network from the given configuration.
+///
+/// For any public keys that are not specified in the genesis configuration,
+/// this command will generate them and place them in the "setup" directory
+/// inside the chain-dir, so it can be used for testing (we're using it in the
+/// e2e tests), dev/test-nets and public networks setup.
 pub fn init_network(
     global_args: args::Global,
     args::InitNetwork {
@@ -250,6 +255,7 @@ pub fn init_network(
         config.sha256 = Some(genesis_config::HexString(hash.to_owned()));
     });
 
+    // The `temp_chain_id` gets renamed after we have chain ID.
     let temp_chain_id = chain_id_prefix.temp_chain_id();
     let temp_dir = global_args.base_dir.join(temp_chain_id.as_str());
     // The `temp_chain_id` gets renamed after we have chain ID
@@ -283,39 +289,50 @@ pub fn init_network(
     config.validator.iter_mut().for_each(|(name, config)| {
         let validator_dir = accounts_dir.join(name);
 
-        // Generate a node key
-        let node_sk = ed25519::SigScheme::generate(&mut rng);
-        let node_pk: ed25519::PublicKey = node_sk.ref_to();
+        let chain_dir = validator_dir.join(&accounts_temp_dir);
+        let tm_home_dir = chain_dir.join("tendermint");
+
+        // Find or generate tendermint node key
+        let node_pk = try_parse_public_key(
+            format!("validator {name} Tendermint node key"),
+            &config.tendermint_node_key,
+        )
+        .map(|pk| ed25519::PublicKey::try_from_pk(&pk).unwrap())
+        .unwrap_or_else(|| {
+            // Generate a node key
+            let node_sk = ed25519::SigScheme::generate(&mut rng);
+            let node_pk: ed25519::PublicKey = node_sk.ref_to();
+
+            // Convert and write the keypair into Tendermint
+            // node_key.json file
+            let node_keypair =
+                [node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()]
+                    .concat();
+            let tm_node_keypair_json = json!({
+                "priv_key": {
+                    "type": "tendermint/PrivKeyEd25519",
+                    "value": base64::encode(node_keypair),
+                }
+            });
+            let tm_config_dir = tm_home_dir.join("config");
+            fs::create_dir_all(&tm_config_dir)
+                .expect("Couldn't create validator directory");
+            let node_key_path = tm_config_dir.join("node_key.json");
+            let file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(&node_key_path)
+                .expect("Couldn't create validator node key file");
+            serde_json::to_writer_pretty(file, &tm_node_keypair_json)
+                .expect("Couldn't write validator node key file");
+            tendermint_node::write_validator_state(&tm_home_dir);
+
+            node_pk
+        });
 
         // Derive the node ID from the node key
         let node_id: TendermintNodeId = id_from_pk(&node_pk);
-
-        // Convert and write the keypair into Tendermint
-        // node_key.json file
-        let node_keypair =
-            [node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()]
-                .concat();
-        let tm_node_keypair_json = json!({
-            "priv_key": {
-                "type": "tendermint/PrivKeyEd25519",
-                "value": base64::encode(node_keypair),
-            }
-        });
-        let chain_dir = validator_dir.join(&accounts_temp_dir);
-        let tm_home_dir = chain_dir.join("tendermint");
-        let tm_config_dir = tm_home_dir.join("config");
-        fs::create_dir_all(&tm_config_dir)
-            .expect("Couldn't create validator directory");
-        let path = tm_config_dir.join("node_key.json");
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(&path)
-            .expect("Couldn't create validator node key file");
-        serde_json::to_writer_pretty(file, &tm_node_keypair_json)
-            .expect("Couldn't write validator node key file");
-        tendermint_node::write_validator_state(&tm_home_dir);
 
         // Build the list of persistent peers from the validators' node IDs
         let peer = TendermintAddress::from_str(&format!(
@@ -356,65 +373,112 @@ pub fn init_network(
             peer_id,
         };
 
-        // Generate the consensus, account and reward keys
-        // The `temp_chain_id` gets renamed after we have chain ID
-        let mut wallet = Wallet::load_or_new(&chain_dir);
-        let consensus_key_alias = format!("{}-consensus-key", name);
-        println!("Generating validator {} consensus key...", name);
-        let (_alias, consensus_keypair) =
-            wallet.gen_key(Some(consensus_key_alias), unsafe_dont_encrypt);
-        let account_key_alias = format!("{}-account-key", name);
-        println!("Generating validator {} account key...", name);
-        let (_alias, account_keypair) =
-            wallet.gen_key(Some(account_key_alias), unsafe_dont_encrypt);
-        let reward_key_alias = format!("{}-reward-key", name);
-        println!(
-            "Generating validator {} staking reward account key...",
-            name
-        );
-        let (_alias, reward_keypair) =
-            wallet.gen_key(Some(reward_key_alias), unsafe_dont_encrypt);
-        println!("Generating validator {} protocol signing key...", name);
-        println!("Generating validator {} DKG session keypair...", name);
-        let validator_keys = wallet
-            .gen_validator_keys(None)
-            .expect("Generating new validator keys should not fail");
-        // Add the validator public keys to genesis config
-        config.consensus_public_key = Some(genesis_config::HexString(
-            consensus_keypair.ref_to().to_string(),
-        ));
-        config.account_public_key = Some(genesis_config::HexString(
-            account_keypair.ref_to().to_string(),
-        ));
-        config.staking_reward_public_key = Some(genesis_config::HexString(
-            reward_keypair.ref_to().to_string(),
-        ));
-
-        config.protocol_public_key = Some(genesis_config::HexString(
-            validator_keys.protocol_keypair.ref_to().to_string(),
-        ));
-        config.dkg_public_key = Some(genesis_config::HexString(
-            validator_keys
-                .dkg_keypair
-                .as_ref()
-                .unwrap()
-                .public()
-                .to_string(),
-        ));
         // Generate account and reward addresses
         let address = address::gen_established_address("validator account");
-        wallet.add_validator_data(address.clone(), validator_keys);
         let reward_address =
             address::gen_established_address("validator reward account");
         config.address = Some(address.to_string());
         config.staking_reward_address = Some(reward_address.to_string());
 
-        // Write consensus key for Tendermint
-        tendermint_node::write_validator_key(
-            &tm_home_dir,
-            &address,
-            &consensus_keypair,
-        );
+        // Generate the consensus, account and reward keys, unless they're
+        // pre-defined.
+        let mut wallet = Wallet::load_or_new(&chain_dir);
+
+        let consensus_pk = try_parse_public_key(
+            format!("validator {name} consensus key"),
+            &config.consensus_public_key,
+        )
+        .unwrap_or_else(|| {
+            let alias = format!("{}-consensus-key", name);
+            println!("Generating validator {} consensus key...", name);
+            let (_alias, keypair) =
+                wallet.gen_key(Some(alias), unsafe_dont_encrypt);
+
+            // Write consensus key for Tendermint
+            tendermint_node::write_validator_key(
+                &tm_home_dir,
+                &address,
+                &keypair,
+            );
+
+            keypair.ref_to()
+        });
+
+        let account_pk = try_parse_public_key(
+            format!("validator {name} account key"),
+            &config.account_public_key,
+        )
+        .unwrap_or_else(|| {
+            let alias = format!("{}-account-key", name);
+            println!("Generating validator {} account key...", name);
+            let (_alias, keypair) =
+                wallet.gen_key(Some(alias), unsafe_dont_encrypt);
+            keypair.ref_to()
+        });
+
+        let staking_reward_pk = try_parse_public_key(
+            format!("validator {name} staking reward key"),
+            &config.staking_reward_public_key,
+        )
+        .unwrap_or_else(|| {
+            let alias = format!("{}-reward-key", name);
+            println!(
+                "Generating validator {} staking reward account key...",
+                name
+            );
+            let (_alias, keypair) =
+                wallet.gen_key(Some(alias), unsafe_dont_encrypt);
+            keypair.ref_to()
+        });
+
+        let protocol_pk = try_parse_public_key(
+            format!("validator {name} protocol key"),
+            &config.protocol_public_key,
+        )
+        .unwrap_or_else(|| {
+            let alias = format!("{}-protocol-key", name);
+            println!("Generating validator {} protocol signing key...", name);
+            let (_alias, keypair) =
+                wallet.gen_key(Some(alias), unsafe_dont_encrypt);
+            keypair.ref_to()
+        });
+
+        let dkg_pk = &config
+            .dkg_public_key
+            .as_ref()
+            .map(|key| {
+                key.to_dkg_public_key().unwrap_or_else(|err| {
+                    let label = format!("validator {name} DKG key");
+                    eprintln!("Invalid {label} key: {}", err);
+                    cli::safe_exit(1)
+                })
+            })
+            .unwrap_or_else(|| {
+                println!(
+                    "Generating validator {} DKG session keypair...",
+                    name
+                );
+
+                let validator_keys = wallet
+                    .gen_validator_keys(Some(protocol_pk.clone()))
+                    .expect("Generating new validator keys should not fail");
+                let pk = validator_keys.dkg_keypair.as_ref().unwrap().public();
+                wallet.add_validator_data(address.clone(), validator_keys);
+                pk
+            });
+
+        // Add the validator public keys to genesis config
+        config.consensus_public_key =
+            Some(genesis_config::HexString(consensus_pk.to_string()));
+        config.account_public_key =
+            Some(genesis_config::HexString(account_pk.to_string()));
+        config.staking_reward_public_key =
+            Some(genesis_config::HexString(staking_reward_pk.to_string()));
+
+        config.protocol_public_key =
+            Some(genesis_config::HexString(protocol_pk.to_string()));
+        config.dkg_public_key =
+            Some(genesis_config::HexString(dkg_pk.to_string()));
 
         // Write keypairs to wallet
         wallet.add_address(name.clone(), address);
@@ -965,4 +1029,17 @@ async fn download_file(url: impl AsRef<str>) -> Vec<u8> {
             cli::safe_exit(1)
         })
         .to_vec()
+}
+
+fn try_parse_public_key(
+    label: impl AsRef<str>,
+    value: &Option<HexString>,
+) -> Option<common::PublicKey> {
+    let label = label.as_ref();
+    value.as_ref().map(|key| {
+        key.to_public_key().unwrap_or_else(|err| {
+            eprintln!("Invalid {label} key: {}", err);
+            cli::safe_exit(1)
+        })
+    })
 }
