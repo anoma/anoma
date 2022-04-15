@@ -49,6 +49,8 @@ pub struct ValidatorData {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
+    /// Special keys if the wallet belongs to a validator
+    pub(crate) validator_address: Option<Address>,
     /// Cryptographic keypairs
     keys: HashMap<Alias, StoredKeypair>,
     /// Anoma address book
@@ -57,7 +59,7 @@ pub struct Store {
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
     /// Special keys if the wallet belongs to a validator
-    pub(crate) validator_data: Option<ValidatorData>,
+    pub(crate) validator_keys: Option<ValidatorKeys>,
 }
 
 #[derive(Error, Debug)]
@@ -263,6 +265,11 @@ impl Store {
         &self.addresses
     }
 
+    /// Set the validator address.
+    pub fn set_validator_address(&mut self, address: Address) {
+        self.validator_address = Some(address);
+    }
+
     fn generate_keypair() -> common::SecretKey {
         use rand::rngs::OsRng;
         let mut csprng = OsRng {};
@@ -319,23 +326,40 @@ impl Store {
         }
     }
 
+    /// Add validator keys to the store
+    pub fn add_validator_keys(&mut self, keys: ValidatorKeys) {
+        self.validator_keys = Some(keys);
+    }
+
     /// Add validator data to the store
     pub fn add_validator_data(
         &mut self,
         address: Address,
         keys: ValidatorKeys,
     ) {
-        self.validator_data = Some(ValidatorData { address, keys });
+        self.validator_address = Some(address);
+        self.validator_keys = Some(keys);
     }
 
-    /// Returns the validator data, if it exists
-    pub fn get_validator_data(&self) -> Option<&ValidatorData> {
-        self.validator_data.as_ref()
+    /// Returns the validator address, if it exists
+    pub fn get_validator_address(&self) -> Option<&Address> {
+        self.validator_address.as_ref()
+    }
+
+    /// Returns the validator keys, if they exists
+    pub fn get_validator_keys(&self) -> Option<&ValidatorKeys> {
+        self.validator_keys.as_ref()
     }
 
     /// Returns the validator data, if it exists
     pub fn validator_data(self) -> Option<ValidatorData> {
-        self.validator_data
+        if let (Some(keys), Some(address)) =
+            (self.validator_keys, self.validator_address)
+        {
+            Some(ValidatorData { address, keys })
+        } else {
+            None
+        }
     }
 
     /// Insert a new key with the given alias. If the alias is already used,
