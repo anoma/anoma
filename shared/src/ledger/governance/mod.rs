@@ -11,7 +11,7 @@ use borsh::BorshDeserialize;
 use thiserror::Error;
 
 use self::storage as gov_storage;
-use super::pos as pos_storage;
+use super::pos::{self as pos_storage, BondId, Bonds};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{xan as m1t, Address, InternalAddress};
@@ -96,18 +96,21 @@ where
                             .ok();
                     let pre_counter: Option<u64> =
                         read(&self.ctx, &counter_key, ReadType::PRE).ok();
-                    let voter = gov_storage::get_address(key);
+                    let voter = gov_storage::get_voter_address(key);
+                    let delegation_address = gov_storage::get_vote_delegation_address(key);
 
                     match (
                         pre_counter,
                         voter,
+                        delegation_address,
                         current_epoch,
                         pre_voting_start_epoch,
                         pre_voting_end_epoch,
                     ) {
                         (
                             Some(pre_counter),
-                            Some(voter),
+                            Some(voter_address),
+                            Some(delegation_address),
                             Some(current_epoch),
                             Some(pre_voting_start_epoch),
                             Some(pre_voting_end_epoch),
@@ -116,20 +119,25 @@ where
                                 &self.ctx,
                                 pre_voting_start_epoch,
                                 verifiers,
-                                voter,
+                                voter_address,
+                                delegation_address
                             );
+
                             let is_validator = is_validator(
                                 &self.ctx,
                                 pre_voting_start_epoch,
                                 verifiers,
-                                voter,
+                                voter_address,
+                                delegation_address
                             );
+
                             let is_valid_validator_voting_period =
                                 is_valid_validator_voting_period(
                                     current_epoch,
                                     pre_voting_start_epoch,
                                     pre_voting_end_epoch,
                                 );
+
                             pre_counter > proposal_id
                                 && current_epoch >= pre_voting_start_epoch
                                 && current_epoch <= pre_voting_end_epoch
@@ -506,28 +514,21 @@ fn is_delegator<DB, H, CA>(
     epoch: Epoch,
     verifiers: &BTreeSet<Address>,
     address: &Address,
+    delegation_address: &Address
 ) -> bool
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    let bonds_prefix_key = pos_storage::bonds_for_source_prefix(address);
-    let mut bonds_iter = context.iter_prefix(&bonds_prefix_key).unwrap();
-    loop {
-        let next = context.iter_pre_next(&mut bonds_iter).unwrap();
-        if let Some((_, data)) = next {
-            let epoched_bond =
-                pos_storage::Bonds::try_from_slice(&data[..]).unwrap();
-            if epoched_bond.get(epoch).is_some() && verifiers.contains(address)
-            {
-                return true;
-            }
-        } else {
-            break;
-        }
+    let bond_key = pos_storage::bond_key(&BondId{ source: address.clone(), validator: delegation_address.clone() });
+    let bonds: Option<Bonds> = read(context, &bond_key, ReadType::PRE).ok();
+    
+    if let Some(bonds) = bonds {
+        bonds.get(epoch).is_some() && verifiers.contains(address)
+    } else {
+        false
     }
-    false
 }
 
 fn is_valid_validator_voting_period(
@@ -535,10 +536,7 @@ fn is_valid_validator_voting_period(
     voting_start_epoch: Epoch,
     voting_end_epoch: Epoch,
 ) -> bool {
-    voting_start_epoch < voting_end_epoch
-        && current_epoch
-            <= voting_start_epoch
-                + ((voting_end_epoch - voting_start_epoch) * 2) / 3
+    voting_start_epoch < voting_end_epoch && current_epoch * 3 <= voting_start_epoch + voting_end_epoch * 2
 }
 
 fn is_validator<DB, H, CA>(
@@ -546,6 +544,7 @@ fn is_validator<DB, H, CA>(
     epoch: Epoch,
     verifiers: &BTreeSet<Address>,
     address: &Address,
+    delegation_address: &Address
 ) -> bool
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
@@ -561,7 +560,7 @@ where
         Some(set) => {
             set.active.iter().any(|weighted_validator| {
                 weighted_validator.address.eq(address)
-            }) && verifiers.contains(address)
+            }) && verifiers.contains(address) && delegation_address.eq(address)
         }
         None => false,
     }

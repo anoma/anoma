@@ -1275,7 +1275,7 @@ pub async fn compute_tally(
         let (validator_voters, delegator_voters) = votes.fold(
             (HashMap::new(), HashMap::new()),
             |(mut validator_voters, mut delegator_voters), (key, vote)| {
-                let address = gov_storage::get_address(&key)
+                let address = gov_storage::get_voter_address(&key)
                     .expect("Vote key should contains an address.")
                     .clone();
                 if active_validators.contains_key(&address) {

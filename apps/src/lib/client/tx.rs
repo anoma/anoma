@@ -656,20 +656,34 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
             }
         }
     } else {
+        let client = HttpClient::new(args.tx.ledger_address.clone()).unwrap();
+
         let voter_address = ctx.get(signer);
-        let tx_data = VoteProposalData {
-            id: args.proposal_id.unwrap(),
-            vote: args.vote,
-            voter: voter_address,
-        };
-
-        let data = tx_data
-            .try_to_vec()
-            .expect("Encoding proposal data shouldn't fail");
-        let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
-        let tx = Tx::new(tx_code, Some(data));
-
-        process_tx(ctx, &args.tx, tx, Some(signer)).await;
+        let proposal_id = args.proposal_id.unwrap();
+        let proposal_start_epoch_key = gov_storage::get_voting_start_epoch_key(proposal_id);
+        let proposal_start_epoch = rpc::query_storage_value::<Epoch>(&client, &proposal_start_epoch_key).await;
+        match proposal_start_epoch {
+            Some(epoch) => {
+                let delegation_addresses = rpc::get_all_active_validators(&client, epoch).await;
+                let tx_data = VoteProposalData {
+                    id: proposal_id,
+                    vote: args.vote,
+                    voter: voter_address,
+                    delegations: delegation_addresses.keys().cloned().collect(),
+                };
+        
+                let data = tx_data
+                    .try_to_vec()
+                    .expect("Encoding proposal data shouldn't fail");
+                let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
+                let tx = Tx::new(tx_code, Some(data));
+        
+                process_tx(ctx, &args.tx, tx, Some(signer)).await;
+            }
+            None => {
+                eprintln!("Proposal start epoch is not in the storage.")
+            }
+        }
     }
 }
 

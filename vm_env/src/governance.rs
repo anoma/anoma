@@ -68,7 +68,9 @@ pub mod tx {
 
     /// A proposal vote transaction.
     pub fn vote_proposal(data: VoteProposalData) {
-        let vote_key = storage::get_vote_proposal_key(data.id, data.voter);
-        tx::write(&vote_key.to_string(), data.vote);
+        for delegation in data.delegations {
+            let vote_key = storage::get_vote_proposal_key(data.id, data.voter.clone(), delegation);
+            tx::write(&vote_key.to_string(), data.vote.clone());
+        }
     }
 }

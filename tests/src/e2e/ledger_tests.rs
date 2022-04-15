@@ -1212,25 +1212,6 @@ fn proposal_submission() -> Result<()> {
     client.exp_string("Transaction is invalid.")?;
     client.assert_success();
 
-    // 11. Query the proposal and check the result
-    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 <= 9 {
-        sleep(1);
-        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    }
-
-    let query_proposal = vec![
-        "query-proposal",
-        "--proposal-id",
-        "0",
-        "--ledger-address",
-        &validator_one_rpc,
-    ];
-
-    let mut client = run!(test, Bin::Client, query_proposal, Some(15))?;
-    client.exp_string("Result: passed")?;
-    client.assert_success();
-
     Ok(())
 }
 

@@ -33,6 +33,7 @@ pub fn is_vote_key(key: &Key) -> bool {
             DbKeySeg::StringSeg(prefix),
             DbKeySeg::StringSeg(id),
             DbKeySeg::StringSeg(vote),
+            DbKeySeg::AddressSeg(_validator_address),
             DbKeySeg::AddressSeg(_address),
         ] if addr == &ADDRESS
             && prefix == PROPOSAL_PREFIX
@@ -421,9 +422,11 @@ pub fn get_proposal_prefix_key(id: u64) -> Key {
 }
 
 /// Get proposal code key
-pub fn get_vote_proposal_key(id: u64, address: Address) -> Key {
+pub fn get_vote_proposal_key(id: u64, voter_address: Address, delegation_address: Address) -> Key {
     get_proposal_prefix_key(id)
-        .push(&address)
+        .push(&delegation_address)
+        .expect("Cannot obtain a storage key")
+        .push(&voter_address)
         .expect("Cannot obtain a storage key")
 }
 
@@ -438,9 +441,20 @@ pub fn get_id(key: &Key) -> Option<u64> {
     }
 }
 
-/// Get voter address from vote key
-pub fn get_address(key: &Key) -> Option<&Address> {
+/// Get the delegation address from vote key
+pub fn get_vote_delegation_address(key: &Key) -> Option<&Address> {
     match key.get_at(4) {
+        Some(addr) => match addr {
+            DbKeySeg::AddressSeg(res) => Some(res),
+            DbKeySeg::StringSeg(_) => None,
+        },
+        None => None,
+    }
+}
+
+/// Get voter address from vote key
+pub fn get_voter_address(key: &Key) -> Option<&Address> {
+    match key.get_at(5) {
         Some(addr) => match addr {
             DbKeySeg::AddressSeg(res) => Some(res),
             DbKeySeg::StringSeg(_) => None,
