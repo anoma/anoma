@@ -684,17 +684,19 @@ async fn gen_shielded_transfer(
             amt
         )?;
     }
-    let params_dir = masp_proofs::default_params_folder().unwrap();
+    let params_dir = ctx.global_args.base_dir
+        .join(&ctx.global_args.chain_id.to_owned().unwrap().as_str())
+        .join("masp");  // TODO: this should be a constant
     let spend_path = params_dir.join("masp-spend.params");
     let output_path = params_dir.join("masp-output.params");
     if !(spend_path.exists() && output_path.exists()) {
-        println!("MASP parameters not present, downloading");
-        masp_proofs::download_parameters().expect("MASP parameters not present or downloadable");
+        // TODO: return an Err(...) of some kind (Result return type of this fn may need to be changed)
+        panic!("Couldn't find MASP parameters in {}", params_dir.to_string_lossy());
     }
     // Build and return the constructed transaction
     builder.build(
         consensus_branch_id,
-        &LocalTxProver::with_default_location().expect("unable to load MASP Parameters")
+        &LocalTxProver::new(&spend_path, &output_path)
     ).map(|x| Some(x))
 }
 
@@ -815,7 +817,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
             }
         }
     };
-    
+
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let masp_addr = masp();
     // The non-MASP entity, if any, will be signer for shielded transactions
@@ -838,7 +840,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let data = transfer
         .try_to_vec()
         .expect("Encoding tx data shouldn't fail");
-    
+
     let tx = Tx::new(tx_code, Some(data));
     process_tx(ctx, &args.tx, tx, Some(&args.source)).await;
 }
