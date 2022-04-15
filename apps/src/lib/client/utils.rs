@@ -3,7 +3,7 @@ use std::env;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use anoma::types::chain::ChainId;
@@ -114,7 +114,9 @@ pub async fn join_network(
         };
 
     // Download the release assets, extracting them into the unpack directory
-    let server = ReleasesServer{ base_url: DEFAULT_RELEASES_SERVER.to_string() };
+    let server = ReleasesServer {
+        base_url: DEFAULT_RELEASES_SERVER.to_string(),
+    };
 
     let chain_tgz_url = server.chain_tgz_url(&chain_id);
     println!("Downloading config release from {} ...", chain_tgz_url);
@@ -182,14 +184,11 @@ pub async fn join_network(
 
     // Move the MASP params
     fs::rename(
-        unpack_dir
-            .join(".masp-params"),
-        base_dir_full
-            .join(chain_id.as_str())
-            .join("masp"),
+        unpack_dir.join(".masp-params"),
+        base_dir_full.join(chain_id.as_str()).join("masp"),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     // Move wasm-dir and update config if it's non-default
     if let Some(wasm_dir) = wasm_dir.as_ref() {
@@ -993,12 +992,12 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
-async fn download_and_unpack(url: String, unpack_dir: &PathBuf) {
+async fn download_and_unpack(url: String, unpack_dir: &Path) {
     let contents = match download_file(url).await {
         Ok(contents) => {
             println!("Downloaded {} bytes", contents.len());
             contents
-        },
+        }
         Err(error) => {
             eprintln!("Error downloading: {}", error);
             cli::safe_exit(1);
@@ -1007,15 +1006,16 @@ async fn download_and_unpack(url: String, unpack_dir: &PathBuf) {
 
     // Decode and unpack the archive
     let decoder = GzDecoder::new(&contents[..]);
-    let buf: Vec<u8> = decoder.bytes().map(|byte|
-        match byte {
+    let buf: Vec<u8> = decoder
+        .bytes()
+        .map(|byte| match byte {
             Ok(byte) => byte,
             Err(error) => {
                 eprintln!("Error decoding: {}", error);
                 cli::safe_exit(1);
             }
-        }
-    ).collect();
+        })
+        .collect();
 
     let mut archive = tar::Archive::new(buf.as_slice());
     if let Err(error) = archive.unpack(unpack_dir) {
