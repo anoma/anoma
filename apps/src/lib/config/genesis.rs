@@ -34,6 +34,7 @@ pub mod genesis_config {
     use anoma::types::{storage, token};
     use hex;
     use serde::{Deserialize, Serialize};
+    use thiserror::Error;
 
     use super::{
         EstablishedAccount, Genesis, ImplicitAccount, TokenAccount, Validator,
@@ -68,10 +69,13 @@ pub mod genesis_config {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Error, Debug)]
     pub enum HexKeyError {
+        #[error("Invalid hex string: {0:?}")]
         InvalidHexString(hex::FromHexError),
+        #[error("Invalid sha256 checksum: {0}")]
         InvalidSha256(TryFromSliceError),
+        #[error("Invalid public key: {0}")]
         InvalidPublicKey(ParsePublicKeyError),
     }
 
