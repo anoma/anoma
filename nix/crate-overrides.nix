@@ -60,6 +60,7 @@ defaultCrateOverrides // {
 
   anoma = attrs: {
     buildInputs = [ rustfmt ];
+    PROTOC = "${protobuf}/bin/protoc";
     patchPhase = ''
       substituteInPlace build.rs --replace ./proto ${../proto}
     '';
@@ -67,6 +68,7 @@ defaultCrateOverrides // {
 
   anoma_apps = attrs: {
     buildInputs = [ rustfmt lz4 zstd zlib bzip2 ];
+    PROTOC = "${protobuf}/bin/protoc";
     patchPhase = ''
       substituteInPlace build.rs --replace ./proto ${../proto}
     '';
