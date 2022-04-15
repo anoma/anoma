@@ -1004,14 +1004,8 @@ async fn download_and_unpack(url: String, unpack_dir: &Path) -> eyre::Result<()>
     let contents = download_file(url).await?;
     println!("Downloaded {} bytes", contents.len());
 
-    // Decode and unpack the archive
     let decoder = GzDecoder::new(&contents[..]);
-    let mut buf = vec![];
-    for byte in decoder.bytes() {
-        buf.push(byte?);
-    }
-
-    let mut archive = tar::Archive::new(buf.as_slice());
+    let mut archive = tar::Archive::new(decoder);
     archive.unpack(unpack_dir).wrap_err("Couldn't unpack")
 }
 
