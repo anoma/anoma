@@ -43,7 +43,7 @@ use crate::wasm_loader;
 pub const NET_ACCOUNTS_DIR: &str = "setup";
 pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 /// Github URL prefix of released Anoma network configs
-const DEFAULT_RELEASES_SERVER: &str = "http://localhost:8000";
+const DEFAULT_RELEASES_SERVER: &str = "https://github.com/heliaxdev/anoma-network-config/releases/download";
 
 const MASP_PARAMS_ARCHIVE_FILENAME: &str = "masp-params.tar.gz";
 const MASP_PARAMS_ARCHIVE_INNER_DIR: &str = ".masp-params";
@@ -119,7 +119,7 @@ pub async fn join_network(
     // MASP params may not be present for every release
     let masp_url = masp_params_tgz_url(DEFAULT_RELEASES_SERVER, &chain_id);
     if not_found(&masp_url).await.unwrap() {
-        println!("No MASP params found for this release.")
+        println!("Not downloading MASP params for this release as none were found at {}", masp_url);
     } else {
         println!("Downloading MASP params from {} ...", masp_url);
         download_and_unpack(&masp_url, &unpack_dir).await.unwrap();
