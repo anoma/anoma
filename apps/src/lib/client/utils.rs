@@ -111,16 +111,27 @@ pub async fn join_network(
         };
 
     let release_url = chain_tgz_url(DEFAULT_RELEASES_SERVER, &chain_id);
-    if let Err(error) = download_and_unpack(release_url, &unpack_dir).await {
-        eprintln!("Couldn't download: {}", error);
-        cli::safe_exit(1);
-    };
+    println!("Downloading config release from {} ...", release_url);
+    download_and_unpack(&release_url, &unpack_dir)
+        .await
+        .unwrap();
 
+    // MASP params may not be present for every release
     let masp_url = masp_params_tgz_url(DEFAULT_RELEASES_SERVER, &chain_id);
-    if let Err(error) = download_and_unpack(masp_url, &unpack_dir).await {
-        eprintln!("Couldn't download: {}", error);
-        cli::safe_exit(1);
-    };
+    if not_found(&masp_url).await.unwrap() {
+        println!("No MASP params found for this release.")
+    } else {
+        println!("Downloading MASP params from {} ...", masp_url);
+        download_and_unpack(&masp_url, &unpack_dir).await.unwrap();
+        fs::rename(
+            unpack_dir.join(MASP_PARAMS_ARCHIVE_INNER_DIR),
+            base_dir_full
+                .join(chain_id.as_str())
+                .join(CHAIN_MASP_PARAMS_DIR),
+        )
+        .await
+        .unwrap();
+    }
 
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
@@ -177,14 +188,6 @@ pub async fn join_network(
             .await
             .unwrap();
     }
-
-    // Move the MASP params
-    fs::rename(
-        unpack_dir.join(MASP_PARAMS_ARCHIVE_INNER_DIR),
-        base_dir_full.join(chain_id.as_str()).join(CHAIN_MASP_PARAMS_DIR),
-    )
-    .await
-    .unwrap();
 
     // Move wasm-dir and update config if it's non-default
     if let Some(wasm_dir) = wasm_dir.as_ref() {
@@ -988,26 +991,25 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
-async fn download_and_unpack(
-    url: impl AsRef<str>,
-    unpack_dir: &Path,
-) -> eyre::Result<()> {
+async fn download_and_unpack(url: &str, unpack_dir: &Path) -> eyre::Result<()> {
     let contents = download(url).await?;
-    println!("Downloaded {} bytes", contents.len());
-    gunzip(&contents[..], unpack_dir).wrap_err("Couldn't unpack")
+    unpack(&contents[..], unpack_dir).wrap_err("Couldn't unpack")
 }
 
-fn gunzip(bytes: &[u8], unpack_dir: &Path) -> std::io::Result<()> {
-    let decoder = GzDecoder::new(bytes);
+fn unpack(gz_bytes: &[u8], unpack_dir: &Path) -> std::io::Result<()> {
+    let decoder = GzDecoder::new(gz_bytes);
     let mut archive = tar::Archive::new(decoder);
     archive.unpack(unpack_dir)
 }
 
-async fn download(url: impl AsRef<str>) -> reqwest::Result<Bytes> {
-    let url = url.as_ref();
-    println!("Downloading {} ...", url);
+async fn not_found(url: &str) -> reqwest::Result<bool> {
+    let response = reqwest::Client::new().head(url).send().await?;
+    Ok(response.status() == reqwest::StatusCode::NOT_FOUND)
+}
+
+async fn download(url: &str) -> reqwest::Result<Bytes> {
     let response = reqwest::get(url).await?;
     response.error_for_status_ref()?;
-    let contents = response.bytes().await?;
-    Ok(contents)
+    let body = response.bytes().await?;
+    Ok(body)
 }
