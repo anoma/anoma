@@ -918,17 +918,7 @@ pub fn init_genesis_validator(
         tendermint_node_key: Some(HexString(
             tendermint_node_key.ref_to().to_string(),
         )),
-        address: None,
-        staking_reward_address: None,
-        tokens: 0,
-        non_staked_balance: 0,
-        validator_vp: None,
-        staking_reward_vp: None,
-        net_address: None,
-        matchmaker_account: None,
-        matchmaker_code: None,
-        matchmaker_tx: None,
-        intent_gossip_seed: None,
+        ..Default::default()
     };
     // this prints the validator block in the same way as the genesis config TOML would look like
     println!("[validator.{}]", validator_address_alias);
