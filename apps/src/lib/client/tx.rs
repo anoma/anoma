@@ -285,12 +285,8 @@ pub async fn submit_init_validator(
                 [account_1, account_2] => {
                     // We need to find out which address is which
                     let (validator_address, rewards_address) =
-                        if rpc::is_validator(
-                            account_1,
-                            None,
-                            tx_args.ledger_address,
-                        )
-                        .await
+                        if rpc::is_validator(account_1, tx_args.ledger_address)
+                            .await
                         {
                             (account_1, account_2)
                         } else {
@@ -704,8 +700,7 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, None, args.tx.ledger_address.clone())
-            .await;
+        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -771,8 +766,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, None, args.tx.ledger_address.clone())
-            .await;
+        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",
@@ -844,8 +838,7 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let validator = ctx.get(&args.validator);
     // Check that the validator address exists on chain
     let is_validator =
-        rpc::is_validator(&validator, None, args.tx.ledger_address.clone())
-            .await;
+        rpc::is_validator(&validator, args.tx.ledger_address.clone()).await;
     if !is_validator {
         eprintln!(
             "The address {} doesn't belong to any known validator account.",

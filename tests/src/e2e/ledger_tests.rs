@@ -9,7 +9,7 @@
 //! To keep the temporary files created by a test, use env var
 //! `ANOMA_E2E_KEEP_TEMP=true`.
 
-use std::fs::{OpenOptions, self};
+use std::fs::{self, OpenOptions};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Arc;

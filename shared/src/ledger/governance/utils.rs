@@ -91,8 +91,8 @@ where
         Ok(start_epoch) => {
             let mut bond_data: HashMap<Address, (Address, token::Amount)> =
                 HashMap::new();
-            let (validator_voters, delegator_voters, validator_set) =
-                get_votes(storage, proposal_id, start_epoch)?;
+            let (validator_voters, delegator_voters, validators) =
+                get_votes(storage, proposal_id, start_epoch);
             for validator_addr in validator_voters.keys() {
                 match get_bond_amount_at(
                     storage,
@@ -126,27 +126,14 @@ where
                 }
             }
 
-            let mut total_tokens = token::Amount::from(0);
+            let total_tokens =
+                get_total_stacked_tokens(storage, start_epoch, &validators);
+
             let mut yay_total_tokens = token::Amount::whole(0);
             for (addr, vote) in validator_voters.clone() {
                 if vote.is_yay() {
                     yay_total_tokens += bond_data.get(&addr).unwrap().1;
                 }
-                let validator_total_deltas_key =
-                    pos::validator_total_deltas_key(&addr);
-                let (validator_total_deltas_bytes, _) = storage
-                    .read(&validator_total_deltas_key)
-                    .expect("Key should exist");
-                let epoched_validator_total_deltas =
-                    ValidatorTotalDeltas::try_from_slice(
-                        &validator_total_deltas_bytes.unwrap()[..],
-                    )
-                    .expect("ValidatorTotalDeltas should be definied");
-                let amount = epoched_validator_total_deltas
-                    .get(start_epoch)
-                    .unwrap_or_default();
-
-                total_tokens += token::Amount::from_change(amount);
             }
 
             for (addr, vote) in delegator_voters {
@@ -154,7 +141,7 @@ where
                 // validator didn't vote
                 if !bond_data.contains_key(&addr) {
                     if vote.is_yay() {
-                        for validator_addr in &validator_set {
+                        for validator_addr in &validators {
                             if bond_data.contains_key(validator_addr) {
                                 continue;
                             }
@@ -275,66 +262,102 @@ fn get_votes<D, H>(
     storage: &Storage<D, H>,
     proposal_id: u64,
     epoch: Epoch,
-) -> Result<(
+) -> (
     HashMap<Address, ProposalVote>,
     HashMap<Address, ProposalVote>,
     Vec<Address>,
-)>
+)
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
-    let validator_set_key = pos::validator_set_key();
-    let vote_prefix_key = gov_storage::get_proposal_prefix_key(proposal_id);
-    let (validator_set_bytes, _) = storage
-        .read(&validator_set_key)
-        .expect("Validator set should be defined.");
+    let validators = get_all_validators(storage, epoch);
+    let vote_prefix_key =
+        gov_storage::get_proposal_vote_prefix_key(proposal_id);
     let (votes, _) = storage.iter_prefix(&vote_prefix_key);
 
     let (mut validator_voters, mut delegator_voters) =
         (HashMap::new(), HashMap::new());
 
-    match validator_set_bytes {
-        Some(bytes) => {
-            let epoched_validator_set =
-                ValidatorSets::try_from_slice(&bytes[..]).ok();
-            if let Some(epoched_validator_set) = epoched_validator_set {
-                let validator_set = epoched_validator_set.get(epoch);
-                if let Some(validator_set) = validator_set {
-                    let mut active_validators = validator_set
-                        .active
-                        .iter()
-                        .map(|validator| validator.address.clone());
-                    for (key, value_bytes, _) in votes {
-                        let vote =
-                            ProposalVote::try_from_slice(&value_bytes[..]).ok();
-                        let key = Key::from_str(key.as_str());
-                        match (key, vote) {
-                            (Ok(key), Some(vote)) => {
-                                let voter_addr = gov_storage::get_address(&key);
-                                if let Some(address) = voter_addr {
-                                    if active_validators.contains(&address) {
-                                        validator_voters.insert(address, vote);
-                                    } else {
-                                        delegator_voters.insert(address, vote);
-                                    }
-                                }
-                            }
-                            _ => continue,
-                        }
+    for (key, value_bytes, _) in votes {
+        let vote = ProposalVote::try_from_slice(&value_bytes[..]).ok();
+        let key = Key::from_str(key.as_str());
+        match (key, vote) {
+            (Ok(key), Some(vote)) => {
+                let voter_addr = gov_storage::get_address(&key);
+                if let Some(address) = voter_addr {
+                    if validators.contains(&address) {
+                        validator_voters.insert(address, vote);
+                    } else {
+                        delegator_voters.insert(address, vote);
                     }
-                    Ok((
-                        validator_voters,
-                        delegator_voters,
-                        active_validators.collect(),
-                    ))
-                } else {
-                    Err(Error::InvalidValidatorSet)
                 }
-            } else {
-                Err(Error::InvalidValidatorSet)
+            }
+            _ => continue,
+        }
+    }
+    (validator_voters, delegator_voters, validators)
+}
+
+fn get_all_validators<D, H>(
+    storage: &Storage<D, H>,
+    epoch: Epoch,
+) -> Vec<Address>
+where
+    D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
+    H: StorageHasher + Sync + 'static,
+{
+    let validator_set_key = pos::validator_set_key();
+    let (validator_set_bytes, _) = storage
+        .read(&validator_set_key)
+        .expect("Validator set should be defined.");
+    if let Some(validator_set_bytes) = validator_set_bytes {
+        let epoched_validator_set =
+            ValidatorSets::try_from_slice(&validator_set_bytes[..]).ok();
+        if let Some(epoched_validator_set) = epoched_validator_set {
+            let validator_set = epoched_validator_set.get(epoch);
+            if let Some(validator_set) = validator_set {
+                let all_validators =
+                    validator_set.active.union(&validator_set.inactive);
+                return all_validators
+                    .into_iter()
+                    .map(|validator| validator.address.clone())
+                    .collect::<Vec<Address>>();
             }
         }
-        None => Err(Error::InvalidValidatorSet),
+        Vec::new()
+    } else {
+        Vec::new()
     }
+}
+
+fn get_total_stacked_tokens<D, H>(
+    storage: &Storage<D, H>,
+    epoch: Epoch,
+    validators: &[Address],
+) -> token::Amount
+where
+    D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
+    H: StorageHasher + Sync + 'static,
+{
+    let mut total = token::Amount::from(0);
+
+    for validator in validators {
+        let total_delta_key = pos::validator_total_deltas_key(validator);
+        let (total_delta_bytes, _) = storage
+            .read(&total_delta_key)
+            .expect("Validator delta should be defined.");
+        if let Some(total_delta_bytes) = total_delta_bytes {
+            let total_delta =
+                ValidatorTotalDeltas::try_from_slice(&total_delta_bytes[..])
+                    .ok();
+            if let Some(total_delta) = total_delta {
+                let epoched_total_delta = total_delta.get(epoch);
+                if let Some(epoched_total_delta) = epoched_total_delta {
+                    total += token::Amount::from_change(epoched_total_delta);
+                }
+            }
+        }
+    }
+    total
 }
