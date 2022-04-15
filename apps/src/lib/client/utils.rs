@@ -1000,16 +1000,19 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
-async fn download_and_unpack(url: String, unpack_dir: &Path) -> eyre::Result<()> {
-    let contents = download_file(url).await?;
+async fn download_and_unpack(url: impl AsRef<str>, unpack_dir: &Path) -> eyre::Result<()> {
+    let contents = download(url).await?;
     println!("Downloaded {} bytes", contents.len());
-
-    let decoder = GzDecoder::new(&contents[..]);
-    let mut archive = tar::Archive::new(decoder);
-    archive.unpack(unpack_dir).wrap_err("Couldn't unpack")
+    gunzip(&contents[..], unpack_dir).wrap_err("Couldn't unpack")
 }
 
-async fn download_file(url: impl AsRef<str>) -> reqwest::Result<Bytes> {
+fn gunzip(bytes: &[u8], unpack_dir: &Path) -> std::io::Result<()> {
+    let decoder = GzDecoder::new(bytes);
+    let mut archive = tar::Archive::new(decoder);
+    archive.unpack(unpack_dir)
+}
+
+async fn download(url: impl AsRef<str>) -> reqwest::Result<Bytes> {
     let url = url.as_ref();
     let response = reqwest::get(url).await?;
     response.error_for_status_ref()?;
