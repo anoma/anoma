@@ -45,10 +45,14 @@ pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 /// Github URL prefix of released Anoma network configs
 const DEFAULT_RELEASES_SERVER: &str = "http://localhost:8000";
 
+const MASP_PARAMS_ARCHIVE_FILENAME: &str = "masp-params.tar.gz";
+const MASP_PARAMS_ARCHIVE_INNER_DIR: &str = ".masp-params";
+const CHAIN_MASP_PARAMS_DIR: &str = "masp";
+
 fn release_asset_urls(base_url: &str, chain_id: &ChainId) -> [String; 2] {
     [
         format!("{}/{}/{}.tar.gz", base_url, chain_id, chain_id),
-        format!("{}/{}/masp-params.tar.gz", base_url, chain_id)
+        format!("{}/{}/{}", base_url, chain_id, MASP_PARAMS_ARCHIVE_FILENAME)
     ]
 }
 
@@ -171,8 +175,8 @@ pub async fn join_network(
 
     // Move the MASP params
     fs::rename(
-        unpack_dir.join(".masp-params"),
-        base_dir_full.join(chain_id.as_str()).join("masp"),
+        unpack_dir.join(MASP_PARAMS_ARCHIVE_INNER_DIR),
+        base_dir_full.join(chain_id.as_str()).join(CHAIN_MASP_PARAMS_DIR),
     )
     .await
     .unwrap();
