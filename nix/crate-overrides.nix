@@ -10,7 +10,10 @@
 , zlib
 , bzip2
 , xcbuild
+, libiconv
 , llvmPackages
+, darwin
+, openssl
 }:
 
 #with pkgs;
@@ -22,6 +25,10 @@ let
     ++ lib.optional (platform.sse4_1Support) "sse4.1"
     ++ lib.optional (platform.sse4_2Support) "sse4.2"
   );
+
+  inherit (darwin.apple_sdk.frameworks) Security;
+  inherit (darwin.apple_sdk.frameworks) DiskArbitration;
+  inherit (darwin.apple_sdk.frameworks) Foundation;
 in
 
 defaultCrateOverrides // {
@@ -67,7 +74,8 @@ defaultCrateOverrides // {
   };
 
   anoma_apps = attrs: {
-    buildInputs = [ rustfmt lz4 zstd zlib bzip2 ];
+    buildInputs = [ rustfmt lz4 zstd zlib bzip2 ]
+    ++ lib.optionals stdenv.isDarwin [ Security DiskArbitration Foundation libiconv openssl ];
     PROTOC = "${protobuf}/bin/protoc";
     patchPhase = ''
       substituteInPlace build.rs --replace ./proto ${../proto}
