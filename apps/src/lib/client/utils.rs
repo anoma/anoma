@@ -10,6 +10,7 @@ use anoma::types::chain::ChainId;
 use anoma::types::key::*;
 use anoma::types::{address, token};
 use borsh::BorshSerialize;
+use eyre::WrapErr;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -120,11 +121,17 @@ pub async fn join_network(
 
     let chain_tgz_url = server.chain_tgz_url(&chain_id);
     println!("Downloading config release from {} ...", chain_tgz_url);
-    download_and_unpack(chain_tgz_url, &unpack_dir).await;
+    if let Err(error) = download_and_unpack(chain_tgz_url, &unpack_dir).await {
+        eprintln!("Couldn't download: {}", error);
+        cli::safe_exit(1);
+    };
 
     let masp_params_tgz_url = server.masp_params_tgz_url(&chain_id);
     println!("Downloading MASP params from {} ...", masp_params_tgz_url);
-    download_and_unpack(masp_params_tgz_url, &unpack_dir).await;
+    if let Err(error) = download_and_unpack(masp_params_tgz_url, &unpack_dir).await {
+        eprintln!("Couldn't download: {}", error);
+        cli::safe_exit(1);
+    };
 
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
@@ -992,17 +999,9 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
-async fn download_and_unpack(url: String, unpack_dir: &Path) {
-    let contents = match download_file(url).await {
-        Ok(contents) => {
-            println!("Downloaded {} bytes", contents.len());
-            contents
-        }
-        Err(error) => {
-            eprintln!("Error downloading: {}", error);
-            cli::safe_exit(1);
-        }
-    };
+async fn download_and_unpack(url: String, unpack_dir: &Path) -> eyre::Result<()> {
+    let contents = download_file(url).await?;
+    println!("Downloaded {} bytes", contents.len());
 
     // Decode and unpack the archive
     let decoder = GzDecoder::new(&contents[..]);
@@ -1018,10 +1017,7 @@ async fn download_and_unpack(url: String, unpack_dir: &Path) {
         .collect();
 
     let mut archive = tar::Archive::new(buf.as_slice());
-    if let Err(error) = archive.unpack(unpack_dir) {
-        eprintln!("Error unpacking: {}", error);
-        cli::safe_exit(1);
-    }
+    archive.unpack(unpack_dir).wrap_err("Couldn't unpack")
 }
 
 async fn download_file(url: impl AsRef<str>) -> reqwest::Result<Bytes> {
