@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -14,7 +14,6 @@ use eyre::WrapErr;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use itertools::Itertools;
 use prost::bytes::Bytes;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
@@ -44,8 +43,7 @@ use crate::wasm_loader;
 pub const NET_ACCOUNTS_DIR: &str = "setup";
 pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 /// Github URL prefix of released Anoma network configs
-const DEFAULT_RELEASES_SERVER: &str =
-    "http://localhost:8000";
+const DEFAULT_RELEASES_SERVER: &str = "http://localhost:8000";
 
 /// Server serving release assets for Anoma chains
 struct ReleasesServer {
@@ -129,7 +127,9 @@ pub async fn join_network(
 
     let masp_params_tgz_url = server.masp_params_tgz_url(&chain_id);
     println!("Downloading MASP params from {} ...", masp_params_tgz_url);
-    if let Err(error) = download_and_unpack(masp_params_tgz_url, &unpack_dir).await {
+    if let Err(error) =
+        download_and_unpack(masp_params_tgz_url, &unpack_dir).await
+    {
         eprintln!("Couldn't download: {}", error);
         cli::safe_exit(1);
     };
@@ -1000,7 +1000,10 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
-async fn download_and_unpack(url: impl AsRef<str>, unpack_dir: &Path) -> eyre::Result<()> {
+async fn download_and_unpack(
+    url: impl AsRef<str>,
+    unpack_dir: &Path,
+) -> eyre::Result<()> {
     let contents = download(url).await?;
     println!("Downloaded {} bytes", contents.len());
     gunzip(&contents[..], unpack_dir).wrap_err("Couldn't unpack")
