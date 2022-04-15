@@ -49,11 +49,12 @@ const MASP_PARAMS_ARCHIVE_FILENAME: &str = "masp-params.tar.gz";
 const MASP_PARAMS_ARCHIVE_INNER_DIR: &str = ".masp-params";
 const CHAIN_MASP_PARAMS_DIR: &str = "masp";
 
-fn release_asset_urls(base_url: &str, chain_id: &ChainId) -> [String; 2] {
-    [
-        format!("{}/{}/{}.tar.gz", base_url, chain_id, chain_id),
-        format!("{}/{}/{}", base_url, chain_id, MASP_PARAMS_ARCHIVE_FILENAME)
-    ]
+fn chain_tgz_url(base_url: &str, chain_id: &ChainId) -> String {
+    format!("{}/{}/{}.tar.gz", base_url, chain_id, chain_id)
+}
+
+fn masp_params_tgz_url(base_url: &str, chain_id: &ChainId) -> String {
+    format!("{}/{}/{}", base_url, chain_id, MASP_PARAMS_ARCHIVE_FILENAME)
 }
 
 /// Configure Anoma to join an existing network. The chain must be released in
@@ -109,13 +110,17 @@ pub async fn join_network(
             (PathBuf::from_str(".").unwrap(), false)
         };
 
-    for url in release_asset_urls(DEFAULT_RELEASES_SERVER, &chain_id) {
-        println!("Downloading {} ...", url);
-        if let Err(error) = download_and_unpack(url, &unpack_dir).await {
-            eprintln!("Couldn't download: {}", error);
-            cli::safe_exit(1);
-        };
-    }
+    let release_url = chain_tgz_url(DEFAULT_RELEASES_SERVER, &chain_id);
+    if let Err(error) = download_and_unpack(release_url, &unpack_dir).await {
+        eprintln!("Couldn't download: {}", error);
+        cli::safe_exit(1);
+    };
+
+    let masp_url = masp_params_tgz_url(DEFAULT_RELEASES_SERVER, &chain_id);
+    if let Err(error) = download_and_unpack(masp_url, &unpack_dir).await {
+        eprintln!("Couldn't download: {}", error);
+        cli::safe_exit(1);
+    };
 
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
@@ -1000,6 +1005,7 @@ fn gunzip(bytes: &[u8], unpack_dir: &Path) -> std::io::Result<()> {
 
 async fn download(url: impl AsRef<str>) -> reqwest::Result<Bytes> {
     let url = url.as_ref();
+    println!("Downloading {} ...", url);
     let response = reqwest::get(url).await?;
     response.error_for_status_ref()?;
     let contents = response.bytes().await?;
