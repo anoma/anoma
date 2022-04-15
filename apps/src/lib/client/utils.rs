@@ -14,6 +14,7 @@ use eyre::WrapErr;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use itertools::Itertools;
 use prost::bytes::Bytes;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
@@ -44,7 +45,7 @@ pub const NET_ACCOUNTS_DIR: &str = "setup";
 pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
 /// Github URL prefix of released Anoma network configs
 const DEFAULT_RELEASES_SERVER: &str =
-    "https://github.com/heliaxdev/anoma-network-config/releases/download";
+    "http://localhost:8000";
 
 /// Server serving release assets for Anoma chains
 struct ReleasesServer {
@@ -1005,16 +1006,10 @@ async fn download_and_unpack(url: String, unpack_dir: &Path) -> eyre::Result<()>
 
     // Decode and unpack the archive
     let decoder = GzDecoder::new(&contents[..]);
-    let buf: Vec<u8> = decoder
-        .bytes()
-        .map(|byte| match byte {
-            Ok(byte) => byte,
-            Err(error) => {
-                eprintln!("Error decoding: {}", error);
-                cli::safe_exit(1);
-            }
-        })
-        .collect();
+    let mut buf = vec![];
+    for byte in decoder.bytes() {
+        buf.push(byte?);
+    }
 
     let mut archive = tar::Archive::new(buf.as_slice());
     archive.unpack(unpack_dir).wrap_err("Couldn't unpack")
