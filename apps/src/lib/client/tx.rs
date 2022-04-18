@@ -685,7 +685,7 @@ async fn gen_shielded_transfer(
         )?;
     }
     let params_dir = ctx.global_args.base_dir
-        .join(&ctx.global_args.chain_id.to_owned().unwrap().as_str())
+        .join(&ctx.global_config.default_chain_id.as_str())
         .join("masp");
     let spend_path = params_dir.join("masp-spend.params");
     let output_path = params_dir.join("masp-output.params");
