@@ -48,7 +48,6 @@ const DEFAULT_RELEASES_SERVER: &str =
 
 const MASP_PARAMS_ARCHIVE_FILENAME: &str = "masp-params.tar.gz";
 const MASP_PARAMS_ARCHIVE_INNER_DIR: &str = ".masp-params";
-const CHAIN_MASP_PARAMS_DIR: &str = "masp";
 
 fn chain_tgz_url(base_url: &str, chain_id: &ChainId) -> String {
     format!("{}/{}/{}.tar.gz", base_url, chain_id, chain_id)
@@ -130,9 +129,9 @@ pub async fn join_network(
         download_and_unpack(&masp_url, &unpack_dir).await.unwrap();
         fs::rename(
             unpack_dir.join(MASP_PARAMS_ARCHIVE_INNER_DIR),
-            base_dir_full
-                .join(chain_id.as_str())
-                .join(CHAIN_MASP_PARAMS_DIR),
+            anoma::masp::ParamsDirectory::for_chain_directory(
+                base_dir_full.join(chain_id.as_str()),
+            ),
         )
         .await
         .unwrap();
