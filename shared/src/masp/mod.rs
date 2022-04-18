@@ -6,7 +6,7 @@ pub struct ParamsDirectory {
 }
 
 impl ParamsDirectory {
-    pub fn from_chain_directory(chain_dir: impl AsRef<Path>) -> Self {
+    pub fn for_chain_directory(chain_dir: impl AsRef<Path>) -> Self {
         ParamsDirectory { path: chain_dir.as_ref().join("masp") }
     }
 
