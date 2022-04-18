@@ -686,11 +686,10 @@ async fn gen_shielded_transfer(
     }
     let params_dir = ctx.global_args.base_dir
         .join(&ctx.global_args.chain_id.to_owned().unwrap().as_str())
-        .join("masp");  // TODO: this should be a constant
+        .join("masp");
     let spend_path = params_dir.join("masp-spend.params");
     let output_path = params_dir.join("masp-output.params");
     if !(spend_path.exists() && output_path.exists()) {
-        // TODO: return an Err(...) of some kind (Result return type of this fn may need to be changed)
         panic!("Couldn't find MASP parameters in {}", params_dir.to_string_lossy());
     }
     // Build and return the constructed transaction
