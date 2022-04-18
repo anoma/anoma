@@ -28,6 +28,7 @@ pub mod ledger;
 pub mod proto;
 pub mod types;
 pub mod vm;
+pub mod masp;
 
 #[cfg(test)]
 #[macro_use]
