@@ -25,10 +25,10 @@ pub use tendermint_stable as tendermint;
 
 pub mod bytes;
 pub mod ledger;
+pub mod masp;
 pub mod proto;
 pub mod types;
 pub mod vm;
-pub mod masp;
 
 #[cfg(test)]
 #[macro_use]
