@@ -74,7 +74,7 @@ pub fn verify_shielded_tx(transaction: &Transaction) -> bool {
     let mut ctx = SaplingVerificationContext::new();
     let tx_data = transaction.deref();
 
-    let params_dir = crate::masp::ParamsDirectory(masp_proofs::default_params_folder().unwrap());
+    let params_dir = crate::masp::ParamsDirectory { path: masp_proofs::default_params_folder().unwrap() };
     let (_, spend_pvk) = load_params(params_dir.spend_path());
     let (_, output_pvk) = load_params(params_dir.output_path());
 
