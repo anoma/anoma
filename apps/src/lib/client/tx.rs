@@ -686,7 +686,7 @@ async fn gen_shielded_transfer(
     }
     let chain_dir = ctx.global_args.base_dir
         .join(&ctx.global_config.default_chain_id.as_str());
-    let params_dir = anoma::masp::ParamsDirectory { path: chain_dir };
+    let params_dir = anoma::masp::ParamsDirectory::for_chain_directory(chain_dir);
     let spend_path = params_dir.spend_path();
     let output_path = params_dir.output_path();
     if !(spend_path.exists() && output_path.exists()) {
