@@ -684,13 +684,13 @@ async fn gen_shielded_transfer(
             amt
         )?;
     }
-    let params_dir = ctx.global_args.base_dir
-        .join(&ctx.global_config.default_chain_id.as_str())
-        .join("masp");
-    let spend_path = params_dir.join("masp-spend.params");
-    let output_path = params_dir.join("masp-output.params");
+    let chain_dir = ctx.global_args.base_dir
+        .join(&ctx.global_config.default_chain_id.as_str());
+    let params_dir = anoma::masp::ParamsDirectory(chain_dir);
+    let spend_path = params_dir.spend_path();
+    let output_path = params_dir.output_path();
     if !(spend_path.exists() && output_path.exists()) {
-        panic!("Couldn't find MASP parameters in {}", params_dir.to_string_lossy());
+        panic!("Couldn't find MASP parameters in {}", params_dir.0.to_string_lossy());
     }
     // Build and return the constructed transaction
     builder.build(
