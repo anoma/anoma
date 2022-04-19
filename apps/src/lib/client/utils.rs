@@ -52,7 +52,10 @@ const PREGENESIS_DIR: &str = "pregenesis";
 /// the <https://github.com/heliaxdev/anoma-network-config> repository.
 pub async fn join_network(
     global_args: args::Global,
-    args::JoinNetwork { chain_id }: args::JoinNetwork,
+    args::JoinNetwork {
+        chain_id,
+        genesis_validator,
+    }: args::JoinNetwork,
 ) {
     use tokio::fs;
 
@@ -291,7 +294,8 @@ pub fn init_network(
 
         let chain_dir = validator_dir.join(&accounts_temp_dir);
         let tm_home_dir = chain_dir.join("tendermint");
-        // ensures the whole directory hierarchy exists in case it is assumed later on
+        // ensures the whole directory hierarchy exists in case it is assumed
+        // later on
         std::fs::create_dir_all(&tm_home_dir).unwrap();
 
         // Find or generate tendermint node key

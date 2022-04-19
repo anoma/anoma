@@ -1252,6 +1252,7 @@ pub mod args {
     const GAS_LIMIT: ArgDefault<token::Amount> =
         arg_default("gas-limit", DefaultFn(|| token::Amount::from(0)));
     const GENESIS_PATH: Arg<PathBuf> = arg("genesis-path");
+    const GENESIS_VALIDATOR: ArgOpt<String> = arg("genesis-validator").opt();
     const INTENT_GOSSIPER_ADDR: ArgDefault<SocketAddr> = arg_default(
         "intent-gossiper",
         DefaultFn(|| {
@@ -2513,16 +2514,22 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct JoinNetwork {
         pub chain_id: ChainId,
+        pub genesis_validator: Option<String>,
     }
 
     impl Args for JoinNetwork {
         fn parse(matches: &ArgMatches) -> Self {
             let chain_id = CHAIN_ID.parse(matches);
-            Self { chain_id }
+            let genesis_validator = GENESIS_VALIDATOR.parse(matches);
+            Self {
+                chain_id,
+                genesis_validator,
+            }
         }
 
         fn def(app: App) -> App {
             app.arg(CHAIN_ID.def().about("The chain ID. The chain must be known in the https://github.com/heliaxdev/anoma-network-config repository."))
+                .arg(GENESIS_VALIDATOR.def().about("The alias of the genesis validator that you want to set up as."))
         }
     }
 
