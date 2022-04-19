@@ -26,7 +26,7 @@ pub struct VpInput<'a> {
     /// The storage changed keys from the write log of storage updates
     /// performed by the transaction for the account associated with the VP
     pub keys_changed: &'a BTreeSet<Key>,
-    /// The verifiers to trigger VPs
+    /// The addresses to trigger VPs
     pub verifiers: &'a BTreeSet<Address>,
 }
 

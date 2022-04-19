@@ -163,7 +163,6 @@ pub(super) enum ShellMode {
         data: ValidatorData,
         broadcast_sender: UnboundedSender<Vec<u8>>,
         ethereum_recv: UnboundedReceiver<EthPollResult>,
-        ethereum_verifier: EthVerifier,
     },
     Full,
     Seed,
@@ -192,15 +191,6 @@ impl ShellMode {
                     },
                 ..
             } => Some(protocol_keypair),
-            _ => None,
-        }
-    }
-
-    pub fn get_eth_verifier(&self) -> Option<&EthVerifier> {
-        match &self {
-            ShellMode::Validator {
-                ethereum_verifier, ..
-            } => Some(ethereum_verifier),
             _ => None,
         }
     }
@@ -289,6 +279,14 @@ where
         // load in keys and address from wallet if mode is set to `Validator`
         let mode = match mode {
             TendermintMode::Validator => {
+                storage.eth_verifier = Some(EthVerifier::new(
+                    ethereum_height.expect(
+                        "Running in validator mode; Ethereum full node should \
+                         be running",
+                    ),
+                    50,
+                    200,
+                ));
                 #[cfg(not(feature = "dev"))]
                 {
                     let wallet_path = &base_dir.join(chain_id.as_str());
@@ -335,14 +333,6 @@ where
                         },
                         broadcast_sender,
                         ethereum_recv,
-                        ethereum_verifier: EthVerifier::new(
-                            ethereum_height.expect(
-                                "Running in validator mode; Ethereum full \
-                                 node should be running",
-                            ),
-                            50,
-                            200,
-                        ),
                     }
                 }
             }
@@ -722,7 +712,7 @@ pub(super) mod test_utils {
     }
 
     /// Generate a random public/private keypair
-    pub(super) fn gen_keypair() -> common::SecretKey {
+    pub(crate) fn gen_keypair() -> common::SecretKey {
         use rand::prelude::ThreadRng;
         use rand::thread_rng;
 

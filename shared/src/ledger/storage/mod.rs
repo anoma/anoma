@@ -27,6 +27,10 @@ use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
 
 use super::parameters::Parameters;
+#[cfg(feature = "eth-fullnode")]
+use crate::ledger::ethash::EthVerifier;
+#[cfg(not(feature = "eth-fullnode"))]
+use crate::ledger::ethash::MockVerifier as EthVerifier;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
 use crate::ledger::storage::merkle_tree::{
@@ -76,6 +80,8 @@ where
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: TxQueue,
+    /// The ethash algorithm that verifies Ethereum headers
+    pub eth_verifier: Option<EthVerifier>,
 }
 
 /// The block storage data
@@ -289,6 +295,7 @@ where
             ),
             #[cfg(feature = "ferveo-tpke")]
             tx_queue: TxQueue::default(),
+            eth_verifier: None,
         }
     }
 
@@ -683,6 +690,7 @@ pub mod testing {
                 ),
                 #[cfg(feature = "ferveo-tpke")]
                 tx_queue: TxQueue::default(),
+                eth_verifier: None,
             }
         }
     }

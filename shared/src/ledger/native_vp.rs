@@ -230,7 +230,7 @@ where
     }
 
     /// Evaluate a validity predicate with given data. The address, changed
-    /// storage keys and verifiers will have the same values as the input to
+    /// storage keys and addresses will have the same values as the input to
     /// caller's validity predicate.
     ///
     /// If the execution fails for whatever reason, this will return `false`.

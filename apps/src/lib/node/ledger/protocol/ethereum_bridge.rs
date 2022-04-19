@@ -1,12 +1,15 @@
 use std::collections::HashSet;
 
+use anoma::ledger::pos::anoma_proof_of_stake::types::ValidatorSet;
 use anoma::ledger::pos::anoma_proof_of_stake::PosBase;
+use anoma::ledger::pos::ValidatorSets;
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::ethereum_headers::{
-    EpochPower, MultiSignedEthHeader, SignedHeader,
+    EpochPower, EthereumHeader, MultiSignedEthHeader, SignedHeader,
 };
 use anoma::types::hash::Hash;
-use anoma::types::storage::{DbKeySeg, Key};
+use anoma::types::key::{common, protocol_pk_key};
+use anoma::types::storage::{DbKeySeg, Epoch, Key};
 use anoma::vm::types::EthereumHeaderUpdate;
 use borsh::BorshDeserialize;
 use fraction::GenericFraction;
@@ -15,102 +18,263 @@ type Fraction = GenericFraction<u64>;
 
 use super::*;
 
-pub fn make_ethereum_header_data<D, H>(
-    header: &MultiSignedEthHeader,
-    storage: &Storage<D, H>,
-) -> (Result<EthereumHeaderUpdate>, u64)
+pub trait CraftEthereumStorageData {
+    fn read_storage(&self, key: &Key) -> Result<(Option<Vec<u8>>, u64)>;
+    fn get_epoch(&self, block_height: u64) -> Option<Epoch>;
+    fn get_validator_set(&self) -> ValidatorSets;
+    fn verify_eth_header(&self, header: &EthereumHeader) -> bool;
+    /// Get the key for a validator's address
+    fn get_validator_key(
+        &self,
+        address: &Address,
+    ) -> (Result<common::PublicKey>, u64) {
+        let (bytes, gas) = match self.read_storage(&protocol_pk_key(address)) {
+            Ok(result) => result,
+            Err(e) => return (Err(e), 0),
+        };
+        if let Some(bytes) = bytes {
+            (
+                BorshDeserialize::deserialize(&mut bytes.as_ref()).map_err(
+                    |_| {
+                        Error::EthereumHeaderTxError(
+                            "Protocol public key in storage should be \
+                             deserializable"
+                                .into(),
+                        )
+                    },
+                ),
+                gas,
+            )
+        } else {
+            (
+                Err(Error::EthereumHeaderTxError(
+                    "Could not find the protocol key for validator".into(),
+                )),
+                gas,
+            )
+        }
+    }
+
+    /// If a validator has not voted on this header before,
+    /// get the epoch it voted on this header and return the
+    /// corresponding validator set.
+    ///
+    /// This also updates the list of validators that has seen
+    /// this header to include the validator being checked
+    fn get_validator_set_by_epoch<'a>(
+        &self,
+        validator_set: &'a ValidatorSets,
+        seen_by: &mut HashSet<EpochPower>,
+        power: EpochPower,
+    ) -> Result<Option<&'a ValidatorSet<Address>>> {
+        let block_height = power.block_height;
+        if seen_by.insert(power) {
+            let epoch = match self.get_epoch(block_height) {
+                Some(epoch) => epoch,
+                _ => {
+                    return Err(Error::EthereumHeaderTxError(
+                        "Could not find epoch from block height".into(),
+                    ));
+                }
+            };
+
+            Some(validator_set.get(epoch).ok_or_else(|| {
+                Error::EthereumHeaderTxError(
+                    "Could not find validators for given epoch".into(),
+                )
+            }))
+        } else {
+            None
+        }
+        .transpose()
+    }
+
+    /// The checks that a validator correctly gave their information about
+    /// a header. It checks that they correctly gave their voting power for
+    /// the epoch at which they voted on this header.
+    ///
+    /// It also fetches their public protocol key (for verifying signatures)
+    /// and keeps a running total of the stake backing a header
+    fn verify_validator_data(
+        &self,
+        power: EpochPower,
+        gas: &mut u64,
+        current_voting_power: &mut Fraction,
+        seen_by: &mut HashSet<EpochPower>,
+        public_keys: &mut Vec<common::PublicKey>,
+    ) -> Result<()> {
+        let address = power.validator.clone();
+        let voting_power = power.voting_power;
+        let validator_set = self.get_validator_set();
+        let validators = match self.get_validator_set_by_epoch(
+            &validator_set,
+            seen_by,
+            power,
+        )? {
+            Some(validators) => validators,
+            None => {
+                let (key, next_gas) = self.get_validator_key(&address);
+                *gas += next_gas;
+                public_keys.push(key?);
+                return Ok(());
+            }
+        };
+
+        let pk = match validators
+            .active
+            .iter()
+            .find(|validator| address == validator.address)
+            .map(|validator| u64::from(validator.voting_power))
+        {
+            Some(power) if power != voting_power => {
+                Err(Error::EthereumHeaderTxError(
+                    "A validator's voting power was incorrectly given".into(),
+                ))
+            }
+            Some(_) => {
+                let (key, next_gas) = self.get_validator_key(&address);
+                *gas += next_gas;
+                key
+            }
+            _ => Err(Error::EthereumHeaderTxError(
+                "A validator's voting power could not be found".into(),
+            )),
+        }?;
+        public_keys.push(pk);
+        let total_voting_power: u64 = validators
+            .active
+            .iter()
+            .map(|validator| u64::from(validator.voting_power))
+            .sum();
+        *current_voting_power +=
+            Fraction::new(voting_power, total_voting_power);
+        Ok(())
+    }
+
+    /// Craft the storage changes to be written given
+    /// a multi-signed Ethereum header
+    fn make_ethereum_header_data(
+        &self,
+        header: &MultiSignedEthHeader,
+    ) -> (Result<EthereumHeaderUpdate>, u64) {
+        let hash = header.header_hash();
+        // storage keys that we look up in order to update
+        let voting_power_key = get_voting_power_key(&hash);
+        let seen_by_key = get_seen_by_key(&hash);
+
+        // get the voting power that has seen this header
+        let (current_voting_power, mut gas) =
+            self.read_storage(&voting_power_key).unwrap_or_default();
+        let current_voting_power = current_voting_power
+            .iter()
+            .filter_map(|bytes| {
+                <(u64, u64) as BorshDeserialize>::deserialize(
+                    &mut bytes.as_slice(),
+                )
+                .ok()
+            })
+            .next()
+            .unwrap_or((0, 1));
+
+        // a running total of the voting power backing a header
+        let mut current_voting_power =
+            Fraction::new(current_voting_power.0, current_voting_power.1);
+
+        // get the validators that have seen this header;
+        let (seen_by, next_gas) =
+            self.read_storage(&seen_by_key).unwrap_or_default();
+
+        let mut seen_by = seen_by
+            .iter()
+            .filter_map(|bytes| {
+                <HashSet<EpochPower> as BorshDeserialize>::deserialize(
+                    &mut bytes.as_slice(),
+                )
+                .ok()
+            })
+            .next()
+            .unwrap_or_default();
+        gas += next_gas;
+
+        // the public keys used to verify the signatures
+        let mut public_keys = vec![];
+
+        // update the seen_by, voting powers, current voting power,
+        // and fetch the public keys for signature verification.
+        for power in header.get_voting_powers().into_iter() {
+            // check that the voting power was correctly given
+            if let Err(e) = self.verify_validator_data(
+                power,
+                &mut gas,
+                &mut current_voting_power,
+                &mut seen_by,
+                &mut public_keys,
+            ) {
+                return (Err(e), gas);
+            }
+        }
+
+        // verify the signatures
+        if header.verify_signatures(&public_keys).is_err() {
+            return (
+                Err(Error::EthereumHeaderTxError(
+                    "The Ethereum header was not correctly signed".into(),
+                )),
+                gas,
+            );
+        }
+
+        // verify the Ethereum header via the ethash algorithm
+        if !self.verify_eth_header(header.get_header()) {
+            return (
+                Err(Error::EthereumHeaderTxError(
+                    "The Ethereum header is not valid".into(),
+                )),
+                gas,
+            );
+        }
+
+        // check if 2 / 3 of the signing validators have seen this header
+        let seen = 3 * current_voting_power.numer().unwrap()
+            > 2 * current_voting_power.denom().unwrap();
+        (
+            Ok(EthereumHeaderUpdate {
+                header: header.get_header().clone(),
+                seen_by,
+                voting_power: (
+                    *current_voting_power.numer().unwrap(),
+                    *current_voting_power.denom().unwrap(),
+                ),
+                seen,
+            }),
+            gas,
+        )
+    }
+}
+
+impl<D, H> CraftEthereumStorageData for Storage<D, H>
 where
     D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
     H: 'static + StorageHasher + Sync,
 {
-    let hash = header.hash();
-    // storage keys that we look up in order to update
-    let voting_power_key = get_voting_power_key(&hash);
-    let seen_by_key = get_seen_by_key(&hash);
+    fn read_storage(&self, key: &Key) -> Result<(Option<Vec<u8>>, u64)> {
+        self.read(key).map_err(Error::StorageError)
+    }
 
-    // get the voting power that has seen this header
-    let (current_voting_power, mut gas) =
-        storage.read(&voting_power_key).unwrap_or_default();
-    let current_voting_power = current_voting_power
-        .iter()
-        .filter_map(|bytes| {
-            <(u64, u64) as BorshDeserialize>::deserialize(&mut bytes.as_slice())
-                .ok()
-        })
-        .next()
-        .unwrap_or((0, 1));
-    let mut current_voting_power =
-        Fraction::new(current_voting_power.0, current_voting_power.1);
+    fn get_epoch(&self, block_height: u64) -> Option<Epoch> {
+        self.block.pred_epochs.get_epoch(block_height.into())
+    }
 
-    // get the validators that have seen this header;
-    let (seen_by, next_gas) = storage.read(&seen_by_key).unwrap_or_default();
-    let mut seen_by = seen_by
-        .iter()
-        .filter_map(|bytes| {
-            <HashSet<EpochPower> as BorshDeserialize>::deserialize(
-                &mut bytes.as_slice(),
-            )
-            .ok()
-        })
-        .next()
-        .unwrap_or_default();
-    gas += next_gas;
+    fn get_validator_set(&self) -> ValidatorSets {
+        self.read_validator_set()
+    }
 
-    // update the seen_by and voting powers
-    for power in header.get_voting_powers().into_iter() {
-        let voting_power = power.voting_power;
-        let block_height = power.block_height;
-        if seen_by.insert(power) {
-            let epoch = match storage
-                .block
-                .pred_epochs
-                .get_epoch(block_height.into())
-            {
-                Some(epoch) => epoch,
-                _ => {
-                    return (
-                        Err(Error::EthereumHeaderTxError(
-                            "Could not find epoch from block height".into(),
-                        )),
-                        gas,
-                    );
-                }
-            };
-            let validators = storage.read_validator_set();
-            let validators = match validators.get(epoch) {
-                Some(validators) => validators,
-                _ => {
-                    return (
-                        Err(Error::EthereumHeaderTxError(
-                            "Could not find validators for given epoch".into(),
-                        )),
-                        gas,
-                    );
-                }
-            };
-            let total_voting_power: u64 = validators
-                .active
-                .iter()
-                .map(|validator| u64::from(validator.voting_power))
-                .sum();
-            current_voting_power +=
-                Fraction::new(voting_power, total_voting_power);
+    fn verify_eth_header(&self, header: &EthereumHeader) -> bool {
+        match self.eth_verifier.as_ref() {
+            Some(verifier) => verifier.verify_header(header),
+            _ => false,
         }
     }
-    let seen = 3 * current_voting_power.numer().unwrap()
-        > 2 * current_voting_power.denom().unwrap();
-    (
-        Ok(EthereumHeaderUpdate {
-            header: header.get_header().clone(),
-            seen_by,
-            voting_power: (
-                *current_voting_power.numer().unwrap(),
-                *current_voting_power.denom().unwrap(),
-            ),
-            seen,
-        }),
-        gas,
-    )
 }
 
 const ETH_ADDRESS: Address = Address::Internal(InternalAddress::EthereumState);
@@ -178,27 +342,16 @@ pub mod ethereum_headers_vp {
     use std::collections::BTreeSet;
     use std::convert::TryFrom;
 
-    use anoma::ledger::native_vp::{self, Ctx, NativeVp};
+    use anoma::ledger::native_vp::{Ctx, NativeVp};
     use anoma::ledger::storage::{self as ledger_storage, StorageHasher};
     use anoma::proto::Tx;
-    use anoma::types::ethereum_headers::EthereumHeader;
-    use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
-    use anoma::types::transaction::{process_tx, TxType};
+    use anoma::types::ethereum_headers::{
+        EthereumHeader, MultiSignedEthHeader, SignedHeader,
+    };
     use anoma::vm::WasmCacheAccess;
     use borsh::BorshDeserialize;
-    use thiserror::Error;
 
     use super::*;
-
-    #[allow(dead_code)]
-    #[derive(Error, Debug)]
-    pub enum Error {
-        #[error("Native VP error: {0}")]
-        NativeVpError(native_vp::Error),
-    }
-
-    /// Verifying Ethereum state result
-    pub type Result<T> = std::result::Result<T, Error>;
 
     /// Ethereum state validity predicate
     pub struct EthereumStateVp<'a, DB, H, CA>
@@ -230,103 +383,40 @@ pub mod ethereum_headers_vp {
                 None
             }
         }
+    }
 
-        /// Recreate the header update from the tx. Check that
-        /// voting powers were given correctly
-        fn make_ethereum_header_data(
-            &self,
-            header: &MultiSignedEthHeader,
-        ) -> Option<EthereumHeaderUpdate> {
-            let hash = header.hash();
-            // storage keys that we look up in order to update
-            let voting_power_key = get_voting_power_key(&hash);
-            let seen_by_key = get_seen_by_key(&hash);
+    impl<'a, DB, H, CA> CraftEthereumStorageData for EthereumStateVp<'a, DB, H, CA>
+    where
+        DB: 'static
+            + ledger_storage::DB
+            + for<'iter> ledger_storage::DBIter<'iter>,
+        H: 'static + StorageHasher,
+        CA: 'static + WasmCacheAccess,
+    {
+        fn read_storage(&self, key: &Key) -> Result<(Option<Vec<u8>>, u64)> {
+            self.ctx
+                .read_pre(key)
+                .map(|result| (result, 0))
+                .map_err(super::Error::EthereumStateVpError)
+        }
 
-            // get the voting power that has seen this header
-            let current_voting_power =
-                self.ctx.read_pre(&voting_power_key).unwrap_or_default();
-            let current_voting_power = current_voting_power
-                .iter()
-                .filter_map(|bytes| {
-                    <(u64, u64) as BorshDeserialize>::deserialize(
-                        &mut bytes.as_slice(),
-                    )
-                    .ok()
-                })
-                .next()
-                .unwrap_or((0, 1));
-            let mut current_voting_power =
-                Fraction::new(current_voting_power.0, current_voting_power.1);
+        fn get_epoch(&self, block_height: u64) -> Option<Epoch> {
+            self.ctx
+                .storage
+                .block
+                .pred_epochs
+                .get_epoch(block_height.into())
+        }
 
-            // get the validators that have seen this header;
-            let seen_by = self.ctx.read_pre(&seen_by_key).unwrap_or_default();
-            let mut seen_by = seen_by
-                .iter()
-                .filter_map(|bytes| {
-                    <HashSet<EpochPower> as BorshDeserialize>::deserialize(
-                        &mut bytes.as_slice(),
-                    )
-                    .ok()
-                })
-                .next()
-                .unwrap_or_default();
+        fn get_validator_set(&self) -> ValidatorSets {
+            self.ctx.storage.read_validator_set()
+        }
 
-            // update the seen_by and voting powers
-            for power in header.get_voting_powers().into_iter() {
-                let address = power.validator.clone();
-                let voting_power = power.voting_power;
-                let block_height = power.block_height;
-                if seen_by.insert(power) {
-                    let epoch = match self
-                        .ctx
-                        .storage
-                        .block
-                        .pred_epochs
-                        .get_epoch(block_height.into())
-                    {
-                        Some(epoch) => epoch,
-                        _ => return None,
-                    };
-                    let validators = self.ctx.storage.read_validator_set();
-                    let validators = match validators.get(epoch) {
-                        Some(validators) => validators,
-                        _ => return None,
-                    };
-                    // check that the voting power was correctly given
-                    match validators
-                        .active
-                        .iter()
-                        .find(|validator| address == validator.address)
-                        .map(|validator| u64::from(validator.voting_power))
-                    {
-                        Some(power) => {
-                            if power != voting_power {
-                                return None;
-                            }
-                        }
-                        _ => return None,
-                    }
-
-                    let total_voting_power: u64 = validators
-                        .active
-                        .iter()
-                        .map(|validator| u64::from(validator.voting_power))
-                        .sum();
-                    current_voting_power +=
-                        Fraction::new(voting_power, total_voting_power);
-                }
+        fn verify_eth_header(&self, header: &EthereumHeader) -> bool {
+            match self.ctx.storage.eth_verifier.as_ref() {
+                Some(verifier) => verifier.verify_header(header),
+                _ => false,
             }
-            let seen = 3 * current_voting_power.numer().unwrap()
-                > 2 * current_voting_power.denom().unwrap();
-            Some(EthereumHeaderUpdate {
-                header: header.get_header().clone(),
-                seen_by,
-                voting_power: (
-                    *current_voting_power.numer().unwrap(),
-                    *current_voting_power.denom().unwrap(),
-                ),
-                seen,
-            })
         }
     }
 
@@ -348,18 +438,22 @@ pub mod ethereum_headers_vp {
             keys_changed: &BTreeSet<Key>,
             _verifiers: &BTreeSet<Address>,
         ) -> Result<bool> {
-            // check that the changes came from a protocol tx
-            let header = if let Ok(Ok(TxType::Protocol(ProtocolTx {
-                tx: ProtocolTxType::EthereumHeaders(header),
-                ..
-            }))) = Tx::try_from(tx_data).map(process_tx)
+            let header = if let Ok(Tx {
+                data: Some(header), ..
+            }) = Tx::try_from(tx_data)
             {
-                header
+                if let Ok(header) =
+                    MultiSignedEthHeader::try_from_slice(&header[..])
+                {
+                    header
+                } else {
+                    return Ok(false);
+                }
             } else {
                 return Ok(false);
             };
             // check that all four relevant storage keys were changed
-            let hash = header.hash();
+            let hash = header.header_hash();
             let header_key = get_header_key(&hash);
             let seen_by_key = get_seen_by_key(&hash);
             let voting_power_key = get_voting_power_key(&hash);
@@ -381,7 +475,7 @@ pub mod ethereum_headers_vp {
                 seen_by,
                 seen,
             } = match self.make_ethereum_header_data(&header) {
-                Some(update) => update,
+                (Ok(update), _) => update,
                 _ => return Ok(false),
             };
             let expected_header =
@@ -422,19 +516,52 @@ pub mod ethereum_headers_vp {
             Ok(true)
         }
     }
+
+    /// A VP to reject changes to Ethereum state storage from
+    /// txs that are not protocol txs.
+    ///
+    /// For protocol txs of type `ProtocolTxType::EthereumHeaders`,
+    /// this VP is skipped (i.e. removed from the verifiers list).
+    pub struct EthereumSentinelVp;
+
+    impl NativeVp for EthereumSentinelVp {
+        type Error = Error;
+
+        const ADDR: InternalAddress = InternalAddress::EthereumSentinel;
+
+        fn validate_tx(
+            &self,
+            _tx_data: &[u8],
+            keys_changed: &BTreeSet<Key>,
+            _verifiers: &BTreeSet<Address>,
+        ) -> Result<bool> {
+            Ok(!keys_changed.iter().any(|key| {
+                key.segments.contains(&DbKeySeg::AddressSeg(ETH_ADDRESS))
+            }))
+        }
+    }
 }
 
-#[cfg(all(test, feature = "dev"))]
+#[cfg(all(test, feature = "dev", not(feature = "eth-fullnode")))]
 mod test_ethereum_bridge {
+    use std::env::temp_dir;
+
+    use anoma::ledger::ethash::MockVerifier;
+    use anoma::ledger::native_vp::Ctx;
     use anoma::ledger::storage::mockdb::MockDB;
     use anoma::ledger::storage::Sha256Hasher;
     use anoma::types::chain::ChainId;
-    use anoma::types::ethereum_headers::EthereumHeader;
+    use anoma::types::ethereum_headers::{
+        EthereumHeader, SignedEthereumHeader,
+    };
     use anoma::types::hash::Hash;
     use anoma::types::time::DateTimeUtc;
+    use anoma::vm::WasmCacheRwAccess;
+    use paste::paste;
 
     use super::*;
     use crate::config::genesis;
+    use crate::node::ledger::shell::test_utils::gen_keypair;
     use crate::wallet::defaults::*;
 
     /// This is not a meaningful default. It is
@@ -481,14 +608,98 @@ mod test_ethereum_bridge {
                 .map(|validator| &validator.pos_data),
             current_epoch,
         );
+        for validator in &genesis.validators {
+            storage
+                .write(
+                    &protocol_pk_key(&validator.pos_data.address),
+                    validator
+                        .protocol_key
+                        .try_to_vec()
+                        .expect("encode protocol public key"),
+                )
+                .expect("Unable to set genesis user protocol public key");
+        }
+        storage.eth_verifier = Some(MockVerifier::new(0, 0, 0));
         storage
+    }
+
+    /// Setup a ctx for running native vps
+    fn setup_ctx<'a>(
+        tx: &'a Tx,
+        storage: &'a Storage<MockDB, Sha256Hasher>,
+        write_log: &'a WriteLog,
+    ) -> Ctx<'a, MockDB, Sha256Hasher, WasmCacheRwAccess> {
+        Ctx::new(
+            storage,
+            &write_log,
+            tx,
+            VpGasMeter::new(0u64),
+            VpCache::new(temp_dir(), 100usize),
+        )
+    }
+
+    /// Write the storage updates from an Ethereum header tx
+    /// in the exact same way the wasm blob run by the protocol
+    /// would.
+    fn mock_wasm_code(
+        storage: &Storage<MockDB, Sha256Hasher>,
+        write_log: &mut WriteLog,
+        header: &MultiSignedEthHeader,
+    ) {
+        let (update, _) = storage.make_ethereum_header_data(header);
+        let EthereumHeaderUpdate {
+            header,
+            seen_by,
+            voting_power,
+            seen,
+        } = update.expect("Test failed");
+        let hash = header.hash();
+        let header_key = get_header_key(&hash);
+        let seen_by_key = get_seen_by_key(&hash);
+        let voting_power_key = get_voting_power_key(&hash);
+        let seen_key = get_seen_key(&hash);
+        write_log
+            .write(&header_key, header.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_by_key, seen_by.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&voting_power_key, voting_power.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_key, seen.try_to_vec().unwrap())
+            .expect("Test failed");
+    }
+
+    /// Parameterize tests for both structs implementing the
+    /// [`CraftEthereumStorageData`] trait
+    macro_rules! make_tests {
+        ($func:ident) => {
+            paste! {
+                #[test]
+                fn [<$func _storage>]() {
+                    let storage = setup();
+                    $func(storage);
+                }
+            }
+            paste! {
+                #[test]
+                fn [<$func _vp>]() {
+                    let storage = setup();
+                    let write_log = WriteLog::default();
+                    let tx = Tx::new(vec![], None);
+                    let ctx = setup_ctx(&tx, &storage, &write_log);
+                    let eth_vp = EthereumStateVp { ctx };
+                    $func(eth_vp);
+                }
+            }
+        };
     }
 
     /// Test the case when as header is seen for the first time.
     /// Thus, none of the keys exist in storage yet.
-    #[test]
-    fn test_new_header() {
-        let storage = setup();
+    fn test_new_header(update_crafter: impl CraftEthereumStorageData) {
         let header: MultiSignedEthHeader = default_eth_header()
             .sign(200, validator_address(), 0, &validator_keys().0)
             .into();
@@ -497,7 +708,8 @@ mod test_ethereum_bridge {
             seen_by,
             voting_power,
             seen,
-        } = make_ethereum_header_data(&header, &storage)
+        } = update_crafter
+            .make_ethereum_header_data(&header)
             .0
             .expect("Test failed");
         assert_eq!(header, default_eth_header());
@@ -526,7 +738,7 @@ mod test_ethereum_bridge {
         let header: MultiSignedEthHeader = default_eth_header()
             .sign(100, validator_address(), 0, &validator_keys().0)
             .into();
-        let hash = header.hash();
+        let hash = header.header_hash();
         // add validator to the seen_by list
         let power = EpochPower {
             validator: validator_address(),
@@ -550,20 +762,456 @@ mod test_ethereum_bridge {
             )
             .expect("Test failed");
 
+        let write_log = WriteLog::default();
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+        let eth_vp = EthereumStateVp { ctx };
+
+        // check the update date from the native vp
         let EthereumHeaderUpdate {
-            header,
+            header: eth_header,
             seen_by,
             voting_power,
             seen,
-        } = make_ethereum_header_data(&header, &storage)
+        } = eth_vp
+            .make_ethereum_header_data(&header)
             .0
             .expect("Test failed");
-        assert_eq!(header, default_eth_header());
+        // check the update date from the storage
+        let EthereumHeaderUpdate {
+            header: eth_header_other,
+            seen_by: seen_by_other,
+            voting_power: voting_power_other,
+            seen: seen_other,
+        } = storage
+            .make_ethereum_header_data(&header)
+            .0
+            .expect("Test failed");
+        // check that the two updates are equal
+        assert_eq!(eth_header, eth_header_other);
+        assert_eq!(seen_by, seen_by_other);
+        assert_eq!(voting_power, voting_power_other);
+        assert_eq!(seen, seen_other);
+
+        assert_eq!(eth_header, default_eth_header());
         assert_eq!(seen_by, HashSet::from([power]));
         assert_eq!(
             Fraction::new(voting_power.0, voting_power.1),
             Fraction::new(1u64, 4u64)
         );
         assert!(!seen);
+    }
+
+    /// Test that the VP will reject an invalid Ethereum header
+    fn test_invalid_header(update_crafter: impl CraftEthereumStorageData) {
+        let mut header = default_eth_header();
+        header.hash = Hash([1; 32]);
+        let header: MultiSignedEthHeader = header
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        assert!(update_crafter.make_ethereum_header_data(&header).0.is_err())
+    }
+
+    /// Test that a incorrect signature is rejected
+    fn test_invalid_sig_rejected(
+        update_crafter: impl CraftEthereumStorageData,
+    ) {
+        let keypair = gen_keypair();
+        let header = default_eth_header()
+            .sign(200, validator_address(), 0, &keypair)
+            .into();
+        assert!(update_crafter.make_ethereum_header_data(&header).0.is_err())
+    }
+
+    /// Test that a validator that gives the incorrect voting power
+    /// for themselves is rejected by the VP.
+    fn test_incorrect_voting_power_rejected(
+        update_crafter: impl CraftEthereumStorageData,
+    ) {
+        let keypair = gen_keypair();
+        let header = default_eth_header()
+            .sign(100, validator_address(), 0, &keypair)
+            .into();
+        assert!(update_crafter.make_ethereum_header_data(&header).0.is_err())
+    }
+
+    /// Test that a non-validator address is rejected by the VP.
+    fn test_non_validator_address_rejected(
+        update_crafter: impl CraftEthereumStorageData,
+    ) {
+        let header = default_eth_header()
+            .sign(200, bertha_address(), 0, &validator_keypair())
+            .into();
+        assert!(update_crafter.make_ethereum_header_data(&header).0.is_err())
+    }
+
+    make_tests!(test_new_header);
+    make_tests!(test_invalid_header);
+    make_tests!(test_invalid_sig_rejected);
+    make_tests!(test_incorrect_voting_power_rejected);
+    make_tests!(test_non_validator_address_rejected);
+
+    /// Test the happy flow that a state change crafted by protocol
+    /// passes the native vp's validation
+    #[test]
+    fn test_native_vp() {
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        let hash = header.header_hash();
+
+        let storage = setup();
+        let mut write_log = WriteLog::default();
+        // mock running the tx and applying the changes to the WAL
+        mock_wasm_code(&storage, &mut write_log, &header);
+
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Test that the changed key set must contain keys
+    /// for `voting_power`, `seen_by`, `seen`, and `header`.
+    /// Otherwise the change is rejected
+    #[test]
+    fn test_wrong_changed_keys_rejected() {
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        let hash = header.header_hash();
+
+        let storage = setup();
+        let mut write_log = WriteLog::default();
+        // mock running the tx and applying the changes to the WAL
+        mock_wasm_code(&storage, &mut write_log, &header);
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Check that if the input tx data does not
+    /// serialize to the correct struct, it is rejected.
+    #[test]
+    fn test_incorrect_tx_data_rejected() {
+        let header: SignedEthereumHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        let hash = header.header_hash();
+
+        let storage = setup();
+        let mut write_log = WriteLog::default();
+        // mock running the tx and applying the changes to the WAL
+        mock_wasm_code(
+            &storage,
+            &mut write_log,
+            &MultiSignedEthHeader::from(header.clone()),
+        );
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Test that if the changed keys don't contain
+    /// the correct hash of the included header, the
+    /// changes are rejected.
+    #[test]
+    fn test_wrong_header_hash_rejected() {
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+
+        let storage = setup();
+        let mut write_log = WriteLog::default();
+        let (update, _) = storage.make_ethereum_header_data(&header);
+        let EthereumHeaderUpdate {
+            header: eth_header,
+            seen_by,
+            voting_power,
+            seen,
+        } = update.expect("Test failed");
+        let hash = Hash([0; 32]);
+        let header_key = get_header_key(&hash);
+        let seen_by_key = get_seen_by_key(&hash);
+        let voting_power_key = get_voting_power_key(&hash);
+        let seen_key = get_seen_key(&hash);
+        write_log
+            .write(&header_key, eth_header.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_by_key, seen_by.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&voting_power_key, voting_power.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_key, seen.try_to_vec().unwrap())
+            .expect("Test failed");
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Test that if an attempt to recreate the
+    /// `EthereumUpdate` instance returns an error,
+    /// the changes are rejected.
+    #[test]
+    fn test_invalid_update_rejected() {
+        let mut header: MultiSignedEthHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        let hash = header.header_hash();
+
+        let storage = setup();
+        let mut write_log = WriteLog::default();
+        let (update, _) = storage.make_ethereum_header_data(&header);
+        let EthereumHeaderUpdate {
+            header: eth_header,
+            seen_by,
+            voting_power: _,
+            seen,
+        } = update.expect("Test failed");
+        let header_key = get_header_key(&hash);
+        let seen_by_key = get_seen_by_key(&hash);
+        let voting_power_key = get_voting_power_key(&hash);
+        let seen_key = get_seen_key(&hash);
+        write_log
+            .write(&header_key, eth_header.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_by_key, seen_by.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&voting_power_key, (100u64, 200u64).try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_key, seen.try_to_vec().unwrap())
+            .expect("Test failed");
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        // this should now cause an error when trying to make the EthereumUpdate
+        // struct
+        header.signers[0].1 = 100;
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Test that if the storage changes aren't correct,
+    /// they are rejected.
+    #[test]
+    fn test_incorrect_update_rejected() {
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        let hash = header.header_hash();
+
+        let storage = setup();
+        let mut write_log = WriteLog::default();
+        let (update, _) = storage.make_ethereum_header_data(&header);
+        let EthereumHeaderUpdate {
+            header: eth_header,
+            seen_by,
+            voting_power: _,
+            seen,
+        } = update.expect("Test failed");
+        let header_key = get_header_key(&hash);
+        let seen_by_key = get_seen_by_key(&hash);
+        let voting_power_key = get_voting_power_key(&hash);
+        let seen_key = get_seen_key(&hash);
+        write_log
+            .write(&header_key, eth_header.try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_by_key, seen_by.try_to_vec().unwrap())
+            .expect("Test failed");
+        // this is not correct
+        write_log
+            .write(&voting_power_key, (100u64, 200u64).try_to_vec().unwrap())
+            .expect("Test failed");
+        write_log
+            .write(&seen_key, seen.try_to_vec().unwrap())
+            .expect("Test failed");
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Check that if some keys are changed but not others,
+    /// all are rejected.
+    #[test]
+    fn test_not_all_keys_changed_rejected() {
+        let header: MultiSignedEthHeader = default_eth_header()
+            .sign(200, validator_address(), 0, &validator_keys().0)
+            .into();
+        let hash = header.header_hash();
+        let storage = setup();
+        let write_log = WriteLog::default();
+        let tx = Tx::new(vec![], None);
+        let ctx = setup_ctx(&tx, &storage, &write_log);
+
+        let eth_vp = EthereumStateVp { ctx };
+        let tx_to_verify = Tx::new(vec![], Some(header.try_to_vec().unwrap()));
+
+        let keys_changed = BTreeSet::from([
+            get_voting_power_key(&hash),
+            get_seen_key(&hash),
+            get_seen_by_key(&hash),
+            get_header_key(&hash),
+        ]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+    }
+
+    /// Test that the sentinel rejects any changes
+    /// that tries to change storage keys belonging
+    /// to Ethereum bridge
+    #[test]
+    fn test_ethereum_sentinel() {
+        let eth_vp = EthereumSentinelVp {};
+        let tx_to_verify = Tx::new(vec![], None);
+
+        // check we reject changes that touch the Ethereum bridge storage
+        let keys_changed = BTreeSet::from([get_seen_key(&Hash([0; 32]))]);
+        let verifiers = BTreeSet::from([]);
+        assert!(
+            !eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        );
+
+        // check we allow other storage changes
+        let keys_changed =
+            BTreeSet::from([protocol_pk_key(&validator_address())]);
+        assert!(
+            eth_vp
+                .validate_tx(
+                    tx_to_verify.to_bytes().as_slice(),
+                    &keys_changed,
+                    &verifiers,
+                )
+                .expect("Test failed")
+        )
     }
 }

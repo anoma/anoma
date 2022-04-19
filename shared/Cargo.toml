@@ -68,6 +68,7 @@ ethereum-headers = [
   "rlp",
   "web3",
 ]
+eth-fullnode = []
 
 [dependencies]
 anoma_proof_of_stake = {path = "../proof_of_stake"}

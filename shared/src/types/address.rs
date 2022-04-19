@@ -63,6 +63,8 @@ mod internal {
         "ano::IBC Mint Address                        ";
     pub const ETHEREUM_STATE: &str =
         "ano::Ethereum State Address                  ";
+    pub const ETHEREUM_SENTINEL: &str =
+        "ano::Ethereum Sentinel Address               ";
 }
 
 /// Fixed-length address strings prefix for established addresses.
@@ -186,6 +188,9 @@ impl Address {
                     InternalAddress::EthereumState => {
                         internal::ETHEREUM_STATE.to_string()
                     }
+                    InternalAddress::EthereumSentinel => {
+                        internal::ETHEREUM_SENTINEL.to_string()
+                    }
                 };
                 debug_assert_eq!(string.len(), FIXED_LEN_STRING_BYTES);
                 string
@@ -239,6 +244,9 @@ impl Address {
                 }
                 internal::ETHEREUM_STATE => {
                     Ok(Address::Internal(InternalAddress::EthereumState))
+                }
+                internal::ETHEREUM_SENTINEL => {
+                    Ok(Address::Internal(InternalAddress::EthereumSentinel))
                 }
                 _ if raw.len() == HASH_LEN => Ok(Address::Internal(
                     InternalAddress::IbcEscrow(raw.to_string()),
@@ -433,6 +441,9 @@ pub enum InternalAddress {
     IbcMint,
     /// Include and verify Ethereum headers
     EthereumState,
+    /// A guard of the Ethereum state that ensures only protocol
+    /// txs may mutate its storage
+    EthereumSentinel,
 }
 
 impl InternalAddress {
@@ -460,6 +471,7 @@ impl Display for InternalAddress {
                 Self::IbcBurn => "IbcBurn".to_string(),
                 Self::IbcMint => "IbcMint".to_string(),
                 Self::EthereumState => "EthereumState".to_string(),
+                Self::EthereumSentinel => "EthereumSentinel".to_string(),
             }
         )
     }
@@ -695,8 +707,10 @@ pub mod testing {
             InternalAddress::IbcEscrow(_) => {}
             InternalAddress::IbcBurn => {}
             InternalAddress::IbcMint => {}
-            InternalAddress::EthereumState => {} /* Add new addresses in the
-                                                  * `prop_oneof` below. */
+            InternalAddress::EthereumState => {}
+            InternalAddress::EthereumSentinel => {} /* Add new addresses in
+                                                     * the
+                                                     * `prop_oneof` below. */
         };
         prop_oneof![
             Just(InternalAddress::PoS),
@@ -708,6 +722,7 @@ pub mod testing {
             Just(InternalAddress::IbcBurn),
             Just(InternalAddress::IbcMint),
             Just(InternalAddress::EthereumState),
+            Just(InternalAddress::EthereumSentinel),
         ]
     }
 

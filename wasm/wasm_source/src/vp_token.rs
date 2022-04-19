@@ -12,7 +12,7 @@ fn validate_tx(
 ) -> bool {
     debug_log!(
         "validate_tx called with token addr: {}, key_changed: {:?}, \
-         verifiers: {:?}",
+         addresses: {:?}",
         addr,
         keys_changed,
         verifiers

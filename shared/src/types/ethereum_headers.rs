@@ -192,6 +192,11 @@ impl EthereumHeader {
             signed_header: Signed::new(signing_key, (self, height)),
         }
     }
+
+    /// Get the hash of the Ethereum header struct
+    pub fn hash(&self) -> Hash {
+        hash_tx(&self.try_to_vec().unwrap()[..])
+    }
 }
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
@@ -243,8 +248,12 @@ pub trait SignedHeader {
         &self,
         public_keys: &[common::PublicKey],
     ) -> std::result::Result<(), VerifySigError>;
-    /// Get the hash of the inner signed Ethereum header
+    /// Get the hash of the inner signed Ethereum header + height seen
     fn hash(&self) -> Hash;
+    /// Get the hash of the inner signed Ethereum header
+    fn header_hash(&self) -> Hash {
+        self.get_header().hash()
+    }
 }
 
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
@@ -330,9 +339,7 @@ impl MultiSignedEthHeader {
     /// Add a new signature for the same (block header, block height)
     /// to this instance.
     pub fn add(&mut self, other: SignedEthereumHeader) -> Result<()> {
-        if self.hash() == other.hash()
-            && self.get_height() == other.get_height()
-        {
+        if self.hash() == other.hash() {
             self.signers.push((other.address, other.voting_power));
             self.signed_header.sigs.push(other.signed_header.sig);
             Ok(())

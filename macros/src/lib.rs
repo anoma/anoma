@@ -53,7 +53,7 @@ pub fn transaction(_attr: TokenStream, input: TokenStream) -> TokenStream {
 ///     tx_data: Vec<u8>,
 ///     addr: Address,
 ///     keys_changed: BTreeSet<storage::Key>,
-///     verifiers: BTreeSet<Address>
+///     addresses: BTreeSet<Address>
 /// ) -> bool
 /// ```
 #[proc_macro_attribute]

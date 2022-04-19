@@ -74,7 +74,7 @@ clippy-abci-plus-plus:
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks" && \
+		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks ethereum-headers" && \
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
@@ -148,7 +148,7 @@ test-unit-abci-plus-plus:
 	$(cargo) test \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks" && \
+		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks ethereum-headers" && \
 	$(cargo) test \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \

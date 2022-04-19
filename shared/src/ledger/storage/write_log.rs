@@ -350,7 +350,7 @@ impl WriteLog {
     }
 
     /// Get the storage keys that have been changed in the write log, grouped by
-    /// their verifiers, whose VPs will be triggered by the changes.
+    /// their addresses, whose VPs will be triggered by the changes.
     ///
     /// Note that some storage keys may comprise of multiple addresses, in which
     /// case every address will be the verifier of the key.
@@ -616,7 +616,7 @@ mod tests {
         /// 2. Every changed storage key is associated with all the addresses
         ///    included in the key except for the addresses of newly
         ///    initialized accounts.
-        /// 3. Addresses of newly initialized accounts are not verifiers, so
+        /// 3. Addresses of newly initialized accounts are not addresses, so
         ///    that anything can be written into an account's storage in the
         ///    same tx in which it's initialized.
         /// 4. Every address is associated with all the newly initialized
@@ -697,7 +697,7 @@ pub mod testing {
         })
     }
 
-    /// Generate arbitrary verifiers from tx of [`BTreeSet<Address>`].
+    /// Generate arbitrary addresses from tx of [`BTreeSet<Address>`].
     pub fn arb_verifiers_from_tx() -> impl Strategy<Value = BTreeSet<Address>> {
         collection::btree_set(arb_address(), 0..10)
     }

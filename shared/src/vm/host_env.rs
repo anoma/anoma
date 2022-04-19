@@ -22,6 +22,7 @@ use crate::types::ibc::IbcEvent;
 use crate::types::internal::HostEnvResult;
 use crate::types::key::*;
 use crate::types::storage::Key;
+use crate::types::validity_predicate::Verifiers;
 use crate::vm::memory::VmMemory;
 use crate::vm::prefix_iter::{PrefixIteratorId, PrefixIterators};
 use crate::vm::types::KeyVal;
@@ -96,7 +97,7 @@ where
     pub iterators: MutHostRef<'a, &'a PrefixIterators<'a, DB>>,
     /// Transaction gas meter.
     pub gas_meter: MutHostRef<'a, &'a BlockGasMeter>,
-    /// The verifiers whose validity predicates should be triggered.
+    /// The addresses whose validity predicates should be triggered.
     pub verifiers: MutHostRef<'a, &'a BTreeSet<Address>>,
     /// Cache for 2-step reads from host environment.
     pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
@@ -133,7 +134,7 @@ where
         write_log: &mut WriteLog,
         iterators: &mut PrefixIterators<'a, DB>,
         gas_meter: &mut BlockGasMeter,
-        verifiers: &mut BTreeSet<Address>,
+        verifiers: &mut Verifiers,
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
         #[cfg(feature = "wasm-runtime")] tx_wasm_cache: &mut TxCache<CA>,
@@ -142,7 +143,7 @@ where
         let write_log = unsafe { MutHostRef::new(write_log) };
         let iterators = unsafe { MutHostRef::new(iterators) };
         let gas_meter = unsafe { MutHostRef::new(gas_meter) };
-        let verifiers = unsafe { MutHostRef::new(verifiers) };
+        let verifiers = unsafe { MutHostRef::new(&mut verifiers.addresses) };
         let result_buffer = unsafe { MutHostRef::new(result_buffer) };
         #[cfg(feature = "wasm-runtime")]
         let vp_wasm_cache = unsafe { MutHostRef::new(vp_wasm_cache) };
@@ -247,7 +248,7 @@ where
     pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
     /// The storage keys that have been changed. Used for calls to `eval`.
     pub keys_changed: HostRef<'a, &'a BTreeSet<Key>>,
-    /// The verifiers whose validity predicates should be triggered. Used for
+    /// The addresses whose validity predicates should be triggered. Used for
     /// calls to `eval`.
     pub verifiers: HostRef<'a, &'a BTreeSet<Address>>,
     /// VP WASM compilation cache
@@ -1767,7 +1768,7 @@ pub mod testing {
         storage: &Storage<DB, H>,
         write_log: &mut WriteLog,
         iterators: &mut PrefixIterators<'static, DB>,
-        verifiers: &mut BTreeSet<Address>,
+        verifiers: &mut Verifiers,
         gas_meter: &mut BlockGasMeter,
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,

@@ -16,7 +16,7 @@ pub mod vp;
 
 #[cfg(test)]
 mod tests {
-
+    use std::collections::BTreeSet;
     use std::panic;
 
     use anoma::ibc::tx_msg::Msg;
@@ -24,6 +24,7 @@ mod tests {
     use anoma::ledger::ibc::vp::Error as IbcError;
     use anoma::proto::{SignedTxData, Tx};
     use anoma::tendermint_proto::Protobuf;
+    use anoma::types::address::{Address, InternalAddress};
     use anoma::types::key::*;
     use anoma::types::storage::{self, BlockHash, BlockHeight, Key, KeySeg};
     use anoma::types::time::DateTimeUtc;
@@ -176,7 +177,12 @@ mod tests {
         let mut env = TestTxEnv::default();
         init_tx_env(&mut env);
 
-        assert!(env.verifiers.is_empty(), "pre-condition");
+        assert_eq!(
+            env.verifiers.addresses,
+            BTreeSet::<Address>::from([Address::Internal(
+                InternalAddress::EthereumSentinel
+            )])
+        );
         let verifier = address::testing::established_address_1();
         tx_host_env::insert_verifier(&verifier);
         assert!(
@@ -185,7 +191,7 @@ mod tests {
         );
         assert_eq!(
             env.verifiers.len(),
-            1,
+            2,
             "There should be only one verifier inserted"
         );
     }

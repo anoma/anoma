@@ -115,7 +115,7 @@ mod extend_votes {
             block_number: u64,
             header: &impl SignedHeader,
         ) -> bool {
-            let eth_verifier = match self.mode.get_eth_verifier() {
+            let eth_verifier = match &self.storage.eth_verifier {
                 Some(verifier) => verifier,
                 _ => return false,
             };

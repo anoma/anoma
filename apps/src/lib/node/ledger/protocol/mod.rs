@@ -16,16 +16,23 @@ use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
 use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
+use anoma::types::validity_predicate::Verifiers;
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
 use borsh::BorshSerialize;
-use ethereum_bridge::ethereum_headers_vp::EthereumStateVp;
-use ethereum_bridge::make_ethereum_header_data;
+use ethereum_bridge::ethereum_headers_vp::{
+    EthereumSentinelVp, EthereumStateVp,
+};
+use ethereum_bridge::CraftEthereumStorageData;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
 
 use crate::node::ledger::shell::Shell;
 use crate::wasm_loader;
+
+/// The address of the Ethereum sentinel that guards the Ethereum state storage
+const ETHEREUM_SENTINEL: Address =
+    Address::Internal(InternalAddress::EthereumSentinel);
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -58,8 +65,8 @@ pub enum Error {
     ParametersNativeVpError(parameters::Error),
     #[error("IBC Token native VP: {0}")]
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
-    #[error("Ethereum state native VP rejected changes")]
-    EthereumStateVpError,
+    #[error("Ethereum state native VP rejected changes: {0:?}")]
+    EthereumStateVpError(native_vp::Error),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
 }
@@ -166,10 +173,8 @@ where
             tx: ProtocolTxType::EthereumHeaders(ref header),
             ..
         }) => {
-            // This is the transaction the vps will see
-            let tx_to_verify = Tx::from(tx.clone());
             // First we create the data to be written to storage
-            let (tx_data, gas) = make_ethereum_header_data(header, storage);
+            let (tx_data, gas) = storage.make_ethereum_header_data(header);
             block_gas_meter.add(gas).map_err(Error::GasError)?;
             let tx_data = tx_data?;
             // We always use the same wasm code for this protocol tx
@@ -180,7 +185,7 @@ where
             // Create the tx to submit to the protocol
             let tx_to_execute =
                 Tx::new(code, Some(tx_data.try_to_vec().unwrap()));
-            let verifiers = execute_tx(
+            let mut verifiers = execute_tx(
                 &tx_to_execute,
                 storage,
                 block_gas_meter,
@@ -188,7 +193,11 @@ where
                 vp_wasm_cache,
                 tx_wasm_cache,
             )?;
-
+            // We have verified via consensus that this tx may modify
+            // the ethereum state storage, so we remove the sentinel
+            verifiers.remove(&ETHEREUM_SENTINEL);
+            let tx_to_verify =
+                Tx::new(vec![], Some(header.try_to_vec().unwrap()));
             let vps_result = check_vps(
                 &tx_to_verify,
                 storage,
@@ -225,7 +234,7 @@ where
     }
 }
 
-/// Execute a transaction code. Returns verifiers requested by the transaction.
+/// Execute a transaction code. Returns addresses requested by the transaction.
 fn execute_tx<D, H, CA>(
     tx: &Tx,
     storage: &Storage<D, H>,
@@ -233,7 +242,7 @@ fn execute_tx<D, H, CA>(
     write_log: &mut WriteLog,
     vp_wasm_cache: &mut VpCache<CA>,
     tx_wasm_cache: &mut TxCache<CA>,
-) -> Result<BTreeSet<Address>>
+) -> Result<Verifiers>
 where
     D: 'static + DB + for<'iter> DBIter<'iter> + Sync,
     H: 'static + StorageHasher + Sync,
@@ -278,7 +287,7 @@ where
 {
     let verifiers = write_log.verifiers_changed_keys(verifiers_from_tx);
 
-    // collect the VPs for the verifiers
+    // collect the VPs for the addresses
     let verifiers: Vec<(Address, BTreeSet<Key>, Vp)> = verifiers
         .iter()
         .filter(|(addr, _)| !matches!(addr, Address::Implicit(_)))
@@ -324,7 +333,7 @@ where
     Ok(vps_result)
 }
 
-/// Execute verifiers' validity predicates
+/// Execute addresses' validity predicates
 fn execute_vps<D, H, CA>(
     verifiers: Vec<(Address, BTreeSet<Key>, Vp)>,
     tx: &Tx,
@@ -443,10 +452,22 @@ where
                         }
                         InternalAddress::EthereumState => {
                             let eth_state = EthereumStateVp { ctx };
-                            let result = eth_state
-                                .validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(|_| Error::EthereumStateVpError);
+                            let result = eth_state.validate_tx(
+                                tx_data,
+                                keys,
+                                &verifiers_addr,
+                            );
                             gas_meter = eth_state.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::EthereumSentinel => {
+                            let sentinel = EthereumSentinelVp {};
+                            let result = sentinel.validate_tx(
+                                tx_data,
+                                keys,
+                                &verifiers_addr,
+                            );
+                            gas_meter = ctx.gas_meter.into_inner();
                             result
                         }
                     };

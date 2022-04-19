@@ -62,7 +62,7 @@ ABCI-plus-plus = [
   "anoma/ibc-vp",
 ]
 testing = ["dev"]
-eth-fullnode = []
+eth-fullnode = ["anoma/eth-fullnode"]
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["wasm-runtime", "ethereum-headers", "ferveo-tpke", "rand"]}
@@ -103,6 +103,7 @@ num-traits = "0.2.14"
 num_cpus = "1.13.0"
 once_cell = "1.8.0"
 orion = "0.16.0"
+paste = "1.0.7"
 pathdiff = "0.2.1"
 prost = "0.9.0"
 prost-types = "0.9.0"

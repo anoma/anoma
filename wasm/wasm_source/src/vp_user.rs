@@ -54,7 +54,7 @@ fn validate_tx(
     verifiers: BTreeSet<Address>,
 ) -> bool {
     debug_log!(
-        "vp_user called with user addr: {}, key_changed: {:?}, verifiers: {:?}",
+        "vp_user called with user addr: {}, key_changed: {:?}, addresses: {:?}",
         addr,
         keys_changed,
         verifiers

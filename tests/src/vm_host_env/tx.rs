@@ -9,6 +9,7 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::types::address::Address;
 use anoma::types::storage::Key;
 use anoma::types::time::DurationSecs;
+use anoma::types::validity_predicate::Verifiers;
 use anoma::types::{key, token};
 use anoma::vm::prefix_iter::PrefixIterators;
 use anoma::vm::wasm::{self, TxCache, VpCache};
@@ -31,7 +32,7 @@ pub struct TestTxEnv {
     pub storage: TestStorage,
     pub write_log: WriteLog,
     pub iterators: PrefixIterators<'static, MockDB>,
-    pub verifiers: BTreeSet<Address>,
+    pub verifiers: Verifiers,
     pub gas_meter: BlockGasMeter,
     pub result_buffer: Option<Vec<u8>>,
     pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
@@ -51,7 +52,7 @@ impl Default for TestTxEnv {
             write_log: WriteLog::default(),
             iterators: PrefixIterators::default(),
             gas_meter: BlockGasMeter::default(),
-            verifiers: BTreeSet::default(),
+            verifiers: Verifiers::default(),
             result_buffer: None,
             vp_wasm_cache,
             vp_cache_dir,
@@ -112,7 +113,7 @@ impl TestTxEnv {
             .map_err(|err| println!("{:?}", err))
             .ok();
         self.iterators = PrefixIterators::default();
-        self.verifiers = BTreeSet::default();
+        self.verifiers = Verifiers::default();
         self.gas_meter = BlockGasMeter::default();
     }
 

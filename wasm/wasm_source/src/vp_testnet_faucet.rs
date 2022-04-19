@@ -20,7 +20,7 @@ fn validate_tx(
 ) -> bool {
     debug_log!(
         "vp_testnet_faucet called with user addr: {}, key_changed: {:?}, \
-         verifiers: {:?}",
+         addresses: {:?}",
         addr,
         keys_changed,
         verifiers

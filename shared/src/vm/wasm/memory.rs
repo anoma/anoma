@@ -109,9 +109,9 @@ pub struct VpCallInput {
     pub keys_changed_ptr: u64,
     /// Length of the serialized changed keys
     pub keys_changed_len: u64,
-    /// Pointer to the serialized verifiers
+    /// Pointer to the serialized addresses
     pub verifiers_ptr: u64,
-    /// Length of the serialized verifiers
+    /// Length of the serialized addresses
     pub verifiers_len: u64,
 }
 

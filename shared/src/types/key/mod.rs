@@ -73,6 +73,11 @@ pub enum VerifySigError {
     MissingData,
     #[error("Signature belongs to a different scheme from the public key.")]
     MismatchedScheme,
+    #[error(
+        "An incorrect number of signatures was given to a piece of \
+         multi-signed data"
+    )]
+    InsufficientKeys,
 }
 
 #[allow(missing_docs)]

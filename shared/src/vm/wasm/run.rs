@@ -17,6 +17,7 @@ use crate::proto::Tx;
 use crate::types::address::Address;
 use crate::types::internal::HostEnvResult;
 use crate::types::storage::Key;
+use crate::types::validity_predicate::Verifiers;
 use crate::vm::host_env::{TxEnv, VpCtx, VpEnv, VpEvaluator};
 use crate::vm::prefix_iter::PrefixIterators;
 use crate::vm::types::VpInput;
@@ -68,7 +69,7 @@ pub enum Error {
 /// Result for functions that may fail
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Execute a transaction code. Returns the set verifiers addresses requested by
+/// Execute a transaction code. Returns the set addresses addresses requested by
 /// the transaction.
 pub fn tx<DB, H, CA>(
     storage: &Storage<DB, H>,
@@ -78,7 +79,7 @@ pub fn tx<DB, H, CA>(
     tx_data: impl AsRef<[u8]>,
     vp_wasm_cache: &mut VpCache<CA>,
     tx_wasm_cache: &mut TxCache<CA>,
-) -> Result<BTreeSet<Address>>
+) -> Result<Verifiers>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
@@ -91,7 +92,7 @@ where
     let (module, store) = tx_wasm_cache.fetch_or_compile(&tx_code)?;
 
     let mut iterators: PrefixIterators<'_, DB> = PrefixIterators::default();
-    let mut verifiers = BTreeSet::new();
+    let mut verifiers = Verifiers::default();
     let mut result_buffer: Option<Vec<u8>> = None;
 
     let env = TxEnv::new(
@@ -883,7 +884,7 @@ mod tests {
         assert!(!passed);
     }
 
-    fn loop_in_tx_wasm(loops: u32) -> Result<BTreeSet<Address>> {
+    fn loop_in_tx_wasm(loops: u32) -> Result<Verifiers> {
         // A transaction with a recursive loop.
         // The boilerplate code is generated from tx_template.wasm using
         // `wasm2wat` and the loop code is hand-written.

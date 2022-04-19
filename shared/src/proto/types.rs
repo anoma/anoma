@@ -246,6 +246,9 @@ where
             .data
             .try_to_vec()
             .expect("Encoding data for verifying signature shouldn't fail");
+        if pks.len() != self.sigs.len() {
+            return Err(VerifySigError::InsufficientKeys);
+        }
         for (pk, sig) in pks.iter().zip(&self.sigs) {
             common::SigScheme::verify_signature_raw(pk, &bytes, sig)?;
         }
