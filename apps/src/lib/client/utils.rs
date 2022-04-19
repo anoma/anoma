@@ -3,7 +3,7 @@ use std::env;
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use anoma::types::address;
@@ -124,6 +124,7 @@ pub async fn join_network(
         };
     archive.unpack(&unpack_dir).unwrap();
 
+    let chain_dir = base_dir_full.join(chain_id.as_str());
     // Rename the base-dir from the default and rename wasm-dir, if non-default.
     if non_default_dir {
         // For compatibility for networks released with Anoma <= v0.4:
@@ -149,7 +150,7 @@ pub async fn join_network(
             unpack_dir
                 .join(config::DEFAULT_BASE_DIR)
                 .join(chain_id.as_str()),
-            base_dir_full.join(chain_id.as_str()),
+            &chain_dir,
         )
         .await
         .unwrap();
@@ -187,7 +188,7 @@ pub async fn join_network(
                 base_dir_full
                     .join(chain_id.as_str())
                     .join(config::DEFAULT_WASM_DIR),
-                base_dir_full.join(chain_id.as_str()).join(wasm_dir),
+                chain_dir.join(wasm_dir),
             )
             .await
             .unwrap();
@@ -210,6 +211,82 @@ pub async fn join_network(
         }
     }
 
+    if let Some(alias) = genesis_validator {
+        let mut wallet = Wallet::load_or_new(&chain_dir);
+        let address = wallet
+            .find_address(&alias)
+            .unwrap_or_else(|| {
+                eprintln!("Unable to find validator address for alias {alias}");
+                cli::safe_exit(1)
+            })
+            .clone();
+
+        let pregenesis_dir = base_dir.join(PREGENESIS_DIR);
+        let mut pregenesis_wallet = Wallet::load(&pregenesis_dir)
+            .unwrap_or_else(|| {
+                eprintln!(
+                    "No pre-genesis wallet found in {}",
+                    pregenesis_dir.to_string_lossy()
+                );
+                cli::safe_exit(1)
+            });
+
+        let alias = validator_key_alias(&alias);
+        pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
+            eprintln!("Missing validator key with alias {}", alias);
+            cli::safe_exit(1)
+        });
+
+        let alias = consensus_key_alias(&alias);
+        let consensus_key =
+            pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
+                eprintln!("Missing consensus key with alias {}", alias);
+                cli::safe_exit(1)
+            });
+
+        let alias = rewards_key_alias(&alias);
+        pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
+            eprintln!("Missing rewards key with alias {}", alias);
+            cli::safe_exit(1)
+        });
+
+        let alias = tendermint_node_key_alias(&alias);
+        let tendermint_node_key =
+            pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
+                eprintln!("Missing validator key with alias {}", alias);
+                cli::safe_exit(1)
+            });
+
+        let tendermint_node_key: ed25519::SecretKey =
+            tendermint_node_key.try_to_sk().unwrap_or_else(|_err| {
+                eprintln!("Tendermint node key must be ed25519");
+                cli::safe_exit(1)
+            });
+
+        let tm_home_dir = chain_dir.join("tendermint");
+
+        // Write consensus key to tendermint home
+        tendermint_node::write_validator_key(
+            &tm_home_dir,
+            &address,
+            &*consensus_key,
+        );
+
+        // Write tendermint node key
+        write_tendermint_node_key(&tm_home_dir, tendermint_node_key);
+
+        // Pre-initialize tendermint validator state
+        tendermint_node::write_validator_state(&tm_home_dir);
+
+        // Extend the current wallet from the pre-genesis wallet.
+        // This takes the validator keys to be usable in future commands (e.g.
+        // to sign a tx from validator account using the account key).
+        wallet.extend(pregenesis_wallet);
+
+        wallet.set_validator_address(address);
+
+        wallet.save().unwrap();
+    }
     println!("Successfully configured for chain ID {}", chain_id);
 }
 
@@ -312,31 +389,9 @@ pub fn init_network(
         .unwrap_or_else(|| {
             // Generate a node key
             let node_sk = ed25519::SigScheme::generate(&mut rng);
-            let node_pk: ed25519::PublicKey = node_sk.ref_to();
 
-            // Convert and write the keypair into Tendermint
-            // node_key.json file
-            let node_keypair =
-                [node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()]
-                    .concat();
-            let tm_node_keypair_json = json!({
-                "priv_key": {
-                    "type": "tendermint/PrivKeyEd25519",
-                    "value": base64::encode(node_keypair),
-                }
-            });
-            let tm_config_dir = tm_home_dir.join("config");
-            fs::create_dir_all(&tm_config_dir)
-                .expect("Couldn't create validator directory");
-            let node_key_path = tm_config_dir.join("node_key.json");
-            let file = OpenOptions::new()
-                .create(true)
-                .write(true)
-                .truncate(true)
-                .open(&node_key_path)
-                .expect("Couldn't create validator node key file");
-            serde_json::to_writer_pretty(file, &tm_node_keypair_json)
-                .expect("Couldn't write validator node key file");
+            let node_pk = write_tendermint_node_key(&tm_home_dir, node_sk);
+
             tendermint_node::write_validator_state(&tm_home_dir);
 
             node_pk
@@ -936,24 +991,18 @@ pub fn init_genesis_validator(
     }
 
     println!("Generating validator account key...");
-    let (validator_key_alias, validator_key) = wallet.gen_key(
-        Some(format!("{}-validator-key", alias)),
-        unsafe_dont_encrypt,
-    );
+    let (validator_key_alias, validator_key) =
+        wallet.gen_key(Some(validator_key_alias(&alias)), unsafe_dont_encrypt);
     println!("Generating consensus key...");
-    let (consensus_key_alias, consensus_key) = wallet.gen_key(
-        Some(format!("{}-consensus-key", alias)),
-        unsafe_dont_encrypt,
-    );
+    let (consensus_key_alias, consensus_key) =
+        wallet.gen_key(Some(consensus_key_alias(&alias)), unsafe_dont_encrypt);
     println!("Generating staking reward account key...");
-    let (rewards_key_alias, rewards_key) = wallet
-        .gen_key(Some(format!("{}-rewards-key", alias)), unsafe_dont_encrypt);
+    let (rewards_key_alias, rewards_key) =
+        wallet.gen_key(Some(rewards_key_alias(&alias)), unsafe_dont_encrypt);
 
     println!("Generating tendermint node key...");
-    let (tendermint_node_alias, tendermint_node_key) = wallet.gen_key(
-        Some(format!("{}-tendermint-key", alias)),
-        unsafe_dont_encrypt,
-    );
+    let (tendermint_node_alias, tendermint_node_key) = wallet
+        .gen_key(Some(tendermint_node_key_alias(&alias)), unsafe_dont_encrypt);
 
     println!("Generating protocol key and DKG session key...");
     let validator_keys = wallet.gen_validator_keys(None).unwrap();
@@ -1058,4 +1107,50 @@ fn try_parse_public_key(
 fn network_configs_server() -> String {
     std::env::var(ENV_VAR_NETWORK_CONFIGS_SERVER)
         .unwrap_or_else(|_| DEFAULT_NETWORK_CONFIGS_SERVER.into())
+}
+
+fn validator_key_alias(alias: &str) -> String {
+    format!("{alias}-validator-key")
+}
+
+fn consensus_key_alias(alias: &str) -> String {
+    format!("{alias}-consensus-key")
+}
+
+fn rewards_key_alias(alias: &str) -> String {
+    format!("{alias}-rewards-key")
+}
+
+fn tendermint_node_key_alias(alias: &str) -> String {
+    format!("{alias}-tendermint-node-key")
+}
+
+fn write_tendermint_node_key(
+    tm_home_dir: &Path,
+    node_sk: ed25519::SecretKey,
+) -> ed25519::PublicKey {
+    let node_pk: ed25519::PublicKey = node_sk.ref_to();
+    // Convert and write the keypair into Tendermint
+    // node_key.json file
+    let node_keypair =
+        [node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()].concat();
+    let tm_node_keypair_json = json!({
+        "priv_key": {
+            "type": "tendermint/PrivKeyEd25519",
+            "value": base64::encode(node_keypair),
+        }
+    });
+    let tm_config_dir = tm_home_dir.join("config");
+    fs::create_dir_all(&tm_config_dir)
+        .expect("Couldn't create validator directory");
+    let node_key_path = tm_config_dir.join("node_key.json");
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&node_key_path)
+        .expect("Couldn't create validator node key file");
+    serde_json::to_writer_pretty(file, &tm_node_keypair_json)
+        .expect("Couldn't write validator node key file");
+    node_pk
 }
