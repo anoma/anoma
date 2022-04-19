@@ -1,13 +1,15 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::ledger::governance::utils::{compute_tally, ProposalEvent};
+use anoma::ledger::governance::utils::{
+    compute_tally, get_proposal_votes, ProposalEvent,
+};
 use anoma::ledger::governance::{
     storage as gov_storage, ADDRESS as gov_address,
 };
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
-use anoma::types::storage::BlockHash;
+use anoma::types::storage::{BlockHash, Epoch};
 use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
@@ -62,6 +64,8 @@ where
         if new_epoch {
             for id in std::mem::take(&mut self.proposal_data) {
                 let proposal_funds_key = gov_storage::get_funds_key(id);
+                let proposal_start_epoch_key =
+                    gov_storage::get_voting_start_epoch_key(id);
 
                 let funds = self
                     .storage
@@ -78,7 +82,24 @@ where
                     })
                     .map_err(|e| Error::BadProposal(e.to_string()))?;
 
-                let tally_result = compute_tally(&self.storage, id);
+                let start_epoch = self
+                    .storage
+                    .read(&proposal_start_epoch_key)
+                    .map(|(bytes, _gas)| {
+                        if let Some(bytes) = bytes {
+                            match Epoch::try_from_slice(&bytes[..]) {
+                                Ok(epoch) => epoch,
+                                Err(_) => Epoch(0),
+                            }
+                        } else {
+                            Epoch(0)
+                        }
+                    })
+                    .map_err(|e| Error::BadProposal(e.to_string()))?;
+
+                let votes = get_proposal_votes(&self.storage, start_epoch, id);
+                let tally_result =
+                    compute_tally(&self.storage, start_epoch, id, votes);
                 if let Ok(tally_result) = tally_result {
                     match tally_result {
                         (TallyResult::Passed, Some(code)) => {

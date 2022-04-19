@@ -80,7 +80,7 @@ where
 
         let result = keys_changed.iter().all(|key| {
             println!("{}", key);
-            let proposal_id = gov_storage::get_id(key);
+            let proposal_id = gov_storage::get_proposal_id(key);
 
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
@@ -369,7 +369,17 @@ where
                     let has_pre_author = self.ctx.has_key_pre(&author_key).ok();
                     match (has_pre_author, author) {
                         (Some(has_pre_author), Some(author)) => {
-                            !has_pre_author && verifiers.contains(&author)
+                            let address_exist_key =
+                                Key::validity_predicate(&author);
+                            let address_exist =
+                                self.ctx.has_key_post(&address_exist_key).ok();
+                            if let Some(address_exist) = address_exist {
+                                !has_pre_author
+                                    && verifiers.contains(&author)
+                                    && address_exist
+                            } else {
+                                false
+                            }
                         }
                         _ => false,
                     }

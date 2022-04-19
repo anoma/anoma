@@ -8,6 +8,7 @@ use std::io::{self, Write};
 use std::iter::Iterator;
 
 use anoma::ledger::governance::storage as gov_storage;
+use anoma::ledger::governance::utils::Votes;
 use anoma::ledger::pos::types::{
     Epoch as PosEpoch, VotingPower, WeightedValidator,
 };
@@ -23,6 +24,7 @@ use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::token::{balance_key, Amount};
 use anoma::types::{address, storage, token};
 use async_std::fs::{self};
+use async_std::path::PathBuf;
 use async_std::prelude::*;
 use borsh::BorshDeserialize;
 use itertools::Itertools;
@@ -242,21 +244,11 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
             {
                 println!("{:4}Status: on-going", "");
             } else {
-                let (delegator_voters, validator_voters, validators) =
-                    get_votes(client, start_epoch, id).await;
+                let votes = get_proposal_votes(client, start_epoch, id).await;
+                let proposal_result =
+                    compute_tally(client, start_epoch, votes).await;
                 println!("{:4}Status: done", "");
-                println!(
-                    "{:4}Result: {}",
-                    "",
-                    compute_tally(
-                        client,
-                        start_epoch,
-                        &delegator_voters,
-                        &validator_voters,
-                        &validators[..]
-                    )
-                    .await
-                );
+                println!("{:4}Result: {}", "", proposal_result);
             }
         } else {
             println!("Proposal: {}", id);
@@ -315,6 +307,7 @@ pub async fn get_token_balance(
     let balance_key = balance_key(token, owner);
     query_storage_value(client, &balance_key).await
 }
+
 pub async fn query_proposal_result(
     _ctx: Context,
     args: args::QueryProposalResult,
@@ -334,21 +327,12 @@ pub async fn query_proposal_result(
             match (start_epoch, end_epoch) {
                 (Some(start_epoch), Some(end_epoch)) => {
                     if current_epoch > end_epoch {
-                        let (delegator_voters, validator_voters, validators) =
-                            get_votes(&client, start_epoch, id).await;
+                        let votes =
+                            get_proposal_votes(&client, start_epoch, id).await;
+                        let proposal_result =
+                            compute_tally(&client, start_epoch, votes).await;
                         println!("Proposal: {}", id);
-                        println!(
-                            "{:4}Result: {}",
-                            "",
-                            compute_tally(
-                                &client,
-                                start_epoch,
-                                &delegator_voters,
-                                &validator_voters,
-                                &validators[..]
-                            )
-                            .await
-                        );
+                        println!("{:4}Result: {}", "", proposal_result);
                     } else {
                         eprintln!("Proposal is still in progress.");
                         cli::safe_exit(1)
@@ -425,75 +409,17 @@ pub async fn query_proposal_result(
                             cli::safe_exit(1)
                         }
 
-                        let proposal_hash = proposal.compute_hash();
+                        let votes = get_proposal_offline_votes(
+                            &client,
+                            proposal.clone(),
+                            files,
+                        )
+                        .await;
+                        let proposal_result =
+                            compute_tally(&client, proposal.tally_epoch, votes)
+                                .await;
 
-                        let mut delegator_voters: HashMap<
-                            Address,
-                            ProposalVote,
-                        > = HashMap::new();
-                        let mut validator_voters: HashMap<
-                            Address,
-                            ProposalVote,
-                        > = HashMap::new();
-
-                        for path in files {
-                            let file = File::open(&path)
-                                .expect("Proposal file must exist.");
-                            let proposal_vote: OfflineVote =
-                                serde_json::from_reader(file).expect(
-                                    "JSON was not well-formatted for offline \
-                                     vote.",
-                                );
-
-                            let public_key = get_public_key(
-                                &proposal_vote.address,
-                                args.query.ledger_address.clone(),
-                            )
-                            .await
-                            .expect("Public key should exist.");
-                            if !proposal_vote.proposal_hash.eq(&proposal_hash)
-                                || !proposal_vote.check_signature(&public_key)
-                            {
-                                continue;
-                            }
-
-                            if is_validator_at(
-                                &proposal_vote.address,
-                                proposal.tally_epoch,
-                                args.query.ledger_address.clone(),
-                            )
-                            .await
-                            {
-                                validator_voters.insert(
-                                    proposal_vote.address,
-                                    proposal_vote.vote,
-                                );
-                            } else if is_delegator_at(
-                                &proposal_vote.address,
-                                proposal.tally_epoch,
-                                args.query.ledger_address.clone(),
-                            )
-                            .await
-                            {
-                                delegator_voters.insert(
-                                    proposal_vote.address,
-                                    proposal_vote.vote,
-                                );
-                            }
-                        }
-                        let all_validators = get_all_validators(&client, proposal.tally_epoch).await;
-                        println!(
-                            "{:4}Result: {}",
-                            "",
-                            compute_tally(
-                                &client,
-                                current_epoch,
-                                &delegator_voters,
-                                &validator_voters,
-                                &all_validators[..]
-                            )
-                            .await
-                        );
+                        println!("{:4}Result: {}", "", proposal_result);
                     }
                     None => {
                         eprintln!(
@@ -1068,31 +994,6 @@ pub async fn is_validator(
     state.is_some()
 }
 
-async fn is_validator_at(
-    address: &Address,
-    epoch: Epoch,
-    ledger_address: TendermintAddress,
-) -> bool {
-    let client = HttpClient::new(ledger_address).unwrap();
-    let validator_set_key = pos::validator_set_key();
-    let validator_sets =
-        query_storage_value::<pos::ValidatorSets>(&client, &validator_set_key)
-            .await
-            .expect("Validator set should always be set");
-    let epoched_validator_set = validator_sets
-        .get(epoch)
-        .expect("Validator set should be always set in the current epoch");
-    let is_active_validator = epoched_validator_set
-        .active
-        .iter()
-        .any(|validator| validator.address.eq(address));
-    let is_inactive_validator = epoched_validator_set
-        .inactive
-        .iter()
-        .any(|validator| validator.address.eq(address));
-    is_active_validator || is_inactive_validator
-}
-
 /// Check if a given address is a known delegator
 pub async fn is_delegator(
     address: &Address,
@@ -1106,13 +1007,13 @@ pub async fn is_delegator(
 }
 
 pub async fn is_delegator_at(
+    client: &HttpClient,
     address: &Address,
     epoch: Epoch,
-    ledger_address: TendermintAddress,
 ) -> bool {
-    let client = HttpClient::new(ledger_address).unwrap();
     let key = pos::bonds_for_source_prefix(address);
-    let bonds_iter = query_storage_prefix::<pos::Bonds>(client, key).await;
+    let bonds_iter =
+        query_storage_prefix::<pos::Bonds>(client.clone(), key).await;
     if let Some(mut bonds) = bonds_iter {
         bonds.any(|(_, bond)| bond.get(epoch).is_some())
     } else {
@@ -1542,138 +1443,182 @@ pub async fn query_result(_ctx: Context, args: args::QueryResult) {
     }
 }
 
-/// Get two HashMap representing the votes of the delegators and validators
-/// respectively
-pub async fn get_votes(
+pub async fn get_proposal_votes(
     client: &HttpClient,
     epoch: Epoch,
     proposal_id: u64,
-) -> (
-    HashMap<Address, ProposalVote>,
-    HashMap<Address, ProposalVote>,
-    Vec<Address>,
-) {
+) -> Votes {
     let validators = get_all_validators(client, epoch).await;
+
     let vote_prefix_key =
         gov_storage::get_proposal_vote_prefix_key(proposal_id);
-    let votes =
+    let vote_iter =
         query_storage_prefix::<ProposalVote>(client.clone(), vote_prefix_key)
             .await;
 
-    if let Some(votes) = votes {
-        let (validator_voters, delegator_voters) = votes.fold(
-            (HashMap::new(), HashMap::new()),
-            |(mut validator_voters, mut delegator_voters), (key, vote)| {
-                let address = gov_storage::get_voter_address(&key)
-                    .expect("Vote key should contains an address.")
-                    .clone();
-                if validators.contains(&address) {
-                    validator_voters.insert(address, vote);
-                } else {
-                    delegator_voters.insert(address, vote);
-                }
-                (validator_voters, delegator_voters)
-            },
-        );
+    let mut yay_validators: HashMap<Address, Amount> = HashMap::new();
+    let mut yay_delegators: HashMap<Address, Amount> = HashMap::new();
+    let mut nay_delegators: HashMap<Address, Amount> = HashMap::new();
 
-        (
-            delegator_voters,
-            validator_voters,
-            validators
-        )
-    } else {
-        (
-            HashMap::new(),
-            HashMap::new(),
-            validators
-        )
+    if let Some(vote_iter) = vote_iter {
+        for (key, vote) in vote_iter {
+            let voter_address = gov_storage::get_voter_address(&key)
+                .expect("Vote key should contains the voting address.")
+                .clone();
+            if vote.is_yay() && validators.contains(&voter_address) {
+                let amount =
+                    get_validator_stake(client, epoch, &voter_address).await;
+                yay_validators.insert(voter_address, amount);
+            } else if !validators.contains(&voter_address) {
+                let validator_address =
+                    gov_storage::get_vote_delegation_address(&key)
+                        .expect(
+                            "Vote key should contains the delegation address.",
+                        )
+                        .clone();
+                let delegator_token_amount = get_bond_amount_at(
+                    client,
+                    &voter_address,
+                    &validator_address,
+                    epoch,
+                )
+                .await;
+                if let Some(amount) = delegator_token_amount {
+                    if vote.is_yay() {
+                        yay_delegators.insert(voter_address, amount);
+                    } else {
+                        nay_delegators.insert(voter_address, amount);
+                    }
+                }
+            }
+        }
+    }
+
+    Votes {
+        yay_validators,
+        yay_delegators,
+        nay_delegators,
     }
 }
 
+pub async fn get_proposal_offline_votes(
+    client: &HttpClient,
+    proposal: OfflineProposal,
+    files: HashSet<PathBuf>,
+) -> Votes {
+    let validators = get_all_validators(client, proposal.tally_epoch).await;
+
+    let proposal_hash = proposal.compute_hash();
+
+    let mut yay_validators: HashMap<Address, Amount> = HashMap::new();
+    let mut yay_delegators: HashMap<Address, Amount> = HashMap::new();
+    let mut nay_delegators: HashMap<Address, Amount> = HashMap::new();
+
+    for path in files {
+        let file = File::open(&path).expect("Proposal file must exist.");
+        let proposal_vote: OfflineVote = serde_json::from_reader(file)
+            .expect("JSON was not well-formatted for offline vote.");
+
+        let key = pk_key(&proposal_vote.address);
+        let public_key = query_storage_value(client, &key)
+            .await
+            .expect("Public key should exist.");
+
+        if !proposal_vote.proposal_hash.eq(&proposal_hash)
+            || !proposal_vote.check_signature(&public_key)
+        {
+            continue;
+        }
+
+        if proposal_vote.vote.is_yay()
+            && validators.contains(&proposal_vote.address)
+        {
+            let amount = get_validator_stake(
+                client,
+                proposal.tally_epoch,
+                &proposal_vote.address,
+            )
+            .await;
+            yay_validators.insert(proposal_vote.address, amount);
+        } else if is_delegator_at(
+            client,
+            &proposal_vote.address,
+            proposal.tally_epoch,
+        )
+        .await
+        {
+            let key = pos::bonds_for_source_prefix(&proposal_vote.address);
+            let bonds_iter =
+                query_storage_prefix::<pos::Bonds>(client.clone(), key).await;
+            if let Some(bonds) = bonds_iter {
+                for (key, epoched_amount) in bonds {
+                    let bond = epoched_amount
+                        .get(proposal.tally_epoch)
+                        .expect("Delegation bond should be definied.");
+                    let epoch = anoma::ledger::pos::types::Epoch::from(
+                        proposal.tally_epoch.0,
+                    );
+                    let amount = *bond
+                        .deltas
+                        .get(&epoch)
+                        .expect("Delegation amount should be definied.");
+                    let validator_address =
+                        pos::get_validator_address_from_bond(&key).expect(
+                            "Delegation key should contain validator address.",
+                        );
+                    if proposal_vote.vote.is_yay() {
+                        yay_delegators.insert(validator_address, amount);
+                    } else {
+                        nay_delegators.insert(validator_address, amount);
+                    }
+                }
+            }
+        }
+    }
+
+    Votes {
+        yay_validators,
+        yay_delegators,
+        nay_delegators,
+    }
+}
+
+// Compute the result of a proposal
 pub async fn compute_tally(
     client: &HttpClient,
     epoch: Epoch,
-    delegator_voters: &HashMap<Address, ProposalVote>,
-    validator_voters: &HashMap<Address, ProposalVote>,
-    validators: &[Address],
+    votes: Votes,
 ) -> TallyResult {
-    println!("val: {:?}", validator_voters);
-    println!("del: {:?}", delegator_voters);
-    println!("act: {:?}", active_validators);
-    let mut bond_data: HashMap<Address, (Address, token::Amount)> =
-        HashMap::new();
-    for validator_addr in validator_voters.keys() {
-        let total_validator_amount = get_validator_stake(&client, epoch, validator_addr).await;
-        bond_data.insert(
-            validator_addr.clone(),
-            (validator_addr.clone(), total_validator_amount),
-        );
-        for delegator_addr in delegator_voters.keys() {
-            match get_bond_amount_at(
-                client,
-                delegator_addr,
-                validator_addr,
-                epoch,
-            )
-            .await
-            {
-                Some(bond_amount) => {
-                    bond_data.insert(
-                        delegator_addr.clone(),
-                        (validator_addr.clone(), bond_amount),
-                    );
-                }
-                None => continue,
-            }
-        }
-    }
-
+    let validators = get_all_validators(client, epoch).await;
     let total_stacked_tokens =
-        get_total_staked_tokes(&client, epoch, validators).await;
+        get_total_staked_tokes(client, epoch, &validators).await;
 
-    let mut yay_votes_tokens = token::Amount::whole(0);
-    for (addr, vote) in validator_voters.clone() {
-        if vote.is_yay() {
-            yay_votes_tokens += bond_data.get(&addr).unwrap().1;
+    let Votes {
+        yay_validators,
+        yay_delegators,
+        nay_delegators,
+    } = votes;
+
+    let mut total_yay_stacked_tokens = Amount::from(0);
+    for (_, amount) in yay_validators.clone().into_iter() {
+        total_yay_stacked_tokens += amount;
+    }
+
+    // YAY: Add delegator amount whose validator didn't vote / voted nay
+    for (validator_address, amount) in yay_delegators.into_iter() {
+        if !yay_validators.contains_key(&validator_address) {
+            total_yay_stacked_tokens += amount;
         }
     }
 
-    for (addr, vote) in delegator_voters {
-        if !bond_data.contains_key(addr) {
-            if vote.is_yay() {
-                for validator_addr in validators {
-                    if bond_data.contains_key(validator_addr) {
-                        continue;
-                    }
-                    match get_bond_amount_at(
-                        client,
-                        addr,
-                        validator_addr,
-                        epoch,
-                    )
-                    .await
-                    {
-                        Some(amount) => yay_votes_tokens += amount,
-                        None => continue,
-                    };
-                }
-            }
-        } else {
-            let delegator_data = bond_data.get(addr).unwrap();
-            let validator_vote =
-                validator_voters.get(&delegator_data.0).unwrap();
-            if validator_vote.is_yay() && validator_vote.ne(vote) {
-                yay_votes_tokens -= delegator_data.1;
-            } else {
-                yay_votes_tokens += delegator_data.1;
-            }
+    // NAY: Remove delegator amount whose validator validator vote yay
+    for (validator_address, amount) in nay_delegators.into_iter() {
+        if yay_validators.contains_key(&validator_address) {
+            total_yay_stacked_tokens -= amount;
         }
     }
 
-    println!("yay: {}", yay_votes_tokens);
-    println!("total: {}", total_stacked_tokens);
-
-    if 3 * yay_votes_tokens >= 2 * total_stacked_tokens {
+    if 3 * total_yay_stacked_tokens >= 2 * total_stacked_tokens {
         TallyResult::Passed
     } else {
         TallyResult::Rejected
@@ -1732,7 +1677,9 @@ pub async fn get_all_validators(
         .get(epoch)
         .expect("Validator set should be always set in the current epoch");
     let all_validators = validator_set.active.union(&validator_set.inactive);
-    return all_validators.map(|validator| validator.address.clone()).collect();
+    all_validators
+        .map(|validator| validator.address.clone())
+        .collect()
 }
 
 pub async fn get_total_staked_tokes(
@@ -1743,7 +1690,7 @@ pub async fn get_total_staked_tokes(
     let mut total = Amount::from(0);
 
     for validator in validators {
-        total += get_validator_stake(&client, epoch, validator).await;
+        total += get_validator_stake(client, epoch, validator).await;
     }
     total
 }
@@ -1754,17 +1701,16 @@ async fn get_validator_stake(
     validator: &Address,
 ) -> token::Amount {
     let total_voting_power_key = pos::validator_total_deltas_key(validator);
-    let total_voting_power =
-        query_storage_value::<pos::ValidatorTotalDeltas>(
-            client,
-            &total_voting_power_key,
-        )
-        .await
-        .expect("Total deltas should be defined");
+    let total_voting_power = query_storage_value::<pos::ValidatorTotalDeltas>(
+        client,
+        &total_voting_power_key,
+    )
+    .await
+    .expect("Total deltas should be defined");
     let epoched_total_voting_power = total_voting_power.get(epoch);
     if let Some(epoched_total_voting_power) = epoched_total_voting_power {
-        return token::Amount::from_change(epoched_total_voting_power);
+        token::Amount::from_change(epoched_total_voting_power)
     } else {
-        return token::Amount::from(0);
+        token::Amount::from(0)
     }
 }

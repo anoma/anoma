@@ -673,12 +673,12 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
         match proposal_start_epoch {
             Some(epoch) => {
                 let delegation_addresses =
-                    rpc::get_all_active_validators(&client, epoch).await;
+                    rpc::get_all_validators(&client, epoch).await;
                 let tx_data = VoteProposalData {
                     id: proposal_id,
                     vote: args.vote,
                     voter: voter_address,
-                    delegations: delegation_addresses.keys().cloned().collect(),
+                    delegations: delegation_addresses,
                 };
 
                 let data = tx_data

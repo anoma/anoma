@@ -70,7 +70,7 @@ impl Shell {
         for (key, _, _) in proposal_iter {
             let key =
                 Key::from_str(key.as_str()).expect("Key should be parsable");
-            if gov_storage::get_commit_epoch(&key).unwrap()
+            if gov_storage::get_commit_proposal_epoch(&key).unwrap()
                 != self.storage.last_epoch.0
             {
                 // NOTE: `iter_prefix` iterate over the matching prefix. In this
