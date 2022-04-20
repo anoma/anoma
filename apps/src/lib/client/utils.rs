@@ -400,9 +400,6 @@ pub fn init_network(
 
         let chain_dir = validator_dir.join(&accounts_temp_dir);
         let tm_home_dir = chain_dir.join("tendermint");
-        // ensures the whole directory hierarchy exists in case it is assumed
-        // later on
-        std::fs::create_dir_all(&tm_home_dir).unwrap();
 
         // Find or generate tendermint node key
         let node_pk = try_parse_public_key(
@@ -435,8 +432,8 @@ pub fn init_network(
         // Add a Intent gossiper bootstrap peer from the validator's IP
         let mut gossiper_config = IntentGossiper::default();
         // Generate P2P identity
-        let p2p_idenity = gossip::p2p::Identity::gen(&chain_dir);
-        let peer_id = p2p_idenity.peer_id();
+        let p2p_identity = gossip::p2p::Identity::gen(&chain_dir);
+        let peer_id = p2p_identity.peer_id();
         let ledger_addr =
             SocketAddr::from_str(config.net_address.as_ref().unwrap()).unwrap();
         let ip = ledger_addr.ip().to_string();
