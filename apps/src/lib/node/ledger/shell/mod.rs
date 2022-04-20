@@ -42,8 +42,6 @@ use anoma::types::transaction::{
 use anoma::types::{address, token};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::WasmCacheRwAccess;
-#[cfg(not(feature = "ABCI"))]
-use borsh::BorshDeserialize;
 use borsh::{BorshDeserialize, BorshSerialize};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
