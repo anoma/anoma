@@ -1834,3 +1834,23 @@ async fn get_validator_stake(
         token::Amount::from(0)
     }
 }
+
+pub async fn get_delegators_delegation(
+    client: &HttpClient,
+    address: &Address,
+    _epoch: Epoch,
+) -> Vec<Address> {
+    let key = pos::bonds_for_source_prefix(address);
+    let bonds_iter =
+        query_storage_prefix::<pos::Bonds>(client.clone(), key).await;
+
+    let mut delegation_addresses: Vec<Address> = Vec::new();
+    if let Some(bonds) = bonds_iter {
+        for (key, _epoched_amount) in bonds {
+            let validator_address = pos::get_validator_address_from_bond(&key)
+                .expect("Delegation key should contain validator address.");
+            delegation_addresses.push(validator_address);
+        }
+    }
+    delegation_addresses
+}

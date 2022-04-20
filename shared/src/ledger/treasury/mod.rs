@@ -10,7 +10,7 @@ use borsh::BorshDeserialize;
 use thiserror::Error;
 
 use self::storage as treasury_storage;
-use super::governance::is_proposal_accepted;
+use super::governance::vp::is_proposal_accepted;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{xan as nam, Address, InternalAddress};

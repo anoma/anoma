@@ -1,13 +1,10 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use std::fs;
-
+use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::{
     compute_tally, get_proposal_votes, ProposalEvent,
 };
-use anoma::ledger::governance::{
-    storage as gov_storage, ADDRESS as gov_address,
-};
+use anoma::ledger::governance::vp::ADDRESS as gov_address;
 use anoma::ledger::storage::types::encode;
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
@@ -176,7 +173,7 @@ where
                                             treasury_address
                                         }
                                     }
-                                    Err(e) => {
+                                    Err(_e) => {
                                         self.write_log.drop_tx();
                                         let proposal_event: Event =
                                             ProposalEvent::new(

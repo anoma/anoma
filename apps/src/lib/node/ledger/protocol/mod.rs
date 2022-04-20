@@ -47,7 +47,7 @@ pub enum Error {
     #[error("IBC Token native VP: {0}")]
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
     #[error("Governance native VP error: {0}")]
-    GovernanceNativeVpError(anoma::ledger::governance::Error),
+    GovernanceNativeVpError(anoma::ledger::governance::vp::Error),
     #[error("Treasury native VP error: {0}")]
     TreasuryNativeVpError(anoma::ledger::treasury::Error),
     #[error("Access to an internal address {0} is forbidden")]

@@ -1227,8 +1227,10 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
+    // this is valid because the client filter ALBERT delegation and there are
+    // none
     let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
-    client.exp_string("Transaction is invalid.")?;
+    client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 11. Query the proposal and check the result

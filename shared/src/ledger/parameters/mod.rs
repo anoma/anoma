@@ -7,7 +7,7 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use thiserror::Error;
 
 use self::storage as parameter_storage;
-use super::governance::is_proposal_accepted;
+use super::governance::vp::is_proposal_accepted;
 use super::storage::types::{decode, encode};
 use super::storage::{types, Storage};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
