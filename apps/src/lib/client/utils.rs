@@ -97,9 +97,8 @@ pub async fn join_network(
 
     let release_filename = format!("{}.tar.gz", chain_id);
     let release_url = format!(
-        "{}/{}/{}",
-        network_configs_server(),
-        chain_id,
+        "{}/{}",
+        network_configs_url_prefix(&chain_id),
         release_filename
     );
     let cwd = env::current_dir().unwrap();
@@ -1129,9 +1128,10 @@ fn try_parse_public_key(
     })
 }
 
-fn network_configs_server() -> String {
-    std::env::var(ENV_VAR_NETWORK_CONFIGS_SERVER)
-        .unwrap_or_else(|_| DEFAULT_NETWORK_CONFIGS_SERVER.into())
+fn network_configs_url_prefix(chain_id: &ChainId) -> String {
+    std::env::var(ENV_VAR_NETWORK_CONFIGS_SERVER).unwrap_or_else(|_| {
+        format!("{DEFAULT_NETWORK_CONFIGS_SERVER}/{chain_id}")
+    })
 }
 
 fn validator_key_alias(alias: &str) -> String {
