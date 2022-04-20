@@ -210,6 +210,7 @@ where
                             !has_pre_proposal_code
                                 && post_proposal_code.len()
                                     < max_proposal_code_size
+                                && !post_proposal_code.is_empty()
                         }
                         _ => false,
                     }

@@ -73,15 +73,12 @@ impl ProposalEvent {
     }
 }
 
-type Result<T> = std::result::Result<T, Error>;
-
 /// Return a proposal result and his associated proposal code (if any)
 pub fn compute_tally<D, H>(
     storage: &Storage<D, H>,
     epoch: Epoch,
-    proposal_id: u64,
     votes: Votes,
-) -> Result<(TallyResult, Option<Vec<u8>>)>
+) -> TallyResult
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
@@ -116,14 +113,9 @@ where
     }
 
     if 3 * total_yay_stacked_tokens >= 2 * total_stacked_tokens {
-        let proposal_code = gov_storage::get_proposal_code_key(proposal_id);
-        let (proposal_code_bytes, _) = storage
-            .read(&proposal_code)
-            .expect("Should be able to read from storage.");
-
-        Ok((TallyResult::Passed, proposal_code_bytes))
+        TallyResult::Passed
     } else {
-        Ok((TallyResult::Rejected, None))
+        TallyResult::Rejected
     }
 }
 

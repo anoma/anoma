@@ -13,7 +13,7 @@ Also, it introduces some protocol parameters:
 - `max_proposal_code_size`
 - `min_proposal_period`
 - `max_proposal_content_size`
-- `min_grace_epoch`
+- `min_proposal_grace_epochs`
 - `max_proposal_fund_transfer`
 
 ## On-chain proposals

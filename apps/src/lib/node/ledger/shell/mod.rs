@@ -44,7 +44,7 @@ use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::WasmCacheRwAccess;
 #[cfg(not(feature = "ABCI"))]
 use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(not(feature = "ABCI"))]
@@ -103,8 +103,8 @@ pub enum Error {
     TowerServer(String),
     #[error("{0}")]
     Broadcaster(tokio::sync::mpsc::error::TryRecvError),
-    #[error("Error executing proposal {0}")]
-    BadProposal(String),
+    #[error("Error executing proposal {0}: {1}")]
+    BadProposal(u64, String),
 }
 
 /// The different error codes that the ledger may
@@ -363,6 +363,35 @@ where
         };
 
         response
+    }
+
+    /// Read the value for a storage key dropping any error
+    pub fn read_storage_key<T>(&self, key: &Key) -> Option<T>
+    where
+        T: Clone + BorshDeserialize,
+    {
+        let result = self.storage.read(key);
+
+        match result {
+            Ok((bytes, _gas)) => match bytes {
+                Some(bytes) => match T::try_from_slice(&bytes) {
+                    Ok(value) => Some(value),
+                    Err(_) => None,
+                },
+                None => None,
+            },
+            Err(_) => None,
+        }
+    }
+
+    /// Read the bytes for a storage key dropping any error
+    pub fn read_storage_key_bytes(&self, key: &Key) -> Option<Vec<u8>> {
+        let result = self.storage.read(key);
+
+        match result {
+            Ok((bytes, _gas)) => bytes,
+            Err(_) => None,
+        }
     }
 
     /// Apply PoS slashes from the evidence
