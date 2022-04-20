@@ -211,12 +211,22 @@ pub async fn join_network(
         }
     }
 
-    if let Some(alias) = genesis_validator {
-        let mut wallet = Wallet::load_or_new(&chain_dir);
+    if let Some(validator_alias) = genesis_validator {
+        let genesis_file_path = global_args
+            .base_dir
+            .join(format!("{}.toml", chain_id.as_str()));
+        let mut wallet =
+            Wallet::load_or_new_from_genesis(&chain_dir, move || {
+                genesis_config::open_genesis_config(genesis_file_path)
+            });
+
         let address = wallet
-            .find_address(&alias)
+            .find_address(&validator_alias)
             .unwrap_or_else(|| {
-                eprintln!("Unable to find validator address for alias {alias}");
+                eprintln!(
+                    "Unable to find validator address for alias \
+                     {validator_alias}"
+                );
                 cli::safe_exit(1)
             })
             .clone();
@@ -231,26 +241,26 @@ pub async fn join_network(
                 cli::safe_exit(1)
             });
 
-        let alias = validator_key_alias(&alias);
+        let alias = validator_key_alias(&validator_alias);
         pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
             eprintln!("Missing validator key with alias {}", alias);
             cli::safe_exit(1)
         });
 
-        let alias = consensus_key_alias(&alias);
+        let alias = consensus_key_alias(&validator_alias);
         let consensus_key =
             pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
                 eprintln!("Missing consensus key with alias {}", alias);
                 cli::safe_exit(1)
             });
 
-        let alias = rewards_key_alias(&alias);
+        let alias = rewards_key_alias(&validator_alias);
         pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
             eprintln!("Missing rewards key with alias {}", alias);
             cli::safe_exit(1)
         });
 
-        let alias = tendermint_node_key_alias(&alias);
+        let alias = tendermint_node_key_alias(&validator_alias);
         let tendermint_node_key =
             pregenesis_wallet.find_key(&alias).unwrap_or_else(|_err| {
                 eprintln!("Missing validator key with alias {}", alias);
@@ -286,6 +296,21 @@ pub async fn join_network(
         wallet.set_validator_address(address);
 
         wallet.save().unwrap();
+
+        // Update the config from the default non-validator settings to
+        // validator settings
+        let base_dir = base_dir.clone();
+        let chain_id = chain_id.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut config = Config::load(&base_dir, &chain_id, None);
+            config.ledger.tendermint.tendermint_mode =
+                TendermintMode::Validator;
+            // Validator node should turned off peer exchange reactor
+            config.ledger.tendermint.p2p_pex = false;
+            config.write(&base_dir, &chain_id, true).unwrap();
+        })
+        .await
+        .unwrap();
     }
     println!("Successfully configured for chain ID {}", chain_id);
 }
