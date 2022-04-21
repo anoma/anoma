@@ -88,6 +88,9 @@ where
     let has_pre_author = ctx.has_key_pre(&author_key).ok();
     match (has_pre_author, author) {
         (Some(has_pre_author), Some(author)) => {
+            // TODO: if author is an implicit address, we should asssume its
+            // existence we should reuse the same logic as in
+            // check_address_existence in shared/src/vm/host_env.rs
             let address_exist_key = Key::validity_predicate(&author);
             let address_exist = ctx.has_key_post(&address_exist_key).ok();
             if let Some(address_exist) = address_exist {

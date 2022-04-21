@@ -670,6 +670,7 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
             &proposal_start_epoch_key,
         )
         .await;
+
         match proposal_start_epoch {
             Some(epoch) => {
                 let delegation_addresses = rpc::get_delegators_delegation(
@@ -678,6 +679,7 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
                     epoch,
                 )
                 .await;
+
                 // TODO: we can optimize by quering if a vote from a validator
                 // is equal to ours. If so, we can avoid voting
                 let tx_data = VoteProposalData {
