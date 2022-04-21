@@ -726,21 +726,16 @@ async fn filter_delegations(
 ) -> Vec<Address> {
     let mut remove_indexes: Vec<usize> = vec![];
 
-    for (index, address) in delegation_addresses.iter().enumerate() {
+    for (index, validator_address) in delegation_addresses.iter().enumerate() {
         let vote_key = gov_storage::get_vote_proposal_key(
             proposal_id,
-            address.to_owned(),
-            address.to_owned(),
+            validator_address.to_owned(),
+            validator_address.to_owned(),
         );
 
-        let vote_iter =
-            rpc::query_storage_prefix::<ProposalVote>(client.clone(), vote_key)
-                .await;
-
-        if let Some(mut vote_iter) = vote_iter {
-            let (_, validator_vote) =
-                vote_iter.next().expect("Vote shouldn't be None");
-
+        if let Some(validator_vote) =
+            rpc::query_storage_value::<ProposalVote>(client, &vote_key).await
+        {
             if &validator_vote == delegator_vote {
                 remove_indexes.push(index);
             }
