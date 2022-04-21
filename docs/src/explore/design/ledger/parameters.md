@@ -10,3 +10,4 @@ The parameters for [epoch](./epochs.md) duration are:
 
 - Minimum number of blocks in an epoch
 - Minimum duration of an epoch
+- Maximum expected time per block 
