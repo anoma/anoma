@@ -21,7 +21,7 @@ use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
 /// process
-static INIT: Once = Once::new();
+pub static INIT: Once = Once::new();
 
 const APPS_PACKAGE: &str = "anoma_apps";
 
@@ -35,7 +35,7 @@ const ENV_VAR_KEEP_TEMP: &str = "ANOMA_E2E_KEEP_TEMP";
 /// This file must contain a single validator with alias "validator-0".
 /// To add more validators, use the [`add_validators`] function in the call to
 /// setup the [`network`].
-const SINGLE_NODE_NET_GENESIS: &str = "genesis/e2e-tests-single-node.toml";
+pub const SINGLE_NODE_NET_GENESIS: &str = "genesis/e2e-tests-single-node.toml";
 /// An E2E test network.
 #[derive(Debug)]
 pub struct Network {

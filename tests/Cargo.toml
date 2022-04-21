@@ -44,11 +44,13 @@ color-eyre = "0.5.11"
 # NOTE: enable "print" feature to see output from builds ran by e2e tests
 escargot = {version = "0.5.7"} # , features = ["print"]}
 eyre = "0.6.5"
+file-serve = "0.2.0"
 fs_extra = "1.2.0"
 itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
 rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
+toml = "0.5.9"
 
 # This is used to enable logging from tests
 [package.metadata.cargo-udeps.ignore]

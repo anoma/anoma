@@ -262,6 +262,7 @@ dependencies = [
  "concat-idents",
  "escargot",
  "eyre",
+ "file-serve",
  "fs_extra",
  "itertools 0.10.3",
  "libp2p",
@@ -272,6 +273,7 @@ dependencies = [
  "sha2 0.9.9",
  "tempfile",
  "test-log",
+ "toml",
  "tracing 0.1.31",
  "tracing-subscriber 0.3.9",
 ]
@@ -456,6 +458,12 @@ name = "arrayvec"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
+
+[[package]]
+name = "ascii"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbf56136a5198c7b01a49e3afcbef6cf84597273d298f54432926024107b0109"
 
 [[package]]
 name = "asn1_der"
@@ -1166,6 +1174,12 @@ dependencies = [
  "time 0.1.44",
  "winapi 0.3.9",
 ]
+
+[[package]]
+name = "chunked_transfer"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e"
 
 [[package]]
 name = "cipher"
@@ -2072,6 +2086,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "file-serve"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67a09c8127b1a49f66ac56a7c9efe420e2ab23e00266ea4144cc2b905076a7f1"
+dependencies = [
+ "log 0.4.14",
+ "mime_guess",
+ "tiny_http",
+]
+
+[[package]]
 name = "filetime"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2672,7 +2697,7 @@ dependencies = [
  "time 0.1.44",
  "traitobject",
  "typeable",
- "unicase",
+ "unicase 1.4.2",
  "url 1.7.2",
 ]
 
@@ -3855,6 +3880,16 @@ name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
+
+[[package]]
+name = "mime_guess"
+version = "2.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4192263c238a5f0d0c6bfd21f336a313a4ce1c450542449ca191bb657b4642ef"
+dependencies = [
+ "mime 0.3.16",
+ "unicase 2.6.0",
+]
 
 [[package]]
 name = "minicbor"
@@ -6632,6 +6667,7 @@ version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "004cbc98f30fa233c61a38bc77e96a9106e65c88f2d3bef182ae952027e5753d"
 dependencies = [
+ "itoa 1.0.1",
  "libc",
  "num_threads",
  "time-macros",
@@ -6642,6 +6678,19 @@ name = "time-macros"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25eb0ca3468fc0acc11828786797f6ef9aa1555e4a211a60d64cc8e4d1be47d6"
+
+[[package]]
+name = "tiny_http"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0d6ef4e10d23c1efb862eecad25c5054429a71958b4eeef85eb5e7170b477ca"
+dependencies = [
+ "ascii",
+ "chunked_transfer",
+ "log 0.4.14",
+ "time 0.3.7",
+ "url 2.2.2",
+]
 
 [[package]]
 name = "tinyvec"
@@ -6845,9 +6894,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.5.8"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31142970826733df8241ef35dc040ef98c679ab14d7c3e54d827099b3acecaa"
+checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
 dependencies = [
  "serde 1.0.136",
 ]
@@ -7250,6 +7299,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f4765f83163b74f957c797ad9253caf97f103fb064d3999aea9568d09fc8a33"
 dependencies = [
  "version_check 0.1.5",
+]
+
+[[package]]
+name = "unicase"
+version = "2.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50f37be617794602aabbeee0be4f259dc1778fabe05e2d67ee8f79326d5cb4f6"
+dependencies = [
+ "version_check 0.9.4",
 ]
 
 [[package]]
@@ -7888,7 +7946,7 @@ dependencies = [
  "tokio-reactor",
  "tokio-tcp",
  "tokio-tls",
- "unicase",
+ "unicase 1.4.2",
  "url 1.7.2",
  "websocket-base",
 ]
