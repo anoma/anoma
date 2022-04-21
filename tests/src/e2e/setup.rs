@@ -188,53 +188,12 @@ pub fn network(
     )
     .unwrap();
 
-    // Copy the built WASM files from "wasm" directory in the root of the
-    // project.
-    let built_wasm_dir = working_dir.join(config::DEFAULT_WASM_DIR);
-    let opts = fs_extra::dir::DirOptions { depth: 1 };
-    let wasm_files: Vec<_> =
-        fs_extra::dir::get_dir_content2(&built_wasm_dir, &opts)
-            .unwrap()
-            .files
-            .into_iter()
-            .map(PathBuf::from)
-            .filter(|path| {
-                matches!(path.extension().and_then(OsStr::to_str), Some("wasm"))
-            })
-            .map(|path| path.file_name().unwrap().to_string_lossy().to_string())
-            .collect();
-    if wasm_files.is_empty() {
-        panic!(
-            "No WASM files found in {}. Please build or download them them \
-             first.",
-            built_wasm_dir.to_string_lossy()
-        );
-    }
-    let target_wasm_dir = chain_dir.join(config::DEFAULT_WASM_DIR);
-    for file in &wasm_files {
-        std::fs::copy(
-            working_dir.join("wasm").join(&file),
-            target_wasm_dir.join(&file),
-        )
-        .unwrap();
-    }
-
-    // Copy the built WASM files from "wasm" directory to each validator dir
-    for validator_name in genesis.validator.keys() {
-        let target_wasm_dir = chain_dir
-            .join(utils::NET_ACCOUNTS_DIR)
-            .join(validator_name)
-            .join(config::DEFAULT_BASE_DIR)
-            .join(net.chain_id.as_str())
-            .join(config::DEFAULT_WASM_DIR);
-        for file in &wasm_files {
-            std::fs::copy(
-                working_dir.join("wasm").join(&file),
-                target_wasm_dir.join(&file),
-            )
-            .unwrap();
-        }
-    }
+    copy_wasm_to_chain_dir(
+        &working_dir,
+        &chain_dir,
+        &net.chain_id,
+        genesis.validator.keys(),
+    );
 
     Ok(Test {
         working_dir,
@@ -688,5 +647,61 @@ pub mod constants {
     pub fn wasm_abs_path(file_name: &str) -> PathBuf {
         let working_dir = fs::canonicalize("..").unwrap();
         working_dir.join(file_name)
+    }
+}
+
+/// Copy WASM files from the `wasm` directory to every node's chain dir.
+pub fn copy_wasm_to_chain_dir<'a>(
+    working_dir: &Path,
+    chain_dir: &Path,
+    chain_id: &ChainId,
+    genesis_validator_keys: impl Iterator<Item = &'a String>,
+) {
+    // Copy the built WASM files from "wasm" directory in the root of the
+    // project.
+    let built_wasm_dir = working_dir.join(config::DEFAULT_WASM_DIR);
+    let opts = fs_extra::dir::DirOptions { depth: 1 };
+    let wasm_files: Vec<_> =
+        fs_extra::dir::get_dir_content2(&built_wasm_dir, &opts)
+            .unwrap()
+            .files
+            .into_iter()
+            .map(PathBuf::from)
+            .filter(|path| {
+                matches!(path.extension().and_then(OsStr::to_str), Some("wasm"))
+            })
+            .map(|path| path.file_name().unwrap().to_string_lossy().to_string())
+            .collect();
+    if wasm_files.is_empty() {
+        panic!(
+            "No WASM files found in {}. Please build or download them them \
+             first.",
+            built_wasm_dir.to_string_lossy()
+        );
+    }
+    let target_wasm_dir = chain_dir.join(config::DEFAULT_WASM_DIR);
+    for file in &wasm_files {
+        std::fs::copy(
+            working_dir.join("wasm").join(&file),
+            target_wasm_dir.join(&file),
+        )
+        .unwrap();
+    }
+
+    // Copy the built WASM files from "wasm" directory to each validator dir
+    for validator_name in genesis_validator_keys {
+        let target_wasm_dir = chain_dir
+            .join(utils::NET_ACCOUNTS_DIR)
+            .join(validator_name)
+            .join(config::DEFAULT_BASE_DIR)
+            .join(chain_id.as_str())
+            .join(config::DEFAULT_WASM_DIR);
+        for file in &wasm_files {
+            std::fs::copy(
+                working_dir.join("wasm").join(&file),
+                target_wasm_dir.join(&file),
+            )
+            .unwrap();
+        }
     }
 }
