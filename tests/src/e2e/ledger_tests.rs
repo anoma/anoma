@@ -79,10 +79,16 @@ fn test_node_connectivity() -> Result<()> {
     let args = ["ledger"];
     let mut validator_0 =
         run_as!(test, Who::Validator(0), Bin::Node, args, Some(40))?;
+    validator_0.exp_string("Anoma ledger node started")?;
+    validator_0.exp_string("This node is a validator")?;
     let mut validator_1 =
         run_as!(test, Who::Validator(1), Bin::Node, args, Some(40))?;
+    validator_1.exp_string("Anoma ledger node started")?;
+    validator_1.exp_string("This node is a validator")?;
     let mut non_validator =
         run_as!(test, Who::NonValidator, Bin::Node, args, Some(40))?;
+    non_validator.exp_string("Anoma ledger node started")?;
+    non_validator.exp_string("This node is not a validator")?;
 
     // 2. Submit a valid token transfer tx
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
