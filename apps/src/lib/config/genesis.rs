@@ -117,6 +117,15 @@ pub mod genesis_config {
         pub wasm: HashMap<String, WasmConfig>,
     }
 
+    /// Validator pre-genesis configuration can be created with client utils
+    /// `init-genesis-validator` command and added to a genesis for
+    /// `init-network` cmd and that can be subsequently read by `join-network`
+    /// cmd to setup a genesis validator node.
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct ValidatorPreGenesisConfig {
+        pub validator: HashMap<String, ValidatorConfig>,
+    }
+
     #[derive(Clone, Default, Debug, Deserialize, Serialize)]
     pub struct ValidatorConfig {
         // Public key for consensus. (default: generate)

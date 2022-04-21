@@ -1273,11 +1273,13 @@ pub mod args {
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
     const MODE: ArgOpt<String> = arg_opt("mode");
     const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
+    const NET_ADDRESS: Arg<SocketAddr> = arg("net-address");
     const NODE_OPT: ArgOpt<String> = arg_opt("node");
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
+    const PRE_GENESIS_PATH: ArgOpt<PathBuf> = arg_opt("pre-genesis-path");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
@@ -2515,21 +2517,25 @@ pub mod args {
     pub struct JoinNetwork {
         pub chain_id: ChainId,
         pub genesis_validator: Option<String>,
+        pub pre_genesis_path: Option<PathBuf>,
     }
 
     impl Args for JoinNetwork {
         fn parse(matches: &ArgMatches) -> Self {
             let chain_id = CHAIN_ID.parse(matches);
             let genesis_validator = GENESIS_VALIDATOR.parse(matches);
+            let pre_genesis_path = PRE_GENESIS_PATH.parse(matches);
             Self {
                 chain_id,
                 genesis_validator,
+                pre_genesis_path,
             }
         }
 
         fn def(app: App) -> App {
             app.arg(CHAIN_ID.def().about("The chain ID. The chain must be known in the https://github.com/heliaxdev/anoma-network-config repository."))
-                .arg(GENESIS_VALIDATOR.def().about("The alias of the genesis validator that you want to set up as."))
+                .arg(GENESIS_VALIDATOR.def().about("The alias of the genesis validator that you want to set up as, if any."))
+                .arg(PRE_GENESIS_PATH.def().about("The path to pre-genesis for genesis validator, if any. Defaults to \"{base-dir}/pre-genesis/{genesis-validator}\"."))
         }
     }
 
@@ -2610,21 +2616,29 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct InitGenesisValidator {
         pub alias: String,
+        pub net_address: SocketAddr,
         pub unsafe_dont_encrypt: bool,
     }
 
     impl Args for InitGenesisValidator {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
+            let net_address = NET_ADDRESS.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
             Self {
                 alias,
+                net_address,
                 unsafe_dont_encrypt,
             }
         }
 
         fn def(app: App) -> App {
             app.arg(ALIAS.def().about("The validator address alias."))
+                .arg(NET_ADDRESS.def().about(
+                    "Static {host:port} of your validator node's P2P address. \
+                     Anoma uses port `26656` for P2P connections by default, \
+                     but you can configure a different value.",
+                ))
                 .arg(UNSAFE_DONT_ENCRYPT.def().about(
                     "UNSAFE: Do not encrypt the generated keypairs. Do not \
                      use this for keys used in a live network.",
