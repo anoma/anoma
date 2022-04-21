@@ -684,13 +684,15 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
 
                 // Optimize by quering if a vote from a validator
                 // is equal to ours. If so, we can avoid voting
-                delegation_addresses = filter_delegations(
-                    &client,
-                    delegation_addresses,
-                    proposal_id,
-                    &args.vote,
-                )
-                .await;
+                if !args.tx.force {
+                    delegation_addresses = filter_delegations(
+                        &client,
+                        delegation_addresses,
+                        proposal_id,
+                        &args.vote,
+                    )
+                    .await;
+                }
 
                 let tx_data = VoteProposalData {
                     id: proposal_id,
