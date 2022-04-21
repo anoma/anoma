@@ -136,11 +136,9 @@ impl Wallet {
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => {
-                Ok(Store::gen_validator_keys(other.map(|res| {
-                    Rc::get_mut(&mut res.unwrap()).unwrap().clone()
-                })))
-            }
+            other => Ok(Store::gen_validator_keys(
+                other.map(|res| res.unwrap().as_ref().clone()),
+            )),
         }
     }
 
