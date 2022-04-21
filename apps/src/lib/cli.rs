@@ -1221,6 +1221,7 @@ pub mod args {
     const ALIAS: Arg<String> = arg("alias");
     const ALLOW_DUPLICATE_IP: ArgFlag = flag("allow-duplicate-ip");
     const AMOUNT: Arg<token::Amount> = arg("amount");
+    const ARCHIVE_DIR: ArgOpt<PathBuf> = arg_opt("archive-dir");
     const BASE_DIR: ArgDefault<PathBuf> = arg_default(
         "base-dir",
         DefaultFn(|| match env::var("ANOMA_BASE_DIR") {
@@ -2549,6 +2550,7 @@ pub mod args {
         pub localhost: bool,
         pub allow_duplicate_ip: bool,
         pub dont_archive: bool,
+        pub archive_dir: Option<PathBuf>,
     }
 
     impl Args for InitNetwork {
@@ -2562,6 +2564,7 @@ pub mod args {
             let localhost = LOCALHOST.parse(matches);
             let allow_duplicate_ip = ALLOW_DUPLICATE_IP.parse(matches);
             let dont_archive = DONT_ARCHIVE.parse(matches);
+            let archive_dir = ARCHIVE_DIR.parse(matches);
             Self {
                 genesis_path,
                 wasm_checksums_path,
@@ -2571,6 +2574,7 @@ pub mod args {
                 localhost,
                 allow_duplicate_ip,
                 dont_archive,
+                archive_dir,
             }
         }
 
@@ -2610,6 +2614,10 @@ pub mod args {
                     .def()
                     .about("Do NOT create the release archive."),
             )
+            .arg(ARCHIVE_DIR.def().about(
+                "Specify a directory into which to store the archive. Default \
+                 is the current working directory.",
+            ))
         }
     }
 

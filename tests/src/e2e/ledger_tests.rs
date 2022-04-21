@@ -1123,6 +1123,7 @@ fn test_genesis_validators() -> Result<()> {
     genesis_config::write_genesis_config(&genesis, &genesis_file);
     let genesis_path = genesis_file.to_string_lossy();
 
+    let archive_dir = base_dir.path().to_string_lossy().to_string();
     let args = vec![
         "utils",
         "init-network",
@@ -1135,6 +1136,8 @@ fn test_genesis_validators() -> Result<()> {
         "--allow-duplicate-ip",
         "--wasm-checksums-path",
         &checksums_path,
+        "--archive-dir",
+        &archive_dir,
     ];
     let mut init_network = setup::run_cmd(
         Bin::Client,
@@ -1182,10 +1185,7 @@ fn test_genesis_validators() -> Result<()> {
 
     std::env::set_var(
         anoma_apps::client::utils::ENV_VAR_NETWORK_CONFIGS_SERVER,
-        format!(
-            "http://{network_archive_addr}/{}",
-            working_dir.to_string_lossy()
-        ),
+        format!("http://{network_archive_addr}/{}", archive_dir),
     );
     let pre_genesis_path = validator_0_pre_genesis_dir.to_string_lossy();
     let mut join_network_val_0 = run_as!(

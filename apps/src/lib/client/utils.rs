@@ -390,6 +390,7 @@ pub fn init_network(
         localhost,
         allow_duplicate_ip,
         dont_archive,
+        archive_dir,
     }: args::InitNetwork,
 ) {
     let mut config = genesis_config::open_genesis_config(&genesis_path);
@@ -990,13 +991,18 @@ pub fn init_network(
             .unwrap();
 
         // Gzip tar release and write to file
-        let release_file = format!("{}.tar.gz", chain_id);
+        let release_file = archive_dir
+            .unwrap_or_else(|| env::current_dir().unwrap())
+            .join(format!("{}.tar.gz", chain_id));
         let compressed_file = File::create(&release_file).unwrap();
         let mut encoder =
             GzEncoder::new(compressed_file, Compression::default());
         encoder.write_all(&release.into_inner().unwrap()).unwrap();
         encoder.finish().unwrap();
-        println!("Release archive created at {}", release_file);
+        println!(
+            "Release archive created at {}",
+            release_file.to_string_lossy()
+        );
     }
 }
 
