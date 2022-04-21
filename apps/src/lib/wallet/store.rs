@@ -429,6 +429,17 @@ impl Store {
         Some(alias)
     }
 
+    /// Extend this store from another store.
+    pub fn extend(&mut self, other: Self) {
+        self.keys.extend(other.keys.into_iter());
+        self.addresses.extend(other.addresses.into_iter());
+        self.pkhs.extend(other.pkhs.into_iter());
+        self.validator_address =
+            self.validator_address.take().or(other.validator_address);
+        self.validator_keys =
+            self.validator_keys.take().or(other.validator_keys);
+    }
+
     fn decode(data: Vec<u8>) -> Result<Self, toml::de::Error> {
         toml::from_slice(&data)
     }

@@ -49,6 +49,11 @@ impl Wallet {
         })
     }
 
+    /// Extend this wallet from another wallet.
+    pub fn extend(&mut self, other: Self) {
+        self.store.extend(other.store)
+    }
+
     /// Load a wallet from the store file or create a new wallet without any
     /// keys or addresses.
     pub fn load_or_new(store_dir: &Path) -> Self {
