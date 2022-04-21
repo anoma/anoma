@@ -50,5 +50,5 @@ pub struct VoteProposalData {
     /// The proposal author address
     pub voter: Address,
     /// Delegator addreses
-    pub delegations: Vec<Address>
+    pub delegations: Vec<Address>,
 }

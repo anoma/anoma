@@ -422,7 +422,11 @@ pub fn get_proposal_prefix_key(id: u64) -> Key {
 }
 
 /// Get proposal code key
-pub fn get_vote_proposal_key(id: u64, voter_address: Address, delegation_address: Address) -> Key {
+pub fn get_vote_proposal_key(
+    id: u64,
+    voter_address: Address,
+    delegation_address: Address,
+) -> Key {
     get_proposal_prefix_key(id)
         .push(&delegation_address)
         .expect("Cannot obtain a storage key")

@@ -97,7 +97,8 @@ where
                     let pre_counter: Option<u64> =
                         read(&self.ctx, &counter_key, ReadType::PRE).ok();
                     let voter = gov_storage::get_voter_address(key);
-                    let delegation_address = gov_storage::get_vote_delegation_address(key);
+                    let delegation_address =
+                        gov_storage::get_vote_delegation_address(key);
 
                     match (
                         pre_counter,
@@ -120,7 +121,7 @@ where
                                 pre_voting_start_epoch,
                                 verifiers,
                                 voter_address,
-                                delegation_address
+                                delegation_address,
                             );
 
                             let is_validator = is_validator(
@@ -128,7 +129,7 @@ where
                                 pre_voting_start_epoch,
                                 verifiers,
                                 voter_address,
-                                delegation_address
+                                delegation_address,
                             );
 
                             let is_valid_validator_voting_period =
@@ -514,16 +515,19 @@ fn is_delegator<DB, H, CA>(
     epoch: Epoch,
     verifiers: &BTreeSet<Address>,
     address: &Address,
-    delegation_address: &Address
+    delegation_address: &Address,
 ) -> bool
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    let bond_key = pos_storage::bond_key(&BondId{ source: address.clone(), validator: delegation_address.clone() });
+    let bond_key = pos_storage::bond_key(&BondId {
+        source: address.clone(),
+        validator: delegation_address.clone(),
+    });
     let bonds: Option<Bonds> = read(context, &bond_key, ReadType::PRE).ok();
-    
+
     if let Some(bonds) = bonds {
         bonds.get(epoch).is_some() && verifiers.contains(address)
     } else {
@@ -536,7 +540,8 @@ fn is_valid_validator_voting_period(
     voting_start_epoch: Epoch,
     voting_end_epoch: Epoch,
 ) -> bool {
-    voting_start_epoch < voting_end_epoch && current_epoch * 3 <= voting_start_epoch + voting_end_epoch * 2
+    voting_start_epoch < voting_end_epoch
+        && current_epoch * 3 <= voting_start_epoch + voting_end_epoch * 2
 }
 
 fn is_validator<DB, H, CA>(
@@ -544,7 +549,7 @@ fn is_validator<DB, H, CA>(
     epoch: Epoch,
     verifiers: &BTreeSet<Address>,
     address: &Address,
-    delegation_address: &Address
+    delegation_address: &Address,
 ) -> bool
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
@@ -560,7 +565,8 @@ where
         Some(set) => {
             set.active.iter().any(|weighted_validator| {
                 weighted_validator.address.eq(address)
-            }) && verifiers.contains(address) && delegation_address.eq(address)
+            }) && verifiers.contains(address)
+                && delegation_address.eq(address)
         }
         None => false,
     }
