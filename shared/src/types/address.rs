@@ -188,7 +188,9 @@ impl Address {
                     }
                     InternalAddress::IbcBurn => internal::IBC_BURN.to_string(),
                     InternalAddress::IbcMint => internal::IBC_MINT.to_string(),
-                    InternalAddress::EthBridge => internal::ETH_BRIDGE.to_string(),
+                    InternalAddress::EthBridge => {
+                        internal::ETH_BRIDGE.to_string()
+                    }
                 };
                 debug_assert_eq!(string.len(), FIXED_LEN_STRING_BYTES);
                 string

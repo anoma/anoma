@@ -4,7 +4,10 @@ use anoma_tx_prelude::*;
 
 #[transaction]
 fn apply_tx(tx_data: Vec<u8>) {
-    log_string(format!("tx_eth_bridge called with tx_data ({} bytes)", tx_data.len()));
+    log_string(format!(
+        "tx_eth_bridge called with tx_data ({} bytes)",
+        tx_data.len()
+    ));
     let signed = match SignedTxData::try_from_slice(&tx_data[..]) {
         Ok(signed) => {
             log_string(format!("Got signed data: {:#?}", signed));

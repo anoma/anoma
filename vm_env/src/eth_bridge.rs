@@ -2,6 +2,7 @@
 pub mod tx {
     use anoma::ledger::eth_bridge::storage;
     use anoma::types::transaction::eth_bridge::UpdateQueue;
+
     use crate::imports::tx;
 
     pub fn update_queue(data: UpdateQueue) {
