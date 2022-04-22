@@ -5,6 +5,8 @@
 pub mod decrypted;
 /// tools for encrypted data
 pub mod encrypted;
+/// txs for managing the Ethereum bridge
+pub mod eth_bridge;
 /// txs to manage governance
 pub mod governance;
 /// txs to manage nfts
