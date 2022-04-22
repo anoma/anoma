@@ -6,6 +6,7 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
+pub mod eth_bridge;
 pub mod governance;
 pub mod ibc;
 pub mod imports;
@@ -22,6 +23,7 @@ pub mod tx_prelude {
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
 
+    pub use crate::eth_bridge::tx as eth_bridge;
     pub use crate::governance::tx as governance;
     pub use crate::ibc::{Ibc, IbcActions};
     pub use crate::imports::tx::*;
