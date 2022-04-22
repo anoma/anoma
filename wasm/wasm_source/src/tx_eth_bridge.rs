@@ -2,39 +2,44 @@
 
 use anoma_tx_prelude::*;
 
+fn log(msg: &str) {
+    log_string(format!("[tx_eth_bridge] {}", msg,))
+}
+
+fn fatal(msg: &str, err: impl std::error::Error) -> ! {
+    log(&format!("ERROR: {} - {:?}", msg, err));
+    panic!()
+}
+
+fn fatal_msg(msg: &str) -> ! {
+    log(msg);
+    panic!()
+}
+
 #[transaction]
 fn apply_tx(tx_data: Vec<u8>) {
-    log_string(format!(
-        "tx_eth_bridge called with tx_data ({} bytes)",
-        tx_data.len()
-    ));
+    log(&format!("called with tx_data ({} bytes)", tx_data.len()));
     let signed = match SignedTxData::try_from_slice(&tx_data[..]) {
         Ok(signed) => {
-            log_string(format!("Got signed data: {:#?}", signed));
+            log(&format!("got signed data: {:#?}", signed));
             signed
         }
-        Err(error) => {
-            log_string(format!("Error getting signed data: {:#?}", error));
-            panic!()
-        }
+        Err(error) => fatal("getting signed data", error),
     };
+
     let data = match signed.data {
         Some(data) => data,
         None => {
-            log_string("No data provided");
-            panic!()
+            fatal_msg("no data provided");
         }
     };
     let strct =
         match transaction::eth_bridge::UpdateQueue::try_from_slice(&data[..]) {
             Ok(strct) => {
-                log_string(format!("Serialized data to: {:#?}", strct));
+                log(&format!("serialized data to: {:#?}", strct));
                 strct
             }
-            Err(error) => {
-                log_string(format!("Error serializing data: {:#?}", error));
-                panic!()
-            }
+            Err(error) => fatal("serializing data", error),
         };
     eth_bridge::update_queue(strct);
 }
