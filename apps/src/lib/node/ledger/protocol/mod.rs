@@ -2,6 +2,7 @@
 use std::collections::BTreeSet;
 use std::panic;
 
+use anoma::ledger::eth_bridge::EthBridge;
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter};
 use anoma::ledger::governance::GovernanceVp;
 use anoma::ledger::ibc::vp::{Ibc, IbcToken};
@@ -331,7 +332,8 @@ where
                             result
                         }
                         InternalAddress::EthBridge => {
-                            gas_meter = ctx.gas_meter.into_inner();
+                            let bridge = EthBridge { ctx };
+                            gas_meter = bridge.ctx.gas_meter.into_inner();
                             Ok(true) // TODO
                         }
                     };
