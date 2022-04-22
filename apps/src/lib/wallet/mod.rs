@@ -36,6 +36,24 @@ pub enum FindKeyError {
 }
 
 impl Wallet {
+    /// Load a wallet from the store file.
+    pub fn load(store_dir: &Path) -> Option<Self> {
+        let store = Store::load(store_dir).unwrap_or_else(|err| {
+            eprintln!("Unable to load the wallet: {}", err);
+            cli::safe_exit(1)
+        });
+        Some(Self {
+            store_dir: store_dir.to_path_buf(),
+            store,
+            decrypted_key_cache: HashMap::default(),
+        })
+    }
+
+    /// Extend this wallet from another wallet.
+    pub fn extend(&mut self, other: Self) {
+        self.store.extend(other.store)
+    }
+
     /// Load a wallet from the store file or create a new wallet without any
     /// keys or addresses.
     pub fn load_or_new(store_dir: &Path) -> Self {
@@ -128,20 +146,23 @@ impl Wallet {
                 .ok()
                 .or_else(|| {
                     self.store
-                        .validator_data
+                        .validator_keys
                         .take()
-                        .map(|data| Rc::new(data.keys.protocol_keypair))
+                        .map(|data| Rc::new(data.protocol_keypair))
                 })
                 .ok_or(FindKeyError::KeyNotFound)
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => {
-                Ok(Store::gen_validator_keys(other.map(|res| {
-                    Rc::get_mut(&mut res.unwrap()).unwrap().clone()
-                })))
-            }
+            other => Ok(Store::gen_validator_keys(
+                other.map(|res| res.unwrap().as_ref().clone()),
+            )),
         }
+    }
+
+    /// Add validator keys to the store
+    pub fn add_validator_keys(&mut self, keys: ValidatorKeys) {
+        self.store.add_validator_keys(keys);
     }
 
     /// Add validator data to the store
@@ -153,9 +174,14 @@ impl Wallet {
         self.store.add_validator_data(address, keys);
     }
 
-    /// Returns the validator data, if it exists.
-    pub fn get_validator_data(&self) -> Option<&ValidatorData> {
-        self.store.get_validator_data()
+    /// Returns the validator keys, if they exists.
+    pub fn get_validator_keys(&self) -> Option<&ValidatorKeys> {
+        self.store.get_validator_keys()
+    }
+
+    /// Returns the validator address, if it exists.
+    pub fn get_validator_address(&self) -> Option<&Address> {
+        self.store.get_validator_address()
     }
 
     /// Returns the validator data, if it exists.
@@ -163,6 +189,11 @@ impl Wallet {
     /// method as it involves a partial move
     pub fn take_validator_data(self) -> Option<ValidatorData> {
         self.store.validator_data()
+    }
+
+    /// Set the validator address.
+    pub fn set_validator_address(&mut self, address: Address) {
+        self.store.set_validator_address(address);
     }
 
     /// Find the stored key by an alias, a public key hash or a public key.

@@ -88,6 +88,7 @@ impl Identity {
     /// Generate a new identity.
     pub fn gen(base_dir: impl AsRef<Path>) -> Identity {
         let file_path = Self::file_path(base_dir);
+        std::fs::create_dir_all(&file_path.parent().unwrap()).unwrap();
         let file = OpenOptions::new()
             .create(true)
             .write(true)

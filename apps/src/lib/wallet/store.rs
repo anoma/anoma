@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::io::prelude::*;
-use std::io::{self, ErrorKind, Write};
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
@@ -49,6 +49,8 @@ pub struct ValidatorData {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
+    /// Special keys if the wallet belongs to a validator
+    pub(crate) validator_address: Option<Address>,
     /// Cryptographic keypairs
     keys: HashMap<Alias, StoredKeypair>,
     /// Anoma address book
@@ -57,7 +59,7 @@ pub struct Store {
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
     /// Special keys if the wallet belongs to a validator
-    pub(crate) validator_data: Option<ValidatorData>,
+    pub(crate) validator_keys: Option<ValidatorKeys>,
 }
 
 #[derive(Error, Debug)]
@@ -121,7 +123,7 @@ impl Store {
 
     /// Load the store file or create a new one without any keys or addresses.
     pub fn load_or_new(store_dir: &Path) -> Result<Self, LoadStoreError> {
-        Self::load_or_new_aux(store_dir, || {
+        Self::load(store_dir).or_else(|_| {
             let store = Self::default();
             store.save(store_dir).map_err(|err| {
                 LoadStoreError::StoreNewWallet(err.to_string())
@@ -136,7 +138,7 @@ impl Store {
         store_dir: &Path,
         load_genesis: impl FnOnce() -> GenesisConfig,
     ) -> Result<Self, LoadStoreError> {
-        Self::load_or_new_aux(store_dir, || {
+        Self::load(store_dir).or_else(|_| {
             #[cfg(not(feature = "dev"))]
             let store = Self::new(load_genesis());
             #[cfg(feature = "dev")]
@@ -152,11 +154,8 @@ impl Store {
         })
     }
 
-    /// Load the store file or create a new with the provided function.
-    fn load_or_new_aux(
-        store_dir: &Path,
-        new_store: impl FnOnce() -> Result<Self, LoadStoreError>,
-    ) -> Result<Self, LoadStoreError> {
+    /// Attempt to load the store file.
+    pub fn load(store_dir: &Path) -> Result<Self, LoadStoreError> {
         let wallet_file = wallet_file(store_dir);
         match FileLock::lock(
             wallet_file.to_str().unwrap(),
@@ -173,19 +172,10 @@ impl Store {
                 })?;
                 Store::decode(store).map_err(LoadStoreError::Decode)
             }
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => {
-                    println!(
-                        "No wallet found at {:?}. Creating a new one.",
-                        wallet_file
-                    );
-                    new_store()
-                }
-                _ => Err(LoadStoreError::ReadWallet(
-                    wallet_file.to_string_lossy().into_owned(),
-                    err.to_string(),
-                )),
-            },
+            Err(err) => Err(LoadStoreError::ReadWallet(
+                wallet_file.to_string_lossy().into_owned(),
+                err.to_string(),
+            )),
         }
     }
 
@@ -263,6 +253,11 @@ impl Store {
         &self.addresses
     }
 
+    /// Set the validator address.
+    pub fn set_validator_address(&mut self, address: Address) {
+        self.validator_address = Some(address);
+    }
+
     fn generate_keypair() -> common::SecretKey {
         use rand::rngs::OsRng;
         let mut csprng = OsRng {};
@@ -319,23 +314,40 @@ impl Store {
         }
     }
 
+    /// Add validator keys to the store
+    pub fn add_validator_keys(&mut self, keys: ValidatorKeys) {
+        self.validator_keys = Some(keys);
+    }
+
     /// Add validator data to the store
     pub fn add_validator_data(
         &mut self,
         address: Address,
         keys: ValidatorKeys,
     ) {
-        self.validator_data = Some(ValidatorData { address, keys });
+        self.validator_address = Some(address);
+        self.validator_keys = Some(keys);
     }
 
-    /// Returns the validator data, if it exists
-    pub fn get_validator_data(&self) -> Option<&ValidatorData> {
-        self.validator_data.as_ref()
+    /// Returns the validator address, if it exists
+    pub fn get_validator_address(&self) -> Option<&Address> {
+        self.validator_address.as_ref()
+    }
+
+    /// Returns the validator keys, if they exists
+    pub fn get_validator_keys(&self) -> Option<&ValidatorKeys> {
+        self.validator_keys.as_ref()
     }
 
     /// Returns the validator data, if it exists
     pub fn validator_data(self) -> Option<ValidatorData> {
-        self.validator_data
+        if let (Some(keys), Some(address)) =
+            (self.validator_keys, self.validator_address)
+        {
+            Some(ValidatorData { address, keys })
+        } else {
+            None
+        }
     }
 
     /// Insert a new key with the given alias. If the alias is already used,
@@ -394,6 +406,17 @@ impl Store {
         }
         self.addresses.insert(alias.clone(), address);
         Some(alias)
+    }
+
+    /// Extend this store from another store.
+    pub fn extend(&mut self, other: Self) {
+        self.keys.extend(other.keys.into_iter());
+        self.addresses.extend(other.addresses.into_iter());
+        self.pkhs.extend(other.pkhs.into_iter());
+        self.validator_address =
+            self.validator_address.take().or(other.validator_address);
+        self.validator_keys =
+            self.validator_keys.take().or(other.validator_keys);
     }
 
     fn decode(data: Vec<u8>) -> Result<Self, toml::de::Error> {
