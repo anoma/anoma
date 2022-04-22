@@ -48,6 +48,10 @@ where
         _keys_changed: &BTreeSet<Key>,
         _verifiers: &BTreeSet<Address>,
     ) -> Result<bool, Self::Error> {
+        println!(
+            "Triggered EthBridge: {:?} {:?} {:?}",
+            _tx_data, _keys_changed, _verifiers
+        );
         Ok(true)
     }
 }
