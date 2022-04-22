@@ -1,5 +1,7 @@
 #[cfg(feature = "tx_bond")]
 pub mod tx_bond;
+#[cfg(feature = "tx_eth_bridge")]
+pub mod tx_eth_bridge;
 #[cfg(feature = "tx_from_intent")]
 pub mod tx_from_intent;
 #[cfg(feature = "tx_ibc")]

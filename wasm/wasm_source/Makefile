@@ -17,6 +17,7 @@ wasms += tx_init_proposal
 wasms += tx_unbond
 wasms += tx_update_vp
 wasms += tx_withdraw
+wasms += tx_eth_bridge
 wasms += vp_nft
 wasms += vp_testnet_faucet
 wasms += vp_token
