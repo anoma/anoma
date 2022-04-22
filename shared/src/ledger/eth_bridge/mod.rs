@@ -1,9 +1,11 @@
 //! Bridge from Ethereum
 
+mod storage;
+
 use std::collections::BTreeSet;
 
 use crate::ledger::native_vp::{Ctx, NativeVp};
-use crate::ledger::storage;
+use crate::ledger::storage as ledger_storage;
 use crate::ledger::storage::StorageHasher;
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::Key;
@@ -15,7 +17,7 @@ pub const ADDRESS: Address = Address::Internal(InternalAddress::EthBridge);
 /// Validity predicate for the Ethereum bridge
 pub struct EthBridge<'ctx, DB, H, CA>
 where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
@@ -32,7 +34,7 @@ pub enum Error {
 
 impl<'a, DB, H, CA> NativeVp for EthBridge<'a, DB, H, CA>
 where
-    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
