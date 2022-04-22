@@ -41,7 +41,7 @@ impl Wallet {
         let store = Store::load(store_dir).unwrap_or_else(|err| {
             eprintln!("Unable to load the wallet: {}", err);
             cli::safe_exit(1)
-        })?;
+        });
         Some(Self {
             store_dir: store_dir.to_path_buf(),
             store,

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::io::prelude::*;
-use std::io::{self, ErrorKind, Write};
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
@@ -121,23 +121,15 @@ impl Store {
         filelock.file.write_all(&data)
     }
 
-    /// Load the store file.
-    pub fn load(store_dir: &Path) -> Result<Option<Self>, LoadStoreError> {
-        Self::load_or_new_aux(store_dir)
-    }
-
     /// Load the store file or create a new one without any keys or addresses.
     pub fn load_or_new(store_dir: &Path) -> Result<Self, LoadStoreError> {
-        match Self::load_or_new_aux(store_dir)? {
-            Some(store) => Ok(store),
-            None => {
-                let store = Self::default();
-                store.save(store_dir).map_err(|err| {
-                    LoadStoreError::StoreNewWallet(err.to_string())
-                })?;
-                Ok(store)
-            }
-        }
+        Self::load(store_dir).or_else(|_| {
+            let store = Self::default();
+            store.save(store_dir).map_err(|err| {
+                LoadStoreError::StoreNewWallet(err.to_string())
+            })?;
+            Ok(store)
+        })
     }
 
     /// Load the store file or create a new one with the default addresses from
@@ -146,29 +138,24 @@ impl Store {
         store_dir: &Path,
         load_genesis: impl FnOnce() -> GenesisConfig,
     ) -> Result<Self, LoadStoreError> {
-        match Self::load_or_new_aux(store_dir)? {
-            Some(store) => Ok(store),
-            None => {
-                #[cfg(not(feature = "dev"))]
-                let store = Self::new(load_genesis());
-                #[cfg(feature = "dev")]
-                let store = {
-                    // The function is unused in dev
-                    let _ = load_genesis;
-                    Self::new()
-                };
-                store.save(store_dir).map_err(|err| {
-                    LoadStoreError::StoreNewWallet(err.to_string())
-                })?;
-                Ok(store)
-            }
-        }
+        Self::load(store_dir).or_else(|_| {
+            #[cfg(not(feature = "dev"))]
+            let store = Self::new(load_genesis());
+            #[cfg(feature = "dev")]
+            let store = {
+                // The function is unused in dev
+                let _ = load_genesis;
+                Self::new()
+            };
+            store.save(store_dir).map_err(|err| {
+                LoadStoreError::StoreNewWallet(err.to_string())
+            })?;
+            Ok(store)
+        })
     }
 
-    /// Load the store file or create a new with the provided function.
-    fn load_or_new_aux(
-        store_dir: &Path,
-    ) -> Result<Option<Self>, LoadStoreError> {
+    /// Attempt to load the store file.
+    pub fn load(store_dir: &Path) -> Result<Self, LoadStoreError> {
         let wallet_file = wallet_file(store_dir);
         match FileLock::lock(
             wallet_file.to_str().unwrap(),
@@ -183,20 +170,12 @@ impl Store {
                         err.to_string(),
                     )
                 })?;
-                Store::decode(store)
-                    .map(Some)
-                    .map_err(LoadStoreError::Decode)
+                Store::decode(store).map_err(LoadStoreError::Decode)
             }
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => {
-                    println!("No wallet found at {:?}", wallet_file);
-                    Ok(None)
-                }
-                _ => Err(LoadStoreError::ReadWallet(
-                    wallet_file.to_string_lossy().into_owned(),
-                    err.to_string(),
-                )),
-            },
+            Err(err) => Err(LoadStoreError::ReadWallet(
+                wallet_file.to_string_lossy().into_owned(),
+                err.to_string(),
+            )),
         }
     }
 
