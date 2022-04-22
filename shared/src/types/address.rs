@@ -63,6 +63,8 @@ mod internal {
         "ano::IBC Burn Address                        ";
     pub const IBC_MINT: &str =
         "ano::IBC Mint Address                        ";
+    pub const ETH_BRIDGE: &str =
+        "ano::ETH Bridge Address                      ";
 }
 
 /// Fixed-length address strings prefix for established addresses.
@@ -186,6 +188,7 @@ impl Address {
                     }
                     InternalAddress::IbcBurn => internal::IBC_BURN.to_string(),
                     InternalAddress::IbcMint => internal::IBC_MINT.to_string(),
+                    InternalAddress::EthBridge => internal::ETH_BRIDGE.to_string(),
                 };
                 debug_assert_eq!(string.len(), FIXED_LEN_STRING_BYTES);
                 string
@@ -239,6 +242,9 @@ impl Address {
                 }
                 internal::IBC_MINT => {
                     Ok(Address::Internal(InternalAddress::IbcMint))
+                }
+                internal::ETH_BRIDGE => {
+                    Ok(Address::Internal(InternalAddress::EthBridge))
                 }
                 _ if raw.len() == HASH_LEN => Ok(Address::Internal(
                     InternalAddress::IbcEscrow(raw.to_string()),
@@ -433,6 +439,8 @@ pub enum InternalAddress {
     IbcMint,
     /// Governance address
     Governance,
+    /// Bridge to Ethereum
+    EthBridge,
 }
 
 impl InternalAddress {
@@ -460,6 +468,7 @@ impl Display for InternalAddress {
                 Self::IbcEscrow(hash) => format!("IbcEscrow: {}", hash),
                 Self::IbcBurn => "IbcBurn".to_string(),
                 Self::IbcMint => "IbcMint".to_string(),
+                Self::EthBridge => "EthBridge".to_string(),
             }
         )
     }
@@ -695,8 +704,9 @@ pub mod testing {
             InternalAddress::Parameters => {}
             InternalAddress::IbcEscrow(_) => {}
             InternalAddress::IbcBurn => {}
-            InternalAddress::IbcMint => {} /* Add new addresses in the
-                                            * `prop_oneof` below. */
+            InternalAddress::IbcMint => {}
+            InternalAddress::EthBridge => {} /* Add new addresses in the
+                                              * `prop_oneof` below. */
         };
         prop_oneof![
             Just(InternalAddress::PoS),
@@ -708,6 +718,7 @@ pub mod testing {
             Just(InternalAddress::IbcBurn),
             Just(InternalAddress::IbcMint),
             Just(InternalAddress::Governance),
+            Just(InternalAddress::EthBridge),
         ]
     }
 

@@ -330,6 +330,10 @@ where
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
                             result
                         }
+                        InternalAddress::EthBridge => {
+                            gas_meter = ctx.gas_meter.into_inner();
+                            Ok(true) // TODO
+                        }
                     };
 
                     accepted
