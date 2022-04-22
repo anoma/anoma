@@ -1,6 +1,6 @@
 //! Bridge from Ethereum
 
-mod storage;
+pub mod storage;
 
 use std::collections::BTreeSet;
 

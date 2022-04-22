@@ -4,7 +4,7 @@ use anoma_tx_prelude::*;
 
 #[transaction]
 fn apply_tx(tx_data: Vec<u8>) {
-    log_string(format!("tx_eth_bridge called with data: {:#?}", tx_data));
+    log_string(format!("tx_eth_bridge called with tx_data ({} bytes)", tx_data.len()));
     let signed = match SignedTxData::try_from_slice(&tx_data[..]) {
         Ok(signed) => {
             log_string(format!("Got signed data: {:#?}", signed));
@@ -25,11 +25,11 @@ fn apply_tx(tx_data: Vec<u8>) {
     let strct =
         match transaction::eth_bridge::UpdateQueue::try_from_slice(&data[..]) {
             Ok(strct) => {
-                log_string(format!("Got UpdateQueue: {:#?}", strct));
+                log_string(format!("Serialized data to: {:#?}", strct));
                 strct
             }
             Err(error) => {
-                log_string(format!("Error getting UpdateQueue: {:#?}", error));
+                log_string(format!("Error serializing data: {:#?}", error));
                 panic!()
             }
         };
