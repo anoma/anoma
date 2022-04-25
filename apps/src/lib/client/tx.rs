@@ -483,7 +483,7 @@ pub async fn fetch_shielded_transfers(
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
 #[derive(BorshSerialize, BorshDeserialize)]
-pub struct TxContext {
+pub struct ShieldedContext {
     /// Position of the next transactions to be processed
     tx_pos: usize,
     /// The commitment tree produced by scanning all transactions up to tx_pos
@@ -507,9 +507,9 @@ pub struct TxContext {
 /// Default implementation to ease construction of TxContexts. Derive cannot be
 /// used here due to CommitmentTree not implementing Default.
 
-impl Default for TxContext {
-    fn default() -> TxContext {
-        TxContext {
+impl Default for ShieldedContext {
+    fn default() -> ShieldedContext {
+        ShieldedContext {
             tx_pos: usize::default(),
             tree: CommitmentTree::empty(),
             vks: HashMap::default(),
@@ -523,10 +523,10 @@ impl Default for TxContext {
     }
 }
 
-impl TxContext {
+impl ShieldedContext {
     /// Initialize a shielded transaction context that identifies notes
     /// decryptable by any viewing key in the given set 
-    pub fn new(vks: &Vec<ViewingKey>) -> TxContext {
+    pub fn new(vks: &Vec<ViewingKey>) -> ShieldedContext {
         let mut ctx = Self::default();
         for vk in vks {
             ctx.vks.entry(*vk).or_insert(HashSet::new());
@@ -775,13 +775,13 @@ async fn gen_shielded_transfer(
     ).map(|x| Some(x))
 }
 
-/// Load up the current state of the multi-asset shielded pool into a TxContext
+/// Load up the current state of the multi-asset shielded pool into a ShieldedContext
 
 pub async fn load_shielded_context(
     ledger_address: &TendermintAddress,
     sks: &Vec<ExtendedSpendingKey>,
     fvks: &Vec<ViewingKey>,
-) -> TxContext {
+) -> ShieldedContext {
     // Load all transactions accepted until this point
     let txs = fetch_shielded_transfers(ledger_address).await;
     // Load the viewing keys corresponding to given spending keys into context
@@ -793,7 +793,7 @@ pub async fn load_shielded_context(
         vks.push(*vk);
     }
     // Apply the loaded transactions to our context
-    let mut tx_ctx = TxContext::new(&vks);
+    let mut tx_ctx = ShieldedContext::new(&vks);
     while tx_ctx.tx_pos() < txs.len() {
         tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
     }
