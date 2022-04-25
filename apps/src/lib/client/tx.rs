@@ -15,7 +15,7 @@ use anoma::types::transaction::{
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
-use borsh::BorshSerialize;
+use borsh::{BorshSerialize, BorshDeserialize};
 use itertools::Either::*;
 use jsonpath_lib as jsonpath;
 use serde::Serialize;
@@ -47,10 +47,10 @@ use masp_primitives::transaction::components::Amount;
 use masp_primitives::transaction::builder::{self, *};
 use rand_core::CryptoRng;
 use rand_core::RngCore;
-use zcash_primitives::merkle_tree::CommitmentTree;
+use masp_primitives::merkle_tree::CommitmentTree;
 use masp_primitives::sapling::Node;
 use ff::PrimeField;
-use zcash_primitives::merkle_tree::IncrementalWitness;
+use masp_primitives::merkle_tree::IncrementalWitness;
 use masp_primitives::zip32::ExtendedSpendingKey;
 use masp_primitives::primitives::Diversifier;
 use rand_core::OsRng;
@@ -64,7 +64,7 @@ use group::cofactor::CofactorGroup;
 use masp_primitives::zip32::ExtendedFullViewingKey;
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::keys::FullViewingKey;
-use zcash_primitives::merkle_tree::MerklePath;
+use masp_primitives::merkle_tree::MerklePath;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -482,6 +482,7 @@ pub async fn fetch_shielded_transfers(
 
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
+#[derive(BorshSerialize, BorshDeserialize)]
 pub struct TxContext {
     /// Position of the next transactions to be processed
     tx_pos: usize,
