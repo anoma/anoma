@@ -489,19 +489,20 @@ impl Default for ShieldedContext {
 }
 
 impl ShieldedContext {
-    /// Load the last saved ShieldedContext from the given context directory
+    /// Try to load the last saved shielded context from the given context
+    /// directory. If this fails, then provide the empty context.
     pub fn load(
         context_dir: &Path,
     ) -> Self {
-        let mut ctx_file = File::open(context_dir.join(FILE_NAME));
-        let mut ctx = match &mut ctx_file {
-            Err(_) => Self::default(),
-            Ok(ctx_file) => {
-                let mut bytes = Vec::new();
-                ctx_file.read_to_end(&mut bytes)
-                    .expect("unable to read shielded context from file");
-                Self::deserialize(&mut &bytes[..])
-                    .expect("ill-formed shielded context")
+        // In the worst case scenario, provide the empty context
+        let mut ctx = Self::default();
+        // Try to load shielded context from file
+        if let Ok(mut ctx_file) = File::open(context_dir.join(FILE_NAME)) {
+            let mut bytes = Vec::new();
+            if let Ok(_) = ctx_file.read_to_end(&mut bytes) {
+                if let Ok(tmp) = Self::deserialize(&mut &bytes[..]) {
+                    ctx = tmp;
+                }
             }
         };
         // Associate the originating context directory with the shielded
@@ -510,12 +511,12 @@ impl ShieldedContext {
         ctx
     }
 
-    /// Save this ShieldedContext into its associated context directory
+    /// Save this shielded context into its associated context directory
     pub fn save(&self) {
         let mut ctx_file = File::create(self.context_dir.join(FILE_NAME))
             .expect("cannot create shielded context file");
         let mut bytes = Vec::new();
-        self.serialize(&mut bytes).expect("serialized ShieldedContext");
+        self.serialize(&mut bytes).expect("cannot serialize shielded context");
         ctx_file.write_all(&bytes[..])
             .expect("unable to write shielded context to file");
     }
