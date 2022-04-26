@@ -445,8 +445,8 @@ pub struct ShieldedContext {
     /// Location where this shielded context is saved
     #[borsh_skip]
     context_dir: PathBuf,
-    /// Position of the next transactions to be processed
-    tx_pos: usize,
+    /// The last transaction ID to be processed in this context
+    last_txid: Option<TxId>,
     /// The commitment tree produced by scanning all transactions up to tx_pos
     tree: CommitmentTree<Node>,
     /// Maps viewing keys to applicable note positions
@@ -475,7 +475,7 @@ impl Default for ShieldedContext {
     fn default() -> ShieldedContext {
         ShieldedContext {
             context_dir: PathBuf::from(FILE_NAME),
-            tx_pos: usize::default(),
+            last_txid: Option::default(),
             tree: CommitmentTree::empty(),
             vks: HashMap::default(),
             nf_map: HashMap::default(),
@@ -521,10 +521,10 @@ impl ShieldedContext {
     }
 
     /// Merge data from the given shielded context into the current shielded
-    /// context. It must be the case that the two shielded contexts are at the
-    /// same transaction position and share identical commitment trees.
+    /// context. It must be the case that the two shielded contexts share the
+    /// same last transaction ID and share identical commitment trees.
     pub fn merge(&mut self, new_ctx: ShieldedContext) {
-        debug_assert_eq!(self.tx_pos(), new_ctx.tx_pos());
+        debug_assert_eq!(self.last_txid, new_ctx.last_txid);
         // Merge by simply extending maps. Identical keys should contain
         // identical values, so overwriting should not be problematic.
         self.vks.extend(new_ctx.vks);
@@ -559,26 +559,34 @@ impl ShieldedContext {
                 unknown_keys.push(*vk);
             }
         }
-        // Load all transactions accepted until this point
-        let txs = Self::fetch_shielded_transfers(ledger_address).await;
 
         // If unknown keys are being used, we need to scan older transactions for
         // any unspent notes
+        let (txs, mut tx_iter);
         if !unknown_keys.is_empty() {
+            // Load all transactions accepted until this point
+            txs = Self::fetch_shielded_transfers(ledger_address, None).await;
+            tx_iter = txs.iter();
             // Do this by constructing a shielding context only for unknown keys
             let mut tx_ctx = ShieldedContext::new(&unknown_keys);
             // Update this unknown shielded context until it is level with self
-            while tx_ctx.tx_pos() < self.tx_pos() {
-                tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
+            while tx_ctx.last_txid != self.last_txid {
+                if let Some(tx) = tx_iter.next() {
+                    tx_ctx.scan_tx(&tx).expect("transaction scanned");
+                } else { break; }
             }
             // Merge the context data originating from the unknown keys into the
             // current context
             self.merge(tx_ctx);
+        } else {
+            // Load only transactions accepted from last_txid until this point
+            txs = Self::fetch_shielded_transfers(ledger_address, self.last_txid).await;
+            tx_iter = txs.iter();
         }
         // Now that we possess the unspent notes corresponding to both old and
         // new keys up until tx_pos, proceed to scan the new transactions.
-        while self.tx_pos() < txs.len() {
-            self.scan_tx(&txs[self.tx_pos()]).expect("transaction scanned");
+        for tx in &mut tx_iter {
+            self.scan_tx(&tx).expect("transaction scanned");
         }
     }
     
@@ -591,11 +599,6 @@ impl ShieldedContext {
         }
         ctx
     }
-    
-    /// Return the position of the current transaction
-    pub fn tx_pos(&self) -> usize {
-        self.tx_pos
-    }
 
     /// Obtain a chronologically-ordered list of all accepted shielded
     /// transactions from the ledger. The ledger conceptually stores transactions
@@ -605,6 +608,7 @@ impl ShieldedContext {
     /// whose name is derived from its txid.
     pub async fn fetch_shielded_transfers(
         ledger_address: &TendermintAddress,
+        last_txid: Option<TxId>,
     ) -> Vec<Transaction> {
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // The address of the MASP account
@@ -622,6 +626,8 @@ impl ShieldedContext {
         let mut shielded_txs = Vec::new();
         // While there are still more transactions in the linked list
         while let Some(head_txid) = head_txid_opt {
+            // Stop at the given Tx ID exclusive
+            if head_txid_opt == last_txid { break; }
             // Construct the key for where the current transaction is stored
             let current_tx_key = Key::from(masp_addr.to_db_key())
                 .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
@@ -698,7 +704,7 @@ impl ShieldedContext {
             }
         }
         // To avoid state corruption caused by accidentaly replaying transaction
-        self.tx_pos += 1;
+        self.last_txid = Some(tx.txid());
         Ok(())
     }
 
