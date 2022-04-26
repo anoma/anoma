@@ -81,6 +81,8 @@ use anoma::types::storage::Key;
 use crate::client::rpc::query_storage_value;
 use anoma::types::storage::KeySeg;
 use anoma::types::address::masp;
+use std::path::{Path, PathBuf};
+use std::io::{Read, Write};
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -436,54 +438,13 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     (diversifier, g_d)
 }
 
-/// Obtain a chronologically-ordered list of all accepted shielded transactions
-/// from the ledger. The ledger conceptually stores transactions as a linked
-/// list. More concretely, the HEAD_TX_KEY location stores the txid of the last
-/// accepted transaction, each transaction stores the txid of the previous
-/// transaction, and each transaction is stored at a key whose name is derived
-/// from its txid.
-
-pub async fn fetch_shielded_transfers(
-    ledger_address: &TendermintAddress,
-) -> Vec<Transaction> {
-    let client = HttpClient::new(ledger_address.clone()).unwrap();
-    // The address of the MASP account
-    let masp_addr = masp();
-    // Construct the key where last transaction pointer is stored
-    let head_tx_key = Key::from(masp_addr.to_db_key())
-        .push(&HEAD_TX_KEY.to_owned())
-        .expect("Cannot obtain a storage key");
-    // Query for the ID of the last accepted transaction
-    let mut head_txid_opt = query_storage_value::<TxId>(
-        client.clone(),
-        head_tx_key,
-    )
-        .await;
-    let mut shielded_txs = Vec::new();
-    // While there are still more transactions in the linked list
-    while let Some(head_txid) = head_txid_opt {
-        // Construct the key for where the current transaction is stored
-        let current_tx_key = Key::from(masp_addr.to_db_key())
-            .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
-            .expect("Cannot obtain a storage key");
-        // Obtain the current transaction and a pointer to the next
-        let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
-            client.clone(),
-            current_tx_key,
-        ).await.unwrap();
-        // Collect the current transaction
-        shielded_txs.push(current_tx);
-        head_txid_opt = next_txid;
-    }
-    // Since we iterated the transaction in reverse chronological order
-    shielded_txs.reverse();
-    shielded_txs
-}
-
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
-#[derive(BorshSerialize, BorshDeserialize)]
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct ShieldedContext {
+    /// Location where this shielded context is saved
+    #[borsh_skip]
+    context_dir: PathBuf,
     /// Position of the next transactions to be processed
     tx_pos: usize,
     /// The commitment tree produced by scanning all transactions up to tx_pos
@@ -504,12 +465,16 @@ pub struct ShieldedContext {
     spents: HashSet<usize>,
 }
 
+/// Shielded context file name
+const FILE_NAME: &str = "shielded.dat";
+
 /// Default implementation to ease construction of TxContexts. Derive cannot be
 /// used here due to CommitmentTree not implementing Default.
 
 impl Default for ShieldedContext {
     fn default() -> ShieldedContext {
         ShieldedContext {
+            context_dir: PathBuf::from(FILE_NAME),
             tx_pos: usize::default(),
             tree: CommitmentTree::empty(),
             vks: HashMap::default(),
@@ -524,6 +489,68 @@ impl Default for ShieldedContext {
 }
 
 impl ShieldedContext {
+    /// Load the last saved ShieldedContext from the given context directory
+    pub fn load(
+        context_dir: &Path,
+    ) -> Self {
+        let mut ctx_file = File::open(context_dir.join(FILE_NAME));
+        let mut ctx = match &mut ctx_file {
+            Err(_) => Self::default(),
+            Ok(ctx_file) => {
+                let mut bytes = Vec::new();
+                ctx_file.read_to_end(&mut bytes)
+                    .expect("unable to read shielded context from file");
+                Self::deserialize(&mut &bytes[..])
+                    .expect("ill-formed shielded context")
+            }
+        };
+        // Associate the originating context directory with the shielded
+        // context under construction
+        ctx.context_dir = context_dir.into();
+        ctx
+    }
+
+    /// Save this ShieldedContext into its associated context directory
+    pub fn save(&self) {
+        let mut ctx_file = File::create(self.context_dir.join(FILE_NAME))
+            .expect("cannot create shielded context file");
+        let mut bytes = Vec::new();
+        self.serialize(&mut bytes).expect("serialized ShieldedContext");
+        ctx_file.write_all(&bytes[..])
+            .expect("unable to write shielded context to file");
+    }
+    
+    /// Fetch the current state of the multi-asset shielded pool into a
+    /// ShieldedContext
+    pub async fn fetch(
+        &mut self,
+        ledger_address: &TendermintAddress,
+        sks: &Vec<ExtendedSpendingKey>,
+        fvks: &Vec<ViewingKey>,
+    ) {
+        // Load all transactions accepted until this point
+        let txs = Self::fetch_shielded_transfers(ledger_address).await;
+        // Load the viewing keys corresponding to given spending keys into
+        // context
+        let mut vks = Vec::new();
+        for esk in sks {
+            vks.push(to_viewing_key(esk).vk.into());
+        }
+        for vk in fvks {
+            vks.push(*vk);
+        }
+        // Apply the loaded transactions to our context
+        let mut tx_ctx = ShieldedContext::new(&vks);
+        // Associate the originating context directory with the shielded
+        // context under construction
+        tx_ctx.context_dir = self.context_dir.clone();
+        while tx_ctx.tx_pos() < txs.len() {
+            tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
+        }
+        // Update the current context with newly fetched data
+        *self = tx_ctx;
+    }
+    
     /// Initialize a shielded transaction context that identifies notes
     /// decryptable by any viewing key in the given set 
     pub fn new(vks: &Vec<ViewingKey>) -> ShieldedContext {
@@ -538,14 +565,58 @@ impl ShieldedContext {
     pub fn tx_pos(&self) -> usize {
         self.tx_pos
     }
+
+    /// Obtain a chronologically-ordered list of all accepted shielded
+    /// transactions from the ledger. The ledger conceptually stores transactions
+    /// as a linked list. More concretely, the HEAD_TX_KEY location stores the
+    /// txid of the last accepted transaction, each transaction stores the txid
+    /// of the previous transaction, and each transaction is stored at a key
+    /// whose name is derived from its txid.
+
+    pub async fn fetch_shielded_transfers(
+        ledger_address: &TendermintAddress,
+    ) -> Vec<Transaction> {
+        let client = HttpClient::new(ledger_address.clone()).unwrap();
+        // The address of the MASP account
+        let masp_addr = masp();
+        // Construct the key where last transaction pointer is stored
+        let head_tx_key = Key::from(masp_addr.to_db_key())
+            .push(&HEAD_TX_KEY.to_owned())
+            .expect("Cannot obtain a storage key");
+        // Query for the ID of the last accepted transaction
+        let mut head_txid_opt = query_storage_value::<TxId>(
+            client.clone(),
+            head_tx_key,
+        )
+            .await;
+        let mut shielded_txs = Vec::new();
+        // While there are still more transactions in the linked list
+        while let Some(head_txid) = head_txid_opt {
+            // Construct the key for where the current transaction is stored
+            let current_tx_key = Key::from(masp_addr.to_db_key())
+                .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
+                .expect("Cannot obtain a storage key");
+            // Obtain the current transaction and a pointer to the next
+            let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
+                client.clone(),
+                current_tx_key,
+            ).await.unwrap();
+            // Collect the current transaction
+            shielded_txs.push(current_tx);
+            head_txid_opt = next_txid;
+        }
+        // Since we iterated the transaction in reverse chronological order
+        shielded_txs.reverse();
+        shielded_txs
+    }
     
-    /// Applies the given transaction to the supplied context. More precisely, the
-    /// shielded transaction's outputs are added to the commitment tree. Newly
-    /// discovered notes are associated to the supplied viewing keys. Note
+    /// Applies the given transaction to the supplied context. More precisely,
+    /// the shielded transaction's outputs are added to the commitment tree.
+    /// Newly discovered notes are associated to the supplied viewing keys. Note
     /// nullifiers are mapped to their originating notes. Note positions are
-    /// associated to notes, memos, and diversifiers. And the set of notes that we
-    /// have spent are updated. The witness map is maintained to make it easier to
-    /// construct note merkle paths in other code. See
+    /// associated to notes, memos, and diversifiers. And the set of notes that
+    /// we have spent are updated. The witness map is maintained to make it
+    /// easier to construct note merkle paths in other code. See
     /// https://zips.z.cash/protocol/protocol.pdf#scan
     pub fn scan_tx(
         &mut self,
@@ -684,11 +755,13 @@ async fn gen_shielded_transfer(
     let spending_key = spending_key.map(|x| x.into());
     let spending_keys = spending_key.clone().into_iter().collect();
     // Load the current shielded context given the spending key we possess
-    let tx_ctx = load_shielded_context(
+    ctx.shielded.fetch(
         &args.tx.ledger_address,
         &spending_keys,
         &vec![],
     ).await;
+    // Save the update state so that future fetches can be short-circuited
+    ctx.shielded.save();
     // Context required for storing which notes are in the source's possesion
     let height = 0u32;
     let consensus_branch_id = BranchId::Sapling;
@@ -706,7 +779,7 @@ async fn gen_shielded_transfer(
     if let Some(sk) = spending_key {
         let sk = sk.into();
         // Locate unspent notes that can help us meet the transaaction amount
-        let (val_acc, unspent_notes) = tx_ctx.collect_unspent_notes(
+        let (val_acc, unspent_notes) = ctx.shielded.collect_unspent_notes(
             &to_viewing_key(&sk).vk,
             amt,
             asset_type
@@ -773,31 +846,6 @@ async fn gen_shielded_transfer(
         consensus_branch_id,
         &LocalTxProver::with_default_location().expect("unable to load MASP Parameters")
     ).map(|x| Some(x))
-}
-
-/// Load up the current state of the multi-asset shielded pool into a ShieldedContext
-
-pub async fn load_shielded_context(
-    ledger_address: &TendermintAddress,
-    sks: &Vec<ExtendedSpendingKey>,
-    fvks: &Vec<ViewingKey>,
-) -> ShieldedContext {
-    // Load all transactions accepted until this point
-    let txs = fetch_shielded_transfers(ledger_address).await;
-    // Load the viewing keys corresponding to given spending keys into context
-    let mut vks = Vec::new();
-    for esk in sks {
-        vks.push(to_viewing_key(esk).vk.into());
-    }
-    for vk in fvks {
-        vks.push(*vk);
-    }
-    // Apply the loaded transactions to our context
-    let mut tx_ctx = ShieldedContext::new(&vks);
-    while tx_ctx.tx_pos() < txs.len() {
-        tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
-    }
-    tx_ctx
 }
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {

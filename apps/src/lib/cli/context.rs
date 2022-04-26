@@ -17,6 +17,7 @@ use crate::config::global::GlobalConfig;
 use crate::config::{self, Config};
 use crate::wallet::Wallet;
 use crate::wasm_loader;
+use crate::client::tx::ShieldedContext;
 
 /// Env. var to set chain ID
 const ENV_VAR_CHAIN_ID: &str = "ANOMA_CHAIN_ID";
@@ -70,6 +71,8 @@ pub struct Context {
     pub global_config: GlobalConfig,
     /// The ledger & intent gossip configuration for a specific chain ID
     pub config: Config,
+    /// The context fr shielded operations
+    pub shielded: ShieldedContext,
 }
 
 impl Context {
@@ -125,6 +128,7 @@ impl Context {
             wallet,
             global_config,
             config,
+            shielded: ShieldedContext::load(&chain_dir),
         }
     }
 
