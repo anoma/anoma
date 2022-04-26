@@ -293,6 +293,8 @@ pub async fn join_network(
             &*pre_genesis_wallet.consensus_key,
         );
 
+        // Derive the node ID from the node key
+        let node_id = id_from_pk(&tendermint_node_key.ref_to());
         // Write tendermint node key
         write_tendermint_node_key(&tm_home_dir, tendermint_node_key);
 
@@ -316,10 +318,27 @@ pub async fn join_network(
         let chain_id = chain_id.clone();
         tokio::task::spawn_blocking(move || {
             let mut config = Config::load(&base_dir, &chain_id, None);
+
             config.ledger.tendermint.tendermint_mode =
                 TendermintMode::Validator;
             // Validator node should turned off peer exchange reactor
             config.ledger.tendermint.p2p_pex = false;
+            // Remove self from persistent peers
+            config
+                .ledger
+                .tendermint
+                .p2p_persistent_peers
+                .retain(|peer| {
+                    if let TendermintAddress::Tcp {
+                        peer_id: Some(peer_id),
+                        ..
+                    } = peer
+                    {
+                        node_id != *peer_id
+                    } else {
+                        true
+                    }
+                });
             config.write(&base_dir, &chain_id, true).unwrap();
         })
         .await
