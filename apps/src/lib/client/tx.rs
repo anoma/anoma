@@ -519,6 +519,22 @@ impl ShieldedContext {
         ctx_file.write_all(&bytes[..])
             .expect("unable to write shielded context to file");
     }
+
+    /// Merge data from the given shielded context into the current shielded
+    /// context. It must be the case that the two shielded contexts are at the
+    /// same transaction position and share identical commitment trees.
+    pub fn merge(&mut self, new_ctx: ShieldedContext) {
+        debug_assert_eq!(self.tx_pos(), new_ctx.tx_pos());
+        // Merge by simply extending maps. Identical keys should contain
+        // identical values, so overwriting should not be problematic.
+        self.vks.extend(new_ctx.vks);
+        self.nf_map.extend(new_ctx.nf_map);
+        self.note_map.extend(new_ctx.note_map);
+        self.memo_map.extend(new_ctx.memo_map);
+        self.div_map.extend(new_ctx.div_map);
+        self.witness_map.extend(new_ctx.witness_map);
+        self.spents.extend(new_ctx.spents);
+    }
     
     /// Fetch the current state of the multi-asset shielded pool into a
     /// ShieldedContext
@@ -528,27 +544,42 @@ impl ShieldedContext {
         sks: &Vec<ExtendedSpendingKey>,
         fvks: &Vec<ViewingKey>,
     ) {
-        // Load all transactions accepted until this point
-        let txs = Self::fetch_shielded_transfers(ledger_address).await;
-        // Load the viewing keys corresponding to given spending keys into
-        // context
-        let mut vks = Vec::new();
+        // First determine which of the keys requested to be fetched are new.
+        // Necessary because old transactions will need to be scanned for new
+        // keys.
+        let mut unknown_keys = Vec::new();
         for esk in sks {
-            vks.push(to_viewing_key(esk).vk.into());
+            let vk = to_viewing_key(esk).vk;
+            if !self.vks.contains_key(&vk) {
+                unknown_keys.push(vk);
+            }
         }
         for vk in fvks {
-            vks.push(*vk);
+            if !self.vks.contains_key(vk) {
+                unknown_keys.push(*vk);
+            }
         }
-        // Apply the loaded transactions to our context
-        let mut tx_ctx = ShieldedContext::new(&vks);
-        // Associate the originating context directory with the shielded
-        // context under construction
-        tx_ctx.context_dir = self.context_dir.clone();
-        while tx_ctx.tx_pos() < txs.len() {
-            tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
+        // Load all transactions accepted until this point
+        let txs = Self::fetch_shielded_transfers(ledger_address).await;
+
+        // If unknown keys are being used, we need to scan older transactions for
+        // any unspent notes
+        if !unknown_keys.is_empty() {
+            // Do this by constructing a shielding context only for unknown keys
+            let mut tx_ctx = ShieldedContext::new(&unknown_keys);
+            // Update this unknown shielded context until it is level with self
+            while tx_ctx.tx_pos() < self.tx_pos() {
+                tx_ctx.scan_tx(&txs[tx_ctx.tx_pos()]).expect("transaction scanned");
+            }
+            // Merge the context data originating from the unknown keys into the
+            // current context
+            self.merge(tx_ctx);
         }
-        // Update the current context with newly fetched data
-        *self = tx_ctx;
+        // Now that we possess the unspent notes corresponding to both old and
+        // new keys up until tx_pos, proceed to scan the new transactions.
+        while self.tx_pos() < txs.len() {
+            self.scan_tx(&txs[self.tx_pos()]).expect("transaction scanned");
+        }
     }
     
     /// Initialize a shielded transaction context that identifies notes
@@ -572,7 +603,6 @@ impl ShieldedContext {
     /// txid of the last accepted transaction, each transaction stores the txid
     /// of the previous transaction, and each transaction is stored at a key
     /// whose name is derived from its txid.
-
     pub async fn fetch_shielded_transfers(
         ledger_address: &TendermintAddress,
     ) -> Vec<Transaction> {
