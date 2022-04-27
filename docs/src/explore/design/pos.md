@@ -90,6 +90,8 @@ Any unbonds created in epoch `n` decrements the bond's validator's total bonded 
 
 An "unbond" with epoch set to `n` may be withdrawn by the bond's source address in or any time after the epoch `n`. Once withdrawn, the unbond is deleted and the tokens are credited to the source account.
 
+Note that unlike bonding and unbonding where token changes are delayed to some future epochs (pipeline or unbonding offset), the token withdrawal applies immediately. This because when the tokens are withdrawable, they are already "unlocked" from the PoS system and do not contribute to voting power.
+
 ### Staking rewards
 
 To a validator who proposed a block, the system rewards tokens based on the `block_proposer_reward` [system parameter](#system-parameters) and each validator that voted on a block receives `block_vote_reward`.
