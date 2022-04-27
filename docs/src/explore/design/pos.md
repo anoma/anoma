@@ -111,7 +111,7 @@ The invariant is that the sum of amounts that may be withdrawn from a misbehavin
 The default values that are relative to epoch duration assume that an epoch last about 24 hours.
 
 - `max_validator_slots`: Maximum active validators, default `128`
-- `pipeline_len`: Pipeline length in number of epochs, default `2`
+- `pipeline_len`: Pipeline length in number of epochs, default `2` (see <https://github.com/cosmos/cosmos-sdk/blob/019444ae4328beaca32f2f8416ee5edbac2ef30b/docs/architecture/adr-039-epoched-staking.md#pipelining-the-epochs>)
 - `unboding_len`: Unbonding duration in number of epochs, default `6`
 - `votes_per_token`: Used in validators' voting power calculation, default 100‱ (1 voting power unit per 1000 tokens)
 - `block_proposer_reward`: Amount of tokens rewarded to a validator for proposing a block
