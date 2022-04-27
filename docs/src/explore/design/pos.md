@@ -36,7 +36,7 @@ A validator may be in one of the following states:
 - *candidate*:
   A validator is considered for block creation and can receive delegations.
 
-For each validator (in any state), the system also tracks total bonded tokens as a sum of the tokens in their self-bonds and delegated bonds, less any unbonded tokens. The total bonded tokens determine their voting voting power by multiplication by the `votes_per_token` [parameter](#system-parameters). The voting power is used for validator selection for block creation and is used in governance related activities.
+For each validator (in any state), the system also tracks total bonded tokens as a sum of the tokens in their self-bonds and delegated bonds. The total bonded tokens determine their voting voting power by multiplication by the `votes_per_token` [parameter](#system-parameters). The voting power is used for validator selection for block creation and is used in governance related activities.
 
 #### Validator actions
 
