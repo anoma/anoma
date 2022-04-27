@@ -76,7 +76,7 @@ The validator transactions are assumed to be applied with an account address `va
   - let `pre_unbond = read(unbond/{validator_address}/{validator_address}/delta)`
   - if `total(bond) - total(pre_unbond) < amount`, panic
   - decrement the `bond` deltas starting from the rightmost value (a bond in a future-most epoch) until whole `amount` is decremented
-  - for each decremented `bond` value write a new `unbond` with the key set to the epoch of the source value
+  - for each decremented `bond` value write a new `unbond` in epoch `n + unbonding_length` with the start epoch set to the epoch of the source value and end epoch `n + unbonding_length`
   - decrement the `amount` from `validator/{validator_address}/total_deltas` in epoch `n + unbonding_length`
   - update the `validator/{validator_address}/voting_power` in epoch `n + unbonding_length`
   - update the `total_voting_power` in epoch `n + unbonding_length`
