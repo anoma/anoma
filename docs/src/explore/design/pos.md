@@ -7,6 +7,7 @@ An epoch is a range of blocks or time that is defined by the base ledger and mad
 ### Epoched data
 
 Epoched data are data associated with a specific epoch that are set in advance. The data relevant to the PoS system in the ledger's state are epoched. Each data can be uniquely identified. These are:
+
 - [System parameters](#system-parameters). A single value for each epoch.
 - [Active validator set](#active-validator-set). A single value for each epoch.
 - Total voting power. A sum of all active and inactive validators' voting power. A single value for each epoch.
@@ -27,6 +28,7 @@ Additionally, any account may submit evidence for [a slashable misbehaviour](#sl
 A validator must have a public consensus key. Additionally, it may also specify optional metadata fields (TBA).
 
 A validator may be in one of the following states:
+
 - *inactive*:
   A validator is not being considered for block creation and cannot receive any new delegations.
 - *pending*:
@@ -126,6 +128,7 @@ type Validators = HashMap<Address, Validator>;
 ```
 
 Epoched data are stored in the following structure:
+
 ```rust,ignore
 struct Epoched<Data> {
   /// The epoch in which this data was last updated
@@ -180,6 +183,7 @@ To update a value in `Epoched` data with delta values in epoch `n` with value `d
 The invariants for updates in both cases are that `m - n >= 0` and `m - n <= pipeline_length`.
 
 For the active validator set, we store all the active and inactive validators separately with their respective voting power:
+
 ```rust,ignore
 type VotingPower = u64;
 

@@ -1,6 +1,7 @@
 # PoS integration
 
 The [PoS system](../pos.md) is integrated into Anoma ledger at 3 different layers:
+
 - base ledger that performs genesis initialization, validator set updates on new epoch and applies slashes when they are received from ABCI
 - an account with an internal address and a [native VP](vp.md#native-vps) that validates any changes applied by transactions to the PoS account state
 - transaction WASMs to perform various PoS actions, also available as a library code for custom made transactions
@@ -153,6 +154,7 @@ In the following description, "pre-state" is the state prior to transaction exec
 Any changes to PoS epoched data are checked to update the structure as described in [epoched data storage](../pos.md#storage).
 
 Because some key changes are expected to relate to others, the VP also accumulates some values that are checked for validity after key specific logic:
+
 - `balance_delta: token::Change`
 - `bond_delta: HashMap<Address, token::Change>`
 - `unbond_delta: HashMap<Address, token::Change>`
@@ -173,6 +175,7 @@ For any updated epoched data, the `last_update` field must be set to the current
 The validity predicate triggers a validation logic based on the storage keys modified by a transaction:
 
 - `validator/{validator_address}/consensus_key`:
+
   ```rust,ignore
   match (pre_state, post_state) {
     (None, Some(post)) => {
@@ -188,7 +191,9 @@ The validity predicate triggers a validation logic based on the storage keys mod
     _ => false,
   }
   ```
+
 - `validator/{validator_address}/state`:
+
   ```rust,ignore
   match (pre_state, post_state) {
     (None, Some(post)) => {
@@ -207,6 +212,7 @@ The validity predicate triggers a validation logic based on the storage keys mod
     _ => false,
   }
   ```
+
 - `validator/{validator_address}/total_deltas`:
   - find the difference between the pre-state and post-state values and add it to the `total_deltas` accumulator and update `total_stake_by_epoch`, `expected_voting_power_by_epoch` and `expected_total_voting_power_delta_by_epoch`
 - `validator/{validator_address}/voting_power`:
