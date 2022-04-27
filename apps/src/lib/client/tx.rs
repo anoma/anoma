@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fs::File;
+use std::fs::OpenOptions;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
@@ -81,7 +82,7 @@ use anoma::types::storage::Key;
 use crate::client::rpc::query_storage_value;
 use anoma::types::storage::KeySeg;
 use anoma::types::address::masp;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::io::{Read, Write};
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
@@ -467,6 +468,7 @@ pub struct ShieldedContext {
 
 /// Shielded context file name
 const FILE_NAME: &str = "shielded.dat";
+const TMP_FILE_NAME: &str = "shielded.tmp";
 
 /// Default implementation to ease construction of TxContexts. Derive cannot be
 /// used here due to CommitmentTree not implementing Default.
@@ -490,35 +492,44 @@ impl Default for ShieldedContext {
 
 impl ShieldedContext {
     /// Try to load the last saved shielded context from the given context
-    /// directory. If this fails, then provide the empty context.
-    pub fn load(
-        context_dir: &Path,
-    ) -> Self {
-        // In the worst case scenario, provide the empty context
-        let mut ctx = Self::default();
+    /// directory. If this fails, then leave the current context unchanged.
+    pub fn load(&mut self) -> std::io::Result<()> {
         // Try to load shielded context from file
-        if let Ok(mut ctx_file) = File::open(context_dir.join(FILE_NAME)) {
-            let mut bytes = Vec::new();
-            if let Ok(_) = ctx_file.read_to_end(&mut bytes) {
-                if let Ok(tmp) = Self::deserialize(&mut &bytes[..]) {
-                    ctx = tmp;
-                }
-            }
-        };
-        // Associate the originating context directory with the shielded
-        // context under construction
-        ctx.context_dir = context_dir.into();
-        ctx
+        let mut ctx_file = File::open(self.context_dir.join(FILE_NAME))?;
+        let mut bytes = Vec::new();
+        ctx_file.read_to_end(&mut bytes)?;
+        let mut new_ctx = Self::deserialize(&mut &bytes[..])?;
+        // Associate the originating context directory with the
+        // shielded context under construction
+        new_ctx.context_dir = self.context_dir.clone();
+        *self = new_ctx;
+        Ok(())
     }
 
     /// Save this shielded context into its associated context directory
-    pub fn save(&self) {
-        let mut ctx_file = File::create(self.context_dir.join(FILE_NAME))
-            .expect("cannot create shielded context file");
-        let mut bytes = Vec::new();
-        self.serialize(&mut bytes).expect("cannot serialize shielded context");
-        ctx_file.write_all(&bytes[..])
-            .expect("unable to write shielded context to file");
+    pub fn save(&self) -> std::io::Result<()> {
+        let tmp_path = self.context_dir.join(TMP_FILE_NAME);
+        {
+            // First serialize the shielded context into a temporary file.
+            // Inability to create this file implies a simultaneuous write is in
+            // progress. In this case, immediately fail. This is unproblematic
+            // because the data intended to be stored can always be re-fetched
+            // from the blockchain.
+            let mut ctx_file = OpenOptions::new().write(true)
+                .create_new(true)
+                .open(tmp_path.clone())?;
+            let mut bytes = Vec::new();
+            self.serialize(&mut bytes).expect("cannot serialize shielded context");
+            ctx_file.write_all(&bytes[..])?;
+        }
+        // Atomically update the old shielded context file with new data.
+        // Atomicity is required to prevent other client instances from reading
+        // corrupt data.
+        std::fs::rename(tmp_path.clone(), self.context_dir.join(FILE_NAME))?;
+        // Finally, remove our temporary file to allow future saving of shielded
+        // contexts.
+        std::fs::remove_file(tmp_path)?;
+        Ok(())
     }
 
     /// Merge data from the given shielded context into the current shielded
@@ -569,7 +580,10 @@ impl ShieldedContext {
             txs = Self::fetch_shielded_transfers(ledger_address, None).await;
             tx_iter = txs.iter();
             // Do this by constructing a shielding context only for unknown keys
-            let mut tx_ctx = ShieldedContext::new(&unknown_keys);
+            let mut tx_ctx = ShieldedContext::new(self.context_dir.clone());
+            for vk in unknown_keys {
+                tx_ctx.vks.entry(vk).or_insert(HashSet::new());
+            }
             // Update this unknown shielded context until it is level with self
             while tx_ctx.last_txid != self.last_txid {
                 if let Some(tx) = tx_iter.next() {
@@ -593,11 +607,9 @@ impl ShieldedContext {
     
     /// Initialize a shielded transaction context that identifies notes
     /// decryptable by any viewing key in the given set 
-    pub fn new(vks: &Vec<ViewingKey>) -> ShieldedContext {
+    pub fn new(context_dir: PathBuf) -> ShieldedContext {
         let mut ctx = Self::default();
-        for vk in vks {
-            ctx.vks.entry(*vk).or_insert(HashSet::new());
-        }
+        ctx.context_dir = context_dir;
         ctx
     }
 
@@ -792,13 +804,14 @@ async fn gen_shielded_transfer(
     let spending_key = spending_key.map(|x| x.into());
     let spending_keys = spending_key.clone().into_iter().collect();
     // Load the current shielded context given the spending key we possess
+    let _ = ctx.shielded.load();
     ctx.shielded.fetch(
         &args.tx.ledger_address,
         &spending_keys,
         &vec![],
     ).await;
     // Save the update state so that future fetches can be short-circuited
-    ctx.shielded.save();
+    let _ = ctx.shielded.save();
     // Context required for storing which notes are in the source's possesion
     let height = 0u32;
     let consensus_branch_id = BranchId::Sapling;

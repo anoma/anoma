@@ -206,13 +206,14 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             .collect(),
     };
     // Build up the context that will be queried for balances
+    let _ = ctx.shielded.load();
     ctx.shielded.fetch(
         &args.query.ledger_address,
         &vec![],
         &viewing_keys.iter().map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk).collect(),
     ).await;
     // Save the update state so that future fetches can be short-circuited
-    ctx.shielded.save();
+    let _ = ctx.shielded.save();
     // Map addresses to token names
     let tokens = address::tokens();
     match (args.token, owner.is_some()) {

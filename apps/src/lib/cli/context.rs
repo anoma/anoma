@@ -128,7 +128,7 @@ impl Context {
             wallet,
             global_config,
             config,
-            shielded: ShieldedContext::load(&chain_dir),
+            shielded: ShieldedContext::new(chain_dir),
         }
     }
 
