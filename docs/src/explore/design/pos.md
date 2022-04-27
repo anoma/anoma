@@ -57,7 +57,7 @@ For each validator (in any state), the system also tracks total bonded tokens as
 
 #### Active validator set
 
-From all the *candidate* validators, in each epoch the ones with the most voting power limited up to the `max_active_validators` [parameter](#system-parameters) are selected for the active validator set. The active validator set selected in epoch `n` is set for epoch `n + pipeline_length`.
+From all the *candidate* validators, in each epoch the ones with the most voting power limited up to the `max_validator_slots` [parameter](#system-parameters) are selected for the active validator set. The active validator set selected in epoch `n` is set for epoch `n + pipeline_length`.
 
 ### Delegator
 
@@ -198,7 +198,7 @@ struct WeightedValidator {
 }
 
 struct ValidatorSet {
-  /// Active validator set with maximum size equal to `max_active_validators`
+  /// Active validator set with maximum size equal to `max_validator_slots`
   active: BTreeSet<WeightedValidator>,
   /// All the other validators that are not active
   inactive: BTreeSet<WeightedValidator>,
