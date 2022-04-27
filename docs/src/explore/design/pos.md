@@ -31,8 +31,6 @@ A validator may be in one of the following states:
 
 - *inactive*:
   A validator is not being considered for block creation and cannot receive any new delegations.
-- *pending*:
-  A validator has requested to become a *candidate*.
 - *candidate*:
   A validator is considered for block creation and can receive delegations.
 
@@ -41,11 +39,11 @@ For each validator (in any state), the system also tracks total bonded tokens as
 #### Validator actions
 
 - *become validator*:
-  Any account that is not a validator already and that doesn't have any delegations may request to become a validator. It is required to provide a public consensus key and staking reward address. For the action applied in epoch `n`, the validator's state will be immediately set to *pending*, it will be set to *candidate* for epoch `n + pipeline_length` and the consensus key is set for epoch `n + pipeline_length`.
+  Any account that is not a validator already and that doesn't have any delegations may request to become a validator. It is required to provide a public consensus key and staking reward address. For the action applied in epoch `n`, the validator's state will be set to *candidate* for epoch `n + pipeline_length` and the consensus key is set for epoch `n + pipeline_length`.
 - *deactivate*:
-  Only a *pending* or *candidate* validator account may *deactivate*. For this action applied in epoch `n`, the validator's account is set to become *inactive* in the epoch `n + pipeline_length`.
+  Only a validator whose state at or before the `pipeline_length` offset is *candidate* account may *deactivate*. For this action applied in epoch `n`, the validator's account is set to become *inactive* in the epoch `n + pipeline_length`.
 - *reactivate*:
-  Only an *inactive* validator may *reactivate*. Similarly to *become validator* action, for this action applied in epoch `n`, the validator's state will be immediately set to *pending* and it will be set to *candidate* for epoch `n + pipeline_length`.
+  Only an *inactive* validator may *reactivate*. Similarly to *become validator* action, for this action applied in epoch `n`, the validator's state will be set to *candidate* for epoch `n + pipeline_length`.
 - *self-bond*:
   A validator may lock-up tokens into a [bond](#bonds) only for its own validator's address.
 - *unbond*:
@@ -238,7 +236,6 @@ struct Validator {
 
 enum ValidatorState {
   Inactive,
-  Pending,
   Candidate,
 }
 ```

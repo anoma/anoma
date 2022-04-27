@@ -56,11 +56,11 @@ The validator transactions are assumed to be applied with an account address `va
 - `become_validator(consensus_key, staking_reward_address)`:
   - creates a record in `validator/{validator_address}/consensus_key` in epoch `n + pipeline_length`
   - creates a record in `validator/{validator_address}/staking_reward_address`
-  - sets `validator/{validator_address}/state` for to `pending` in the current epoch and `candidate` in epoch `n + pipeline_length`
+  - sets `validator/{validator_address}/state` to `candidate` in epoch `n + pipeline_length`
 - `deactivate`:
-  - sets `validator/{validator_address}/state` for to `inactive` in epoch `n + pipeline_length`
+  - sets `validator/{validator_address}/state` to `inactive` in epoch `n + pipeline_length`
 - `reactivate`:
-  - sets `validator/{validator_address}/state` for to `pending` in the current epoch and `candidate` in epoch `n + pipeline_length`
+  - sets `validator/{validator_address}/state` to `candidate` in epoch `n + pipeline_length`
 - `self_bond(amount)`:
   - let `bond = read(bond/{validator_address}/{validator_address}/delta)`
   - if `bond` exist, update it with the new bond amount in epoch `n + pipeline_length`
@@ -199,15 +199,14 @@ The validity predicate triggers a validation logic based on the storage keys mod
     (None, Some(post)) => {
       // - check that all other required validator fields have been initialized
       // - check that the `post` state is set correctly:
-      //   - the state should be set to `pending` in the current epoch and `candidate` at pipeline offset
+      //   - the state should be set to `candidate` at pipeline offset
       // - insert into or update `new_validators` accumulator
     },
     (Some(pre), Some(post)) => {
       // - check that a validator has been correctly deactivated or reactivated
       // - the `state` should only be changed at `pipeline_length` offset
-      // - if the `state` becomes `inactive`, it must have been `pending` or `candidate`
-      // - if the `state` becomes `pending`, it must have been `inactive`
-      // - if the `state` becomes `candidate`, it must have been `pending` or `inactive`
+      // - if the `state` becomes `inactive`, it must have been `candidate`
+      // - if the `state` becomes `candidate`, it must have been `inactive`
     },
     _ => false,
   }
