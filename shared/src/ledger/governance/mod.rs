@@ -87,9 +87,7 @@ where
                 (KeyType::COUNTER(validate), _) => {
                     validate(&self.ctx, set_count)
                 }
-                (KeyType::PROPOSAL_COMMIT(validate), _) => {
-                    validate(&self.ctx, set_count)
-                }
+                (KeyType::PROPOSAL_COMMIT(validate), _) => validate(&self.ctx),
                 (KeyType::BALANCE(validate), _) => validate(&self.ctx),
                 (KeyType::PARAMETER(validate), _) => {
                     validate(&self.ctx, tx_data)
@@ -182,7 +180,7 @@ where
     PROPOSAL_CODE(fn(&Ctx<'a, DB, H, CA>, u64) -> bool),
     #[allow(clippy::upper_case_acronyms)]
     #[allow(non_camel_case_types)]
-    PROPOSAL_COMMIT(fn(&Ctx<'a, DB, H, CA>, u64) -> bool),
+    PROPOSAL_COMMIT(fn(&Ctx<'a, DB, H, CA>) -> bool),
     #[allow(clippy::upper_case_acronyms)]
     #[allow(non_camel_case_types)]
     GRACE_EPOCH(fn(&Ctx<'a, DB, H, CA>, u64) -> bool),

@@ -126,10 +126,7 @@ where
 }
 
 /// Validate a commit key
-pub fn validate_commit_key<'a, DB, H, CA>(
-    ctx: &Ctx<'a, DB, H, CA>,
-    set_count: u64,
-) -> bool
+pub fn validate_commit_key<'a, DB, H, CA>(ctx: &Ctx<'a, DB, H, CA>) -> bool
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
@@ -141,7 +138,10 @@ where
         read(ctx, &counter_key, ReadType::POST).ok();
     match (pre_counter, post_counter) {
         (Some(pre_counter), Some(post_counter)) => {
-            pre_counter + set_count == post_counter
+            // NOTE: can't do pre_counter + set_count == post_counter here
+            // because someone may update an empty proposal that just register a
+            // committing key causing a bug
+            pre_counter < post_counter
         }
         _ => false,
     }
