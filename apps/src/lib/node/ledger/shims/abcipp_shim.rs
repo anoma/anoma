@@ -20,6 +20,7 @@ use crate::config;
 use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
     BeginBlock, ProcessedTx,
 };
+use crate::node::ledger::shims::abcipp_shim_types::shim::response::{self, TxResult};
 
 /// The shim wraps the shell, which implements ABCI++.
 /// The shim makes a crude translation between the ABCI interface currently used
@@ -28,7 +29,7 @@ use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
 pub struct AbcippShim {
     service: Shell,
     begin_block_request: Option<BeginBlock>,
-    block_txs: Vec<ProcessedTx>,
+    processed_txs: Vec<ProcessedTx>,
     shell_recv: std::sync::mpsc::Receiver<(
         Req,
         tokio::sync::oneshot::Sender<Result<Resp, BoxError>>,
@@ -65,7 +66,7 @@ impl AbcippShim {
                     ethereum_height,
                 ),
                 begin_block_request: None,
-                block_txs: vec![],
+                processed_txs: vec![],
                 shell_recv,
             },
             AbciService { shell_send },
@@ -86,29 +87,38 @@ impl AbcippShim {
                     Ok(Resp::BeginBlock(Default::default()))
                 }
                 Req::DeliverTx(deliver_tx) => {
-                    // We call [`process_proposal`] to report back the validity
+                    // We call [`process_single_tx`] to report back the validity
                     // of the tx to tendermint.
-                    // Invariant: The service call with
-                    // `Request::ProcessProposal`
-                    // must always return `Response::ProcessProposal`
                     self.service
-                        .call(Request::ProcessProposal(
-                            #[cfg(not(feature = "ABCI"))]
-                            deliver_tx.tx.clone().into(),
-                            #[cfg(feature = "ABCI")]
-                            deliver_tx.tx.into(),
-                        ))
+                        .call(Request::DeliverTx(deliver_tx))
+                        .map_err(Error::from)
+                        .and_then(|res| match res {
+                            Response::DeliverTx(resp) => {
+                                self.processed_txs.push(resp);
+                                Ok(Resp::DeliverTx(Default::default()))
+                            }
+                            _ => unreachable!(),
+                        })
+                }
+                Req::ProcessProposal(proposal) => {
+                    let txs = proposal.txs.clone();
+                    self.service
+                        .call(Request::ProcessProposal(proposal))
                         .map_err(Error::from)
                         .and_then(|res| match res {
                             Response::ProcessProposal(resp) => {
-                                self.block_txs.push(ProcessedTx {
-                                    #[cfg(not(feature = "ABCI"))]
-                                    tx: deliver_tx.tx,
-                                    #[cfg(feature = "ABCI")]
-                                    tx: resp.tx,
-                                    result: resp.result,
-                                });
-                                Ok(Resp::DeliverTx(Default::default()))
+                                for (result, tx) in resp
+                                    .tx_results
+                                    .iter()
+                                    .map(TxResult::from)
+                                    .zip(txs.into_iter())
+                                {
+                                    self.processed_txs.push(ProcessedTx{
+                                        tx,
+                                        result
+                                    });
+                                }
+                                Ok(Resp::ProcessProposal(resp))
                             }
                             _ => unreachable!(),
                         })
@@ -118,7 +128,7 @@ impl AbcippShim {
                         panic!("Unexpected block height {}", end.height)
                     });
                     let mut txs = vec![];
-                    std::mem::swap(&mut txs, &mut self.block_txs);
+                    std::mem::swap(&mut txs, &mut self.processed_txs);
                     // If the wrapper txs were not properly submitted, reject
                     // all txs
                     let out_of_order =

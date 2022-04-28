@@ -7,7 +7,7 @@ mod prepare_block {
 
     use anoma::types::ethereum_headers::{MultiSignedEthHeader, SignedHeader};
     use anoma::types::transaction::protocol::ProtocolTxType;
-    use anoma::types::vote_extensions::VoteExtensionData;
+    use anoma::types::vote_extensions::VoteExtension;
 
     use super::super::*;
     use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;
@@ -98,7 +98,7 @@ mod prepare_block {
                 .into_iter()
                 // extract vote extension data from vote
                 .filter_map(|vote| {
-                    VoteExtensionData::try_from(vote)
+                    VoteExtension::try_from(vote)
                         .ok()
                         .map(|data| data.ethereum_headers)
                 })
@@ -339,7 +339,7 @@ mod prepare_block {
                 signing_key,
             );
 
-            let vote_extension = VoteExtensionData {
+            let vote_extension = VoteExtension {
                 ethereum_headers: vec![
                     signed_1.clone(),
                     incorrect,

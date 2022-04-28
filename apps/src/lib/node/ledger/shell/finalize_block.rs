@@ -4,17 +4,13 @@ use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
 use anoma::types::transaction::protocol::ProtocolTxType;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::block::Header;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::abci::Evidence;
+use tendermint_proto::abci::{Evidence, RequestFinalizeBlock};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::Evidence;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::Header;
 
 use super::*;
 
@@ -281,7 +277,7 @@ where
             .expect("Beginning a block shouldn't fail");
 
         self.storage
-            .set_header(header)
+            .set_header(Header)
             .expect("Setting a header shouldn't fail");
 
         self.byzantine_validators = byzantine_validators;

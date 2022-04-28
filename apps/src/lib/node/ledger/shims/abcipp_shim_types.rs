@@ -9,23 +9,23 @@ pub mod shim {
     #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::{
         RequestApplySnapshotChunk, RequestCheckTx, RequestCommit, RequestEcho,
-        RequestExtendVote, RequestFlush, RequestInfo, RequestInitChain,
+        RequestExtendVote, RequestFinalizeBlock, RequestFlush, RequestInfo, RequestInitChain,
         RequestListSnapshots, RequestLoadSnapshotChunk, RequestOfferSnapshot,
-        RequestPrepareProposal, RequestQuery, RequestVerifyVoteExtension,
+        RequestPrepareProposal, RequestProcessProposal, RequestQuery, RequestVerifyVoteExtension,
         ResponseApplySnapshotChunk, ResponseCheckTx, ResponseCommit,
-        ResponseEcho, ResponseExtendVote, ResponseFlush, ResponseInfo,
+        ResponseEcho, ResponseExtendVote, ResponseFinalizeBlock, ResponseFlush, ResponseInfo,
         ResponseInitChain, ResponseListSnapshots, ResponseLoadSnapshotChunk,
-        ResponseOfferSnapshot, ResponsePrepareProposal, ResponseQuery,
-        ResponseVerifyVoteExtension,
+        ResponseOfferSnapshot, ResponsePrepareProposal, ResponseProcessProposal,
+        ResponseQuery, ResponseVerifyVoteExtension,
     };
     #[cfg(feature = "ABCI")]
     use tendermint_proto_abci::abci::{
-        RequestApplySnapshotChunk, RequestCheckTx, RequestCommit, RequestEcho,
-        RequestFlush, RequestInfo, RequestInitChain, RequestListSnapshots,
+        RequestApplySnapshotChunk, RequestCheckTx, RequestCommit, RequestDeliverTx,
+        RequestEcho, RequestEndBlock, RequestFlush, RequestInfo, RequestInitChain, RequestListSnapshots,
         RequestLoadSnapshotChunk, RequestOfferSnapshot, RequestQuery,
         ResponseApplySnapshotChunk, ResponseCheckTx, ResponseCommit,
-        ResponseEcho, ResponseFlush, ResponseInfo, ResponseInitChain,
-        ResponseListSnapshots, ResponseLoadSnapshotChunk,
+        ResponseDeliverTx, ResponseEcho, ResponseEndBlock, ResponseFlush, ResponseInfo,
+        ResponseInitChain,ResponseListSnapshots, ResponseLoadSnapshotChunk,
         ResponseOfferSnapshot, ResponseQuery,
     };
     use thiserror::Error;
@@ -68,8 +68,10 @@ pub mod shim {
         PrepareProposal(RequestPrepareProposal),
         #[allow(dead_code)]
         VerifyHeader(request::VerifyHeader),
-        #[allow(dead_code)]
-        ProcessProposal(request::ProcessProposal),
+        #[cfg(not(feature = "ABCI"))]
+        ProcessProposal(RequestProcessProposal),
+        #[cfg(feature = "ABCI")]
+        DeliverTx(RequestDeliverTx),
         #[allow(dead_code)]
         #[cfg(not(feature = "ABCI"))]
         RevertProposal(request::RevertProposal),
@@ -77,7 +79,10 @@ pub mod shim {
         ExtendVote(RequestExtendVote),
         #[cfg(not(feature = "ABCI"))]
         VerifyVoteExtension(RequestVerifyVoteExtension),
-        FinalizeBlock(request::FinalizeBlock),
+        #[cfg(not(feature = "ABCI"))]
+        FinalizeBlock(RequestFinalizeBlock),
+        #[cfg(feature = "ABCI")]
+        EndBlock(RequestEndBlock),
         Commit(RequestCommit),
         Flush(RequestFlush),
         Echo(RequestEcho),
@@ -106,6 +111,8 @@ pub mod shim {
                 Req::VerifyVoteExtension(inner) => {
                     Ok(Request::VerifyVoteExtension(inner))
                 }
+                #[cfg(feature = "ABCI")]
+                Req::EndBlock(end) => Ok(Request::EndBlock(end)),
                 Req::CheckTx(inner) => Ok(Request::CheckTx(inner)),
                 Req::ListSnapshots(inner) => Ok(Request::ListSnapshots(inner)),
                 Req::OfferSnapshot(inner) => Ok(Request::OfferSnapshot(inner)),
@@ -118,6 +125,16 @@ pub mod shim {
                 #[cfg(not(feature = "ABCI"))]
                 Req::PrepareProposal(inner) => {
                     Ok(Request::PrepareProposal(inner))
+                }
+                #[cfg(not(feature = "ABCI"))]
+                Req::ProcessProposal(inner) => {
+                    Ok(Request::ProcessProposal(inner))
+                }
+                #[cfg(feature = "ABCI")]
+                Req::DeliverTx(inner) => Ok(Request::DeliverTx(inner)),
+                #[cfg(not(feature = "ABCI"))]
+                Req::FinalizeBlock(inner) => {
+                    Ok(Request::FinalizeBlock(inner))
                 }
                 _ => Err(Error::ConvertReq(req)),
             }
@@ -135,14 +152,20 @@ pub mod shim {
         #[cfg(not(feature = "ABCI"))]
         PrepareProposal(ResponsePrepareProposal),
         VerifyHeader(response::VerifyHeader),
-        ProcessProposal(response::ProcessProposal),
+        #[cfg(not(feature = "ABCI"))]
+        ProcessProposal(ResponseProcessProposal),
+        #[cfg(feature = "ABCI")]
+        DeliverTx(request::ProcessedTx),
         #[cfg(not(feature = "ABCI"))]
         RevertProposal(response::RevertProposal),
         #[cfg(not(feature = "ABCI"))]
         ExtendVote(ResponseExtendVote),
         #[cfg(not(feature = "ABCI"))]
         VerifyVoteExtension(ResponseVerifyVoteExtension),
-        FinalizeBlock(response::FinalizeBlock),
+        #[cfg(not(feature = "ABCI"))]
+        FinalizeBlock(ResponseFinalizeBlock),
+        #[cfg(feature = "ABCI")]
+        EndBlock(ResponseEndBlock),
         Commit(ResponseCommit),
         Flush(ResponseFlush),
         Echo(ResponseEcho),
@@ -188,6 +211,14 @@ pub mod shim {
                 Response::VerifyVoteExtension(inner) => {
                     Ok(Resp::VerifyVoteExtension(inner))
                 }
+                #[cfg(not(feature = "ABCI"))]
+                Response::ProcessProposal(inner) => {
+                    Ok(Resp::ProcessProposal(inner))
+                }
+                #[cfg(not(feature = "ABCI"))]
+                Response::FinalizeBlock(inner) => {
+                    Ok(Resp::FinalizeBlock(inner))
+                }
                 _ => Err(Error::ConvertResp(resp)),
             }
         }
@@ -206,6 +237,7 @@ pub mod shim {
         use tendermint_proto_abci::abci::{Evidence, RequestBeginBlock};
         #[cfg(feature = "ABCI")]
         use tendermint_stable::block::Header;
+        use tendermint_proto::abci::RequestFinalizeBlock;
 
         pub struct VerifyHeader;
 
@@ -276,10 +308,22 @@ pub mod shim {
             pub txs: Vec<ProcessedTx>,
             pub reject_all_decrypted: bool,
         }
+        
+        #[cfg(not(feature = "ABCI"))]
+        fn finalize_block_req(req: RequestFinalizeBlock, txs: Vec<ProcessedTx>) -> FinalizeBlock {
+            FinalizeBlock {
+                hash: req.hash,
+                header: Header {},
+                byzantine_validators: vec![],
+                txs,
+                reject_all_decrypted: false
+            }
+        }
     }
 
     /// Custom types for response payloads
     pub mod response {
+        use std::convert::TryFrom;
         #[cfg(not(feature = "ABCI"))]
         use tendermint_proto::abci::{Event, ValidatorUpdate};
         #[cfg(not(feature = "ABCI"))]
@@ -295,6 +339,7 @@ pub mod shim {
 
         #[cfg(feature = "ABCI")]
         use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;
+        use tendermint_proto::abci::ExecTxResult;
 
         #[derive(Debug, Default)]
         pub struct VerifyHeader;
@@ -313,6 +358,27 @@ pub mod shim {
                 TxResult {
                     code: 1,
                     info: err.to_string(),
+                }
+            }
+        }
+
+        #[cfg(not(feature = "ABCI"))]
+        impl From<TxResult> for ExecTxResult {
+            fn from(TxResult{ code, info }: TxResult) -> Self {
+                ExecTxResult {
+                    code: code.into(),
+                    info,
+                    ..Default::default()
+                }
+            }
+        }
+
+        #[cfg(not(feature = "ABCI"))]
+        impl From<&ExecTxResult> for TxResult {
+            fn from(ExecTxResult{code, info, ..}: &ExecTxResult) -> Self {
+                TxResult {
+                    code: u32::try_from(code).unwrap(),
+                    info: info.clone(),
                 }
             }
         }

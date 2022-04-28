@@ -3,7 +3,7 @@ mod extend_votes {
     use anoma::types::ethereum_headers::{
         EpochPower, SignedEthereumHeader, SignedHeader,
     };
-    use anoma::types::vote_extensions::VoteExtensionData;
+    use anoma::types::vote_extensions::VoteExtension;
     use tendermint_proto::types::Vote;
 
     use super::super::*;
@@ -19,7 +19,7 @@ mod extend_votes {
             _req: request::ExtendVote,
         ) -> response::ExtendVote {
             response::ExtendVote {
-                vote_extension: VoteExtensionData {
+                vote_extension: VoteExtension {
                     ethereum_headers: self.new_ethereum_headers(),
                 }
                 .try_to_vec()
@@ -46,8 +46,8 @@ mod extend_votes {
             }) = req.vote
             {
                 // Verify all the Ethereum headers are signed correctly
-                if let Ok(VoteExtensionData { ethereum_headers }) =
-                    VoteExtensionData::try_from(ext)
+                if let Ok(VoteExtension { ethereum_headers }) =
+                VoteExtension::try_from(ext)
                 {
                     return if ethereum_headers.iter().all(|header| {
                         self.validate_ethereum_header(
@@ -179,7 +179,7 @@ mod test_vote_extensions {
     use anoma::types::hash::Hash;
     use anoma::types::key::*;
     use anoma::types::storage::Epoch;
-    use anoma::types::vote_extensions::VoteExtensionData;
+    use anoma::types::vote_extensions::VoteExtension;
     use tendermint_proto::types::Vote;
     use tower_abci::request;
 
@@ -219,7 +219,7 @@ mod test_vote_extensions {
             .vote_extension
             .expect("Test failed");
         let vote_extension_data =
-            VoteExtensionData::try_from(vote_extension.clone())
+            VoteExtension::try_from(vote_extension.clone())
                 .expect("Test failed");
 
         assert!(vote_extension_data.ethereum_headers.len() > 1);

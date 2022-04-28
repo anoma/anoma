@@ -9,8 +9,6 @@ pub mod write_log;
 use core::fmt::Debug;
 
 #[cfg(not(feature = "ABCI"))]
-use tendermint::block::Header;
-#[cfg(not(feature = "ABCI"))]
 use tendermint::merkle::proof::Proof;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Error as TmProtoError;
@@ -20,8 +18,6 @@ use tendermint_proto::Protobuf;
 use tendermint_proto_abci::Error as TmProtoError;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::Header;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
@@ -42,6 +38,7 @@ pub use crate::ledger::storage::merkle_tree::{
 };
 use crate::types::address::{Address, EstablishedAddressGen, InternalAddress};
 use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
+use crate::types::hash::Hash;
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
@@ -51,6 +48,17 @@ use crate::types::time::DateTimeUtc;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
+
+/// The data from Tendermint header
+/// relevant for Anoma storage
+pub struct Header {
+    /// Merkle root hash of block
+    pub hash: Hash,
+    /// Timestamp associated to block
+    pub time: DateTimeUtc,
+    /// Hash of the addresses of the next validator set
+    pub next_validators_hash: Hash,
+}
 
 /// The storage data
 #[derive(Debug)]

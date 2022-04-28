@@ -126,12 +126,12 @@ sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", b
 sysinfo = {version = "=0.21.1", default-features = false}
 tar = "0.4.37"
 # temporarily using fork work-around
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-16.03.2022", optional = true}
-tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-16.03.2022", optional = true}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-rebase-master", optional = true}
+tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-rebase-master", optional = true}
 tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-16.03.2022", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-rebase-master", optional = true}
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-16.03.2022", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-rebase-master", optional = true, features = ["http-client", "websocket-client"]}
 tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 thiserror = "1.0.30"
@@ -141,7 +141,7 @@ tonic = "0.6.1"
 tower = "0.4"
 # Also, using the same version of tendermint-rs as we do here.
 # with a patch for https://github.com/penumbra-zone/tower-abci/issues/7.
-tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "bat/abcipp-16.03.2022", optional = true}
+tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "bat/abcipp-rebase-master", optional = true}
 tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/rebase_v0.23.5_tracing", optional = true}
 tracing = "0.1.30"
 tracing-log = "0.1.2"
