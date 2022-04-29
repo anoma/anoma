@@ -737,11 +737,7 @@ pub fn init_network(
     );
 
     // Update the ledger config persistent peers and save it
-    let mut config = Config::load(
-        &global_args.base_dir,
-        &chain_id,
-        Some(TendermintMode::Validator),
-    );
+    let mut config = Config::load(&global_args.base_dir, &chain_id, None);
     config.ledger.tendermint.p2p_persistent_peers = persistent_peers;
     config.ledger.tendermint.consensus_timeout_commit =
         consensus_timeout_commit;

@@ -344,7 +344,7 @@ impl Config {
     ) -> Result<Self> {
         let file_path = Self::file_path(base_dir, chain_id);
         let file_name = file_path.to_str().expect("Expected UTF-8 file path");
-        let mode = mode.unwrap_or(TendermintMode::Validator);
+        let mode = mode.unwrap_or(TendermintMode::Full);
         if !file_path.exists() {
             return Self::generate(base_dir, chain_id, mode, true);
         };
