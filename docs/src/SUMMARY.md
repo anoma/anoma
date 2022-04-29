@@ -10,6 +10,7 @@
     - [Interact with PoS](./user-guide/ledger/pos.md)
     - [Customize](./user-guide/ledger/customize.md)
   - [The Intent gossiper and Matchmaker](./user-guide/intent-gossiper-and-matchmaker.md)
+  - [Genesis validator setup](./user-guide/genesis-validator-setup.md)
 - [Testnets](./testnets/README.md)
   - [Testnet launch procedure](./testnets/testnet-launch-procedure/README.md)
   - [Internal Testnet 1](./testnets/internal-testnet-1/README.md)
