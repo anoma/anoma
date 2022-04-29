@@ -209,8 +209,8 @@ pub async fn join_network(
 /// Length of a Tendermint Node ID in bytes
 const TENDERMINT_NODE_ID_LENGTH: usize = 20;
 
-/// Derive node ID from public key
-fn id_from_pk<PK: PublicKey>(pk: PK) -> TendermintNodeId {
+/// Derive Tendermint node ID from public key
+fn id_from_pk(pk: &ed25519::PublicKey) -> TendermintNodeId {
     let digest = Sha256::digest(pk.try_to_vec().unwrap().as_slice());
     let mut bytes = [0u8; TENDERMINT_NODE_ID_LENGTH];
     bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
@@ -285,31 +285,23 @@ pub fn init_network(
         let validator_dir = accounts_dir.join(name);
 
         // Generate a node key
-        let node_seckey: common::SecretKey =
-            ed25519::SigScheme::generate(&mut rng).try_to_sk().unwrap();
-        let node_pk: common::PublicKey = node_seckey.ref_to();
+        let node_sk = ed25519::SigScheme::generate(&mut rng);
+        let node_pk: ed25519::PublicKey = node_sk.ref_to();
 
         // Derive the node ID from the node key
-        let node_id: TendermintNodeId = id_from_pk(node_pk);
+        let node_id: TendermintNodeId = id_from_pk(&node_pk);
 
-        let tm_node_keypair_json =
-            ed25519::SecretKey::try_from_sk(&node_seckey)
-                .map(|sk| {
-                    // Convert and write the keypair into Tendermint
-                    // node_key.json file
-                    let node_keypair = [
-                        sk.try_to_vec().unwrap(),
-                        sk.ref_to().try_to_vec().unwrap(),
-                    ]
-                    .concat();
-                    json!({
-                        "priv_key": {
-                            "type": "tendermint/PrivKeyEd25519",
-                            "value": base64::encode(node_keypair),
-                        }
-                    })
-                })
-                .unwrap();
+        // Convert and write the keypair into Tendermint
+        // node_key.json file
+        let node_keypair =
+            [node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()]
+                .concat();
+        let tm_node_keypair_json = json!({
+            "priv_key": {
+                "type": "tendermint/PrivKeyEd25519",
+                "value": base64::encode(node_keypair),
+            }
+        });
         let chain_dir = validator_dir.join(&accounts_temp_dir);
         let tm_home_dir = chain_dir.join("tendermint");
         let tm_config_dir = tm_home_dir.join("config");
@@ -750,6 +742,7 @@ pub fn init_network(
             .p2p_address
             .set_ip(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)));
     }
+    config.ledger.tendermint.p2p_addr_book_strict = !localhost;
     config.ledger.genesis_time = genesis.genesis_time.into();
     config.intent_gossiper.seed_peers = seed_peers;
     config

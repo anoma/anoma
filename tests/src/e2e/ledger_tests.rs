@@ -62,6 +62,59 @@ fn run_ledger() -> Result<()> {
 }
 
 /// In this test we:
+/// 1. Run 2 genesis validator ledger nodes and 1 non-validator node
+/// 2. Submit a valid token transfer tx
+/// 3. Check that all the nodes processed the tx with the same result
+#[test]
+fn test_node_connectivity() -> Result<()> {
+    // Setup 2 genesis validator nodes
+    let test =
+        setup::network(|genesis| setup::add_validators(1, genesis), None)?;
+
+    // 1. Run 2 genesis validator ledger nodes and 1 non-validator node
+    let args = ["ledger"];
+    let mut validator_0 =
+        run_as!(test, Who::Validator(0), Bin::Node, args, Some(40))?;
+    let mut validator_1 =
+        run_as!(test, Who::Validator(1), Bin::Node, args, Some(40))?;
+    let mut non_validator =
+        run_as!(test, Who::NonValidator, Bin::Node, args, Some(40))?;
+
+    // 2. Submit a valid token transfer tx
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+    let tx_args = [
+        "transfer",
+        "--source",
+        BERTHA,
+        "--target",
+        ALBERT,
+        "--token",
+        XAN,
+        "--amount",
+        "10.1",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
+    // 3. Check that all the nodes processed the tx with the same result
+    let expected_result = "all VPs accepted apply_tx storage modification";
+    validator_0.exp_string(expected_result)?;
+    validator_1.exp_string(expected_result)?;
+    non_validator.exp_string(expected_result)?;
+
+    Ok(())
+}
+
+/// In this test we:
 /// 1. Start up the ledger
 /// 2. Kill the tendermint process
 /// 3. Check that the node detects this

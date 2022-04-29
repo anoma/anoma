@@ -148,6 +148,7 @@ pub fn network(
         "e2e-test",
         "--localhost",
         "--dont-archive",
+        "--allow-duplicate-ip",
         "--wasm-checksums-path",
         &checksums_path,
     ];

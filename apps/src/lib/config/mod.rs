@@ -120,6 +120,9 @@ pub struct Tendermint {
     pub p2p_pex: bool,
     /// Toggle to disable guard against peers connecting from the same IP
     pub p2p_allow_duplicate_ip: bool,
+    /// Set `true` for strict address routability rules
+    /// Set `false` for private or local networks
+    pub p2p_addr_book_strict: bool,
     /// How long we wait after committing a block, before starting on the new
     /// height
     pub consensus_timeout_commit: Timeout,
@@ -188,6 +191,7 @@ impl Ledger {
                 p2p_persistent_peers: vec![],
                 p2p_pex: true,
                 p2p_allow_duplicate_ip: false,
+                p2p_addr_book_strict: true,
                 consensus_timeout_commit: Timeout::from_str("1s").unwrap(),
                 tendermint_mode: mode,
                 instrumentation_prometheus: false,
