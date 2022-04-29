@@ -79,6 +79,8 @@ mod protocol_txs {
         /// Aggregation of Ethereum state changes
         /// voted on by validators in last block
         EthereumStateUpdate(Tx),
+        /// Update to the Ethereum bridge's state
+        EthereumBridgeUpdate(Tx),
     }
 
     impl ProtocolTxType {
