@@ -891,10 +891,21 @@ async fn gen_shielded_transfer(
             amt
         )?;
     }
+    // Make sure that MASP parameters are downloaded before building transaction
+    let params_dir = masp_proofs::default_params_folder().unwrap();
+    let spend_path = params_dir.join("masp-spend.params");
+    let output_path = params_dir.join("masp-output.params");
+    if !(spend_path.exists() && output_path.exists()) {
+        println!("MASP parameters not present, downloading...");
+        masp_proofs::download_parameters()
+            .expect("MASP parameters not present or downloadable");
+        println!("MASP parameter download complete, resuming transaction...");
+    }
     // Build and return the constructed transaction
     builder.build(
         consensus_branch_id,
-        &LocalTxProver::with_default_location().expect("unable to load MASP Parameters")
+        &LocalTxProver::with_default_location()
+            .expect("unable to load MASP Parameters")
     ).map(|x| Some(x))
 }
 
