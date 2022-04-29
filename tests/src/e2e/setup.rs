@@ -550,7 +550,7 @@ where
         cmd.release()
     };
     let mut cmd = cmd.run().unwrap().command();
-    cmd.env("ANOMA_LOG", "anoma=debug")
+    cmd.env("ANOMA_LOG", "anoma=info")
         .current_dir(working_dir)
         .args(&[
             "--base-dir",
@@ -646,6 +646,7 @@ pub mod constants {
     pub const VP_ALWAYS_FALSE_WASM: &str =
         "wasm_for_tests/vp_always_false.wasm";
     pub const TX_MINT_TOKENS_WASM: &str = "wasm_for_tests/tx_mint_tokens.wasm";
+    pub const TX_PROPOSAL_CODE: &str = "wasm_for_tests/tx_proposal_code.wasm";
 
     /// Find the absolute path to one of the WASM files above
     pub fn wasm_abs_path(file_name: &str) -> PathBuf {

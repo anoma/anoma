@@ -160,7 +160,7 @@ where
                         {
                             let start_epoch = Epoch::from(*start_epoch);
                             delta = apply_slashes(&slashes, delta, start_epoch);
-                            if epoch <= start_epoch {
+                            if epoch >= start_epoch {
                                 delegated_amount += delta;
                             }
                         }

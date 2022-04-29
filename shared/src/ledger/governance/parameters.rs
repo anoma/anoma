@@ -34,9 +34,9 @@ impl Default for GovParams {
     fn default() -> Self {
         Self {
             min_proposal_fund: 500,
-            max_proposal_code_size: 300000,
+            max_proposal_code_size: 300_000,
             min_proposal_period: 3,
-            max_proposal_content_size: 10000,
+            max_proposal_content_size: 10_000,
             min_proposal_grace_epochs: 6,
         }
     }
@@ -82,7 +82,7 @@ impl GovParams {
                 &max_proposal_content_size_key,
                 encode(max_proposal_content_size),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let min_proposal_grace_epoch_key =
             gov_storage::get_min_proposal_grace_epoch_key();
@@ -91,9 +91,11 @@ impl GovParams {
                 &min_proposal_grace_epoch_key,
                 encode(min_proposal_grace_epochs),
             )
-            .unwrap();
+            .expect("Should be able to write to storage");
 
         let counter_key = gov_storage::get_counter_key();
-        storage.write(&counter_key, encode(&u64::MIN)).unwrap();
+        storage
+            .write(&counter_key, encode(&u64::MIN))
+            .expect("Should be able to write to storage");
     }
 }

@@ -9,12 +9,14 @@ use std::iter::Iterator;
 
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::Votes;
+use anoma::ledger::parameters::{storage as param_storage, EpochDuration};
 use anoma::ledger::pos::types::{
     Epoch as PosEpoch, VotingPower, WeightedValidator,
 };
 use anoma::ledger::pos::{
-    self, is_validator_slashes_key, BondId, Bonds, Slash, Unbonds,
+    self, is_validator_slashes_key, BondId, Bonds, PosParams, Slash, Unbonds,
 };
+use anoma::ledger::treasury::storage as treasury_storage;
 use anoma::types::address::Address;
 use anoma::types::governance::{
     OfflineProposal, OfflineVote, ProposalVote, TallyResult,
@@ -434,6 +436,124 @@ pub async fn query_proposal_result(
             }
         }
     }
+}
+
+pub async fn query_protocol_parameters(
+    _ctx: Context,
+    args: args::QueryProtocolParameters,
+) {
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
+
+    println!("Goveranance parameters");
+    let key = gov_storage::get_max_proposal_code_size_key();
+    let max_proposal_code_size = query_storage_value::<u64>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!(
+        "{:4}Max. proposal code size: {}",
+        "", max_proposal_code_size
+    );
+
+    let key = gov_storage::get_max_proposal_content_key();
+    let max_proposal_content = query_storage_value::<u64>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!(
+        "{:4}Max. proposal content size: {}",
+        "", max_proposal_content
+    );
+
+    let key = gov_storage::get_min_proposal_fund_key();
+    let min_proposal_fund = query_storage_value::<Amount>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!("{:4}Min. proposal funds: {}", "", min_proposal_fund);
+
+    let key = gov_storage::get_min_proposal_grace_epoch_key();
+    let min_proposal_grace_epoch = query_storage_value::<u64>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!(
+        "{:4}Min. proposal grace epoch: {}",
+        "", min_proposal_grace_epoch
+    );
+
+    let key = gov_storage::get_min_proposal_period_key();
+    let min_proposal_period = query_storage_value::<u64>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!("{:4}Min. proposal period: {}", "", min_proposal_period);
+
+    println!("Protocol parameters");
+    let key = param_storage::get_epoch_storage_key();
+    let epoch_duration = query_storage_value::<EpochDuration>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!(
+        "{:4}Min. epoch duration: {}",
+        "", epoch_duration.min_duration
+    );
+    println!(
+        "{:4}Min. number of blocks: {}",
+        "", epoch_duration.min_num_of_blocks
+    );
+
+    let key = param_storage::get_max_expected_time_per_block_key();
+    let max_block_duration = query_storage_value::<u64>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!("{:4}Max. block duration: {}", "", max_block_duration);
+
+    let key = param_storage::get_tx_whitelist_storage_key();
+    let vp_whitelist = query_storage_value::<Vec<String>>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!("{:4}VP whitelist: {:?}", "", vp_whitelist);
+
+    let key = param_storage::get_tx_whitelist_storage_key();
+    let tx_whitelist = query_storage_value::<Vec<String>>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!("{:4}Transactions whitelist: {:?}", "", tx_whitelist);
+
+    println!("Treasury parameters");
+    let key = treasury_storage::get_max_transferable_fund_key();
+    let max_transferable_amount = query_storage_value::<Amount>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!(
+        "{:4}Max. transferable amount: {}",
+        "", max_transferable_amount
+    );
+
+    println!("PoS parameters");
+    let key = pos::params_key();
+    let pos_params = query_storage_value::<PosParams>(&client, &key)
+        .await
+        .expect("Parameter should be definied.");
+    println!(
+        "{:4}Block proposer reward: {}",
+        "", pos_params.block_proposer_reward
+    );
+    println!(
+        "{:4}Block vote reward: {}",
+        "", pos_params.block_vote_reward
+    );
+    println!(
+        "{:4}Duplicate vote slash rate: {}",
+        "", pos_params.duplicate_vote_slash_rate
+    );
+    println!(
+        "{:4}Light client attack slash rate: {}",
+        "", pos_params.light_client_attack_slash_rate
+    );
+    println!(
+        "{:4}Max. validator slots: {}",
+        "", pos_params.max_validator_slots
+    );
+    println!("{:4}Pipeline length: {}", "", pos_params.pipeline_len);
+    println!("{:4}Unbonding length: {}", "", pos_params.unbonding_len);
+    println!("{:4}Votes per token: {}", "", pos_params.votes_per_token);
 }
 
 /// Query PoS bond(s)
@@ -1713,4 +1833,24 @@ async fn get_validator_stake(
     } else {
         token::Amount::from(0)
     }
+}
+
+pub async fn get_delegators_delegation(
+    client: &HttpClient,
+    address: &Address,
+    _epoch: Epoch,
+) -> Vec<Address> {
+    let key = pos::bonds_for_source_prefix(address);
+    let bonds_iter =
+        query_storage_prefix::<pos::Bonds>(client.clone(), key).await;
+
+    let mut delegation_addresses: Vec<Address> = Vec::new();
+    if let Some(bonds) = bonds_iter {
+        for (key, _epoched_amount) in bonds {
+            let validator_address = pos::get_validator_address_from_bond(&key)
+                .expect("Delegation key should contain validator address.");
+            delegation_addresses.push(validator_address);
+        }
+    }
+    delegation_addresses
 }

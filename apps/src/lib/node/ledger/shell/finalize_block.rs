@@ -1,11 +1,11 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
+use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::{
     compute_tally, get_proposal_votes, ProposalEvent,
 };
-use anoma::ledger::governance::{
-    storage as gov_storage, ADDRESS as gov_address,
-};
+use anoma::ledger::governance::vp::ADDRESS as gov_address;
+use anoma::ledger::storage::types::encode;
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
@@ -107,10 +107,18 @@ where
                             self.read_storage_key_bytes(&proposal_code_key);
                         match proposal_code {
                             Some(proposal_code) => {
-                                let tx = Tx::new(proposal_code, None);
+                                let tx =
+                                    Tx::new(proposal_code, Some(encode(&id)));
                                 let tx_type = TxType::Decrypted(
                                     DecryptedTx::Decrypted(tx),
                                 );
+                                let pending_execution_key =
+                                    gov_storage::get_proposal_execution_key(id);
+                                self.storage
+                                    .write(&pending_execution_key, "")
+                                    .expect(
+                                        "Should be able to write to storage.",
+                                    );
                                 let tx_result = protocol::apply_tx(
                                     tx_type,
                                     0, /*  this is used to compute the fee
@@ -122,9 +130,15 @@ where
                                     &mut self.vp_wasm_cache,
                                     &mut self.tx_wasm_cache,
                                 );
+                                self.storage
+                                    .delete(&pending_execution_key)
+                                    .expect(
+                                        "Should be able to delete the storage.",
+                                    );
                                 match tx_result {
                                     Ok(tx_result) => {
                                         if tx_result.is_accepted() {
+                                            self.write_log.commit_tx();
                                             let proposal_event: Event =
                                                 ProposalEvent::new(
                                                     EventType::Proposal
@@ -141,6 +155,7 @@ where
 
                                             proposal_author
                                         } else {
+                                            self.write_log.drop_tx();
                                             let proposal_event: Event =
                                                 ProposalEvent::new(
                                                     EventType::Proposal
@@ -158,7 +173,8 @@ where
                                             treasury_address
                                         }
                                     }
-                                    Err(_) => {
+                                    Err(_e) => {
+                                        self.write_log.drop_tx();
                                         let proposal_event: Event =
                                             ProposalEvent::new(
                                                 EventType::Proposal.to_string(),

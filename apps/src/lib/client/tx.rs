@@ -6,7 +6,9 @@ use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::{xan as m1t, Address};
-use anoma::types::governance::{OfflineProposal, OfflineVote, Proposal};
+use anoma::types::governance::{
+    OfflineProposal, OfflineVote, Proposal, ProposalVote,
+};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
@@ -670,10 +672,28 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
             &proposal_start_epoch_key,
         )
         .await;
+
         match proposal_start_epoch {
             Some(epoch) => {
-                let delegation_addresses =
-                    rpc::get_all_validators(&client, epoch).await;
+                let mut delegation_addresses = rpc::get_delegators_delegation(
+                    &client,
+                    &voter_address,
+                    epoch,
+                )
+                .await;
+
+                // Optimize by quering if a vote from a validator
+                // is equal to ours. If so, we can avoid voting
+                if !args.tx.force {
+                    delegation_addresses = filter_delegations(
+                        &client,
+                        delegation_addresses,
+                        proposal_id,
+                        &args.vote,
+                    )
+                    .await;
+                }
+
                 let tx_data = VoteProposalData {
                     id: proposal_id,
                     vote: args.vote,
@@ -694,6 +714,39 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
             }
         }
     }
+}
+
+/// Removes validators whose vote corresponds to that of the delegator (needless
+/// vote)
+async fn filter_delegations(
+    client: &HttpClient,
+    mut delegation_addresses: Vec<Address>,
+    proposal_id: u64,
+    delegator_vote: &ProposalVote,
+) -> Vec<Address> {
+    let mut remove_indexes: Vec<usize> = vec![];
+
+    for (index, validator_address) in delegation_addresses.iter().enumerate() {
+        let vote_key = gov_storage::get_vote_proposal_key(
+            proposal_id,
+            validator_address.to_owned(),
+            validator_address.to_owned(),
+        );
+
+        if let Some(validator_vote) =
+            rpc::query_storage_value::<ProposalVote>(client, &vote_key).await
+        {
+            if &validator_vote == delegator_vote {
+                remove_indexes.push(index);
+            }
+        }
+    }
+
+    for index in remove_indexes {
+        delegation_addresses.swap_remove(index);
+    }
+
+    delegation_addresses
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {

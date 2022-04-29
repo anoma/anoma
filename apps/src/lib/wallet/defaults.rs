@@ -20,7 +20,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
     let mut addresses: Vec<(Alias, Address)> = vec![
         ("pos".into(), pos::ADDRESS),
         ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
-        ("governance".into(), governance::ADDRESS),
+        ("governance".into(), governance::vp::ADDRESS),
     ];
     // Genesis validators
     let validator_addresses =
@@ -116,7 +116,7 @@ mod dev {
         let mut addresses: Vec<(Alias, Address)> = vec![
             ("pos".into(), pos::ADDRESS),
             ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
-            ("governance".into(), governance::ADDRESS),
+            ("governance".into(), governance::vp::ADDRESS),
             ("matchmaker".into(), matchmaker_address()),
             ("validator".into(), validator_address()),
             ("albert".into(), albert_address()),

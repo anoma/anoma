@@ -1025,6 +1025,12 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
 
+    let anomac_help = vec!["--help"];
+
+    let mut client = run!(test, Bin::Client, anomac_help, Some(40))?;
+    client.exp_string("Anoma client command line interface.")?;
+    client.assert_success();
+
     // 1. Run the ledger node
     let mut ledger =
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
@@ -1063,7 +1069,7 @@ fn proposal_submission() -> Result<()> {
     // 2. Submit valid proposal
     let valid_proposal_json_path =
         test.base_dir.path().join("valid_proposal.json");
-    let proposal_code = wasm_abs_path(TX_NO_OP_WASM);
+    let proposal_code = wasm_abs_path(TX_PROPOSAL_CODE);
 
     let albert = find_address(&test, ALBERT)?;
     let valid_proposal_json = json!(
@@ -1080,9 +1086,9 @@ fn proposal_submission() -> Result<()> {
                 "requires": "2"
             },
             "author": albert,
-            "voting_start_epoch": 9,
-            "voting_end_epoch": 21,
-            "grace_epoch": 35,
+            "voting_start_epoch": 6,
+            "voting_end_epoch": 18,
+            "grace_epoch": 24,
             "proposal_code_path": proposal_code.to_str().unwrap()
         }
     );
@@ -1162,10 +1168,25 @@ fn proposal_submission() -> Result<()> {
                 "discussions-to": "www.github.com/anoma/aip/1",
                 "created": "2022-03-10T08:54:37Z",
                 "license": "MIT",
-                "abstract": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida eros. Nullam sed ex justo. Ut at placerat ipsum, sit amet rhoncus libero. Sed blandit non purus non suscipit. Phasellus sed quam nec augue bibendum bibendum ut vitae urna. Sed odio diam, ornare nec sapien eget, congue viverra enim.",
-                "motivation": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices.",
-                "details": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida eros.",
-                "requires": "2"
+                "abstract": "Ut convallis eleifend orci vel venenatis. Duis
+    vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit
+    ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum
+    fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra
+    varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida
+    eros. Nullam sed ex justo. Ut at placerat ipsum, sit amet rhoncus libero.
+    Sed blandit non purus non suscipit. Phasellus sed quam nec augue bibendum
+    bibendum ut vitae urna. Sed odio diam, ornare nec sapien eget, congue
+    viverra enim.",
+                "motivation": "Ut convallis eleifend orci vel venenatis. Duis
+    vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit
+    ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum
+    fermentum. Morbi aliquet purus at sollicitudin ultrices.",
+                "details": "Ut convallis eleifend orci vel venenatis. Duis
+    vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit
+    ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum
+    fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra
+    varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida
+    eros.",             "requires": "2"
             },
             "author": albert,
             "voting_start_epoch": 9999,
@@ -1219,7 +1240,7 @@ fn proposal_submission() -> Result<()> {
 
     // 9. Send a yay vote from a validator
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 <= 9 {
+    while epoch.0 <= 7 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
@@ -1276,19 +1297,21 @@ fn proposal_submission() -> Result<()> {
         &validator_one_rpc,
     ];
 
+    // this is valid because the client filter ALBERT delegation and there are
+    // none
     let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
-    client.exp_string("Transaction is invalid.")?;
+    client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 11. Query the proposal and check the result
     let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
-    while epoch.0 <= 22 {
+    while epoch.0 <= 19 {
         sleep(1);
         epoch = get_epoch(&test, &validator_one_rpc).unwrap();
     }
 
     let query_proposal = vec![
-        "query-proposal",
+        "query-proposal-result",
         "--proposal-id",
         "0",
         "--ledger-address",
@@ -1297,6 +1320,54 @@ fn proposal_submission() -> Result<()> {
 
     let mut client = run!(test, Bin::Client, query_proposal, Some(15))?;
     client.exp_string("Result: passed")?;
+    client.assert_success();
+
+    // 12. Wait proposal grace and check proposal author funds
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 < 26 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    let query_balance_args = vec![
+        "balance",
+        "--owner",
+        ALBERT,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(30))?;
+    client.exp_string("XAN: 1000000")?;
+    client.assert_success();
+
+    // 13. Check if governance funds are 0
+    let query_balance_args = vec![
+        "balance",
+        "--owner",
+        GOVERNANCE_ADDRESS,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, query_balance_args, Some(30))?;
+    client.exp_string("XAN: 0")?;
+    client.assert_success();
+
+    // // 14. Query parameters
+    let query_protocol_parameters = vec![
+        "query-protocol-parameters",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client =
+        run!(test, Bin::Client, query_protocol_parameters, Some(30))?;
+    client.exp_regex(".*Min. proposal grace epoch: 9.*")?;
     client.assert_success();
 
     Ok(())

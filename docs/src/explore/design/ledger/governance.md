@@ -21,6 +21,12 @@ Also, it introduces some protocol parameters:
 On-chain proposals are created under the `governance_address` storage space and, by default, this storage space is initialized with following storage keys:
 ```
 /$GovernanceAddress/counter: u64
+/$GovernanceAddress/min_proposal_fund: u64
+/$GovernanceAddress/max_proposal_code_size: u64
+/$GovernanceAddress/min_proposal_period: u64
+/$GovernanceAddress/max_proposal_content_size: u64
+/$GovernanceAddress/min_proposal_grace_epochs: u64
+/$GovernanceAddress/max_proposal_fund_transfer: u64
 ```
 
 In order to create a valid proposal, a transaction need to modify these storage keys:
@@ -45,8 +51,9 @@ and follow these rules:
 - `graceEpoch` must:
     - be at least `min_grace_epoch` epochs greater than `endEpoch`
 - `proposalCode` can be empty and must be a valid transaction with size less than `max_proposal_code_size` kibibytes.
-- `funds` must be at least `min_proposal_fund` and should be moved to the `governance_address`.
+- `funds` must be equal to `min_proposal_fund` and should be moved to the `governance_address`.
 - `content` should follow the `Anoma Improvement Proposal schema` and must be less than `max_proposal_content_size` kibibytes.
+- `author` must be a valid address on-chain
 
 A proposal gets accepted if, at least 2/3 of the total voting power (computed at the epoch definied in the `startEpoch` field) vote `yay`. If the proposal is accepted, the locked funds are returned to the address definied in the `proposal_author` field, otherwise are moved to the treasury address.
 
@@ -66,10 +73,26 @@ The preferred content template (`Anoma Improvement Proposal schema`) is the foll
     "license": "<abbreviation for approved license(s)>",
     "abstract": "<string>",
     "motivation": "<string>",
-    "details": "<AIP number(s)> - optional field",
+    "details": "<string - optional field",
     "requires": "<AIP number(s)> - optional field",
 }
 ```
+
+In order to vote a proposal, a transaction should modify the following storage key:
+```
+/$GovernanceAddress/proposal/$id/vote/$validator_address/$voter_address: ProposalVote
+```
+
+where ProposalVote is a borsh encoded string containing either `yay` or `nay`, `$validator_address` is the delegation validator address and the `$voter_address` is the address of who is voting. A voter can be cast for each delegation.
+
+Vote is valid if it follow this rules:
+- vote can be sent only by validator or delegators
+- validator can vote only during the first 2/3 of the total voting period, delegator can vote for the whole voting period
+
+The outcome of a proposal is compute at the epoch specific in the `endEpoch` field and executed at `graceEpoch` field (if it contains a non-empty `proposalCode` field).
+A proposal is accepted only if more than 2/3 of the voting power vote `yay`.
+If a proposal gets accepted, the locked funds will be reimbursed to the author. In case it gets rejected, the locked funds will be moved to treasury.
+
 
 ## Off-chain proposal
 

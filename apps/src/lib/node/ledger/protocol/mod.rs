@@ -47,7 +47,7 @@ pub enum Error {
     #[error("IBC Token native VP: {0}")]
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
     #[error("Governance native VP error: {0}")]
-    GovernanceNativeVpError(anoma::ledger::governance::Error),
+    GovernanceNativeVpError(anoma::ledger::governance::vp::Error),
     #[error("Treasury native VP error: {0}")]
     TreasuryNativeVpError(anoma::ledger::treasury::Error),
     #[error("Access to an internal address {0} is forbidden")]
@@ -325,7 +325,7 @@ where
                         InternalAddress::Treasury => {
                             let treasury = TreasuryVp { ctx };
                             let result = treasury
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
                                 .map_err(Error::TreasuryNativeVpError);
                             gas_meter = treasury.ctx.gas_meter.into_inner();
                             result

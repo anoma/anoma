@@ -193,6 +193,7 @@ pub mod cmds {
                 .subcommand(QueryRawBytes::def().display_order(3))
                 .subcommand(QueryProposal::def().display_order(3))
                 .subcommand(QueryProposalResult::def().display_order(3))
+                .subcommand(QueryProtocolParameters::def().display_order(3))
                 // Intents
                 .subcommand(Intent::def().display_order(4))
                 .subcommand(SubscribeTopic::def().display_order(4))
@@ -228,6 +229,8 @@ pub mod cmds {
             let query_proposal = Self::parse_with_ctx(matches, QueryProposal);
             let query_proposal_result =
                 Self::parse_with_ctx(matches, QueryProposalResult);
+            let query_protocol_parameters =
+                Self::parse_with_ctx(matches, QueryProtocolParameters);
             let intent = Self::parse_with_ctx(matches, Intent);
             let subscribe_topic = Self::parse_with_ctx(matches, SubscribeTopic);
             let utils = SubCmd::parse(matches).map(Self::WithoutContext);
@@ -252,6 +255,7 @@ pub mod cmds {
                 .or(query_raw_bytes)
                 .or(query_proposal)
                 .or(query_proposal_result)
+                .or(query_protocol_parameters)
                 .or(intent)
                 .or(subscribe_topic)
                 .or(utils)
@@ -311,6 +315,7 @@ pub mod cmds {
         QueryRawBytes(QueryRawBytes),
         QueryProposal(QueryProposal),
         QueryProposalResult(QueryProposalResult),
+        QueryProtocolParameters(QueryProtocolParameters),
         // Gossip cmds
         Intent(Intent),
         SubscribeTopic(SubscribeTopic),
@@ -820,6 +825,30 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Query proposals result.")
                 .add_args::<args::QueryProposalResult>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProtocolParameters(pub args::QueryProtocolParameters);
+
+    impl SubCmd for QueryProtocolParameters {
+        const CMD: &'static str = "query-protocol-parameters";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryProtocolParameters(args::QueryProtocolParameters::parse(
+                    matches,
+                ))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query protocol parameters.")
+                .add_args::<args::QueryProtocolParameters>()
         }
     }
 
@@ -2028,6 +2057,24 @@ pub mod args {
                         )
                         .conflicts_with(PROPOSAL_ID.name),
                 )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProtocolParameters {
+        /// Common query args
+        pub query: Query,
+    }
+
+    impl Args for QueryProtocolParameters {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+
+            Self { query }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
         }
     }
 

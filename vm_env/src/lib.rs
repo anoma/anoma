@@ -16,8 +16,12 @@ pub mod proof_of_stake;
 pub mod token;
 
 pub mod tx_prelude {
+    pub use anoma::ledger::parameters::storage as parameters_storage;
+    pub use anoma::ledger::storage::types::encode;
+    pub use anoma::ledger::treasury::storage as treasury_storage;
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
+    pub use anoma::types::storage::Key;
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
 
@@ -38,6 +42,7 @@ pub mod vp_prelude {
     pub use anoma::ledger::{parameters, pos as proof_of_stake};
     pub use anoma::proto::{Signed, SignedTxData};
     pub use anoma::types::address::Address;
+    pub use anoma::types::storage::Key;
     pub use anoma::types::*;
     pub use anoma_macros::validity_predicate;
 
