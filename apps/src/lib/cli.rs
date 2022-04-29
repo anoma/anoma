@@ -50,6 +50,8 @@ pub mod cmds {
         TxUpdateVp(TxUpdateVp),
         TxInitNft(TxInitNft),
         TxMintNft(TxMintNft),
+        TxInitProposal(TxInitProposal),
+        TxVoteProposal(TxVoteProposal),
         Intent(Intent),
     }
 
@@ -66,6 +68,8 @@ pub mod cmds {
                 .subcommand(TxUpdateVp::def())
                 .subcommand(TxInitNft::def())
                 .subcommand(TxMintNft::def())
+                .subcommand(TxInitProposal::def())
+                .subcommand(TxVoteProposal::def())
                 .subcommand(Intent::def())
         }
 
@@ -81,6 +85,10 @@ pub mod cmds {
             let tx_update_vp = SubCmd::parse(matches).map(Self::TxUpdateVp);
             let tx_nft_create = SubCmd::parse(matches).map(Self::TxInitNft);
             let tx_nft_mint = SubCmd::parse(matches).map(Self::TxMintNft);
+            let tx_init_proposal =
+                SubCmd::parse(matches).map(Self::TxInitProposal);
+            let tx_vote_proposal =
+                SubCmd::parse(matches).map(Self::TxVoteProposal);
             let intent = SubCmd::parse(matches).map(Self::Intent);
             node.or(client)
                 .or(wallet)
@@ -92,6 +100,8 @@ pub mod cmds {
                 .or(tx_update_vp)
                 .or(tx_nft_create)
                 .or(tx_nft_mint)
+                .or(tx_init_proposal)
+                .or(tx_vote_proposal)
                 .or(intent)
         }
     }
@@ -166,6 +176,9 @@ pub mod cmds {
                 // Nft transactions
                 .subcommand(TxInitNft::def().display_order(1))
                 .subcommand(TxMintNft::def().display_order(1))
+                // Proposal transactions
+                .subcommand(TxInitProposal::def().display_order(1))
+                .subcommand(TxVoteProposal::def().display_order(1))
                 // PoS transactions
                 .subcommand(Bond::def().display_order(2))
                 .subcommand(Unbond::def().display_order(2))
@@ -177,6 +190,10 @@ pub mod cmds {
                 .subcommand(QueryVotingPower::def().display_order(3))
                 .subcommand(QuerySlashes::def().display_order(3))
                 .subcommand(QueryResult::def().display_order(3))
+                .subcommand(QueryRawBytes::def().display_order(3))
+                .subcommand(QueryProposal::def().display_order(3))
+                .subcommand(QueryProposalResult::def().display_order(3))
+                .subcommand(QueryProtocolParameters::def().display_order(3))
                 // Intents
                 .subcommand(Intent::def().display_order(4))
                 .subcommand(SubscribeTopic::def().display_order(4))
@@ -194,6 +211,10 @@ pub mod cmds {
                 Self::parse_with_ctx(matches, TxInitValidator);
             let tx_nft_create = Self::parse_with_ctx(matches, TxInitNft);
             let tx_nft_mint = Self::parse_with_ctx(matches, TxMintNft);
+            let tx_init_proposal =
+                Self::parse_with_ctx(matches, TxInitProposal);
+            let tx_vote_proposal =
+                Self::parse_with_ctx(matches, TxVoteProposal);
             let bond = Self::parse_with_ctx(matches, Bond);
             let unbond = Self::parse_with_ctx(matches, Unbond);
             let withdraw = Self::parse_with_ctx(matches, Withdraw);
@@ -204,6 +225,12 @@ pub mod cmds {
                 Self::parse_with_ctx(matches, QueryVotingPower);
             let query_slashes = Self::parse_with_ctx(matches, QuerySlashes);
             let query_result = Self::parse_with_ctx(matches, QueryResult);
+            let query_raw_bytes = Self::parse_with_ctx(matches, QueryRawBytes);
+            let query_proposal = Self::parse_with_ctx(matches, QueryProposal);
+            let query_proposal_result =
+                Self::parse_with_ctx(matches, QueryProposalResult);
+            let query_protocol_parameters =
+                Self::parse_with_ctx(matches, QueryProtocolParameters);
             let intent = Self::parse_with_ctx(matches, Intent);
             let subscribe_topic = Self::parse_with_ctx(matches, SubscribeTopic);
             let utils = SubCmd::parse(matches).map(Self::WithoutContext);
@@ -214,6 +241,8 @@ pub mod cmds {
                 .or(tx_init_validator)
                 .or(tx_nft_create)
                 .or(tx_nft_mint)
+                .or(tx_init_proposal)
+                .or(tx_vote_proposal)
                 .or(bond)
                 .or(unbond)
                 .or(withdraw)
@@ -223,6 +252,10 @@ pub mod cmds {
                 .or(query_voting_power)
                 .or(query_slashes)
                 .or(query_result)
+                .or(query_raw_bytes)
+                .or(query_proposal)
+                .or(query_proposal_result)
+                .or(query_protocol_parameters)
                 .or(intent)
                 .or(subscribe_topic)
                 .or(utils)
@@ -269,6 +302,8 @@ pub mod cmds {
         TxInitValidator(TxInitValidator),
         TxInitNft(TxInitNft),
         TxMintNft(TxMintNft),
+        TxInitProposal(TxInitProposal),
+        TxVoteProposal(TxVoteProposal),
         Bond(Bond),
         Unbond(Unbond),
         Withdraw(Withdraw),
@@ -277,6 +312,10 @@ pub mod cmds {
         QueryBonds(QueryBonds),
         QueryVotingPower(QueryVotingPower),
         QuerySlashes(QuerySlashes),
+        QueryRawBytes(QueryRawBytes),
+        QueryProposal(QueryProposal),
+        QueryProposalResult(QueryProposalResult),
+        QueryProtocolParameters(QueryProtocolParameters),
         // Gossip cmds
         Intent(Intent),
         SubscribeTopic(SubscribeTopic),
@@ -911,6 +950,74 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct QueryProposal(pub args::QueryProposal);
+
+    impl SubCmd for QueryProposal {
+        const CMD: &'static str = "query-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryProposal(args::QueryProposal::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query proposals.")
+                .add_args::<args::QueryProposal>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProposalResult(pub args::QueryProposalResult);
+
+    impl SubCmd for QueryProposalResult {
+        const CMD: &'static str = "query-proposal-result";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryProposalResult(args::QueryProposalResult::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query proposals result.")
+                .add_args::<args::QueryProposalResult>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProtocolParameters(pub args::QueryProtocolParameters);
+
+    impl SubCmd for QueryProtocolParameters {
+        const CMD: &'static str = "query-protocol-parameters";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryProtocolParameters(args::QueryProtocolParameters::parse(
+                    matches,
+                ))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query protocol parameters.")
+                .add_args::<args::QueryProtocolParameters>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct TxCustom(pub args::TxCustom);
 
     impl SubCmd for TxCustom {
@@ -1170,6 +1277,25 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct QueryRawBytes(pub args::QueryRawBytes);
+
+    impl SubCmd for QueryRawBytes {
+        const CMD: &'static str = "query-bytes";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryRawBytes(args::QueryRawBytes::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query the raw bytes of a given storage key")
+                .add_args::<args::QueryRawBytes>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct TxInitNft(pub args::NftCreate);
 
     impl SubCmd for TxInitNft {
@@ -1210,6 +1336,50 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Mint new NFT tokens.")
                 .add_args::<args::NftMint>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct TxInitProposal(pub args::InitProposal);
+
+    impl SubCmd for TxInitProposal {
+        const CMD: &'static str = "init-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                TxInitProposal(args::InitProposal::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Create a new proposal.")
+                .add_args::<args::InitProposal>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct TxVoteProposal(pub args::VoteProposal);
+
+    impl SubCmd for TxVoteProposal {
+        const CMD: &'static str = "vote-proposal";
+
+        fn parse(matches: &ArgMatches) -> Option<Self>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                TxVoteProposal(args::VoteProposal::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Vote a proposal.")
+                .add_args::<args::VoteProposal>()
         }
     }
 
@@ -1359,9 +1529,10 @@ pub mod args {
 
     use anoma::types::address::Address;
     use anoma::types::chain::{ChainId, ChainIdPrefix};
+    use anoma::types::governance::ProposalVote;
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::*;
-    use anoma::types::storage::Epoch;
+    use anoma::types::storage::{self, Epoch};
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
@@ -1434,6 +1605,7 @@ pub mod args {
             let raw = "127.0.0.1:26657";
             TendermintAddress::from_str(raw).unwrap()
         }));
+
     const LEDGER_ADDRESS: Arg<TendermintAddress> = arg("ledger-address");
     const LOCALHOST: ArgFlag = flag("localhost");
     const MASP_VALUE: Arg<MaspValue> = arg("value");
@@ -1444,8 +1616,12 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
+    const PROPOSAL_OFFLINE: ArgFlag = flag("offline");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
+    const PROPOSAL_ID: Arg<u64> = arg("proposal-id");
+    const PROPOSAL_ID_OPT: ArgOpt<u64> = arg_opt("proposal-id");
+    const PROPOSAL_VOTE: Arg<ProposalVote> = arg("vote");
     const RAW_ADDRESS: Arg<Address> = arg("address");
     const RAW_PUBLIC_KEY_OPT: ArgOpt<common::PublicKey> = arg_opt("public-key");
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
@@ -1456,6 +1632,7 @@ pub mod args {
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
+    const STORAGE_KEY: Arg<storage::Key> = arg("storage-key");
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
@@ -1876,6 +2053,198 @@ pub mod args {
         }
     }
 
+    #[derive(Clone, Debug)]
+    pub struct InitProposal {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// The proposal file path
+        pub proposal_data: PathBuf,
+        /// Flag if proposal should be run offline
+        pub offline: bool,
+    }
+
+    impl Args for InitProposal {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let proposal_data = DATA_PATH.parse(matches);
+            let offline = PROPOSAL_OFFLINE.parse(matches);
+
+            Self {
+                tx,
+                proposal_data,
+                offline,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(DATA_PATH.def().about(
+                    "The data path file (json) that describes the proposal.",
+                ))
+                .arg(
+                    PROPOSAL_OFFLINE
+                        .def()
+                        .about("Flag if the proposal vote should run offline."),
+                )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct VoteProposal {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Proposal id
+        pub proposal_id: Option<u64>,
+        /// The vote
+        pub vote: ProposalVote,
+        /// Flag if proposal vote should be run offline
+        pub offline: bool,
+        /// The proposal file path
+        pub proposal_data: Option<PathBuf>,
+    }
+
+    impl Args for VoteProposal {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let proposal_id = PROPOSAL_ID_OPT.parse(matches);
+            let vote = PROPOSAL_VOTE.parse(matches);
+            let offline = PROPOSAL_OFFLINE.parse(matches);
+            let proposal_data = DATA_PATH_OPT.parse(matches);
+
+            Self {
+                tx,
+                proposal_id,
+                vote,
+                offline,
+                proposal_data,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(
+                    PROPOSAL_ID_OPT
+                        .def()
+                        .about("The proposal identifier.")
+                        .conflicts_with_all(&[
+                            PROPOSAL_OFFLINE.name,
+                            DATA_PATH_OPT.name,
+                        ]),
+                )
+                .arg(
+                    PROPOSAL_VOTE
+                        .def()
+                        .about("The vote for the proposal. Either yay or nay."),
+                )
+                .arg(
+                    PROPOSAL_OFFLINE
+                        .def()
+                        .about("Flag if the proposal vote should run offline.")
+                        .conflicts_with(PROPOSAL_ID.name),
+                )
+                .arg(
+                    DATA_PATH_OPT
+                        .def()
+                        .about(
+                            "The data path file (json) that describes the \
+                             proposal.",
+                        )
+                        .conflicts_with(PROPOSAL_ID.name),
+                )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProposal {
+        /// Common query args
+        pub query: Query,
+        /// Proposal id
+        pub proposal_id: Option<u64>,
+    }
+
+    impl Args for QueryProposal {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let proposal_id = PROPOSAL_ID_OPT.parse(matches);
+
+            Self { query, proposal_id }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(PROPOSAL_ID_OPT.def().about("The proposal identifier."))
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProposalResult {
+        /// Common query args
+        pub query: Query,
+        /// Proposal id
+        pub proposal_id: Option<u64>,
+        /// Flag if proposal result should be run on offline data
+        pub offline: bool,
+        /// The folder containing the proposal and votes
+        pub proposal_folder: Option<PathBuf>,
+    }
+
+    impl Args for QueryProposalResult {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let proposal_id = PROPOSAL_ID_OPT.parse(matches);
+            let offline = PROPOSAL_OFFLINE.parse(matches);
+            let proposal_folder = DATA_PATH_OPT.parse(matches);
+
+            Self {
+                query,
+                proposal_id,
+                offline,
+                proposal_folder,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(PROPOSAL_ID_OPT.def().about("The proposal identifier."))
+                .arg(
+                    PROPOSAL_OFFLINE
+                        .def()
+                        .about(
+                            "Flag if the proposal result should run on \
+                             offline data.",
+                        )
+                        .conflicts_with(PROPOSAL_ID.name),
+                )
+                .arg(
+                    DATA_PATH_OPT
+                        .def()
+                        .about(
+                            "The path to the folder containing the proposal \
+                             json and votes",
+                        )
+                        .conflicts_with(PROPOSAL_ID.name),
+                )
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryProtocolParameters {
+        /// Common query args
+        pub query: Query,
+    }
+
+    impl Args for QueryProtocolParameters {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+
+            Self { query }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+        }
+    }
+
     /// Withdraw arguments
     #[derive(Clone, Debug)]
     pub struct Withdraw {
@@ -2167,7 +2536,27 @@ pub mod args {
             )
         }
     }
+    /// Query the raw bytes of given storage key
+    #[derive(Clone, Debug)]
+    pub struct QueryRawBytes {
+        /// The storage key to query
+        pub storage_key: storage::Key,
+        /// Common query args
+        pub query: Query,
+    }
 
+    impl Args for QueryRawBytes {
+        fn parse(matches: &ArgMatches) -> Self {
+            let storage_key = STORAGE_KEY.parse(matches);
+            let query = Query::parse(matches);
+            Self { storage_key, query }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(STORAGE_KEY.def().about("Storage key"))
+        }
+    }
     /// Intent arguments
     #[derive(Clone, Debug)]
     pub struct Intent {

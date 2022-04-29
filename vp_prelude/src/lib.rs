@@ -17,7 +17,7 @@ pub fn sha256(bytes: &[u8]) -> Hash {
 
 pub fn is_tx_whitelisted() -> bool {
     let tx_hash = get_tx_code_hash();
-    let key = parameters::tx_whitelist_storage_key();
+    let key = parameters::storage::get_tx_whitelist_storage_key();
     let whitelist: Vec<String> = read_pre(&key.to_string()).unwrap_or_default();
     // if whitelist is empty, allow any transaction
     whitelist.is_empty() || whitelist.contains(&tx_hash.to_string())
@@ -25,7 +25,7 @@ pub fn is_tx_whitelisted() -> bool {
 
 pub fn is_vp_whitelisted(vp_bytes: &[u8]) -> bool {
     let vp_hash = sha256(vp_bytes);
-    let key = parameters::vp_whitelist_storage_key();
+    let key = parameters::storage::get_vp_whitelist_storage_key();
     let whitelist: Vec<String> = read_pre(&key.to_string()).unwrap_or_default();
     // if whitelist is empty, allow any transaction
     whitelist.is_empty() || whitelist.contains(&vp_hash.to_string())

@@ -345,7 +345,7 @@ impl NetworkBehaviourEventProcess<IdentifyEvent> for Behaviour {
     fn inject_event(&mut self, event: IdentifyEvent) {
         match event {
             IdentifyEvent::Received { peer_id, info } => {
-                tracing::debug!("Identified Peer {}", peer_id);
+                tracing::info!("Identified Peer {}", peer_id);
                 tracing::debug!("protocol_version {}", info.protocol_version);
                 tracing::debug!("agent_version {}", info.agent_version);
                 tracing::debug!("listening_addresses {:?}", info.listen_addrs);
@@ -355,7 +355,7 @@ impl NetworkBehaviourEventProcess<IdentifyEvent> for Behaviour {
                     // Only the first address is the public IP, the others
                     // seem to be private
                     if let Some(addr) = info.listen_addrs.first() {
-                        tracing::debug!(
+                        tracing::info!(
                             "Routing updated peer ID: {}, address: {}",
                             peer_id,
                             addr

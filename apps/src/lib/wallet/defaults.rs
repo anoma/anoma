@@ -1,6 +1,6 @@
 //! Default addresses and keys.
 
-use anoma::ledger::pos;
+use anoma::ledger::{governance, pos};
 use anoma::types::address::Address;
 use anoma::types::key::*;
 #[cfg(feature = "dev")]
@@ -20,6 +20,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
     let mut addresses: Vec<(Alias, Address)> = vec![
         ("pos".into(), pos::ADDRESS),
         ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
+        ("governance".into(), governance::vp::ADDRESS),
     ];
     // Genesis validators
     let validator_addresses =
@@ -71,7 +72,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
 
 #[cfg(feature = "dev")]
 mod dev {
-    use anoma::ledger::pos;
+    use anoma::ledger::{governance, pos};
     use anoma::types::address::{self, Address};
     use anoma::types::key::dkg_session_keys::DkgKeypair;
     use anoma::types::key::*;
@@ -115,6 +116,7 @@ mod dev {
         let mut addresses: Vec<(Alias, Address)> = vec![
             ("pos".into(), pos::ADDRESS),
             ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
+            ("governance".into(), governance::vp::ADDRESS),
             ("matchmaker".into(), matchmaker_address()),
             ("validator".into(), validator_address()),
             ("albert".into(), albert_address()),

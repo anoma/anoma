@@ -57,6 +57,10 @@ mod internal {
         "ano::Inter-Blockchain Communication          ";
     pub const PARAMETERS: &str =
         "ano::Protocol Parameters                     ";
+    pub const GOVERNANCE: &str =
+        "ano::Governance                              ";
+    pub const TREASURY: &str =
+        "ano::Treasury                                ";
     pub const IBC_BURN: &str =
         "ano::IBC Burn Address                        ";
     pub const IBC_MINT: &str =
@@ -171,6 +175,10 @@ impl Address {
                     InternalAddress::Parameters => {
                         internal::PARAMETERS.to_string()
                     }
+                    InternalAddress::Governance => {
+                        internal::GOVERNANCE.to_string()
+                    }
+                    InternalAddress::Treasury => internal::TREASURY.to_string(),
                     InternalAddress::IbcEscrow(hash) => {
                         format!("{}::{}", PREFIX_INTERNAL, hash)
                     }
@@ -223,6 +231,12 @@ impl Address {
                 }
                 internal::IBC_BURN => {
                     Ok(Address::Internal(InternalAddress::IbcBurn))
+                }
+                internal::GOVERNANCE => {
+                    Ok(Address::Internal(InternalAddress::Governance))
+                }
+                internal::TREASURY => {
+                    Ok(Address::Internal(InternalAddress::Treasury))
                 }
                 internal::IBC_MINT => {
                     Ok(Address::Internal(InternalAddress::IbcMint))
@@ -418,6 +432,10 @@ pub enum InternalAddress {
     IbcBurn,
     /// Mint tokens from this address with IBC token transfer
     IbcMint,
+    /// Governance address
+    Governance,
+    /// Treasury address
+    Treasury,
 }
 
 impl InternalAddress {
@@ -441,6 +459,8 @@ impl Display for InternalAddress {
                 Self::PosSlashPool => "PosSlashPool".to_string(),
                 Self::Ibc => "IBC".to_string(),
                 Self::Parameters => "Parameters".to_string(),
+                Self::Governance => "Governance".to_string(),
+                Self::Treasury => "Treasury".to_string(),
                 Self::IbcEscrow(hash) => format!("IbcEscrow: {}", hash),
                 Self::IbcBurn => "IbcBurn".to_string(),
                 Self::IbcMint => "IbcMint".to_string(),
@@ -680,6 +700,8 @@ pub mod testing {
             InternalAddress::PoS => {}
             InternalAddress::PosSlashPool => {}
             InternalAddress::Ibc => {}
+            InternalAddress::Governance => {}
+            InternalAddress::Treasury => {}
             InternalAddress::Parameters => {}
             InternalAddress::IbcEscrow(_) => {}
             InternalAddress::IbcBurn => {}
@@ -695,6 +717,8 @@ pub mod testing {
                 .prop_map(|(p, c)| InternalAddress::ibc_escrow_address(p, c)),
             Just(InternalAddress::IbcBurn),
             Just(InternalAddress::IbcMint),
+            Just(InternalAddress::Governance),
+            Just(InternalAddress::Treasury),
         ]
     }
 

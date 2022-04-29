@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{self, Display};
 use std::ops::{Index, IndexMut};
 
+use anoma::ledger::governance::utils::ProposalEvent;
 use anoma::types::ibc::IbcEvent;
 use anoma::types::transaction::{hash_tx, TxType};
 use borsh::BorshSerialize;
@@ -27,6 +28,8 @@ pub enum EventType {
     Applied,
     // The IBC transaction was applied during block finalization
     Ibc(String),
+    // The proposal that has been executed
+    Proposal,
 }
 
 #[cfg(not(feature = "ABCI"))]
@@ -36,6 +39,7 @@ impl Display for EventType {
             EventType::Accepted => write!(f, "accepted"),
             EventType::Applied => write!(f, "applied"),
             EventType::Ibc(t) => write!(f, "{}", t),
+            EventType::Proposal => write!(f, "proposal"),
         }?;
         Ok(())
     }
@@ -48,6 +52,7 @@ impl Display for EventType {
             EventType::Accepted => write!(f, "applied"),
             EventType::Applied => write!(f, "applied"),
             EventType::Ibc(t) => write!(f, "{}", t),
+            EventType::Proposal => write!(f, "proposal"),
         }?;
         Ok(())
     }
@@ -129,6 +134,15 @@ impl From<IbcEvent> for Event {
         Self {
             event_type: EventType::Ibc(ibc_event.event_type),
             attributes: ibc_event.attributes,
+        }
+    }
+}
+
+impl From<ProposalEvent> for Event {
+    fn from(proposal_event: ProposalEvent) -> Self {
+        Self {
+            event_type: EventType::Proposal,
+            attributes: proposal_event.attributes,
         }
     }
 }

@@ -186,3 +186,19 @@ duplicate_vote_slash_rate = 500
 # Portion of a validator's stake that should be slashed on a light
 # client attack (in basis points, i.e., 500 = 5%).
 light_client_attack_slash_rate = 500
+
+# Governance parameters.
+[gov_params]
+# minimum amount of xan token to lock
+min_proposal_fund = 500
+# proposal code size in bytes
+max_proposal_code_size = 300000
+# proposal period length in epoch
+min_proposal_period = 3
+# maximum number of characters in the proposal content
+max_proposal_content_size = 10000
+# minimum epochs between end and grace epoch
+min_proposal_grace_epochs = 6
+
+[treasury_params]
+max_proposal_fund_transfer = 10000

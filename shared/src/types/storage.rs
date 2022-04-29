@@ -2,7 +2,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 use std::num::ParseIntError;
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Rem, Sub};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -186,6 +186,14 @@ impl From<DbKeySeg> for Key {
     }
 }
 
+impl FromStr for Key {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Key::parse(s)
+    }
+}
+
 impl Key {
     /// Parses string and returns a key
     pub fn parse(string: impl AsRef<str>) -> Result<Self> {
@@ -221,6 +229,11 @@ impl Key {
             }
         }
         addresses
+    }
+
+    /// Return the segment at the index parameter
+    pub fn get_at(&self, index: usize) -> Option<&DbKeySeg> {
+        self.segments.get(index)
     }
 
     /// Returns the length
@@ -499,9 +512,71 @@ impl Add<u64> for Epoch {
     }
 }
 
+impl Sub<u64> for Epoch {
+    type Output = Epoch;
+
+    fn sub(self, rhs: u64) -> Self::Output {
+        Self(self.0 - rhs)
+    }
+}
+
+impl Mul<u64> for Epoch {
+    type Output = Epoch;
+
+    fn mul(self, rhs: u64) -> Self::Output {
+        Self(self.0 * rhs)
+    }
+}
+
+impl Div<u64> for Epoch {
+    type Output = Epoch;
+
+    fn div(self, rhs: u64) -> Self::Output {
+        Self(self.0 / rhs)
+    }
+}
+
+impl Rem<u64> for Epoch {
+    type Output = u64;
+
+    fn rem(self, rhs: u64) -> Self::Output {
+        Self(self.0 % rhs).0
+    }
+}
+
+impl Sub for Epoch {
+    type Output = Epoch;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl Add for Epoch {
+    type Output = Epoch;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl Mul for Epoch {
+    type Output = Epoch;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self(self.0 * rhs.0)
+    }
+}
+
 impl From<Epoch> for u64 {
     fn from(epoch: Epoch) -> Self {
         epoch.0
+    }
+}
+
+impl From<u64> for Epoch {
+    fn from(value: u64) -> Self {
+        Self(value)
     }
 }
 

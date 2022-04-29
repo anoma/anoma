@@ -4,6 +4,7 @@ pub mod masp;
 pub mod address;
 pub mod chain;
 pub mod dylib;
+pub mod governance;
 pub mod hash;
 pub mod ibc;
 pub mod intent;

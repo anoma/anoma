@@ -590,7 +590,7 @@ where
         cmd.release()
     };
     let mut cmd = cmd.run().unwrap().command();
-    cmd.env("ANOMA_LOG", "anoma=debug")
+    cmd.env("ANOMA_LOG", "anoma=info")
         .current_dir(working_dir)
         .args(&[
             "--base-dir",
@@ -672,6 +672,9 @@ pub mod constants {
     pub const BB_PAYMENT_ADDRESS: &str = "patest1vqe0vyxh6wmhahwa52gthgd6edgqxfmgyv8e94jtwn55mdvpvylcyqnp59595272qrz3zxn0ysg";
     pub const AA_VIEWING_KEY: &str = "xfvktest1qqqqqqqqqqqqqq9v0sls5r5de7njx8ehu49pqgmqr9ygelg87l5x8y4s9r0pjlvu6x74w9gjpw856zcu826qesdre628y6tjc26uhgj6d9zqur9l5u3p99d9ggc74ald6s8y3sdtka74qmheyqvdrasqpwyv2fsmxlz57lj4grm2pthzj3sflxc0jx0edrakx3vdcngrfjmru8ywkguru8mxss2uuqxdlglaz6undx5h8w7g70t2es850g48xzdkqay5qs0yw06rtxc5292sl";
 
+    //  Native VP aliases
+    pub const GOVERNANCE_ADDRESS: &str = "governance";
+
     // Fungible token addresses
     pub const XAN: &str = "XAN";
     pub const BTC: &str = "BTC";
@@ -687,10 +690,12 @@ pub mod constants {
     pub const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
     pub const VP_USER_WASM: &str = "wasm/vp_user.wasm";
     pub const TX_NO_OP_WASM: &str = "wasm_for_tests/tx_no_op.wasm";
+    pub const TX_INIT_PROPOSAL: &str = "wasm_for_tests/tx_init_proposal.wasm";
     pub const VP_ALWAYS_TRUE_WASM: &str = "wasm_for_tests/vp_always_true.wasm";
     pub const VP_ALWAYS_FALSE_WASM: &str =
         "wasm_for_tests/vp_always_false.wasm";
     pub const TX_MINT_TOKENS_WASM: &str = "wasm_for_tests/tx_mint_tokens.wasm";
+    pub const TX_PROPOSAL_CODE: &str = "wasm_for_tests/tx_proposal_code.wasm";
 
     /// Find the absolute path to one of the WASM files above
     pub fn wasm_abs_path(file_name: &str) -> PathBuf {

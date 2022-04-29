@@ -553,7 +553,7 @@ mod tests {
         env.write_log.commit_block(&mut env.storage).unwrap();
         // update the block height for the following client update
         env.storage
-            .begin_block(BlockHash::default(), BlockHeight(1))
+            .begin_block(BlockHash::default(), BlockHeight(2))
             .unwrap();
         env.storage.set_header(ibc::tm_dummy_header()).unwrap();
 
@@ -630,7 +630,7 @@ mod tests {
         env.write_log.commit_block(&mut env.storage).unwrap();
         // update the block height for the following client update
         env.storage
-            .begin_block(BlockHash::default(), BlockHeight(2))
+            .begin_block(BlockHash::default(), BlockHeight(3))
             .unwrap();
         env.storage.set_header(ibc::tm_dummy_header()).unwrap();
 
