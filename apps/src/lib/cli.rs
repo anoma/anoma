@@ -1871,10 +1871,10 @@ pub mod args {
         /// Common tx arguments
         pub tx: Tx,
         /// Proposal id
-        pub proposal_id: u64,
+        pub proposal_id: Option<u64>,
         /// The vote
         pub vote: ProposalVote,
-        /// Flag if proposal should be run offline
+        /// Flag if proposal vote should be run offline
         pub offline: bool,
         /// The proposal file path
         pub proposal_data: Option<PathBuf>,
@@ -1883,7 +1883,7 @@ pub mod args {
     impl Args for VoteProposal {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
-            let proposal_id = PROPOSAL_ID.parse(matches);
+            let proposal_id = PROPOSAL_ID_OPT.parse(matches);
             let vote = PROPOSAL_VOTE.parse(matches);
             let offline = PROPOSAL_OFFLINE.parse(matches);
             let proposal_data = DATA_PATH_OPT.parse(matches);
@@ -1900,7 +1900,7 @@ pub mod args {
         fn def(app: App) -> App {
             app.add_args::<Tx>()
                 .arg(
-                    PROPOSAL_ID
+                    PROPOSAL_ID_OPT
                         .def()
                         .about("The proposal identifier.")
                         .conflicts_with_all(&[

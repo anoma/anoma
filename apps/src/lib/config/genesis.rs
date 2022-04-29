@@ -116,13 +116,13 @@ pub mod genesis_config {
         // PoS parameters
         pub pos_params: PosParamsConfig,
         // Governance parameters
-        pub gov_params: GovernanceParamasConfig,
+        pub gov_params: GovernanceParamsConfig,
         // Wasm definitions
         pub wasm: HashMap<String, WasmConfig>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct GovernanceParamasConfig {
+    pub struct GovernanceParamsConfig {
         // Min funds to stake to submit a proposal
         // XXX: u64 doesn't work with toml-rs!
         pub min_proposal_fund: u64,
@@ -137,7 +137,7 @@ pub mod genesis_config {
         pub max_proposal_content_size: u64,
         // Minimum number of epoch between end and grace epoch
         // XXX: u64 doesn't work with toml-rs!
-        pub min_grace_epoch: u64,
+        pub min_proposal_grace_epochs: u64,
     }
 
     /// Validator pre-genesis configuration can be created with client utils
@@ -535,11 +535,15 @@ pub mod genesis_config {
         };
 
         let gov_params = GovParams {
-            min_proposal_fund: 500,
-            max_proposal_code_size: 300,
-            min_proposal_period: 3,
-            max_proposal_content_size: 10_000,
-            min_proposal_grace_epochs: 6,
+            min_proposal_fund: config.gov_params.min_proposal_fund,
+            max_proposal_code_size: config.gov_params.max_proposal_code_size,
+            min_proposal_period: config.gov_params.min_proposal_period,
+            max_proposal_content_size: config
+                .gov_params
+                .max_proposal_content_size,
+            min_proposal_grace_epochs: config
+                .gov_params
+                .min_proposal_grace_epochs,
         };
 
         let pos_params = PosParams {

@@ -4,7 +4,9 @@ pub mod tx {
     use anoma::ledger::governance::{storage, ADDRESS as governance_address};
     use anoma::types::address::xan as m1t;
     use anoma::types::token::Amount;
-    use anoma::types::transaction::governance::InitProposalData;
+    use anoma::types::transaction::governance::{
+        InitProposalData, VoteProposalData,
+    };
 
     use crate::imports::tx;
     use crate::token::tx::transfer;
@@ -62,5 +64,17 @@ pub mod tx {
             &m1t(),
             min_proposal_funds,
         );
+    }
+
+    /// A proposal vote transaction.
+    pub fn vote_proposal(data: VoteProposalData) {
+        for delegation in data.delegations {
+            let vote_key = storage::get_vote_proposal_key(
+                data.id,
+                data.voter.clone(),
+                delegation,
+            );
+            tx::write(&vote_key.to_string(), data.vote.clone());
+        }
     }
 }

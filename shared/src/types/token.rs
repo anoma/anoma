@@ -2,7 +2,7 @@
 
 use std::convert::TryFrom;
 use std::fmt::Display;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -71,6 +71,17 @@ impl Amount {
     pub fn max() -> Self {
         Self { micro: u64::MAX }
     }
+
+    /// Create amount from Change
+    ///
+    /// # Panics
+    ///
+    /// Panics if the change is negative or overflows `u64`.
+    pub fn from_change(change: Change) -> Self {
+        Self {
+            micro: change as u64,
+        }
+    }
 }
 
 impl serde::Serialize for Amount {
@@ -134,6 +145,15 @@ impl Add for Amount {
     fn add(mut self, rhs: Self) -> Self::Output {
         self.micro += rhs.micro;
         self
+    }
+}
+
+impl Mul<Amount> for u64 {
+    type Output = Amount;
+
+    fn mul(mut self, rhs: Amount) -> Self::Output {
+        self *= rhs.micro;
+        Self::Output::from(self)
     }
 }
 

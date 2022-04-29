@@ -49,9 +49,16 @@ impl GovParams {
         DB: storage::DB + for<'iter> storage::DBIter<'iter>,
         H: storage::StorageHasher,
     {
-        let min_proposal_fund_key = gov_storage::get_min_proposal_fund_key();
-        let amount = Amount::whole(self.min_proposal_fund);
+        let Self {
+            min_proposal_fund,
+            max_proposal_code_size,
+            min_proposal_period,
+            max_proposal_content_size,
+            min_proposal_grace_epochs,
+        } = self;
 
+        let min_proposal_fund_key = gov_storage::get_min_proposal_fund_key();
+        let amount = Amount::whole(*min_proposal_fund);
         storage
             .write(&min_proposal_fund_key, encode(&amount))
             .unwrap();
@@ -59,16 +66,13 @@ impl GovParams {
         let max_proposal_code_size_key =
             gov_storage::get_max_proposal_code_size_key();
         storage
-            .write(
-                &max_proposal_code_size_key,
-                encode(&self.max_proposal_code_size),
-            )
+            .write(&max_proposal_code_size_key, encode(max_proposal_code_size))
             .unwrap();
 
         let min_proposal_period_key =
             gov_storage::get_min_proposal_period_key();
         storage
-            .write(&min_proposal_period_key, encode(&self.min_proposal_period))
+            .write(&min_proposal_period_key, encode(min_proposal_period))
             .unwrap();
 
         let max_proposal_content_size_key =
@@ -76,7 +80,7 @@ impl GovParams {
         storage
             .write(
                 &max_proposal_content_size_key,
-                encode(&self.max_proposal_content_size),
+                encode(max_proposal_content_size),
             )
             .unwrap();
 
@@ -85,7 +89,7 @@ impl GovParams {
         storage
             .write(
                 &min_proposal_grace_epoch_key,
-                encode(&self.min_proposal_grace_epochs),
+                encode(min_proposal_grace_epochs),
             )
             .unwrap();
 

@@ -31,6 +31,7 @@ use serde_json::json;
 use setup::constants::*;
 use tempfile::tempdir;
 
+use super::setup::working_dir;
 use crate::e2e::helpers::{
     find_address, find_voting_power, get_actor_rpc, get_epoch,
 };
@@ -1015,6 +1016,9 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 /// 6. Submit an invalid proposal
 /// 7. Check invalid proposal was not accepted
 /// 8. Query token balance (funds shall not be submitted)
+/// 9. Send a yay vote from a validator
+/// 10. Send a yay vote from a normal user
+/// 11. Query the proposal and check the result
 #[test]
 fn proposal_submission() -> Result<()> {
     let test = setup::network(|genesis| genesis, None)?;
@@ -1029,6 +1033,30 @@ fn proposal_submission() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
+    // 1.1 Delegate some token
+    let tx_args = vec![
+        "bond",
+        "--validator",
+        "validator-0",
+        "--source",
+        BERTHA,
+        "--amount",
+        "900",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
 
     // 2. Submit valid proposal
     let valid_proposal_json_path =
@@ -1048,9 +1076,9 @@ fn proposal_submission() -> Result<()> {
                 "requires": "2"
             },
             "author": albert,
-            "voting_start_epoch": 9999,
-            "voting_end_epoch": 10002,
-            "grace_epoch": 10009
+            "voting_start_epoch": 3,
+            "voting_end_epoch": 9,
+            "grace_epoch": 30
         }
     );
     generate_proposal_json(
@@ -1145,8 +1173,6 @@ fn proposal_submission() -> Result<()> {
         invalid_proposal_json,
     );
 
-    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
-
     let submit_proposal_args = vec![
         "init-proposal",
         "--data-path",
@@ -1186,6 +1212,165 @@ fn proposal_submission() -> Result<()> {
     let mut client = run!(test, Bin::Client, query_balance_args, Some(15))?;
     client.exp_string("XAN: 999500")?;
     client.assert_success();
+
+    // 9. Send a yay vote from a validator
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 < 3 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    let submit_proposal_vote = vec![
+        "vote-proposal",
+        "--proposal-id",
+        "0",
+        "--vote",
+        "yay",
+        "--signer",
+        "validator-0",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run_as!(
+        test,
+        Who::Validator(0),
+        Bin::Client,
+        submit_proposal_vote,
+        Some(15)
+    )?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
+    let mut epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    while epoch.0 <= 6 {
+        sleep(1);
+        epoch = get_epoch(&test, &validator_one_rpc).unwrap();
+    }
+
+    let submit_proposal_vote_delagator = vec![
+        "vote-proposal",
+        "--proposal-id",
+        "0",
+        "--vote",
+        "nay",
+        "--signer",
+        BERTHA,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client =
+        run!(test, Bin::Client, submit_proposal_vote_delagator, Some(15))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
+    // 10. Send a yay vote from a non-validator/non-delegator user
+    let submit_proposal_vote = vec![
+        "vote-proposal",
+        "--proposal-id",
+        "0",
+        "--vote",
+        "yay",
+        "--signer",
+        ALBERT,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
+    client.exp_string("Transaction is invalid.")?;
+    client.assert_success();
+
+    Ok(())
+}
+
+/// In this test we:
+/// 1. Run the ledger node
+/// 2. Create an offline proposal
+/// 3. Create an offline vote
+/// 4. Tally offline
+#[test]
+fn proposal_offline() -> Result<()> {
+    let test = setup::network(|genesis| genesis, None)?;
+
+    // 1. Run the ledger node
+    let mut ledger =
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+
+    ledger.exp_string("Anoma ledger node started")?;
+    if !cfg!(feature = "ABCI") {
+        ledger.exp_string("started node")?;
+    } else {
+        ledger.exp_string("Started node")?;
+    }
+
+    // 2. Submit valid proposal
+    let valid_proposal_json_path =
+        test.base_dir.path().join("valid_proposal.json");
+    let albert = find_address(&test, ALBERT)?;
+    let valid_proposal_json = json!(
+        {
+            "content": {
+                "title": "TheTitle",
+                "authors": "test@test.com",
+                "discussions-to": "www.github.com/anoma/aip/1",
+                "created": "2022-03-10T08:54:37Z",
+                "license": "MIT",
+                "abstract": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida eros. Nullam sed ex justo. Ut at placerat ipsum, sit amet rhoncus libero. Sed blandit non purus non suscipit. Phasellus sed quam nec augue bibendum bibendum ut vitae urna. Sed odio diam, ornare nec sapien eget, congue viverra enim.",
+                "motivation": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices.",
+                "details": "Ut convallis eleifend orci vel venenatis. Duis vulputate metus in lacus sollicitudin vestibulum. Suspendisse vel velit ac est consectetur feugiat nec ac urna. Ut faucibus ex nec dictum fermentum. Morbi aliquet purus at sollicitudin ultrices. Quisque viverra varius cursus. Praesent sed mauris gravida, pharetra turpis non, gravida eros.",
+                "requires": "2"
+            },
+            "author": albert,
+            "voting_start_epoch": 3,
+            "voting_end_epoch": 6,
+            "grace_epoch": 30
+        }
+    );
+    generate_proposal_json(
+        valid_proposal_json_path.clone(),
+        valid_proposal_json,
+    );
+
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
+    let offline_proposal_args = vec![
+        "init-proposal",
+        "--data-path",
+        valid_proposal_json_path.to_str().unwrap(),
+        "--offline",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, offline_proposal_args, Some(15))?;
+    client.exp_string("Proposal created: ")?;
+    client.assert_success();
+
+    // 3. Generate an offline yay vote
+    let proposal_path = working_dir().join("proposal");
+    let proposal_ref = proposal_path.to_string_lossy();
+    let submit_proposal_vote = vec![
+        "vote-proposal",
+        "--data-path",
+        &proposal_ref,
+        "--vote",
+        "yay",
+        "--signer",
+        ALBERT,
+        "--offline",
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+
+    let mut client = run!(test, Bin::Client, submit_proposal_vote, Some(15))?;
+    client.exp_string("Proposal vote created: ")?;
+    client.assert_success();
+
+    let expected_file_name = format!("proposal-vote-{}", albert);
+    let expected_path = working_dir().join(expected_file_name);
+    assert!(expected_path.exists());
 
     Ok(())
 }

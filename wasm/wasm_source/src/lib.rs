@@ -20,6 +20,8 @@ pub mod tx_transfer;
 pub mod tx_unbond;
 #[cfg(feature = "tx_update_vp")]
 pub mod tx_update_vp;
+#[cfg(feature = "tx_vote_proposal")]
+pub mod tx_vote_proposal;
 #[cfg(feature = "tx_withdraw")]
 pub mod tx_withdraw;
 #[cfg(feature = "vp_nft")]

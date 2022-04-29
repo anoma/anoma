@@ -26,6 +26,7 @@ enum KeyType<'a> {
     InvalidIntentSet(&'a Address),
     Nft(&'a Address),
     Vp(&'a Address),
+    GovernanceVote(&'a Address),
     Unknown,
 }
 
@@ -39,6 +40,13 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
             Self::InvalidIntentSet(address)
         } else if let Some(address) = nft::is_nft_key(key) {
             Self::Nft(address)
+        } else if gov_storage::is_vote_key(key) {
+            let voter_address = gov_storage::get_voter_address(key);
+            if let Some(address) = voter_address {
+                Self::GovernanceVote(address)
+            } else {
+                Self::Unknown
+            }
         } else if let Some(address) = key.is_validity_predicate() {
             Self::Vp(address)
         } else {
@@ -163,6 +171,13 @@ fn validate_tx(
             }
             KeyType::Nft(owner) => {
                 if owner == &addr {
+                    *valid_sig
+                } else {
+                    true
+                }
+            }
+            KeyType::GovernanceVote(voter) => {
+                if voter == &addr {
                     *valid_sig
                 } else {
                     true
