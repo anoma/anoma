@@ -34,7 +34,7 @@ impl Default for GovParams {
     fn default() -> Self {
         Self {
             min_proposal_fund: 500,
-            max_proposal_code_size: 500,
+            max_proposal_code_size: 300000,
             min_proposal_period: 3,
             max_proposal_content_size: 10000,
             min_proposal_grace_epochs: 6,

@@ -7,6 +7,7 @@ use std::path::Path;
 use anoma::ledger::governance::parameters::GovParams;
 use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::{GenesisValidator, PosParams};
+use anoma::ledger::treasury::parameters::TreasuryParams;
 use anoma::types::address::Address;
 #[cfg(not(feature = "dev"))]
 use anoma::types::chain::ChainId;
@@ -29,6 +30,7 @@ pub mod genesis_config {
     use anoma::ledger::parameters::{EpochDuration, Parameters};
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
+    use anoma::ledger::treasury::parameters::TreasuryParams;
     use anoma::types::address::Address;
     use anoma::types::key::dkg_session_keys::DkgPublicKey;
     use anoma::types::key::*;
@@ -117,6 +119,8 @@ pub mod genesis_config {
         pub pos_params: PosParamsConfig,
         // Governance parameters
         pub gov_params: GovernanceParamsConfig,
+        // Treasury parameters
+        pub treasury_params: TreasuryParamasConfig,
         // Wasm definitions
         pub wasm: HashMap<String, WasmConfig>,
     }
@@ -150,6 +154,13 @@ pub mod genesis_config {
     }
 
     #[derive(Clone, Default, Debug, Deserialize, Serialize)]
+    pub struct TreasuryParamasConfig {
+        // Maximum funds that can be moved from treasury in a single transfer
+        // XXX: u64 doesn't work with toml-rs!
+        pub max_proposal_fund_transfer: u64,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ValidatorConfig {
         // Public key for consensus. (default: generate)
         pub consensus_public_key: Option<HexString>,
@@ -546,6 +557,10 @@ pub mod genesis_config {
                 .min_proposal_grace_epochs,
         };
 
+        let treasury_params = TreasuryParams {
+            max_proposal_fund_transfer: 10_000,
+        };
+
         let pos_params = PosParams {
             max_validator_slots: config.pos_params.max_validator_slots,
             pipeline_len: config.pos_params.pipeline_len,
@@ -572,6 +587,7 @@ pub mod genesis_config {
             parameters,
             pos_params,
             gov_params,
+            treasury_params,
         };
         genesis.init();
         genesis
@@ -606,6 +622,7 @@ pub struct Genesis {
     pub parameters: Parameters,
     pub pos_params: PosParams,
     pub gov_params: GovParams,
+    pub treasury_params: TreasuryParams,
 }
 
 impl Genesis {
@@ -841,6 +858,7 @@ pub fn genesis() -> Genesis {
         parameters,
         pos_params: PosParams::default(),
         gov_params: GovParams::default(),
+        treasury_params: TreasuryParams::default(),
     }
 }
 

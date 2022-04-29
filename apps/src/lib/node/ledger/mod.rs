@@ -10,7 +10,10 @@ pub mod tendermint_node;
 use std::convert::TryInto;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::str::FromStr;
 
+use anoma::ledger::governance::storage as gov_storage;
+use anoma::types::storage::Key;
 use byte_unit::Byte;
 use futures::future::TryFutureExt;
 use once_cell::unsync::Lazy;
@@ -58,6 +61,34 @@ const ENV_VAR_RAYON_THREADS: &str = "ANOMA_RAYON_THREADS";
 //```
 
 impl Shell {
+    fn load_proposals(&mut self) {
+        let proposals_key = gov_storage::get_commiting_proposals_prefix(
+            self.storage.last_epoch.0,
+        );
+
+        let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
+        for (key, _, _) in proposal_iter {
+            let key =
+                Key::from_str(key.as_str()).expect("Key should be parsable");
+            if gov_storage::get_commit_proposal_epoch(&key).unwrap()
+                != self.storage.last_epoch.0
+            {
+                // NOTE: `iter_prefix` iterate over the matching prefix. In this
+                // case  a proposal with grace_epoch 110 will be
+                // matched by prefixes  1, 11 and 110. Thus we
+                // have to skip to the next iteration of
+                //  the cycle for all the prefixes that don't actually match
+                //  the desired epoch.
+                continue;
+            }
+
+            let proposal_id = gov_storage::get_commit_proposal_id(&key);
+            if let Some(id) = proposal_id {
+                self.proposal_data.insert(id);
+            }
+        }
+    }
+
     fn call(&mut self, req: Request) -> Result<Response, Error> {
         match req {
             Request::InitChain(init) => {
@@ -97,6 +128,7 @@ impl Shell {
                 Response::VerifyVoteExtension(self.verify_vote_extension(_req)),
             ),
             Request::FinalizeBlock(finalize) => {
+                self.load_proposals();
                 self.finalize_block(finalize).map(Response::FinalizeBlock)
             }
             Request::Commit(_) => Ok(Response::Commit(self.commit())),

@@ -1,6 +1,15 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::types::storage::BlockHash;
+use anoma::ledger::governance::utils::{
+    compute_tally, get_proposal_votes, ProposalEvent,
+};
+use anoma::ledger::governance::{
+    storage as gov_storage, ADDRESS as gov_address,
+};
+use anoma::ledger::treasury::ADDRESS as treasury_address;
+use anoma::types::address::{xan as m1t, Address};
+use anoma::types::governance::TallyResult;
+use anoma::types::storage::{BlockHash, Epoch};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -15,6 +24,7 @@ use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 use tendermint_stable::block::Header;
 
 use super::*;
+use crate::node::ledger::events::EventType;
 
 impl<D, H> Shell<D, H>
 where
@@ -49,6 +59,162 @@ where
         // begin the next block and check if a new epoch began
         let (height, new_epoch) =
             self.update_state(req.header, req.hash, req.byzantine_validators);
+
+        if new_epoch {
+            for id in std::mem::take(&mut self.proposal_data) {
+                let proposal_funds_key = gov_storage::get_funds_key(id);
+                let proposal_start_epoch_key =
+                    gov_storage::get_voting_start_epoch_key(id);
+
+                let funds = self
+                    .read_storage_key::<token::Amount>(&proposal_funds_key)
+                    .ok_or_else(|| {
+                        Error::BadProposal(
+                            id,
+                            "Invalid proposal funds.".to_string(),
+                        )
+                    })?;
+                let proposal_start_epoch = self
+                    .read_storage_key::<Epoch>(&proposal_start_epoch_key)
+                    .ok_or_else(|| {
+                        Error::BadProposal(
+                            id,
+                            "Invalid proposal start_epoch.".to_string(),
+                        )
+                    })?;
+
+                let votes =
+                    get_proposal_votes(&self.storage, proposal_start_epoch, id);
+                let tally_result =
+                    compute_tally(&self.storage, proposal_start_epoch, votes);
+
+                let transfer_address = match tally_result {
+                    TallyResult::Passed => {
+                        let proposal_author_key =
+                            gov_storage::get_author_key(id);
+                        let proposal_author = self
+                            .read_storage_key::<Address>(&proposal_author_key)
+                            .ok_or_else(|| {
+                                Error::BadProposal(
+                                    id,
+                                    "Invalid proposal author.".to_string(),
+                                )
+                            })?;
+
+                        let proposal_code_key =
+                            gov_storage::get_proposal_code_key(id);
+                        let proposal_code =
+                            self.read_storage_key_bytes(&proposal_code_key);
+                        match proposal_code {
+                            Some(proposal_code) => {
+                                let tx = Tx::new(proposal_code, None);
+                                let tx_type = TxType::Decrypted(
+                                    DecryptedTx::Decrypted(tx),
+                                );
+                                let tx_result = protocol::apply_tx(
+                                    tx_type,
+                                    0, /*  this is used to compute the fee
+                                        * based on the code size. We dont
+                                        * need it here. */
+                                    &mut BlockGasMeter::default(),
+                                    &mut self.write_log,
+                                    &self.storage,
+                                    &mut self.vp_wasm_cache,
+                                    &mut self.tx_wasm_cache,
+                                );
+                                match tx_result {
+                                    Ok(tx_result) => {
+                                        if tx_result.is_accepted() {
+                                            let proposal_event: Event =
+                                                ProposalEvent::new(
+                                                    EventType::Proposal
+                                                        .to_string(),
+                                                    TallyResult::Passed,
+                                                    id,
+                                                    true,
+                                                    true,
+                                                )
+                                                .into();
+                                            response
+                                                .events
+                                                .push(proposal_event.into());
+
+                                            proposal_author
+                                        } else {
+                                            let proposal_event: Event =
+                                                ProposalEvent::new(
+                                                    EventType::Proposal
+                                                        .to_string(),
+                                                    TallyResult::Passed,
+                                                    id,
+                                                    true,
+                                                    false,
+                                                )
+                                                .into();
+                                            response
+                                                .events
+                                                .push(proposal_event.into());
+
+                                            treasury_address
+                                        }
+                                    }
+                                    Err(_) => {
+                                        let proposal_event: Event =
+                                            ProposalEvent::new(
+                                                EventType::Proposal.to_string(),
+                                                TallyResult::Passed,
+                                                id,
+                                                true,
+                                                false,
+                                            )
+                                            .into();
+                                        response
+                                            .events
+                                            .push(proposal_event.into());
+
+                                        treasury_address
+                                    }
+                                }
+                            }
+                            None => {
+                                let proposal_event: Event = ProposalEvent::new(
+                                    EventType::Proposal.to_string(),
+                                    TallyResult::Passed,
+                                    id,
+                                    false,
+                                    false,
+                                )
+                                .into();
+                                response.events.push(proposal_event.into());
+
+                                proposal_author
+                            }
+                        }
+                    }
+                    TallyResult::Rejected | TallyResult::Unknown => {
+                        let proposal_event: Event = ProposalEvent::new(
+                            EventType::Proposal.to_string(),
+                            TallyResult::Rejected,
+                            id,
+                            false,
+                            false,
+                        )
+                        .into();
+                        response.events.push(proposal_event.into());
+
+                        treasury_address
+                    }
+                };
+
+                // transfer proposal locked funds
+                self.storage.transfer(
+                    &m1t(),
+                    funds,
+                    &gov_address,
+                    &transfer_address,
+                );
+            }
+        }
 
         for processed_tx in &req.txs {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {

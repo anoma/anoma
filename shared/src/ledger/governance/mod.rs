@@ -4,6 +4,8 @@
 pub mod parameters;
 /// governance storage
 pub mod storage;
+/// utility function
+pub mod utils;
 
 use std::collections::BTreeSet;
 
@@ -77,7 +79,8 @@ where
         };
 
         let result = keys_changed.iter().all(|key| {
-            let proposal_id = gov_storage::get_id(key);
+            println!("{}", key);
+            let proposal_id = gov_storage::get_proposal_id(key);
 
             let key_type: KeyType = key.into();
             match (key_type, proposal_id) {
@@ -189,9 +192,11 @@ where
                     .ok();
                     let has_pre_proposal_code =
                         self.ctx.has_key_pre(&proposal_code_key).ok();
-                    let post_proposal_code: Option<Vec<u8>> =
-                        read(&self.ctx, &proposal_code_key, ReadType::POST)
-                            .ok();
+                    let post_proposal_code = read_bytes(
+                        &self.ctx,
+                        &proposal_code_key,
+                        ReadType::POST,
+                    );
                     match (
                         has_pre_proposal_code,
                         post_proposal_code,
@@ -205,6 +210,7 @@ where
                             !has_pre_proposal_code
                                 && post_proposal_code.len()
                                     < max_proposal_code_size
+                                && !post_proposal_code.is_empty()
                         }
                         _ => false,
                     }
@@ -364,7 +370,17 @@ where
                     let has_pre_author = self.ctx.has_key_pre(&author_key).ok();
                     match (has_pre_author, author) {
                         (Some(has_pre_author), Some(author)) => {
-                            !has_pre_author && verifiers.contains(&author)
+                            let address_exist_key =
+                                Key::validity_predicate(&author);
+                            let address_exist =
+                                self.ctx.has_key_post(&address_exist_key).ok();
+                            if let Some(address_exist) = address_exist {
+                                !has_pre_author
+                                    && verifiers.contains(&author)
+                                    && address_exist
+                            } else {
+                                false
+                            }
                         }
                         _ => false,
                     }
@@ -448,6 +464,27 @@ where
             None => Err(Error::NativeVpNonExistingKeyError(key.to_string())),
         },
         Err(err) => Err(Error::NativeVpError(err)),
+    }
+}
+
+fn read_bytes<DB, H, CA>(
+    context: &Ctx<DB, H, CA>,
+    key: &Key,
+    read_type: ReadType,
+) -> Option<Vec<u8>>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    let storage_result = match read_type {
+        ReadType::PRE => context.read_pre(key),
+        ReadType::POST => context.read_post(key),
+    };
+
+    match storage_result {
+        Ok(value) => value,
+        Err(_err) => None,
     }
 }
 
@@ -622,7 +659,7 @@ impl From<&Key> for KeyType {
             KeyType::GRACE_EPOCH
         } else if gov_storage::is_start_epoch_key(value) {
             KeyType::START_EPOCH
-        } else if gov_storage::is_min_grace_epoch_key(value) {
+        } else if gov_storage::is_commit_proposal_key(value) {
             KeyType::PROPOSAL_COMMIT
         } else if gov_storage::is_end_epoch_key(value) {
             KeyType::END_EPOCH

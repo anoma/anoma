@@ -534,10 +534,6 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
 
     if args.offline {
         let signer = ctx.get(&signer);
-        let public_key =
-            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
-                .await
-                .expect("Public key should exist.");
         let signing_key = signing::find_keypair(
             &mut ctx.wallet,
             &signer,
@@ -545,7 +541,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         )
         .await;
         let offline_proposal =
-            OfflineProposal::new(proposal, public_key, &signing_key);
+            OfflineProposal::new(proposal, signer, &signing_key);
         let proposal_filename = "proposal".to_string();
         let out = File::create(&proposal_filename).unwrap();
         match serde_json::to_writer_pretty(out, &offline_proposal) {
@@ -623,25 +619,32 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
         let proposal_file_path =
             args.proposal_data.expect("Proposal file should exist.");
         let file = File::open(&proposal_file_path).expect("File must exist.");
+
         let proposal: OfflineProposal =
             serde_json::from_reader(file).expect("JSON was not well-formatted");
-        if !proposal.check_signature() {
+        let public_key = rpc::get_public_key(
+            &proposal.address,
+            args.tx.ledger_address.clone(),
+        )
+        .await
+        .expect("Public key should exist.");
+        if !proposal.check_signature(&public_key) {
             eprintln!("Proposal signature mismatch!");
             safe_exit(1)
         }
 
-        let public_key =
-            rpc::get_public_key(&signer, args.tx.ledger_address.clone())
-                .await
-                .expect("Public key should exist.");
         let signing_key = signing::find_keypair(
             &mut ctx.wallet,
             &signer,
             args.tx.ledger_address.clone(),
         )
         .await;
-        let offline_vote =
-            OfflineVote::new(&proposal, args.vote, public_key, &signing_key);
+        let offline_vote = OfflineVote::new(
+            &proposal,
+            args.vote,
+            signer.clone(),
+            &signing_key,
+        );
 
         let proposal_vote_filename =
             format!("proposal-vote-{}", &signer.to_string());
@@ -670,12 +673,12 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
         match proposal_start_epoch {
             Some(epoch) => {
                 let delegation_addresses =
-                    rpc::get_all_active_validators(&client, epoch).await;
+                    rpc::get_all_validators(&client, epoch).await;
                 let tx_data = VoteProposalData {
                     id: proposal_id,
                     vote: args.vote,
                     voter: voter_address,
-                    delegations: delegation_addresses.keys().cloned().collect(),
+                    delegations: delegation_addresses,
                 };
 
                 let data = tx_data

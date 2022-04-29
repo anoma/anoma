@@ -26,9 +26,10 @@ use tendermint_stable::block::Header;
 use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
 
+use super::parameters;
 use super::parameters::Parameters;
 use crate::ledger::gas::MIN_STORAGE_GAS;
-use crate::ledger::parameters::{self, EpochDuration};
+use crate::ledger::parameters::EpochDuration;
 use crate::ledger::storage::merkle_tree::{
     Error as MerkleTreeError, MerkleRoot,
 };
@@ -751,7 +752,7 @@ mod tests {
 
     use super::testing::*;
     use super::*;
-    use crate::ledger::parameters::Parameters;
+    use crate::ledger::parameters::{self, Parameters};
     use crate::types::time::{self, Duration};
 
     prop_compose! {
@@ -820,7 +821,7 @@ mod tests {
                 vp_whitelist: vec![],
                 tx_whitelist: vec![]
             };
-            parameters::init_genesis_storage(&mut storage, &parameters);
+            parameters.init_storage(&mut storage);
 
             let epoch_before = storage.last_epoch;
             assert_eq!(epoch_before, storage.block.epoch);

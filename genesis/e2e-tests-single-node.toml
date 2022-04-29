@@ -191,3 +191,6 @@ min_proposal_period = 3
 max_proposal_content_size = 10000
 # minimum epochs between end and grace epoch
 min_proposal_grace_epochs = 6
+
+[treasury_params]
+max_proposal_fund_transfer = 10000

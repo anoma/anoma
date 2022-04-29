@@ -74,6 +74,9 @@ pub async fn main() -> Result<()> {
                 Sub::QueryProposal(QueryProposal(args)) => {
                     rpc::query_proposal(ctx, args).await;
                 }
+                Sub::QueryProposalResult(QueryProposalResult(args)) => {
+                    rpc::query_proposal_result(ctx, args).await;
+                }
                 // Gossip cmds
                 Sub::Intent(Intent(args)) => {
                     gossip::gossip_intent(ctx, args).await;
