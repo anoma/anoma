@@ -730,6 +730,13 @@ pub fn genesis() -> Genesis {
         public_key: Some(wallet::defaults::christel_keypair().ref_to()),
         storage: HashMap::default(),
     };
+    let masp = EstablishedAccount {
+        address: anoma::types::address::masp(),
+        vp_code_path: "vp_masp.wasm".into(),
+        vp_sha256: Default::default(),
+        public_key: None,
+        storage: HashMap::default(),
+    };
     let matchmaker = EstablishedAccount {
         address: wallet::defaults::matchmaker_address(),
         vp_code_path: vp_user_path.into(),
@@ -780,7 +787,7 @@ pub fn genesis() -> Genesis {
     Genesis {
         genesis_time: DateTimeUtc::now(),
         validators: vec![validator],
-        established_accounts: vec![albert, bertha, christel, matchmaker],
+        established_accounts: vec![albert, bertha, christel, masp, matchmaker],
         implicit_accounts,
         token_accounts,
         parameters,

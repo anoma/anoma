@@ -186,6 +186,7 @@ dependencies = [
  "anoma_vp_prelude",
  "borsh",
  "getrandom",
+ "masp_proofs",
  "once_cell",
  "proptest",
  "rust_decimal",
