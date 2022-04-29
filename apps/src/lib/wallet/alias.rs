@@ -86,3 +86,23 @@ impl FromStr for Alias {
         Ok(Self(s.into()))
     }
 }
+
+/// Default alias of a validator's account key
+pub fn validator_key(validator_alias: &Alias) -> Alias {
+    format!("{validator_alias}-validator-key").into()
+}
+
+/// Default alias of a validator's consensus key
+pub fn validator_consensus_key(validator_alias: &Alias) -> Alias {
+    format!("{validator_alias}-consensus-key").into()
+}
+
+/// Default alias of a validator's staking rewards key
+pub fn validator_rewards_key(validator_alias: &Alias) -> Alias {
+    format!("{validator_alias}-rewards-key").into()
+}
+
+/// Default alias of a validator's Tendermint node key
+pub fn validator_tendermint_node_key(validator_alias: &Alias) -> Alias {
+    format!("{validator_alias}-tendermint-node-key").into()
+}

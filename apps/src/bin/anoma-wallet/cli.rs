@@ -129,7 +129,7 @@ fn key_list(
             if let Some(pkh) = pkh {
                 writeln!(w, "    Public key hash: {}", pkh).unwrap();
             }
-            match stored_keypair.get(decrypt) {
+            match stored_keypair.get(decrypt, None) {
                 Ok(keypair) => {
                     writeln!(w, "    Public key: {}", keypair.ref_to())
                         .unwrap();

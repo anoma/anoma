@@ -156,16 +156,20 @@ impl StoredKeypair {
         }
     }
 
-    /// Get a raw keypair from a stored keypair. If the keypair is encrypted, a
-    /// password will be prompted from stdin.
+    /// Get a raw keypair from a stored keypair. If the keypair is encrypted and
+    /// no password is provided in the argument, a password will be prompted
+    /// from stdin.
     pub fn get(
         &self,
         decrypt: bool,
+        password: Option<String>,
     ) -> Result<Rc<common::SecretKey>, DecryptionError> {
         match self {
             StoredKeypair::Encrypted(encrypted_keypair) => {
                 if decrypt {
-                    let password = read_password("Enter decryption password: ");
+                    let password = password.unwrap_or_else(|| {
+                        read_password("Enter decryption password: ")
+                    });
                     let key = encrypted_keypair.decrypt(password)?;
                     Ok(Rc::new(key))
                 } else {
