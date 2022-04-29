@@ -122,6 +122,7 @@ masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/mas
 masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = { version = "0.11" }
+group = {version = "0.11.0"}
 
 [dev-dependencies]
 assert_matches = "1.5.0"

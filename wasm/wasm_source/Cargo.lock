@@ -75,6 +75,7 @@ dependencies = [
  "ed25519-consensus",
  "ferveo-common",
  "ff",
+ "group",
  "hex",
  "ibc",
  "ibc-proto",

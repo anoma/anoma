@@ -11,6 +11,7 @@ wasms += tx_ibc
 wasms += tx_init_account
 wasms += tx_init_nft
 wasms += tx_init_validator
+wasms += tx_masp
 wasms += tx_init_proposal
 wasms += tx_mint_nft
 wasms += tx_vote_proposal

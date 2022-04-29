@@ -93,6 +93,7 @@ dependencies = [
  "ferveo",
  "ferveo-common",
  "ff",
+ "group",
  "group-threshold-cryptography",
  "hex",
  "ibc 0.12.0 (git+https://github.com/murisi/ibc-rs?branch=murisi/jsfix)",

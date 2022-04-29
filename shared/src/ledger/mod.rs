@@ -9,3 +9,4 @@ pub mod pos;
 pub mod storage;
 pub mod treasury;
 pub mod vp_env;
+pub mod masp;

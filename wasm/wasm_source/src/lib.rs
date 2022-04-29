@@ -27,6 +27,8 @@ pub mod tx_withdraw;
 
 #[cfg(feature = "vp_masp")]
 pub mod vp_masp;
+#[cfg(feature = "tx_masp")]
+pub mod tx_masp;
 #[cfg(feature = "vp_nft")]
 pub mod vp_nft;
 #[cfg(feature = "vp_testnet_faucet")]
