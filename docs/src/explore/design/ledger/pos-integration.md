@@ -14,8 +14,12 @@ All [the data relevant to the PoS system](../pos.md#storage) are stored under th
 - for any validator, all the following fields are required:
   - `validator/{validator_address}/consensus_key`
   - `validator/{validator_address}/state`
-  - `validator/{validator_address}/total_deltas`
+  - `validator/{validator_address}/total_deltas`: sum of self-bonds and delegations to this validator
   - `validator/{validator_address}/voting_power`
+  - `validator/{validator_address}/validator_rewards_product`: a multiplier of the `total_deltas` that yields the updated amount with staking rewards added to this validator
+  - `validator/{validator_address}/delegation_rewards_product`: similar to `validator_rewards_product`, but with delegation commissions are subtracted
+  - `validator/{validator_address}/commissions`: the total amount of delegations commissions collected by this validator
+  - `validator/{validator_address}/commission_rate`: a validator chosen commission rate that is a fraction of delegation rewards charged by this validator
 - `slash/{validator_address}` (optional): a list of slashes, where each record contains epoch and slash rate
 - `bond/{bond_source}/{bond_validator} (optional)`
 - `unbond/{unbond_source}/{unbond_validator} (optional)`
@@ -23,8 +27,8 @@ All [the data relevant to the PoS system](../pos.md#storage) are stored under th
 - `total_voting_power (required)`
 
 - standard validator metadata (these are regular storage values, not epoched data):
-  - `validator/{validator_address}/staking_reward_address` (required): an address that should receive staking rewards
   - `validator/{validator_address}/address_raw_hash` (required): raw hash of validator's address associated with the address is used for look-up of validator address from a raw hash
+  - `validator/{validator_address}/max_commission_rate_change` (required): a validator chosen maximum commission rate change per epoch, set when the validator account is created and cannot be changed
   - TBA (e.g. alias, website, description, delegation commission rate, etc.)
 
 Only XAN tokens can be staked in bonds. The tokens being staked (bonds and unbonds amounts) are kept in the PoS account under `{xan_address}/balance/{pos_address}` until they are withdrawn.
@@ -32,16 +36,6 @@ Only XAN tokens can be staked in bonds. The tokens being staked (bonds and unbon
 ## Initialization
 
 The PoS system is initialized via the shell on chain initialization. The genesis validator set is given in the genesis configuration. On genesis initialization, all the epoched data is set to be immediately active for the current (the very first) epoch.
-
-## Staking rewards and transaction fees
-
-Staking rewards for validators are rewarded in Tendermint's method `BeginBlock` in the base ledger. A validator must specify a `validator/{validator_address}/staking_reward_address` for its rewards to be credited to this address.
-
-To a validator who proposed a block (`block.header.proposer_address`), the system rewards tokens based on the `block_proposer_reward` PoS parameter and each validator that voted on a block (`block.last_commit_info.validator` who `signed_last_block`) receives `block_vote_reward`.
-
-All the fees that are charged in a transaction execution (DKG transaction wrapper fee and transactions applied in a block) are transferred into a fee pool, which is another special account controlled by the PoS module. Note that the fee pool account may contain tokens other than the staking token XAN.
-
-- TODO describe the fee pool, related to <https://github.com/anomanetwork/anoma/issues/48>, <https://github.com/anomanetwork/anoma/issues/51> and <https://github.com/anomanetwork/anoma/issues/72>
 
 ## Transactions
 
@@ -53,9 +47,10 @@ For slashing tokens, we implement a [PoS slash pool account](vp.md#pos-slash-poo
 
 The validator transactions are assumed to be applied with an account address `validator_address`.
 
-- `become_validator(consensus_key, staking_reward_address)`:
+- `become_validator(consensus_key, commission_rate, max_commission_rate_change)`:
   - creates a record in `validator/{validator_address}/consensus_key` in epoch `n + pipeline_length`
-  - creates a record in `validator/{validator_address}/staking_reward_address`
+  - creates a record in `validator/{validator_address}/commission_rate` in epoch `n + pipeline_length`
+  - sets `validator/{validator_address}/max_commission_rate_change`
   - sets `validator/{validator_address}/state` to `candidate` in epoch `n + pipeline_length`
 - `deactivate`:
   - sets `validator/{validator_address}/state` to `inactive` in epoch `n + pipeline_length`
@@ -93,8 +88,10 @@ The validator transactions are assumed to be applied with an account address `va
     - burn the slashed tokens (`amount - amount_after_slash`), if not zero
 - `change_consensus_key`:
   - creates a record in `validator/{validator_address}/consensus_key` in epoch `n + pipeline_length`
+- `change_commission_rate`:
+  - creates a record in `validator/{validator_address}/commission_rate` in epoch `n + pipeline_length`
 
-For `self_bond`, `unbond`, `withdraw_unbonds`, `become_validator` and `change_consensus_key` the transaction must be signed with the validator's public key. Additionally, for `become_validator` and `change_consensus_key` we must attach a signature with the validator's consensus key to verify its ownership. Note that for `self_bond`, signature verification is also performed because there are tokens debited from the validator's account.
+For `self_bond`, `unbond`, `withdraw_unbonds`, `become_validator` `change_consensus_key` and `change_commission_rate` the transaction must be signed with the validator's public key. Additionally, for `become_validator` and `change_consensus_key` we must attach a signature with the validator's consensus key to verify its ownership. Note that for `self_bond`, signature verification is also performed because there are tokens debited from the validator's account.
 
 ### Delegator transactions
 
@@ -216,6 +213,11 @@ The validity predicate triggers a validation logic based on the storage keys mod
   - find the difference between the pre-state and post-state values and add it to the `total_deltas` accumulator and update `total_stake_by_epoch`, `expected_voting_power_by_epoch` and `expected_total_voting_power_delta_by_epoch`
 - `validator/{validator_address}/voting_power`:
   - find the difference between the pre-state and post-state value and insert it into the `voting_power_by_epoch` accumulator
+- `validator/{validator_address}/validator_rewards_product`: cannot be changed by a transaction, updated by the protocol
+- `validator/{validator_address}/delegation_rewards_product`: cannot be changed by a transaction, updated by the protocol
+- `validator/{validator_address}/commissions`: cannot be changed by a transaction, updated by the protocol
+- `validator/{validator_address}/max_commission_rate_change`: cannot be changed by a transaction, set when the validator account is created
+- `validator/{validator_address}/commission_rate`: The commission rate may only change at pipeline offset. Additionally, the difference from the predecessor epoch (pipeline offset - 1) must be within the limits of `max_commission_rate_change`
 - `bond/{bond_source}/{bond_validator}/delta`:
   - for each difference between the post-state and pre-state values:
     - if the difference is not in epoch `n` or `n + pipeline_length`, panic
