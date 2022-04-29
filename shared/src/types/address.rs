@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::str::FromStr;
-use std::string;
 
 use bech32::{self, FromBase32, ToBase32, Variant};
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -25,7 +24,8 @@ pub const ADDRESS_LEN: usize = 79 + ADDRESS_HRP.len();
 /// human-readable part of Bech32m encoded address
 // TODO use "a" for live network
 const ADDRESS_HRP: &str = "atest";
-const ADDRESS_BECH32_VARIANT: bech32::Variant = Variant::Bech32m;
+/// We're using "Bech32m" variant
+pub const BECH32M_VARIANT: bech32::Variant = Variant::Bech32m;
 pub(crate) const HASH_LEN: usize = 40;
 
 /// An address string before bech32m encoding must be this size.
@@ -76,29 +76,21 @@ const PREFIX_INTERNAL: &str = "ano";
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
-pub enum Error {
+pub enum DecodeError {
     #[error("Error decoding address from Bech32m: {0}")]
     DecodeBech32(bech32::Error),
     #[error("Error decoding address from base32: {0}")]
     DecodeBase32(bech32::Error),
-    #[error(
-        "Unexpected Bech32m human-readable part {0}, expected {ADDRESS_HRP}"
-    )]
-    UnexpectedBech32Prefix(String),
-    #[error(
-        "Unexpected Bech32m variant {0:?}, expected {ADDRESS_BECH32_VARIANT:?}"
-    )]
+    #[error("Unexpected Bech32m human-readable part {0}, expected {1}")]
+    UnexpectedBech32Prefix(String, String),
+    #[error("Unexpected Bech32m variant {0:?}, expected {BECH32M_VARIANT:?}")]
     UnexpectedBech32Variant(bech32::Variant),
-    #[error("Address must be encoded with utf-8")]
-    NonUtf8Address(string::FromUtf8Error),
     #[error("Invalid address encoding")]
-    InvalidAddressEncoding(std::io::Error),
-    #[error("Unexpected address hash length {0}, expected {HASH_LEN}")]
-    UnexpectedHashLength(usize),
+    InvalidInnerEncoding(std::io::Error),
 }
 
 /// Result of a function that may fail
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, DecodeError>;
 
 /// An account's address
 #[derive(
@@ -125,7 +117,7 @@ impl Address {
     /// Encode an address with Bech32m encoding
     pub fn encode(&self) -> String {
         let bytes = self.to_fixed_len_string();
-        bech32::encode(ADDRESS_HRP, bytes.to_base32(), ADDRESS_BECH32_VARIANT)
+        bech32::encode(ADDRESS_HRP, bytes.to_base32(), BECH32M_VARIANT)
             .unwrap_or_else(|_| {
                 panic!(
                     "The human-readable part {} should never cause a failure",
@@ -136,19 +128,22 @@ impl Address {
 
     /// Decode an address from Bech32m encoding
     pub fn decode(string: impl AsRef<str>) -> Result<Self> {
-        let (prefix, hash_base32, variant) =
-            bech32::decode(string.as_ref()).map_err(Error::DecodeBech32)?;
+        let (prefix, hash_base32, variant) = bech32::decode(string.as_ref())
+            .map_err(DecodeError::DecodeBech32)?;
         if prefix != ADDRESS_HRP {
-            return Err(Error::UnexpectedBech32Prefix(prefix));
+            return Err(DecodeError::UnexpectedBech32Prefix(
+                prefix,
+                ADDRESS_HRP.into(),
+            ));
         }
         match variant {
-            ADDRESS_BECH32_VARIANT => {}
-            _ => return Err(Error::UnexpectedBech32Variant(variant)),
+            BECH32M_VARIANT => {}
+            _ => return Err(DecodeError::UnexpectedBech32Variant(variant)),
         }
         let bytes: Vec<u8> = FromBase32::from_base32(&hash_base32)
-            .map_err(Error::DecodeBase32)?;
+            .map_err(DecodeError::DecodeBase32)?;
         Self::try_from_fixed_len_string(&mut &bytes[..])
-            .map_err(Error::InvalidAddressEncoding)
+            .map_err(DecodeError::InvalidInnerEncoding)
     }
 
     /// Try to get a raw hash of an address, only defined for established and
@@ -318,7 +313,7 @@ impl Debug for Address {
 }
 
 impl FromStr for Address {
-    type Err = Error;
+    type Err = DecodeError;
 
     fn from_str(s: &str) -> Result<Self> {
         Address::decode(s)
@@ -507,6 +502,11 @@ pub fn apfel() -> Address {
 /// Temporary helper for testing
 pub fn kartoffel() -> Address {
     Address::decode("atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90").expect("The token address decoding shouldn't fail")
+}
+
+/// Temporary helper for testing
+pub fn masp() -> Address {
+    Address::decode("atest1v4ehgw36xaryysfsx5unvve4g5my2vjz89p52sjxxgenzd348yuyyv3hg3pnjs35g5unvde4ca36y5").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing, a hash map of tokens addresses with their

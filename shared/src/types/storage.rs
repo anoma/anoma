@@ -21,7 +21,7 @@ pub enum Error {
     #[error("TEMPORARY error: {error}")]
     Temporary { error: String },
     #[error("Error parsing address: {0}")]
-    ParseAddress(address::Error),
+    ParseAddress(address::DecodeError),
     #[error("Error parsing address from a storage key")]
     ParseAddressFromKey,
     #[error("Reserved prefix or string is specified: {0}")]
@@ -274,8 +274,7 @@ impl Key {
             DbKeySeg::StringSeg(key),
             DbKeySeg::AddressSeg(Address::Internal(
                 InternalAddress::IbcBurn | InternalAddress::IbcMint)),
-        ] if key == BALANCE_STORAGE_KEY
-        )
+        ] if key == BALANCE_STORAGE_KEY)
     }
 
     /// Returns a key from the given DB key path that has the height and

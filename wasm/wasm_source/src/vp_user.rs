@@ -12,6 +12,7 @@
 //!
 //! Any other storage key changes are allowed only with a valid signature.
 
+use anoma_vp_prelude::address::masp;
 use anoma_vp_prelude::intent::{
     Exchange, FungibleTokenIntent, IntentTransfers,
 };
@@ -26,6 +27,7 @@ enum KeyType<'a> {
     InvalidIntentSet(&'a Address),
     Nft(&'a Address),
     Vp(&'a Address),
+    Masp,
     GovernanceVote(&'a Address),
     Unknown,
 }
@@ -49,6 +51,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
             }
         } else if let Some(address) = key.is_validity_predicate() {
             Self::Vp(address)
+        } else if token::is_masp_key(key) {
+            Self::Masp
         } else {
             Self::Unknown
         }
@@ -103,7 +107,10 @@ fn validate_tx(
                         read_post(&key).unwrap_or_default();
                     let change = post.change() - pre.change();
                     // debit has to signed, credit doesn't
-                    let valid = change >= 0 || *valid_sig || *valid_intent;
+                    let valid = change >= 0
+                        || addr == masp()
+                        || *valid_sig
+                        || *valid_intent;
                     debug_log!(
                         "token key: {}, change: {}, valid_sig: {}, \
                          valid_intent: {}, valid modification: {}",
@@ -198,6 +205,7 @@ fn validate_tx(
                     return is_vp_whitelisted(&vp);
                 }
             }
+            KeyType::Masp => true,
             KeyType::Unknown => {
                 if key.segments.get(0) == Some(&addr.to_db_key()) {
                     // Unknown changes to this address space require a valid
@@ -412,7 +420,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(&source, address, &token, amount);
+            tx_host_env::token::transfer(
+                &source, address, &token, amount, &None,
+            );
         });
 
         let vp_env = vp_host_env::take();
@@ -445,7 +455,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(address, &target, &token, amount);
+            tx_host_env::token::transfer(
+                address, &target, &token, amount, &None,
+            );
         });
 
         let vp_env = vp_host_env::take();
@@ -482,7 +494,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(address, &target, &token, amount);
+            tx_host_env::token::transfer(
+                address, &target, &token, amount, &None,
+            );
         });
 
         let mut vp_env = vp_host_env::take();
@@ -520,7 +534,9 @@ mod tests {
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             tx_host_env::insert_verifier(address);
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(&source, &target, &token, amount);
+            tx_host_env::token::transfer(
+                &source, &target, &token, amount, &None,
+            );
         });
 
         let vp_env = vp_host_env::take();

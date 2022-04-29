@@ -224,6 +224,7 @@ fn match_intents() -> Result<()> {
 
     let rpc_address = format!("http://{}", rpc_address);
     //  Send intent A
+    let bertha_lower = BERTHA_KEY.to_lowercase();
     let mut session_send_intent_a = run!(
         test,
         Bin::Client,
@@ -236,7 +237,7 @@ fn match_intents() -> Result<()> {
             "--topic",
             "asset_v1",
             "--signing-key",
-            BERTHA_KEY,
+            &bertha_lower,
             "--ledger-address",
             &validator_one_rpc
         ],
@@ -253,6 +254,7 @@ fn match_intents() -> Result<()> {
     matchmaker.exp_string("trying to match new intent")?;
 
     // Send intent B
+    let albert_lower = ALBERT_KEY.to_lowercase();
     let mut session_send_intent_b = run!(
         test,
         Bin::Client,
@@ -265,7 +267,7 @@ fn match_intents() -> Result<()> {
             "--topic",
             "asset_v1",
             "--signing-key",
-            ALBERT_KEY,
+            &albert_lower,
             "--ledger-address",
             &validator_one_rpc
         ],
@@ -282,6 +284,7 @@ fn match_intents() -> Result<()> {
     matchmaker.exp_string("trying to match new intent")?;
 
     // Send intent C
+    let christel_lower = CHRISTEL_KEY.to_lowercase();
     let mut session_send_intent_c = run!(
         test,
         Bin::Client,
@@ -294,7 +297,7 @@ fn match_intents() -> Result<()> {
             "--topic",
             "asset_v1",
             "--signing-key",
-            CHRISTEL_KEY,
+            &christel_lower,
             "--ledger-address",
             &validator_one_rpc
         ],

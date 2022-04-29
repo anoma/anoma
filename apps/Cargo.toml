@@ -124,12 +124,12 @@ tar = "0.4.37"
 # temporarily using fork work-around
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
 tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix", optional = true}
+tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix", optional = true}
 tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix", optional = true}
 tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
-tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix", optional = true, features = ["http-client", "websocket-client"]}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix", optional = true}
+tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-stable = {package = "tendermint", git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix", optional = true}
 thiserror = "1.0.30"
 tokio = {version = "1.8.2", features = ["full"]}
 toml = "0.5.8"
@@ -138,12 +138,21 @@ tower = "0.4"
 # Also, using the same version of tendermint-rs as we do here.
 # with a patch for https://github.com/penumbra-zone/tower-abci/issues/7.
 tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/abcipp-v0.23.5-tracing", optional = true}
-tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "murisi/jsfix", optional = true}
+tower-abci-old = {package = "tower-abci", git = "https://github.com/murisi/tower-abci", branch = "murisi/jsfix", optional = true}
 tracing = "0.1.30"
 tracing-log = "0.1.2"
 tracing-subscriber = {version = "0.3.7", features = ["env-filter"]}
 websocket = "0.26.2"
 winapi = "0.3.9"
+jubjub = {version = "0.8" }
+bls12_381 = {version = "0.6" }
+#libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3", features = ["transparent-inputs"] }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3", features = ["bundled-prover", "download-params"] }
+zcash_primitives = { git = "https://github.com/zcash/librustzcash", rev = "2425a08" }
+bellman = { version = "0.11.1", features = ["groth16"] }
+ff = {version = "0.11" }
+group = "0.11"
 
 [dev-dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}

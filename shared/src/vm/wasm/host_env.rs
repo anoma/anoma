@@ -115,6 +115,7 @@ where
             "anoma_vp_get_tx_code_hash" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_get_tx_code_hash),
             "anoma_vp_get_block_epoch" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_get_block_epoch),
             "anoma_vp_verify_tx_signature" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_verify_tx_signature),
+            "anoma_vp_verify_masp" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_verify_masp),
             "anoma_vp_eval" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_eval),
             "anoma_vp_log_string" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_log_string),
         },

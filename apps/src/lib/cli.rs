@@ -327,18 +327,22 @@ pub mod cmds {
         Key(WalletKey),
         /// Address management commands
         Address(WalletAddress),
+        /// MASP key, address management commands
+        Masp(WalletMasp),
     }
 
     impl Cmd for AnomaWallet {
         fn add_sub(app: App) -> App {
             app.subcommand(WalletKey::def())
                 .subcommand(WalletAddress::def())
+                .subcommand(WalletMasp::def())
         }
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             let key = SubCmd::parse(matches).map(Self::Key);
             let address = SubCmd::parse(matches).map(Self::Address);
-            key.or(address)
+            let masp = SubCmd::parse(matches).map(Self::Masp);
+            key.or(address).or(masp)
         }
     }
 
@@ -474,6 +478,169 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Exports a keypair to a file.")
                 .add_args::<args::KeyExport>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub enum WalletMasp {
+        GenPayAddr(MaspGenPayAddr),
+        GenSpendKey(MaspGenSpendKey),
+        AddAddrKey(MaspAddAddrKey),
+        ListPayAddrs(MaspListPayAddrs),
+        ListSpendKeys(MaspListSpendKeys),
+        FindAddrKey(MaspFindAddrKey),
+    }
+
+    impl SubCmd for WalletMasp {
+        const CMD: &'static str = "masp";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).and_then(|matches| {
+                let genpa = SubCmd::parse(matches).map(Self::GenPayAddr);
+                let gensk = SubCmd::parse(matches).map(Self::GenSpendKey);
+                let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
+                let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
+                let listsk = SubCmd::parse(matches).map(Self::ListSpendKeys);
+                let findak = SubCmd::parse(matches).map(Self::FindAddrKey);
+                gensk.or(genpa).or(addak).or(listpa).or(listsk).or(findak)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about(
+                    "Multi-asset shielded pool address and keypair management \
+                     including methods to generate and look-up addresses and \
+                     keys.",
+                )
+                .setting(AppSettings::SubcommandRequiredElseHelp)
+                .subcommand(MaspGenSpendKey::def())
+                .subcommand(MaspGenPayAddr::def())
+                .subcommand(MaspAddAddrKey::def())
+                .subcommand(MaspListPayAddrs::def())
+                .subcommand(MaspListSpendKeys::def())
+                .subcommand(MaspFindAddrKey::def())
+        }
+    }
+
+    /// Find the given shielded address or key
+    #[derive(Clone, Debug)]
+    pub struct MaspFindAddrKey(pub args::AddrKeyFind);
+
+    impl SubCmd for MaspFindAddrKey {
+        const CMD: &'static str = "find";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| Self(args::AddrKeyFind::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Find the given shielded address or key in the wallet")
+                .add_args::<args::AddrKeyFind>()
+        }
+    }
+
+    /// List all known shielded keys
+    #[derive(Clone, Debug)]
+    pub struct MaspListSpendKeys(pub args::SpendKeysList);
+
+    impl SubCmd for MaspListSpendKeys {
+        const CMD: &'static str = "list-keys";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| Self(args::SpendKeysList::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Lists all shielded keys in the wallet")
+                .add_args::<args::SpendKeysList>()
+        }
+    }
+
+    /// List all known payment addresses
+    #[derive(Clone, Debug)]
+    pub struct MaspListPayAddrs;
+
+    impl SubCmd for MaspListPayAddrs {
+        const CMD: &'static str = "list-addrs";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|_matches| MaspListPayAddrs)
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Lists all payment addresses in the wallet")
+        }
+    }
+
+    /// Add a key or an address
+    #[derive(Clone, Debug)]
+    pub struct MaspAddAddrKey(pub args::MaspAddrKeyAdd);
+
+    impl SubCmd for MaspAddAddrKey {
+        const CMD: &'static str = "add";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MaspAddAddrKey(args::MaspAddrKeyAdd::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Adds the given payment address or key to the wallet")
+                .add_args::<args::MaspAddrKeyAdd>()
+        }
+    }
+
+    /// Generate a spending key
+    #[derive(Clone, Debug)]
+    pub struct MaspGenSpendKey(pub args::MaspSpendKeyGen);
+
+    impl SubCmd for MaspGenSpendKey {
+        const CMD: &'static str = "gen-key";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MaspGenSpendKey(args::MaspSpendKeyGen::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Generates a random spending key")
+                .add_args::<args::MaspSpendKeyGen>()
+        }
+    }
+
+    /// Generate a payment address from a viewing key or payment address
+    #[derive(Clone, Debug)]
+    pub struct MaspGenPayAddr(pub args::MaspPayAddrGen);
+
+    impl SubCmd for MaspGenPayAddr {
+        const CMD: &'static str = "gen-addr";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                MaspGenPayAddr(args::MaspPayAddrGen::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about(
+                    "Generates a payment address from the given spending key",
+                )
+                .add_args::<args::MaspPayAddrGen>()
         }
     }
 
@@ -1367,6 +1534,7 @@ pub mod args {
     use anoma::types::governance::ProposalVote;
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::*;
+    use anoma::types::masp::MaspValue;
     use anoma::types::storage::{self, Epoch};
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
@@ -1381,7 +1549,7 @@ pub mod args {
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
 
-    use super::context::{WalletAddress, WalletKeypair, WalletPublicKey};
+    use super::context::*;
     use super::utils::*;
     use super::ArgMatches;
     use crate::config;
@@ -1393,6 +1561,7 @@ pub mod args {
     const ALLOW_DUPLICATE_IP: ArgFlag = flag("allow-duplicate-ip");
     const AMOUNT: Arg<token::Amount> = arg("amount");
     const ARCHIVE_DIR: ArgOpt<PathBuf> = arg_opt("archive-dir");
+    const BALANCE_OWNER: ArgOpt<WalletBalanceOwner> = arg_opt("owner");
     const BASE_DIR: ArgDefault<PathBuf> = arg_default(
         "base-dir",
         DefaultFn(|| match env::var("ANOMA_BASE_DIR") {
@@ -1443,6 +1612,7 @@ pub mod args {
 
     const LEDGER_ADDRESS: Arg<TendermintAddress> = arg("ledger-address");
     const LOCALHOST: ArgFlag = flag("localhost");
+    const MASP_VALUE: Arg<MaspValue> = arg("value");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
     const MODE: ArgOpt<String> = arg_opt("mode");
     const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
@@ -1469,12 +1639,13 @@ pub mod args {
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
     const STORAGE_KEY: Arg<storage::Key> = arg("storage-key");
-    const TARGET: Arg<WalletAddress> = arg("target");
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
     const TOPIC_OPT: ArgOpt<String> = arg_opt("topic");
     const TOPIC: Arg<String> = arg("topic");
+    const TRANSFER_SOURCE: Arg<WalletTransferSource> = arg("source");
+    const TRANSFER_TARGET: Arg<WalletTransferTarget> = arg("target");
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
     const TX_HASH: Arg<String> = arg("tx-hash");
     const UNSAFE_DONT_ENCRYPT: ArgFlag = flag("unsafe-dont-encrypt");
@@ -1487,6 +1658,7 @@ pub mod args {
         arg_opt("consensus-key");
     const VALIDATOR_CODE_PATH: ArgOpt<PathBuf> = arg_opt("validator-code-path");
     const VALUE: ArgOpt<String> = arg_opt("value");
+    const VIEWING_KEY: Arg<WalletViewingKey> = arg("key");
     const WASM_CHECKSUMS_PATH: Arg<PathBuf> = arg("wasm-checksums-path");
     const WASM_DIR: ArgOpt<PathBuf> = arg_opt("wasm-dir");
 
@@ -1609,9 +1781,9 @@ pub mod args {
         /// Common tx arguments
         pub tx: Tx,
         /// Transfer source address
-        pub source: WalletAddress,
+        pub source: WalletTransferSource,
         /// Transfer target address
-        pub target: WalletAddress,
+        pub target: WalletTransferTarget,
         /// Transferred token address
         pub token: WalletAddress,
         /// Transferred token amount
@@ -1621,8 +1793,8 @@ pub mod args {
     impl Args for TxTransfer {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
-            let source = SOURCE.parse(matches);
-            let target = TARGET.parse(matches);
+            let source = TRANSFER_SOURCE.parse(matches);
+            let target = TRANSFER_TARGET.parse(matches);
             let token = TOKEN.parse(matches);
             let amount = AMOUNT.parse(matches);
             Self {
@@ -1636,11 +1808,14 @@ pub mod args {
 
         fn def(app: App) -> App {
             app.add_args::<Tx>()
-                .arg(SOURCE.def().about(
-                    "The source account address. The source's key is used to \
-                     produce the signature.",
+                .arg(TRANSFER_SOURCE.def().about(
+                    "The source account address. The source's key may be used \
+                     to produce the signature.",
                 ))
-                .arg(TARGET.def().about("The target account address."))
+                .arg(TRANSFER_TARGET.def().about(
+                    "The target account address. The target's key may be used \
+                     to produce the signature.",
+                ))
                 .arg(TOKEN.def().about("The transfer token."))
                 .arg(AMOUNT.def().about("The amount to transfer in decimal."))
         }
@@ -2179,7 +2354,7 @@ pub mod args {
         /// Common query args
         pub query: Query,
         /// Address of an owner
-        pub owner: Option<WalletAddress>,
+        pub owner: Option<WalletBalanceOwner>,
         /// Address of a token
         pub token: Option<WalletAddress>,
     }
@@ -2187,7 +2362,7 @@ pub mod args {
     impl Args for QueryBalance {
         fn parse(matches: &ArgMatches) -> Self {
             let query = Query::parse(matches);
-            let owner = OWNER.parse(matches);
+            let owner = BALANCE_OWNER.parse(matches);
             let token = TOKEN_OPT.parse(matches);
             Self {
                 query,
@@ -2199,7 +2374,7 @@ pub mod args {
         fn def(app: App) -> App {
             app.add_args::<Query>()
                 .arg(
-                    OWNER
+                    BALANCE_OWNER
                         .def()
                         .about("The account address whose balance to query."),
                 )
@@ -2724,6 +2899,105 @@ pub mod args {
         }
     }
 
+    /// MASP add key or address arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspAddrKeyAdd {
+        /// Key alias
+        pub alias: String,
+        /// Any MASP value
+        pub value: MaspValue,
+        /// Don't encrypt the keypair
+        pub unsafe_dont_encrypt: bool,
+    }
+
+    impl Args for MaspAddrKeyAdd {
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            let value = MASP_VALUE.parse(matches);
+            let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            Self {
+                alias,
+                value,
+                unsafe_dont_encrypt,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("An alias to be associated with the new entry."),
+            )
+            .arg(
+                MASP_VALUE
+                    .def()
+                    .about("A spending key, viewing key, or payment address."),
+            )
+            .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
+                 used in a live network.",
+            ))
+        }
+    }
+
+    /// MASP generate spending key arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspSpendKeyGen {
+        /// Key alias
+        pub alias: String,
+        /// Don't encrypt the keypair
+        pub unsafe_dont_encrypt: bool,
+    }
+
+    impl Args for MaspSpendKeyGen {
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            Self {
+                alias,
+                unsafe_dont_encrypt,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(
+                ALIAS
+                    .def()
+                    .about("An alias to be associated with the spending key."),
+            )
+            .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
+                 used in a live network.",
+            ))
+        }
+    }
+
+    /// MASP generate payment address arguments
+    #[derive(Clone, Debug)]
+    pub struct MaspPayAddrGen {
+        /// Key alias
+        pub alias: String,
+        /// Viewing key
+        pub viewing_key: WalletViewingKey,
+    }
+
+    impl Args for MaspPayAddrGen {
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            let viewing_key = VIEWING_KEY.parse(matches);
+            Self { alias, viewing_key }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(
+                ALIAS.def().about(
+                    "An alias to be associated with the payment address.",
+                ),
+            )
+            .arg(VIEWING_KEY.def().about("The viewing key."))
+        }
+    }
+
     /// Wallet generate key and implicit address arguments
     #[derive(Clone, Debug)]
     pub struct KeyAndAddressGen {
@@ -2802,6 +3076,60 @@ pub mod args {
                     .def()
                     .about("UNSAFE: Print the secret key."),
             )
+        }
+    }
+
+    /// Wallet find shielded address or key arguments
+    #[derive(Clone, Debug)]
+    pub struct AddrKeyFind {
+        pub alias: String,
+        pub unsafe_show_secret: bool,
+    }
+
+    impl Args for AddrKeyFind {
+        fn parse(matches: &ArgMatches) -> Self {
+            let alias = ALIAS.parse(matches);
+            let unsafe_show_secret = UNSAFE_SHOW_SECRET.parse(matches);
+            Self {
+                alias,
+                unsafe_show_secret,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(ALIAS.def().about("The alias that is to be found."))
+                .arg(
+                    UNSAFE_SHOW_SECRET
+                        .def()
+                        .about("UNSAFE: Print the spending key values."),
+                )
+        }
+    }
+
+    /// Wallet list shielded keys arguments
+    #[derive(Clone, Debug)]
+    pub struct SpendKeysList {
+        pub decrypt: bool,
+        pub unsafe_show_secret: bool,
+    }
+
+    impl Args for SpendKeysList {
+        fn parse(matches: &ArgMatches) -> Self {
+            let decrypt = DECRYPT.parse(matches);
+            let unsafe_show_secret = UNSAFE_SHOW_SECRET.parse(matches);
+            Self {
+                decrypt,
+                unsafe_show_secret,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(DECRYPT.def().about("Decrypt keys that are encrypted."))
+                .arg(
+                    UNSAFE_SHOW_SECRET
+                        .def()
+                        .about("UNSAFE: Print the spending key values."),
+                )
         }
     }
 

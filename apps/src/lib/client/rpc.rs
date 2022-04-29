@@ -22,14 +22,17 @@ use anoma::types::governance::{
     OfflineProposal, OfflineVote, ProposalVote, TallyResult,
 };
 use anoma::types::key::*;
+use anoma::types::masp::BalanceOwner;
 use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::token::{balance_key, Amount};
 use anoma::types::{address, storage, token};
 use async_std::fs::{self};
 use async_std::path::PathBuf;
 use async_std::prelude::*;
-use borsh::BorshDeserialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Itertools;
+use masp_primitives::asset_type::AssetType;
+use masp_primitives::zip32::ExtendedFullViewingKey;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
@@ -111,13 +114,39 @@ pub async fn query_raw_bytes(_ctx: Context, args: args::QueryRawBytes) {
 }
 
 /// Query token balance(s)
-pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
+pub async fn query_balance(mut ctx: Context, args: args::QueryBalance) {
+    // Query the balances of shielded or transparent account types depending on
+    // the CLI arguments
+    match args.owner.as_ref().map(|x| ctx.get_cached(x)) {
+        Some(BalanceOwner::FullViewingKey(_viewing_key)) => {
+            query_shielded_balance(&mut ctx, args).await
+        }
+        Some(BalanceOwner::Address(_owner)) => {
+            query_transparent_balance(&mut ctx, args).await
+        }
+        None => {
+            // Print shielded balance
+            query_shielded_balance(&mut ctx, args.clone()).await;
+            // Then print transparent balance
+            query_transparent_balance(&mut ctx, args).await;
+        }
+    };
+}
+
+/// Query token balance(s)
+pub async fn query_transparent_balance(
+    ctx: &mut Context,
+    args: args::QueryBalance,
+) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
     let tokens = address::tokens();
     match (args.token, args.owner) {
         (Some(token), Some(owner)) => {
             let token = ctx.get(&token);
-            let owner = ctx.get(&owner);
+            let owner = ctx
+                .get_cached(&owner)
+                .address()
+                .expect("a transparent address");
             let key = token::balance_key(&token, &owner);
             let currency_code = tokens
                 .get(&token)
@@ -133,7 +162,10 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
             }
         }
         (None, Some(owner)) => {
-            let owner = ctx.get(&owner);
+            let owner = ctx
+                .get_cached(&owner)
+                .address()
+                .expect("a transparent address");
             let mut found_any = false;
             for (token, currency_code) in tokens {
                 let key = token::balance_key(&token, &owner);
@@ -196,6 +228,228 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                         println!("No balances for token {}", token.encode())
                     }
                 }
+            }
+        }
+    }
+}
+
+/// Query token shielded balance(s)
+pub async fn query_shielded_balance(
+    ctx: &mut Context,
+    args: args::QueryBalance,
+) {
+    // Used to control whether balances for all keys or a specific key are
+    // printed
+    let owner = args
+        .owner
+        .and_then(|x| ctx.get_cached(&x).full_viewing_key());
+    // Viewing keys are used to query shielded balances. If a spending key is
+    // provided, then convert to a viewing key first.
+    let viewing_keys = match owner {
+        Some(viewing_key) => vec![viewing_key],
+        None => ctx
+            .wallet
+            .get_viewing_keys()
+            .values()
+            .map(|x| x.clone())
+            .collect(),
+    };
+    // Build up the context that will be queried for balances
+    let _ = ctx.shielded.load();
+    ctx.shielded
+        .fetch(
+            &args.query.ledger_address,
+            &vec![],
+            &viewing_keys
+                .iter()
+                .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+                .collect(),
+        )
+        .await;
+    // Save the update state so that future fetches can be short-circuited
+    let _ = ctx.shielded.save();
+    // Map addresses to token names
+    let tokens = address::tokens();
+    match (args.token, owner.is_some()) {
+        // Here the user wants to know the balance for a specific token
+        (Some(token), true) => {
+            // Query the multi-asset balance at the given spending key
+            let viewing_key =
+                ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
+            let balance = ctx
+                .shielded
+                .compute_shielded_balance(&viewing_key)
+                .expect("context should contain viewing key");
+            // Compute the unique asset identifier from the token address
+            let token = ctx.get(&token);
+            let asset_type = AssetType::new(
+                token
+                    .try_to_vec()
+                    .expect("token addresses should serialize")
+                    .as_ref(),
+            )
+            .unwrap();
+            let currency_code = tokens
+                .get(&token)
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
+            if balance[&asset_type] == 0 {
+                println!(
+                    "No shielded {} balance found for given key",
+                    currency_code
+                );
+            } else {
+                let asset_value =
+                    token::Amount::from(balance[&asset_type] as u64);
+                println!("{}: {}", currency_code, asset_value);
+            }
+        }
+        // Here the user wants to know the balance of all tokens across users
+        (None, false) => {
+            // Maps asset types to balances divided by viewing key
+            let mut balances = HashMap::new();
+            for fvk in viewing_keys {
+                // Query the multi-asset balance at the given spending key
+                let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
+                let balance = ctx
+                    .shielded
+                    .compute_shielded_balance(&viewing_key)
+                    .expect("context should contain viewing key");
+                for (asset_type, value) in balance.components() {
+                    if !balances.contains_key(asset_type) {
+                        balances.insert(*asset_type, Vec::new());
+                    }
+                    balances.get_mut(asset_type).unwrap().push((fvk, *value));
+                }
+            }
+
+            // These are the asset types for which we have human-readable names
+            let mut readable_tokens = HashSet::new();
+            // Print those balances corresponding to human-readable token names
+            for (token, currency_code) in tokens {
+                println!("Shielded Token {}:", currency_code);
+                // Compute the unique asset identifier from the token address
+                let asset_type = AssetType::new(
+                    token
+                        .try_to_vec()
+                        .expect("token addresses should serialize")
+                        .as_ref(),
+                )
+                .unwrap();
+                // Take note of the asset types corresponding to readable tokens
+                readable_tokens.insert(asset_type);
+                let mut found_any = false;
+                if balances.contains_key(&asset_type) {
+                    for (fvk, asset_value) in &balances[&asset_type] {
+                        let asset_value =
+                            token::Amount::from(*asset_value as u64);
+                        println!("  {}, owned by {}", asset_value, fvk);
+                        found_any = true;
+                    }
+                }
+                if !found_any {
+                    println!(
+                        "No shielded {} balance found for any wallet key",
+                        currency_code
+                    );
+                }
+            }
+            // Print those balances that do not correspond to human-readable
+            // token names
+            for (asset_type, balances) in balances {
+                if !readable_tokens.contains(&asset_type) {
+                    println!("Shielded Token {}:", asset_type);
+                    let mut found_any = false;
+                    for (fvk, value) in balances {
+                        let value = token::Amount::from(value as u64);
+                        println!("{}: {}", fvk, value);
+                        found_any = true;
+                    }
+                    if !found_any {
+                        println!(
+                            "No shielded {} balance found for any wallet key",
+                            asset_type
+                        );
+                    }
+                }
+            }
+        }
+        // Here the user wants to know the balance for a specific token across
+        // users
+        (Some(token), false) => {
+            // Compute the unique asset identifier from the token address
+            let token = ctx.get(&token);
+            let asset_type = AssetType::new(
+                token
+                    .try_to_vec()
+                    .expect("token addresses should serialize")
+                    .as_ref(),
+            )
+            .unwrap();
+            let currency_code = tokens
+                .get(&token)
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
+            println!("Shielded Token {}:", currency_code);
+            let mut found_any = false;
+            for fvk in viewing_keys {
+                // Query the multi-asset balance at the given spending key
+                let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
+                let balance = ctx
+                    .shielded
+                    .compute_shielded_balance(&viewing_key)
+                    .expect("context should contain viewing key");
+                if balance[&asset_type] != 0 {
+                    let asset_value =
+                        token::Amount::from(balance[&asset_type] as u64);
+                    println!("  {}, owned by {}", asset_value, fvk);
+                    found_any = true;
+                }
+            }
+            if !found_any {
+                println!(
+                    "No shielded {} balance found for any wallet key",
+                    currency_code
+                );
+            }
+        }
+        // Here the user wants to know all possible token balances for a key
+        (None, true) => {
+            // Query the multi-asset balance at the given spending key
+            let viewing_key =
+                ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
+            let mut balance = ctx
+                .shielded
+                .compute_shielded_balance(&viewing_key)
+                .expect("context should contain viewing key");
+            let mut found_any = false;
+            // Print those balances corresponding to human-readable token names
+            for (token, currency_code) in tokens {
+                // Compute the unique asset identifier from the token address
+                let asset_type = AssetType::new(
+                    token
+                        .try_to_vec()
+                        .expect("token addresses should serialize")
+                        .as_ref(),
+                )
+                .unwrap();
+                let asset_value = balance[&asset_type];
+                if asset_value > 0 {
+                    balance -= balance.project(asset_type);
+                    let asset_value = token::Amount::from(asset_value as u64);
+                    println!("{}: {}", currency_code, asset_value);
+                    found_any = true;
+                }
+            }
+            // Now print those balances that do not correspond to human-readable
+            // token names
+            for (asset_type, value) in balance.components() {
+                let value = token::Amount::from(*value as u64);
+                println!("{}: {}", asset_type, value);
+                found_any = true;
+            }
+            if !found_any {
+                println!("No shielded balance found for given key");
             }
         }
     }

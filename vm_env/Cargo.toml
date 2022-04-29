@@ -23,4 +23,11 @@ ABCI-plus-plus = [
 anoma = {path = "../shared", default-features = false}
 anoma_macros = {path = "../macros"}
 borsh = "0.9.0"
+jubjub = { version = "0.8"}
+bls12_381 = { version = "0.6"}
+#libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3" }
+bellman = { version = "0.11.1", features = ["groth16"] }
+ff = { version = "0.11" }
 hex = "0.4.3"

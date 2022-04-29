@@ -414,6 +414,249 @@ fn ledger_txs_and_queries() -> Result<()> {
 
 /// In this test we:
 /// 1. Run the ledger node
+/// 2. Attempt to spend 10 BTC at SK(A) to PA(B)
+/// 3. Attempt to spend 15 BTC at SK(A) to Bertha
+/// 4. Send 20 BTC from Albert to PA(A)
+/// 5. Attempt to spend 10 ETH at SK(A) to PA(B)
+/// 6. Spend 7 BTC at SK(A) to PA(B)
+/// 7. Spend 7 BTC at SK(A) to PA(B)
+/// 8. Attempt to spend 7 BTC at SK(A) to PA(B)
+/// 9. Spend 6 BTC at SK(A) to PA(B)
+/// 10. Assert balance at VK(A) is 0
+/// 11. Assert balance at VK(B) is 10 BTC
+/// 12. Send 10 BTC from SK(B) to Bertha
+
+#[test]
+fn masp_txs_and_queries() -> Result<()> {
+    let test = setup::network(|genesis| genesis, None)?;
+
+    // 1. Run the ledger node
+    let mut ledger =
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
+
+    ledger.exp_string("Anoma ledger node started")?;
+    if !cfg!(feature = "ABCI") {
+        ledger.exp_string("started node")?;
+    } else {
+        ledger.exp_string("Started node")?;
+    }
+
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
+    let txs_args = vec![
+        // 2. Attempt to spend 10 BTC at SK(A) to PA(B)
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                AB_PAYMENT_ADDRESS,
+                "--token",
+                BTC,
+                "--amount",
+                "10",
+                "--signer",
+                ALBERT,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "No balance found",
+        ),
+        // 3. Attempt to spend 15 BTC at SK(A) to Bertha
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                BERTHA,
+                "--token",
+                BTC,
+                "--amount",
+                "15",
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "No balance found",
+        ),
+        // 4. Send 20 BTC from Albert to PA(A)
+        (
+            vec![
+                "transfer",
+                "--source",
+                ALBERT,
+                "--target",
+                AA_PAYMENT_ADDRESS,
+                "--token",
+                BTC,
+                "--amount",
+                "20",
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "Transaction is valid",
+        ),
+        // 5. Attempt to spend 10 ETH at SK(A) to PA(B)
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                AB_PAYMENT_ADDRESS,
+                "--token",
+                ETH,
+                "--amount",
+                "10",
+                "--signer",
+                ALBERT,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "No balance found",
+        ),
+        // 6. Spend 7 BTC at SK(A) to PA(B)
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                AB_PAYMENT_ADDRESS,
+                "--token",
+                BTC,
+                "--amount",
+                "7",
+                "--signer",
+                ALBERT,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "Transaction is valid",
+        ),
+        // 7. Spend 7 BTC at SK(A) to PA(B)
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                BB_PAYMENT_ADDRESS,
+                "--token",
+                BTC,
+                "--amount",
+                "7",
+                "--signer",
+                ALBERT,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "Transaction is valid",
+        ),
+        // 8. Attempt to spend 7 BTC at SK(A) to PA(B)
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                BB_PAYMENT_ADDRESS,
+                "--token",
+                BTC,
+                "--amount",
+                "7",
+                "--signer",
+                ALBERT,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "ChangeIsNegative",
+        ),
+        // 9. Spend 6 BTC at SK(A) to PA(B)
+        (
+            vec![
+                "transfer",
+                "--source",
+                A_SPENDING_KEY,
+                "--target",
+                BB_PAYMENT_ADDRESS,
+                "--token",
+                BTC,
+                "--amount",
+                "6",
+                "--signer",
+                ALBERT,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "Transaction is valid",
+        ),
+        // 10. Assert balance at VK(A) is 0
+        (
+            vec![
+                "balance",
+                "--owner",
+                AA_VIEWING_KEY,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "No shielded balance found",
+        ),
+        // 11. Assert balance at VK(B) is 10 BTC
+        (
+            vec![
+                "balance",
+                "--owner",
+                AB_VIEWING_KEY,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "BTC: 20",
+        ),
+        // 12. Send 10 BTC from SK(B) to Bertha
+        (
+            vec![
+                "transfer",
+                "--source",
+                B_SPENDING_KEY,
+                "--target",
+                BERTHA,
+                "--token",
+                BTC,
+                "--amount",
+                "20",
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
+            "Transaction is valid",
+        ),
+    ];
+
+    for (tx_args, tx_result) in &txs_args {
+        for &dry_run in &[true, false] {
+            let tx_args = if dry_run && tx_args[0] == "transfer" {
+                vec![tx_args.clone(), vec!["--dry-run"]].concat()
+            } else {
+                tx_args.clone()
+            };
+            let mut client = run!(test, Bin::Client, tx_args, Some(300))?;
+
+            if *tx_result == "Transaction is valid" && !dry_run {
+                if !cfg!(feature = "ABCI") {
+                    client.exp_string("Transaction accepted")?;
+                }
+                client.exp_string("Transaction applied")?;
+            }
+            client.exp_string(tx_result)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// In this test we:
+/// 1. Run the ledger node
 /// 2. Submit an invalid transaction (disallowed by state machine)
 /// 3. Shut down the ledger
 /// 4. Restart the ledger
@@ -442,6 +685,7 @@ fn invalid_transactions() -> Result<()> {
         target: find_address(&test, ALBERT)?,
         token: find_address(&test, XAN)?,
         amount: token::Amount::whole(1),
+        shielded: None,
     };
     let data = transfer
         .try_to_vec()
@@ -453,6 +697,7 @@ fn invalid_transactions() -> Result<()> {
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
+    let daewon_lower = DAEWON.to_lowercase();
     let tx_args = vec![
         "tx",
         "--code-path",
@@ -460,7 +705,7 @@ fn invalid_transactions() -> Result<()> {
         "--data-path",
         &tx_data_path,
         "--signing-key",
-        DAEWON,
+        &daewon_lower,
         "--fee-amount",
         "0",
         "--gas-limit",
@@ -503,12 +748,13 @@ fn invalid_transactions() -> Result<()> {
     ledger.exp_string("Last state root hash:")?;
 
     // 5. Submit an invalid transactions (invalid token address)
+    let daewon_lower = DAEWON.to_lowercase();
     let tx_args = vec![
         "transfer",
         "--source",
         DAEWON,
         "--signing-key",
-        DAEWON,
+        &daewon_lower,
         "--target",
         ALBERT,
         "--token",

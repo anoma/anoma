@@ -122,6 +122,10 @@ vp = "vp_user"
 [established.Christel]
 vp = "vp_user"
 
+[established.masp]
+address = "atest1v4ehgw36xaryysfsx5unvve4g5my2vjz89p52sjxxgenzd348yuyyv3hg3pnjs35g5unvde4ca36y5"
+vp = "vp_masp"
+
 [implicit.Daewon]
 
 # Wasm VP definitions
@@ -142,6 +146,10 @@ sha256 = "e428a11f570d21dd3c871f5d35de6fe18098eb8ee0456b3e11a72ccdd8685cd0"
 [wasm.vp_testnet_faucet]
 filename = "vp_testnet_faucet.wasm"
 sha256 = "2038d93afd456a77c45123811b671627f488c8d2a72b714d82dd494cbbd552bc"
+
+# MASP VP
+[wasm.vp_masp]
+filename = "vp_masp.wasm"
 
 # General protocol parameters.
 [parameters]

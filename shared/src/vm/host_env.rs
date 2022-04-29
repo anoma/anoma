@@ -58,7 +58,7 @@ pub enum TxRuntimeError {
     #[error("Encoding error: {0}")]
     EncodingError(std::io::Error),
     #[error("Address error: {0}")]
-    AddressError(address::Error),
+    AddressError(address::DecodeError),
     #[error("Numeric conversion error: {0}")]
     NumConversionError(TryFromIntError),
     #[error("Memory error: {0}")]
@@ -1672,6 +1672,37 @@ where
     vp_env::add_gas(gas_meter, VERIFY_TX_SIG_GAS_COST)?;
     let tx = unsafe { env.ctx.tx.get() };
     Ok(HostEnvResult::from(tx.verify_sig(&pk, &sig).is_ok()).to_i64())
+}
+
+/// Verify a ShieldedTransaction.
+pub fn vp_verify_masp<MEM, DB, H, EVAL, CA>(
+    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    tx_ptr: u64,
+    tx_len: u64,
+) -> vp_env::Result<i64>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
+{
+    use masp_primitives::transaction::Transaction;
+
+    use crate::types::token::Transfer;
+    let gas_meter = unsafe { env.ctx.gas_meter.get() };
+    let (tx_bytes, gas) = env
+        .memory
+        .read_bytes(tx_ptr, tx_len as _)
+        .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
+    vp_env::add_gas(gas_meter, gas)?;
+    let full_tx: Transfer =
+        BorshDeserialize::try_from_slice(tx_bytes.as_slice()).unwrap();
+    let shielded_tx: Transaction = full_tx.shielded.unwrap();
+    Ok(HostEnvResult::from(crate::ledger::masp::verify_shielded_tx(
+        &shielded_tx,
+    ))
+    .to_i64())
 }
 
 /// Log a string from exposed to the wasm VM Tx environment. The message will be

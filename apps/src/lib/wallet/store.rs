@@ -3,16 +3,19 @@ use std::fs;
 use std::io::prelude::*;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::{Address, ImplicitAddress};
 use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::key::*;
+use anoma::types::masp::{
+    ExtendedSpendingKey, ExtendedViewingKey, PaymentAddress,
+};
 use anoma::types::transaction::EllipticCurve;
 use ark_std::rand::prelude::*;
 use ark_std::rand::SeedableRng;
 use file_lock::{FileLock, FileOptions};
+use masp_primitives::zip32::ExtendedFullViewingKey;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -50,8 +53,14 @@ pub struct ValidatorData {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
+    /// Known viewing keys
+    view_keys: HashMap<Alias, ExtendedViewingKey>,
+    /// Known spending keys
+    spend_keys: HashMap<Alias, StoredKeypair<ExtendedSpendingKey>>,
+    /// Known payment addresses
+    payment_addrs: HashMap<Alias, PaymentAddress>,
     /// Cryptographic keypairs
-    keys: HashMap<Alias, StoredKeypair>,
+    keys: HashMap<Alias, StoredKeypair<common::SecretKey>>,
     /// Anoma address book
     addresses: HashMap<Alias, Address>,
     /// Known mappings of public key hashes to their aliases in the `keys`
@@ -182,7 +191,7 @@ impl Store {
     pub fn find_key(
         &self,
         alias_pkh_or_pk: impl AsRef<str>,
-    ) -> Option<&StoredKeypair> {
+    ) -> Option<&StoredKeypair<common::SecretKey>> {
         let alias_pkh_or_pk = alias_pkh_or_pk.as_ref();
         // Try to find by alias
         self.keys
@@ -199,11 +208,32 @@ impl Store {
             })
     }
 
+    pub fn find_spending_key(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&StoredKeypair<ExtendedSpendingKey>> {
+        self.spend_keys.get(&alias.into())
+    }
+
+    pub fn find_viewing_key(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&ExtendedViewingKey> {
+        self.view_keys.get(&alias.into())
+    }
+
+    pub fn find_payment_addr(
+        &self,
+        alias: impl AsRef<str>,
+    ) -> Option<&PaymentAddress> {
+        self.payment_addrs.get(&alias.into())
+    }
+
     /// Find the stored key by a public key.
     pub fn find_key_by_pk(
         &self,
         pk: &common::PublicKey,
-    ) -> Option<&StoredKeypair> {
+    ) -> Option<&StoredKeypair<common::SecretKey>> {
         let pkh = PublicKeyHash::from(pk);
         self.find_key_by_pkh(&pkh)
     }
@@ -212,7 +242,7 @@ impl Store {
     pub fn find_key_by_pkh(
         &self,
         pkh: &PublicKeyHash,
-    ) -> Option<&StoredKeypair> {
+    ) -> Option<&StoredKeypair<common::SecretKey>> {
         let alias = self.pkhs.get(pkh)?;
         self.keys.get(alias)
     }
@@ -230,15 +260,21 @@ impl Store {
     /// Get all known keys by their alias, paired with PKH, if known.
     pub fn get_keys(
         &self,
-    ) -> HashMap<Alias, (&StoredKeypair, Option<&PublicKeyHash>)> {
-        let mut keys: HashMap<Alias, (&StoredKeypair, Option<&PublicKeyHash>)> =
-            self.pkhs
-                .iter()
-                .filter_map(|(pkh, alias)| {
-                    let key = &self.keys.get(alias)?;
-                    Some((alias.clone(), (*key, Some(pkh))))
-                })
-                .collect();
+    ) -> HashMap<
+        Alias,
+        (&StoredKeypair<common::SecretKey>, Option<&PublicKeyHash>),
+    > {
+        let mut keys: HashMap<
+            Alias,
+            (&StoredKeypair<common::SecretKey>, Option<&PublicKeyHash>),
+        > = self
+            .pkhs
+            .iter()
+            .filter_map(|(pkh, alias)| {
+                let key = &self.keys.get(alias)?;
+                Some((alias.clone(), (*key, Some(pkh))))
+            })
+            .collect();
         self.keys.iter().for_each(|(alias, key)| {
             if !keys.contains_key(alias) {
                 keys.insert(alias.clone(), (key, None));
@@ -252,6 +288,31 @@ impl Store {
         &self.addresses
     }
 
+    /// Get all known payment addresses by their alias.
+    pub fn get_payment_addrs(&self) -> &HashMap<Alias, PaymentAddress> {
+        &self.payment_addrs
+    }
+
+    /// Get all known viewing keys by their alias.
+    pub fn get_viewing_keys(&self) -> &HashMap<Alias, ExtendedViewingKey> {
+        &self.view_keys
+    }
+
+    /// Get all known spending keys by their alias.
+    pub fn get_spending_keys(
+        &self,
+    ) -> &HashMap<Alias, StoredKeypair<ExtendedSpendingKey>> {
+        &self.spend_keys
+    }
+
+    fn generate_spending_key() -> ExtendedSpendingKey {
+        use rand::rngs::OsRng;
+        let mut spend_key = [0; 32];
+        OsRng.fill_bytes(&mut spend_key);
+        masp_primitives::zip32::ExtendedSpendingKey::master(spend_key.as_ref())
+            .into()
+    }
+
     /// Generate a new keypair and insert it into the store with the provided
     /// alias. If none provided, the alias will be the public key hash.
     /// If no password is provided, the keypair will be stored raw without
@@ -261,7 +322,7 @@ impl Store {
         &mut self,
         alias: Option<String>,
         password: Option<String>,
-    ) -> (Alias, Rc<common::SecretKey>) {
+    ) -> (Alias, common::SecretKey) {
         let sk = gen_sk();
         let pkh: PublicKeyHash = PublicKeyHash::from(&sk.ref_to());
         let (keypair_to_store, raw_keypair) = StoredKeypair::new(sk, password);
@@ -279,6 +340,27 @@ impl Store {
             cli::safe_exit(1);
         }
         (alias, raw_keypair)
+    }
+
+    /// Generate a spending key similarly to how it's done for keypairs
+    pub fn gen_spending_key(
+        &mut self,
+        alias: String,
+        password: Option<String>,
+    ) -> (Alias, ExtendedSpendingKey) {
+        let spendkey = Self::generate_spending_key();
+        let viewkey = ExtendedFullViewingKey::from(&spendkey.into()).into();
+        let (spendkey_to_store, _raw_spendkey) =
+            StoredKeypair::new(spendkey, password);
+        let alias = Alias::from(alias);
+        if self
+            .insert_spending_key(alias.clone(), spendkey_to_store, viewkey)
+            .is_none()
+        {
+            eprintln!("Action cancelled, no changes persisted.");
+            cli::safe_exit(1);
+        }
+        (alias, spendkey)
     }
 
     /// Generate keypair for signing protocol txs and for the DKG
@@ -324,7 +406,7 @@ impl Store {
     pub(super) fn insert_keypair(
         &mut self,
         alias: Alias,
-        keypair: StoredKeypair,
+        keypair: StoredKeypair<common::SecretKey>,
         pkh: PublicKeyHash,
     ) -> Option<Alias> {
         if alias.is_empty() {
@@ -333,18 +415,143 @@ impl Store {
                 alias = Into::<Alias>::into(pkh.to_string())
             );
         }
-        if self.keys.contains_key(&alias) {
+        // Addresses and keypairs can share aliases, so first remove any
+        // addresses sharing the same namesake before checking if alias has been
+        // used.
+        let counterpart_address = self.addresses.remove(&alias);
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "a key") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
+                    // Restore the removed address in case the recursive prompt
+                    // terminates with a cancellation
+                    counterpart_address
+                        .map(|x| self.addresses.insert(alias.clone(), x));
                     return self.insert_keypair(new_alias, keypair, pkh);
+                }
+                ConfirmationResponse::Skip => {
+                    // Restore the removed address since this insertion action
+                    // has now been cancelled
+                    counterpart_address
+                        .map(|x| self.addresses.insert(alias.clone(), x));
+                    return None;
+                }
+            }
+        }
+        self.remove_alias(&alias);
+        self.keys.insert(alias.clone(), keypair);
+        self.pkhs.insert(pkh, alias.clone());
+        // Since it is intended for the inserted keypair to share its namesake
+        // with the pre-existing address
+        counterpart_address.map(|x| self.addresses.insert(alias.clone(), x));
+        Some(alias)
+    }
+
+    /// Insert spending keys similarly to how it's done for keypairs
+    pub fn insert_spending_key(
+        &mut self,
+        alias: Alias,
+        spendkey: StoredKeypair<ExtendedSpendingKey>,
+        viewkey: ExtendedViewingKey,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            eprintln!("Empty alias given.");
+            return None;
+        }
+        if self.contains_alias(&alias) {
+            match show_overwrite_confirmation(&alias, "a spending key") {
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self
+                        .insert_spending_key(new_alias, spendkey, viewkey);
                 }
                 ConfirmationResponse::Skip => return None,
             }
         }
-        self.keys.insert(alias.clone(), keypair);
-        self.pkhs.insert(pkh, alias.clone());
+        self.remove_alias(&alias);
+        self.spend_keys.insert(alias.clone(), spendkey);
+        // Simultaneously add the derived viewing key to ease balance viewing
+        self.view_keys.insert(alias.clone(), viewkey);
         Some(alias)
+    }
+
+    /// Insert viewing keys similarly to how it's done for keypairs
+    pub fn insert_viewing_key(
+        &mut self,
+        alias: Alias,
+        viewkey: ExtendedViewingKey,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            eprintln!("Empty alias given.");
+            return None;
+        }
+        if self.contains_alias(&alias) {
+            match show_overwrite_confirmation(&alias, "a viewing key") {
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_viewing_key(new_alias, viewkey);
+                }
+                ConfirmationResponse::Skip => return None,
+            }
+        }
+        self.remove_alias(&alias);
+        self.view_keys.insert(alias.clone(), viewkey);
+        Some(alias)
+    }
+
+    /// Check if any map of the wallet contains the given alias
+    fn contains_alias(&self, alias: &Alias) -> bool {
+        self.payment_addrs.contains_key(alias)
+            || self.view_keys.contains_key(alias)
+            || self.spend_keys.contains_key(alias)
+            || self.keys.contains_key(alias)
+            || self.addresses.contains_key(alias)
+    }
+
+    /// Completely remove the given alias from all maps in the wallet
+    fn remove_alias(&mut self, alias: &Alias) {
+        self.payment_addrs.remove(alias);
+        self.view_keys.remove(alias);
+        self.spend_keys.remove(alias);
+        self.keys.remove(alias);
+        self.addresses.remove(alias);
+        self.pkhs.retain(|_key, val| val != alias);
+    }
+
+    /// Insert payment addresses similarly to how it's done for keypairs
+    pub fn insert_payment_addr(
+        &mut self,
+        alias: Alias,
+        payment_addr: PaymentAddress,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            eprintln!("Empty alias given.");
+            return None;
+        }
+        if self.contains_alias(&alias) {
+            match show_overwrite_confirmation(&alias, "a payment address") {
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_payment_addr(new_alias, payment_addr);
+                }
+                ConfirmationResponse::Skip => return None,
+            }
+        }
+        self.remove_alias(&alias);
+        self.payment_addrs.insert(alias.clone(), payment_addr);
+        Some(alias)
+    }
+
+    /// Helper function to restore keypair given alias-keypair mapping and the
+    /// pkhs-alias mapping.
+    fn restore_keypair(
+        &mut self,
+        alias: Alias,
+        key: Option<StoredKeypair<common::SecretKey>>,
+        pkh: Option<PublicKeyHash>,
+    ) {
+        key.map(|x| self.keys.insert(alias.clone(), x));
+        pkh.map(|x| self.pkhs.insert(x, alias.clone()));
     }
 
     /// Insert a new address with the given alias. If the alias is already used,
@@ -362,16 +569,48 @@ impl Store {
                 alias = address.encode()
             );
         }
-        if self.addresses.contains_key(&alias) {
+        // Addresses and keypairs can share aliases, so first remove any keys
+        // sharing the same namesake before checking if alias has been used.
+        let counterpart_key = self.keys.remove(&alias);
+        let mut counterpart_pkh = None;
+        self.pkhs.retain(|k, v| {
+            if v == &alias {
+                counterpart_pkh = Some(k.clone());
+                false
+            } else {
+                true
+            }
+        });
+        if self.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "an address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
+                    // Restore the removed keypair in case the recursive prompt
+                    // terminates with a cancellation
+                    self.restore_keypair(
+                        alias,
+                        counterpart_key,
+                        counterpart_pkh,
+                    );
                     return self.insert_address(new_alias, address);
                 }
-                ConfirmationResponse::Skip => return None,
+                ConfirmationResponse::Skip => {
+                    // Restore the removed keypair since this insertion action
+                    // has now been cancelled
+                    self.restore_keypair(
+                        alias,
+                        counterpart_key,
+                        counterpart_pkh,
+                    );
+                    return None;
+                }
             }
         }
+        self.remove_alias(&alias);
         self.addresses.insert(alias.clone(), address);
+        // Since it is intended for the inserted address to share its namesake
+        // with the pre-existing keypair
+        self.restore_keypair(alias.clone(), counterpart_key, counterpart_pkh);
         Some(alias)
     }
 

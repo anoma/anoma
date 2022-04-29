@@ -610,7 +610,7 @@ where
     /// wallet. If the node is not validator, this function returns None
     #[cfg(not(feature = "ABCI"))]
     #[allow(dead_code)]
-    fn get_account_keypair(&self) -> Option<Rc<common::SecretKey>> {
+    fn get_account_keypair(&self) -> Option<common::SecretKey> {
         let wallet_path = &self.base_dir.join(self.chain_id.as_str());
         let genesis_path = &self
             .base_dir

@@ -1,6 +1,5 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
 use anoma::types::key::common;
 use ark_serialize::{Read, Write};
@@ -37,13 +36,13 @@ pub struct ValidatorWallet {
     /// The wallet store that can be written/read to/from TOML
     pub store: ValidatorStore,
     /// Cryptographic keypair for validator account key
-    pub account_key: Rc<common::SecretKey>,
+    pub account_key: common::SecretKey,
     /// Cryptographic keypair for consensus key
-    pub consensus_key: Rc<common::SecretKey>,
+    pub consensus_key: common::SecretKey,
     /// Cryptographic keypair for rewards key
-    pub rewards_key: Rc<common::SecretKey>,
+    pub rewards_key: common::SecretKey,
     /// Cryptographic keypair for Tendermint node key
-    pub tendermint_node_key: Rc<common::SecretKey>,
+    pub tendermint_node_key: common::SecretKey,
 }
 
 /// Validator pre-genesis wallet store includes all the required keys for
@@ -51,13 +50,13 @@ pub struct ValidatorWallet {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ValidatorStore {
     /// Cryptographic keypair for validator account key
-    pub account_key: wallet::StoredKeypair,
+    pub account_key: wallet::StoredKeypair<common::SecretKey>,
     /// Cryptographic keypair for consensus key
-    pub consensus_key: wallet::StoredKeypair,
+    pub consensus_key: wallet::StoredKeypair<common::SecretKey>,
     /// Cryptographic keypair for rewards key
-    pub rewards_key: wallet::StoredKeypair,
+    pub rewards_key: wallet::StoredKeypair<common::SecretKey>,
     /// Cryptographic keypair for Tendermint node key
-    pub tendermint_node_key: wallet::StoredKeypair,
+    pub tendermint_node_key: wallet::StoredKeypair<common::SecretKey>,
     /// Special validator keys
     pub validator_keys: wallet::ValidatorKeys,
 }
@@ -181,7 +180,7 @@ impl ValidatorStore {
 
 fn gen_key_to_store(
     password: &Option<String>,
-) -> (StoredKeypair, Rc<common::SecretKey>) {
+) -> (StoredKeypair<common::SecretKey>, common::SecretKey) {
     let sk = store::gen_sk();
     StoredKeypair::new(sk, password.clone())
 }

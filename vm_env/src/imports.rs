@@ -553,6 +553,13 @@ pub mod vp {
         HostEnvResult::is_success(valid)
     }
 
+    /// Verify a MASP transaction.
+    pub fn verify_masp(tx: Vec<u8>) -> bool {
+        let valid =
+            unsafe { anoma_vp_verify_masp(tx.as_ptr() as _, tx.len() as _) };
+        HostEnvResult::is_success(valid)
+    }
+
     /// Log a string. The message will be printed at the `tracing::Level::Info`.
     pub fn log_string<T: AsRef<str>>(msg: T) {
         let msg = msg.as_ref();
@@ -651,6 +658,8 @@ pub mod vp {
             sig_ptr: u64,
             sig_len: u64,
         ) -> i64;
+
+        fn anoma_vp_verify_masp(tx_ptr: u64, tx_len: u64) -> i64;
 
         // Requires a node running with "Info" log level
         fn anoma_vp_log_string(str_ptr: u64, str_len: u64);

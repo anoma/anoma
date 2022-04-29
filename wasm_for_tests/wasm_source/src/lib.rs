@@ -75,6 +75,7 @@ pub mod main {
             target,
             token,
             amount,
+            shielded: _,
         } = transfer;
         let target_key = token::balance_key(&token, &target);
         let mut target_bal: token::Amount =

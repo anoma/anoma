@@ -295,7 +295,7 @@ pub async fn join_network(
         tendermint_node::write_validator_key(
             &tm_home_dir,
             &address,
-            &*pre_genesis_wallet.consensus_key,
+            &pre_genesis_wallet.consensus_key,
         );
 
         // Derive the node ID from the node key
