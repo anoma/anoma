@@ -608,6 +608,18 @@ impl ShieldedContext {
     /// Initialize a shielded transaction context that identifies notes
     /// decryptable by any viewing key in the given set 
     pub fn new(context_dir: PathBuf) -> ShieldedContext {
+        // Make sure that MASP parameters are downloaded to enable MASP
+        // transaction building and verification later on
+        let params_dir = masp_proofs::default_params_folder().unwrap();
+        let spend_path = params_dir.join("masp-spend.params");
+        let output_path = params_dir.join("masp-output.params");
+        if !(spend_path.exists() && output_path.exists()) {
+            println!("MASP parameters not present, downloading...");
+            masp_proofs::download_parameters()
+                .expect("MASP parameters not present or downloadable");
+            println!("MASP parameter download complete, resuming execution...");
+        }
+        // Finally initialize a shielded context with the supplied directory
         let mut ctx = Self::default();
         ctx.context_dir = context_dir;
         ctx
@@ -890,16 +902,6 @@ async fn gen_shielded_transfer(
             asset_type,
             amt
         )?;
-    }
-    // Make sure that MASP parameters are downloaded before building transaction
-    let params_dir = masp_proofs::default_params_folder().unwrap();
-    let spend_path = params_dir.join("masp-spend.params");
-    let output_path = params_dir.join("masp-output.params");
-    if !(spend_path.exists() && output_path.exists()) {
-        println!("MASP parameters not present, downloading...");
-        masp_proofs::download_parameters()
-            .expect("MASP parameters not present or downloadable");
-        println!("MASP parameter download complete, resuming transaction...");
     }
     // Build and return the constructed transaction
     builder.build(
