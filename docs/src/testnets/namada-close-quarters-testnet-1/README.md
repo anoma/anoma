@@ -2,29 +2,37 @@
 
 (WIP)
 
-## Info
+This testnet introduces the following new features:
+- [on-chain governance](../../user-guide/ledger/governance.md) - create and vote for proposals both onchain and offchain
+- [MASP (multi-asset shielded pool) transfers](../internal-testnet-1/README.md#shielded-transfers) - make private transfers of any Namada token
+
+Future testnets will include more features as described in [the Namada spec](https://specs.anoma.net/master/architecture/namada.html), like IBC (inter-blockchain communication protocol), bridging to the Ethereum blockchain and more.
+
+## Status
+- 2021-05-02 - we are currently preparing to launch the chain. Applications are open for people to be genesis validators.
+
+## Chain information
 Chain ID: TBD
+Links to download prebuilt binaries: TODO - will be automatically uploaded from the branch tag CI
 
-Link to download prebuilt binaries: TBD
+If you want to compile the binaries from source yourself, make sure you have checked out the specific tag `TODO-x.x.x-prerelease` to build from. i.e.
 
-If you want to compile the binaries from source yourself, please usethe head of the [`tomas/gov-and-masp`](https://github.com/anoma/anoma/tree/tomas/gov-and-masp) branch.
+```shell
+git checkout tags/TODO-x.x.x-prerelease -b namada-close-quarters-testnet-1
+```
 
-### Current status
-- 2021-05-02 - we are currently preparing for chain genesis and open for applications from people to be genesis validators
-
-### Useful guides on new features
-- [Governance](#TODO)
-- [MASP (multi-asset shielded pool) transfers](./masp.md)
+Then follow [the building from source guide](../../user-guide/install.md#from-source).
 
 ## Applying to be a genesis validator
-If you want to be a validator on the testnet.
 
 ### Prerequisites
-- a machine that meets the [requirements](../../user-guide/genesis-validator-setup.md) for running a validator node
+- a machine that meets the [requirements](../../user-guide/install.md#hardware-requirements) for running a validator node
 - an associated public IPv4 address with ports 26656 and 26657 reachable from anywhere
 
 ### Set up
-Follow [this guide](../../user-guide/genesis-validator-setup.md) on how to generate. After this, you'll have a `validator.toml` file, the contents of which will look something like the following:
+Follow [this guide](../../user-guide/genesis-validator-setup.md#Pre-genesis) on how to generate your "pre-genesis" validator files.
+
+After this, you'll have a `validator.toml` file, the contents of which will look something like the following:
 
 ```toml
 [validator.1337-validator]
@@ -37,4 +45,4 @@ net_address = "1.2.3.4:26656"
 tendermint_node_key = "00e1a8fe1abceb700063ab4558baec680b64247e2fd9891962af552b9e49318d8d"
 ```
 
-This file contains only public information and is safe to share publicly. If you want to be a genesis validator for this testnet, please make a pull request to [https://github.com/anoma/namada-testnets](https://github.com/anoma/namada-testnets) with this `validator.toml` file. You can see what an example PR looks like [here](#TODO).
+This file contains only public information and is safe to share publicly. If you want to be a genesis validator for this testnet, please make a pull request to [https://github.com/anoma/namada-testnets](https://github.com/anoma/namada-testnets) adding your `validator.toml` file to the `namada-close-quarters-testnet-1/` directory, renaming it to `$alias.toml`. e.g. if you chose your alias to be "bertha", submit the file with the name `bertha.toml`. You can see what an example PR looks like [here](https://github.com/anoma/namada-testnets/pull/1).
