@@ -1,7 +1,8 @@
-# Introduction to governance.
+# Introduction to governance
 
 The anoma governance mechanism gives users the possibility to upgrade the protocol dynamically.
 There are two different mechanism to create a proposal:
+
 - Onchain
 - Offchain
 
@@ -9,7 +10,7 @@ There are two different mechanism to create a proposal:
 
 ### Create a proposal
 
-Assuming you have an account with at least 500 NAM token (in this example we are going to use `my-new-acc`), lets get the corresponding address
+Assuming you have an account with at least 500 XAN token (in this example we are going to use `my-new-acc`), lets get the corresponding address
 
 ```shell
 anoma wallet address find `my-new-acc`
@@ -37,7 +38,9 @@ Now, we need to create a json file `proposal.json` holding the content of our pr
     "proposal_code_path": "./wasm_for_tests/tx_no_op.wasm"
 }
 ```
+
 You should change the value of:
+
 - `Author` field with the address of `my-new-acc`.
 - `voting_start_epoch` with future epoch (must be a multiple of 3)
 - `voting_end_epoch` with an epoch greater of `voting_start_epoch`, multiple of 3.
@@ -57,6 +60,7 @@ anoma client query-proposal
 ```
 
 or a single proposal with
+
 ```shell
 anoma client query-proposal --proposal-id 0
 ```
@@ -102,6 +106,7 @@ This command will create a `proposal` file same directory where the command was 
 ### Vote proposal
 
 To vote an offline proposal use the following command:
+
 ```shell
 anoma client vote-proposal --data-path proposal --vote yay --signer validator --offline
 ```
@@ -111,12 +116,14 @@ This command will create a `proposal-vote-${address}` file (where address is the
 ### Tally offline proposal
 
 To compute the tally for an offline proposal we need to collect
+
 - `proposal` file (must have this name)
 - all the `proposal-vote-${address}` files
 
 All those files will have to be in a folder (lets call it `offline-proposal`).
 
 Now you can use the following command:
+
 ```shell
 anoma client query-proposal-result --offline --data-path `offline-proposal`
 ```
