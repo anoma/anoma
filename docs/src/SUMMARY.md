@@ -15,6 +15,7 @@
 - [Testnets](./testnets/README.md)
   - [Testnet launch procedure](./testnets/testnet-launch-procedure/README.md)
   - [Namada Close Quarters Testnet 1](./testnets/namada-close-quarters-testnet-1/README.md)
+    - [MASP](./testnets/namada-close-quarters-testnet-1/masp.md)
   - [Internal Testnet 1](./testnets/internal-testnet-1/README.md)
 - [Exploration](./explore/README.md)
   - [Design](./explore/design/README.md)
