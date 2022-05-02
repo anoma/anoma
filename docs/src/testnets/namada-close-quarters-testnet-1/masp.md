@@ -34,7 +34,7 @@ balance.
 To create a payment address from your spending key, use:
 
 ```
-./anomaw masp gen-addr --key [your viewing key alias] --alias [your payment address alias]
+anomaw masp gen-addr --key [your viewing key alias] --alias [your payment address alias]
 ```
 
 This will generate a different payment address each time you run it.
