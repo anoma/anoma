@@ -1,7 +1,5 @@
 # Namada Close Quarters Testnet 1
 
-(WIP)
-
 This testnet introduces the following new features:
 - [on-chain governance](../../user-guide/ledger/governance.md) - create and vote for proposals both onchain and offchain
 - [MASP (multi-asset shielded pool) transfers](./masp.md) - make private transfers of any Namada token
@@ -13,15 +11,8 @@ Future testnets will include more features as described in [the Namada spec](htt
 
 ## Chain information
 Chain ID: TBD
-Links to download prebuilt binaries: TODO - will be automatically uploaded from the branch tag CI
-
-If you want to compile the binaries from source yourself, make sure you have checked out the specific tag `TODO-x.x.x-prerelease` to build from. i.e.
-
-```shell
-git checkout tags/TODO-x.x.x-prerelease -b namada-close-quarters-testnet-1
-```
-
-Then follow [the building from source guide](../../user-guide/install.md#from-source).
+ 
+You will need to compile the binaries from source yourself, make sure you have checked out the specific commit `f1afdffd5e43ad4bb448db7bf5bc1e23464350f7` to build from, then follow [the building from source guide](../../user-guide/install.md#from-source).
 
 ## Applying to be a genesis validator
 
