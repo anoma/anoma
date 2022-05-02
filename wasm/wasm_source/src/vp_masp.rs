@@ -36,6 +36,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "not yet implemented"]
     fn test_good_tx() {
         let env = TestVpEnv::default();
         let addr: Address = env.addr.clone();
