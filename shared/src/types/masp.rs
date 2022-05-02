@@ -363,7 +363,7 @@ pub enum BalanceOwner {
     /// A balance stored at a transparent address
     Address(Address),
     /// A balance stored at a shielded address
-    FullViewingKey(ExtendedViewingKey),
+    FullViewingKey(Box<ExtendedViewingKey>),
 }
 
 impl BalanceOwner {
@@ -378,7 +378,7 @@ impl BalanceOwner {
     /// Get the contained FullViewingKey, if any
     pub fn full_viewing_key(&self) -> Option<ExtendedViewingKey> {
         match self {
-            Self::FullViewingKey(x) => Some(*x),
+            Self::FullViewingKey(x) => Some(**x),
             _ => None,
         }
     }
@@ -392,7 +392,7 @@ pub enum MaspValue {
     /// A MASP ExtendedSpendingKey
     ExtendedSpendingKey(ExtendedSpendingKey),
     /// A MASP FullViewingKey
-    FullViewingKey(ExtendedViewingKey),
+    FullViewingKey(Box<ExtendedViewingKey>),
 }
 
 impl FromStr for MaspValue {
@@ -407,7 +407,9 @@ impl FromStr for MaspValue {
                 ExtendedSpendingKey::from_str(s).map(Self::ExtendedSpendingKey)
             })
             .or_else(|_err| {
-                ExtendedViewingKey::from_str(s).map(Self::FullViewingKey)
+                ExtendedViewingKey::from_str(s)
+                    .map(Box::new)
+                    .map(Self::FullViewingKey)
             })
     }
 }
@@ -461,10 +463,10 @@ impl From<SpendDescription> for SpendDescriptionBytes {
         SpendDescriptionBytes {
             cv: s.cv.to_bytes(),
             anchor: s.anchor.to_bytes(),
-            nullifier: s.nullifier.clone(),
+            nullifier: s.nullifier,
             rk: s.rk.0.to_bytes(),
             spend_auth_sig: sig,
-            sighash_value: s.sighash_value.clone(),
+            sighash_value: s.sighash_value,
             zkproof: proof,
         }
     }
@@ -481,10 +483,10 @@ impl From<SpendDescriptionBytes> for SpendDescription {
         SpendDescription {
             cv: jubjub::ExtendedPoint::from_bytes(&s.cv).unwrap(),
             anchor: bls12_381::Scalar::from_bytes(&s.anchor).unwrap(),
-            nullifier: s.nullifier.clone(),
+            nullifier: s.nullifier,
             rk: PublicKey(jubjub::ExtendedPoint::from_bytes(&s.rk).unwrap()),
             spend_auth_sig: sig,
-            sighash_value: s.sighash_value.clone(),
+            sighash_value: s.sighash_value,
             zkproof: proof,
         }
     }
@@ -590,7 +592,7 @@ impl From<ShieldedTransaction> for ShieldedTransactionBytes {
                 })
                 .collect(),
             binding_sig: sig,
-            sighash_value: tx.sighash_value.clone(),
+            sighash_value: tx.sighash_value,
         }
     }
 }
@@ -617,7 +619,7 @@ impl From<ShieldedTransactionBytes> for ShieldedTransaction {
                 })
                 .collect(),
             binding_sig: sig,
-            sighash_value: tx.sighash_value.clone(),
+            sighash_value: tx.sighash_value,
         }
     }
 }

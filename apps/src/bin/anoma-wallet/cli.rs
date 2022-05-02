@@ -248,7 +248,7 @@ fn address_key_add(
         MaspValue::FullViewingKey(viewing_key) => {
             let alias = ctx
                 .wallet
-                .insert_viewing_key(alias, viewing_key)
+                .insert_viewing_key(alias, *viewing_key)
                 .unwrap_or_else(|| {
                     eprintln!("Viewing key not added");
                     cli::safe_exit(1);

@@ -129,8 +129,7 @@ impl Wallet {
         let password = read_and_confirm_pwd(unsafe_dont_encrypt);
         let (alias, key) = self.store.gen_spending_key(alias, password);
         // Cache the newly added key
-        self.decrypted_spendkey_cache
-            .insert(alias.clone(), key.clone());
+        self.decrypted_spendkey_cache.insert(alias.clone(), key);
         (alias.into(), key)
     }
 
@@ -155,9 +154,9 @@ impl Wallet {
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => Ok(Store::gen_validator_keys(
-                other.map(|res| res.unwrap().clone()),
-            )),
+            other => {
+                Ok(Store::gen_validator_keys(other.map(|res| res.unwrap())))
+            }
         }
     }
 
@@ -217,7 +216,7 @@ impl Wallet {
         if let Some(cached_key) =
             self.decrypted_spendkey_cache.get(&alias.as_ref().into())
         {
-            return Ok(cached_key.clone());
+            return Ok(*cached_key);
         }
         // If not cached, look-up in store
         let stored_spendkey = self
@@ -368,7 +367,7 @@ impl Wallet {
         self.store
             .get_payment_addrs()
             .iter()
-            .map(|(alias, value)| (alias.into(), value.clone()))
+            .map(|(alias, value)| (alias.into(), *value))
             .collect()
     }
 
@@ -377,7 +376,7 @@ impl Wallet {
         self.store
             .get_viewing_keys()
             .iter()
-            .map(|(alias, value)| (alias.into(), value.clone()))
+            .map(|(alias, value)| (alias.into(), *value))
             .collect()
     }
 
@@ -388,7 +387,7 @@ impl Wallet {
         self.store
             .get_spending_keys()
             .iter()
-            .map(|(alias, value)| (alias.into(), value.clone()))
+            .map(|(alias, value)| (alias.into(), value))
             .collect()
     }
 

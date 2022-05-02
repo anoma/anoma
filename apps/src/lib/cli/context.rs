@@ -250,20 +250,20 @@ impl FromContext<TransferSource> {
     /// Converts this TransferSource argument to an Address. Call this function
     /// only when certain that raw represents an Address.
     pub fn to_address(&self) -> FromContext<Address> {
-        return FromContext::<Address> {
+        FromContext::<Address> {
             raw: self.raw.clone(),
             phantom: PhantomData,
-        };
+        }
     }
 
     /// Converts this TransferSource argument to an ExtendedSpendingKey. Call
     /// this function only when certain that raw represents an
     /// ExtendedSpendingKey.
     pub fn to_spending_key(&self) -> FromContext<ExtendedSpendingKey> {
-        return FromContext::<ExtendedSpendingKey> {
+        FromContext::<ExtendedSpendingKey> {
             raw: self.raw.clone(),
             phantom: PhantomData,
-        };
+        }
     }
 }
 
@@ -271,19 +271,19 @@ impl FromContext<TransferTarget> {
     /// Converts this TransferTarget argument to an Address. Call this function
     /// only when certain that raw represents an Address.
     pub fn to_address(&self) -> FromContext<Address> {
-        return FromContext::<Address> {
+        FromContext::<Address> {
             raw: self.raw.clone(),
             phantom: PhantomData,
-        };
+        }
     }
 
     /// Converts this TransferTarget argument to a PaymentAddress. Call this
     /// function only when certain that raw represents a PaymentAddress.
     pub fn to_payment_address(&self) -> FromContext<PaymentAddress> {
-        return FromContext::<PaymentAddress> {
+        FromContext::<PaymentAddress> {
             raw: self.raw.clone(),
             phantom: PhantomData,
-        };
+        }
     }
 }
 
@@ -475,6 +475,7 @@ impl ArgFromMutContext for BalanceOwner {
             .map(Self::Address)
             .or_else(|_| {
                 ExtendedViewingKey::arg_from_mut_ctx(ctx, raw)
+                    .map(Box::new)
                     .map(Self::FullViewingKey)
             })
     }

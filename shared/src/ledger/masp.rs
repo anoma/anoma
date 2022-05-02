@@ -70,7 +70,7 @@ pub fn check_spend(
         spend.anchor,
         &spend.nullifier,
         // TODO: should make this clone, or just use an ExtendedPoint?
-        PublicKey(spend.rk.0.clone()),
+        PublicKey(spend.rk.0),
         sighash,
         spend.spend_auth_sig.unwrap(),
         zkproof,
@@ -106,7 +106,7 @@ pub fn verify_shielded_tx(transaction: &Transaction) -> bool {
     let (_, output_pvk) = load_output_params();
 
     let sighash: [u8; 32] =
-        signature_hash_data(&tx_data, Sapling, SIGHASH_ALL, None)
+        signature_hash_data(tx_data, Sapling, SIGHASH_ALL, None)
             .try_into()
             .unwrap();
 

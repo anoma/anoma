@@ -551,22 +551,22 @@ impl ShieldedContext {
     pub async fn fetch(
         &mut self,
         ledger_address: &TendermintAddress,
-        sks: &Vec<ExtendedSpendingKey>,
-        fvks: &Vec<ViewingKey>,
+        sks: impl Iterator<Item = ExtendedSpendingKey>,
+        fvks: impl Iterator<Item = ViewingKey>,
     ) {
         // First determine which of the keys requested to be fetched are new.
         // Necessary because old transactions will need to be scanned for new
         // keys.
         let mut unknown_keys = Vec::new();
         for esk in sks {
-            let vk = to_viewing_key(esk).vk;
+            let vk = to_viewing_key(&esk).vk;
             if !self.vks.contains_key(&vk) {
                 unknown_keys.push(vk);
             }
         }
         for vk in fvks {
-            if !self.vks.contains_key(vk) {
-                unknown_keys.push(*vk);
+            if !self.vks.contains_key(&vk) {
+                unknown_keys.push(vk);
             }
         }
 
@@ -580,12 +580,12 @@ impl ShieldedContext {
             // Do this by constructing a shielding context only for unknown keys
             let mut tx_ctx = ShieldedContext::new(self.context_dir.clone());
             for vk in unknown_keys {
-                tx_ctx.vks.entry(vk).or_insert(HashSet::new());
+                tx_ctx.vks.entry(vk).or_insert_with(HashSet::new);
             }
             // Update this unknown shielded context until it is level with self
             while tx_ctx.last_txid != self.last_txid {
                 if let Some(tx) = tx_iter.next() {
-                    tx_ctx.scan_tx(&tx).expect("transaction scanned");
+                    tx_ctx.scan_tx(tx).expect("transaction scanned");
                 } else {
                     break;
                 }
@@ -603,7 +603,7 @@ impl ShieldedContext {
         // Now that we possess the unspent notes corresponding to both old and
         // new keys up until tx_pos, proceed to scan the new transactions.
         for tx in &mut tx_iter {
-            self.scan_tx(&tx).expect("transaction scanned");
+            self.scan_tx(tx).expect("transaction scanned");
         }
     }
 
@@ -622,9 +622,10 @@ impl ShieldedContext {
             println!("MASP parameter download complete, resuming execution...");
         }
         // Finally initialize a shielded context with the supplied directory
-        let mut ctx = Self::default();
-        ctx.context_dir = context_dir;
-        ctx
+        Self {
+            context_dir,
+            ..Default::default()
+        }
     }
 
     /// Obtain a chronologically-ordered list of all accepted shielded
@@ -682,7 +683,8 @@ impl ShieldedContext {
     /// associated to notes, memos, and diversifiers. And the set of notes that
     /// we have spent are updated. The witness map is maintained to make it
     /// easier to construct note merkle paths in other code. See
-    /// https://zips.z.cash/protocol/protocol.pdf#scan
+    /// <https://zips.z.cash/protocol/protocol.pdf#scan>
+    #[allow(clippy::result_unit_err)]
     pub fn scan_tx(&mut self, tx: &Transaction) -> Result<(), ()> {
         // Listen for notes sent to our viewing keys
         for so in &(*tx).shielded_outputs {
@@ -721,7 +723,7 @@ impl ShieldedContext {
                     // The payment address' diversifier is required to spend
                     // note
                     self.div_map.insert(note_pos, *pa.diversifier());
-                    self.nf_map.insert(nf.0.try_into().unwrap(), note_pos);
+                    self.nf_map.insert(nf.0, note_pos);
                     break;
                 }
             }
@@ -756,7 +758,7 @@ impl ShieldedContext {
                     continue;
                 }
                 // Get note associated with this ID
-                let note = self.note_map.get(note_idx).unwrap().clone();
+                let note = *self.note_map.get(note_idx).unwrap();
                 // Finally add value to multi-asset accumulator
                 val_acc += Amount::from(note.asset_type, note.value)
                     .expect("found note with invalid value or asset type");
@@ -778,7 +780,7 @@ impl ShieldedContext {
         let mut val_acc = 0;
         let mut notes = Vec::new();
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = self.vks.get(&vk) {
+        if let Some(avail_notes) = self.vks.get(vk) {
             for note_idx in avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
@@ -790,7 +792,7 @@ impl ShieldedContext {
                     continue;
                 }
                 // Get note, merkle path, diversifier associated with this ID
-                let note = self.note_map.get(note_idx).unwrap().clone();
+                let note = *self.note_map.get(note_idx).unwrap();
                 // Note with distinct asset type cannot be used as input to this
                 // transaction
                 if note.asset_type != asset_type {
@@ -829,11 +831,11 @@ async fn gen_shielded_transfer(
     }
     // We want to fund our transaction solely from supplied spending key
     let spending_key = spending_key.map(|x| x.into());
-    let spending_keys = spending_key.clone().into_iter().collect();
+    let spending_keys = spending_key.into_iter();
     // Load the current shielded context given the spending key we possess
     let _ = ctx.shielded.load();
     ctx.shielded
-        .fetch(&args.tx.ledger_address, &spending_keys, &vec![])
+        .fetch(&args.tx.ledger_address, spending_keys, vec![].into_iter())
         .await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
@@ -856,7 +858,7 @@ async fn gen_shielded_transfer(
     builder.set_fee(Amount::zero())?;
     // If there are shielded inputs
     if let Some(sk) = spending_key {
-        let sk = sk.into();
+        let sk = sk;
         // Locate unspent notes that can help us meet the transaaction amount
         let (val_acc, unspent_notes) = ctx.shielded.collect_unspent_notes(
             &to_viewing_key(&sk).vk,
@@ -865,12 +867,7 @@ async fn gen_shielded_transfer(
         );
         // Commit the notes found to our transaction
         for (diversifier, note, merkle_path) in unspent_notes {
-            builder.add_sapling_spend(
-                sk.clone(),
-                diversifier,
-                note,
-                merkle_path,
-            )?;
+            builder.add_sapling_spend(sk, diversifier, note, merkle_path)?;
         }
         // If there is change leftover send it back to this spending key
         if val_acc > amt {
@@ -881,7 +878,7 @@ async fn gen_shielded_transfer(
             let change_amt = val_acc - amt;
             builder.add_sapling_output(
                 Some(sk.expsk.ovk),
-                change_pa.clone(),
+                change_pa,
                 asset_type,
                 change_amt,
                 None,
@@ -912,8 +909,7 @@ async fn gen_shielded_transfer(
     // Now handle the outputs of this transaction
     // If there is a shielded output
     if let Some(pa) = payment_address {
-        let ovk_opt =
-            spending_key.map(|x| ExtendedSpendingKey::from(x).expsk.ovk);
+        let ovk_opt = spending_key.map(|x| x.expsk.ovk);
         builder.add_sapling_output(
             ovk_opt,
             pa.into(),
@@ -946,7 +942,7 @@ async fn gen_shielded_transfer(
             &LocalTxProver::with_default_location()
                 .expect("unable to load MASP Parameters"),
         )
-        .map(|x| Some(x))
+        .map(Some)
 }
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
