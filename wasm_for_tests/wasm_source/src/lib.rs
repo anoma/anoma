@@ -30,7 +30,7 @@ pub mod main {
     #[transaction]
     fn apply_tx(_tx_data: Vec<u8>) {
         // governance
-        let target_key = storage::get_min_proposal_grace_epoch_key();
+        let target_key = gov_storage::get_min_proposal_grace_epoch_key();
         write(&target_key.to_string(), 9_u64);
 
         // treasury

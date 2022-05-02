@@ -16,6 +16,7 @@ pub mod proof_of_stake;
 pub mod token;
 
 pub mod tx_prelude {
+    pub use anoma::ledger::governance::storage as gov_storage;
     pub use anoma::ledger::parameters::storage as parameters_storage;
     pub use anoma::ledger::storage::types::encode;
     pub use anoma::ledger::treasury::storage as treasury_storage;
