@@ -9,6 +9,7 @@
   - [The Ledger](./user-guide/ledger.md)
     - [Interact with PoS](./user-guide/ledger/pos.md)
     - [Customize](./user-guide/ledger/customize.md)
+  - [Governance](./user-guide/ledger/governance.md)
   - [The Intent gossiper and Matchmaker](./user-guide/intent-gossiper-and-matchmaker.md)
   - [Genesis validator setup](./user-guide/genesis-validator-setup.md)
 - [Testnets](./testnets/README.md)
