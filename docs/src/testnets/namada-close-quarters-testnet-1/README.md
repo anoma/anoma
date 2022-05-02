@@ -4,6 +4,7 @@
 
 ## Info
 Chain ID: TBD
+
 Link to download prebuilt binaries: TBD
 
 If you want to compile the binaries from source yourself, please usethe head of the [`tomas/gov-and-masp`](https://github.com/anoma/anoma/tree/tomas/gov-and-masp) branch.
