@@ -14,7 +14,7 @@ If you want to compile the binaries from source yourself, please usethe head of 
 
 ### Useful guides on new features
 - [Governance](#TODO)
-- [MASP (multi-asset shielded pool) transfers](#TODO)
+- [MASP (multi-asset shielded pool) transfers](./masp.md)
 
 ## Applying to be a genesis validator
 If you want to be a validator on the testnet.
