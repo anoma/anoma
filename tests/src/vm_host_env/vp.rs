@@ -335,5 +335,6 @@ mod native_vp_host_env {
             input_data_ptr: u64,
             input_data_len: u64,
         ) -> i64);
+    native_host_fn!(vp_verify_masp(tx_ptr: u64, tx_len: u64) -> i64);
     native_host_fn!(vp_log_string(str_ptr: u64, str_len: u64));
 }
