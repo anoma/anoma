@@ -1,5 +1,6 @@
 # Genesis validator setup
 
+## Pre-genesis
 To setup all the [required keys](#required-keys) for a genesis validator for an upcoming network, you can execute the following command with an alias of your choice. Note that this alias is public (the address of your validator account will be visible in every wallet) and must be unique within the network.
 
 You must also provide a static `{IP:port}` to the `--net-address` argument of your future node's P2P address.
@@ -21,6 +22,7 @@ This file is the public configuration of your validator. You can safely share th
 
 Note that the wallet containing your private keys will also be written into this directory.
 
+## After network config release
 Once the network is finalized, a new chain ID will be created and released on [anoma-network-config/releases](https://github.com/heliaxdev/anoma-network-config/releases) (a custom configs URL can be used instead with `ANOMA_NETWORK_CONFIGS_SERVER` env var). You can use it to setup your genesis validator node for the `--chain-id` argument in the command below.
 
 ```shell
