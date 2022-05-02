@@ -405,6 +405,7 @@ mod tests {
     use super::*;
     use crate::ledger::storage::testing::TestStorage;
     use crate::types::validity_predicate::EvalVp;
+    use crate::proto::SignedTxData;
     use crate::vm::wasm;
 
     const TX_MEMORY_LIMIT_WASM: &str = "../wasm_for_tests/tx_memory_limit.wasm";
@@ -533,7 +534,8 @@ mod tests {
         let input = 2_usize.pow(23).try_to_vec().unwrap();
         let eval_vp = EvalVp {
             vp_code: vp_memory_limit.clone(),
-            input,
+            input: SignedTxData {data: Some(input), sig: None}
+            .try_to_vec().expect("cannot encode input"),
         };
         let tx_data = eval_vp.try_to_vec().unwrap();
         let tx = Tx::new(vec![], Some(tx_data));

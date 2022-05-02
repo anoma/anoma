@@ -293,6 +293,7 @@ mod tests {
     use core::time::Duration;
     use std::convert::TryFrom;
     use std::str::FromStr;
+    use borsh::BorshSerialize;
 
     use crate::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
     use crate::ibc::core::ics02_client::client_consensus::ConsensusState;
@@ -592,7 +593,8 @@ mod tests {
         // this should return true because state has been stored
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -621,7 +623,9 @@ mod tests {
         let ibc = Ibc { ctx };
         // this should fail because no state is stored
         let result = ibc
-            .validate_tx(tx.data.as_ref().unwrap(), &keys_changed, &verifiers)
+            .validate_tx(tx.data.try_to_vec()
+                         .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
+                         &keys_changed, &verifiers)
             .unwrap_err();
         assert_matches!(
             result,
@@ -691,7 +695,8 @@ mod tests {
         // this should return true because state has been stored
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -740,7 +745,8 @@ mod tests {
         // this should return true because state has been stored
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -785,7 +791,8 @@ mod tests {
         let ibc = Ibc { ctx };
         // this should fail because no client exists
         let result = ibc
-            .validate_tx(tx.data.as_ref().unwrap(), &keys_changed, &verifiers)
+            .validate_tx(tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(), &keys_changed, &verifiers)
             .unwrap_err();
         assert_matches!(
             result,
@@ -858,7 +865,8 @@ mod tests {
         // this should return true because state has been stored
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -935,7 +943,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1000,7 +1009,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1051,7 +1061,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1121,7 +1132,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1199,7 +1211,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1272,7 +1285,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1303,7 +1317,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1336,7 +1351,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1409,7 +1425,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1489,7 +1506,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1574,7 +1592,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1650,7 +1669,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1734,7 +1754,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )
@@ -1774,7 +1795,8 @@ mod tests {
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
-                tx.data.as_ref().unwrap(),
+                tx.data.try_to_vec()
+                    .expect("Encoding data for verifying signature shouldn't fail").as_ref(),
                 &keys_changed,
                 &verifiers
             )

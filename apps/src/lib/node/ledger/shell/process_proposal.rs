@@ -317,7 +317,7 @@ mod test_process_proposal {
             Some("transaction data".as_bytes().to_owned()),
         );
         let timestamp = tx.timestamp;
-        let mut wrapper = WrapperTx::new(
+        let wrapper = WrapperTx::new(
             Fee {
                 amount: 100.into(),
                 token: xan(),
@@ -330,13 +330,10 @@ mod test_process_proposal {
         )
         .sign(&keypair)
         .expect("Test failed");
-        let new_tx = if let Some(Ok(SignedTxData {
+        let new_tx = if let SignedTxData {
             data: Some(data),
             sig,
-        })) = wrapper
-            .data
-            .take()
-            .map(|data| SignedTxData::try_from_slice(&data[..]))
+        } = wrapper.data
         {
             let mut new_wrapper = if let TxType::Wrapper(wrapper) =
                 <TxType as BorshDeserialize>::deserialize(&mut data.as_ref())
@@ -354,14 +351,11 @@ mod test_process_proposal {
                 .expect("Test failed");
             Tx {
                 code: vec![],
-                data: Some(
+                data:
                     SignedTxData {
                         sig,
                         data: Some(new_data),
-                    }
-                    .try_to_vec()
-                    .expect("Test failed"),
-                ),
+                    },
                 timestamp,
             }
         } else {

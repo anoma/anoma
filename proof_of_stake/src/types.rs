@@ -7,6 +7,8 @@ use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
 use std::ops::{Add, AddAssign, Mul, Sub};
+use borsh::schema::Declaration;
+use borsh::schema::Definition;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
@@ -149,7 +151,6 @@ pub struct ActiveValidator<PK> {
     Hash,
     BorshDeserialize,
     BorshSerialize,
-    BorshSchema,
 )]
 pub struct BondId<Address>
 where
@@ -171,6 +172,27 @@ where
     pub validator: Address,
 }
 
+impl<Address> BorshSchema for BondId<Address>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshSerialize
+        + BorshSchema
+    + BorshDeserialize,
+{
+    fn add_definitions_recursively(
+        _definitions: &mut HashMap<Declaration, Definition>
+    ) {}
+
+    fn declaration() -> Declaration { "BondId".to_string() }        
+}
+
 /// Validator's address with its voting power.
 #[derive(
     Debug,
@@ -181,7 +203,6 @@ where
     Ord,
     BorshDeserialize,
     BorshSerialize,
-    BorshSchema,
 )]
 pub struct WeightedValidator<Address>
 where
@@ -203,6 +224,27 @@ where
     pub voting_power: VotingPower,
     /// Validator's address
     pub address: Address,
+}
+
+impl<Address> BorshSchema for WeightedValidator<Address>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshSerialize
+        + BorshSchema
+    + BorshDeserialize,
+{
+    fn add_definitions_recursively(
+        _definitions: &mut HashMap<Declaration, Definition>
+    ) {}
+
+    fn declaration() -> Declaration { "WeightedValidator".to_string() }        
 }
 
 impl<Address> Display for WeightedValidator<Address>
@@ -238,7 +280,6 @@ where
     Ord,
     BorshDeserialize,
     BorshSerialize,
-    BorshSchema,
 )]
 pub struct ValidatorSet<Address>
 where
@@ -258,6 +299,26 @@ where
     pub active: BTreeSet<WeightedValidator<Address>>,
     /// All the other validators that are not active
     pub inactive: BTreeSet<WeightedValidator<Address>>,
+}
+
+impl<Address> BorshSchema for ValidatorSet<Address>
+where
+    Address: Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshSerialize
+        + BorshSchema
+    + BorshDeserialize,
+{
+    fn add_definitions_recursively(
+        _definitions: &mut HashMap<Declaration, Definition>
+    ) {}
+
+    fn declaration() -> Declaration { "ValidatorSet".to_string() }        
 }
 
 /// Validator's state.

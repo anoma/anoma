@@ -2,6 +2,9 @@
 //! future epochs at a given [`EpochOffset`].
 
 use core::marker::PhantomData;
+use borsh::schema::Declaration;
+use borsh::schema::Definition;
+use std::collections::HashMap;
 use core::{cmp, fmt, ops};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -11,7 +14,7 @@ use crate::PosParams;
 
 /// Data that may have values set for future epochs, up to an epoch at offset as
 /// set via the `Offset` type parameter.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct Epoched<Data, Offset>
 where
     Data: Clone + BorshDeserialize + BorshSerialize + BorshSchema,
@@ -23,10 +26,25 @@ where
     offset: PhantomData<Offset>,
 }
 
+impl<Data, Offset> BorshSchema for Epoched<Data, Offset>
+where
+    Data: Clone
+        + ops::Add<Output = Data>
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    Offset: EpochOffset, {
+    fn add_definitions_recursively(
+        _definitions: &mut HashMap<Declaration, Definition>
+    ) {}
+
+    fn declaration() -> Declaration { "Epoched".to_string() }        
+}
+
 /// Data that may have delta values (a difference from the predecessor epoch)
 /// set for future epochs, up to an epoch at offset as set via the `Offset` type
 /// parameter.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct EpochedDelta<Data, Offset>
 where
     Data: Clone
@@ -40,6 +58,21 @@ where
     last_update: Epoch,
     data: Vec<Option<Data>>,
     offset: PhantomData<Offset>,
+}
+
+impl<Data, Offset> BorshSchema for EpochedDelta<Data, Offset>
+where
+    Data: Clone
+        + ops::Add<Output = Data>
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    Offset: EpochOffset, {
+    fn add_definitions_recursively(
+        _definitions: &mut HashMap<Declaration, Definition>
+    ) {}
+
+    fn declaration() -> Declaration { "EpochedDelta".to_string() }        
 }
 
 /// Which offset should be used to set data. The value is read from

@@ -412,19 +412,19 @@ mod tests {
             // Initialize the environment
             init_vp_env(&mut env);
 
-            let tx_data = env.tx.data.expect("data should exist");
+            let tx_data = env.tx.data.try_to_vec().expect("data should exist");
             let signed_tx_data =
                 match SignedTxData::try_from_slice(&tx_data[..]) {
                     Ok(data) => data,
                     _ => panic!("decoding failed"),
                 };
             assert_eq!(&signed_tx_data.data, data);
-            assert!(vp_host_env::verify_tx_signature(&pk, &signed_tx_data.sig));
+            assert!(vp_host_env::verify_tx_signature(&pk, signed_tx_data.sig.as_ref().unwrap()));
 
             let other_keypair = key::testing::keypair_2();
             assert!(!vp_host_env::verify_tx_signature(
                 &other_keypair.ref_to(),
-                &signed_tx_data.sig
+                signed_tx_data.sig.as_ref().unwrap()
             ));
         }
     }
@@ -495,7 +495,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData {data:Some(tx_data.clone()), sig:None},
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -517,7 +517,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect_err("validation succeeded unexpectedly"),
             IbcError::ClientError(_),
         ));
@@ -530,7 +530,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -544,7 +544,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -566,7 +566,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -595,7 +595,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect_err("validation succeeded unexpectedly"),
             IbcError::ClientError(_),
         ));
@@ -608,7 +608,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -621,7 +621,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -640,7 +640,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -653,7 +653,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -680,7 +680,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -702,7 +702,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect_err("validation succeeded unexpectedly"),
             IbcError::ConnectionError(_),
         ));
@@ -715,7 +715,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -728,7 +728,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -744,7 +744,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -757,7 +757,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -781,7 +781,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -794,7 +794,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -811,7 +811,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -824,7 +824,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -854,7 +854,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -879,7 +879,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect_err("validation succeeded unexpectedly"),
             IbcError::ChannelError(_),
         ));
@@ -896,7 +896,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -923,7 +923,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect_err("validation succeeded unexpectedly"),
             IbcError::ChannelError(_),
         ));
@@ -937,7 +937,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -950,7 +950,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -964,7 +964,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -977,7 +977,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1004,7 +1004,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1017,7 +1017,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -1032,7 +1032,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1045,7 +1045,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1074,7 +1074,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1087,7 +1087,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1116,7 +1116,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1130,7 +1130,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1163,7 +1163,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1176,7 +1176,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
         // Check if the token was escrowed
@@ -1189,7 +1189,7 @@ mod tests {
         let (token_vp, _) = ibc::init_token_vp_from_tx(&env, &tx, &escrow);
         assert!(
             token_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("token validation failed unexpectedly")
         );
 
@@ -1206,7 +1206,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1219,7 +1219,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1250,7 +1250,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1263,7 +1263,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
         // Check if the token was burned
@@ -1272,7 +1272,7 @@ mod tests {
         let (token_vp, _) = ibc::init_token_vp_from_tx(&env, &tx, &burn);
         assert!(
             token_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("token validation failed unexpectedly")
         );
     }
@@ -1310,7 +1310,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1323,7 +1323,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
         // Check if the token was minted
@@ -1332,7 +1332,7 @@ mod tests {
         let (token_vp, _) = ibc::init_token_vp_from_tx(&env, &tx, &mint);
         assert!(
             token_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("token validation failed unexpectedly")
         );
     }
@@ -1388,7 +1388,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1401,14 +1401,14 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
         // Check if the token was unescrowed
         let (token_vp, _) = ibc::init_token_vp_from_tx(&env, &tx, &escrow);
         assert!(
             token_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("token validation failed unexpectedly")
         );
     }
@@ -1441,7 +1441,7 @@ mod tests {
             .expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1456,7 +1456,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
 
@@ -1473,7 +1473,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1488,7 +1488,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1526,7 +1526,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1541,7 +1541,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
     }
@@ -1591,7 +1591,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1605,7 +1605,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
         // Check if the token was refunded
@@ -1618,7 +1618,7 @@ mod tests {
         let (token_vp, _) = ibc::init_token_vp_from_tx(&env, &tx, &escrow);
         assert!(
             token_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("token validation failed unexpectedly")
         );
     }
@@ -1667,7 +1667,7 @@ mod tests {
         msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx {
             code: vec![],
-            data: Some(tx_data.clone()),
+            data: SignedTxData { sig: None, data: Some(tx_data.clone()) },
             timestamp: DateTimeUtc::now(),
         }
         .sign(&key::testing::keypair_1());
@@ -1681,7 +1681,7 @@ mod tests {
         let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("validation failed unexpectedly")
         );
         // Check if the token was refunded
@@ -1694,7 +1694,7 @@ mod tests {
         let (token_vp, _) = ibc::init_token_vp_from_tx(&env, &tx, &escrow);
         assert!(
             token_vp
-                .validate(tx.data.as_ref().unwrap())
+                .validate(tx.data.try_to_vec().expect("encoding failed").as_ref())
                 .expect("token validation failed unexpectedly")
         );
     }

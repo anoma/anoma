@@ -440,7 +440,8 @@ pub mod wrapper_tx {
             };
 
             let mut signed_tx_data =
-                SignedTxData::try_from_slice(&tx.data.unwrap()[..])
+                SignedTxData::try_from_slice(tx.data.try_to_vec()
+                                             .expect("Encoding data for verifying signature shouldn't fail").as_ref())
                     .expect("Test failed");
 
             // malicious transaction
@@ -469,10 +470,10 @@ pub mod wrapper_tx {
             signed_tx_data.data = Some(
                 TxType::Wrapper(wrapper).try_to_vec().expect("Test failed"),
             );
-            tx.data = Some(signed_tx_data.try_to_vec().expect("Test failed"));
+            tx.data = signed_tx_data.clone();
 
             // check that the signature is not valid
-            tx.verify_sig(&keypair.ref_to(), &signed_tx_data.sig)
+            tx.verify_sig(&keypair.ref_to(), &signed_tx_data.sig.unwrap())
                 .expect_err("Test failed");
             // check that the try from method also fails
             let err = crate::types::transaction::process_tx(tx)

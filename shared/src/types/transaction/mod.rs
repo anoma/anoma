@@ -512,8 +512,8 @@ pub mod tx_types {
             sig: Some(common::Signature::try_from_sig(&ed_sig).unwrap()),
         };
         // create the tx with signed decrypted data
-        let tx =
-            Tx::new(vec![], Some(signed.try_to_vec().expect("Test failed")));
+        let mut tx = Tx::new(vec![], None);
+        tx.data = signed;
         match process_tx(tx).expect("Test failed") {
             TxType::Decrypted(DecryptedTx::Decrypted(processed)) => {
                 assert_eq!(payload, processed);

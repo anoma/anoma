@@ -74,8 +74,8 @@ pub mod main {
     fn validate_tx(
         _tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         true
     }
@@ -90,8 +90,8 @@ pub mod main {
     fn validate_tx(
         _tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         false
     }
@@ -107,12 +107,12 @@ pub mod main {
     fn validate_tx(
         tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         use validity_predicate::EvalVp;
         let EvalVp { vp_code, input }: EvalVp =
-            EvalVp::try_from_slice(&tx_data[..]).unwrap();
+            EvalVp::try_from_slice(SignedTxData::try_from_slice(&tx_data[..]).unwrap().data.unwrap().as_ref()).unwrap();
         eval(vp_code, input)
     }
 }
@@ -127,10 +127,11 @@ pub mod main {
     fn validate_tx(
         tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
-        let len = usize::try_from_slice(&tx_data[..]).unwrap();
+        let len = usize::try_from_slice(
+            SignedTxData::try_from_slice(&tx_data[..]).unwrap().data.unwrap().as_ref()).unwrap();
         log_string(format!("allocate len {}", len));
         let bytes: Vec<u8> = vec![6_u8; len];
         // use the variable to prevent it from compiler optimizing it away
@@ -149,8 +150,8 @@ pub mod main {
     fn validate_tx(
         tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         // Allocates a memory of size given from the `tx_data (usize)`
         let key = storage::Key::try_from_slice(&tx_data[..]).unwrap();
