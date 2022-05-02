@@ -67,10 +67,10 @@ fn validate_tx(
         Lazy::new(|| SignedTxData::try_from_slice(&tx_data[..]));
 
     let valid_sig = Lazy::new(|| match &*signed_tx_data {
-        Ok(signed_tx_data) => {
+        Ok(SignedTxData {data: _data, sig: Some(sig)}) => {
             let pk = key::get(&addr);
             match pk {
-                Some(pk) => verify_tx_signature(&pk, &signed_tx_data.sig),
+                Some(pk) => verify_tx_signature(&pk, &sig),
                 None => false,
             }
         }

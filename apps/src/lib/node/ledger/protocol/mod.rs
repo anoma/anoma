@@ -17,6 +17,7 @@ use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
+use borsh::BorshSerialize;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -140,8 +141,8 @@ where
     gas_meter
         .add_compiling_fee(tx.code.len())
         .map_err(Error::GasError)?;
-    let empty = vec![];
-    let tx_data = tx.data.as_ref().unwrap_or(&empty);
+    let tx_data = tx.data.try_to_vec()
+        .expect("Encoding data for verifying signature shouldn't fail");
     wasm::run::tx(
         storage,
         write_log,
@@ -267,10 +268,8 @@ where
                         gas_meter,
                         vp_wasm_cache.clone(),
                     );
-                    let tx_data = match tx.data.as_ref() {
-                        Some(data) => &data[..],
-                        None => &[],
-                    };
+                    let tx_data = tx.data.try_to_vec()
+                        .expect("Encoding data for verifying signature shouldn't fail");
 
                     let accepted: Result<bool> = match internal_addr {
                         InternalAddress::PoS => {
@@ -284,7 +283,7 @@ where
                             let result = match panic::catch_unwind(move || {
                                 pos_ref
                                     .validate_tx(
-                                        tx_data,
+                                        tx_data.as_ref(),
                                         keys,
                                         verifiers_addr_ref,
                                     )
@@ -306,7 +305,7 @@ where
                         InternalAddress::Ibc => {
                             let ibc = Ibc { ctx };
                             let result = ibc
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data.as_ref(), keys, &verifiers_addr)
                                 .map_err(Error::IbcNativeVpError);
                             // Take the gas meter back out of the context
                             gas_meter = ibc.ctx.gas_meter.into_inner();
@@ -315,7 +314,7 @@ where
                         InternalAddress::Parameters => {
                             let parameters = ParametersVp { ctx };
                             let result = parameters
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data.as_ref(), keys, &verifiers_addr)
                                 .map_err(Error::ParametersNativeVpError);
                             // Take the gas meter back out of the context
                             gas_meter = parameters.ctx.gas_meter.into_inner();
@@ -334,7 +333,7 @@ where
                             // validate the transfer
                             let ibc_token = IbcToken { ctx };
                             let result = ibc_token
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data.as_ref(), keys, &verifiers_addr)
                                 .map_err(Error::IbcTokenNativeVpError);
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
                             result

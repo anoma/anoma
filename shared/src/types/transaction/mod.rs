@@ -254,7 +254,7 @@ pub mod tx_types {
         type Error = std::io::Error;
 
         fn try_from(tx: Tx) -> std::io::Result<TxType> {
-            if let Some(ref data) = tx.data {
+            if let Some(ref data) = tx.data.data {
                 BorshDeserialize::deserialize(&mut data.as_ref())
             } else {
                 // We allow Txs with empty data fields, which we
@@ -285,35 +285,27 @@ pub mod tx_types {
     /// indicating it is a wrapper. Otherwise, an error is
     /// returned indicating the signature was not valid
     pub fn process_tx(tx: Tx) -> Result<TxType, TxError> {
-        if let Some(Ok(SignedTxData {
+        if let SignedTxData {
             data: Some(data),
-            ref sig,
-        })) = tx
-            .data
-            .as_ref()
-            .map(|data| SignedTxData::try_from_slice(&data[..]))
-        {
+            sig: Some(sig),
+        } = tx.data.clone() {
             let signed_hash = Tx {
-                code: tx.code,
-                data: Some(data.clone()),
+                code: tx.code.clone(),
+                data: SignedTxData { data: Some(data.clone()), sig: None },
                 timestamp: tx.timestamp,
             }
             .hash();
-            match TxType::try_from(Tx {
-                code: vec![],
-                data: Some(data),
-                timestamp: tx.timestamp,
-            })
+            match TxType::try_from(tx)
             .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
                 // verify signature and extract signed data
                 TxType::Wrapper(wrapper) => {
-                    wrapper.validate_sig(signed_hash, sig)?;
+                    wrapper.validate_sig(signed_hash, &sig)?;
                     Ok(TxType::Wrapper(wrapper))
                 }
                 // verify signature and extract signed data
                 TxType::Protocol(protocol) => {
-                    protocol.validate_sig(signed_hash, sig)?;
+                    protocol.validate_sig(signed_hash, &sig)?;
                     Ok(TxType::Protocol(protocol))
                 }
                 // we extract the signed data, but don't check the signature
@@ -517,7 +509,7 @@ pub mod tx_types {
                     .try_to_vec()
                     .expect("Test failed"),
             ),
-            sig: common::Signature::try_from_sig(&ed_sig).unwrap(),
+            sig: Some(common::Signature::try_from_sig(&ed_sig).unwrap()),
         };
         // create the tx with signed decrypted data
         let tx =

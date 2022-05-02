@@ -8,6 +8,7 @@ use pwasm_utils::{self, rules};
 use thiserror::Error;
 use wasmer::BaseTunables;
 
+use borsh::BorshSerialize;
 use super::memory::{Limit, WasmMemory};
 use super::TxCache;
 use crate::ledger::gas::{BlockGasMeter, VpGasMeter};
@@ -169,10 +170,8 @@ where
     CA: 'static + WasmCacheAccess,
 {
     let vp_code = vp_code.as_ref();
-    let input_data = match tx.data.as_ref() {
-        Some(data) => &data[..],
-        None => &[],
-    };
+    let input_data = tx.data.try_to_vec()
+        .expect("Encoding data for verifying signature shouldn't fail");
 
     // let wasm_store = untrusted_wasm_store(memory::vp_limit());
 
@@ -211,7 +210,7 @@ where
     run_vp(
         module,
         imports,
-        input_data,
+        input_data.as_ref(),
         address,
         keys_changed,
         verifiers,

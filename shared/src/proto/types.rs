@@ -40,13 +40,20 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Because the signature is not checked by the ledger, we don't inline it into
 /// the `Tx` type directly. Instead, the signature is attached to the `tx.data`,
 /// which is can then be checked by a validity predicate wasm.
-#[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema)]
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize, BorshSchema, PartialEq)]
 pub struct SignedTxData {
     /// The original tx data bytes, if any
     pub data: Option<Vec<u8>>,
     /// The signature is produced on the tx data concatenated with the tx code
     /// and the timestamp.
-    pub sig: common::Signature,
+    pub sig: Option<common::Signature>,
+}
+
+impl Hash for SignedTxData {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.try_to_vec()
+        .expect("Encoding transaction data shouldn't fail").hash(state);
+    }
 }
 
 /// A generic signed data wrapper for Borsh encode-able data.
@@ -125,7 +132,7 @@ where
 )]
 pub struct Tx {
     pub code: Vec<u8>,
-    pub data: Option<Vec<u8>>,
+    pub data: SignedTxData,
     pub timestamp: DateTimeUtc,
 }
 
@@ -140,7 +147,8 @@ impl TryFrom<&[u8]> for Tx {
         };
         Ok(Tx {
             code: tx.code,
-            data: tx.data,
+            data: tx.data.map_or(SignedTxData {data: None, sig: None}, |x| SignedTxData::try_from_slice(&x[..])
+                .expect("Decoding transaction data shouldn't fail")),
             timestamp,
         })
     }
@@ -151,7 +159,8 @@ impl From<Tx> for types::Tx {
         let timestamp = Some(tx.timestamp.into());
         types::Tx {
             code: tx.code,
-            data: tx.data,
+            data: Some(tx.data.try_to_vec()
+                .expect("Encoding transaction data shouldn't fail")),
             timestamp,
         }
     }
@@ -161,7 +170,7 @@ impl Tx {
     pub fn new(code: Vec<u8>, data: Option<Vec<u8>>) -> Self {
         Tx {
             code,
-            data,
+            data: SignedTxData { data, sig: None },
             timestamp: DateTimeUtc::now(),
         }
     }
@@ -184,17 +193,20 @@ impl Tx {
 
     /// Sign a transaction using [`SignedTxData`].
     pub fn sign(self, keypair: &common::SecretKey) -> Self {
-        let to_sign = self.hash();
+        let unsigned_self = Tx {
+            code: self.code.clone(),
+            data: SignedTxData { data: self.data.data.clone(), sig: None },
+            timestamp: self.timestamp,
+        };
+        let to_sign = unsigned_self.hash();
         let sig = common::SigScheme::sign(keypair, &to_sign);
         let signed = SignedTxData {
-            data: self.data,
-            sig,
-        }
-        .try_to_vec()
-        .expect("Encoding transaction data shouldn't fail");
+            data: self.data.data,
+            sig: Some(sig),
+        };
         Tx {
             code: self.code,
-            data: Some(signed),
+            data: signed,
             timestamp: self.timestamp,
         }
     }
@@ -207,13 +219,9 @@ impl Tx {
         sig: &common::Signature,
     ) -> std::result::Result<(), VerifySigError> {
         // Try to get the transaction data from decoded `SignedTxData`
-        let tx_data = self.data.clone().ok_or(VerifySigError::MissingData)?;
-        let signed_tx_data = SignedTxData::try_from_slice(&tx_data[..])
-            .expect("Decoding transaction data shouldn't fail");
-        let data = signed_tx_data.data;
         let tx = Tx {
             code: self.code.clone(),
-            data,
+            data: SignedTxData { data: self.data.data.clone(), sig: None },
             timestamp: self.timestamp,
         };
         let signed_data = tx.hash();
