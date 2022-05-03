@@ -4,8 +4,9 @@ use std::fs::File;
 use std::fs::OpenOptions;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
+use crate::cli::context::WalletKeypair;
 use anoma::proto::Tx;
-use anoma::types::address::{Address, btc};
+use anoma::types::address::{Address, btc, masp_tx_key};
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
@@ -118,7 +119,7 @@ pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
         std::fs::read(data_path).expect("Expected a file at given data path")
     });
     let tx = Tx::new(tx_code, data);
-    let (ctx, initialized_accounts) = process_tx(ctx, &args.tx, tx, None).await;
+    let (ctx, initialized_accounts) = process_tx(ctx, &args.tx, tx, TxSigningKey::None).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -173,7 +174,7 @@ pub async fn submit_update_vp(ctx: Context, args: args::TxUpdateVp) {
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    process_tx(ctx, &args.tx, tx, Some(&args.addr)).await;
+    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(args.addr)).await;
 }
 
 pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
@@ -199,7 +200,7 @@ pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, initialized_accounts) =
-        process_tx(ctx, &args.tx, tx, Some(&args.source)).await;
+        process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(args.source)).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -307,7 +308,7 @@ pub async fn submit_init_validator(
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
     let tx = Tx::new(tx_code, Some(data));
     let (mut ctx, initialized_accounts) =
-        process_tx(ctx, &tx_args, tx, Some(&source)).await;
+        process_tx(ctx, &tx_args, tx, TxSigningKey::WalletAddress(source)).await;
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -972,17 +973,17 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
     
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let masp_addr = masp();
-    // The non-MASP entity, if any, will be signer for shielded transactions
+    // For MASP sources, use a special sentinel key recognized by VPs as signer.
     // Also, if the transaction is shielded, redact the amount and token types
     // by setting the transparent value to 0 and token type to a constant. This
     // has no side-effect because transaction is to self.
     let (default_signer, amount, token) =
         if source == masp_addr && target == masp_addr {
-            (None, 0.into(), btc())
+            (TxSigningKey::SecretKey(masp_tx_key()), 0.into(), btc())
         } else if source == masp_addr {
-            (Some(args.target.to_address()), args.amount, token)
+            (TxSigningKey::SecretKey(masp_tx_key()), args.amount, token)
         } else {
-            (Some(args.source.to_address()), args.amount, token)
+            (TxSigningKey::WalletAddress(args.source.to_address()), args.amount, token)
         };
     let transfer = token::Transfer {
         source,
@@ -997,7 +998,7 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         .expect("Encoding tx data shouldn't fail");
     
     let tx = Tx::new(tx_code, Some(data));
-    process_tx(ctx, &args.tx, tx, default_signer.as_ref()).await;
+    process_tx(ctx, &args.tx, tx, default_signer).await;
 }
 
 pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {
@@ -1012,7 +1013,7 @@ pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {
         None => ctx.read_wasm(VP_NFT),
     };
 
-    let signer = Some(WalletAddress::new(nft.creator.clone().to_string()));
+    let signer = TxSigningKey::WalletAddress(WalletAddress::new(nft.creator.clone().to_string()));
 
     let data = CreateNft {
         tag: nft.tag.to_string(),
@@ -1030,7 +1031,7 @@ pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {
     let tx_code = ctx.read_wasm(TX_INIT_NFT);
 
     let tx = Tx::new(tx_code, Some(data));
-    process_tx(ctx, &args.tx, tx, signer.as_ref()).await;
+    process_tx(ctx, &args.tx, tx, signer).await;
 }
 
 pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
@@ -1053,7 +1054,7 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
         }
     };
 
-    let signer = Some(WalletAddress::new(nft_creator_address.to_string()));
+    let signer = TxSigningKey::WalletAddress(WalletAddress::new(nft_creator_address.to_string()));
 
     let data = MintNft {
         address: args.nft_address,
@@ -1068,7 +1069,7 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
     let tx_code = ctx.read_wasm(TX_MINT_NFT);
 
     let tx = Tx::new(tx_code, Some(data));
-    process_tx(ctx, &args.tx, tx, signer.as_ref()).await;
+    process_tx(ctx, &args.tx, tx, signer).await;
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
@@ -1132,8 +1133,8 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let data = bond.try_to_vec().expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    let default_signer = args.source.as_ref().unwrap_or(&args.validator);
-    process_tx(ctx, &args.tx, tx, Some(default_signer)).await;
+    let default_signer = args.source.unwrap_or(args.validator);
+    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(default_signer)).await;
 }
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
@@ -1200,8 +1201,8 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    let default_signer = args.source.as_ref().unwrap_or(&args.validator);
-    process_tx(ctx, &args.tx, tx, Some(default_signer)).await;
+    let default_signer = args.source.unwrap_or(args.validator);
+    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(default_signer)).await;
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
@@ -1268,8 +1269,20 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    let default_signer = args.source.as_ref().unwrap_or(&args.validator);
-    process_tx(ctx, &args.tx, tx, Some(default_signer)).await;
+    let default_signer = args.source.unwrap_or(args.validator);
+    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(default_signer)).await;
+}
+
+/// Carries types that can be directly/indirectly used to sign a transaction.
+enum TxSigningKey {
+    // Do not sign any transaction
+    None,
+    // Obtain the actual keypair from wallet and use that to sign
+    WalletKeypair(WalletKeypair),
+    // Obtain the keypair corresponding to given address from wallet and sign
+    WalletAddress(WalletAddress),
+    // Directly use the given secret key to sign transactions
+    SecretKey(common::SecretKey),
 }
 
 /// Sign a transaction with a given signing key or public key of a given signer.
@@ -1284,25 +1297,36 @@ async fn sign_tx(
     mut ctx: Context,
     tx: Tx,
     args: &args::Tx,
-    default: Option<&WalletAddress>,
+    mut default: TxSigningKey,
 ) -> (Context, TxBroadcastData) {
-    let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
-        let signing_key = ctx.get_cached(signing_key);
-        (tx.sign(&signing_key), signing_key)
-    } else if let Some(signer) = args.signer.as_ref().or(default) {
-        let signer = ctx.get(signer);
-        let signing_key = signing::find_keypair(
-            &mut ctx.wallet,
-            &signer,
-            args.ledger_address.clone(),
-        )
-        .await;
-        (tx.sign(&signing_key), signing_key)
-    } else {
-        panic!(
-            "All transactions must be signed; please either specify the key \
-             or the address from which to look up the signing key."
-        );
+    // Override the default signing key source if possible
+    if let Some(signing_key) = &args.signing_key {
+        default = TxSigningKey::WalletKeypair(signing_key.clone());
+    } else if let Some(signer) = &args.signer {
+        default = TxSigningKey::WalletAddress(signer.clone());
+    }
+    // Now actually fetch the signing key and apply it
+    let (tx, keypair) = match default {
+        TxSigningKey::WalletKeypair(signing_key) => {
+            let signing_key = ctx.get_cached(&signing_key);
+            (tx.sign(&signing_key), signing_key)
+        }, TxSigningKey::WalletAddress(signer) => {
+            let signer = ctx.get(&signer);
+            let signing_key = signing::find_keypair(
+                &mut ctx.wallet,
+                &signer,
+                args.ledger_address.clone(),
+            )
+                .await;
+            (tx.sign(&signing_key), signing_key)
+        }, TxSigningKey::SecretKey(signing_key) => {
+            (tx.sign(&signing_key), signing_key)
+        }, TxSigningKey::None => {
+            panic!(
+                "All transactions must be signed; please either specify the key \
+                 or the address from which to look up the signing key."
+            );
+        }
     };
     let epoch = rpc::query_epoch(args::Query {
         ledger_address: args.ledger_address.clone(),
@@ -1369,7 +1393,7 @@ async fn process_tx(
     ctx: Context,
     args: &args::Tx,
     tx: Tx,
-    default_signer: Option<&WalletAddress>,
+    default_signer: TxSigningKey,
 ) -> (Context, Vec<Address>) {
     let (ctx, to_broadcast) = sign_tx(ctx, tx, args, default_signer).await;
     // NOTE: use this to print the request JSON body:
