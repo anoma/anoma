@@ -200,7 +200,7 @@ mod tests {
 
         let tx = vp_env.tx.clone();
         let signed_tx = tx.sign(&keypair);
-        let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
+        let tx_data: Vec<u8> = signed_tx.data.try_to_vec().unwrap();
         vp_env.tx = signed_tx;
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
@@ -321,7 +321,7 @@ mod tests {
 
             let tx = vp_env.tx.clone();
             let signed_tx = tx.sign(&keypair);
-            let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
+            let tx_data: Vec<u8> = signed_tx.data.try_to_vec().unwrap();
             vp_env.tx = signed_tx;
             let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();

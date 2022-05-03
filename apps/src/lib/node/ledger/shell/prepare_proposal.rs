@@ -185,7 +185,7 @@ mod prepare_block {
             expected_wrapper.append(&mut expected_decrypted);
             let expected_txs: Vec<Vec<u8>> = expected_wrapper
                 .iter()
-                .map(|tx| tx.data.clone().expect("Test failed"))
+                .map(|tx| tx.data.try_to_vec().expect("Test failed"))
                 .collect();
 
             let received: Vec<Vec<u8>> = shell
@@ -196,6 +196,7 @@ mod prepare_block {
                     Tx::try_from(tx_bytes.as_slice())
                         .expect("Test failed")
                         .data
+                        .try_to_vec()
                         .expect("Test failed")
                 })
                 .collect();
