@@ -355,8 +355,6 @@ fn masp_txs_and_queries() -> Result<()> {
             BTC,
             "--amount",
             "10",
-            "--signer",
-            ALBERT,
             "--ledger-address",
             &validator_one_rpc
         ], "No balance found"),
@@ -399,8 +397,6 @@ fn masp_txs_and_queries() -> Result<()> {
             ETH,
             "--amount",
             "10",
-            "--signer",
-            ALBERT,
             "--ledger-address",
             &validator_one_rpc
         ], "No balance found"),
@@ -415,8 +411,6 @@ fn masp_txs_and_queries() -> Result<()> {
             BTC,
             "--amount",
             "7",
-            "--signer",
-            ALBERT,
             "--ledger-address",
             &validator_one_rpc
         ], "Transaction is valid"),
@@ -431,8 +425,6 @@ fn masp_txs_and_queries() -> Result<()> {
             BTC,
             "--amount",
             "7",
-            "--signer",
-            ALBERT,
             "--ledger-address",
             &validator_one_rpc
         ], "Transaction is valid"),
@@ -447,8 +439,6 @@ fn masp_txs_and_queries() -> Result<()> {
             BTC,
             "--amount",
             "7",
-            "--signer",
-            ALBERT,
             "--ledger-address",
             &validator_one_rpc
         ], "ChangeIsNegative"),
@@ -463,8 +453,6 @@ fn masp_txs_and_queries() -> Result<()> {
             BTC,
             "--amount",
             "6",
-            "--signer",
-            ALBERT,
             "--ledger-address",
             &validator_one_rpc
         ], "Transaction is valid"),

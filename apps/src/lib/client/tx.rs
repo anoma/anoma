@@ -794,6 +794,18 @@ impl ShieldedContext {
     }
 }
 
+/// Convert Anoma amount and token type to MASP equivalents
+fn convert_amount(token: &Address, val: token::Amount) -> (AssetType, Amount) {
+    let token_bytes = token.try_to_vec().expect("token should serialize");
+    // Generate the unique asset identifier from the unique token address
+    let asset_type = AssetType::new(token_bytes.as_ref())
+        .expect("unable to create asset type");
+    // Combine the value and unit into one amount
+    let amount = Amount::from_nonnegative(asset_type, u64::from(val))
+        .expect("invalid value or asset type for amount");
+    (asset_type, amount)
+}
+
 /// Make shielded components to embed within a Transfer object. If no shielded
 /// payment address nor spending key is specified, then no shielded components
 /// are produced. Otherwise a transaction containing nullifiers and/or note
@@ -801,7 +813,6 @@ impl ShieldedContext {
 /// transactions balanced, but it is understood that transparent account changes
 /// are effected only by the amounts and signatures specified by the containing
 /// Transfer object.
-
 async fn gen_shielded_transfer(
     ctx: &mut Context,
     args: &args::TxTransfer,
@@ -833,38 +844,46 @@ async fn gen_shielded_transfer(
 
     // Now we build up the transaction within this object
     let mut builder = Builder::<TestNetwork, OsRng>::new(height);
-    let token_bytes = ctx.get(&args.token).try_to_vec().expect("token should serialize");
-    // Generate the unique asset identifier from the unique token address
-    let asset_type = AssetType::new(token_bytes.as_ref()).expect("unable to create asset type");
-    // Transaction fees will be taken care of in the wrapper Transfer
-    builder.set_fee(Amount::zero())?;
+    // Convert transaction amount into MASP types
+    let (asset_type, amount) = convert_amount(&ctx.get(&args.token), args.amount);
     // If there are shielded inputs
     if let Some(sk) = spending_key {
+        // Transaction fees need to match the amount in the wrapper Transfer
+        // when MASP source is used
+        let (_, fee) = convert_amount(&ctx.get(&args.tx.fee_token), args.tx.fee_amount);
+        builder.set_fee(fee.clone())?;
         let sk = sk.into();
-        // Locate unspent notes that can help us meet the transaaction amount
-        let (val_acc, unspent_notes) = ctx.shielded.collect_unspent_notes(
-            &to_viewing_key(&sk).vk,
-            amt,
-            asset_type
-        );
-        // Commit the notes found to our transaction
-        for (diversifier, note, merkle_path) in unspent_notes {
-            builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
-        }
-        // If there is change leftover send it back to this spending key
-        if val_acc > amt {
-            let vk = sk.expsk.proof_generation_key().to_viewing_key();
-            let change_pa = vk.to_payment_address(find_valid_diversifier(&mut OsRng).0).unwrap();
-            let change_amt = val_acc - amt;
-            builder.add_sapling_output(
-                Some(sk.expsk.ovk),
-                change_pa.clone(),
-                asset_type,
-                change_amt,
-                None
-            )?;
+        // For each asset type going into the transaction
+        for (asset_type, val) in (amount + fee).components() {
+            // Locate unspent notes that can help us meet the transaction amount
+            let (val_acc, unspent_notes) = ctx.shielded.collect_unspent_notes(
+                &to_viewing_key(&sk).vk,
+                *val as u64,
+                *asset_type
+            );
+            // Commit the notes found to our transaction
+            for (diversifier, note, merkle_path) in unspent_notes {
+                builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
+            }
+            // If there is change leftover send it back to this spending key
+            if val_acc > *val as u64 {
+                let vk = sk.expsk.proof_generation_key().to_viewing_key();
+                let div = find_valid_diversifier(&mut OsRng).0;
+                let change_pa = vk.to_payment_address(div).unwrap();
+                let change_amt = val_acc - *val as u64;
+                builder.add_sapling_output(
+                    Some(sk.expsk.ovk),
+                    change_pa.clone(),
+                    *asset_type,
+                    change_amt,
+                    None
+                )?;
+            }
         }
     } else {
+        // No transfer fees come from the shielded transaction for non-MASP
+        // sources
+        builder.set_fee(Amount::zero())?;
         // We add a dummy UTXO to our transaction, but only the source of the
         // parent Transfer object is used to validate fund availability
         let secp_sk = secp256k1::SecretKey::from_slice(&[0xcd; 32]).expect("secret key");
