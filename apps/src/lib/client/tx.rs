@@ -856,7 +856,7 @@ async fn gen_shielded_transfer(
         // For each asset type going into the transaction
         for (asset_type, val) in (amount + fee).components() {
             // Locate unspent notes that can help us meet the transaction amount
-            let (val_acc, unspent_notes) = ctx.shielded.collect_unspent_notes(
+            let (_, unspent_notes) = ctx.shielded.collect_unspent_notes(
                 &to_viewing_key(&sk).vk,
                 *val as u64,
                 *asset_type
@@ -864,20 +864,6 @@ async fn gen_shielded_transfer(
             // Commit the notes found to our transaction
             for (diversifier, note, merkle_path) in unspent_notes {
                 builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
-            }
-            // If there is change leftover send it back to this spending key
-            if val_acc > *val as u64 {
-                let vk = sk.expsk.proof_generation_key().to_viewing_key();
-                let div = find_valid_diversifier(&mut OsRng).0;
-                let change_pa = vk.to_payment_address(div).unwrap();
-                let change_amt = val_acc - *val as u64;
-                builder.add_sapling_output(
-                    Some(sk.expsk.ovk),
-                    change_pa.clone(),
-                    *asset_type,
-                    change_amt,
-                    None
-                )?;
             }
         }
     } else {
