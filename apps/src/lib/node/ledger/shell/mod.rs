@@ -29,6 +29,7 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
 use anoma::types::chain::ChainId;
+use anoma::types::address::{masp, masp_tx_key};
 use anoma::types::key::*;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTimeUtc, TimeZone, Utc};
