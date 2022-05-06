@@ -379,6 +379,12 @@ pub mod testing {
         })
     }
 
+    /// Generate an arbitrary [`common::SecretKey`].
+    pub fn arb_common_keypair() -> impl Strategy<Value = common::SecretKey> {
+        arb_keypair::<ed25519::SigScheme>()
+            .prop_map(|keypair| keypair.try_to_sk().unwrap())
+    }
+
     /// Generate a new random [`super::SecretKey`].
     pub fn gen_keypair<S: SigScheme>() -> S::SecretKey {
         let mut rng: ThreadRng = thread_rng();
