@@ -393,3 +393,15 @@ mod tests {
         assert_eq!("0", zero.to_string());
     }
 }
+
+/// Helpers for testing with addresses.
+#[cfg(any(test, feature = "testing"))]
+pub mod testing {
+    use proptest::prelude::*;
+    use super::*;
+
+    /// Generate an arbitrary token amount
+    pub fn arb_amount() -> impl Strategy<Value = Amount> {
+        any::<u64>().prop_map(Amount::from)
+    }
+}
