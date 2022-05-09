@@ -85,6 +85,9 @@ use anoma::types::storage::KeySeg;
 use anoma::types::address::masp;
 use std::path::PathBuf;
 use std::io::{Read, Write};
+use crate::client::rpc::query_epoch;
+use anoma::types::token::CONVERSION_KEY_PREFIX;
+use masp_primitives::convert::AllowedConversion;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -758,45 +761,137 @@ impl ShieldedContext {
         Some(val_acc)
     }
 
+    /// Query the ledger for the conversion that is allowed for the given asset
+    /// type.
+    async fn query_allowed_conversion(
+        client: HttpClient,
+        asset_type: &AssetType
+    ) -> Option<(AllowedConversion, IncrementalWitness<Node>)> {
+        // The key with which to lookup allowed conversions
+        let conversion_key = anoma::types::storage::Key::from(masp().to_db_key())
+            .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
+            .expect("Cannot obtain a storage key");
+        // Query for the ID of the last accepted transaction
+        query_storage_value::<(AllowedConversion, IncrementalWitness<Node>)>(
+            client,
+            conversion_key,
+        )
+            .await
+    }
+
+    /// Compute the total unspent notes associated with the viewing key in the
+    /// context and express that value in terms of the currently timestamped
+    /// asset types. If the key is not in the context, then we do not know the
+    /// balance and hence we return None.
+    pub async fn compute_exchanged_balance(
+        &self,
+        ledger_address: TendermintAddress,
+        vk: &ViewingKey,
+    ) -> Option<Amount> {
+        if let Some(balance) = self.compute_shielded_balance(vk) {
+            // Establish connection with which to do exchange rate queries
+            let client = HttpClient::new(ledger_address.clone()).unwrap();
+            // Where we will store our exchanged value
+            let mut val_acc = Amount::zero();
+            for (asset_type, value) in balance.components() {
+                let comp = balance.project(asset_type.clone());
+                val_acc += if let Some((conv, _wit)) =
+                    Self::query_allowed_conversion(client.clone(), asset_type).await {
+                        // If conversion if possible, accumulate the exchanged
+                        // amount
+                        let conv: Amount = conv.into();
+                        // We assume here that conversion always contains
+                        // extactly -1 units of the queried asset type
+                        comp + conv * value.clone()
+                    } else {
+                        // Otherwise accumulate the amount as is
+                        comp
+                    }
+            }
+            Some(val_acc)
+        } else { None }
+    }
+
     /// Collect enough unspent notes in this context to exceed the given amount
     /// of the specified asset type. Return the total value accumulated plus
     /// notes and the corresponding diversifiers/merkle paths that were used to
     /// achieve the total value.
-    pub fn collect_unspent_notes(
+    pub async fn collect_unspent_notes(
         &self,
+        ledger_address: TendermintAddress,
         vk: &ViewingKey,
-        amt: u64,
-        asset_type: AssetType
-    ) -> (u64, Vec<(Diversifier, Note, MerklePath<Node>)>) {
-        let mut val_acc = 0;
+        target: Amount,
+    ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, HashMap<AssetType, (AllowedConversion, IncrementalWitness<Node>, u64)>) {
+        // Establish connection with which to do exchange rate queries
+        let client = HttpClient::new(ledger_address.clone()).unwrap();
+        let mut conversions = HashMap::new();
+        let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
         // Retrieve the notes that can be spent by this key
         if let Some(avail_notes) = self.vks.get(&vk) {
             for note_idx in avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
-                if val_acc >= amt { break; }
+                if val_acc >= target { break; }
                 // Spent notes cannot contribute a new transaction's pool
                 if self.spents.contains(note_idx) { continue; }
                 // Get note, merkle path, diversifier associated with this ID
                 let note = self.note_map.get(note_idx).unwrap().clone();
-                // Note with distinct asset type cannot be used as input to this
-                // transaction
-                if note.asset_type != asset_type { continue; }
+                // Check if our asset type should be exchanged to different type
+                let admits_conversion =
+                    conversions.contains_key(&note.asset_type) ||
+                    Self::query_allowed_conversion(client.clone(), &note.asset_type)
+                    .await
+                    .map(|(x,y)| conversions.insert(note.asset_type, (x, y, 0))).is_some();
+                // Try to use the note's equivalent value, and if that doesn't
+                // exist then use the note's actual value
+                let (contr, conv) = if admits_conversion {
+                    let conv = conversions.get_mut(&note.asset_type).unwrap();
+                    let conv_amt: Amount = conv.0.clone().into();
+                    (conv_amt.reject(note.asset_type) * (note.value as i64), Some(conv))
+                } else {
+                    (Amount::from(note.asset_type, note.value)
+                        .expect("received note has invalid value or asset type"), None)
+                };
+                // Determine if using the current note would actually bring us
+                // closer to our target
+                let mut required = false;
+                if contr > Amount::zero() {
+                    let gap = target.clone() - val_acc.clone();
+                    for (asset_type, value) in gap.components() {
+                        if *value > 0 && contr[asset_type] > 0 {
+                            required = true;
+                            break;
+                        }
+                    }
+                }
+                // Use this note only if it brings us closer to our target
+                if !required {
+                    continue;
+                }
+                // Be sure to record the conversions used in computing
+                // accumulated value
+                val_acc += contr;
+                conv.unwrap().2 += note.value;
                 let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
                 let diversifier = self.div_map.get(note_idx).unwrap();
-                val_acc += note.value;
                 // Commit this note to our transaction
                 notes.push((*diversifier, note, merkle_path));
             }
         }
-        (val_acc, notes)
+        (val_acc, notes, conversions)
     }
 }
 
 /// Convert Anoma amount and token type to MASP equivalents
-fn convert_amount(token: &Address, val: token::Amount) -> (AssetType, Amount) {
-    let token_bytes = token.try_to_vec().expect("token should serialize");
+async fn convert_amount(
+    ledger_address: TendermintAddress,
+    token: &Address,
+    val: token::Amount,
+) -> (AssetType, Amount) {
+    let epoch = query_epoch(args::Query { ledger_address }).await;
+    // Typestamp the chosen token with the current epoch
+    let token_bytes = (token, epoch.0).try_to_vec().expect("token should serialize");
     // Generate the unique asset identifier from the unique token address
     let asset_type = AssetType::new(token_bytes.as_ref())
         .expect("unable to create asset type");
@@ -845,26 +940,27 @@ async fn gen_shielded_transfer(
     // Now we build up the transaction within this object
     let mut builder = Builder::<TestNetwork, OsRng>::new(height);
     // Convert transaction amount into MASP types
-    let (asset_type, amount) = convert_amount(&ctx.get(&args.token), args.amount);
+    let (asset_type, amount) = convert_amount(args.tx.ledger_address.clone(), &ctx.get(&args.token), args.amount).await;
     // If there are shielded inputs
     if let Some(sk) = spending_key {
         // Transaction fees need to match the amount in the wrapper Transfer
         // when MASP source is used
-        let (_, fee) = convert_amount(&ctx.get(&args.tx.fee_token), args.tx.fee_amount);
+        let (_, fee) = convert_amount(args.tx.ledger_address.clone(), &ctx.get(&args.tx.fee_token), args.tx.fee_amount).await;
         builder.set_fee(fee.clone())?;
         let sk = sk.into();
-        // For each asset type going into the transaction
-        for (asset_type, val) in (amount + fee).components() {
-            // Locate unspent notes that can help us meet the transaction amount
-            let (_, unspent_notes) = ctx.shielded.collect_unspent_notes(
-                &to_viewing_key(&sk).vk,
-                *val as u64,
-                *asset_type
-            );
-            // Commit the notes found to our transaction
-            for (diversifier, note, merkle_path) in unspent_notes {
-                builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
-            }
+        // Locate unspent notes that can help us meet the transaction amount
+        let (_, unspent_notes, used_convs) = ctx.shielded.collect_unspent_notes(
+            args.tx.ledger_address.clone(),
+            &to_viewing_key(&sk).vk,
+            amount + fee,
+        ).await;
+        // Commit the notes found to our transaction
+        for (diversifier, note, merkle_path) in unspent_notes {
+            builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
+        }
+        // Commit the conversion notes used during summation
+        for (conv, wit, value) in used_convs.values() {
+            builder.add_convert(conv.clone(), *value, wit.path().unwrap())?;
         }
     } else {
         // No transfer fees come from the shielded transaction for non-MASP

@@ -216,6 +216,8 @@ pub const BALANCE_STORAGE_KEY: &str = "balance";
 pub const HEAD_TX_KEY: &str = "head-tx";
 /// Key segment prefix for shielded transaction key
 pub const TX_KEY_PREFIX: &str = "tx-";
+/// Key segment prefix for MASP conversions
+pub const CONVERSION_KEY_PREFIX: &str = "conv-";
 
 /// Obtain a storage key for user's balance.
 pub fn balance_key(token_addr: &Address, owner: &Address) -> Key {

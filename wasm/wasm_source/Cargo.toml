@@ -37,7 +37,7 @@ once_cell = {version = "1.8.0", optional = true}
 rust_decimal = {version = "1.14.3", optional = true}
 wee_alloc = "0.4.5"
 getrandom = { version = "0.2", features = ["custom"] }
-masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-transaction3", optional = true }
+masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive", optional = true }
 
 [dev-dependencies]
 anoma = {path = "../../shared", default-features = false, features = ["ABCI"]}

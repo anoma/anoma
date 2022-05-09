@@ -36,6 +36,16 @@ use crate::types::storage::{
     BlockHash, BlockHeight, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
+use borsh::BorshSerialize;
+use masp_primitives::asset_type::AssetType;
+use std::collections::HashMap;
+use crate::types::address::*;
+use masp_primitives::merkle_tree::CommitmentTree;
+use masp_primitives::sapling::Node;
+use ff::PrimeField;
+use masp_primitives::merkle_tree::IncrementalWitness;
+use masp_primitives::convert::AllowedConversion;
+use crate::types::token::CONVERSION_KEY_PREFIX;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -538,9 +548,93 @@ where
                 .pred_epochs
                 .new_epoch(height, evidence_max_age_num_blocks);
             tracing::info!("Began a new epoch {}", self.block.epoch);
+            self.update_allowed_conversions()?;
         }
         self.update_epoch_in_merkle_tree()?;
         Ok(new_epoch)
+    }
+
+    /// Update the MASP's allowed conversions
+    fn update_allowed_conversions(&mut self) -> Result<()> {
+        let key_prefix: Key = masp().to_db_key().into();
+        
+        let mut conv_tree = CommitmentTree::empty();
+        let mut incr_trees = HashMap
+            ::<AssetType, (AllowedConversion, IncrementalWitness<Node>)>
+            ::new();
+
+        // The amount of XAN to reward for each token on each epoch change
+        let rewards: HashMap<Address, i64> = vec![
+            (xan(), 0),
+            (btc(), 1),
+            (eth(), 2),
+            (dot(), 3),
+            (schnitzel(), 2),
+            (apfel(), 4),
+            (kartoffel(), 6),
+        ]
+            .into_iter()
+            .collect();
+
+        // Construct MASP asset type for rewards
+        let reward_asset_bytes = (xan(), self.block.epoch.0)
+            .try_to_vec()
+            .expect("unable to serialize address and epoch");
+        let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
+            .expect("unable to derive asset identifier");
+
+        // Reward all tokens according to above reward rates
+        for addr in tokens().keys() {
+            // Construct MASP asset type with latest timestamp for this token
+            let new_asset_bytes = (addr.clone(), self.block.epoch.0)
+                .try_to_vec()
+                .expect("unable to serialize address and epoch");
+            let new_asset = AssetType::new(new_asset_bytes.as_ref())
+                .expect("unable to derive asset identifier");
+
+            // Provide an allowed conversion from all previous timestamps
+            for prev_epoch in 0..self.block.epoch.0 {
+                // Construct MASP asset type with old timestamp
+                let old_asset_bytes = (addr.clone(), prev_epoch)
+                    .try_to_vec()
+                    .expect("unable to serialize address and epoch");
+                let old_asset = AssetType::new(old_asset_bytes.as_ref())
+                    .expect("unable to derive asset identifier");
+                // The -1 allows each instance of the old asset to be cancelled
+                // out/replaced with the new asset
+                let conv = AllowedConversion {
+                    assets: vec![
+                        (old_asset, -1),
+                        (new_asset, 1),
+                        (reward_asset, (self.block.epoch.0 - prev_epoch) as i64 * rewards[&addr])
+                    ]
+                };
+                // The merkle tree need only provide the conversion commitment,
+                // the remaining information is provided through the storage API
+                let conv_node = Node::new(conv.cmu().to_repr());
+                // Old IncrementalWitnesses need this new node so that their
+                // MerklePaths can remain correct
+                for (_conv, incr_tree) in incr_trees.values_mut() {
+                    incr_tree.append(conv_node)
+                        .expect("unable to add conversion to incremental witness");
+                }
+                conv_tree.append(conv_node)
+                    .expect("unable to add conversion to commitment tree");
+                // Now indirectly make a MerklePath for the current conversion
+                let incr_tree = IncrementalWitness::from_tree(&conv_tree);
+                incr_trees.insert(old_asset, (conv, incr_tree));
+            }
+        }
+
+        // Allow for the AllowedConversion and MerklePath to be looked up by a
+        // timestamped asset type
+        for (asset_type, conv) in incr_trees {
+            let key = key_prefix
+                .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
+                .map_err(Error::KeyError)?;
+            self.write(&key, types::encode(&conv))?;
+        }
+        Ok(())
     }
 
     /// Update the merkle tree with epoch data
@@ -554,7 +648,7 @@ where
         self.block
             .tree
             .update(&key, types::encode(&self.next_epoch_min_start_height))?;
-
+        
         let key = key_prefix
             .push(&"epoch_start_time".to_string())
             .map_err(Error::KeyError)?;
@@ -568,6 +662,7 @@ where
         self.block
             .tree
             .update(&key, types::encode(&self.block.epoch))?;
+
         Ok(())
     }
 

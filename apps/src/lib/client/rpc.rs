@@ -214,6 +214,8 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
     ).await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
+    // The epoch is required to identify timestamped tokens
+    let epoch = query_epoch(args.query.clone()).await;
     // Map addresses to token names
     let tokens = address::tokens();
     match (args.token, owner.is_some()) {
@@ -221,12 +223,14 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         (Some(token), true) => {
             // Query the multi-asset balance at the given spending key
             let viewing_key = ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
-            let balance = ctx.shielded.compute_shielded_balance(&viewing_key)
-                .expect("context should contain viewing key");
+            let balance = ctx.shielded.compute_exchanged_balance(
+                args.query.ledger_address,
+                &viewing_key
+            ).await.expect("context should contain viewing key");
             // Compute the unique asset identifier from the token address
             let token = ctx.get(&token);
             let asset_type = AssetType::new(
-                token.try_to_vec().expect("token addresses should serialize").as_ref()
+                (token.clone(), epoch.0).try_to_vec().expect("token addresses should serialize").as_ref()
             ).unwrap();
             let currency_code = tokens
                 .get(&token)
@@ -246,8 +250,10 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
                 let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
-                let balance = ctx.shielded.compute_shielded_balance(&viewing_key)
-                    .expect("context should contain viewing key");
+                let balance = ctx.shielded.compute_exchanged_balance(
+                    args.query.ledger_address.clone(),
+                    &viewing_key
+                ).await.expect("context should contain viewing key");
                 for (asset_type, value) in balance.components() {
                     if !balances.contains_key(asset_type) {
                         balances.insert(*asset_type, Vec::new());
@@ -263,7 +269,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                 println!("Shielded Token {}:", currency_code);
                 // Compute the unique asset identifier from the token address
                 let asset_type = AssetType::new(
-                    token.try_to_vec().expect("token addresses should serialize").as_ref()
+                    (token, epoch.0).try_to_vec().expect("token addresses should serialize").as_ref()
                 ).unwrap();
                 // Take note of the asset types corresponding to readable tokens
                 readable_tokens.insert(asset_type);
@@ -302,7 +308,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             // Compute the unique asset identifier from the token address
             let token = ctx.get(&token);
             let asset_type = AssetType::new(
-                token.try_to_vec().expect("token addresses should serialize").as_ref()
+                (token.clone(), epoch.0).try_to_vec().expect("token addresses should serialize").as_ref()
             ).unwrap();
             let currency_code = tokens
                 .get(&token)
@@ -313,8 +319,10 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
             for fvk in viewing_keys {
                 // Query the multi-asset balance at the given spending key
                 let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
-                let balance = ctx.shielded.compute_shielded_balance(&viewing_key)
-                    .expect("context should contain viewing key");
+                let balance = ctx.shielded.compute_exchanged_balance(
+                    args.query.ledger_address.clone(),
+                    &viewing_key
+                ).await.expect("context should contain viewing key");
                 if balance[&asset_type] != 0 {
                     let asset_value = token::Amount::from(balance[&asset_type] as u64);
                     println!("  {}, owned by {}", asset_value, fvk);
@@ -329,14 +337,16 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         (None, true) => {
             // Query the multi-asset balance at the given spending key
             let viewing_key = ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
-            let mut balance = ctx.shielded.compute_shielded_balance(&viewing_key)
-                .expect("context should contain viewing key");
+            let mut balance = ctx.shielded.compute_exchanged_balance(
+                args.query.ledger_address,
+                &viewing_key
+            ).await.expect("context should contain viewing key");
             let mut found_any = false;
             // Print those balances corresponding to human-readable token names
             for (token, currency_code) in tokens {
                 // Compute the unique asset identifier from the token address
                 let asset_type = AssetType::new(
-                    token.try_to_vec().expect("token addresses should serialize").as_ref()
+                    (token, epoch.0).try_to_vec().expect("token addresses should serialize").as_ref()
                 ).unwrap();
                 let asset_value = balance[&asset_type];
                 if asset_value > 0 {
