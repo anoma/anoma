@@ -577,7 +577,7 @@ where
             .collect();
 
         // Construct MASP asset type for rewards
-        let reward_asset_bytes = (xan(), self.block.epoch.0)
+        let reward_asset_bytes = (xan(), self.last_epoch.0)
             .try_to_vec()
             .expect("unable to serialize address and epoch");
         let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
@@ -586,14 +586,14 @@ where
         // Reward all tokens according to above reward rates
         for addr in tokens().keys() {
             // Construct MASP asset type with latest timestamp for this token
-            let new_asset_bytes = (addr.clone(), self.block.epoch.0)
+            let new_asset_bytes = (addr.clone(), self.last_epoch.0)
                 .try_to_vec()
                 .expect("unable to serialize address and epoch");
             let new_asset = AssetType::new(new_asset_bytes.as_ref())
                 .expect("unable to derive asset identifier");
 
             // Provide an allowed conversion from all previous timestamps
-            for prev_epoch in 0..self.block.epoch.0 {
+            for prev_epoch in 0..self.last_epoch.0 {
                 // Construct MASP asset type with old timestamp
                 let old_asset_bytes = (addr.clone(), prev_epoch)
                     .try_to_vec()
@@ -606,7 +606,7 @@ where
                     assets: vec![
                         (old_asset, -1),
                         (new_asset, 1),
-                        (reward_asset, (self.block.epoch.0 - prev_epoch) as i64 * rewards[&addr])
+                        (reward_asset, (self.last_epoch.0 - prev_epoch) as i64 * rewards[&addr])
                     ]
                 };
                 // The merkle tree need only provide the conversion commitment,
