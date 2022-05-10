@@ -45,7 +45,7 @@ use masp_primitives::sapling::Node;
 use ff::PrimeField;
 use masp_primitives::merkle_tree::IncrementalWitness;
 use masp_primitives::convert::AllowedConversion;
-use crate::types::token::CONVERSION_KEY_PREFIX;
+use crate::types::token;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -556,12 +556,16 @@ where
 
     /// Update the MASP's allowed conversions
     fn update_allowed_conversions(&mut self) -> Result<()> {
-        let key_prefix: Key = masp().to_db_key().into();
+        // The derived conversions will be placed in MASP address space
+        let masp_addr = masp();
+        let key_prefix: Key = masp_addr.to_db_key().into();
         
         let mut conv_tree = CommitmentTree::empty();
         let mut incr_trees = HashMap
             ::<AssetType, (AllowedConversion, IncrementalWitness<Node>)>
             ::new();
+        // The total transparent value of the rewards being distributed
+        let mut total_reward = token::Amount::from(0);
 
         // The amount of XAN to reward for each token on each epoch change
         let rewards: HashMap<Address, i64> = vec![
@@ -585,6 +589,15 @@ where
 
         // Reward all tokens according to above reward rates
         for addr in tokens().keys() {
+            // Dispence a transparent reward in parallel to the shielded rewards
+            let token_key = self.read(&token::balance_key(addr, &masp_addr));
+            if let Ok((Some(addr_balance), _)) = token_key {
+                // The reward for each unit of the current asset is a constant
+                // amount of the reward token.
+                let addr_bal: token::Amount = types::decode(addr_balance)
+                    .expect("invalid balance");
+                total_reward += addr_bal * rewards[&addr] as u64;
+            }
             // Construct MASP asset type with latest timestamp for this token
             let new_asset_bytes = (addr.clone(), self.last_epoch.0)
                 .try_to_vec()
@@ -626,11 +639,28 @@ where
             }
         }
 
+        // Update the MASP's transparent reward token balance to ensure that it
+        // is sufficiently backed to redeem rewards
+        let reward_key = token::balance_key(&xan(), &masp_addr);
+        if let Ok((Some(addr_bal), _)) = self.read(&reward_key) {
+            // If there is already a balance, then add to it
+            let addr_bal: token::Amount = types::decode(addr_bal)
+                .expect("invalid balance");
+            let new_bal = types::encode(&(addr_bal + total_reward));
+            self.write(&reward_key, new_bal)
+                .expect("unable to update MASP transparent balance");
+        } else {
+            // Otherwise the rewards form the entirity of the reward token
+            // balance
+            self.write(&reward_key, types::encode(&total_reward))
+                .expect("unable to update MASP transparent balance");
+        }
+
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
         for (asset_type, conv) in incr_trees {
             let key = key_prefix
-                .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
+                .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
             self.write(&key, types::encode(&conv))?;
         }

@@ -2,7 +2,7 @@
 
 use std::convert::TryFrom;
 use std::fmt::Display;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Mul};
 use std::str::FromStr;
 use masp_primitives::transaction::Transaction;
 
@@ -134,6 +134,15 @@ impl Add for Amount {
 
     fn add(mut self, rhs: Self) -> Self::Output {
         self.micro += rhs.micro;
+        self
+    }
+}
+
+impl Mul<u64> for Amount {
+    type Output = Amount;
+
+    fn mul(mut self, rhs: u64) -> Self::Output {
+        self.micro *= rhs;
         self
     }
 }
