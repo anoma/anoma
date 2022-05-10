@@ -322,9 +322,10 @@ fn ledger_txs_and_queries() -> Result<()> {
 /// 7. Spend 7 BTC at SK(A) to PA(B)
 /// 8. Attempt to spend 7 BTC at SK(A) to PA(B)
 /// 9. Spend 6 BTC at SK(A) to PA(B)
-/// 10. Assert balance at VK(A) is 0
-/// 11. Assert balance at VK(B) is 10 BTC
-/// 12. Send 10 BTC from SK(B) to Bertha
+/// 10. Assert BTC balance at VK(A) is 0
+/// 11. Assert ETH balance at VK(A) is 0
+/// 12. Assert balance at VK(B) is 10 BTC
+/// 13. Send 10 BTC from SK(B) to Bertha
 
 #[test]
 fn masp_txs_and_queries() -> Result<()> {
@@ -458,16 +459,29 @@ fn masp_txs_and_queries() -> Result<()> {
         ], "Transaction is valid"),
 
 
-        // 10. Assert balance at VK(A) is 0
+        // 10. Assert BTC balance at VK(A) is 0
         (vec![
             "balance",
             "--owner",
             AA_VIEWING_KEY,
+            "--token",
+            BTC,
             "--ledger-address",
             &validator_one_rpc
-        ], "No shielded balance found"),
+        ], "No shielded BTC balance found"),
 
-        // 11. Assert balance at VK(B) is 10 BTC
+        // 11. Assert ETH balance at VK(A) is 0
+        (vec![
+            "balance",
+            "--owner",
+            AA_VIEWING_KEY,
+            "--token",
+            ETH,
+            "--ledger-address",
+            &validator_one_rpc
+        ], "No shielded ETH balance found"),
+
+        // 12. Assert balance at VK(B) is 10 BTC
         (vec![
             "balance",
             "--owner",
@@ -476,7 +490,7 @@ fn masp_txs_and_queries() -> Result<()> {
             &validator_one_rpc
         ], "BTC: 20"),
 
-        // 12. Send 10 BTC from SK(B) to Bertha
+        // 13. Send 10 BTC from SK(B) to Bertha
         (vec![
             "transfer",
             "--source",

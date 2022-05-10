@@ -866,17 +866,16 @@ impl ShieldedContext {
                     }
                 }
                 // Use this note only if it brings us closer to our target
-                if !required {
-                    continue;
+                if required {
+                    // Be sure to record the conversions used in computing
+                    // accumulated value
+                    val_acc += contr;
+                    conv.unwrap().2 += note.value;
+                    let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
+                    let diversifier = self.div_map.get(note_idx).unwrap();
+                    // Commit this note to our transaction
+                    notes.push((*diversifier, note, merkle_path));
                 }
-                // Be sure to record the conversions used in computing
-                // accumulated value
-                val_acc += contr;
-                conv.unwrap().2 += note.value;
-                let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
-                let diversifier = self.div_map.get(note_idx).unwrap();
-                // Commit this note to our transaction
-                notes.push((*diversifier, note, merkle_path));
             }
         }
         (val_acc, notes, conversions)
@@ -960,7 +959,9 @@ async fn gen_shielded_transfer(
         }
         // Commit the conversion notes used during summation
         for (conv, wit, value) in used_convs.values() {
-            builder.add_convert(conv.clone(), *value, wit.path().unwrap())?;
+            if *value > 0 {
+                builder.add_convert(conv.clone(), *value, wit.path().unwrap())?;
+            }
         }
     } else {
         // No transfer fees come from the shielded transaction for non-MASP
