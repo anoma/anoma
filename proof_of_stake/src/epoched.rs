@@ -11,7 +11,17 @@ use crate::PosParams;
 
 /// Data that may have values set for future epochs, up to an epoch at offset as
 /// set via the `Offset` type parameter.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(
+    Debug,
+    Clone,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub struct Epoched<Data, Offset>
 where
     Data: Clone + BorshDeserialize + BorshSerialize + BorshSchema,
@@ -27,7 +37,17 @@ where
 /// Data that may have delta values (a difference from the predecessor epoch)
 /// set for future epochs, up to an epoch at offset as set via the `Offset` type
 /// parameter.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(
+    Debug,
+    Clone,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub struct EpochedDelta<Data, Offset>
 where
     Data: Clone
@@ -56,7 +76,17 @@ pub trait EpochOffset:
 }
 
 /// Offset at pipeline length.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(
+    Debug,
+    Clone,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub struct OffsetPipelineLen;
 impl EpochOffset for OffsetPipelineLen {
     fn value(params: &PosParams) -> u64 {
@@ -69,7 +99,17 @@ impl EpochOffset for OffsetPipelineLen {
 }
 
 /// Offset at unbonding length.
-#[derive(Debug, Clone, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(
+    Debug,
+    Clone,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub struct OffsetUnboundingLen;
 impl EpochOffset for OffsetUnboundingLen {
     fn value(params: &PosParams) -> u64 {
@@ -82,7 +122,7 @@ impl EpochOffset for OffsetUnboundingLen {
 }
 
 /// Offset length dynamic choice.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum DynEpochOffset {
     /// Offset at pipeline length.
     PipelineLen,
