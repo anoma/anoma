@@ -99,6 +99,37 @@
 //! - add arb invalid storage changes
 //! - add slashes
 
+use anoma::ledger::pos::anoma_proof_of_stake::PosBase;
+use anoma_vm_env::proof_of_stake::{
+    staking_token_address, GenesisValidator, PosParams,
+};
+
+use crate::tx::tx_host_env;
+
+/// initialize proof-of-stake genesis with the given list of validators and
+/// parameters.
+pub fn init_pos(genesis_validators: &[GenesisValidator], params: &PosParams) {
+    tx_host_env::init();
+
+    tx_host_env::with(|tx_env| {
+        // Ensure that all the used
+        // addresses exist
+        tx_env.spawn_accounts([&staking_token_address()]);
+        for validator in genesis_validators {
+            tx_env.spawn_accounts([
+                &validator.address,
+                &validator.staking_reward_address,
+            ]);
+        }
+        // Initialize PoS storage
+        let start_epoch = 0;
+        tx_env
+            .storage
+            .init_genesis(params, genesis_validators.iter(), start_epoch)
+            .unwrap();
+    });
+}
+
 #[cfg(test)]
 mod tests {
 
