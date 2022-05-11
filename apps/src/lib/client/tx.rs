@@ -766,17 +766,13 @@ impl ShieldedContext {
     async fn query_allowed_conversion(
         client: HttpClient,
         asset_type: &AssetType
-    ) -> Option<(AllowedConversion, IncrementalWitness<Node>)> {
+    ) -> Option<(AllowedConversion, MerklePath<Node>)> {
         // The key with which to lookup allowed conversions
         let conversion_key = anoma::types::storage::Key::from(masp().to_db_key())
             .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
             .expect("Cannot obtain a storage key");
         // Query for the ID of the last accepted transaction
-        query_storage_value::<(AllowedConversion, IncrementalWitness<Node>)>(
-            client,
-            conversion_key,
-        )
-            .await
+        query_storage_value(client, conversion_key).await
     }
 
     /// Compute the total unspent notes associated with the viewing key in the
@@ -821,7 +817,7 @@ impl ShieldedContext {
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
         target: Amount,
-    ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, HashMap<AssetType, (AllowedConversion, IncrementalWitness<Node>, u64)>) {
+    ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>) {
         // Establish connection with which to do exchange rate queries
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         let mut conversions = HashMap::new();
@@ -960,7 +956,7 @@ async fn gen_shielded_transfer(
         // Commit the conversion notes used during summation
         for (conv, wit, value) in used_convs.values() {
             if *value > 0 {
-                builder.add_convert(conv.clone(), *value, wit.path().unwrap())?;
+                builder.add_convert(conv.clone(), *value, wit.clone())?;
             }
         }
     } else {

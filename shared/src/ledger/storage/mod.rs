@@ -658,11 +658,11 @@ where
 
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (asset_type, conv) in incr_trees {
+        for (asset_type, (conv, incr_tree)) in incr_trees {
             let key = key_prefix
                 .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
-            self.write(&key, types::encode(&conv))?;
+            self.write(&key, types::encode(&(conv, incr_tree.path().unwrap())))?;
         }
         Ok(())
     }
