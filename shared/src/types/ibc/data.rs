@@ -16,7 +16,9 @@ use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOp
 use crate::ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
 use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
 use crate::ibc::core::ics03_connection::msgs::ConnectionMsg;
-use crate::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use crate::ibc::core::ics04_channel::msgs::acknowledgement::{
+    Acknowledgement, MsgAcknowledgement,
+};
 use crate::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
 use crate::ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
 use crate::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
@@ -32,14 +34,14 @@ use crate::ibc::core::ics26_routing::error::Error as Ics26Error;
 use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ibc::downcast;
 use crate::ibc_proto::google::protobuf::Any;
-use crate::ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
-use crate::ibc_proto::ibc::core::channel::v1::Acknowledgement;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Decoding IBC data error: {0}")]
     DecodingData(prost::DecodeError),
+    #[error("Decoding Json data error: {0}")]
+    DecodingJsonData(serde_json::Error),
     #[error("Decoding message error: {0}")]
     DecodingMessage(Ics26Error),
     #[error("Downcast error: {0}")]
@@ -326,39 +328,70 @@ impl Default for PacketReceipt {
 }
 
 /// Acknowledgement for a packet
-#[derive(Clone, Debug)]
-pub struct PacketAck(pub Acknowledgement);
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PacketAck {
+    /// Success Acknowledgement
+    Result(String),
+    /// Error Acknowledgement
+    Error(String),
+}
+
+/// Success acknowledgement
+const ACK_SUCCESS_B64: &str = "AQ==";
+/// Error acknowledgement
+const ACK_ERR_STR: &str =
+    "error handling packet on destination chain: see events for details";
 
 // TODO temporary type. add a new type for ack to ibc-rs
 impl PacketAck {
+    /// Success acknowledgement
+    pub fn result_success() -> Self {
+        Self::Result(ACK_SUCCESS_B64.to_string())
+    }
+
+    /// Acknowledgement with an error
+    pub fn result_error(err: String) -> Self {
+        Self::Error(format!("{}: {}", ACK_ERR_STR, err))
+    }
+
+    /// Check if the ack is for success
+    pub fn is_success(&self) -> bool {
+        match self {
+            Self::Result(_) => true,
+            Self::Error(_) => false,
+        }
+    }
+
     /// Encode the ack
     pub fn encode_to_vec(&self) -> Vec<u8> {
-        serde_json::to_vec(&self.0)
+        serde_json::to_vec(&self)
             .expect("Encoding acknowledgement shouldn't fail")
     }
 }
 
-impl Default for PacketAck {
-    fn default() -> Self {
-        Self(Acknowledgement {
-            response: Some(Response::Result(vec![1_u8])),
-        })
+impl TryFrom<Acknowledgement> for PacketAck {
+    type Error = Error;
+
+    fn try_from(ack: Acknowledgement) -> Result<Self> {
+        serde_json::from_slice(&ack.into_bytes())
+            .map_err(Error::DecodingJsonData)
     }
 }
 
 // for the string to be used by the current reader
 impl Display for PacketAck {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", serde_json::to_string(&self.0).unwrap())
+        write!(f, "{}", serde_json::to_string(&self).unwrap())
     }
 }
 
-// TODO temporary type. add a new type for ack to ibc-rs
+// TODO temporary type. add a new type for packet data to ibc-rs
 /// Data to transfer a token
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct FungibleTokenPacketData {
     /// the token denomination to be transferred
-    pub denomination: String,
+    pub denom: String,
     /// the token amount to be transferred
     pub amount: String,
     /// the sender address
@@ -372,7 +405,7 @@ impl From<MsgTransfer> for FungibleTokenPacketData {
         // TODO validation
         let token = msg.token.unwrap();
         Self {
-            denomination: token.denom,
+            denom: token.denom,
             amount: token.amount,
             sender: msg.sender.to_string(),
             receiver: msg.receiver.to_string(),

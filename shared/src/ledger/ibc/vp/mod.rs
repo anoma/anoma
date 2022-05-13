@@ -1446,7 +1446,7 @@ mod tests {
             .write(&key, PacketReceipt::default().as_bytes().to_vec())
             .expect("write failed");
         let key = ack_key(&get_port_id(), &get_channel_id(), sequence);
-        let ack = PacketAck::default().encode_to_vec();
+        let ack = PacketAck::result_success().encode_to_vec();
         write_log.write(&key, ack).expect("write failed");
 
         let tx_code = vec![];
@@ -1516,7 +1516,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let ack = PacketAck::default().encode_to_vec();
+        let ack = PacketAck::result_success().encode_to_vec();
         let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
             Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
@@ -1689,7 +1689,7 @@ mod tests {
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        let ack = PacketAck::default().encode_to_vec();
+        let ack = PacketAck::result_success().encode_to_vec();
         write_log.write(&ack_key, ack).expect("write failed");
         write_log.commit_tx();
 
@@ -1730,7 +1730,7 @@ mod tests {
             .expect("write failed");
         let ack_key =
             ack_key(&get_port_id(), &get_channel_id(), Sequence::from(1));
-        let ack = PacketAck::default().encode_to_vec();
+        let ack = PacketAck::result_success().encode_to_vec();
         write_log.write(&ack_key, ack).expect("write failed");
         write_log.commit_tx();
 

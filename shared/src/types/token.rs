@@ -341,11 +341,8 @@ impl TryFrom<FungibleTokenPacketData> for Transfer {
             Address::decode(&data.sender).map_err(TransferError::Address)?;
         let target =
             Address::decode(&data.receiver).map_err(TransferError::Address)?;
-        let token_str = data
-            .denomination
-            .split('/')
-            .last()
-            .ok_or(TransferError::NoToken)?;
+        let token_str =
+            data.denom.split('/').last().ok_or(TransferError::NoToken)?;
         let token =
             Address::decode(token_str).map_err(TransferError::Address)?;
         let amount =
