@@ -866,7 +866,10 @@ impl ShieldedContext {
                     // Be sure to record the conversions used in computing
                     // accumulated value
                     val_acc += contr;
-                    conv.unwrap().2 += note.value;
+                    // If we are using a conversion, note how much of it we use
+                    if let Some(conv) = conv {
+                        conv.2 += note.value;
+                    }
                     let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
                     let diversifier = self.div_map.get(note_idx).unwrap();
                     // Commit this note to our transaction

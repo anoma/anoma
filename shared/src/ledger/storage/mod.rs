@@ -572,10 +572,10 @@ where
             (xan(), 0),
             (btc(), 1),
             (eth(), 2),
-            (dot(), 3),
-            (schnitzel(), 2),
-            (apfel(), 4),
-            (kartoffel(), 6),
+            (dot(), 0),
+            (schnitzel(), 1),
+            (apfel(), 2),
+            (kartoffel(), 0),
         ]
             .into_iter()
             .collect();

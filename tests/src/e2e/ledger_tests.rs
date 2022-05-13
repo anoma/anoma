@@ -329,7 +329,19 @@ fn ledger_txs_and_queries() -> Result<()> {
 
 #[test]
 fn masp_txs_and_queries() -> Result<()> {
-    let test = setup::network(|genesis| genesis, None)?;
+    // Lengthen epoch to ensure that a transaction can be constructed and
+    // submitted within the same block. Necessary to ensure that conversion is
+    // not invalidated.
+    let test = setup::network(|genesis| {
+            let parameters = ParametersConfig {
+                min_duration: 120,
+                ..genesis.parameters
+            };
+            GenesisConfig {
+                parameters,
+                ..genesis
+            }
+        }, None)?;
 
     // 1. Run the ledger node
     let mut ledger =
