@@ -1,4 +1,4 @@
-mod pos;
+pub mod pos;
 
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
