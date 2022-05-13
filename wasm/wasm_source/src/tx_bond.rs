@@ -24,6 +24,7 @@ mod tests {
 
     use anoma::ledger::pos::PosParams;
     use anoma::proto::Tx;
+    use anoma::types::storage::Epoch;
     use anoma_tests::log::test;
     use anoma_tests::native_vp::pos::init_pos;
     use anoma_tests::native_vp::TestNativeVpEnv;
@@ -82,7 +83,8 @@ mod tests {
             staking_reward_key,
         }];
 
-        init_pos(&genesis_validators[..], &pos_params);
+        init_pos(&genesis_validators[..], &pos_params, Epoch(0));
+
         tx_host_env::with(|tx_env| {
             if let Some(source) = &bond.source {
                 tx_env.spawn_accounts([source]);
