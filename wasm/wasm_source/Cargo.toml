@@ -23,7 +23,7 @@ tx_transfer = ["anoma_tx_prelude"]
 tx_unbond = ["anoma_tx_prelude"]
 tx_update_vp = ["anoma_tx_prelude"]
 tx_withdraw = ["anoma_tx_prelude"]
-vp_masp = ["anoma_vp_prelude", "masp_proofs"]
+vp_masp = ["anoma_vp_prelude", "masp_proofs", "masp_primitives"]
 vp_nft = ["anoma_vp_prelude"]
 vp_testnet_faucet = ["anoma_vp_prelude", "once_cell"]
 vp_token = ["anoma_vp_prelude"]
@@ -38,6 +38,7 @@ rust_decimal = {version = "1.14.3", optional = true}
 wee_alloc = "0.4.5"
 getrandom = { version = "0.2", features = ["custom"] }
 masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive", optional = true }
+masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive", optional = true }
 
 [dev-dependencies]
 anoma = {path = "../../shared", default-features = false, features = ["ABCI"]}

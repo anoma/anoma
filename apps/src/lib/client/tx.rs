@@ -906,6 +906,7 @@ async fn convert_amount(
 async fn gen_shielded_transfer(
     ctx: &mut Context,
     args: &args::TxTransfer,
+    shielded_gas: bool,
 ) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
     // No shielded components are needed when neither source nor destination
     // are shielded
@@ -943,11 +944,18 @@ async fn gen_shielded_transfer(
         let (_, fee) = convert_amount(args.tx.ledger_address.clone(), &ctx.get(&args.tx.fee_token), args.tx.fee_amount).await;
         builder.set_fee(fee.clone())?;
         let sk = sk.into();
+        // If the gas is coming from the shielded pool, then our shielded inputs
+        // must also cover the gas fee
+        let required_amt = if shielded_gas {
+            amount + fee
+        } else {
+            amount
+        };
         // Locate unspent notes that can help us meet the transaction amount
         let (_, unspent_notes, used_convs) = ctx.shielded.collect_unspent_notes(
             args.tx.ledger_address.clone(),
             &to_viewing_key(&sk).vk,
-            amount + fee,
+            required_amt,
         ).await;
         // Commit the notes found to our transaction
         for (diversifier, note, merkle_path) in unspent_notes {
@@ -1071,10 +1079,10 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
     
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let masp_addr = masp();
-    // For MASP sources, use a special sentinel key recognized by VPs as signer.
-    // Also, if the transaction is shielded, redact the amount and token types
-    // by setting the transparent value to 0 and token type to a constant. This
-    // has no side-effect because transaction is to self.
+    // For MASP sources, use a special sentinel key recognized by VPs as default
+    // signer. Also, if the transaction is shielded, redact the amount and token
+    // types by setting the transparent value to 0 and token type to a constant.
+    // This has no side-effect because transaction is to self.
     let (default_signer, amount, token) =
         if source == masp_addr && target == masp_addr {
             (TxSigningKey::SecretKey(masp_tx_key()), 0.into(), btc())
@@ -1083,12 +1091,22 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         } else {
             (TxSigningKey::WalletAddress(args.source.to_address()), args.amount, token)
         };
+    // If our chosen signer is the MASP sentinel key, then our shielded inputs
+    // will need to cover the gas fees.
+    let chosen_signer = tx_signer(&mut ctx, &args.tx, default_signer.clone())
+        .await
+        .ref_to();
+    let shielded_gas = masp_tx_key().ref_to() == chosen_signer;
+    
     let transfer = token::Transfer {
         source,
         target,
         token,
         amount,
-        shielded: gen_shielded_transfer(&mut ctx, &args).await.unwrap().map(|x| x.0),
+        shielded: gen_shielded_transfer(&mut ctx, &args, shielded_gas)
+            .await
+            .unwrap()
+            .map(|x| x.0),
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer
@@ -1372,6 +1390,7 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
 }
 
 /// Carries types that can be directly/indirectly used to sign a transaction.
+#[derive(Clone)]
 enum TxSigningKey {
     // Do not sign any transaction
     None,
@@ -1381,6 +1400,46 @@ enum TxSigningKey {
     WalletAddress(WalletAddress),
     // Directly use the given secret key to sign transactions
     SecretKey(common::SecretKey),
+}
+
+/// Given CLI arguments and some defaults, determine the rightful transaction
+/// signer. Return the given signing key or public key of the given signer if
+/// possible. If no explicit signer given, use the `default`. If no `default`
+/// is given, panics.
+async fn tx_signer(
+    ctx: &mut Context,
+    args: &args::Tx,
+    mut default: TxSigningKey,
+) -> common::SecretKey {
+    // Override the default signing key source if possible
+    if let Some(signing_key) = &args.signing_key {
+        default = TxSigningKey::WalletKeypair(signing_key.clone());
+    } else if let Some(signer) = &args.signer {
+        default = TxSigningKey::WalletAddress(signer.clone());
+    }
+    // Now actually fetch the signing key and apply it
+    match default {
+        TxSigningKey::WalletKeypair(signing_key) => {
+            let signing_key = ctx.get_cached(&signing_key);
+            signing_key
+        }, TxSigningKey::WalletAddress(signer) => {
+            let signer = ctx.get(&signer);
+            let signing_key = signing::find_keypair(
+                &mut ctx.wallet,
+                &signer,
+                args.ledger_address.clone(),
+            )
+                .await;
+            signing_key
+        }, TxSigningKey::SecretKey(signing_key) => {
+            signing_key
+        }, TxSigningKey::None => {
+            panic!(
+                "All transactions must be signed; please either specify the key \
+                 or the address from which to look up the signing key."
+            );
+        }
+    }
 }
 
 /// Sign a transaction with a given signing key or public key of a given signer.
@@ -1395,37 +1454,11 @@ async fn sign_tx(
     mut ctx: Context,
     tx: Tx,
     args: &args::Tx,
-    mut default: TxSigningKey,
+    default: TxSigningKey,
 ) -> (Context, TxBroadcastData) {
-    // Override the default signing key source if possible
-    if let Some(signing_key) = &args.signing_key {
-        default = TxSigningKey::WalletKeypair(signing_key.clone());
-    } else if let Some(signer) = &args.signer {
-        default = TxSigningKey::WalletAddress(signer.clone());
-    }
-    // Now actually fetch the signing key and apply it
-    let (tx, keypair) = match default {
-        TxSigningKey::WalletKeypair(signing_key) => {
-            let signing_key = ctx.get_cached(&signing_key);
-            (tx.sign(&signing_key), signing_key)
-        }, TxSigningKey::WalletAddress(signer) => {
-            let signer = ctx.get(&signer);
-            let signing_key = signing::find_keypair(
-                &mut ctx.wallet,
-                &signer,
-                args.ledger_address.clone(),
-            )
-                .await;
-            (tx.sign(&signing_key), signing_key)
-        }, TxSigningKey::SecretKey(signing_key) => {
-            (tx.sign(&signing_key), signing_key)
-        }, TxSigningKey::None => {
-            panic!(
-                "All transactions must be signed; please either specify the key \
-                 or the address from which to look up the signing key."
-            );
-        }
-    };
+    let keypair = tx_signer(&mut ctx, args, default).await;
+    let tx = tx.sign(&keypair);
+    
     let epoch = rpc::query_epoch(args::Query {
         ledger_address: args.ledger_address.clone(),
     })
