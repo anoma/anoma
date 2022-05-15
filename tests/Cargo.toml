@@ -15,12 +15,14 @@ ABCI = [
   "anoma/ABCI",
   "anoma/ibc-mocks-abci",
   "anoma_vm_env/ABCI",
+  "anoma/ferveo-tpke",
 ]
 
 ABCI-plus-plus = [
   "anoma/ABCI-plus-plus",
   "anoma/ibc-mocks",
   "anoma_vm_env/ABCI-plus-plus",
+  "anoma/ferveo-tpke",
 ]
 
 [dependencies]
