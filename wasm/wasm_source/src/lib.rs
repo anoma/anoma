@@ -1,5 +1,7 @@
 #[cfg(feature = "tx_bond")]
 pub mod tx_bond;
+#[cfg(feature = "tx_enqueue_eth_transfer")]
+pub mod tx_enqueue_eth_transfer;
 #[cfg(feature = "tx_from_intent")]
 pub mod tx_from_intent;
 #[cfg(feature = "tx_ibc")]
