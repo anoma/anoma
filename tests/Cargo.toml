@@ -37,6 +37,7 @@ test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tempfile = "3.2.0"
 tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
+tokio = {version = "1.8.2", features = ["full"]}
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}

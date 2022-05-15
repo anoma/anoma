@@ -273,6 +273,7 @@ dependencies = [
  "sha2 0.9.9",
  "tempfile",
  "test-log",
+ "tokio",
  "tracing 0.1.32",
  "tracing-subscriber 0.3.9",
 ]
