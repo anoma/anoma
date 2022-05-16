@@ -15,7 +15,8 @@ fn apply_tx(tx_data: Vec<u8>) {
         target,
         token,
         amount,
+        key,
         shielded,
     } = transfer;
-    token::transfer(&source, &target, &token, amount, &shielded)
+    token::transfer(&source, &target, &token, amount, &key, &shielded)
 }

@@ -88,6 +88,7 @@ use std::io::{Read, Write};
 use crate::client::rpc::query_epoch;
 use anoma::types::token::CONVERSION_KEY_PREFIX;
 use masp_primitives::convert::AllowedConversion;
+use anoma::types::masp::TransferTarget;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -1100,12 +1101,18 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         .await
         .ref_to();
     let shielded_gas = masp_tx_key().ref_to() == chosen_signer;
+    // Determine whether to pin this transaction to a storage key
+    let key = match ctx.get(&args.target) {
+        TransferTarget::PaymentAddress(pa) if pa.is_pinned() => Some(pa.hash()),
+        _ => None,
+    };
     
     let transfer = token::Transfer {
         source,
         target,
         token,
         amount,
+        key,
         shielded: gen_shielded_transfer(&mut ctx, &args, shielded_gas)
             .await
             .unwrap()

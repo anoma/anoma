@@ -317,6 +317,7 @@ mod tests {
                     target: albert_addr.clone(),
                     token: Address::from_str(BTC).unwrap(),
                     amount: token::Amount::from(100),
+                    key: None,
                     shielded: None,
                 },
                 token::Transfer {
@@ -324,6 +325,7 @@ mod tests {
                     target: bertha_addr,
                     token: Address::from_str(XAN).unwrap(),
                     amount: token::Amount::from(1),
+                    key: None,
                     shielded: None,
                 },
             ]
@@ -427,6 +429,7 @@ mod tests {
                     target: albert_addr.clone(),
                     token: Address::from_str(BTC).unwrap(),
                     amount: token::Amount::from(100),
+                    key: None,
                     shielded: None,
                 },
                 token::Transfer {
@@ -434,6 +437,7 @@ mod tests {
                     target: bertha_addr,
                     token: Address::from_str(XAN).unwrap(),
                     amount: token::Amount::from(1),
+                    key: None,
                     shielded: None,
                 },
             ]

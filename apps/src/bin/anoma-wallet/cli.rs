@@ -13,7 +13,7 @@ use itertools::sorted;
 use rand_core::OsRng;
 use masp_primitives::zip32::ExtendedFullViewingKey;
 use anoma_apps::client::tx::find_valid_diversifier;
-use anoma::types::masp::MaspValue;
+use anoma::types::masp::{MaspValue, PaymentAddress};
 
 pub fn main() -> Result<()> {
     let (cmd, ctx) = cli::anoma_wallet_cli();
@@ -211,6 +211,7 @@ fn payment_address_gen(
     args::MaspPayAddrGen {
         alias,
         viewing_key,
+        pin,
     }: args::MaspPayAddrGen,
 ) {
     let alias = alias.to_lowercase();
@@ -218,7 +219,10 @@ fn payment_address_gen(
     let (div, _g_d) = find_valid_diversifier(&mut OsRng);
     let payment_addr = viewing_key.to_payment_address(div).expect("a PaymentAddress");
     let mut wallet = ctx.wallet;
-    let alias = wallet.insert_payment_addr(alias, payment_addr.into()).unwrap_or_else(|| {
+    let alias = wallet.insert_payment_addr(
+        alias,
+        PaymentAddress::from(payment_addr).pinned(pin)
+    ).unwrap_or_else(|| {
         eprintln!("Payment address not added");
         cli::safe_exit(1);
     });

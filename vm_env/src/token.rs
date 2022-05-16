@@ -72,6 +72,7 @@ pub mod tx {
         dest: &Address,
         token: &Address,
         amount: Amount,
+        key: &Option<String>,
         shielded: &Option<Transaction>,
     ) {
         let src_key = token::balance_key(token, src);
@@ -127,6 +128,13 @@ pub mod tx {
                 .expect("Cannot obtain a storage key");
             tx::write(&new_tx_key.to_string(), (shielded, prev_tx_id));
             tx::write(&head_tx_key.to_string(), shielded.txid());
+            // If storage key has been supplied, then pin this transaction to it
+            if let Some(key) = key {
+                let pin_key = Key::from(masp_addr.to_db_key())
+                    .push(&(PIN_KEY_PREFIX.to_owned() + &key))
+                    .expect("Cannot obtain a storage key");
+                tx::write(&pin_key.to_string(), shielded.txid());
+            }
         }
     }
 }

@@ -4,15 +4,17 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::io::{Error, ErrorKind};
 
+use sha2::{Sha256, Digest};
 use bech32::{FromBase32, ToBase32};
 use borsh::{BorshSerialize, BorshDeserialize};
 
-use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, masp};
+use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, HASH_LEN, masp};
 
 /// human-readable part of Bech32m encoded address
 // TODO use "a" for live network
 const EXT_FULL_VIEWING_KEY_HRP: &str = "xfvktest";
 const PAYMENT_ADDRESS_HRP: &str = "patest";
+const PINNED_PAYMENT_ADDRESS_HRP: &str = "ppatest";
 const EXT_SPENDING_KEY_HRP: &str = "xsktest";
 
 /// Wrapper for masp_primitive's FullViewingKey
@@ -101,7 +103,31 @@ impl<'de> serde::Deserialize<'de> for ExtendedViewingKey {
 
 /// Wrapper for masp_primitive's PaymentAddress
 #[derive(Clone, Debug, Copy, PartialOrd, Ord, Eq, PartialEq)]
-pub struct PaymentAddress(masp_primitives::primitives::PaymentAddress);
+pub struct PaymentAddress(masp_primitives::primitives::PaymentAddress, bool);
+
+impl PaymentAddress {
+    /// Turn this PaymentAddress into a pinned/unpinned one
+    pub fn pinned(self, pin: bool) -> PaymentAddress {
+        PaymentAddress(self.0, pin)
+    }
+    /// Determine whether this PaymentAddress is pinned
+    pub fn is_pinned(&self) -> bool {
+        self.1
+    }
+    /// Hash this payment address
+    pub fn hash(&self) -> String {
+        let bytes =
+            (self.0, self.1).try_to_vec().expect("Payment address encoding shouldn't fail");
+        let mut hasher = Sha256::new();
+        hasher.update(bytes);
+        // hex of the first 40 chars of the hash
+        format!(
+            "{:.width$X}",
+            hasher.finalize(),
+            width = HASH_LEN
+        )
+    }
+}
 
 impl From<PaymentAddress> for masp_primitives::primitives::PaymentAddress {
     fn from(addr: PaymentAddress) -> Self {
@@ -111,15 +137,20 @@ impl From<PaymentAddress> for masp_primitives::primitives::PaymentAddress {
 
 impl From<masp_primitives::primitives::PaymentAddress> for PaymentAddress {
     fn from(addr: masp_primitives::primitives::PaymentAddress) -> Self {
-        Self(addr)
+        Self(addr, false)
     }
 }
 
 impl Display for PaymentAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let bytes = self.0.to_bytes();
+        let hrp = if self.1 {
+            PINNED_PAYMENT_ADDRESS_HRP
+        } else {
+            PAYMENT_ADDRESS_HRP
+        };
         let encoded = bech32::encode(
-            PAYMENT_ADDRESS_HRP,
+            hrp,
             bytes.to_base32(),
             BECH32M_VARIANT,
         )
@@ -139,12 +170,16 @@ impl FromStr for PaymentAddress {
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         let (prefix, base32, variant) =
             bech32::decode(string).map_err(DecodeError::DecodeBech32)?;
-        if prefix != PAYMENT_ADDRESS_HRP {
+        let pinned = if prefix == PAYMENT_ADDRESS_HRP {
+            false
+        } else if prefix == PINNED_PAYMENT_ADDRESS_HRP {
+            true
+        } else {
             return Err(DecodeError::UnexpectedBech32Prefix(
                 prefix,
                 PAYMENT_ADDRESS_HRP.into(),
             ));
-        }
+        };
         match variant {
             BECH32M_VARIANT => {}
             _ => return Err(DecodeError::UnexpectedBech32Variant(variant)),
@@ -159,7 +194,7 @@ impl FromStr for PaymentAddress {
             .map_err(DecodeError::DecodeBase32)?;
         masp_primitives::primitives::PaymentAddress::from_bytes(
             &bytes.try_into().map_err(addr_len_err)?
-        ).ok_or_else(addr_data_err).map(Self)
+        ).ok_or_else(addr_data_err).map(|x| Self(x, pinned))
     }
 }
 

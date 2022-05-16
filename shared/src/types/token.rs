@@ -227,6 +227,8 @@ pub const HEAD_TX_KEY: &str = "head-tx";
 pub const TX_KEY_PREFIX: &str = "tx-";
 /// Key segment prefix for MASP conversions
 pub const CONVERSION_KEY_PREFIX: &str = "conv-";
+/// Key segment prefix for pinned shielded transactions
+pub const PIN_KEY_PREFIX: &str = "pin-";
 
 /// Obtain a storage key for user's balance.
 pub fn balance_key(token_addr: &Address, owner: &Address) -> Key {
@@ -297,7 +299,8 @@ pub fn is_masp_key(key: &Key) -> bool {
         [
             DbKeySeg::AddressSeg(addr),
             DbKeySeg::StringSeg(key),
-        ] if *addr == masp() && (key == HEAD_TX_KEY || key.starts_with(TX_KEY_PREFIX)) => true,
+        ] if *addr == masp() && (key == HEAD_TX_KEY || key.starts_with(TX_KEY_PREFIX)
+        || key.starts_with(PIN_KEY_PREFIX)) => true,
         _ => false,
     }
 }
@@ -325,6 +328,8 @@ pub struct Transfer {
     pub token: Address,
     /// The amount of tokens
     pub amount: Amount,
+    /// The unused storage location at which to place TxId
+    pub key: Option<String>,
     /// Shielded transaction part
     pub shielded: Option<Transaction>,
 }
@@ -362,6 +367,7 @@ impl TryFrom<FungibleTokenPacketData> for Transfer {
             target,
             token,
             amount,
+            key: None,
             shielded: None,
         })
     }

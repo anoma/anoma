@@ -1444,6 +1444,7 @@ pub mod args {
     const NODE: Arg<String> = arg("node");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const OWNER: ArgOpt<WalletAddress> = arg_opt("owner");
+    const PIN: ArgFlag = flag("pin");
     const PROTOCOL_KEY: ArgOpt<WalletPublicKey> = arg_opt("protocol-key");
     const PUBLIC_KEY: Arg<WalletPublicKey> = arg("public-key");
     const RAW_ADDRESS: Arg<Address> = arg("address");
@@ -2571,15 +2572,19 @@ pub mod args {
         pub alias: String,
         /// Viewing key
         pub viewing_key: WalletViewingKey,
+        /// Pin
+        pub pin: bool,
     }
 
     impl Args for MaspPayAddrGen {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
             let viewing_key = VIEWING_KEY.parse(matches);
+            let pin = PIN.parse(matches);
             Self {
                 alias,
                 viewing_key,
+                pin,
             }
         }
 
@@ -2588,9 +2593,15 @@ pub mod args {
                 ALIAS
                     .def()
                     .about("An alias to be associated with the payment address."),
-            ).arg(VIEWING_KEY.def().about(
-                "The viewing key."
-            ))
+            ).arg(
+                VIEWING_KEY.def().about(
+                    "The viewing key."
+                )
+            ).arg(
+                PIN.def().about(
+                    "Require that the single transaction to this address be pinned."
+                )
+            )
         }
     }
 

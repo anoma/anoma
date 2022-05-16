@@ -37,7 +37,7 @@ impl IbcActions for Ibc {
         token: &Address,
         amount: Amount,
     ) {
-        transfer(src, dest, token, amount, &None)
+        transfer(src, dest, token, amount, &None, &None)
     }
 
     fn get_height(&self) -> BlockHeight {
