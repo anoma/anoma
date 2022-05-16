@@ -768,7 +768,7 @@ impl ShieldedContext {
     async fn query_allowed_conversion(
         client: HttpClient,
         asset_type: &AssetType
-    ) -> Option<(AllowedConversion, MerklePath<Node>)> {
+    ) -> Option<(Address, Epoch, AllowedConversion, MerklePath<Node>)> {
         // The key with which to lookup allowed conversions
         let conversion_key = anoma::types::storage::Key::from(masp().to_db_key())
             .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
@@ -793,7 +793,7 @@ impl ShieldedContext {
             let mut val_acc = Amount::zero();
             for (asset_type, value) in balance.components() {
                 let comp = balance.project(asset_type.clone());
-                val_acc += if let Some((conv, _wit)) =
+                val_acc += if let Some((_addr, _epoch, conv, _wit)) =
                     Self::query_allowed_conversion(client.clone(), asset_type).await {
                         // If conversion if possible, accumulate the exchanged
                         // amount
@@ -840,7 +840,7 @@ impl ShieldedContext {
                     conversions.contains_key(&note.asset_type) ||
                     Self::query_allowed_conversion(client.clone(), &note.asset_type)
                     .await
-                    .map(|(x,y)| conversions.insert(note.asset_type, (x, y, 0))).is_some();
+                    .map(|(_w,_z,x,y)| conversions.insert(note.asset_type, (x, y, 0))).is_some();
                 // Try to use the note's equivalent value, and if that doesn't
                 // exist then use the note's actual value
                 let (contr, conv) = if admits_conversion {

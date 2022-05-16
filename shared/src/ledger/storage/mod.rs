@@ -562,7 +562,7 @@ where
         
         let mut conv_tree = CommitmentTree::empty();
         let mut incr_trees = HashMap
-            ::<AssetType, (AllowedConversion, IncrementalWitness<Node>)>
+            ::<AssetType, (Address, Epoch, AllowedConversion, IncrementalWitness<Node>)>
             ::new();
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
@@ -627,7 +627,7 @@ where
                 let conv_node = Node::new(conv.cmu().to_repr());
                 // Old IncrementalWitnesses need this new node so that their
                 // MerklePaths can remain correct
-                for (_conv, incr_tree) in incr_trees.values_mut() {
+                for (_addr, _epoch, _conv, incr_tree) in incr_trees.values_mut() {
                     incr_tree.append(conv_node)
                         .expect("unable to add conversion to incremental witness");
                 }
@@ -635,7 +635,7 @@ where
                     .expect("unable to add conversion to commitment tree");
                 // Now indirectly make a MerklePath for the current conversion
                 let incr_tree = IncrementalWitness::from_tree(&conv_tree);
-                incr_trees.insert(old_asset, (conv, incr_tree));
+                incr_trees.insert(old_asset, (addr.clone(), Epoch(prev_epoch), conv, incr_tree));
             }
         }
 
@@ -658,11 +658,11 @@ where
 
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (asset_type, (conv, incr_tree)) in incr_trees {
+        for (asset_type, (addr, epoch, conv, incr_tree)) in incr_trees {
             let key = key_prefix
                 .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
-            self.write(&key, types::encode(&(conv, incr_tree.path().unwrap())))?;
+            self.write(&key, types::encode(&(addr, epoch, conv, incr_tree.path().unwrap())))?;
         }
         Ok(())
     }
