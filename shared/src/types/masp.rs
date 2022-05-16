@@ -376,6 +376,8 @@ pub enum BalanceOwner {
     Address(Address),
     /// A balance stored at a shielded address
     FullViewingKey(ExtendedViewingKey),
+    /// A balance stored at a payment address
+    PaymentAddress(PaymentAddress),
 }
 
 impl BalanceOwner {
@@ -391,6 +393,14 @@ impl BalanceOwner {
     pub fn full_viewing_key(&self) -> Option<ExtendedViewingKey> {
         match self {
             Self::FullViewingKey(x) => Some(*x),
+            _ => None,
+        }
+    }
+
+    /// Get the contained PaymentAddress, if any
+    pub fn payment_address(&self) -> Option<PaymentAddress> {
+        match self {
+            Self::PaymentAddress(x) => Some(*x),
             _ => None,
         }
     }

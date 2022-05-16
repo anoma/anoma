@@ -45,6 +45,11 @@ use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
 use std::collections::{HashMap, HashSet};
 use masp_primitives::zip32::ExtendedFullViewingKey;
+use masp_primitives::transaction::components::Amount;
+use itertools::Either;
+use std::collections::BTreeMap;
+use anoma::types::masp::PaymentAddress;
+use crate::client::tx::ShieldedContext;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
@@ -87,7 +92,11 @@ pub async fn query_balance(mut ctx: Context, args: args::QueryBalance) {
             query_shielded_balance(&mut ctx, args).await,
         Some(BalanceOwner::Address(_owner)) =>
             query_transparent_balance(&mut ctx, args).await,
+        Some(BalanceOwner::PaymentAddress(_owner)) =>
+            query_pinned_balance(&mut ctx, args).await,
         None => {
+            // Print pinned balance
+            query_pinned_balance(&mut ctx, args.clone()).await;
             // Print shielded balance
             query_shielded_balance(&mut ctx, args.clone()).await;
             // Then print transparent balance
@@ -188,6 +197,124 @@ pub async fn query_transparent_balance(ctx: &mut Context, args: args::QueryBalan
             }
         }
     }
+}
+
+/// Query the token pinned balance(s)
+pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
+    // The epoch is required to identify timestamped tokens
+    let epoch = query_epoch(args.query.clone()).await;
+    // Map addresses to token names
+    let tokens = address::tokens();
+    let owners = if let Some(pa) = args.owner.and_then(|x| ctx.get_cached(&x).payment_address()) {
+        vec![pa]
+    } else {
+        ctx.wallet
+            .get_payment_addrs()
+            .clone().into_values().filter(PaymentAddress::is_pinned).collect()
+    };
+    // Get the viewing keys with which to try note decryptions
+    let viewing_keys = ctx.wallet
+        .get_viewing_keys()
+        .values()
+        .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+        .collect();
+    // Print the token balances by payment address
+    for owner in owners {
+        let balance = ShieldedContext::compute_pinned_balance(
+            &args.query.ledger_address,
+            owner,
+            &viewing_keys,
+        ).await;
+        
+        match (balance, args.token.as_ref()) {
+            (None, _) => {
+                println!("Payment address {} has not yet received payment.", owner);
+            }, (Some(balance), Some(token)) => {
+                let token = ctx.get(&token);
+                // Extract and print only the specified token from the total
+                let (_asset_type, balance) = value_by_address(&balance, token.clone(), epoch);
+                let currency_code = tokens
+                    .get(&token)
+                    .map(|c| Cow::Borrowed(*c))
+                    .unwrap_or_else(|| Cow::Owned(token.to_string()));
+                if balance == 0 {
+                    println!("Payment address {} received no shielded {}", owner, currency_code);
+                } else {
+                    let asset_value = token::Amount::from(balance as u64);
+                    println!("Payment address {} received {} {}",
+                             owner, asset_value, currency_code);
+                }
+            }, (Some(balance), None) => {
+                let mut found_any = false;
+                // Print balances by asset IDs and human-readable token names
+                for (asset_type, value) in decode_asset_types(balance, epoch) {
+                    if !found_any {
+                        println!("Payment address {} received:", owner);
+                        found_any = true;
+                    }
+                    let asset_value = token::Amount::from(value as u64);
+                    match asset_type {
+                        Either::Left(asset_type) =>
+                            println!("  {}: {}", asset_type, asset_value),
+                        Either::Right(token) => {
+                            // If corresponding token address was found, print
+                            // that instead
+                            let currency_code = tokens
+                                .get(&token)
+                                .map(|c| Cow::Borrowed(*c))
+                                .unwrap_or_else(|| Cow::Owned(token.to_string()));
+                            println!("  {}: {}", currency_code, asset_value)
+                        },
+                    }
+                }
+                if !found_any {
+                    println!("Payment address {} received no shielded assets", owner);
+                }
+            },
+        }
+    }
+}
+
+/// Get the component of the given amount corresponding to the given token
+pub fn value_by_address(
+    amt: &Amount,
+    token: Address,
+    epoch: Epoch,
+) -> (AssetType, i64) {
+    // Compute the unique asset identifier from the token address
+    let asset_type = AssetType::new(
+        (token, epoch.0)
+            .try_to_vec()
+            .expect("token addresses should serialize")
+            .as_ref()
+    ).unwrap();
+    (asset_type, amt[&asset_type])
+}
+
+/// Determine the token addresses yielding the given asset types if possible
+pub fn decode_asset_types(
+    mut amt: Amount,
+    epoch: Epoch,
+) -> BTreeMap<Either<AssetType, Address>, i64> {
+    // Map addresses to token names
+    let tokens = address::tokens();
+    let mut decoded = BTreeMap::new();
+    // Print those balances corresponding to human-readable token names
+    for (token, _currency_code) in tokens {
+        // Compute the unique asset identifier from the token address
+        let (asset_type, asset_value) =
+            value_by_address(&amt, token.clone(), epoch);
+        if asset_value != 0 {
+            amt -= amt.project(asset_type);
+            decoded.insert(Either::Right(token), asset_value);
+        }
+    }
+    // Now print those balances that do not correspond to human-readable
+    // token names
+    for (asset_type, value) in amt.components() {
+        decoded.insert(Either::Left(*asset_type), *value);
+    }
+    decoded
 }
 
 /// Query token shielded balance(s)
@@ -293,7 +420,7 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
                     let mut found_any = false;
                     for (fvk, value) in balances {
                         let value = token::Amount::from(value as u64);
-                        println!("{}: {}", fvk, value);
+                        println!("  {}, owned by {}", value, fvk);
                         found_any = true;
                     }
                     if !found_any {
@@ -337,30 +464,20 @@ pub async fn query_shielded_balance(ctx: &mut Context, args: args::QueryBalance)
         (None, true) => {
             // Query the multi-asset balance at the given spending key
             let viewing_key = ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
-            let mut balance = ctx.shielded.compute_exchanged_balance(
+            let balance = ctx.shielded.compute_exchanged_balance(
                 args.query.ledger_address,
                 &viewing_key
             ).await.expect("context should contain viewing key");
             let mut found_any = false;
-            // Print those balances corresponding to human-readable token names
-            for (token, currency_code) in tokens {
-                // Compute the unique asset identifier from the token address
-                let asset_type = AssetType::new(
-                    (token, epoch.0).try_to_vec().expect("token addresses should serialize").as_ref()
-                ).unwrap();
-                let asset_value = balance[&asset_type];
-                if asset_value > 0 {
-                    balance -= balance.project(asset_type);
-                    let asset_value = token::Amount::from(asset_value as u64);
-                    println!("{}: {}", currency_code, asset_value);
-                    found_any = true;
+            // Print balances by asset IDs and human-readable token names
+            for (asset_type, value) in decode_asset_types(balance, epoch) {
+                let asset_value = token::Amount::from(value as u64);
+                match asset_type {
+                    Either::Left(asset_type) =>
+                        println!("{}: {}", asset_type, asset_value),
+                    Either::Right(token) =>
+                        println!("{}: {}", tokens[&token], asset_value),
                 }
-            }
-            // Now print those balances that do not correspond to human-readable
-            // token names
-            for (asset_type, value) in balance.components() {
-                let value = token::Amount::from(*value as u64);
-                println!("{}: {}", asset_type, value);
                 found_any = true;
             }
             if !found_any {

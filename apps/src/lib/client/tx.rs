@@ -86,9 +86,10 @@ use anoma::types::address::masp;
 use std::path::PathBuf;
 use std::io::{Read, Write};
 use crate::client::rpc::query_epoch;
-use anoma::types::token::CONVERSION_KEY_PREFIX;
+use anoma::types::token::{PIN_KEY_PREFIX, CONVERSION_KEY_PREFIX};
 use masp_primitives::convert::AllowedConversion;
 use anoma::types::masp::TransferTarget;
+use anoma::types::masp::PaymentAddress;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -880,15 +881,69 @@ impl ShieldedContext {
         }
         (val_acc, notes, conversions)
     }
+
+    /// Compute the combined value of the output notes of the transaction pinned
+    /// at the given payment address. This computation uses the supplied viewing
+    /// keys to try to decrypt the output notes. If no transaction is pinned at
+    /// the given payment address, then return None.
+    pub async fn compute_pinned_balance(
+        ledger_address: &TendermintAddress,
+        owner: PaymentAddress,
+        viewing_keys: &Vec<ViewingKey>,
+    ) -> Option<Amount> {
+        let client = HttpClient::new(ledger_address.clone()).unwrap();
+        // The address of the MASP account
+        let masp_addr = masp();
+        // Construct the key for where the transaction ID would be stored
+        let pin_key = Key::from(masp_addr.to_db_key())
+            .push(&(PIN_KEY_PREFIX.to_owned() + &owner.hash()))
+            .expect("Cannot obtain a storage key");
+        // Obtain the transaction pointer at the key
+        let txid = query_storage_value::<TxId>(
+            client.clone(),
+            pin_key,
+        ).await?;
+        // Construct the key for where the pinned transaction is stored
+        let tx_key = Key::from(masp_addr.to_db_key())
+            .push(&(TX_KEY_PREFIX.to_owned() + &txid.to_string()))
+            .expect("Cannot obtain a storage key");
+        // Obtain the pointed to transaction
+        let (tx, _next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
+            client.clone(),
+            tx_key,
+        ).await.unwrap();
+        // Accumulate the combined output note value into this Amount
+        let mut val_acc = Amount::zero();
+        for so in &(*tx).shielded_outputs {
+            // Let's try to see if any of our viewing keys can decrypt current note
+            for vk in viewing_keys {
+                let decres = try_sapling_note_decryption::<TestNetwork>(
+                    0,
+                    &vk.ivk().0,
+                    &so.ephemeral_key.into_subgroup().unwrap(),
+                    &so.cmu,
+                    &so.enc_ciphertext
+                );
+                match decres {
+                    // So this current viewing key does decrypt this current note...
+                    Some((note, pa, _memo)) if pa == owner.into() => {
+                        val_acc += Amount::from_nonnegative(note.asset_type, note.value)
+                            .expect("found note with invalid value or asset type");
+                        break;
+                    }, _ => {}
+                }
+            }
+        }
+        Some(val_acc)
+    }
 }
 
 /// Convert Anoma amount and token type to MASP equivalents
 async fn convert_amount(
-    ledger_address: TendermintAddress,
+    epoch: Epoch,
     token: &Address,
     val: token::Amount,
 ) -> (AssetType, Amount) {
-    let epoch = query_epoch(args::Query { ledger_address }).await;
     // Typestamp the chosen token with the current epoch
     let token_bytes = (token, epoch.0).try_to_vec().expect("token should serialize");
     // Generate the unique asset identifier from the unique token address
@@ -931,21 +986,24 @@ async fn gen_shielded_transfer(
     ).await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
+    // Determine epoch in which to submit potential shielded transaction
+    let epoch = query_epoch(
+        args::Query { ledger_address: args.tx.ledger_address.clone() }
+    ).await;
     // Context required for storing which notes are in the source's possesion
-    let height = 0u32;
     let consensus_branch_id = BranchId::Sapling;
     let amt: u64 = args.amount.into();
     let memo: Option<Memo> = None;
 
     // Now we build up the transaction within this object
-    let mut builder = Builder::<TestNetwork, OsRng>::new(height);
+    let mut builder = Builder::<TestNetwork, OsRng>::new(0u32);
     // Convert transaction amount into MASP types
-    let (asset_type, amount) = convert_amount(args.tx.ledger_address.clone(), &ctx.get(&args.token), args.amount).await;
+    let (asset_type, amount) = convert_amount(epoch, &ctx.get(&args.token), args.amount).await;
     // If there are shielded inputs
     if let Some(sk) = spending_key {
         // Transaction fees need to match the amount in the wrapper Transfer
         // when MASP source is used
-        let (_, fee) = convert_amount(args.tx.ledger_address.clone(), &ctx.get(&args.tx.fee_token), args.tx.fee_amount).await;
+        let (_, fee) = convert_amount(epoch, &ctx.get(&args.tx.fee_token), args.tx.fee_amount).await;
         builder.set_fee(fee.clone())?;
         let sk = sk.into();
         // If the gas is coming from the shielded pool, then our shielded inputs
