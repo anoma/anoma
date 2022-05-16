@@ -112,6 +112,7 @@ dependencies = [
  "chrono",
  "concat-idents",
  "prost",
+ "rand 0.8.5",
  "serde_json",
  "sha2 0.9.9",
  "tempfile",
