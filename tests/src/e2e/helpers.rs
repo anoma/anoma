@@ -1,5 +1,6 @@
 //! E2E test helpers
 
+pub(super) mod transactions;
 use std::str::FromStr;
 
 use anoma::types::address::Address;

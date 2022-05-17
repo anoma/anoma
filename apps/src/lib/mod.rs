@@ -14,6 +14,19 @@ pub mod proto;
 pub mod wallet;
 pub mod wasm_loader;
 
+#[cfg(not(feature = "ABCI"))]
+pub extern crate tendermint;
+#[cfg(not(feature = "ABCI"))]
+pub extern crate tendermint_config;
+#[cfg(feature = "ABCI")]
+pub extern crate tendermint_config_abci;
+#[cfg(not(feature = "ABCI"))]
+pub extern crate tendermint_rpc;
+#[cfg(feature = "ABCI")]
+pub extern crate tendermint_rpc_abci;
+#[cfg(feature = "ABCI")]
+pub extern crate tendermint_stable;
+
 // This is here only to include the std's docs in our docs.
 // Taken from <https://github.com/rust-lang/rfcs/issues/2324#issuecomment-502437904>.
 #[doc(inline)]
