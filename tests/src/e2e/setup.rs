@@ -7,6 +7,7 @@ use std::sync::Once;
 use std::{env, fs, mem, thread, time};
 
 use anoma::types::chain::ChainId;
+use anoma::types::key::common;
 use anoma_apps::client::utils;
 use anoma_apps::config::genesis::genesis_config::{self, GenesisConfig};
 use anoma_apps::{config, wallet};
@@ -18,6 +19,7 @@ use eyre::eyre;
 use rexpect::process::wait::WaitStatus;
 use rexpect::session::{spawn_command, PtySession};
 use tempfile::{tempdir, TempDir};
+use toml::Value;
 
 /// For `color_eyre::install`, which fails if called more than once in the same
 /// process
@@ -406,6 +408,25 @@ impl Test {
             mode,
             loc,
         )
+    }
+
+    pub fn get_validator_protocol_sk(&self, who: &Who) -> common::SecretKey {
+        let validator_dir = &self.get_base_dir(who);
+        let global_config =
+            fs::read(&validator_dir.join("global-config.toml")).unwrap();
+        let global_config = String::from_utf8(global_config).unwrap();
+        let global_config = global_config.parse::<Value>().unwrap();
+        let chain_id = &global_config["default_chain_id"].as_str().unwrap();
+        let wallet_path = &validator_dir.join(&chain_id).join("wallet.toml");
+        let wallet = fs::read(&wallet_path).unwrap();
+        let wallet = String::from_utf8(wallet).unwrap();
+        let wallet = wallet.parse::<Value>().unwrap();
+        let protocol_sk = &wallet["validator_data"]["keys"]["protocol_keypair"]
+            .as_str()
+            .unwrap();
+        const PROTOCOL_SK_PREFIX: &str = "ED25519_SK_PREFIX";
+        common::SecretKey::from_str(&protocol_sk[PROTOCOL_SK_PREFIX.len()..])
+            .unwrap()
     }
 
     pub fn get_base_dir(&self, who: &Who) -> PathBuf {
