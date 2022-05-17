@@ -39,6 +39,7 @@ tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 tokio = {version = "1.8.2", features = ["full"]}
 rand = "0.8"
+toml = "0.5.8"
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}

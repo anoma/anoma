@@ -275,6 +275,7 @@ dependencies = [
  "tempfile",
  "test-log",
  "tokio",
+ "toml",
  "tracing 0.1.32",
  "tracing-subscriber 0.3.9",
 ]
