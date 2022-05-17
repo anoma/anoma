@@ -62,9 +62,7 @@ pub mod main {
 pub mod main {
     use anoma_vm_env::tx_prelude::*;
 
-    const TX_NAME: &str = "tx_write";
-
-    const ARBITRARY_VALUE: &str = "arbitrary value";
+    const TX_NAME: &str = "tx_write_storage_key";
 
     fn log(msg: &str) {
         log_string(format!("[{}] {}", TX_NAME, msg))
@@ -82,44 +80,44 @@ pub mod main {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
+        log(&format!("called with tx_data - {} bytes", tx_data.len()));
         let signed = match SignedTxData::try_from_slice(&tx_data[..]) {
             Ok(signed) => {
-                log("got signed data");
+                log("deserialized SignedTxData");
                 signed
             }
-            Err(error) => fatal("getting signed data", error),
+            Err(error) => fatal("deserializing SignedTxData", error),
         };
         let data = match signed.data {
             Some(data) => {
-                log(&format!("got data ({} bytes)", data.len()));
+                log(&format!("got data - {} bytes", data.len()));
                 data
             }
             None => {
                 fatal_msg("no data provided");
             }
         };
-        let key = match String::from_utf8(data) {
-            Ok(key) => {
-                log(&format!("parsed key from data: {}", key));
-                key
+        let write_op = match transaction::util::WriteOp::try_from_slice(&data[..]) {
+            Ok(write_op) => {
+                log("deserialized WriteOp");
+                write_op
             }
-            Err(error) => fatal("getting key", error),
+            Err(error) => fatal("deserializing WriteOp", error),
         };
-        let val: Option<Vec<u8>> = read(key.as_str());
+        let val: Option<Vec<u8>> = read(write_op.key.as_str());
         match val {
             Some(val) => {
-                let val = String::from_utf8(val).unwrap();
-                log(&format!("preexisting val is {}", val));
+                log(&format!("storage key already has a value present- {} bytes", val.len()));
             }
             None => {
-                log("no preexisting val");
+                log("no existing value found at storage key");
             }
         }
         log(&format!(
-            "attempting to write new value {} to key {}",
-            ARBITRARY_VALUE, key
+            "attempting to write new value ({} bytes) to storage key {}",
+            write_op.value.len(), &write_op.key
         ));
-        write(key.as_str(), ARBITRARY_VALUE);
+        write(write_op.key.as_str(), write_op.value);
     }
 }
 

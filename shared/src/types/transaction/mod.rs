@@ -12,6 +12,7 @@ pub mod nft;
 pub mod pos;
 /// transaction protocols made by validators
 pub mod protocol;
+pub mod util;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
