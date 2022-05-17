@@ -1,5 +1,6 @@
 //! E2E test helpers
 
+pub(super) mod keys;
 pub(super) mod transactions;
 pub(super) mod wasms;
 
