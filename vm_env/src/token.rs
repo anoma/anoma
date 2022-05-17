@@ -133,7 +133,7 @@ pub mod tx {
                 let pin_key = Key::from(masp_addr.to_db_key())
                     .push(&(PIN_KEY_PREFIX.to_owned() + &key))
                     .expect("Cannot obtain a storage key");
-                tx::write(&pin_key.to_string(), shielded.txid());
+                tx::write(&pin_key.to_string(), (shielded.txid(), tx::get_block_epoch()));
             }
         }
     }

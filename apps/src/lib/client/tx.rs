@@ -890,7 +890,7 @@ impl ShieldedContext {
         ledger_address: &TendermintAddress,
         owner: PaymentAddress,
         viewing_keys: &Vec<ViewingKey>,
-    ) -> Option<Amount> {
+    ) -> Option<(Amount, Epoch)> {
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // The address of the MASP account
         let masp_addr = masp();
@@ -899,7 +899,7 @@ impl ShieldedContext {
             .push(&(PIN_KEY_PREFIX.to_owned() + &owner.hash()))
             .expect("Cannot obtain a storage key");
         // Obtain the transaction pointer at the key
-        let txid = query_storage_value::<TxId>(
+        let (txid, tx_epoch) = query_storage_value::<(TxId, Epoch)>(
             client.clone(),
             pin_key,
         ).await?;
@@ -934,7 +934,7 @@ impl ShieldedContext {
                 }
             }
         }
-        Some(val_acc)
+        Some((val_acc, tx_epoch))
     }
 }
 

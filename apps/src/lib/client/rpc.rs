@@ -201,8 +201,6 @@ pub async fn query_transparent_balance(ctx: &mut Context, args: args::QueryBalan
 
 /// Query the token pinned balance(s)
 pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
-    // The epoch is required to identify timestamped tokens
-    let epoch = query_epoch(args.query.clone()).await;
     // Map addresses to token names
     let tokens = address::tokens();
     let owners = if let Some(pa) = args.owner.and_then(|x| ctx.get_cached(&x).payment_address()) {
@@ -228,8 +226,8 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
         
         match (balance, args.token.as_ref()) {
             (None, _) => {
-                println!("Payment address {} has not yet received payment.", owner);
-            }, (Some(balance), Some(token)) => {
+                println!("Payment address {} has not yet been consumed.", owner);
+            }, (Some((balance, epoch)), Some(token)) => {
                 let token = ctx.get(&token);
                 // Extract and print only the specified token from the total
                 let (_asset_type, balance) = value_by_address(&balance, token.clone(), epoch);
@@ -238,18 +236,20 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
                     .map(|c| Cow::Borrowed(*c))
                     .unwrap_or_else(|| Cow::Owned(token.to_string()));
                 if balance == 0 {
-                    println!("Payment address {} received no shielded {}", owner, currency_code);
+                    println!("Payment address {} was consumed during epoch {}. \
+                              Received no shielded {}", owner, epoch, currency_code);
                 } else {
                     let asset_value = token::Amount::from(balance as u64);
-                    println!("Payment address {} received {} {}",
-                             owner, asset_value, currency_code);
+                    println!("Payment address {} was consumed during epoch {}. \
+                              Received {} {}", owner, epoch, asset_value, currency_code);
                 }
-            }, (Some(balance), None) => {
+            }, (Some((balance, epoch)), None) => {
                 let mut found_any = false;
                 // Print balances by asset IDs and human-readable token names
                 for (asset_type, value) in decode_asset_types(balance, epoch) {
                     if !found_any {
-                        println!("Payment address {} received:", owner);
+                        println!("Payment address {} was consumed during epoch {}. \
+                                  Received:", owner, epoch);
                         found_any = true;
                     }
                     let asset_value = token::Amount::from(value as u64);
@@ -268,7 +268,8 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
                     }
                 }
                 if !found_any {
-                    println!("Payment address {} received no shielded assets", owner);
+                    println!("Payment address {} was consumed during epoch {}. \
+                              Received no shielded assets.", owner, epoch);
                 }
             },
         }
