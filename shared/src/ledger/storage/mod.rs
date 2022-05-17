@@ -40,11 +40,10 @@ use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
 use std::collections::HashMap;
 use crate::types::address::*;
-use masp_primitives::merkle_tree::CommitmentTree;
 use masp_primitives::sapling::Node;
 use ff::PrimeField;
-use masp_primitives::merkle_tree::IncrementalWitness;
 use masp_primitives::convert::AllowedConversion;
+use masp_primitives::merkle_tree::FrozenCommitmentTree;
 use crate::types::token;
 
 /// A result of a function that may fail
@@ -559,10 +558,10 @@ where
         // The derived conversions will be placed in MASP address space
         let masp_addr = masp();
         let key_prefix: Key = masp_addr.to_db_key().into();
-        
-        let mut conv_tree = CommitmentTree::empty();
+
+        let mut conv_notes = Vec::new();
         let mut incr_trees = HashMap
-            ::<AssetType, (Address, Epoch, AllowedConversion, IncrementalWitness<Node>)>
+            ::<AssetType, (Address, Epoch, AllowedConversion, usize)>
             ::new();
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
@@ -625,17 +624,12 @@ where
                 // The merkle tree need only provide the conversion commitment,
                 // the remaining information is provided through the storage API
                 let conv_node = Node::new(conv.cmu().to_repr());
-                // Old IncrementalWitnesses need this new node so that their
-                // MerklePaths can remain correct
-                for (_addr, _epoch, _conv, incr_tree) in incr_trees.values_mut() {
-                    incr_tree.append(conv_node)
-                        .expect("unable to add conversion to incremental witness");
-                }
-                conv_tree.append(conv_node)
-                    .expect("unable to add conversion to commitment tree");
-                // Now indirectly make a MerklePath for the current conversion
-                let incr_tree = IncrementalWitness::from_tree(&conv_tree);
-                incr_trees.insert(old_asset, (addr.clone(), Epoch(prev_epoch), conv, incr_tree));
+                incr_trees.insert(
+                    old_asset,
+                    (addr.clone(), Epoch(prev_epoch), conv, conv_notes.len())
+                );
+                // Now indirectly add leaf corresponding to this conversion
+                conv_notes.push(conv_node);
             }
         }
 
@@ -656,13 +650,15 @@ where
                 .expect("unable to update MASP transparent balance");
         }
 
+        // Convert conversion vector into tree so that Merkle paths can be obtained
+        let conv_tree = FrozenCommitmentTree::new(&conv_notes);
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (asset_type, (addr, epoch, conv, incr_tree)) in incr_trees {
+        for (asset_type, (addr, epoch, conv, pos)) in incr_trees {
             let key = key_prefix
                 .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
-            self.write(&key, types::encode(&(addr, epoch, conv, incr_tree.path().unwrap())))?;
+            self.write(&key, types::encode(&(addr, epoch, conv, conv_tree.path(pos))))?;
         }
         Ok(())
     }
