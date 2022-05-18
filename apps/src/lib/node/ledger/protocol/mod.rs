@@ -15,6 +15,7 @@ use anoma::ledger::treasury::TreasuryVp;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage;
+use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
@@ -61,7 +62,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Apply a given transaction
 ///
-/// The only Tx Types that should be input here are `Decrypted` and `Wrapper`
+/// The only Tx Types that should be input here are `Decrypted`, `Wrapper` and
+/// `Protocol`.
 ///
 /// If the given tx is a successfully decrypted payload apply the necessary
 /// vps. Otherwise, we include the tx on chain with the gas charge added
@@ -86,7 +88,11 @@ where
         .map_err(Error::GasError)?;
     match tx {
         TxType::Raw(_) => Err(Error::TxTypeError),
-        TxType::Decrypted(DecryptedTx::Decrypted(tx)) => {
+        TxType::Decrypted(DecryptedTx::Decrypted(tx))
+        | TxType::Protocol(ProtocolTx {
+            tx: ProtocolTxType::EthereumBridgeUpdate(tx),
+            ..
+        }) => {
             let verifiers = execute_tx(
                 &tx,
                 storage,
