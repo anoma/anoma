@@ -102,6 +102,9 @@ where
             Ics26Envelope::Ics4PacketMsg(PacketMsg::RecvPacket(msg)) => {
                 self.validate_receiving_token(&msg.packet)
             }
+            Ics26Envelope::Ics4PacketMsg(PacketMsg::AckPacket(msg)) => {
+                self.validate_refunding_token(&msg.packet)
+            }
             Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => {
                 self.validate_refunding_token(&msg.packet)
             }
