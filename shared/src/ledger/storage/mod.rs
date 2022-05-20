@@ -565,19 +565,8 @@ where
             ::new();
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
-
         // The amount of XAN to reward for each token on each epoch change
-        let rewards: HashMap<Address, i64> = vec![
-            (xan(), 0),
-            (btc(), 1),
-            (eth(), 2),
-            (dot(), 0),
-            (schnitzel(), 1),
-            (apfel(), 2),
-            (kartoffel(), 0),
-        ]
-            .into_iter()
-            .collect();
+        let rewards: HashMap<Address, i64> = masp_rewards();
 
         // Construct MASP asset type for rewards
         let reward_asset_bytes = (xan(), self.last_epoch.0)

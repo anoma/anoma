@@ -516,6 +516,23 @@ pub fn tokens() -> HashMap<Address, &'static str> {
     .collect()
 }
 
+/// Temporary helper for testing, a hash map of tokens addresses with their
+/// MASP XAN incentive schedules
+pub fn masp_rewards() -> HashMap<Address, i64> {
+    vec![
+        (xan(), 0),
+        (btc(), 1),
+        (eth(), 2),
+        (dot(), 0),
+        (schnitzel(), 1),
+        (apfel(), 2),
+        (kartoffel(), 0),
+    ]
+        .into_iter()
+        .collect()
+}
+
+
 #[cfg(test)]
 pub mod tests {
     use proptest::prelude::*;
