@@ -544,6 +544,7 @@ fn masp_txs_and_queries() -> Result<()> {
 
 /// In this test we verify that users of the MASP receive the correct rewards
 /// for leaving their assets in the pool for varying periods of time.
+
 #[test]
 fn masp_incentives() -> Result<()> {
     // Lengthen epoch to ensure that a transaction can be constructed and
@@ -574,7 +575,7 @@ fn masp_incentives() -> Result<()> {
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     // Wait till epoch boundary
-    let epoch_0 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep0 = epoch_sleep(&test, &validator_one_rpc, 720)?;
     
     // Send 20 BTC from Albert to PA(A)
     let mut client = run!(test, Bin::Client, vec![
@@ -622,7 +623,7 @@ fn masp_incentives() -> Result<()> {
     let masp_rewards = masp_rewards();
 
     // Wait till epoch boundary
-    let epoch_1 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep1 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Assert BTC balance at VK(A) is 20
     let mut client = run!(test, Bin::Client, vec![
@@ -647,7 +648,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 20*masp_rewards[&btc()]*(epoch_1.0-epoch_0.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        20 * masp_rewards[&btc()] * (ep1.0 - ep0.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at MASP pool is 20*BTC_reward*(epoch_1-epoch_0)
@@ -660,11 +664,14 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 20*masp_rewards[&btc()]*(epoch_1.0-epoch_0.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        20 * masp_rewards[&btc()] * (ep1.0 - ep0.0) as i64
+    ))?;
     drop(client);
 
     // Wait till epoch boundary
-    let epoch_2 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep2 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Assert BTC balance at VK(A) is 20
     let mut client = run!(test, Bin::Client, vec![
@@ -689,7 +696,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 20*masp_rewards[&btc()]*(epoch_2.0-epoch_0.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        20 * masp_rewards[&btc()] * (ep2.0 - ep0.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at MASP pool is 20*BTC_reward*(epoch_2-epoch_0)
@@ -702,11 +712,14 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 20*masp_rewards[&btc()]*(epoch_2.0-epoch_0.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        20 * masp_rewards[&btc()] * (ep2.0 - ep0.0) as i64
+    ))?;
     drop(client);
 
     // Wait till epoch boundary
-    let epoch_3 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep3 = epoch_sleep(&test, &validator_one_rpc, 720)?;
     
     // Send 30 ETH from Albert to PA(B)
     let mut client = run!(test, Bin::Client, vec![
@@ -752,7 +765,7 @@ fn masp_incentives() -> Result<()> {
     drop(client);
 
     // Wait till epoch boundary
-    let epoch_4 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep4 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Assert ETH balance at VK(B) is 30
     let mut client = run!(test, Bin::Client, vec![
@@ -777,7 +790,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 30*masp_rewards[&eth()]*(epoch_4.0-epoch_3.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        30 * masp_rewards[&eth()] * (ep4.0 - ep3.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at MASP pool is 20*BTC_reward*(epoch_4-epoch_0)+30*ETH_reward*(epoch_4-epoch_3)
@@ -790,11 +806,15 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", (20*masp_rewards[&btc()]*(epoch_4.0-epoch_0.0) as i64)+(30*masp_rewards[&eth()]*(epoch_4.0-epoch_3.0) as i64)))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        (20 * masp_rewards[&btc()] * (ep4.0 - ep0.0) as i64) +
+            (30 * masp_rewards[&eth()] * (ep4.0 - ep3.0) as i64)
+    ))?;
     drop(client);
 
     // Wait till epoch boundary
-    let epoch_5 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep5 = epoch_sleep(&test, &validator_one_rpc, 720)?;
     
     // Send 30 ETH from SK(B) to Christel
     let mut client = run!(test, Bin::Client, vec![
@@ -836,7 +856,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 30*masp_rewards[&eth()]*(epoch_5.0-epoch_3.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at MASP pool is 20*BTC_reward*(epoch_5-epoch_0)+30*ETH_reward*(epoch_5-epoch_3)
@@ -849,11 +872,15 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", (20*masp_rewards[&btc()]*(epoch_5.0-epoch_0.0) as i64)+(30*masp_rewards[&eth()]*(epoch_5.0-epoch_3.0) as i64)))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        (20 * masp_rewards[&btc()] * (ep5.0 - ep0.0) as i64) +
+            (30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64)
+    ))?;
     drop(client);
 
     // Wait till epoch boundary
-    let epoch_6 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let ep6 = epoch_sleep(&test, &validator_one_rpc, 720)?;
     
     // Send 20 BTC from SK(A) to Christel
     let mut client = run!(test, Bin::Client, vec![
@@ -895,7 +922,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 20*masp_rewards[&btc()]*(epoch_6.0-epoch_0.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at MASP pool is 20*BTC_reward*(epoch_6-epoch_0)+20*ETH_reward*(epoch_5-epoch_3)
@@ -908,11 +938,15 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", (20*masp_rewards[&btc()]*(epoch_6.0-epoch_0.0) as i64)+(30*masp_rewards[&eth()]*(epoch_5.0-epoch_3.0) as i64)))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        (20 * masp_rewards[&btc()] *(ep6.0 - ep0.0) as i64) +
+            (30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64)
+    ))?;
     drop(client);
 
     // Wait till epoch boundary
-    let _epoch_7 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    let _ep7 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Assert XAN balance at VK(A) is 20*BTC_reward*(epoch_6-epoch_0)
     let mut client = run!(test, Bin::Client, vec![
@@ -924,7 +958,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 20*masp_rewards[&btc()]*(epoch_6.0-epoch_0.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at VK(B) is 30*ETH_reward*(epoch_5-epoch_3)
@@ -937,7 +974,10 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", 30*masp_rewards[&eth()]*(epoch_5.0-epoch_3.0) as i64))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64
+    ))?;
     drop(client);
 
     // Assert XAN balance at MASP pool is 20*BTC_reward*(epoch_6-epoch_0)+30*ETH_reward*(epoch_5-epoch_3)
@@ -950,7 +990,90 @@ fn masp_incentives() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc
     ], Some(300))?;
-    client.exp_string(&format!("XAN: {}", (20*masp_rewards[&btc()]*(epoch_6.0-epoch_0.0) as i64)+(30*masp_rewards[&eth()]*(epoch_5.0-epoch_3.0) as i64)))?;
+    client.exp_string(&format!(
+        "XAN: {}",
+        (20 * masp_rewards[&btc()] *(ep6.0 - ep0.0) as i64) +
+            (30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64)
+    ))?;
+    drop(client);
+
+    // Wait till epoch boundary
+    let _ep8 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    
+    // Send 30*ETH_reward*(epoch_5-epoch_3) XAN from SK(B) to Christel
+    let mut client = run!(test, Bin::Client, vec![
+        "transfer",
+        "--source",
+        B_SPENDING_KEY,
+        "--target",
+        CHRISTEL,
+        "--token",
+        XAN,
+        "--amount",
+        &(30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64).to_string(),
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.exp_string("Transaction is valid")?;
+    drop(client);
+
+    // Wait till epoch boundary
+    let _ep9 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+
+    // Send 20*BTC_reward*(epoch_6-epoch_0) XAN from SK(A) to Christel
+    let mut client = run!(test, Bin::Client, vec![
+        "transfer",
+        "--source",
+        A_SPENDING_KEY,
+        "--target",
+        BERTHA,
+        "--token",
+        XAN,
+        "--amount",
+        &(20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64).to_string(),
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.exp_string("Transaction is valid")?;
+    drop(client);
+
+    // Assert XAN balance at VK(A) is 0
+    let mut client = run!(test, Bin::Client, vec![
+        "balance",
+        "--owner",
+        AA_VIEWING_KEY,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.exp_string("No shielded XAN balance found")?;
+    drop(client);
+
+    // Assert XAN balance at VK(B) is 0
+    let mut client = run!(test, Bin::Client, vec![
+        "balance",
+        "--owner",
+        AB_VIEWING_KEY,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.exp_string("No shielded XAN balance found")?;
+    drop(client);
+
+    // Assert XAN balance at MASP pool is 0
+    let mut client = run!(test, Bin::Client, vec![
+        "balance",
+        "--owner",
+        MASP,
+        "--token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.exp_string("XAN: 0")?;
     drop(client);
     
     Ok(())
