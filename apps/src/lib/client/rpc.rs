@@ -49,7 +49,10 @@ use masp_primitives::transaction::components::Amount;
 use itertools::Either;
 use std::collections::BTreeMap;
 use anoma::types::masp::PaymentAddress;
-use crate::client::tx::ShieldedContext;
+use masp_primitives::primitives::ViewingKey;
+use anoma::types::masp::ExtendedViewingKey;
+use std::str::FromStr;
+use crate::client::tx::{ShieldedContext, PinnedBalanceError};
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
@@ -211,23 +214,55 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
             .clone().into_values().filter(PaymentAddress::is_pinned).collect()
     };
     // Get the viewing keys with which to try note decryptions
-    let viewing_keys = ctx.wallet
+    let viewing_keys: Vec<ViewingKey> = ctx.wallet
         .get_viewing_keys()
         .values()
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
     // Print the token balances by payment address
     for owner in owners {
-        let balance = ShieldedContext::compute_pinned_balance(
-            &args.query.ledger_address,
-            owner,
-            &viewing_keys,
-        ).await;
-        
+        let mut balance = Err(PinnedBalanceError::InvalidViewingKey);
+        // Find the viewing key that can recognize payments the current payment
+        // address
+        for vk in &viewing_keys {
+            balance = ShieldedContext::compute_pinned_balance(
+                &args.query.ledger_address,
+                owner,
+                &vk,
+            ).await;
+            if balance != Err(PinnedBalanceError::InvalidViewingKey) {
+                break;
+            }
+        }
+        // If a suitable viewing key was not found, then demand it from the user
+        if balance == Err(PinnedBalanceError::InvalidViewingKey) {
+            print!("Enter the viewing key of the payment address: ");
+            io::stdout().flush().unwrap();
+            let mut vk_str = String::new();
+            io::stdin().read_line(&mut vk_str).unwrap();
+            let fvk = match ExtendedViewingKey::from_str(vk_str.trim()) {
+                Ok(fvk) => fvk,
+                _ => {
+                    eprintln!("Invalid viewing key entered");
+                    continue;
+                },
+            };
+            let vk = ExtendedFullViewingKey::from(fvk).fvk.vk;
+            // Use the given viewing key to decrypt pinned transaction data
+            balance = ShieldedContext::compute_pinned_balance(
+                &args.query.ledger_address,
+                owner,
+                &vk,
+            ).await
+        }
+        // Now print out the received quantities according to CLI arguments
         match (balance, args.token.as_ref()) {
-            (None, _) => {
-                println!("Payment address {} has not yet been consumed.", owner);
-            }, (Some((balance, epoch)), Some(token)) => {
+            (Err(PinnedBalanceError::InvalidViewingKey), _) =>
+                println!("The supplied viewing key cannot decode transactions to \
+                          the given payment address."),
+            (Err(PinnedBalanceError::NoTransactionPinned), _) =>
+                println!("Payment address {} has not yet been consumed.", owner),
+            (Ok((balance, epoch)), Some(token)) => {
                 let token = ctx.get(&token);
                 // Extract and print only the specified token from the total
                 let (_asset_type, balance) = value_by_address(&balance, token.clone(), epoch);
@@ -243,7 +278,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
                     println!("Payment address {} was consumed during epoch {}. \
                               Received {} {}", owner, epoch, asset_value, currency_code);
                 }
-            }, (Some((balance, epoch)), None) => {
+            }, (Ok((balance, epoch)), None) => {
                 let mut found_any = false;
                 // Print balances by asset IDs and human-readable token names
                 for (asset_type, value) in decode_asset_types(balance, epoch) {

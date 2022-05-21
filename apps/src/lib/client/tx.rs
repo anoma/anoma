@@ -445,6 +445,15 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     (diversifier, g_d)
 }
 
+/// Errors that can occur when trying to retrieve pinned transaction
+#[derive(PartialEq, Eq)]
+pub enum PinnedBalanceError {
+    /// No transaction has yet been pinned to the given payment address
+    NoTransactionPinned,
+    /// The supplied viewing key does not recognize payments to given address
+    InvalidViewingKey,
+}
+
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -889,8 +898,17 @@ impl ShieldedContext {
     pub async fn compute_pinned_balance(
         ledger_address: &TendermintAddress,
         owner: PaymentAddress,
-        viewing_keys: &Vec<ViewingKey>,
-    ) -> Option<(Amount, Epoch)> {
+        viewing_key: &ViewingKey,
+    ) -> Result<(Amount, Epoch), PinnedBalanceError> {
+        // Check that the supplied viewing key corresponds to given payment
+        // address
+        let counter_owner = viewing_key.to_payment_address(
+            *masp_primitives::primitives::PaymentAddress::diversifier(&owner.into())
+        );
+        match counter_owner {
+            Some(counter_owner) if counter_owner == owner.into() => {},
+            _ => return Err(PinnedBalanceError::InvalidViewingKey),
+        }
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // The address of the MASP account
         let masp_addr = masp();
@@ -902,7 +920,7 @@ impl ShieldedContext {
         let (txid, tx_epoch) = query_storage_value::<(TxId, Epoch)>(
             client.clone(),
             pin_key,
-        ).await?;
+        ).await.ok_or(PinnedBalanceError::NoTransactionPinned)?;
         // Construct the key for where the pinned transaction is stored
         let tx_key = Key::from(masp_addr.to_db_key())
             .push(&(TX_KEY_PREFIX.to_owned() + &txid.to_string()))
@@ -915,26 +933,24 @@ impl ShieldedContext {
         // Accumulate the combined output note value into this Amount
         let mut val_acc = Amount::zero();
         for so in &(*tx).shielded_outputs {
-            // Let's try to see if any of our viewing keys can decrypt current note
-            for vk in viewing_keys {
-                let decres = try_sapling_note_decryption::<TestNetwork>(
-                    0,
-                    &vk.ivk().0,
-                    &so.ephemeral_key.into_subgroup().unwrap(),
-                    &so.cmu,
-                    &so.enc_ciphertext
-                );
-                match decres {
-                    // So this current viewing key does decrypt this current note...
-                    Some((note, pa, _memo)) if pa == owner.into() => {
-                        val_acc += Amount::from_nonnegative(note.asset_type, note.value)
-                            .expect("found note with invalid value or asset type");
-                        break;
-                    }, _ => {}
-                }
+            // Let's try to see if our viewing key can decrypt current note
+            let decres = try_sapling_note_decryption::<TestNetwork>(
+                0,
+                &viewing_key.ivk().0,
+                &so.ephemeral_key.into_subgroup().unwrap(),
+                &so.cmu,
+                &so.enc_ciphertext
+            );
+            match decres {
+                // So the given viewing key does decrypt this current note...
+                Some((note, pa, _memo)) if pa == owner.into() => {
+                    val_acc += Amount::from_nonnegative(note.asset_type, note.value)
+                        .expect("found note with invalid value or asset type");
+                    break;
+                }, _ => {}
             }
         }
-        Some((val_acc, tx_epoch))
+        Ok((val_acc, tx_epoch))
     }
 }
 
