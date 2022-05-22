@@ -542,6 +542,107 @@ fn masp_txs_and_queries() -> Result<()> {
     Ok(())
 }
 
+/// In this test we:
+/// 1. Run the ledger node
+/// 2. Assert PPA(C) cannot be recognized by incorrect viewing key
+/// 3. Assert PPA(C) has not transaction pinned to it
+/// 4. Send 20 BTC from Albert to PPA(C)
+/// 5. Assert PPA(C) has the 20 BTC transaction pinned to it
+
+#[test]
+fn masp_pinned_txs() -> Result<()> {
+    // Lengthen epoch to ensure that a transaction can be constructed and
+    // submitted within the same block. Necessary to ensure that conversion is
+    // not invalidated.
+    let test = setup::network(|genesis| {
+            let parameters = ParametersConfig {
+                min_duration: 180,
+                ..genesis.parameters
+            };
+            GenesisConfig {
+                parameters,
+                ..genesis
+            }
+        }, None)?;
+
+    // 1. Run the ledger node
+    let mut ledger =
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
+
+    ledger.exp_string("Anoma ledger node started")?;
+    if !cfg!(feature = "ABCI") {
+        ledger.exp_string("started node")?;
+    } else {
+        ledger.exp_string("Started node")?;
+    }
+
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
+    // Assert PPA(C) cannot be recognized by incorrect viewing key
+    let mut client = run!(test, Bin::Client, vec![
+        "balance",
+        "--owner",
+        AC_PAYMENT_ADDRESS,
+        "--token",
+        BTC,
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.send_line(AB_VIEWING_KEY)?;
+    client.exp_string("Supplied viewing key cannot decode transactions to")?;
+    drop(client);
+    
+    // Assert PPA(C) has not transaction pinned to it
+    let mut client = run!(test, Bin::Client, vec![
+        "balance",
+        "--owner",
+        AC_PAYMENT_ADDRESS,
+        "--token",
+        BTC,
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.send_line(AC_VIEWING_KEY)?;
+    client.exp_string("has not yet been consumed")?;
+    drop(client);
+
+    // Wait till epoch boundary
+    let _ep0 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+    
+    // Send 20 BTC from Albert to PPA(C)
+    let mut client = run!(test, Bin::Client, vec![
+        "transfer",
+        "--source",
+        ALBERT,
+        "--target",
+        AC_PAYMENT_ADDRESS,
+        "--token",
+        BTC,
+        "--amount",
+        "20",
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.exp_string("Transaction is valid")?;
+    drop(client);
+
+    // Assert PPA(C) has the 20 BTC transaction pinned to it
+    let mut client = run!(test, Bin::Client, vec![
+        "balance",
+        "--owner",
+        AC_PAYMENT_ADDRESS,
+        "--token",
+        BTC,
+        "--ledger-address",
+        &validator_one_rpc
+    ], Some(300))?;
+    client.send_line(AC_VIEWING_KEY)?;
+    client.exp_string("Received 20 BTC")?;
+    drop(client);
+
+    Ok(())
+}
+
 /// In this test we verify that users of the MASP receive the correct rewards
 /// for leaving their assets in the pool for varying periods of time.
 

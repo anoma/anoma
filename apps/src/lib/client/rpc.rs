@@ -236,7 +236,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
         }
         // If a suitable viewing key was not found, then demand it from the user
         if balance == Err(PinnedBalanceError::InvalidViewingKey) {
-            print!("Enter the viewing key of the payment address: ");
+            print!("Enter the viewing key for {}: ", owner);
             io::stdout().flush().unwrap();
             let mut vk_str = String::new();
             io::stdin().read_line(&mut vk_str).unwrap();
@@ -258,8 +258,8 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
         // Now print out the received quantities according to CLI arguments
         match (balance, args.token.as_ref()) {
             (Err(PinnedBalanceError::InvalidViewingKey), _) =>
-                println!("The supplied viewing key cannot decode transactions to \
-                          the given payment address."),
+                println!("Supplied viewing key cannot decode transactions to \
+                          given payment address."),
             (Err(PinnedBalanceError::NoTransactionPinned), _) =>
                 println!("Payment address {} has not yet been consumed.", owner),
             (Ok((balance, epoch)), Some(token)) => {
