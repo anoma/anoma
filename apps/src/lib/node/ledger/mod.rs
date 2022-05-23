@@ -292,7 +292,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             who: "Tendermint",
         };
 
-        let res = tendermint_node::run(
+        if let Err(error) = tendermint_node::run(
             tendermint_dir,
             chain_id,
             genesis_time,
@@ -301,11 +301,13 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             tm_abort_recv,
         )
         .map_err(Error::Tendermint)
-        .await;
+        .await
+        {
+            tracing::error!(?error, "Tendermint node exited with error");
+        };
         tracing::info!("Tendermint node is no longer running.");
 
         drop(aborter);
-        res
     });
 
     let broadcaster = if matches!(
@@ -414,12 +416,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         }
     };
     match res {
-        Ok((tendermint_res, abci_res, _)) => {
+        Ok((_, abci_res, _)) => {
             // we ignore errors on user-initiated shutdown
             if aborted {
-                if let Err(err) = tendermint_res {
-                    tracing::error!("Tendermint error: {}", err);
-                }
                 if let Err(err) = abci_res {
                     tracing::error!("ABCI error: {}", err);
                 }
