@@ -2,553 +2,519 @@
 
 [IBC](https://arxiv.org/pdf/2006.15918.pdf) allows a ledger to track another ledger's consensus state using a light client. IBC is a protocol to agree the consensus state and to send/receive packets between ledgers.
 
-## Transaction for IBC
-A requester (IBC relayer or user) who wants to execute IBC operations on a ledger sets required data (packet, proofs, module state, timeout height/timestamp etc.) as transaction data, and submit a transaction with the transaction data. The transaction executes the specified IBC operation. IBC validity predicate is invoked after this transaction execution to verify the IBC operation. The trigger to invoke IBC validity predicate is changing IBC-related keys prefixed with `#encoded-ibc-address/`.
+We have mainly two components for IBC integration, IBC hander and IBC validity predicate. IBC hander is a set of functions to handle IBC-related data. A transaction calls these functions for IBC operations. IBC validity predicate is a native validity predicate to validate the transaction which mutates IBC-related data.
 
-The transaction can modify the ledger state by writing not only data specified in the transaction but also IBC-related data on the storage sub-space. Also, it emits an IBC event at the end of the transaction.
+## Storage key of IBC-related data
+Its storage key should be prefixed with [`InternalAddress::Ibc`](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/shared/src/types/address.rs#L56) to differ them from other storage operations. A path after the prefix specifies an IBC-related data. The paths are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). The utility functions for the keys are defined [here](https://github.com/anoma/anoma/blob/master/shared/src/ledger/ibc/storage.rs). For example, a client state of a counterparty ledger will be stored with a storage key `#IBC_encoded_addr/clients/{client_id}/clientState`. The IBC transaction and IBC validity predicate can use the storage keys to read/write IBC-related data according to IBC protocol.
 
-- Transaction to create a client
-  ```rust
-  #[transaction]
-  fn apply_tx(tx_data: Vec<u8>) {
-      let signed =
-          key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-      let data  = ClientCreationData::try_from_slice(&signed.data[..]).unwrap();
+## IBC transaction
+A requester (IBC relayer or user) who wants to execute IBC operations on a ledger should make a transaction and an IBC message as transaction data, and submit a transaction with the transaction data. We provide [`tx_ibc.wasm`](https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/tx_ibc.rs) for IBC transaction.
 
-      // handle IBC modules
-      // write the client type, the client state, and the consensus state
-      ibc::create_client(&data);
-  }
-  ```
+The transaction can mutate the ledger state by writing not only data specified in the transaction but also IBC-related data on the storage sub-space. It depends on the given IBC message. The [`dispatch`](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/shared/src/ledger/ibc/handler.rs#L153) function will check the message and call the corresponding IBC operations. Also, it emits an IBC event at the end of the transaction.
 
-- Transaction to transfer a token
-  ```rust
-  #[transaction]
-  fn apply_tx(tx_data: Vec<u8>) {
-      let signed =
-          key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-      let data = PacketSendData::try_from_slice(&signed.data[..]).unwrap();
-
-      // escrow the token, make a packet, and handle IBC modules
-      ibc::transfer_send(&data);
-  }
-  ```
-
-### Store IBC-related data
-The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed with `InternalAddress::Ibc` to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). For example, a client state will be stored with a key `#IBC_encoded_addr/clients/{client_id}/clientState`.
+### Handle IBC operations
+IBC transaction mutates the ledger state. We provides IBC operations, e.g. [`create_client`](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/shared/src/ledger/ibc/handler.rs#L203). Basically, they read IBC-related data, check and update them according to IBC protocol. For example, when it receives a message `MsgCreateAnyClient` to create a new client for the counterparty chain, the transaction increments the client counter, make a new client ID and inserts the client type, the client state and the client consensus state, then emits an event with the client ID. The transaction accesses the storage through the host environment functions.
 
 ### Emit IBC event
-The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. We could add `IbcEvent` to `TxResult`. `IbcEvent` should have the IBC event type and necessary data according to the IBC operation. If the `IbcEvent` is set, the ledger sets an IBC event to the response of the transaction. A transaction sets `IbcEvent` on the write log as non-committed data. We provide functions to set/get them.
+The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events.
 
-IBC relayer can subscribe to the ledger with Tendermint RPC or get the response when the relayer submits a transaction, then get the event. It is parsed in the relayer by [`from_tx_response_event()`](https://github.com/informalsystems/ibc-rs/blob/26087d575c620d1ec57b3343d1aaf5afd1db72d5/modules/src/events.rs#L167-L181).
+[`TxResult`](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/shared/src/types/transaction/mod.rs#L46-L57) can have `IbcEvent`. [`IbcEvent`](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/shared/src/types/ibc/event.rs#L25-L30) should have the IBC event type and necessary data according to the IBC operation. A transaction sets `IbcEvent` on the write log as non-committed data with the host environment function [`tx_emit_ibc_event`](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/shared/src/vm/host_env.rs#L940). When the block is finalized, [the event is given to the ABCI response](https://github.com/anoma/anoma/blob/ce0a07598a2bcb90ac67cab2c25e71e32b68193f/apps/src/lib/node/ledger/shell/finalize_block.rs#L387-L391).
 
-```rust
-/* apps/src/lib/node/ledger/protocol/mod.rs */
-
-pub struct TxResult {
-    pub gas_used: u64,
-    pub changed_keys: HashSet<Key>,
-    pub vps_result: VpsResult,
-    pub initialized_accounts: Vec<Address>,
-    pub ibc_event: IbcEvent,
-}
-```
-
-```rust
-/* shared/src/ledger/ibc/event.rs */
-
-pub enum IbcEventType {
-    NotIbcEvent,
-    CreateClient,
-    UpdateClient,
-    SendPacket,
-    ...
-}
-
-impl fmt::Display for IbcEvent {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            IbcEventType::NotIbcEvent => write!(f, "not_ibc_event"),
-            IbcEventType::CreateClient => write!(f, "create_client"),
-            ...
-        }
-    }
-}
-
-pub struct IbcEvent {
-    pub event_type: IbcEventType,
-    pub attributes: HashMap<String, String>,
-}
-
-impl IbcEvent {
-    pub fn new() -> Self {
-        IbcEvent {
-            event_type: IbcEventType::NotIbcEvent,
-            attributes: HashMap::new(),
-        }
-    }
-
-    pub fn set_event_type(&mut self, event_type: IbcEventType) {
-        self.event_type = event_type;
-    }
-
-    pub fn insert(&mut self, key: String, value: String) {
-        self.attributes.insert(key, value);
-    }
-}
-```
-
-```rust
-/* shared/src/vm/host_env.rs */
-
-/// IBC event type insertion function exposed to the wasm VM Tx environment.
-pub fn tx_set_ibc_event_type<MEM, DB, H>(
-    env: &TxEnv<MEM, DB, H>,
-    val_ptr: u64,
-    val_len: u64,
-) -> TxResult<()>
-where
-    MEM: VmMemory,
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
-{
-    let (event_type, gas) = env
-        .memory
-        .read_string(val_ptr, val_len as _)
-        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
-    tx_add_gas(env, gas)?;
-
-    let write_log = unsafe { env.ctx.write_log.get() };
-    let (gas, _size_diff) = write_log
-        .set_ibc_event_type(event_type)
-        .map_err(TxRuntimeError::StorageModificationError)?;
-    tx_add_gas(env, gas)
-}
-
-/// IBC data insertion function exposed to the wasm VM Tx environment.
-pub fn tx_insert_ibc_attribute<MEM, DB, H>(
-    env: &TxEnv<MEM, DB, H>,
-    key_ptr: u64,
-    key_len: u64,
-    val_ptr: u64,
-    val_len: u64,
-) -> TxResult<()>
-where
-    MEM: VmMemory,
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
-{
-    let (key, gas) = env
-        .memory
-        .read_string(key_ptr, key_len as _)
-        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
-    tx_add_gas(env, gas)?;
-    let (value, gas) = env
-        .memory
-        .read_string(val_ptr, val_len as _)
-        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
-    tx_add_gas(env, gas)?;
-
-    let write_log = unsafe { env.ctx.write_log.get() };
-    write_log.insert_ibc_attribute(key, value);
-}
-```
-
-### Handle IBC modules
-IBC-related transactions should call functions to handle IBC modules. These functions are defined in [ibc-rs](https://github.com/informalsystems/ibc-rs) in traits (e.g. [`ClientReader`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics02_client/context.rs#L14)). But we can implement IBC-related operations (e.g. `create_client()`) without these traits because Anoma WASM transaction accesses the storage through the host environment functions.
-
-```rust
-/* shared/src/ledger/ibc/storage.rs */
-
-/// Returns a key of the IBC-related data
-pub fn ibc_key(path: impl AsRef<str>) -> Result<Self> {
-    let path = Key::parse(path).map_err(Error::StorageKey)?;
-    let addr = Address::Internal(InternalAddress::Ibc);
-    let key = Key::from(addr.to_db_key());
-    Ok(key.join(&path))
-}
-
-/// Returns a key for the client state
-pub fn client_state_key(client_id: &ClientId) -> Key {
-    let path = Path::ClientState(client_id.clone());
-    ibc_key(path.to_string())
-        .expect("Creating a key for the client state shouldn't fail")
-}
-
-...
-```
-
-```rust
-/* vm_env/src/ibc.rs */
-
-/// This struct integrates and gives access to lower-level IBC functions.
-pub struct Ibc;
-
-impl Ibc {
-    pub fn create_client(data: &ClientCreationData) {
-        let counter_key = client_counter_key().to_string();
-        let counter = Self::get_and_inc_counter(&counter_key);
-        let client_id = data.client_id(counter).expect("invalid client ID");
-        // client type
-        let client_type_key = client_type_key(&client_id).to_string();
-        let client_type = data.client_state.client_type();
-        tx::write(&client_type_key, client_type.clone());
-        // client state
-        let client_state_key = client_state_key(&client_id).to_string();
-        tx::write(&client_state_key, data.client_state.clone());
-        // consensus state
-        let height = data.client_state.latest_height();
-        let consensus_state_key =
-            consensus_state_key(&client_id, height).to_string();
-        tx::write(&consensus_state_key, data.consensus_state);
-
-        // set the event type
-        tx::set_ibc_event_type(ibc::CREATE_CLIENT_EVENT.to_owned());
-        // set attributes
-        tx::insert_ibc_attribute(CLIENT_ID.to_owned(), client_id.to_string());
-        tx::insert_ibc_attribute(CLIENT_TYPE.to_owned(), client_type.to_string());
-        tx::insert_ibc_attribute(CONSENSUS_HEIGHT.to_owned(), height.to_string());
-    }
-    ...
-}
-```
-
-### Proof
-If a proven IBC-related data is needed, the response of a query should have proof of the data (ICS 24). It is used to verify if the key-value pair exists or doesn't exist on the counterpart ledger in IBC validity predicate (ICS 23).
-
-The query response has the proof as [`tendermint::merkle::proof::Proof`](https://github.com/informalsystems/tendermint-rs/blob/dd371372da58921efe1b48a4dd24a2597225df11/tendermint/src/merkle/proof.rs#L15), which consists of a vector of [`tendermint::merkle::proof::ProofOp`](https://github.com/informalsystems/tendermint-rs/blob/dd371372da58921efe1b48a4dd24a2597225df11/tendermint/src/merkle/proof.rs#L25). `ProofOp` should have `data`, which is encoded to `Vec<u8>` from [`ibc_proto::ics23::CommitmentProof`](https://github.com/informalsystems/ibc-rs/blob/66049e29a3f5a0c9258d228b9a6c21704e7e2fa4/proto/src/prost/ics23.rs#L49). The relayer getting the proof converts the proof from `tendermint::merkle::proof::Proof` to `ibc::ics23_commitment::commitment::CommitmentProofBytes` by [`convert_tm_to_ics_merkle_proof()`](https://github.com/informalsystems/ibc-rs/blob/66049e29a3f5a0c9258d228b9a6c21704e7e2fa4/modules/src/ics23_commitment/merkle.rs#L84) and set it to the request data of
- the following IBC operation.
+IBC relayer can get these events by subscribing to the ledger with Tendermint RPC or getting the response after the relayer submits a transaction. It is parsed in the relayer by [`from_tx_response_event()`](https://github.com/informalsystems/ibc-rs/blob/26087d575c620d1ec57b3343d1aaf5afd1db72d5/modules/src/events.rs#L167-L181).
 
 ## IBC validity predicate
-IBC validity predicate validates that the IBC-related transactions are correct by checking the ledger state including prior and posterior. It is executed after a transaction has written IBC-related state. If the result is true, the IBC-related mutations are committed and the events are returned. If the result is false, the IBC-related mustations are dropped and the events aren't emitted. For the performance, IBC validity predicate is a [native validity predicate](ledger/vp.md#native-vps) that are built into the ledger.
+IBC validity predicate is invoked after the transaction execution to validate the IBC operations. The trigger invoking IBC validity predicate is changing IBC-related data whose key is prefixed with `#encoded-ibc-address/`.
 
-IBC validity predicate has to execute the following validations for state changes of IBC modules.
+IBC validity predicate validates that the state changes by the IBC transaction are valid by checking the ledger state including prior and posterior. If the validation succeeds, the state changes are committed and the event is emitted. If the validation fails, the IBC-related mustations are dropped and the event isn't emitted. For the performance, IBC validity predicate is a [native validity predicate](vp.md#native-vps) that are built into the ledger.
+
+IBC validity predicate has to execute the following validations for state changes of IBC-related data. `validate_tx` calls the corresponding validation functions according to the prefix of each storage key.
 
 ```rust
-/* shared/src/ledger/ibc.rs */
+/* shared/src/ledger/ibc/vp/mod.rs */
 
-pub struct Ibc<'a, DB, H>
+/// IBC VP
+pub struct Ibc<'a, DB, H, CA>
 where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     /// Context to interact with the host structures.
-    pub ctx: Ctx<'a, DB, H>,
+    pub ctx: Ctx<'a, DB, H, CA>,
 }
 
 impl NativeVp for Ibc {
-    const ADDR: InternalAddress = InternalAddress::Ibc;
-
-    fn init_genesis_storage<DB, H>(storage: &mut Storage<DB, H>)
-    where
-        DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-        H: StorageHasher
-    {
-        // initialize the counters of client, connection and channel module
-    }
 
     fn validate_tx(
+        &self,
         tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
-        _verifiers: &HashSet<Address>,
+        keys_changed: &BTreeSet<Key>,
+        _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
         for key in keys_changed {
-            if !key.is_ibc_key() {
-                continue;
-            }
-
-            match get_ibc_prefix(key) {
-                // client
-                "clients" => {
-                    // Use ClientReader functions to load the posterior state of modules
-
-                    let client_id = get_client_id(key);
-                    // Check the client state change
-                    //   - created or updated
-                    match check_client_state(client_id) {
-                        StateChange::Created => {
-                            // "CreateClient"
-                            // Assert that the corresponding consensus state exists
+            // Check the prefix of the storage key
+            if let Some(ibc_prefix) = ibc_prefix(key) {
+                match ibc_prefix {
+                    IbcPrefix::Client => {
+                        if is_client_counter_key(key) {
+                            // Check if the counter is incremented
+                        } else {
+                            let client_id = get_client_id(key);
+                            // client validation
+                            self.validate_client(&client_id, tx_data)?
                         }
-                        StateChange::Update => {
-                            match get_header(key, tx_data) {
-                                Some(header) => {
-                                    // "UpdateClient"
-                                    // Verify the header with the stored client state’s validity predicate and consensus state
-                                    //   - Refer to `ibc-rs::ics02_client::client_def::check_header_and_update_state()`
-                                }
-                                None => {
-                                    // "UpgradeClient"
-                                    // Verify the proofs to check the client state and consensus state
-                                    //   - Refer to `ibc-rs::ics02_client::client_def::verify_upgrade_and_update_state()`
-                                }
-                            }
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
+                    }
+                    IbcPrefix::Connection => {
+                        self.validate_connection(key, tx_data)?
+                    }
+                    IbcPrefix::Channel => {
+                        self.validate_channel(key, tx_data)?
+                    }
+                    IbcPrefix::Port => self.validate_port(key)?,
+                    IbcPrefix::Capability => self.validate_capability(key)?,
+                    IbcPrefix::SeqSend => {
+                        self.validate_sequence_send(key, tx_data)?
+                    }
+                    IbcPrefix::SeqRecv => {
+                        self.validate_sequence_recv(key, tx_data)?
+                    }
+                    IbcPrefix::SeqAck => {
+                        self.validate_sequence_ack(key, tx_data)?
+                    }
+                    IbcPrefix::Commitment => {
+                        self.validate_commitment(key, tx_data)?
+                    }
+                    IbcPrefix::Receipt => {
+                        self.validate_receipt(key, tx_data)?
+                    }
+                    IbcPrefix::Ack => self.validate_ack(key)?,
+                    IbcPrefix::Event => {}
+                    IbcPrefix::Unknown => {
+                        return Err(Error::KeyError(format!(
+                            "Invalid IBC-related key: {}",
+                            key
+                        )));
                     }
                 }
-
-                // connection handshake
-                "connections" => {
-                    // Use ConnectionReader functions to load the posterior state of modules
-
-                    let connection_id = get_connection_id(key);
-                    // Check the connection state change
-                    //   - none => INIT, none => TRYOPEN, INIT => OPEN, or TRYOPEN => OPEN
-                    match check_connection_state(connection_id) {
-                        StateChange::Created => {
-                            // "ConnectionOpenInit"
-                            // Assert that the corresponding client exists
-                        }
-                        StateChange::Updated => {
-                            // Assert that the version is compatible
-
-                            // Verify the proofs to check the counterpart ledger's state is expected
-                            //   - The state can be inferred from the own connection state change
-                            //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
-                    }
-                }
-
-                // channel handshake or closing
-                "channelEnds" => {
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    // Assert that the port is owend
-
-                    // Assert that the corresponding connection exists
-
-                    // Assert that the version is compatible
-
-                    // Check the channel state change
-                    //   - none => INIT, none => TRYOPEN, INIT => OPEN, TRYOPEN => OPEN, or OPEN => CLOSED
-                    match check_channel_state(channel_id) {
-                        StateChange::Created => {
-                            // "ChanOpenInit"
-                            continue;
-                        }
-                        StateChange::Closed => {
-                            // OPEN => CLOSED
-                            match get_proofs(tx_data) {
-                                Some(proofs) => {
-                                    // "ChanCloseConfirm"
-                                    // Verify the proofs to check the counterpart ledger's channel has been closed
-                                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
-                                }
-                                None => {
-                                    // "ChanCloseInit"
-                                    continue;
-                                }
-                            }
-                        }
-                        StateChange::Updated => {
-                            // Verify the proof to check the counterpart ledger's state is expected
-                            //   - The state can be inferred from the own channel state change
-                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
-                    }
-                }
-
-                "nextSequenceSend" => {
-                    // "SendPacket"
-                    let packet = get_packet(key, tx_data)?;
-
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-
-                    // Assert that the commitment has been stored
-                }
-
-                "nextSequenceRecv" => {
-                    // "RecvPacket"
-                    let packet = get_packet(key, tx_data)?;
-
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-
-                    // Assert that the receipt and the ack have been stored
-                }
-
-                "nextSequenceAck" => {
-                    // "Acknowledgement"
-                    let packet = get_packet(key, tx_data)?;
-                    let proofs = get_proofs(key, tx_data)?;
-
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-
-                    // Assert that the commitment has been deleted
-                }
-
-                "commitments" => {
-                    let packet = get_packet(key, tx_data)?;
-                    let proofs = get_proofs(key, tx_data)?;
-
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    // check if the commitment is stored or deleted
-                    match check_commitment_state(key) {
-                        StateChange::Deleted => {
-                            // Assert that the packet was actually sent on this channel
-                            //   - Get the stored commitment and compare it with a commitment made from the packet
-
-                            // Check the channel state change
-                            match get_channel_state(channel_id) {
-                                ChannelState::Open => {
-                                    // "AcknowledgementPacket"
-                                    // Assert that the packet metadata matches the channel and connection information
-
-                                    // Assert that the connection and channel are open
-
-                                    // Verify that the packet was actually sent on this channel
-                                    //   - Get the stored commitment and compare it with a commitment made from the packet
-
-                                    // Verify the proofs to check the acknowledgement has been written on the counterpart ledger
-                                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_acknowledgement_proofs()`
-                                }
-                                ChannelState::Closed => {
-                                    // Check the packet timeout
-                                    if !is_timeout(packet) {
-                                        // "TimeoutOnClose"
-                                        // Verify the proofs to check the counterpart ledger's state is expected
-                                        //   - The channel state on the counterpart ledger should be CLOSED
-                                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
-                                    }
-                                    // Verify the proofs to check the packet has not been confirmed on the counterpart ledger yet
-                                    //   - For ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_next_sequence_recv()`
-                                    //   - For not-ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_packet_receipt_absence()`
-                                }
-                                _ => return Err(Error::InvalidChannel("Invalid channel state")),
-                            }
-                        }
-                        StateChange::Created => {
-                            // "SendPacket"
-                            // Assert that the packet metadata matches the channel and connection information
-                            //   - the port is owend
-                            //   - the channel exists
-                            //   - the counterparty information is valid
-                            //   - the connection exists
-
-                            // Assert that the connection and channel are open
-
-                            // Assert that the timeout height and timestamp have not passed on the destination ledger
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
-                    }
-                }
-
-                "ports" => {
-                    // check the state change
-                    match check_port_state(key) {
-                        StateChange::Created | StateChange::Updated => {
-                            // check the authentication
-                            self.authenticated_capability(port_id)?;
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
-                    }
-                }
-
-                "receipts" => {
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    match check_state(key) {
-                        StateChange::Created => {
-                            let packet = get_packet(key, tx_data)?;
-                            let proofs = get_proofs(key, tx_data)?;
-                            // Assert that the receipt is valid
-
-                            // Assert that the packet metadata matches the channel and connection information
-
-                            // Assert that the connection and channel are open
-
-                            // Assert that the timeout height and timestamp have not passed on the destination ledger
-
-                            // Assert that the receipt and ack have been stored
-
-                            // Verify the proofs that the counterpart ledger has stored the commitment
-                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_recv_proofs()`
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
-                    }
-                }
-
-                "acks" => {
-                    // Use ChannelReader functions to load the posterior state of modules
-
-                    match check_state(key) {
-                        StateChange::Created => {
-                            // Assert that the ack is valid
-
-                            // Assert that the receipt and ack have been stored
-                        }
-                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
-                    }
-                }
-
-                _ => return Err(Error::UnknownKeyPrefix("Found an unknown key prefix")),
             }
         }
         Ok(true)
     }
-}
 ```
 
-### Handle IBC modules
-Like IBC-related transactions, the validity predicate should handle IBC modules. It only reads the prior or the posterior state to validate them. `Keeper` to write IBC-related data aren't required, but we needs to implement `Reader` for both the prior and the posterior state. To use verification functions in `ibc-rs`, implementations for traits for IBC modules (e.g. `ClientReader`) should be for the posterior state. For example, we can call [`verify_proofs()`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics03_connection/handler/verify.rs#L14) with the IBC's context in a step of the connection handshake: `verify_proofs(ibc, client_state, &conn_end, &expected_conn, proofs)`.
+### Client validation
+The IBC client is validated by checking the state change for updating or upgrading. `ibc-rs` provides the check functions for the updating and upgrading.
 
 ```rust
-/* shared/src/ledger/ibc.rs */
-
-pub struct Ibc<'a, DB, H>
-where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
-{
-    /// Context to interact with the host structures.
-    pub ctx: Ctx<'a, DB, H>,
-}
-
-// Add implementations to get the posterior state for validations in `ibc-rs`
-// ICS 2
-impl<'a, DB, H> ClientReader for Ibc<'a, DB, H> {...}
-// ICS 3
-impl<'a, DB, H> ConnectionReader for Ibc<'a, DB, H> {...}
-// ICS 4
-impl<'a, DB, H> ChannelReader for Ibc<'a, DB, H> {...}
-// ICS 5
-impl<'a, DB, H> PortReader for Ibc<'a, DB, H> {...}
-
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
-    ...
+    pub(super) fn validate_client(
+        &self,
+        client_id: &ClientId,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        // Check the client state change
+        match self.get_client_state_change(client_id)? {
+            StateChange::Created => {
+                // "CreateClient"
+                // Confirm that the corresponding consensus state exists
+            }
+            StateChange::Updated => {
+                // check the message
+                let ibc_msg = IbcMessage::decode(tx_data)?;
+                match ibc_msg.0 {
+                    Ics26Envelope::Ics2Msg(ClientMsg::UpdateClient(msg)) => {
+                        // Check the header, the updated client state and consensus state
+                        //   - Refer to `ibc-rs::ics02_client::client_def::check_header_and_update_state()`
+                    }
+                    Ics26Envelope::Ics2Msg(ClientMsg::UpgradeClient(msg)) => {
+                        // Check the upgraded client state and consensus state
+                        //   - Refer to `ibc-rs::ics02_client::client_def::verify_upgrade_and_update_state()`
+                    }
+                    _ => Err(Error::InvalidStateChange(format!(
+                        "The state change of the client is invalid: ID {}",
+                        client_id
+                    ))),
+                }
 
-    // Add functions to get the prior state if needed
-    pub fn client_type_pre(&self, client_id: &ClientId) -> Result<Option<ClientType>> {
-        ...
+            }
+            _ => Err(Error::InvalidStateChange(format!(
+                "The state change of the client is invalid: ID {}",
+                client_id
+            ))),
+        }
     }
-    pub fn client_state_pre(&self, client_id: &ClientId) -> Result<Option<AnyClientState>> {
-        ...
-    }
-    pub fn consensus_state_pre(&self, client_id: &ClientId, height: Height) -> Result<Option<AnyConsensusState>> {
-        ...
-    }
-    pub fn client_counter_pre(&self) -> Result<u64> {
-        ...
-    }
-    ...
 }
 ```
 
+### Connection validation
+The IBC connection is validated by checking the state change for creating or updating in connection handshake. Some validations requires proof verification to verify the counterparty state. `ibc-rs` provides the proof verification function for the counterparty connection end.
+
+```rust
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
+where
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    pub(super) fn validate_connection(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        if is_connection_counter_key(key) {
+            // Check if the counter is incremented
+            return Ok(());
+        }
+
+        // Check if the connection end exists
+        let conn_id = connection_id(key)?;
+        let conn = self.connection_end(&conn_id).map_err(|_| {
+            Error::InvalidConnection(format!(
+                "The connection doesn't exist: ID {}",
+                conn_id
+            ))
+        })?;
+
+        // Check the state change
+        match self.get_connection_state_change(&conn_id)? {
+            StateChange::Created => {
+                match conn.state() {
+                    State::Init => {
+                        // "ConnectionOpenInit"
+                        // Confirm that the corresponding client exists
+                    }
+                    State::TryOpen => {
+                        // "ConnectionOpenTry"
+                        // Confirm that the version is compatible
+
+                        // Verify the proofs to check if the counterparty connection end exists as expected
+                        //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
+                    }
+                }
+            }
+            StateChange::Updated => {
+                if conn.state() != State::Open {
+                    return Err(Error::InvalidConnection(format!(
+                        "The state of the connection is invalid: ID {}",
+                        conn_id
+                    )));
+                }
+                // Check the previous state of the connection end
+                let prev_conn = self.connection_end_pre(conn_id)?;
+                match prev_conn.state() {
+                    State::Init => {
+                        // "ConnectionOpenAck"
+                        // Verify the proofs to check if the counterparty connection end exists as expected
+                        //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
+                    }
+                    State::TryOpen => {
+                        // "ConnectionOpenConfirm"
+                        // Verify the proofs to check if the counterparty connection end exists as expected
+                        //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
+                    }
+                }
+            }
+            _ => Err(Error::InvalidStateChange(format!(
+                "The state change of the connection is invalid: ID {}",
+                conn_id
+            ))),
+        }
+    }
+}
+```
+
+### Port/Channel validation
+The IBC port and channel end are validated by checking the state change for creating or updating in channel handshake as the connection validation. The validation function also checks the state change when the channel end is closed unlike a connection end. When packet timeout, the validation has to confirm that the commitment has been deleted. This deletion will trigger the packet validation for the timed-out packet.
+
+```rust
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    pub(super) fn validate_port(&self, key: &Key) -> Result<()> {
+        let port_id = port_id(key)?;
+        match self.get_port_state_change(&port_id)? {
+            StateChange::Created => {
+                // Confirm that the port is owend
+            }
+            StateChange::Updated => {
+                // Check the port is bound to another channel or released properly
+            }
+            _ => Err(Error::InvalidPort(format!(
+                "The state change of the port is invalid: Port {}",
+                port_id
+            ))),
+        }
+    }
+}
+```
+
+```rust
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    pub(super) fn validate_channel(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        if is_channel_counter_key(key) {
+            // Check if the counter is incremented
+            return Ok(());
+        }
+
+        // Confirm that the port is owend
+        // Confirm that the version is compatible
+
+        // Check the channel state change
+        match self.get_channel_state_change(&port_channel_id)? {
+            StateChange::Created => match channel.state() {
+                State::Init => {
+                    // "ChannelOpenInit"
+                }
+                State::TryOpen => {
+                    // "ChannelOpenTry"
+                    // Verify the proof to check if the counterparty channel end exists as expected
+                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                }
+                _ => Err(Error::InvalidChannel(format!(
+                    "The channel state is invalid: Port/Channel {}, State {}",
+                    port_channel_id,
+                    channel.state()
+                ))),
+            },
+            StateChange::Updated => {
+                let prev_channel = self.channel_end_pre(port_channel_id)?;
+                match channel.state() {
+                    State::Open => match prev_channel.state() {
+                        State::Init => {
+                            // "ChannelOpenAck"
+                            // Verify the proof to check if the counterparty channel end exists as expected
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                        }
+                        State::TryOpen => {
+                            // "ChannelOpenConfirm"
+                            // Verify the proof to check if the counterparty channel end exists as expected
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                        }
+                    }
+                    State::Closed => {
+                        // Confirm that the previous state is State::Open
+
+                        // Check the message
+                        let ibc_msg = IbcMessage::decode(tx_data)?;
+                        match ibc_msg.0 {
+                            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => {
+                                // "TimeoutPacket"
+                                // Confirm that the commitment has been deleted
+                                //    - The state change of the commitment triggers the packet validation
+                            }
+                            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(
+                                msg,
+                            )) => {
+                                // "TimeoutOnClosePacket"
+                                // Confirm that the commitment has been deleted
+                                //    - The state change of the commitment triggers the packet validation
+                            }
+                            Ics26Envelope::Ics4ChannelMsg(
+                                ChannelMsg::ChannelCloseInit(msg),
+                            ) => {
+                                // "ChannelCloseInit"
+                            }
+                            Ics26Envelope::Ics4ChannelMsg(
+                                ChannelMsg::ChannelCloseConfirm(msg),
+                            ) => {
+                                // "ChannelCloseConfirm"
+                                // Verify the proof to check if the counterparty channel end exists as expected
+                                //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                            }
+                            _ => Err(Error::InvalidMessage(format!(
+                                "The state change of the channel is invalid for the message: \
+                                 Port/Channel {}",
+                                port_channel_id,
+                            ))),
+                        }
+                    }
+                }
+            }
+            _ => Err(Error::InvalidStateChange(format!(
+                "The state change of the channel: Port/Channel {}",
+                port_channel_id
+            ))),
+        }
+    }
+}
+```
+
+### Sequence validation
+When the packet sending, receiving, or acknowledgement, the sequence counter is incremented. The sequence validation checks these sequences and the existence of the commitment, the receipt, or acknowledgement. The contents of them are validated in the packet validation functions.
+
+```rust
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    pub(super) fn validate_sequence_send(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        // Confirm that the sequence is incremented
+        // Confirm that the commitment exists
+    }
+
+    pub(super) fn validate_sequence_recv(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        // Confirm that the sequence is incremented
+        // Confirm that the receipt and the acknowledgement exist
+    }
+
+    pub(super) fn validate_sequence_ack(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        // Confirm that the sequence is incremented
+        // Confirm that the commitment doesn't exist
+    }
+}
+```
+
+### Packet validation
+The validation functions should check commitment, receipt, and acknowledgement which are stored or deleted when packet sending, receiving or acknowledgement. And, when the commitment has been deleted, the packet timeout should be checked.
+
+```rust
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
+where
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    pub(super) fn validate_commitment(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        // check if the commitment is stored or deleted
+        match self
+            .get_state_change(key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?
+        {
+            StateChange::Created => {
+                // "SendPacket"
+                // Confirm that the channel is open
+                // Validate the sent packet
+                // Confirm that the expected commitment exists
+            }
+            StateChange::Deleted => {
+                let ibc_msg = IbcMessage::decode(tx_data)?;
+                match channel.state() {
+                    State::Open => {
+                        match &ibc_msg.0 {
+                            Ics26Envelope::Ics4PacketMsg(
+                                PacketMsg::AckPacket(msg),
+                            ) => {
+                                // "PacketAcknowledgement"
+                                // Verify the proof to check if the expected ack exists on the counterparty
+                            }
+                            Ics26Envelope::Ics4PacketMsg(
+                                PacketMsg::ToPacket(_),
+                            )
+                            | Ics26Envelope::Ics4PacketMsg(
+                                PacketMsg::ToClosePacket(_),
+                            ) => {
+                                // "PacketTimeout"
+                                // Confirm that the deleted commitment was for the channel and the counterparty
+                                if !is_timed_out(packet) {
+                                    // "PacketTimedoutOnClose"
+                                    // Verify the proof to check if the counterparty channel is closed
+                                }
+                            }
+                            _ => Err(Error::InvalidChannel(format!(
+                                "The channel state is invalid: Port {}, \
+                                 Channel {}",
+                                commitment_key.0, commitment_key.1
+                            ))),
+                        }
+                    }
+                    State::Closed => {
+                        // "PacketTimeout"
+                        // Confirm that the deleted commitment was for the channel and the counterparty
+                        // Confirm that the packet timed out
+                    }
+                    _ => Err(Error::InvalidChannel(format!(
+                        "The channel state is invalid: Port {}, Channel {}",
+                        commitment_key.0, commitment_key.1
+                    ))),
+                }
+            }
+            _ => Err(Error::InvalidStateChange(format!(
+                "The state change of the commitment is invalid: Key {}",
+                key
+            ))),
+        }
+
+            }
+        }
+    }
+
+    pub(super) fn validate_receipt(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
+        // Check the state change of the receipt
+        match self
+            .get_state_change(key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?
+        {
+            StateChange::Created => {
+                OK(())
+            }
+            _ => Err(Error::InvalidStateChange(
+                "The state change of the receipt is invalid".to_owned(),
+            )),
+        }
+    }
+
+    pub(super) fn validate_ack(&self, key: &Key) -> Result<()> {
+        match self
+            .get_state_change(key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?
+        {
+            StateChange::Created => {
+                // Confirm that the receipt exists
+            }
+            _ => Err(Error::InvalidStateChange(
+                "The state change of the acknowledgment is invalid".to_owned(),
+            )),
+        }
+    }
+}
+```
+
+### Proof
+A query for a proven IBC-related data returns the value and the proof. The proof is used to verify if the key-value pair exists or doesn't exist on the counterpart ledger in IBC validity predicate (ICS 23).
+
+The query response has the proof as [`tendermint::merkle::proof::Proof`](https://github.com/informalsystems/tendermint-rs/blob/dd371372da58921efe1b48a4dd24a2597225df11/tendermint/src/merkle/proof.rs#L15), which consists of a vector of [`tendermint::merkle::proof::ProofOp`](https://github.com/informalsystems/tendermint-rs/blob/dd371372da58921efe1b48a4dd24a2597225df11/tendermint/src/merkle/proof.rs#L25). `ProofOp` should have `data`, which is encoded to `Vec<u8>` from [`ibc_proto::ics23::CommitmentProof`](https://github.com/informalsystems/ibc-rs/blob/66049e29a3f5a0c9258d228b9a6c21704e7e2fa4/proto/src/prost/ics23.rs#L49). The relayer getting the proof converts the proof from `tendermint::merkle::proof::Proof` to `ibc::ics23_commitment::commitment::CommitmentProofBytes` by [`convert_tm_to_ics_merkle_proof()`](https://github.com/informalsystems/ibc-rs/blob/66049e29a3f5a0c9258d228b9a6c21704e7e2fa4/modules/src/ics23_commitment/merkle.rs#L84) and sets it to the request data of the following IBC operation.
+
 ## Relayer (ICS 18)
-IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `ChainEndpoint` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs). As those of Cosmos, these querys can request ABCI query to Anoma.
+IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `ChainEndpoint` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs). As those of Cosmos, these querys can request ABCI queries to Anoma.
 
 ```rust
 impl ChainEndpoint for Anoma {
