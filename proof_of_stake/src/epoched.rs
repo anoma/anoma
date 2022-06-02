@@ -110,8 +110,8 @@ impl EpochOffset for OffsetPipelineLen {
     PartialOrd,
     Ord,
 )]
-pub struct OffsetUnboundingLen;
-impl EpochOffset for OffsetUnboundingLen {
+pub struct OffsetUnbondingLen;
+impl EpochOffset for OffsetUnbondingLen {
     fn value(params: &PosParams) -> u64 {
         params.unbonding_len
     }
@@ -610,7 +610,7 @@ mod tests {
 
         #[test]
         fn epoched_state_machine_with_unbounding_offset(
-            sequential 1..20 => EpochedAbstractStateMachine<OffsetUnboundingLen>);
+            sequential 1..20 => EpochedAbstractStateMachine<OffsetUnbondingLen>);
 
         #[test]
         fn epoched_delta_state_machine_with_pipeline_offset(
@@ -618,7 +618,7 @@ mod tests {
 
         #[test]
         fn epoched_delta_state_machine_with_unbounding_offset(
-            sequential 1..20 => EpochedDeltaAbstractStateMachine<OffsetUnboundingLen>);
+            sequential 1..20 => EpochedDeltaAbstractStateMachine<OffsetUnbondingLen>);
     }
 
     /// Abstract representation of [`Epoched`].

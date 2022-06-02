@@ -11,7 +11,7 @@ use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 use crate::epoched::{
-    Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen,
+    Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnbondingLen,
 };
 use crate::parameters::PosParams;
 
@@ -22,22 +22,21 @@ pub type ValidatorConsensusKeys<PublicKey> =
 pub type ValidatorStates = Epoched<ValidatorState, OffsetPipelineLen>;
 /// Epoched validator's total deltas.
 pub type ValidatorTotalDeltas<TokenChange> =
-    EpochedDelta<TokenChange, OffsetUnboundingLen>;
+    EpochedDelta<TokenChange, OffsetUnbondingLen>;
 /// Epoched validator's voting power.
 pub type ValidatorVotingPowers =
-    EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
+    EpochedDelta<VotingPowerDelta, OffsetUnbondingLen>;
 /// Epoched bond.
 pub type Bonds<TokenAmount> =
     EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>;
 /// Epoched unbond.
 pub type Unbonds<TokenAmount> =
-    EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>;
+    EpochedDelta<Unbond<TokenAmount>, OffsetUnbondingLen>;
 /// Epoched validator set.
 pub type ValidatorSets<Address> =
-    Epoched<ValidatorSet<Address>, OffsetUnboundingLen>;
+    Epoched<ValidatorSet<Address>, OffsetUnbondingLen>;
 /// Epoched total voting power.
-pub type TotalVotingPowers =
-    EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
+pub type TotalVotingPowers = EpochedDelta<VotingPowerDelta, OffsetUnbondingLen>;
 
 /// Epoch identifier. Epochs are identified by consecutive natural numbers.
 ///
