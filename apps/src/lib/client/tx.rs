@@ -783,7 +783,8 @@ impl ShieldedContext {
             .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
             .expect("Cannot obtain a storage key");
         // Query for the ID of the last accepted transaction
-        query_storage_value(client, conversion_key).await
+        let (addr, ep, conv, path) = query_storage_value(client, conversion_key).await?;
+        Some((addr, ep, Amount::into(conv), path))
     }
 
     /// Compute the total unspent notes associated with the viewing key in the

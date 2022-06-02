@@ -38,6 +38,7 @@ use crate::types::storage::{
 use crate::types::time::DateTimeUtc;
 use borsh::BorshSerialize;
 use masp_primitives::asset_type::AssetType;
+use masp_primitives::transaction::components::Amount;
 use std::collections::HashMap;
 use crate::types::address::*;
 use masp_primitives::sapling::Node;
@@ -603,13 +604,11 @@ where
                     .expect("unable to derive asset identifier");
                 // The -1 allows each instance of the old asset to be cancelled
                 // out/replaced with the new asset
-                let conv = AllowedConversion {
-                    assets: vec![
-                        (old_asset, -1),
-                        (new_asset, 1),
-                        (reward_asset, (self.last_epoch.0 - prev_epoch) as i64 * rewards[&addr])
-                    ]
-                };
+                let conv: AllowedConversion = (
+                    Amount::from(old_asset, -1).unwrap() +
+                    Amount::from(new_asset, 1).unwrap() +
+                    Amount::from(reward_asset, (self.last_epoch.0 - prev_epoch) as i64 * rewards[&addr]).unwrap()
+                ).into();
                 // The merkle tree need only provide the conversion commitment,
                 // the remaining information is provided through the storage API
                 let conv_node = Node::new(conv.cmu().to_repr());
@@ -647,7 +646,10 @@ where
             let key = key_prefix
                 .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
-            self.write(&key, types::encode(&(addr, epoch, conv, conv_tree.path(pos))))?;
+            self.write(
+                &key,
+                types::encode(&(addr, epoch, Into::<Amount>::into(conv), conv_tree.path(pos))),
+            )?;
         }
         Ok(())
     }
