@@ -96,6 +96,17 @@ where
         got: u64,
         expected: u64,
     },
+
+    #[error(
+        "Bond ID {id} must be subtracted at the correct epoch. Got epoch \
+         {got}, expected {expected}"
+    )]
+    InvalidNegDeltaEpoch {
+        id: BondId<Address>,
+        got: u64,
+        expected: u64,
+    },
+
     #[error(
         "Invalid validator {address} sum of total deltas. Total Δ \
          {total_delta}, bonds Δ {bond_delta}"
@@ -840,22 +851,31 @@ where
                     // pre, not both pre and post to avoid rounding errors
                     let mut slashed_deltas: HashMap<Epoch, TokenChange> =
                         HashMap::default();
-
+                    let mut neg_deltas: HashMap<Epoch, TokenChange> =
+                        Default::default();
                     // Iter from the first epoch of `pre` to the last epoch of
                     // `post`
                     for epoch in Epoch::iter_range(
                         pre.last_update(),
-                        pre_offset + pipeline_offset + 1,
+                        pre_offset + unbonding_offset + 1,
                     ) {
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in bond.deltas.iter() {
+                            for (start_epoch, delta) in bond.pos_deltas.iter() {
                                 let delta = TokenChange::from(*delta);
                                 slashed_deltas.insert(*start_epoch, -delta);
                                 pre_bonds.insert(*start_epoch, delta);
                             }
+                            let ins_epoch = if epoch <= current_epoch {
+                                current_epoch
+                            } else {
+                                epoch
+                            };
+                            let entry =
+                                neg_deltas.entry(ins_epoch).or_default();
+                            *entry -= TokenChange::from(bond.neg_deltas);
                         }
                         if let Some(bond) = post.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in bond.deltas.iter() {
+                            for (start_epoch, delta) in bond.pos_deltas.iter() {
                                 // An empty bond must be deleted
                                 if *delta == TokenAmount::default() {
                                     errors.push(Error::EmptyBond(id.clone()))
@@ -901,7 +921,7 @@ where
                                 if epoch != pipeline_epoch {
                                     match pre_bonds.get(start_epoch) {
                                         Some(pre_delta) => {
-                                            if &delta > pre_delta {
+                                            if &delta != pre_delta {
                                                 errors.push(
                                                 Error::InvalidNewBondEpoch {
                                                     id: id.clone(),
@@ -925,6 +945,40 @@ where
                                     }
                                 }
                             }
+                            if epoch != unbonding_epoch {
+                                match neg_deltas.get(&epoch) {
+                                    Some(deltas) => {
+                                        if -*deltas
+                                            != TokenChange::from(
+                                                bond.neg_deltas,
+                                            )
+                                        {
+                                            errors.push(
+                                                Error::InvalidNegDeltaEpoch {
+                                                    id: id.clone(),
+                                                    got: epoch.into(),
+                                                    expected: unbonding_epoch
+                                                        .into(),
+                                                },
+                                            )
+                                        }
+                                    }
+                                    None => {
+                                        if bond.neg_deltas != 0.into() {
+                                            errors.push(
+                                                Error::InvalidNegDeltaEpoch {
+                                                    id: id.clone(),
+                                                    got: epoch.into(),
+                                                    expected: unbonding_epoch
+                                                        .into(),
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            let entry = neg_deltas.entry(epoch).or_default();
+                            *entry += TokenChange::from(bond.neg_deltas);
                         }
                     }
                     // Check slashes
@@ -942,7 +996,13 @@ where
                         .values()
                         .fold(TokenChange::default(), |acc, delta| {
                             acc + *delta
-                        });
+                        })
+                        - neg_deltas
+                            .values()
+                            .fold(TokenChange::default(), |acc, delta| {
+                                acc + *delta
+                            });
+
                     if total != TokenChange::default() {
                         let bond_entry =
                             bond_delta.entry(id.validator).or_default();
@@ -956,18 +1016,30 @@ where
                     }
                     let mut total_delta = TokenChange::default();
                     for epoch in
-                        Epoch::iter_range(current_epoch, pipeline_offset + 1)
+                        Epoch::iter_range(current_epoch, unbonding_offset + 1)
                     {
                         if let Some(bond) = post.get_delta_at_epoch(epoch) {
                             // A new bond must be initialized at
                             // `pipeline_offset`
-                            if epoch != pipeline_epoch {
+                            if epoch != pipeline_epoch
+                                && !bond.pos_deltas.is_empty()
+                            {
+                                dbg!(&bond.pos_deltas);
                                 errors.push(Error::EpochedDataWrongEpoch {
                                     got: epoch.into(),
                                     expected: vec![pipeline_epoch.into()],
                                 })
                             }
-                            for (start_epoch, delta) in bond.deltas.iter() {
+                            if epoch != unbonding_epoch
+                                && bond.neg_deltas != 0.into()
+                            {
+                                errors.push(Error::InvalidNegDeltaEpoch {
+                                    id: id.clone(),
+                                    got: epoch.into(),
+                                    expected: unbonding_epoch.into(),
+                                })
+                            }
+                            for (start_epoch, delta) in bond.pos_deltas.iter() {
                                 if *start_epoch != epoch {
                                     errors.push(Error::InvalidBondStartEpoch {
                                         id: id.clone(),
@@ -989,6 +1061,7 @@ where
                                 let delta = TokenChange::from(delta);
                                 total_delta += delta
                             }
+                            total_delta -= TokenChange::from(bond.neg_deltas)
                         }
                     }
                     // An empty bond must be deleted
@@ -1006,7 +1079,7 @@ where
                         let index = index as usize;
                         let epoch = pre.last_update() + index;
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in &bond.deltas {
+                            for (start_epoch, delta) in &bond.pos_deltas {
                                 let mut delta = *delta;
                                 // Check slashes
                                 for slash in &slashes {
@@ -1021,6 +1094,7 @@ where
                                 let delta = TokenChange::from(delta);
                                 total_delta -= delta
                             }
+                            total_delta += TokenChange::from(bond.neg_deltas)
                         }
                     }
                     let bond_entry =

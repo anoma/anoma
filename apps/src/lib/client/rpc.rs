@@ -1211,7 +1211,7 @@ fn process_bonds_query(
     let mut total_active = total_active.unwrap_or_else(|| 0.into());
     let mut current_total: token::Amount = 0.into();
     for bond in bonds.iter() {
-        for (epoch_start, &(mut delta)) in bond.deltas.iter().sorted() {
+        for (epoch_start, &(mut delta)) in bond.pos_deltas.iter().sorted() {
             writeln!(w, "  Active from epoch {}: Δ {}", epoch_start, delta)
                 .unwrap();
             delta = apply_slashes(slashes, delta, *epoch_start, None, Some(w));
@@ -1670,25 +1670,56 @@ pub async fn get_proposal_offline_votes(
             let bonds_iter =
                 query_storage_prefix::<pos::Bonds>(client.clone(), key).await;
             if let Some(bonds) = bonds_iter {
-                for (key, epoched_amount) in bonds {
-                    let bond = epoched_amount
-                        .get(proposal.tally_epoch)
-                        .expect("Delegation bond should be definied.");
+                for (key, epoched_bonds) in bonds {
+                    // Look-up slashes for the validator in this key and
+                    // apply them if any
+                    let validator = pos::get_validator_address_from_bond(&key)
+                        .expect(
+                            "Delegation key should contain validator address.",
+                        );
+                    let slashes_key = pos::validator_slashes_key(&validator);
+                    let slashes = query_storage_value::<pos::Slashes>(
+                        client,
+                        &slashes_key,
+                    )
+                    .await
+                    .unwrap_or_default();
+                    let mut delegated_amount: token::Amount = 0.into();
                     let epoch = anoma::ledger::pos::types::Epoch::from(
                         proposal.tally_epoch.0,
                     );
-                    let amount = *bond
-                        .deltas
-                        .get(&epoch)
-                        .expect("Delegation amount should be definied.");
-                    let validator_address =
-                        pos::get_validator_address_from_bond(&key).expect(
-                            "Delegation key should contain validator address.",
+                    let bond = epoched_bonds
+                        .get(epoch)
+                        .expect("Delegation bond should be definied.");
+                    let mut to_deduct = bond.neg_deltas;
+                    for (start_epoch, &(mut delta)) in
+                        bond.pos_deltas.iter().sorted()
+                    {
+                        // deduct bond's neg_deltas
+                        if to_deduct > delta {
+                            to_deduct -= delta;
+                            // If the whole bond was deducted, continue to
+                            // the next one
+                            continue;
+                        } else {
+                            delta -= to_deduct;
+                            to_deduct = token::Amount::default();
+                        }
+
+                        delta = apply_slashes(
+                            &slashes,
+                            delta,
+                            *start_epoch,
+                            None,
+                            None,
                         );
+                        delegated_amount += delta;
+                    }
+
                     if proposal_vote.vote.is_yay() {
-                        yay_delegators.insert(validator_address, amount);
+                        yay_delegators.insert(validator, delegated_amount);
                     } else {
-                        nay_delegators.insert(validator_address, amount);
+                        nay_delegators.insert(validator, delegated_amount);
                     }
                 }
             }
@@ -1763,7 +1794,21 @@ pub async fn get_bond_amount_at(
         Some(epoched_bonds) => {
             let mut delegated_amount: token::Amount = 0.into();
             for bond in epoched_bonds.iter() {
-                for (epoch_start, &(mut delta)) in bond.deltas.iter().sorted() {
+                let mut to_deduct = bond.neg_deltas;
+                for (epoch_start, &(mut delta)) in
+                    bond.pos_deltas.iter().sorted()
+                {
+                    // deduct bond's neg_deltas
+                    if to_deduct > delta {
+                        to_deduct -= delta;
+                        // If the whole bond was deducted, continue to
+                        // the next one
+                        continue;
+                    } else {
+                        delta -= to_deduct;
+                        to_deduct = token::Amount::default();
+                    }
+
                     delta = apply_slashes(
                         &slashes,
                         delta,

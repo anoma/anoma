@@ -28,7 +28,7 @@ pub type ValidatorVotingPowers =
     EpochedDelta<VotingPowerDelta, OffsetUnbondingLen>;
 /// Epoched bond.
 pub type Bonds<TokenAmount> =
-    EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>;
+    EpochedDelta<Bond<TokenAmount>, OffsetUnbondingLen>;
 /// Epoched unbond.
 pub type Unbonds<TokenAmount> =
     EpochedDelta<Unbond<TokenAmount>, OffsetUnbondingLen>;
@@ -287,14 +287,18 @@ pub enum ValidatorState {
     Debug, Clone, Default, BorshDeserialize, BorshSerialize, BorshSchema,
 )]
 pub struct Bond<Token: Default> {
-    /// A key is a the epoch set for the bond. This is used in unbonding, where
-    /// it's needed for slash epoch range check.
+    /// Bonded positive deltas. A key is a the epoch set for the bond. This is
+    /// used in unbonding, where it's needed for slash epoch range check.
     ///
     /// TODO: For Bonds, there's unnecessary redundancy with this hash map.
     /// We only need to keep the start `Epoch` for the Epoched head element
     /// (i.e. the current epoch data), the rest of the array can be calculated
     /// from the offset from the head
-    pub deltas: HashMap<Epoch, Token>,
+    pub pos_deltas: HashMap<Epoch, Token>,
+    /// Unbonded negative deltas. The values are recorded as positive, but
+    /// should be subtracted when we're finding the total for some given
+    /// epoch.
+    pub neg_deltas: Token,
 }
 
 /// An unbond contains unbonded tokens from a validator's self-bond or a
@@ -545,13 +549,15 @@ where
 
 impl<Token> Bond<Token>
 where
-    Token: Clone + Copy + Add<Output = Token> + Default,
+    Token: Clone + Copy + Add<Output = Token> + Sub<Output = Token> + Default,
 {
     /// Find the sum of all the bonds amounts.
     pub fn sum(&self) -> Token {
-        self.deltas
+        let pos_deltas_sum: Token = self
+            .pos_deltas
             .iter()
-            .fold(Default::default(), |acc, (_epoch, amount)| acc + *amount)
+            .fold(Default::default(), |acc, (_epoch, amount)| acc + *amount);
+        pos_deltas_sum - self.neg_deltas
     }
 }
 
@@ -562,24 +568,26 @@ where
     type Output = Self;
 
     fn add(mut self, rhs: Self) -> Self::Output {
-        // This is almost the same as `self.delta.extend(rhs.delta);`, except
-        // that we add values where a key is present on both sides.
-        let iter = rhs.deltas.into_iter();
-        let reserve = if self.deltas.is_empty() {
+        // This is almost the same as `self.pos_deltas.extend(rhs.pos_deltas);`,
+        // except that we add values where a key is present on both
+        // sides.
+        let iter = rhs.pos_deltas.into_iter();
+        let reserve = if self.pos_deltas.is_empty() {
             iter.size_hint().0
         } else {
             (iter.size_hint().0 + 1) / 2
         };
-        self.deltas.reserve(reserve);
+        self.pos_deltas.reserve(reserve);
         iter.for_each(|(k, v)| {
             // Add or insert
-            match self.deltas.get_mut(&k) {
+            match self.pos_deltas.get_mut(&k) {
                 Some(value) => *value += v,
                 None => {
-                    self.deltas.insert(k, v);
+                    self.pos_deltas.insert(k, v);
                 }
             }
         });
+        self.neg_deltas += rhs.neg_deltas;
         self
     }
 }

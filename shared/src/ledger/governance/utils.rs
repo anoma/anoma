@@ -155,9 +155,21 @@ where
                 (Some(epoched_bonds), Some(slashes)) => {
                     let mut delegated_amount: token::Amount = 0.into();
                     for bond in epoched_bonds.iter() {
+                        let mut to_deduct = bond.neg_deltas;
                         for (start_epoch, &(mut delta)) in
-                            bond.deltas.iter().sorted()
+                            bond.pos_deltas.iter().sorted()
                         {
+                            // deduct bond's neg_deltas
+                            if to_deduct > delta {
+                                to_deduct -= delta;
+                                // If the whole bond was deducted, continue to
+                                // the next one
+                                continue;
+                            } else {
+                                delta -= to_deduct;
+                                to_deduct = token::Amount::default();
+                            }
+
                             let start_epoch = Epoch::from(*start_epoch);
                             delta = apply_slashes(&slashes, delta, start_epoch);
                             if epoch >= start_epoch {

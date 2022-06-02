@@ -34,7 +34,7 @@
 //! the modifications of its predecessor transition).
 //!
 //! The PoS storage modifications are modelled using
-//! [`testing::PosStorageChange`].
+//! `testing::PosStorageChange`.
 //!
 //! - Bond: Requires a validator account in the state (the `#{validator}`
 //!   segments in the keys below). Some of the storage change are optional,
@@ -1151,9 +1151,10 @@ pub mod testing {
                     let amount: u64 = delta.try_into().unwrap();
                     let amount: token::Amount = amount.into();
                     let mut value = Bond {
-                        deltas: HashMap::default(),
+                        pos_deltas: HashMap::default(),
+                        neg_deltas: Default::default(),
                     };
-                    value.deltas.insert(
+                    value.pos_deltas.insert(
                         (current_epoch + offset.value(params)).into(),
                         amount,
                     );
@@ -1178,34 +1179,27 @@ pub mod testing {
                             );
                             bonds
                         }
-                        None => Bonds::init(value, current_epoch, params),
+                        None => Bonds::init_at_offset(
+                            value,
+                            current_epoch,
+                            offset,
+                            params,
+                        ),
                     }
                 } else {
                     let mut bonds = bonds.unwrap_or_else(|| {
                         Bonds::init(Default::default(), current_epoch, params)
                     });
                     let to_unbond: u64 = (-delta).try_into().unwrap();
-                    let mut to_unbond: token::Amount = to_unbond.into();
-                    let to_unbond = &mut to_unbond;
-                    bonds.rev_update_while(
-                        |bonds, _epoch| {
-                            bonds.deltas.retain(|_epoch_start, bond_delta| {
-                                if *to_unbond == 0.into() {
-                                    return true;
-                                }
-                                if to_unbond > bond_delta {
-                                    *to_unbond -= *bond_delta;
-                                    *bond_delta = 0.into();
-                                } else {
-                                    *bond_delta -= *to_unbond;
-                                    *to_unbond = 0.into();
-                                }
-                                // Remove bonds with no tokens left
-                                *bond_delta != 0.into()
-                            });
-                            *to_unbond != 0.into()
+                    let to_unbond: token::Amount = to_unbond.into();
+
+                    bonds.add_at_offset(
+                        Bond {
+                            pos_deltas: Default::default(),
+                            neg_deltas: to_unbond,
                         },
                         current_epoch,
+                        offset,
                         params,
                     );
                     bonds
@@ -1237,7 +1231,7 @@ pub mod testing {
                     && bond_epoch >= bonds.last_update().into()
                 {
                     if let Some(bond) = bonds.get_delta_at_epoch(bond_epoch) {
-                        for (start_epoch, delta) in &bond.deltas {
+                        for (start_epoch, delta) in &bond.pos_deltas {
                             if delta >= &to_unbond {
                                 value.deltas.insert(
                                     (
@@ -1612,7 +1606,7 @@ pub mod testing {
 
         // any u64 but `0`
         let arb_delta =
-            prop_oneof![(-(u64::MAX as i128)..0), (1..=u64::MAX as i128),];
+            prop_oneof![(-(u32::MAX as i128)..0), (1..=u32::MAX as i128),];
 
         prop_oneof![
             (

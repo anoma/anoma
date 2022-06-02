@@ -584,6 +584,27 @@ where
         }
     }
 
+    /// Apply the given `f` function on each delta value in reverse order
+    /// (starting from the future-most epoch) while the given function returns
+    /// `true`.
+    pub fn rev_while(
+        &self,
+        mut f: impl FnMut(&Data, Epoch) -> bool,
+        current_epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let epoch = current_epoch.into();
+        let offset = Offset::value(params) as usize;
+        for ix in (0..offset + 1).rev() {
+            if let Some(Some(current)) = self.data.get(ix) {
+                let keep_going = f(current, epoch + ix);
+                if !keep_going {
+                    break;
+                }
+            }
+        }
+    }
+
     /// Get the epoch of the last update
     pub fn last_update(&self) -> Epoch {
         self.last_update

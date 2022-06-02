@@ -878,7 +878,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
         Some(bonds) => {
             let mut bond_amount: token::Amount = 0.into();
             for bond in bonds.iter() {
-                for delta in bond.deltas.values() {
+                for delta in bond.pos_deltas.values() {
                     bond_amount += *delta;
                 }
             }
