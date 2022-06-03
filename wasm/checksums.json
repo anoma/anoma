@@ -1,6 +1,6 @@
 {
     "tx_bond.wasm": "tx_bond.a92f8a522f972914fb145749cf492a07796236ba78fc28b814368d4516897dc5.wasm",
-    "tx_from_intent.wasm": "tx_from_intent.4581f0b7068284961145c83b5be919e56246fc395e2233046eb5cc2781a690e5.wasm",
+    "tx_from_intent.wasm": "tx_from_intent.305d2d2b0d7088489d9c8cf1e0a62a4ad5dbd32969d03a5904617d98cf3b0446.wasm",
     "tx_ibc.wasm": "tx_ibc.f74f591750b9ccd6adc2c6f10794fff5fdc2620ffb387b4f51fe7450febfbfd6.wasm",
     "tx_init_account.wasm": "tx_init_account.e4592716b80b5c1201233efd0bd090583b626de635178210e8c894ba7a4122b5.wasm",
     "tx_init_nft.wasm": "tx_init_nft.09787c19aa2ab32a77c9c83bbadb49aded15c7581bbee4566d92573b100c0a41.wasm",
@@ -8,14 +8,14 @@
     "tx_init_validator.wasm": "tx_init_validator.1905501bc72d9a40ac6fdcf6797c0cb2ba058af8c127d112499382c0c259f506.wasm",
     "tx_masp.wasm": "tx_masp.c03ba7efea2cfcc8c9570d30f97bcc9ed13160a0baa280269fd0c8b1f4d320a7.wasm",
     "tx_mint_nft.wasm": "tx_mint_nft.6832913f42d25c890422386635f253cc97c9a5bf38ade55a6f86d69bdc54a528.wasm",
-    "tx_transfer.wasm": "tx_transfer.c50ccf84227bb89f0489d322f6bc699fcf25ade8e2e675c8ae6591ca4ec67787.wasm",
+    "tx_transfer.wasm": "tx_transfer.0ab05f9878ac92e8399c7e647fb9a45fff8b6b1c33275fe726e7f48945b05874.wasm",
     "tx_unbond.wasm": "tx_unbond.226daf4719f398f17e9e56910656dd1f5bbc6298299391e9c1bfbd0f8b312a9e.wasm",
     "tx_update_vp.wasm": "tx_update_vp.3244dce83a556404c6fca71852358bacf4306847c6adb8cc8d010298217d229c.wasm",
     "tx_vote_proposal.wasm": "tx_vote_proposal.94cf11aff57703db26d02fd57422301d270cfce6604a8311cb62e96f4548eb74.wasm",
     "tx_withdraw.wasm": "tx_withdraw.f501c10e3695e8db6009fbb067575d0104a46fc59deff64ecf2cc2e514f24013.wasm",
-    "vp_masp.wasm": "vp_masp.f4cdaba312ffe972ad13fc5222e9c938a36cb2f10448d985210e729769d06ae2.wasm",
+    "vp_masp.wasm": "vp_masp.a6972e7378ae461581a75779edb59a6bd2e2bef0f626eefa38b15c2270ae1ae3.wasm",
     "vp_nft.wasm": "vp_nft.985a76be540da3d2093795b72bb3c75bf89dc2187062d3f282b1bce6c559e189.wasm",
     "vp_testnet_faucet.wasm": "vp_testnet_faucet.4741de45a4adb5f66e30bc150bdc884dd809fb1161b7c2cfaef9c6ad926b5a54.wasm",
     "vp_token.wasm": "vp_token.2e19094884a761ac64d85fcb8a5241ca97c78e0bd223e34697d5b053a4c89729.wasm",
-    "vp_user.wasm": "vp_user.e9a4cb0175f69b94c58f0e906bf458f068d572d609ceff658e93c416408f80bc.wasm"
+    "vp_user.wasm": "vp_user.b2276477079f192e39dafac20bdad338e0fd4b080b445e12dc8c7822282338c2.wasm"
 }

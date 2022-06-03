@@ -561,9 +561,6 @@ where
         let key_prefix: Key = masp_addr.to_db_key().into();
 
         let mut conv_notes = Vec::new();
-        let mut incr_trees = HashMap
-            ::<Address, Vec<(Epoch, AssetType, AllowedConversion, usize)>>
-            ::new();
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
         // The amount of XAN to reward for each token on each epoch change
@@ -575,6 +572,22 @@ where
             .expect("unable to serialize address and epoch");
         let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
             .expect("unable to derive asset identifier");
+
+        // Load up the conversions currently being given as query results
+        let state_key = key_prefix
+            .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
+            .map_err(Error::KeyError)?;
+        let mut allowed_convs = if self.last_epoch.0 > 1 {
+            types::decode(self.read(&state_key)
+                          .expect("unable to read conversion state")
+                          .0
+                          .expect("unable to find conversion state"))
+                .expect("unable to decode conversion state")
+        } else {
+            // In the first epoch, there are no conversions to load
+            HashMap::<Address, Vec<(Epoch, AssetType, AllowedConversion, usize)>>
+                ::new()
+        };
 
         // Reward all tokens according to above reward rates
         for addr in tokens().keys() {
@@ -610,7 +623,7 @@ where
             ).into();
 
             // Update the conversion query data and prepare new Merkle tree
-            let convs = incr_trees.entry(addr.clone()).or_insert_with(|| Vec::new());
+            let convs = allowed_convs.entry(addr.clone()).or_insert_with(|| Vec::new());
             // Add a conversion from the previous asset type
             convs.push((self.last_epoch.prev(), old_asset, Amount::zero().into(), 0));
 
@@ -626,6 +639,10 @@ where
                 conv_notes.push(conv_node);
             }
         }
+        // Save the current conversion state in order to avoid computing
+        // conversion commitments from scratch in the next epoch
+        self.write(&state_key, types::encode(&allowed_convs))
+            .expect("unable to save current conversion state");
 
         // Update the MASP's transparent reward token balance to ensure that it
         // is sufficiently backed to redeem rewards
@@ -648,7 +665,7 @@ where
         let conv_tree = FrozenCommitmentTree::new(&conv_notes);
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (addr, convs) in incr_trees {
+        for (addr, convs) in allowed_convs.clone() {
             for (epoch, asset_type, conv, pos) in convs {
                 let key = key_prefix
                     .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
