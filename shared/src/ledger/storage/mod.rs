@@ -562,7 +562,7 @@ where
 
         let mut conv_notes = Vec::new();
         let mut incr_trees = HashMap
-            ::<AssetType, (Address, Epoch, AllowedConversion, usize)>
+            ::<Address, Vec<(Epoch, AssetType, AllowedConversion, usize)>>
             ::new();
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
@@ -594,28 +594,34 @@ where
             let new_asset = AssetType::new(new_asset_bytes.as_ref())
                 .expect("unable to derive asset identifier");
 
-            // Provide an allowed conversion from all previous timestamps
-            for prev_epoch in 0..self.last_epoch.0 {
-                // Construct MASP asset type with old timestamp
-                let old_asset_bytes = (addr.clone(), prev_epoch)
-                    .try_to_vec()
-                    .expect("unable to serialize address and epoch");
-                let old_asset = AssetType::new(old_asset_bytes.as_ref())
-                    .expect("unable to derive asset identifier");
-                // The -1 allows each instance of the old asset to be cancelled
-                // out/replaced with the new asset
-                let conv: AllowedConversion = (
-                    Amount::from(old_asset, -1).unwrap() +
+            // Provide an allowed conversion from previous timestamp
+            // Construct MASP asset type with old timestamp
+            let old_asset_bytes = (addr.clone(), self.last_epoch.0 - 1)
+                .try_to_vec()
+                .expect("unable to serialize address and epoch");
+            let old_asset = AssetType::new(old_asset_bytes.as_ref())
+                .expect("unable to derive asset identifier");
+            // The -1 allows each instance of the old asset to be cancelled
+            // out/replaced with the new asset
+            let latest_conv: AllowedConversion = (
+                Amount::from(old_asset, -1).unwrap() +
                     Amount::from(new_asset, 1).unwrap() +
-                    Amount::from(reward_asset, (self.last_epoch.0 - prev_epoch) as i64 * rewards[&addr]).unwrap()
-                ).into();
+                    Amount::from(reward_asset, rewards[&addr]).unwrap()
+            ).into();
+
+            // Update the conversion query data and prepare new Merkle tree
+            let convs = incr_trees.entry(addr.clone()).or_insert_with(|| Vec::new());
+            // Add a conversion from the previous asset type
+            convs.push((self.last_epoch.prev(), old_asset, Amount::zero().into(), 0));
+
+            for (_epoch, _asset_type, conv, pos) in convs {
+                // Use transitivity to update conversion
+                *conv += latest_conv.clone();
+                // Update conversion position to leaf we are about to create
+                *pos = conv_notes.len();
                 // The merkle tree need only provide the conversion commitment,
                 // the remaining information is provided through the storage API
                 let conv_node = Node::new(conv.cmu().to_repr());
-                incr_trees.insert(
-                    old_asset,
-                    (addr.clone(), Epoch(prev_epoch), conv, conv_notes.len())
-                );
                 // Now indirectly add leaf corresponding to this conversion
                 conv_notes.push(conv_node);
             }
@@ -642,14 +648,14 @@ where
         let conv_tree = FrozenCommitmentTree::new(&conv_notes);
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (asset_type, (addr, epoch, conv, pos)) in incr_trees {
-            let key = key_prefix
-                .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
-                .map_err(Error::KeyError)?;
-            self.write(
-                &key,
-                types::encode(&(addr, epoch, Into::<Amount>::into(conv), conv_tree.path(pos))),
-            )?;
+        for (addr, convs) in incr_trees {
+            for (epoch, asset_type, conv, pos) in convs {
+                let key = key_prefix
+                    .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
+                    .map_err(Error::KeyError)?;
+                let val = (addr.clone(), epoch, Into::<Amount>::into(conv), conv_tree.path(pos));
+                self.write(&key, types::encode(&val))?;
+            }
         }
         Ok(())
     }

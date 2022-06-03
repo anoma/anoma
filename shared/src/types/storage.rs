@@ -489,6 +489,10 @@ impl Epoch {
     pub fn next(&self) -> Self {
         Self(self.0 + 1)
     }
+    /// Change to the previous epoch
+    pub fn prev(&self) -> Self {
+        Self(self.0 - 1)
+    }
 }
 
 impl Add<u64> for Epoch {
