@@ -563,11 +563,12 @@ where
         let mut conv_notes = Vec::new();
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
-        // The amount of XAN to reward for each token on each epoch change
-        let rewards: HashMap<Address, i64> = masp_rewards();
 
-        // Construct MASP asset type for rewards
-        let reward_asset_bytes = (xan(), self.last_epoch.0)
+        // Construct MASP asset type for rewards. Always timestamp reward tokens
+        // with the zeroth epoch to minimize the number of convert notes clients
+        // have to use. This trick works under the assumption that reward tokens
+        // from different epochs are exactly equivalent.
+        let reward_asset_bytes = (xan(), 0u64)
             .try_to_vec()
             .expect("unable to serialize address and epoch");
         let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
@@ -590,7 +591,7 @@ where
         };
 
         // Reward all tokens according to above reward rates
-        for addr in tokens().keys() {
+        for (addr, reward) in &masp_rewards() {
             // Dispence a transparent reward in parallel to the shielded rewards
             let token_key = self.read(&token::balance_key(addr, &masp_addr));
             if let Ok((Some(addr_balance), _)) = token_key {
@@ -598,7 +599,7 @@ where
                 // amount of the reward token.
                 let addr_bal: token::Amount = types::decode(addr_balance)
                     .expect("invalid balance");
-                total_reward += addr_bal * rewards[&addr] as u64;
+                total_reward += addr_bal * *reward as u64;
             }
             // Construct MASP asset type with latest timestamp for this token
             let new_asset_bytes = (addr.clone(), self.last_epoch.0)
@@ -619,7 +620,7 @@ where
             let latest_conv: AllowedConversion = (
                 Amount::from(old_asset, -1).unwrap() +
                     Amount::from(new_asset, 1).unwrap() +
-                    Amount::from(reward_asset, rewards[&addr]).unwrap()
+                    Amount::from(reward_asset, *reward).unwrap()
             ).into();
 
             // Update the conversion query data and prepare new Merkle tree

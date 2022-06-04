@@ -419,14 +419,12 @@ pub async fn submit_init_validator(
 }
 
 /// Make a ViewingKey that can view notes encrypted by given ExtendedSpendingKey
-
 pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> FullViewingKey {
     ExtendedFullViewingKey::from(esk).fvk
 }
 
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
 /// also this diversified base.
-
 pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     rng: &mut R
 ) -> (Diversifier, jubjub::SubgroupPoint) {
@@ -443,6 +441,11 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
         }
     }
     (diversifier, g_d)
+}
+
+/// An extension of Option's cloned method for pair types
+fn clone_pair_option<T: Clone, U: Clone>(pr: Option<(&T, &U)>) -> Option<(T, U)> {
+    pr.map(|(a, b)| (a.clone(), b.clone()))
 }
 
 /// Errors that can occur when trying to retrieve pinned transaction
@@ -796,28 +799,57 @@ impl ShieldedContext {
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
     ) -> Option<Amount> {
+        // First get the unexchanged balance
         if let Some(balance) = self.compute_shielded_balance(vk) {
-            // Establish connection with which to do exchange rate queries
-            let client = HttpClient::new(ledger_address.clone()).unwrap();
-            // Where we will store our exchanged value
-            let mut val_acc = Amount::zero();
-            for (asset_type, value) in balance.components() {
-                let comp = balance.project(asset_type.clone());
-                val_acc += if let Some((_addr, _epoch, conv, _wit)) =
-                    Self::query_allowed_conversion(client.clone(), asset_type).await {
-                        // If conversion if possible, accumulate the exchanged
-                        // amount
-                        let conv: Amount = conv.into();
-                        // We assume here that conversion always contains
-                        // extactly -1 units of the queried asset type
-                        comp + conv * value.clone()
-                    } else {
-                        // Otherwise accumulate the amount as is
-                        comp
-                    }
-            }
-            Some(val_acc)
+            // And then exchange balance into current asset types
+            Some(self.compute_exchanged_amount(
+                ledger_address,
+                balance,
+                HashMap::new()
+            ).await.0)
         } else { None }
+    }
+
+    /// Convert the given amount into the latest asset types whilst making a note
+    /// of the conversions that were used. Note that this function does not
+    /// assume that allowed conversions from the ledger are expressed in terms of
+    /// the latest asset types.
+    pub async fn compute_exchanged_amount(
+        &self,
+        ledger_address: TendermintAddress,
+        mut balance: Amount,
+        mut conversions: HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>,
+    ) -> (Amount, HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>) {
+        // Establish connection with which to do exchange rate queries
+        let client = HttpClient::new(ledger_address.clone()).unwrap();
+        // Where we will store our exchanged value
+        let mut val_acc = Amount::zero();
+        while let Some((asset_type, value)) = clone_pair_option(balance.components().next()) {
+            let comp = balance.project(asset_type.clone());
+            if let Some((conv, _wit, curr_value)) = conversions.get_mut(&asset_type) {
+                // Record how much more of the given conversion has been used
+                *curr_value += value as u64;
+                // If conversion if possible, accumulate the exchanged amount
+                let conv: Amount = conv.clone().into();
+                // We assume here that conversion always contains extactly -1
+                // units of the queried asset type
+                balance += conv * value.clone();
+            } else if let Some((_addr, _epoch, conv, wit)) = Self::query_allowed_conversion(client.clone(), &asset_type).await {
+                // Note how much of the found conversion we are using
+                conversions.insert(asset_type, (conv.clone(), wit, value as u64));
+                // If conversion if possible, accumulate the exchanged amount
+                let conv: Amount = conv.into();
+                // We assume here that conversion always contains extactly -1
+                // units of the queried asset type
+                balance += conv * value.clone();
+            } else {
+                // Otherwise accumulate the amount as is
+                val_acc += comp.clone();
+                // Strike from balance to avoid repeating computation
+                balance -= comp;
+            }
+        }
+        (val_acc, conversions)
     }
 
     /// Collect enough unspent notes in this context to exceed the given amount
@@ -830,8 +862,6 @@ impl ShieldedContext {
         vk: &ViewingKey,
         target: Amount,
     ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>) {
-        // Establish connection with which to do exchange rate queries
-        let client = HttpClient::new(ledger_address.clone()).unwrap();
         let mut conversions = HashMap::new();
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
@@ -845,22 +875,15 @@ impl ShieldedContext {
                 if self.spents.contains(note_idx) { continue; }
                 // Get note, merkle path, diversifier associated with this ID
                 let note = self.note_map.get(note_idx).unwrap().clone();
-                // Check if our asset type should be exchanged to different type
-                let admits_conversion =
-                    conversions.contains_key(&note.asset_type) ||
-                    Self::query_allowed_conversion(client.clone(), &note.asset_type)
-                    .await
-                    .map(|(_w,_z,x,y)| conversions.insert(note.asset_type, (x, y, 0))).is_some();
-                // Try to use the note's equivalent value, and if that doesn't
-                // exist then use the note's actual value
-                let (contr, conv) = if admits_conversion {
-                    let conv = conversions.get_mut(&note.asset_type).unwrap();
-                    let conv_amt: Amount = conv.0.clone().into();
-                    (conv_amt.reject(note.asset_type) * (note.value as i64), Some(conv))
-                } else {
-                    (Amount::from(note.asset_type, note.value)
-                        .expect("received note has invalid value or asset type"), None)
-                };
+
+                // The amount contributed by this note before conversion
+                let pre_contr = Amount::from(note.asset_type, note.value)
+                    .expect("received note has invalid value or asset type");
+                let (contr, proposed_convs) = self.compute_exchanged_amount(
+                    ledger_address.clone(),
+                    pre_contr,
+                    conversions.clone()
+                ).await;
                 // Determine if using the current note would actually bring us
                 // closer to our target
                 let mut required = false;
@@ -878,10 +901,8 @@ impl ShieldedContext {
                     // Be sure to record the conversions used in computing
                     // accumulated value
                     val_acc += contr;
-                    // If we are using a conversion, note how much of it we use
-                    if let Some(conv) = conv {
-                        conv.2 += note.value;
-                    }
+                    // Commit the conversions that were used to exchange
+                    conversions = proposed_convs;
                     let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
                     let diversifier = self.div_map.get(note_idx).unwrap();
                     // Commit this note to our transaction
