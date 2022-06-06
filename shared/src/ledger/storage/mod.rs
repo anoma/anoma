@@ -53,11 +53,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Default, BorshSerialize, BorshDeserialize)]
 pub struct ConversionState {
     /// The tree currently containing all the conversions
-    tree: FrozenCommitmentTree<Node>,
+    pub tree: FrozenCommitmentTree<Node>,
     /// Map addresses to all assets corresponding to them
-    addresses: HashMap::<Address, Vec<AssetType>>,
+    pub addresses: HashMap::<Address, Vec<AssetType>>,
     /// Map assets to their latest conversion and position in Merkle tree
-    assets: HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>,
+    pub assets: HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>,
 }
 
 /// The storage data
@@ -695,21 +695,6 @@ where
         // conversion commitments from scratch in the next epoch
         self.write(&state_key, types::encode(&self.conversion_state))
             .expect("unable to save current conversion state");
-        
-        // Allow for the AllowedConversion and MerklePath to be looked up by a
-        // timestamped asset type
-        for (asset_type, (addr, epoch, conv, pos)) in self.conversion_state.assets.clone() {
-            let key = key_prefix
-                .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
-                .map_err(Error::KeyError)?;
-            let val = (
-                addr.clone(),
-                epoch,
-                Into::<Amount>::into(conv),
-                self.conversion_state.tree.path(pos)
-            );
-            self.write(&key, types::encode(&val))?;
-        }
         Ok(())
     }
 

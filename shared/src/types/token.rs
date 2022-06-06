@@ -5,6 +5,7 @@ use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul};
 use std::str::FromStr;
 use masp_primitives::transaction::Transaction;
+use masp_primitives::asset_type::AssetType;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
@@ -302,6 +303,21 @@ pub fn is_masp_key(key: &Key) -> bool {
         ] if *addr == masp() && (key == HEAD_TX_KEY || key.starts_with(TX_KEY_PREFIX)
         || key.starts_with(PIN_KEY_PREFIX)) => true,
         _ => false,
+    }
+}
+
+/// Check if the given storage key is a masp conversion
+pub fn is_masp_conversion(key: &Key) -> Option<AssetType> {
+    match &key.segments[..] {
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(key),
+        ] if *addr == masp() && key.starts_with(CONVERSION_KEY_PREFIX) => {
+            key.strip_prefix(CONVERSION_KEY_PREFIX).and_then(|asset_str| {
+                AssetType::from_str(asset_str).ok()
+            })
+        },
+        _ => None,
     }
 }
 

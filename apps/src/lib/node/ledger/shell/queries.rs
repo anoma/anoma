@@ -7,7 +7,8 @@ use anoma::types::address::Address;
 use anoma::types::key;
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
 use anoma::types::storage::{Key, PrefixValue};
-use anoma::types::token::{self, Amount};
+use anoma::types::token::{self, Amount, is_masp_conversion};
+use anoma::ledger::storage::types;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
 #[cfg(not(feature = "ABCI"))]
@@ -117,25 +118,53 @@ where
                 }
             }
             Ok((None, _gas)) => {
-                let proof_ops = if is_proven {
-                    match self.storage.get_non_existence_proof(key) {
-                        Ok(proof) => Some(proof.into()),
-                        Err(err) => {
-                            return response::Query {
-                                code: 2,
-                                info: format!("Storage error: {}", err),
-                                ..Default::default()
-                            };
+                if is_proven {
+                    let proof_ops =
+                        match self.storage.get_non_existence_proof(key) {
+                            Ok(proof) => Some(proof.into()),
+                            Err(err) => {
+                                return response::Query {
+                                    code: 2,
+                                    info: format!("Storage error: {}", err),
+                                    ..Default::default()
+                                };
+                            }
+                        };
+                    response::Query {
+                        code: 1,
+                        info: format!("No value found for key: {}", key),
+                        proof_ops,
+                        ..Default::default()
+                    }
+                } else if let Some(asset_type) = is_masp_conversion(key) {
+                    // Conversion values are constructed on request
+                    if let Some((addr, epoch, conv, pos)) = self.storage.conversion_state.assets.get(&asset_type) {
+                        let conv = (
+                            addr,
+                            epoch,
+                            Into::<masp_primitives::transaction::components::Amount>::into(conv.clone()),
+                            self.storage.conversion_state.tree.path(*pos)
+                        );
+                        response::Query {
+                            value: types::encode(&conv),
+                            proof_ops: None,
+                            ..Default::default()
+                        }
+                    } else {
+                        response::Query {
+                            code: 1,
+                            info: format!("No value found for key: {}", key),
+                            proof_ops: None,
+                            ..Default::default()
                         }
                     }
                 } else {
-                    None
-                };
-                response::Query {
-                    code: 1,
-                    info: format!("No value found for key: {}", key),
-                    proof_ops,
-                    ..Default::default()
+                    response::Query {
+                        code: 1,
+                        info: format!("No value found for key: {}", key),
+                        proof_ops: None,
+                        ..Default::default()
+                    }
                 }
             }
             Err(err) => response::Query {
@@ -225,9 +254,20 @@ where
     /// Query to check if a storage key exists.
     fn has_storage_key(&self, key: &Key) -> response::Query {
         match self.storage.has_key(key) {
-            Ok((has_key, _gas)) => response::Query {
-                value: has_key.try_to_vec().unwrap(),
-                ..Default::default()
+            Ok((has_key, _gas)) => {
+                // Conversion values are constructed on request
+                let has_key = has_key ||
+                    is_masp_conversion(key).map_or(
+                        false,
+                        |asset_type| self.storage
+                            .conversion_state
+                            .assets
+                            .contains_key(&asset_type)
+                    );
+                response::Query {
+                    value: has_key.try_to_vec().unwrap(),
+                    ..Default::default()
+                }
             },
             Err(err) => response::Query {
                 code: 2,
