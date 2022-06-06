@@ -36,7 +36,7 @@ use crate::types::storage::{
     BlockHash, BlockHeight, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
-use borsh::BorshSerialize;
+use borsh::{BorshSerialize, BorshDeserialize};
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::transaction::components::Amount;
 use std::collections::HashMap;
@@ -50,8 +50,13 @@ use crate::types::token;
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
 /// A representation of the conversion state
-type ConversionState = (HashMap::<Address, Vec<AssetType>>,
-                        HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>);
+#[derive(Debug, Default, BorshSerialize, BorshDeserialize)]
+pub struct ConversionState {
+    /// Map addresses to all assets corresponding to them
+    addresses: HashMap::<Address, Vec<AssetType>>,
+    /// Map assets to their latest conversion and position in Merkle tree
+    assets: HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>,
+}
 
 /// The storage data
 #[derive(Debug)]
@@ -630,19 +635,19 @@ where
 
             // Update the conversion query data and prepare new Merkle tree
             let convs = self.conversion_state
-                .0
+                .addresses
                 .entry(addr.clone())
                 .or_insert_with(|| Vec::new());
             // Add a conversion from the previous asset type
             convs.push(old_asset);
-            self.conversion_state.1.insert(
+            self.conversion_state.assets.insert(
                 old_asset,
                 (addr.clone(), self.last_epoch.prev(), Amount::zero().into(), 0)
             );
 
             for asset_type in convs {
                 let (_epoch, _asset_type, conv, pos) =
-                    self.conversion_state.1.get_mut(asset_type).unwrap();
+                    self.conversion_state.assets.get_mut(asset_type).unwrap();
                 // Use transitivity to update conversion
                 *conv += latest_conv.clone();
                 // Update conversion position to leaf we are about to create
@@ -684,7 +689,7 @@ where
         let conv_tree = FrozenCommitmentTree::new(&conv_notes);
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (asset_type, (addr, epoch, conv, pos)) in self.conversion_state.1.clone() {
+        for (asset_type, (addr, epoch, conv, pos)) in self.conversion_state.assets.clone() {
             let key = key_prefix
                 .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
