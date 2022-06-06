@@ -52,6 +52,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// A representation of the conversion state
 #[derive(Debug, Default, BorshSerialize, BorshDeserialize)]
 pub struct ConversionState {
+    /// The tree currently containing all the conversions
+    tree: FrozenCommitmentTree<Node>,
     /// Map addresses to all assets corresponding to them
     addresses: HashMap::<Address, Vec<AssetType>>,
     /// Map assets to their latest conversion and position in Merkle tree
@@ -580,6 +582,11 @@ where
         Ok(new_epoch)
     }
 
+    /// Get the current conversions
+    pub fn get_conversion_state(&self) -> &ConversionState {
+        &self.conversion_state
+    }
+
     /// Update the MASP's allowed conversions
     fn update_allowed_conversions(&mut self) -> Result<()> {
         // The derived conversions will be placed in MASP address space
@@ -659,14 +666,6 @@ where
                 conv_notes.push(conv_node);
             }
         }
-        // Load up the conversions currently being given as query results
-        let state_key = key_prefix
-            .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
-            .map_err(Error::KeyError)?;
-        // Save the current conversion state in order to avoid computing
-        // conversion commitments from scratch in the next epoch
-        self.write(&state_key, types::encode(&self.conversion_state))
-            .expect("unable to save current conversion state");
 
         // Update the MASP's transparent reward token balance to ensure that it
         // is sufficiently backed to redeem rewards
@@ -686,14 +685,29 @@ where
         }
 
         // Convert conversion vector into tree so that Merkle paths can be obtained
-        let conv_tree = FrozenCommitmentTree::new(&conv_notes);
+        self.conversion_state.tree = FrozenCommitmentTree::new(&conv_notes);
+
+        // Load up the conversions currently being given as query results
+        let state_key = key_prefix
+            .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
+            .map_err(Error::KeyError)?;
+        // Save the current conversion state in order to avoid computing
+        // conversion commitments from scratch in the next epoch
+        self.write(&state_key, types::encode(&self.conversion_state))
+            .expect("unable to save current conversion state");
+        
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
         for (asset_type, (addr, epoch, conv, pos)) in self.conversion_state.assets.clone() {
             let key = key_prefix
                 .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
                 .map_err(Error::KeyError)?;
-            let val = (addr.clone(), epoch, Into::<Amount>::into(conv), conv_tree.path(pos));
+            let val = (
+                addr.clone(),
+                epoch,
+                Into::<Amount>::into(conv),
+                self.conversion_state.tree.path(pos)
+            );
             self.write(&key, types::encode(&val))?;
         }
         Ok(())
