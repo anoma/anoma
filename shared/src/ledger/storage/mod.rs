@@ -49,6 +49,9 @@ use crate::types::token;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
+/// A representation of the conversion state
+type ConversionState = (HashMap::<Address, Vec<AssetType>>,
+                        HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>);
 
 /// The storage data
 #[derive(Debug)]
@@ -75,6 +78,8 @@ where
     pub next_epoch_min_start_time: DateTimeUtc,
     /// The current established address generator
     pub address_gen: EstablishedAddressGen,
+    /// The currently saved conversion state
+    pub conversion_state: ConversionState,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: TxQueue,
@@ -282,6 +287,7 @@ where
             address_gen: EstablishedAddressGen::new(
                 "Privacy is a function of liberty.",
             ),
+            conversion_state: ConversionState::default(),
             #[cfg(feature = "ferveo-tpke")]
             tx_queue: TxQueue::default(),
         }
@@ -313,6 +319,21 @@ where
             self.next_epoch_min_start_height = next_epoch_min_start_height;
             self.next_epoch_min_start_time = next_epoch_min_start_time;
             self.address_gen = address_gen;
+            if self.last_epoch.0 > 1 {
+                // The derived conversions will be placed in MASP address space
+                let masp_addr = masp();
+                let key_prefix: Key = masp_addr.to_db_key().into();
+                // Load up the conversions currently being given as query results
+                let state_key = key_prefix
+                    .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
+                    .map_err(Error::KeyError)?;
+                self.conversion_state =
+                    types::decode(self.read(&state_key)
+                                  .expect("unable to read conversion state")
+                                  .0
+                                  .expect("unable to find conversion state"))
+                    .expect("unable to decode conversion state")
+            }
             #[cfg(feature = "ferveo-tpke")]
             {
                 self.tx_queue = tx_queue;
@@ -574,22 +595,6 @@ where
         let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
             .expect("unable to derive asset identifier");
 
-        // Load up the conversions currently being given as query results
-        let state_key = key_prefix
-            .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
-            .map_err(Error::KeyError)?;
-        let mut allowed_convs = if self.last_epoch.0 > 1 {
-            types::decode(self.read(&state_key)
-                          .expect("unable to read conversion state")
-                          .0
-                          .expect("unable to find conversion state"))
-                .expect("unable to decode conversion state")
-        } else {
-            // In the first epoch, there are no conversions to load
-            HashMap::<Address, Vec<(Epoch, AssetType, AllowedConversion, usize)>>
-                ::new()
-        };
-
         // Reward all tokens according to above reward rates
         for (addr, reward) in &masp_rewards() {
             // Dispence a transparent reward in parallel to the shielded rewards
@@ -624,11 +629,20 @@ where
             ).into();
 
             // Update the conversion query data and prepare new Merkle tree
-            let convs = allowed_convs.entry(addr.clone()).or_insert_with(|| Vec::new());
+            let convs = self.conversion_state
+                .0
+                .entry(addr.clone())
+                .or_insert_with(|| Vec::new());
             // Add a conversion from the previous asset type
-            convs.push((self.last_epoch.prev(), old_asset, Amount::zero().into(), 0));
+            convs.push(old_asset);
+            self.conversion_state.1.insert(
+                old_asset,
+                (addr.clone(), self.last_epoch.prev(), Amount::zero().into(), 0)
+            );
 
-            for (_epoch, _asset_type, conv, pos) in convs {
+            for asset_type in convs {
+                let (_epoch, _asset_type, conv, pos) =
+                    self.conversion_state.1.get_mut(asset_type).unwrap();
                 // Use transitivity to update conversion
                 *conv += latest_conv.clone();
                 // Update conversion position to leaf we are about to create
@@ -640,9 +654,13 @@ where
                 conv_notes.push(conv_node);
             }
         }
+        // Load up the conversions currently being given as query results
+        let state_key = key_prefix
+            .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
+            .map_err(Error::KeyError)?;
         // Save the current conversion state in order to avoid computing
         // conversion commitments from scratch in the next epoch
-        self.write(&state_key, types::encode(&allowed_convs))
+        self.write(&state_key, types::encode(&self.conversion_state))
             .expect("unable to save current conversion state");
 
         // Update the MASP's transparent reward token balance to ensure that it
@@ -666,14 +684,12 @@ where
         let conv_tree = FrozenCommitmentTree::new(&conv_notes);
         // Allow for the AllowedConversion and MerklePath to be looked up by a
         // timestamped asset type
-        for (addr, convs) in allowed_convs.clone() {
-            for (epoch, asset_type, conv, pos) in convs {
-                let key = key_prefix
-                    .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
-                    .map_err(Error::KeyError)?;
-                let val = (addr.clone(), epoch, Into::<Amount>::into(conv), conv_tree.path(pos));
-                self.write(&key, types::encode(&val))?;
-            }
+        for (asset_type, (addr, epoch, conv, pos)) in self.conversion_state.1.clone() {
+            let key = key_prefix
+                .push(&(token::CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
+                .map_err(Error::KeyError)?;
+            let val = (addr.clone(), epoch, Into::<Amount>::into(conv), conv_tree.path(pos));
+            self.write(&key, types::encode(&val))?;
         }
         Ok(())
     }
@@ -786,6 +802,7 @@ pub mod testing {
                 address_gen: EstablishedAddressGen::new(
                     "Test address generator seed",
                 ),
+                conversion_state: ConversionState::default(),
                 #[cfg(feature = "ferveo-tpke")]
                 tx_queue: TxQueue::default(),
             }
