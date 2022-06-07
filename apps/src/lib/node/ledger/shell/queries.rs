@@ -118,25 +118,7 @@ where
                 }
             }
             Ok((None, _gas)) => {
-                if is_proven {
-                    let proof_ops =
-                        match self.storage.get_non_existence_proof(key) {
-                            Ok(proof) => Some(proof.into()),
-                            Err(err) => {
-                                return response::Query {
-                                    code: 2,
-                                    info: format!("Storage error: {}", err),
-                                    ..Default::default()
-                                };
-                            }
-                        };
-                    response::Query {
-                        code: 1,
-                        info: format!("No value found for key: {}", key),
-                        proof_ops,
-                        ..Default::default()
-                    }
-                } else if let Some(asset_type) = is_masp_conversion(key) {
+                if let Some(asset_type) = is_masp_conversion(key) {
                     // Conversion values are constructed on request
                     if let Some((addr, epoch, conv, pos)) = self.storage.conversion_state.assets.get(&asset_type) {
                         let conv = (
@@ -159,10 +141,24 @@ where
                         }
                     }
                 } else {
+                    let proof_ops = if is_proven {
+                        match self.storage.get_non_existence_proof(key) {
+                            Ok(proof) => Some(proof.into()),
+                            Err(err) => {
+                                return response::Query {
+                                    code: 2,
+                                    info: format!("Storage error: {}", err),
+                                    ..Default::default()
+                                };
+                            }
+                        }
+                    } else {
+                        None
+                    };
                     response::Query {
                         code: 1,
                         info: format!("No value found for key: {}", key),
-                        proof_ops: None,
+                        proof_ops,
                         ..Default::default()
                     }
                 }

@@ -593,7 +593,8 @@ where
         let masp_addr = masp();
         let key_prefix: Key = masp_addr.to_db_key().into();
 
-        let mut conv_notes = Vec::new();
+        let masp_rewards = masp_rewards();
+        let mut conv_notes = Vec::with_capacity(masp_rewards.len() * self.last_epoch.0 as usize);
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
 
@@ -608,7 +609,7 @@ where
             .expect("unable to derive asset identifier");
 
         // Reward all tokens according to above reward rates
-        for (addr, reward) in &masp_rewards() {
+        for (addr, reward) in &masp_rewards {
             // Dispence a transparent reward in parallel to the shielded rewards
             let token_key = self.read(&token::balance_key(addr, &masp_addr));
             if let Ok((Some(addr_balance), _)) = token_key {
