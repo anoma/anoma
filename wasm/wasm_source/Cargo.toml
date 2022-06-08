@@ -44,7 +44,8 @@ anoma = {path = "../../shared"}
 anoma_tests = {path = "../../tests"}
 anoma_tx_prelude = {path = "../../tx_prelude"}
 anoma_vp_prelude = {path = "../../vp_prelude"}
-proptest = "1.0.0"
+# A fork with state machine testing
+proptest = {git = "https://github.com/heliaxdev/proptest", branch = "tomas/sm"}
 tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
