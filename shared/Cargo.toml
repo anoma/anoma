@@ -93,6 +93,7 @@ pwasm-utils = {version = "0.18.0", optional = true}
 rand = {version = "0.8", optional = true}
 # TODO proptest rexports the RngCore trait but the re-implementations only work for version `0.8`. *sigh*
 rand_core = {version = "0.6", optional = true}
+rayon = "=1.5.1"
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_json = "1.0.62"

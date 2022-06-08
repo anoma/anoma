@@ -45,6 +45,8 @@ use masp_primitives::sapling::Node;
 use ff::PrimeField;
 use masp_primitives::convert::AllowedConversion;
 use masp_primitives::merkle_tree::FrozenCommitmentTree;
+use rayon::prelude::ParallelSlice;
+use rayon::iter::ParallelIterator;
 use crate::types::token;
 
 /// A result of a function that may fail
@@ -684,9 +686,23 @@ where
             self.write(&reward_key, types::encode(&total_reward))
                 .expect("unable to update MASP transparent balance");
         }
-
+        // Try to distribute Merkle tree construction as evenly as possible
+        // across multiple cores
+        let num_threads = rayon::current_num_threads();
+        // ceil(conv_notes.len() / num_threads)
+        let notes_per_thread_approx = (conv_notes.len() - 1) / num_threads + 1;
+        // Merkle trees must have exactly 2^n leaves to be mergeable
+        let mut notes_per_thread = 1;
+        while notes_per_thread_approx > notes_per_thread {
+            notes_per_thread *= 2;
+        }
+        // Make the sub-Merkle trees in parallel
+        let tree_parts: Vec::<_> = conv_notes
+            .par_chunks(notes_per_thread)
+            .map(|x| FrozenCommitmentTree::new(&x))
+            .collect();
         // Convert conversion vector into tree so that Merkle paths can be obtained
-        self.conversion_state.tree = FrozenCommitmentTree::new(&conv_notes);
+        self.conversion_state.tree = FrozenCommitmentTree::merge(&tree_parts);
 
         // Load up the conversions currently being given as query results
         let state_key = key_prefix

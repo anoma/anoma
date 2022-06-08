@@ -91,6 +91,7 @@ dependencies = [
  "pwasm-utils",
  "rand",
  "rand_core 0.6.3",
+ "rayon",
  "rust_decimal",
  "serde",
  "serde_json",
@@ -1720,7 +1721,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-incentive#624d7d5f5ce4db31fdf3804e0bf6522ed6e278c2"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-incentive#6b1f0fde4c2191681930119b95827b1f5266aac7"
 dependencies = [
  "aes",
  "bip0039",
@@ -1751,7 +1752,7 @@ dependencies = [
 [[package]]
 name = "masp_proofs"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-incentive#624d7d5f5ce4db31fdf3804e0bf6522ed6e278c2"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-incentive#6b1f0fde4c2191681930119b95827b1f5266aac7"
 dependencies = [
  "bellman",
  "blake2b_simd 1.0.0",
