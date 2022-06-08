@@ -47,6 +47,8 @@ use masp_primitives::convert::AllowedConversion;
 use masp_primitives::merkle_tree::FrozenCommitmentTree;
 use rayon::prelude::ParallelSlice;
 use rayon::iter::ParallelIterator;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::IndexedParallelIterator;
 use crate::types::token;
 
 /// A result of a function that may fail
@@ -56,8 +58,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct ConversionState {
     /// The tree currently containing all the conversions
     pub tree: FrozenCommitmentTree<Node>,
-    /// Map addresses to all assets corresponding to them
-    pub addresses: HashMap::<Address, Vec<AssetType>>,
     /// Map assets to their latest conversion and position in Merkle tree
     pub assets: HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>,
 }
@@ -596,7 +596,6 @@ where
         let key_prefix: Key = masp_addr.to_db_key().into();
 
         let masp_rewards = masp_rewards();
-        let mut conv_notes = Vec::with_capacity(masp_rewards.len() * self.last_epoch.0 as usize);
         // The total transparent value of the rewards being distributed
         let mut total_reward = token::Amount::from(0);
 
@@ -609,7 +608,8 @@ where
             .expect("unable to serialize address and epoch");
         let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
             .expect("unable to derive asset identifier");
-
+        // Conversions from the previous to current asset for each address
+        let mut current_convs = HashMap::<Address, AllowedConversion>::new();
         // Reward all tokens according to above reward rates
         for (addr, reward) in &masp_rewards {
             // Dispence a transparent reward in parallel to the shielded rewards
@@ -637,38 +637,41 @@ where
                 .expect("unable to derive asset identifier");
             // The -1 allows each instance of the old asset to be cancelled
             // out/replaced with the new asset
-            let latest_conv: AllowedConversion = (
+            current_convs.insert(addr.clone(), (
                 Amount::from(old_asset, -1).unwrap() +
                     Amount::from(new_asset, 1).unwrap() +
                     Amount::from(reward_asset, *reward).unwrap()
-            ).into();
-
-            // Update the conversion query data and prepare new Merkle tree
-            let convs = self.conversion_state
-                .addresses
-                .entry(addr.clone())
-                .or_insert_with(|| Vec::new());
+            ).into());
             // Add a conversion from the previous asset type
-            convs.push(old_asset);
             self.conversion_state.assets.insert(
                 old_asset,
                 (addr.clone(), self.last_epoch.prev(), Amount::zero().into(), 0)
             );
+        }
 
-            for asset_type in convs {
-                let (_epoch, _asset_type, conv, pos) =
-                    self.conversion_state.assets.get_mut(asset_type).unwrap();
+        // Try to distribute Merkle leaf updating as evenly as possible across
+        // multiple cores
+        let num_threads = rayon::current_num_threads();
+        // Put assets into vector to enable computation batching
+        let assets: Vec<_> = self.conversion_state.assets.values_mut().enumerate().collect();
+        // ceil(assets.len() / num_threads)
+        let notes_per_thread_max = (assets.len() - 1) / num_threads + 1;
+        // floor(assets.len() / num_threads)
+        let notes_per_thread_min = assets.len() / num_threads;
+        // Now on each core, add the latest conversion to each conversion
+        let conv_notes: Vec<Node> = assets
+            .into_par_iter()
+            .with_min_len(notes_per_thread_min)
+            .with_max_len(notes_per_thread_max)
+            .map(|(idx, (addr, _epoch, conv, pos))| {
                 // Use transitivity to update conversion
-                *conv += latest_conv.clone();
+                *conv += current_convs[addr].clone();
                 // Update conversion position to leaf we are about to create
-                *pos = conv_notes.len();
+                *pos = idx;
                 // The merkle tree need only provide the conversion commitment,
                 // the remaining information is provided through the storage API
-                let conv_node = Node::new(conv.cmu().to_repr());
-                // Now indirectly add leaf corresponding to this conversion
-                conv_notes.push(conv_node);
-            }
-        }
+                Node::new(conv.cmu().to_repr())
+            }).collect();
 
         // Update the MASP's transparent reward token balance to ensure that it
         // is sufficiently backed to redeem rewards
@@ -688,17 +691,14 @@ where
         }
         // Try to distribute Merkle tree construction as evenly as possible
         // across multiple cores
-        let num_threads = rayon::current_num_threads();
-        // ceil(conv_notes.len() / num_threads)
-        let notes_per_thread_approx = (conv_notes.len() - 1) / num_threads + 1;
         // Merkle trees must have exactly 2^n leaves to be mergeable
-        let mut notes_per_thread = 1;
-        while notes_per_thread_approx > notes_per_thread {
-            notes_per_thread *= 2;
+        let mut notes_per_thread_rounded = 1;
+        while notes_per_thread_max > notes_per_thread_rounded {
+            notes_per_thread_rounded *= 2;
         }
         // Make the sub-Merkle trees in parallel
         let tree_parts: Vec::<_> = conv_notes
-            .par_chunks(notes_per_thread)
+            .par_chunks(notes_per_thread_rounded)
             .map(|x| FrozenCommitmentTree::new(&x))
             .collect();
         // Convert conversion vector into tree so that Merkle paths can be obtained
