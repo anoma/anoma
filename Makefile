@@ -101,7 +101,7 @@ install: tendermint
 	find "target/release/" -type f \
 		\( -name "$(mm).dll" -o -name "$(mm).dylib" -o -name "$(mm).so" \) \
 		-exec install -d {} ${HOME}/.cargo/lib/ \; && \
-	ANOMA_DEV=false $(cargo) install --path ./apps
+	ANOMA_DEV=false $(cargo) install --path ./apps --locked
 
 tendermint:
 	./scripts/install/get_tendermint.sh
