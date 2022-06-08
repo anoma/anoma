@@ -285,6 +285,11 @@ impl Wallet {
         self.store.find_address(alias)
     }
 
+    /// Find an alias by the address if it's in the wallet.
+    pub fn find_alias(&self, address: &Address) -> Option<&Alias> {
+        self.store.find_alias(address)
+    }
+
     /// Get all known addresses by their alias, paired with PKH, if known.
     pub fn get_addresses(&self) -> HashMap<String, Address> {
         self.store

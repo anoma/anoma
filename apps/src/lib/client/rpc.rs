@@ -188,6 +188,10 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                         for (key, balance) in balances {
                             let owner =
                                 token::is_any_token_balance_key(&key).unwrap();
+                            let owner = match ctx.wallet.find_alias(owner) {
+                                Some(alias) => format!("{}", alias),
+                                None => format!("{}", owner),
+                            };
                             writeln!(w, "  {}, owned by {}", balance, owner)
                                 .unwrap();
                         }

@@ -228,6 +228,11 @@ impl Store {
         self.addresses.get_by_left(&alias.into())
     }
 
+    /// Find an alias by the address if it's in the wallet.
+    pub fn find_alias(&self, address: &Address) -> Option<&Alias> {
+        self.addresses.get_by_right(address)
+    }
+
     /// Get all known keys by their alias, paired with PKH, if known.
     pub fn get_keys(
         &self,
