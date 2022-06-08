@@ -12,6 +12,7 @@ use anoma::types::key::*;
 use anoma::types::transaction::EllipticCurve;
 use ark_std::rand::prelude::*;
 use ark_std::rand::SeedableRng;
+use bimap::BiHashMap;
 use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -53,7 +54,7 @@ pub struct Store {
     /// Cryptographic keypairs
     keys: HashMap<Alias, StoredKeypair>,
     /// Anoma address book
-    addresses: HashMap<Alias, Address>,
+    addresses: BiHashMap<Alias, Address>,
     /// Known mappings of public key hashes to their aliases in the `keys`
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
@@ -224,7 +225,7 @@ impl Store {
 
     /// Find the stored address by an alias.
     pub fn find_address(&self, alias: impl AsRef<str>) -> Option<&Address> {
-        self.addresses.get(&alias.into())
+        self.addresses.get_by_left(&alias.into())
     }
 
     /// Get all known keys by their alias, paired with PKH, if known.
@@ -248,7 +249,7 @@ impl Store {
     }
 
     /// Get all known addresses by their alias, paired with PKH, if known.
-    pub fn get_addresses(&self) -> &HashMap<Alias, Address> {
+    pub fn get_addresses(&self) -> &BiHashMap<Alias, Address> {
         &self.addresses
     }
 
@@ -362,7 +363,7 @@ impl Store {
                 alias = address.encode()
             );
         }
-        if self.addresses.contains_key(&alias) {
+        if self.addresses.contains_left(&alias) {
             match show_overwrite_confirmation(&alias, "an address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
