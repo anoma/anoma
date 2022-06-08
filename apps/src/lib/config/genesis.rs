@@ -38,6 +38,7 @@ pub mod genesis_config {
     use anoma::types::{storage, token};
     use hex;
     use serde::{Deserialize, Serialize};
+    use thiserror::Error;
 
     use super::{
         EstablishedAccount, Genesis, ImplicitAccount, TokenAccount, Validator,
@@ -72,10 +73,13 @@ pub mod genesis_config {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Error, Debug)]
     pub enum HexKeyError {
+        #[error("Invalid hex string: {0:?}")]
         InvalidHexString(hex::FromHexError),
+        #[error("Invalid sha256 checksum: {0}")]
         InvalidSha256(TryFromSliceError),
+        #[error("Invalid public key: {0}")]
         InvalidPublicKey(ParsePublicKeyError),
     }
 
@@ -147,7 +151,16 @@ pub mod genesis_config {
         pub max_proposal_fund_transfer: u64,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    /// Validator pre-genesis configuration can be created with client utils
+    /// `init-genesis-validator` command and added to a genesis for
+    /// `init-network` cmd and that can be subsequently read by `join-network`
+    /// cmd to setup a genesis validator node.
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct ValidatorPreGenesisConfig {
+        pub validator: HashMap<String, ValidatorConfig>,
+    }
+
+    #[derive(Clone, Default, Debug, Deserialize, Serialize)]
     pub struct ValidatorConfig {
         // Public key for consensus. (default: generate)
         pub consensus_public_key: Option<HexString>,
@@ -166,10 +179,10 @@ pub mod genesis_config {
         pub staking_reward_address: Option<String>,
         // Total number of tokens held at genesis.
         // XXX: u64 doesn't work with toml-rs!
-        pub tokens: u64,
+        pub tokens: Option<u64>,
         // Unstaked balance at genesis.
         // XXX: u64 doesn't work with toml-rs!
-        pub non_staked_balance: u64,
+        pub non_staked_balance: Option<u64>,
         // Filename of validator VP. (default: default validator VP)
         pub validator_vp: Option<String>,
         // Filename of staking reward account VP. (default: user VP)
@@ -186,6 +199,9 @@ pub mod genesis_config {
         /// not part of the gossipsub where intents are being propagated and
         /// hence cannot run matchmakers
         pub intent_gossip_seed: Option<bool>,
+        /// Tendermint node key is used to derive Tendermint node ID for node
+        /// authentication
+        pub tendermint_node_key: Option<HexString>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -289,7 +305,7 @@ pub mod genesis_config {
                     &config.staking_reward_address.as_ref().unwrap(),
                 )
                 .unwrap(),
-                tokens: token::Amount::whole(config.tokens),
+                tokens: token::Amount::whole(config.tokens.unwrap_or_default()),
                 consensus_key: config
                     .consensus_public_key
                     .as_ref()
@@ -321,7 +337,9 @@ pub mod genesis_config {
                 .unwrap()
                 .to_dkg_public_key()
                 .unwrap(),
-            non_staked_balance: token::Amount::whole(config.non_staked_balance),
+            non_staked_balance: token::Amount::whole(
+                config.non_staked_balance.unwrap_or_default(),
+            ),
             validator_vp_code_path: validator_vp_config.filename.to_owned(),
             validator_vp_sha256: validator_vp_config
                 .sha256
