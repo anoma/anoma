@@ -522,5 +522,36 @@ impl ChainEndpoint for Anoma {
 }
 ```
 
-## Transfer (ICS 20)
+## Token Transfer (ICS 20)
+### IBC Token VP
+IBC token VP checks transfers of sent tokens from the chain and tokens received over IBC. These transfers changes the state of accounts prefixed with `#IbcToken`, i.e. this VP is triggered by the state change of these accounts.
+
+The existing token's VP `vp_token` checks if the total of the changes in the transaction should be zero. IBC-related accounts should be included as general accounts.
+IBC token VP as a native VP should check if the escrow/unescrow/burn/mint has been done properly in the transaction. When an IBC transaction has `MsgTransfer`, the VP should check if the amount of the specified token by the message has been escrowed or burned. When an IBC transaction has `MsgRecvPacket` with `FungibleTokenPacketData`, the VP should check if the amount of the specified token by the data has been unescrowed or minted. For example, if a transaction tries to unescrow an amount and to send it to a different account from the specified account, the VP should refuse it, even if the transaction satisfies IBC protocol.
+
+### Send a token
+In a transaction with `MsgTransfer` (defined in ibc-rs) including `FungibleTokenPacketData` as transaction data, the specified token is sent according to ICS20 and a packet is sent.
+The transaction updates the sender's balance by escrowing or burning the amount of the token. The account, the sent token(denomination), and the amount are specified by `MsgTransfer`. [The denomination field would indicate that this chain is the source zone or the sink zone](https://github.com/cosmos/ibc/blob/master/spec/app/ics-020-fungible-token-transfer/README.md#technical-specification).
+
+#### Escrow
+When this chain is the source zone, the amount of the specified token is sent from the sender's account key (e.g. `{token_addr}/balance/{sender_addr}`) to the escrow key `#IbcToken/multitoken/{hashed_token_addr}/balance/{escrow_addr}`. The `hashed_token_addr` is calculated with the token address, the IBC port ID and the channel ID. The escrow address should be associated with IBC port ID and channel ID to unescrow it later. The escrow address is one of internal addresses, `InternalAddress::Escrow` with the hash calculated with the port ID and the channel ID. It is not allowed to transfer from this account without IBC token transfer operation. IBC token VP should check the transfer from the escrow accounts.
+
+#### Burn
+When this chain is the sink zone, the amount of the specified token is sent from the sender's account to a special key `#IbcToken/multitoken/{hashed_token_addr}/balance/BURN_ADDR.` The `BURN_ADDR` is one of internal addresses, `InternalAddress::Burn`. The value of the key should NOT written to the block when the block is committed, i.e. reading the previous value of the key in a VP results in always `None` and the amount is zero by default. We can use `tx_write_temp` in the transaction for these writes.
+
+### Receive a token
+In a transaction with `MsgRecvPacket` (defined in ibc-rs) including `FungibleTokenTransferData` as transaction data, the specified token is received according to ICS20.
+The transaction updates the receiver's balance by unescrowing or minting the amount of the token. The account(receiver), the received token(denomination), and the amount are specified by `FungibleTokenPacketData` in the received packet.
+
+#### Unescrow
+When this chain was the source zone, the amount of the token is sent from its escrow key `#IbcToken/multitoken/{hashed_token_addr}/balance/{escrow_addr}` to the receiver's account key `{token_addr}/balance/{receiver_addr}`.
+
+#### Mint
+When this chain is not the source zone, the amount of the token is minted for the receiver's account `#IbcToken/multitoken/{hashed_token_addr}/balance/{receiver_addr}`. The `hashed_token_addr` is calculated with the token address, the IBC port ID and the channel ID. It means that the token is originated from the source chain. Unlike an escrow account, the token can be transferred from the received account to another account on the chain without IBC operations.
+
+The transaction should transfer the amount from the special account `#IbcToken/multitoken/{hashed_token_addr}/balance/MINT_ADDR` to the receiver account. The `MINT_ADDR` is one of internal addresses, `InternalAddress::Mint`. The account is NOT updated when the block is committed same as `#IbcToken/multitoken/{hashed_token_addr}/balance/BURN_ADDR`, i.e. reading the previous value of `#IbcToken/multitoken/{hashed_token_addr}/balance/MINT_ADDR` in a VP results in always the maximum amount.
+
+### Refund tokens
+When a packet has timed out or a failure acknowledgement is given, the escrowed or burned amount of the token should be refunded by unescrowing or minting the amount of the token on the chain which has sent the token. i.e. the IBC transaction should transfer the amount of the token from `#IbcToken/multitoken/{hashed_token_addr}/balance/{escrow_addr}` or `#IbcToken/multitoken/{hashed_token_addr}/balance/MINT_ADDR` to the sender account.
+
 ![transfer](./ibc/transfer.svg  "transfer")
