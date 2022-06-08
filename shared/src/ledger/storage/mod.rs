@@ -693,7 +693,7 @@ where
         // across multiple cores
         // Merkle trees must have exactly 2^n leaves to be mergeable
         let mut notes_per_thread_rounded = 1;
-        while notes_per_thread_max > notes_per_thread_rounded {
+        while notes_per_thread_max > notes_per_thread_rounded*4 {
             notes_per_thread_rounded *= 2;
         }
         // Make the sub-Merkle trees in parallel
