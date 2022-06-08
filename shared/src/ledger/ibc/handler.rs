@@ -799,12 +799,18 @@ pub trait IbcActions {
 
     /// Bind a new port
     fn bind_port(&self, port_id: &PortId) -> Result<()> {
-        let index_key = storage::capability_index_key();
-        let cap_index = self.get_and_inc_counter(&index_key)?;
         let port_key = storage::port_key(port_id);
-        self.write_ibc_data(&port_key, cap_index.to_be_bytes());
-        let cap_key = storage::capability_key(cap_index);
-        self.write_ibc_data(&cap_key, port_id.as_bytes());
+        match self.read_ibc_data(&port_key) {
+            Some(_) => {}
+            None => {
+                // create a new capability and claim it
+                let index_key = storage::capability_index_key();
+                let cap_index = self.get_and_inc_counter(&index_key)?;
+                self.write_ibc_data(&port_key, cap_index.to_be_bytes());
+                let cap_key = storage::capability_key(cap_index);
+                self.write_ibc_data(&cap_key, port_id.as_bytes());
+            }
+        }
         Ok(())
     }
 
