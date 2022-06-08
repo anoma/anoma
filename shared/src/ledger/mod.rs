@@ -1,5 +1,6 @@
 //! The ledger modules
 
+pub mod eth_bridge;
 pub mod gas;
 pub mod governance;
 pub mod ibc;

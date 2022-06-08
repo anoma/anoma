@@ -9,6 +9,7 @@ wasms := tx_memory_limit
 wasms += tx_mint_tokens
 wasms += tx_no_op
 wasms += tx_read_storage_key
+wasms += tx_write_storage_key
 wasms += vp_always_false
 wasms += vp_always_true
 wasms += vp_eval

@@ -57,6 +57,72 @@ pub mod main {
     }
 }
 
+/// A tx that attempts to write arbitrary data to the given key
+#[cfg(feature = "tx_write_storage_key")]
+pub mod main {
+    use anoma_vm_env::tx_prelude::*;
+
+    const TX_NAME: &str = "tx_write";
+
+    const ARBITRARY_VALUE: &str = "arbitrary value";
+
+    fn log(msg: &str) {
+        log_string(format!("[{}] {}", TX_NAME, msg))
+    }
+
+    fn fatal(msg: &str, err: impl std::error::Error) -> ! {
+        log(&format!("ERROR: {} - {:?}", msg, err));
+        panic!()
+    }
+
+    fn fatal_msg(msg: &str) -> ! {
+        log(msg);
+        panic!()
+    }
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed = match SignedTxData::try_from_slice(&tx_data[..]) {
+            Ok(signed) => {
+                log("got signed data");
+                signed
+            }
+            Err(error) => fatal("getting signed data", error),
+        };
+        let data = match signed.data {
+            Some(data) => {
+                log(&format!("got data ({} bytes)", data.len()));
+                data
+            }
+            None => {
+                fatal_msg("no data provided");
+            }
+        };
+        let key = match String::from_utf8(data) {
+            Ok(key) => {
+                log(&format!("parsed key from data: {}", key));
+                key
+            }
+            Err(error) => fatal("getting key", error),
+        };
+        let val: Option<Vec<u8>> = read(key.as_str());
+        match val {
+            Some(val) => {
+                let val = String::from_utf8(val).unwrap();
+                log(&format!("preexisting val is {}", val));
+            }
+            None => {
+                log("no preexisting val");
+            }
+        }
+        log(&format!(
+            "attempting to write new value {} to key {}",
+            ARBITRARY_VALUE, key
+        ));
+        write(key.as_str(), ARBITRARY_VALUE);
+    }
+}
+
 /// A tx that attempts to mint tokens in the transfer's target without debiting
 /// the tokens from the source. This tx is expected to be rejected by the
 /// token's VP.
