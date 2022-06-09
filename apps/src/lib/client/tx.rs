@@ -443,6 +443,20 @@ pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
     (diversifier, g_d)
 }
 
+/// Determine if using the current note would actually bring us closer to our
+/// target
+pub fn is_amount_required(src: Amount, dest: Amount, delta: Amount) -> bool {
+    if delta > Amount::zero() {
+        let gap = dest - src;
+        for (asset_type, value) in gap.components() {
+            if *value > 0 && delta[asset_type] > 0 {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// An extension of Option's cloned method for pair types
 fn clone_pair_option<T: Clone, U: Clone>(pr: Option<(&T, &U)>) -> Option<(T, U)> {
     pr.map(|(a, b)| (a.clone(), b.clone()))
@@ -456,6 +470,9 @@ pub enum PinnedBalanceError {
     /// The supplied viewing key does not recognize payments to given address
     InvalidViewingKey,
 }
+
+/// Represents the amount used of different conversions
+type Conversions = HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>;
 
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
@@ -818,8 +835,8 @@ impl ShieldedContext {
         &self,
         ledger_address: TendermintAddress,
         mut balance: Amount,
-        mut conversions: HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>,
-    ) -> (Amount, HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>) {
+        mut conversions: Conversions,
+    ) -> (Amount, Conversions) {
         // Establish connection with which to do exchange rate queries
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // Where we will store our exchanged value
@@ -861,7 +878,7 @@ impl ShieldedContext {
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
         target: Amount,
-    ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>) {
+    ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, Conversions) {
         let mut conversions = HashMap::new();
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
@@ -884,20 +901,9 @@ impl ShieldedContext {
                     pre_contr,
                     conversions.clone()
                 ).await;
-                // Determine if using the current note would actually bring us
-                // closer to our target
-                let mut required = false;
-                if contr > Amount::zero() {
-                    let gap = target.clone() - val_acc.clone();
-                    for (asset_type, value) in gap.components() {
-                        if *value > 0 && contr[asset_type] > 0 {
-                            required = true;
-                            break;
-                        }
-                    }
-                }
+                
                 // Use this note only if it brings us closer to our target
-                if required {
+                if is_amount_required(val_acc.clone(), target.clone(), contr.clone()) {
                     // Be sure to record the conversions used in computing
                     // accumulated value
                     val_acc += contr;
