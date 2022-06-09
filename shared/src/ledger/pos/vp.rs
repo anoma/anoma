@@ -60,6 +60,18 @@ where
     pub ctx: Ctx<'a, DB, H, CA>,
 }
 
+impl<'a, DB, H, CA> PosVP<'a, DB, H, CA>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    /// Instantiate a `PosVP`.
+    pub fn new(ctx: Ctx<'a, DB, H, CA>) -> Self {
+        Self { ctx }
+    }
+}
+
 // TODO this is temporarily to run PoS native VP in a new thread to avoid
 // crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The
 // RefCells contained within PosVP are not thread-safe, but each thread has its

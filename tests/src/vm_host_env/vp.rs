@@ -55,7 +55,7 @@ impl Default for TestVpEnv {
             storage: TestStorage::default(),
             write_log: WriteLog::default(),
             iterators: PrefixIterators::default(),
-            gas_meter: VpGasMeter::new(0),
+            gas_meter: VpGasMeter::default(),
             tx: Tx::new(vec![], None),
             keys_changed: BTreeSet::default(),
             verifiers: BTreeSet::default(),

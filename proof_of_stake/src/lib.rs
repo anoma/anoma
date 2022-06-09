@@ -12,7 +12,7 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
-mod btree_set;
+pub mod btree_set;
 pub mod epoched;
 pub mod parameters;
 pub mod types;
@@ -1825,7 +1825,7 @@ fn update_validator_set<Address, TokenChange>(
                         let popped =
                             validator_set.active.remove(&validator_pre);
                         debug_assert!(popped);
-                        validator_set.inactive.insert(validator_pre);
+                        validator_set.inactive.insert(validator_post);
                         if let Some(activate_max) = activate_max {
                             validator_set.active.insert(activate_max);
                         }

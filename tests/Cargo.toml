@@ -33,8 +33,14 @@ serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tempfile = "3.2.0"
+# temporarily using fork work-around
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
+derivative = "2.2.0"
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}
@@ -50,6 +56,8 @@ itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
 rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
+# A fork with state machine testing
+proptest = {git = "https://github.com/heliaxdev/proptest", branch = "tomas/sm"}
 
 # This is used to enable logging from tests
 [package.metadata.cargo-udeps.ignore]

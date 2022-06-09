@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc b6b9b879bcb06a57880aedebd51ac7aa34caf89e26d6ed7ac6052125310829ed # shrinks to (bond, balance) = (Amount { micro: 1844674407360857039 }, Amount { micro: 1862547810151928191 })
