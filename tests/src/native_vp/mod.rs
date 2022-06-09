@@ -1,14 +1,11 @@
 mod pos;
 
-use std::collections::BTreeSet;
-
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::Sha256Hasher;
 use anoma::vm::wasm::compilation_cache;
 use anoma::vm::wasm::compilation_cache::common::Cache;
 use anoma::vm::{wasm, WasmCacheRwAccess};
-use anoma_vm_env::tx_prelude::Address;
 use tempfile::TempDir;
 
 use crate::tx::TestTxEnv;
@@ -60,30 +57,13 @@ impl TestNativeVpEnv {
     where
         T: NativeVp,
     {
-        // // The address of the native VP we're testing
-        let self_addr = Address::Internal(<T as NativeVp>::ADDR);
-
         let tx_data = self.tx_env.tx.data.as_ref().cloned().unwrap_or_default();
         apply_tx(&tx_data);
 
         // Find the tx verifiers and keys_changes the same way as protocol would
-        let verifiers = self
-            .tx_env
-            .write_log
-            .verifiers_changed_keys(&self.tx_env.verifiers);
+        let verifiers = self.tx_env.get_verifiers();
 
-        let keys_changed = verifiers
-            .get(&self_addr)
-            .expect(
-                "The transaction didn't touch any keys of this native VP and \
-                 it isn't set as the verifier of the tx",
-            )
-            .clone();
-        let verifiers = verifiers
-            .iter()
-            .map(|(addr, _)| addr)
-            .cloned()
-            .collect::<BTreeSet<_>>();
+        let keys_changed = self.tx_env.all_touched_storage_keys();
 
         let ctx = Ctx {
             iterators: Default::default(),

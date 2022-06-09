@@ -81,7 +81,6 @@ pub async fn join_network(
         }
     }
     let base_dir_full = fs::canonicalize(&base_dir).await.unwrap();
-    let cwd = env::current_dir().unwrap();
     let chain_dir = base_dir_full.join(chain_id.as_str());
 
     let validator_alias_and_dir = pre_genesis_path
