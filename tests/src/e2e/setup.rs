@@ -692,6 +692,8 @@ pub mod constants {
     pub const VP_USER_WASM: &str = "wasm/vp_user.wasm";
     pub const TX_NO_OP_WASM: &str = "wasm_for_tests/tx_no_op.wasm";
     pub const TX_INIT_PROPOSAL: &str = "wasm_for_tests/tx_init_proposal.wasm";
+    pub const TX_WRITE_STORAGE_KEY_WASM: &str =
+        "wasm_for_tests/tx_write_storage_key.wasm";
     pub const VP_ALWAYS_TRUE_WASM: &str = "wasm_for_tests/vp_always_true.wasm";
     pub const VP_ALWAYS_FALSE_WASM: &str =
         "wasm_for_tests/vp_always_false.wasm";
