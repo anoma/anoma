@@ -39,9 +39,12 @@ pub mod vp {
                         _ => vp::read_pre(&key).unwrap_or_default(),
                     };
                     let post: Amount = match owner {
-                        Address::Internal(
-                            InternalAddress::IbcMint | InternalAddress::IbcBurn,
-                        ) => vp::read_temp(&key).unwrap_or_default(),
+                        Address::Internal(InternalAddress::IbcMint) => {
+                            vp::read_temp(&key).unwrap_or_else(Amount::max)
+                        }
+                        Address::Internal(InternalAddress::IbcBurn) => {
+                            vp::read_temp(&key).unwrap_or_default()
+                        }
                         _ => vp::read_post(&key).unwrap_or_default(),
                     };
                     let this_change = post.change() - pre.change();

@@ -145,6 +145,7 @@ pub fn read_temp(
         Some(&write_log::StorageModification::Temp { ref value }) => {
             Ok(Some(value.clone()))
         }
+        None => Ok(None),
         _ => Err(RuntimeError::ReadPermanentValueError),
     }
 }
