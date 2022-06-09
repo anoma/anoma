@@ -9,7 +9,7 @@ title = "Anoma - DOCS"
 [output.html]
 edit-url-template = "https://github.com/anoma/anoma/edit/master/docs/{path}"
 git-repository-url = "https://github.com/anoma/anoma"
-additional-css = ["assets/custom.css", "mdbook-admonish.css"]
+additional-css = ["assets/custom.css", "assets/mdbook-admonish.css"]
 additional-js = ["assets/mermaid.min.js", "assets/mermaid-init.js"]
 mathjax-support = true
 git-branch = "master"
@@ -29,3 +29,4 @@ renderer = ["html"]
 
 [preprocessor.admonish]
 command = "mdbook-admonish"
+assets_version = "1.0.0" # do not edit: managed by `mdbook-admonish install`
