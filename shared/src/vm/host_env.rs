@@ -1081,7 +1081,7 @@ where
     let gas_meter = unsafe { env.ctx.gas_meter.get() };
     vp_env::add_gas(gas_meter, gas)?;
 
-    tracing::debug!("vp_read_temp {}, key {}", key, key_ptr,);
+    tracing::debug!("vp_read_temp {}, key {}", key, key_ptr);
 
     // try to read from the write log
     let key =

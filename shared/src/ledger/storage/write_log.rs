@@ -326,6 +326,9 @@ impl WriteLog {
     /// accepted by all the triggered validity predicates. Starts a new
     /// transaction write log.
     pub fn commit_tx(&mut self) {
+        self.tx_write_log.retain(|_, v| {
+            !matches!(v, StorageModification::Temp { value: _ })
+        });
         let tx_write_log = std::mem::replace(
             &mut self.tx_write_log,
             HashMap::with_capacity(100),
@@ -352,11 +355,7 @@ impl WriteLog {
         H: StorageHasher,
     {
         let mut batch = Storage::<DB, H>::batch();
-        for (key, entry) in self
-            .block_write_log
-            .iter()
-            .filter(|(k, _)| k.is_updatable())
-        {
+        for (key, entry) in self.block_write_log.iter() {
             match entry {
                 StorageModification::Write { value } => {
                     storage

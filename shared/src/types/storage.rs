@@ -12,8 +12,7 @@ use thiserror::Error;
 #[cfg(feature = "ferveo-tpke")]
 use super::transaction::WrapperTx;
 use crate::bytes::ByteBuf;
-use crate::types::address::{self, Address, InternalAddress};
-use crate::types::token::BALANCE_STORAGE_KEY;
+use crate::types::address::{self, Address};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -265,17 +264,6 @@ impl Key {
             }
             _ => None,
         }
-    }
-
-    /// Check if the given key can be updated
-    pub fn is_updatable(&self) -> bool {
-        !matches!(&self.segments[..], [
-            DbKeySeg::AddressSeg(_),
-            DbKeySeg::StringSeg(key),
-            DbKeySeg::AddressSeg(Address::Internal(
-                InternalAddress::IbcBurn | InternalAddress::IbcMint)),
-        ] if key == BALANCE_STORAGE_KEY
-        )
     }
 
     /// Returns a key from the given DB key path that has the height and
