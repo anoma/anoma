@@ -1,0 +1,1 @@
+- Ledger: Fix IBC token VP ([#1040](https://github.com/anoma/anoma/issues/1040))
