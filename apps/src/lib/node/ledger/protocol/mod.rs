@@ -2,6 +2,7 @@
 use std::collections::BTreeSet;
 use std::panic;
 
+use anoma::ledger::eth_bridge::vp::EthBridge;
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter};
 use anoma::ledger::governance::GovernanceVp;
 use anoma::ledger::ibc::vp::{Ibc, IbcToken};
@@ -50,6 +51,8 @@ pub enum Error {
     GovernanceNativeVpError(anoma::ledger::governance::vp::Error),
     #[error("Treasury native VP error: {0}")]
     TreasuryNativeVpError(anoma::ledger::treasury::Error),
+    #[error("Ethereum bridge native VP error: {0}")]
+    EthBridgeNativeVpError(anoma::ledger::eth_bridge::vp::Error),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
 }
@@ -339,6 +342,14 @@ where
                                 .validate_tx(tx_data, &keys_changed, &verifiers)
                                 .map_err(Error::IbcTokenNativeVpError);
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::EthBridge => {
+                            let bridge = EthBridge { ctx };
+                            let result = bridge
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
+                                .map_err(Error::EthBridgeNativeVpError);
+                            gas_meter = bridge.ctx.gas_meter.into_inner();
                             result
                         }
                     };

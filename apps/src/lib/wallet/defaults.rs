@@ -1,6 +1,6 @@
 //! Default addresses and keys.
 
-use anoma::ledger::{governance, pos};
+use anoma::ledger::{eth_bridge, governance, pos};
 use anoma::types::address::Address;
 use anoma::types::key::*;
 #[cfg(feature = "dev")]
@@ -21,6 +21,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
         ("pos".into(), pos::ADDRESS),
         ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
         ("governance".into(), governance::vp::ADDRESS),
+        ("eth_bridge".into(), eth_bridge::vp::ADDRESS),
     ];
     // Genesis validators
     let validator_addresses =
