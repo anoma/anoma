@@ -1,4 +1,4 @@
-# network
+# Network
 
 ##  Libp2p : Peer To Peer network
 
@@ -13,7 +13,7 @@ encryption for us.
 
 Generates a client/server from protobuf file. This can be used for a rpc server.
 
-# network behaviour
+# Network behaviour
 
 ## Gossipsub
 
