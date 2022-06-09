@@ -1050,6 +1050,7 @@ fn proposal_submission() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -1401,6 +1402,7 @@ fn proposal_offline() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
