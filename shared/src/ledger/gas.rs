@@ -41,7 +41,7 @@ pub struct BlockGasMeter {
 }
 
 /// Gas metering in a validity predicate
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct VpGasMeter {
     /// The gas used in the transaction before the VP run
     initial_gas: u64,
