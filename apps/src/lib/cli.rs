@@ -2868,7 +2868,7 @@ pub mod args {
 
         fn def(app: App) -> App {
             app.arg(
-                ALIAS_OPT
+                ALIAS
                     .def()
                     .about("An alias associated with the address."),
             )
