@@ -580,8 +580,8 @@ impl ShieldedContext {
     pub async fn fetch(
         &mut self,
         ledger_address: &TendermintAddress,
-        sks: &Vec<ExtendedSpendingKey>,
-        fvks: &Vec<ViewingKey>,
+        sks: &[ExtendedSpendingKey],
+        fvks: &[ViewingKey],
     ) {
         // First determine which of the keys requested to be fetched are new.
         // Necessary because old transactions will need to be scanned for new
@@ -609,12 +609,12 @@ impl ShieldedContext {
             // Do this by constructing a shielding context only for unknown keys
             let mut tx_ctx = ShieldedContext::new(self.context_dir.clone());
             for vk in unknown_keys {
-                tx_ctx.vks.entry(vk).or_insert(HashSet::new());
+                tx_ctx.vks.entry(vk).or_insert_with(HashSet::new);
             }
             // Update this unknown shielded context until it is level with self
             while tx_ctx.last_txid != self.last_txid {
                 if let Some(tx) = tx_iter.next() {
-                    tx_ctx.scan_tx(&tx).expect("transaction scanned");
+                    tx_ctx.scan_tx(tx);
                 } else {
                     break;
                 }
@@ -632,7 +632,7 @@ impl ShieldedContext {
         // Now that we possess the unspent notes corresponding to both old and
         // new keys up until tx_pos, proceed to scan the new transactions.
         for tx in &mut tx_iter {
-            self.scan_tx(&tx).expect("transaction scanned");
+            self.scan_tx(tx);
         }
     }
 
@@ -651,9 +651,7 @@ impl ShieldedContext {
             println!("MASP parameter download complete, resuming execution...");
         }
         // Finally initialize a shielded context with the supplied directory
-        let mut ctx = Self::default();
-        ctx.context_dir = context_dir;
-        ctx
+        Self { context_dir, ..Default::default() }
     }
 
     /// Obtain a chronologically-ordered list of all accepted shielded
@@ -712,7 +710,7 @@ impl ShieldedContext {
     /// we have spent are updated. The witness map is maintained to make it
     /// easier to construct note merkle paths in other code. See
     /// https://zips.z.cash/protocol/protocol.pdf#scan
-    pub fn scan_tx(&mut self, tx: &Transaction) -> Result<(), ()> {
+    pub fn scan_tx(&mut self, tx: &Transaction) {
         // Listen for notes sent to our viewing keys
         for so in &(*tx).shielded_outputs {
             // Create merkle tree leaf node from note commitment
@@ -720,10 +718,10 @@ impl ShieldedContext {
             // Update each merkle tree in the witness map with the latest
             // addition
             for (_, witness) in self.witness_map.iter_mut() {
-                witness.append(node)?;
+                witness.append(node).expect("note commitment tree is full");
             }
             let note_pos = self.tree.size();
-            self.tree.append(node)?;
+            self.tree.append(node).expect("note commitment tree is full");
             // Finally, make it easier to construct merkle paths to this new
             // note
             let witness = IncrementalWitness::<Node>::from_tree(&self.tree);
@@ -750,7 +748,7 @@ impl ShieldedContext {
                     // The payment address' diversifier is required to spend
                     // note
                     self.div_map.insert(note_pos, *pa.diversifier());
-                    self.nf_map.insert(nf.0.try_into().unwrap(), note_pos);
+                    self.nf_map.insert(nf.0, note_pos);
                     break;
                 }
             }
@@ -765,7 +763,6 @@ impl ShieldedContext {
         }
         // To avoid state corruption caused by accidentaly replaying transaction
         self.last_txid = Some(tx.txid());
-        Ok(())
     }
 
     /// Compute the total unspent notes associated with the viewing key in the
@@ -785,7 +782,7 @@ impl ShieldedContext {
                     continue;
                 }
                 // Get note associated with this ID
-                let note = self.note_map.get(note_idx).unwrap().clone();
+                let note = self.note_map.get(note_idx).unwrap();
                 // Finally add value to multi-asset accumulator
                 val_acc += Amount::from(note.asset_type, note.value)
                     .expect("found note with invalid value or asset type");
@@ -857,7 +854,7 @@ impl ShieldedContext {
         while let Some((asset_type, value)) =
             clone_pair_option(balance.components().next())
         {
-            let comp = balance.project(asset_type.clone());
+            let comp = balance.project(asset_type);
             if let Some((conv, _wit, curr_value)) =
                 conversions.get_mut(&asset_type)
             {
@@ -867,7 +864,7 @@ impl ShieldedContext {
                 let conv: Amount = conv.clone().into();
                 // We assume here that conversion always contains extactly -1
                 // units of the queried asset type
-                balance += conv * value.clone();
+                balance += conv * value;
             } else if let Some((_addr, _epoch, conv, wit)) =
                 Self::query_allowed_conversion(client.clone(), &asset_type)
                     .await
@@ -879,7 +876,7 @@ impl ShieldedContext {
                 let conv: Amount = conv.into();
                 // We assume here that conversion always contains extactly -1
                 // units of the queried asset type
-                balance += conv * value.clone();
+                balance += conv * value;
             } else {
                 // Otherwise accumulate the amount as is
                 val_acc += comp.clone();
@@ -908,7 +905,7 @@ impl ShieldedContext {
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = self.vks.get(&vk) {
+        if let Some(avail_notes) = self.vks.get(vk) {
             for note_idx in avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
@@ -920,7 +917,7 @@ impl ShieldedContext {
                     continue;
                 }
                 // Get note, merkle path, diversifier associated with this ID
-                let note = self.note_map.get(note_idx).unwrap().clone();
+                let note = *self.note_map.get(note_idx).unwrap();
 
                 // The amount contributed by this note before conversion
                 let pre_contr = Amount::from(note.asset_type, note.value)
@@ -1067,11 +1064,11 @@ async fn gen_shielded_transfer(
     }
     // We want to fund our transaction solely from supplied spending key
     let spending_key = spending_key.map(|x| x.into());
-    let spending_keys = spending_key.clone().into_iter().collect();
+    let spending_keys: Vec<_> = spending_key.into_iter().collect();
     // Load the current shielded context given the spending key we possess
     let _ = ctx.shielded.load();
     ctx.shielded
-        .fetch(&args.tx.ledger_address, &spending_keys, &vec![])
+        .fetch(&args.tx.ledger_address, &spending_keys, &[])
         .await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
@@ -1101,7 +1098,6 @@ async fn gen_shielded_transfer(
         )
         .await;
         builder.set_fee(fee.clone())?;
-        let sk = sk.into();
         // If the gas is coming from the shielded pool, then our shielded inputs
         // must also cover the gas fee
         let required_amt = if shielded_gas { amount + fee } else { amount };
@@ -1117,7 +1113,7 @@ async fn gen_shielded_transfer(
         // Commit the notes found to our transaction
         for (diversifier, note, merkle_path) in unspent_notes {
             builder.add_sapling_spend(
-                sk.clone(),
+                sk,
                 diversifier,
                 note,
                 merkle_path,
@@ -1158,7 +1154,7 @@ async fn gen_shielded_transfer(
     // If there is a shielded output
     if let Some(pa) = payment_address {
         let ovk_opt =
-            spending_key.map(|x| ExtendedSpendingKey::from(x).expsk.ovk);
+            spending_key.map(|x| x.expsk.ovk);
         builder.add_sapling_output(
             ovk_opt,
             pa.into(),
@@ -1191,7 +1187,7 @@ async fn gen_shielded_transfer(
             &LocalTxProver::with_default_location()
                 .expect("unable to load MASP Parameters"),
         )
-        .map(|x| Some(x))
+        .map(Some)
 }
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
@@ -1598,6 +1594,7 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
 }
 
 /// Carries types that can be directly/indirectly used to sign a transaction.
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone)]
 enum TxSigningKey {
     // Do not sign any transaction
@@ -1628,8 +1625,7 @@ async fn tx_signer(
     // Now actually fetch the signing key and apply it
     match default {
         TxSigningKey::WalletKeypair(signing_key) => {
-            let signing_key = ctx.get_cached(&signing_key);
-            signing_key
+            ctx.get_cached(&signing_key)
         }
         TxSigningKey::WalletAddress(signer) => {
             let signer = ctx.get(&signer);

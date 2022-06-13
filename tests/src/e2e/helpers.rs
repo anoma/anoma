@@ -149,7 +149,7 @@ pub fn epoch_sleep(
         if Instant::now().duration_since(start) > loop_timeout {
             panic!("Timed out waiting for the next epoch");
         }
-        let epoch = get_epoch(&test, &ledger_address)?;
+        let epoch = get_epoch(test, ledger_address)?;
         if epoch > old_epoch {
             break Ok(epoch);
         } else {

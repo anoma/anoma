@@ -130,7 +130,7 @@ pub mod tx {
             // If storage key has been supplied, then pin this transaction to it
             if let Some(key) = key {
                 let pin_key = Key::from(masp_addr.to_db_key())
-                    .push(&(PIN_KEY_PREFIX.to_owned() + &key))
+                    .push(&(PIN_KEY_PREFIX.to_owned() + key))
                     .expect("Cannot obtain a storage key");
                 tx::write(
                     &pin_key.to_string(),

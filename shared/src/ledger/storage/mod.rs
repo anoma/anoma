@@ -715,7 +715,7 @@ where
         // Make the sub-Merkle trees in parallel
         let tree_parts: Vec<_> = conv_notes
             .par_chunks(notes_per_thread_rounded)
-            .map(|x| FrozenCommitmentTree::new(&x))
+            .map(FrozenCommitmentTree::new)
             .collect();
         // Convert conversion vector into tree so that Merkle paths can be
         // obtained

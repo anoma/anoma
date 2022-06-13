@@ -384,6 +384,7 @@ impl TransferTarget {
 }
 
 /// Represents the owner of arbitrary funds
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum BalanceOwner {
     /// A balance stored at a transparent address
@@ -421,6 +422,7 @@ impl BalanceOwner {
 }
 
 /// Represents any MASP value
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum MaspValue {
     /// A MASP PaymentAddress

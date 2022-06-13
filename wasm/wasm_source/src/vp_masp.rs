@@ -5,6 +5,7 @@ pub mod vp_masp {
     use anoma_vp_prelude::*;
     use masp_primitives::asset_type::AssetType;
     use masp_primitives::transaction::components::Amount;
+    use std::cmp::Ordering;
 
     /// Convert Anoma amount and token type to MASP equivalents
     fn convert_amount(
@@ -60,21 +61,23 @@ pub mod vp_masp {
             }
             if transfer.target != masp() {
                 // Non-masp destinations subtract from transparent tx pool
-                transparent_tx_pool -= transp_amt.clone();
+                transparent_tx_pool -= transp_amt;
             }
 
-            if !(transparent_tx_pool >= Amount::zero()) {
-                debug_log!(
-                    "Transparent transaction value pool must be nonnegative. \
-                     Violation may be caused by transaction being constructed \
-                     in previous epoch. Maybe try again."
-                );
-                // Section 3.4: The remaining value in the transparent
-                // transaction value pool MUST be nonnegative.
-                return false;
+            match transparent_tx_pool.partial_cmp(&Amount::zero()) {
+                None | Some(Ordering::Less) => {
+                    debug_log!(
+                        "Transparent transaction value pool must be nonnegative. \
+                         Violation may be caused by transaction being constructed \
+                         in previous epoch. Maybe try again."
+                    );
+                    // Section 3.4: The remaining value in the transparent
+                    // transaction value pool MUST be nonnegative.
+                    return false;
+                }, _ => {},
             }
         }
 
-        return true;
+        true
     }
 }

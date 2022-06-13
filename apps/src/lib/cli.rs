@@ -282,6 +282,7 @@ pub mod cmds {
         SubscribeTopic(SubscribeTopic),
     }
 
+    #[allow(clippy::large_enum_variant)]
     #[derive(Clone, Debug)]
     pub enum AnomaWallet {
         /// Key management commands
@@ -442,6 +443,7 @@ pub mod cmds {
         }
     }
 
+    #[allow(clippy::large_enum_variant)]
     #[derive(Clone, Debug)]
     pub enum WalletMasp {
         GenPayAddr(MaspGenPayAddr),

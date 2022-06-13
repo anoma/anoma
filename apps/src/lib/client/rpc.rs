@@ -218,7 +218,6 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
     } else {
         ctx.wallet
             .get_payment_addrs()
-            .clone()
             .into_values()
             .filter(PaymentAddress::is_pinned)
             .collect()
@@ -239,7 +238,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
             balance = ShieldedContext::compute_pinned_balance(
                 &args.query.ledger_address,
                 owner,
-                &vk,
+                vk,
             )
             .await;
             if balance != Err(PinnedBalanceError::InvalidViewingKey) {
@@ -278,7 +277,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
                 println!("Payment address {} has not yet been consumed.", owner)
             }
             (Ok((balance, epoch)), Some(token)) => {
-                let token = ctx.get(&token);
+                let token = ctx.get(token);
                 // Extract and print only the specified token from the total
                 let (_asset_type, balance) =
                     value_by_address(&balance, token.clone(), epoch);
@@ -404,19 +403,20 @@ pub async fn query_shielded_balance(
             .wallet
             .get_viewing_keys()
             .values()
-            .map(|x| x.clone())
+            .copied()
             .collect(),
     };
     // Build up the context that will be queried for balances
     let _ = ctx.shielded.load();
+    let fvks: Vec<_> = viewing_keys
+        .iter()
+        .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+        .collect();
     ctx.shielded
         .fetch(
             &args.query.ledger_address,
-            &vec![],
-            &viewing_keys
-                .iter()
-                .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
-                .collect(),
+            &[],
+            &fvks,
         )
         .await;
     // Save the update state so that future fetches can be short-circuited
