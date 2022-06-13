@@ -651,7 +651,10 @@ impl ShieldedContext {
             println!("MASP parameter download complete, resuming execution...");
         }
         // Finally initialize a shielded context with the supplied directory
-        Self { context_dir, ..Default::default() }
+        Self {
+            context_dir,
+            ..Default::default()
+        }
     }
 
     /// Obtain a chronologically-ordered list of all accepted shielded
@@ -721,7 +724,9 @@ impl ShieldedContext {
                 witness.append(node).expect("note commitment tree is full");
             }
             let note_pos = self.tree.size();
-            self.tree.append(node).expect("note commitment tree is full");
+            self.tree
+                .append(node)
+                .expect("note commitment tree is full");
             // Finally, make it easier to construct merkle paths to this new
             // note
             let witness = IncrementalWitness::<Node>::from_tree(&self.tree);
@@ -1112,12 +1117,7 @@ async fn gen_shielded_transfer(
             .await;
         // Commit the notes found to our transaction
         for (diversifier, note, merkle_path) in unspent_notes {
-            builder.add_sapling_spend(
-                sk,
-                diversifier,
-                note,
-                merkle_path,
-            )?;
+            builder.add_sapling_spend(sk, diversifier, note, merkle_path)?;
         }
         // Commit the conversion notes used during summation
         for (conv, wit, value) in used_convs.values() {
@@ -1153,8 +1153,7 @@ async fn gen_shielded_transfer(
     // Now handle the outputs of this transaction
     // If there is a shielded output
     if let Some(pa) = payment_address {
-        let ovk_opt =
-            spending_key.map(|x| x.expsk.ovk);
+        let ovk_opt = spending_key.map(|x| x.expsk.ovk);
         builder.add_sapling_output(
             ovk_opt,
             pa.into(),

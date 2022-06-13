@@ -138,8 +138,7 @@ impl Wallet {
         let password = Self::new_password_prompt(unsafe_dont_encrypt);
         let (alias, key) = self.store.gen_spending_key(alias, password);
         // Cache the newly added key
-        self.decrypted_spendkey_cache
-            .insert(alias.clone(), key);
+        self.decrypted_spendkey_cache.insert(alias.clone(), key);
         (alias.into(), key)
     }
 
@@ -164,9 +163,9 @@ impl Wallet {
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => Ok(Store::gen_validator_keys(
-                other.map(|res| res.unwrap()),
-            )),
+            other => {
+                Ok(Store::gen_validator_keys(other.map(|res| res.unwrap())))
+            }
         }
     }
 

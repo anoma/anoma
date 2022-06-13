@@ -137,7 +137,7 @@ mod tests {
         let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
             tx_host_env::token::transfer(
-                &source, address, &token, amount, &None,
+                &source, address, &token, amount, &None, &None,
             );
         });
 
@@ -248,7 +248,7 @@ mod tests {
         // Initialize VP environment from a transaction
         let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
         // Apply transfer in a transaction
-        tx_host_env::token::transfer(address, &target, &token, amount, &None);
+        tx_host_env::token::transfer(address, &target, &token, amount, &None, &None);
         });
 
         let tx_data: Vec<u8> = vec![];
@@ -279,7 +279,7 @@ mod tests {
         // Initialize VP environment from a transaction
         let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
         // Apply transfer in a transaction
-        tx_host_env::token::transfer(address, &target, &token, amount, &None);
+        tx_host_env::token::transfer(address, &target, &token, amount, &None, &None);
         });
 
         let tx_data: Vec<u8> = vec![];

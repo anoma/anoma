@@ -399,12 +399,7 @@ pub async fn query_shielded_balance(
     // provided, then convert to a viewing key first.
     let viewing_keys = match owner {
         Some(viewing_key) => vec![viewing_key],
-        None => ctx
-            .wallet
-            .get_viewing_keys()
-            .values()
-            .copied()
-            .collect(),
+        None => ctx.wallet.get_viewing_keys().values().copied().collect(),
     };
     // Build up the context that will be queried for balances
     let _ = ctx.shielded.load();
@@ -413,11 +408,7 @@ pub async fn query_shielded_balance(
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
     ctx.shielded
-        .fetch(
-            &args.query.ledger_address,
-            &[],
-            &fvks,
-        )
+        .fetch(&args.query.ledger_address, &[], &fvks)
         .await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
