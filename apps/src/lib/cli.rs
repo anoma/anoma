@@ -492,7 +492,8 @@ pub mod cmds {
         const CMD: &'static str = "find";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches.subcommand_matches(Self::CMD)
+            matches
+                .subcommand_matches(Self::CMD)
                 .map(|matches| Self(args::AddrKeyFind::parse(matches)))
         }
 
@@ -511,7 +512,8 @@ pub mod cmds {
         const CMD: &'static str = "list-keys";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches.subcommand_matches(Self::CMD)
+            matches
+                .subcommand_matches(Self::CMD)
                 .map(|matches| Self(args::SpendKeysList::parse(matches)))
         }
 
@@ -530,7 +532,8 @@ pub mod cmds {
         const CMD: &'static str = "list-addrs";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches.subcommand_matches(Self::CMD)
+            matches
+                .subcommand_matches(Self::CMD)
                 .map(|_matches| MaspListPayAddrs)
         }
 
@@ -555,9 +558,7 @@ pub mod cmds {
 
         fn def() -> App {
             App::new(Self::CMD)
-                .about(
-                    "Adds the given payment address or key to the wallet",
-                )
+                .about("Adds the given payment address or key to the wallet")
                 .add_args::<args::MaspAddrKeyAdd>()
         }
     }
@@ -576,7 +577,8 @@ pub mod cmds {
         }
 
         fn def() -> App {
-            App::new(Self::CMD).about("Generates a random spending key")
+            App::new(Self::CMD)
+                .about("Generates a random spending key")
                 .add_args::<args::MaspSpendKeyGen>()
         }
     }
@@ -602,7 +604,7 @@ pub mod cmds {
                 .add_args::<args::MaspPayAddrGen>()
         }
     }
-    
+
     #[derive(Clone, Debug)]
     pub enum WalletAddress {
         Gen(AddressGen),
@@ -1361,6 +1363,7 @@ pub mod args {
     use anoma::types::chain::{ChainId, ChainIdPrefix};
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::*;
+    use anoma::types::masp::MaspValue;
     use anoma::types::storage::Epoch;
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
@@ -1374,7 +1377,6 @@ pub mod args {
     use tendermint_config_abci::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
-    use anoma::types::masp::MaspValue;
 
     use super::context::*;
     use super::utils::*;
@@ -1630,8 +1632,10 @@ pub mod args {
                     "The source account address. The source's key may be used \
                      to produce the signature.",
                 ))
-                .arg(TRANSFER_TARGET.def().about("The target account address. \
-                     The target's key may be used to produce the signature."))
+                .arg(TRANSFER_TARGET.def().about(
+                    "The target account address. The target's key may be used \
+                     to produce the signature.",
+                ))
                 .arg(TOKEN.def().about("The transfer token."))
                 .arg(AMOUNT.def().about("The amount to transfer in decimal."))
         }
@@ -2519,21 +2523,28 @@ pub mod args {
             let alias = ALIAS.parse(matches);
             let value = MASP_VALUE.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
-            Self { alias, value, unsafe_dont_encrypt }
+            Self {
+                alias,
+                value,
+                unsafe_dont_encrypt,
+            }
         }
-        
+
         fn def(app: App) -> App {
             app.arg(
                 ALIAS
                     .def()
                     .about("An alias to be associated with the new entry."),
-            ).arg(MASP_VALUE.def().about(
-                "A spending key, viewing key, or payment address."
+            )
+            .arg(
+                MASP_VALUE
+                    .def()
+                    .about("A spending key, viewing key, or payment address."),
+            )
+            .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
+                 used in a live network.",
             ))
-                .arg(UNSAFE_DONT_ENCRYPT.def().about(
-                    "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
-                     used in a live network.",
-                ))
         }
     }
 
@@ -2550,18 +2561,22 @@ pub mod args {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
-            Self { alias, unsafe_dont_encrypt }
+            Self {
+                alias,
+                unsafe_dont_encrypt,
+            }
         }
+
         fn def(app: App) -> App {
             app.arg(
                 ALIAS
                     .def()
                     .about("An alias to be associated with the spending key."),
             )
-                .arg(UNSAFE_DONT_ENCRYPT.def().about(
-                    "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
-                     used in a live network.",
-                ))
+            .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                "UNSAFE: Do not encrypt the keypair. Do not use this for keys \
+                 used in a live network.",
+            ))
         }
     }
 
@@ -2590,18 +2605,15 @@ pub mod args {
 
         fn def(app: App) -> App {
             app.arg(
-                ALIAS
-                    .def()
-                    .about("An alias to be associated with the payment address."),
-            ).arg(
-                VIEWING_KEY.def().about(
-                    "The viewing key."
-                )
-            ).arg(
-                PIN.def().about(
-                    "Require that the single transaction to this address be pinned."
-                )
+                ALIAS.def().about(
+                    "An alias to be associated with the payment address.",
+                ),
             )
+            .arg(VIEWING_KEY.def().about("The viewing key."))
+            .arg(PIN.def().about(
+                "Require that the single transaction to this address be \
+                 pinned.",
+            ))
         }
     }
 
@@ -2704,11 +2716,7 @@ pub mod args {
         }
 
         fn def(app: App) -> App {
-            app.arg(
-                ALIAS
-                    .def()
-                    .about("The alias that is to be found.")
-            )
+            app.arg(ALIAS.def().about("The alias that is to be found."))
                 .arg(
                     UNSAFE_SHOW_SECRET
                         .def()

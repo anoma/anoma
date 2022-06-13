@@ -1,8 +1,8 @@
 //! Cryptographic keys for digital signatures support for the wallet.
 
 use std::fmt::Display;
-use std::str::FromStr;
 use std::marker::PhantomData;
+use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use orion::{aead, kdf};
@@ -16,7 +16,10 @@ const UNENCRYPTED_KEY_PREFIX: &str = "unencrypted:";
 
 /// A keypair stored in a wallet
 #[derive(Debug)]
-pub enum StoredKeypair<T: BorshSerialize + BorshDeserialize + Display + FromStr> where <T as FromStr>::Err: Display {
+pub enum StoredKeypair<T: BorshSerialize + BorshDeserialize + Display + FromStr>
+where
+    <T as FromStr>::Err: Display,
+{
     /// An encrypted keypair
     Encrypted(EncryptedKeypair<T>),
     /// An raw (unencrypted) keypair
@@ -26,7 +29,11 @@ pub enum StoredKeypair<T: BorshSerialize + BorshDeserialize + Display + FromStr>
     ),
 }
 
-impl<T: BorshSerialize + BorshDeserialize + Display + FromStr> Serialize for StoredKeypair<T> where <T as FromStr>::Err: Display {
+impl<T: BorshSerialize + BorshDeserialize + Display + FromStr> Serialize
+    for StoredKeypair<T>
+where
+    <T as FromStr>::Err: Display,
+{
     fn serialize<S>(
         &self,
         serializer: S,
@@ -50,7 +57,11 @@ impl<T: BorshSerialize + BorshDeserialize + Display + FromStr> Serialize for Sto
     }
 }
 
-impl<'de, T: BorshSerialize + BorshDeserialize + Display + FromStr> Deserialize<'de> for StoredKeypair<T> where <T as FromStr>::Err: Display {
+impl<'de, T: BorshSerialize + BorshDeserialize + Display + FromStr>
+    Deserialize<'de> for StoredKeypair<T>
+where
+    <T as FromStr>::Err: Display,
+{
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -103,7 +114,10 @@ pub enum DeserializeStoredKeypairError {
 
 /// An encrypted keypair stored in a wallet
 #[derive(Debug)]
-pub struct EncryptedKeypair<T: BorshSerialize + BorshDeserialize>(Vec<u8>, PhantomData<T>);
+pub struct EncryptedKeypair<T: BorshSerialize + BorshDeserialize>(
+    Vec<u8>,
+    PhantomData<T>,
+);
 
 impl<T: BorshSerialize + BorshDeserialize> Display for EncryptedKeypair<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -132,33 +146,27 @@ pub enum DecryptionError {
     NotDecrypting,
 }
 
-impl<T: BorshSerialize + BorshDeserialize + Display + FromStr + Clone> StoredKeypair<T> where <T as FromStr>::Err: Display {
+impl<T: BorshSerialize + BorshDeserialize + Display + FromStr + Clone>
+    StoredKeypair<T>
+where
+    <T as FromStr>::Err: Display,
+{
     /// Construct a keypair for storage. If no password is provided, the keypair
     /// will be stored raw without encryption. Returns the key for storing and a
     /// reference-counting point to the raw key.
-    pub fn new(
-        keypair: T,
-        password: Option<String>,
-    ) -> (Self, T) {
+    pub fn new(keypair: T, password: Option<String>) -> (Self, T) {
         match password {
-            Some(password) => {
-                (
-                    Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
-                    keypair,
-                )
-            }
-            None => {
-                (Self::Raw(keypair.clone()), keypair)
-            }
+            Some(password) => (
+                Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
+                keypair,
+            ),
+            None => (Self::Raw(keypair.clone()), keypair),
         }
     }
 
     /// Get a raw keypair from a stored keypair. If the keypair is encrypted, a
     /// password will be prompted from stdin.
-    pub fn get(
-        &self,
-        decrypt: bool,
-    ) -> Result<T, DecryptionError> {
+    pub fn get(&self, decrypt: bool) -> Result<T, DecryptionError> {
         match self {
             StoredKeypair::Encrypted(encrypted_keypair) => {
                 if decrypt {
@@ -200,10 +208,7 @@ impl<T: BorshSerialize + BorshDeserialize> EncryptedKeypair<T> {
     }
 
     /// Decrypt an encrypted keypair
-    pub fn decrypt(
-        &self,
-        password: String,
-    ) -> Result<T, DecryptionError> {
+    pub fn decrypt(&self, password: String) -> Result<T, DecryptionError> {
         let salt_len = encryption_salt().len();
         let (raw_salt, cipher) = self.0.split_at(salt_len);
 

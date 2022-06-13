@@ -1,14 +1,16 @@
 //! MASP types
 
 use std::fmt::Display;
-use std::str::FromStr;
 use std::io::{Error, ErrorKind};
+use std::str::FromStr;
 
-use sha2::{Sha256, Digest};
 use bech32::{FromBase32, ToBase32};
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
+use sha2::{Digest, Sha256};
 
-use crate::types::address::{Address, DecodeError, BECH32M_VARIANT, HASH_LEN, masp};
+use crate::types::address::{
+    masp, Address, DecodeError, BECH32M_VARIANT, HASH_LEN,
+};
 
 /// human-readable part of Bech32m encoded address
 // TODO use "a" for live network
@@ -24,7 +26,8 @@ pub struct ExtendedViewingKey(masp_primitives::zip32::ExtendedFullViewingKey);
 impl Display for ExtendedViewingKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut bytes = [0; 169];
-        self.0.write(&mut bytes[..])
+        self.0
+            .write(&mut bytes[..])
             .expect("should be able to serialize an ExtendedFullViewingKey");
         let encoded = bech32::encode(
             EXT_FULL_VIEWING_KEY_HRP,
@@ -65,13 +68,17 @@ impl FromStr for ExtendedViewingKey {
     }
 }
 
-impl From<ExtendedViewingKey> for masp_primitives::zip32::ExtendedFullViewingKey {
+impl From<ExtendedViewingKey>
+    for masp_primitives::zip32::ExtendedFullViewingKey
+{
     fn from(key: ExtendedViewingKey) -> Self {
         key.0
     }
 }
 
-impl From<masp_primitives::zip32::ExtendedFullViewingKey> for ExtendedViewingKey {
+impl From<masp_primitives::zip32::ExtendedFullViewingKey>
+    for ExtendedViewingKey
+{
     fn from(key: masp_primitives::zip32::ExtendedFullViewingKey) -> Self {
         Self(key)
     }
@@ -110,22 +117,21 @@ impl PaymentAddress {
     pub fn pinned(self, pin: bool) -> PaymentAddress {
         PaymentAddress(self.0, pin)
     }
+
     /// Determine whether this PaymentAddress is pinned
     pub fn is_pinned(&self) -> bool {
         self.1
     }
+
     /// Hash this payment address
     pub fn hash(&self) -> String {
-        let bytes =
-            (self.0, self.1).try_to_vec().expect("Payment address encoding shouldn't fail");
+        let bytes = (self.0, self.1)
+            .try_to_vec()
+            .expect("Payment address encoding shouldn't fail");
         let mut hasher = Sha256::new();
         hasher.update(bytes);
         // hex of the first 40 chars of the hash
-        format!(
-            "{:.width$X}",
-            hasher.finalize(),
-            width = HASH_LEN
-        )
+        format!("{:.width$X}", hasher.finalize(), width = HASH_LEN)
     }
 }
 
@@ -149,17 +155,13 @@ impl Display for PaymentAddress {
         } else {
             PAYMENT_ADDRESS_HRP
         };
-        let encoded = bech32::encode(
-            hrp,
-            bytes.to_base32(),
-            BECH32M_VARIANT,
-        )
-        .unwrap_or_else(|_| {
-            panic!(
-                "The human-readable part {} should never cause a failure",
-                PAYMENT_ADDRESS_HRP
-            )
-        });
+        let encoded = bech32::encode(hrp, bytes.to_base32(), BECH32M_VARIANT)
+            .unwrap_or_else(|_| {
+                panic!(
+                    "The human-readable part {} should never cause a failure",
+                    PAYMENT_ADDRESS_HRP
+                )
+            });
         write!(f, "{encoded}")
     }
 }
@@ -184,17 +186,25 @@ impl FromStr for PaymentAddress {
             BECH32M_VARIANT => {}
             _ => return Err(DecodeError::UnexpectedBech32Variant(variant)),
         }
-        let addr_len_err = |_| DecodeError::InvalidInnerEncoding(
-            Error::new(ErrorKind::InvalidData, "expected 43 bytes for the payment address")
-        );
-        let addr_data_err = || DecodeError::InvalidInnerEncoding(
-            Error::new(ErrorKind::InvalidData, "invalid payment address provided")
-        );
+        let addr_len_err = |_| {
+            DecodeError::InvalidInnerEncoding(Error::new(
+                ErrorKind::InvalidData,
+                "expected 43 bytes for the payment address",
+            ))
+        };
+        let addr_data_err = || {
+            DecodeError::InvalidInnerEncoding(Error::new(
+                ErrorKind::InvalidData,
+                "invalid payment address provided",
+            ))
+        };
         let bytes: Vec<u8> = FromBase32::from_base32(&base32)
             .map_err(DecodeError::DecodeBase32)?;
         masp_primitives::primitives::PaymentAddress::from_bytes(
-            &bytes.try_into().map_err(addr_len_err)?
-        ).ok_or_else(addr_data_err).map(|x| Self(x, pinned))
+            &bytes.try_into().map_err(addr_len_err)?,
+        )
+        .ok_or_else(addr_data_err)
+        .map(|x| Self(x, pinned))
     }
 }
 
@@ -229,7 +239,8 @@ pub struct ExtendedSpendingKey(masp_primitives::zip32::ExtendedSpendingKey);
 impl Display for ExtendedSpendingKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut bytes = [0; 169];
-        self.0.write(&mut &mut bytes[..])
+        self.0
+            .write(&mut &mut bytes[..])
             .expect("should be able to serialize an ExtendedSpendingKey");
         let encoded = bech32::encode(
             EXT_SPENDING_KEY_HRP,
@@ -325,6 +336,7 @@ impl TransferSource {
             Self::ExtendedSpendingKey(_) => masp(),
         }
     }
+
     /// Get the contained ExtendedSpendingKey contained, if any
     pub fn spending_key(&self) -> Option<ExtendedSpendingKey> {
         match self {
@@ -353,6 +365,7 @@ impl TransferTarget {
             Self::PaymentAddress(_) => masp(),
         }
     }
+
     /// Get the contained PaymentAddress, if any
     pub fn payment_address(&self) -> Option<PaymentAddress> {
         match self {
@@ -360,6 +373,7 @@ impl TransferTarget {
             _ => None,
         }
     }
+
     /// Get the contained Address, if any
     pub fn address(&self) -> Option<Address> {
         match self {
@@ -419,14 +433,17 @@ pub enum MaspValue {
 
 impl FromStr for MaspValue {
     type Err = DecodeError;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Try to decode this value first as a PaymentAddress, then as an
         // ExtendedSpendingKey, then as FullViewingKey
-        PaymentAddress::from_str(s).map(Self::PaymentAddress)
-            .or_else(|_err| ExtendedSpendingKey::from_str(s)
-                     .map(Self::ExtendedSpendingKey))
-            .or_else(|_err| ExtendedViewingKey::from_str(s)
-                     .map(Self::FullViewingKey))
+        PaymentAddress::from_str(s)
+            .map(Self::PaymentAddress)
+            .or_else(|_err| {
+                ExtendedSpendingKey::from_str(s).map(Self::ExtendedSpendingKey)
+            })
+            .or_else(|_err| {
+                ExtendedViewingKey::from_str(s).map(Self::FullViewingKey)
+            })
     }
 }

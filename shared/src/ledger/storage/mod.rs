@@ -7,7 +7,19 @@ pub mod types;
 pub mod write_log;
 
 use core::fmt::Debug;
+use std::collections::HashMap;
 
+use borsh::{BorshDeserialize, BorshSerialize};
+use ff::PrimeField;
+use masp_primitives::asset_type::AssetType;
+use masp_primitives::convert::AllowedConversion;
+use masp_primitives::merkle_tree::FrozenCommitmentTree;
+use masp_primitives::sapling::Node;
+use masp_primitives::transaction::components::Amount;
+use rayon::iter::{
+    IndexedParallelIterator, IntoParallelIterator, ParallelIterator,
+};
+use rayon::prelude::ParallelSlice;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -28,7 +40,9 @@ pub use crate::ledger::storage::merkle_tree::{
     MerkleTree, MerkleTreeStoresRead, MerkleTreeStoresWrite, Sha256Hasher,
     StorageHasher, StoreType,
 };
-use crate::types::address::{Address, EstablishedAddressGen, InternalAddress};
+use crate::types::address::{
+    Address, EstablishedAddressGen, InternalAddress, *,
+};
 use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
@@ -36,19 +50,6 @@ use crate::types::storage::{
     BlockHash, BlockHeight, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
-use borsh::{BorshSerialize, BorshDeserialize};
-use masp_primitives::asset_type::AssetType;
-use masp_primitives::transaction::components::Amount;
-use std::collections::HashMap;
-use crate::types::address::*;
-use masp_primitives::sapling::Node;
-use ff::PrimeField;
-use masp_primitives::convert::AllowedConversion;
-use masp_primitives::merkle_tree::FrozenCommitmentTree;
-use rayon::prelude::ParallelSlice;
-use rayon::iter::ParallelIterator;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::IndexedParallelIterator;
 use crate::types::token;
 
 /// A result of a function that may fail
@@ -59,7 +60,7 @@ pub struct ConversionState {
     /// The tree currently containing all the conversions
     pub tree: FrozenCommitmentTree<Node>,
     /// Map assets to their latest conversion and position in Merkle tree
-    pub assets: HashMap::<AssetType, (Address, Epoch, AllowedConversion, usize)>,
+    pub assets: HashMap<AssetType, (Address, Epoch, AllowedConversion, usize)>,
 }
 
 /// The storage data
@@ -332,16 +333,18 @@ where
                 // The derived conversions will be placed in MASP address space
                 let masp_addr = masp();
                 let key_prefix: Key = masp_addr.to_db_key().into();
-                // Load up the conversions currently being given as query results
+                // Load up the conversions currently being given as query
+                // results
                 let state_key = key_prefix
                     .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
                     .map_err(Error::KeyError)?;
-                self.conversion_state =
-                    types::decode(self.read(&state_key)
-                                  .expect("unable to read conversion state")
-                                  .0
-                                  .expect("unable to find conversion state"))
-                    .expect("unable to decode conversion state")
+                self.conversion_state = types::decode(
+                    self.read(&state_key)
+                        .expect("unable to read conversion state")
+                        .0
+                        .expect("unable to find conversion state"),
+                )
+                .expect("unable to decode conversion state")
             }
             #[cfg(feature = "ferveo-tpke")]
             {
@@ -617,8 +620,8 @@ where
             if let Ok((Some(addr_balance), _)) = token_key {
                 // The reward for each unit of the current asset is a constant
                 // amount of the reward token.
-                let addr_bal: token::Amount = types::decode(addr_balance)
-                    .expect("invalid balance");
+                let addr_bal: token::Amount =
+                    types::decode(addr_balance).expect("invalid balance");
                 total_reward += addr_bal * *reward as u64;
             }
             // Construct MASP asset type with latest timestamp for this token
@@ -637,15 +640,22 @@ where
                 .expect("unable to derive asset identifier");
             // The -1 allows each instance of the old asset to be cancelled
             // out/replaced with the new asset
-            current_convs.insert(addr.clone(), (
-                Amount::from(old_asset, -1).unwrap() +
-                    Amount::from(new_asset, 1).unwrap() +
-                    Amount::from(reward_asset, *reward).unwrap()
-            ).into());
+            current_convs.insert(
+                addr.clone(),
+                (Amount::from(old_asset, -1).unwrap()
+                    + Amount::from(new_asset, 1).unwrap()
+                    + Amount::from(reward_asset, *reward).unwrap())
+                .into(),
+            );
             // Add a conversion from the previous asset type
             self.conversion_state.assets.insert(
                 old_asset,
-                (addr.clone(), self.last_epoch.prev(), Amount::zero().into(), 0)
+                (
+                    addr.clone(),
+                    self.last_epoch.prev(),
+                    Amount::zero().into(),
+                    0,
+                ),
             );
         }
 
@@ -653,7 +663,12 @@ where
         // multiple cores
         let num_threads = rayon::current_num_threads();
         // Put assets into vector to enable computation batching
-        let assets: Vec<_> = self.conversion_state.assets.values_mut().enumerate().collect();
+        let assets: Vec<_> = self
+            .conversion_state
+            .assets
+            .values_mut()
+            .enumerate()
+            .collect();
         // ceil(assets.len() / num_threads)
         let notes_per_thread_max = (assets.len() - 1) / num_threads + 1;
         // floor(assets.len() / num_threads)
@@ -671,15 +686,16 @@ where
                 // The merkle tree need only provide the conversion commitment,
                 // the remaining information is provided through the storage API
                 Node::new(conv.cmu().to_repr())
-            }).collect();
+            })
+            .collect();
 
         // Update the MASP's transparent reward token balance to ensure that it
         // is sufficiently backed to redeem rewards
         let reward_key = token::balance_key(&xan(), &masp_addr);
         if let Ok((Some(addr_bal), _)) = self.read(&reward_key) {
             // If there is already a balance, then add to it
-            let addr_bal: token::Amount = types::decode(addr_bal)
-                .expect("invalid balance");
+            let addr_bal: token::Amount =
+                types::decode(addr_bal).expect("invalid balance");
             let new_bal = types::encode(&(addr_bal + total_reward));
             self.write(&reward_key, new_bal)
                 .expect("unable to update MASP transparent balance");
@@ -693,15 +709,16 @@ where
         // across multiple cores
         // Merkle trees must have exactly 2^n leaves to be mergeable
         let mut notes_per_thread_rounded = 1;
-        while notes_per_thread_max > notes_per_thread_rounded*4 {
+        while notes_per_thread_max > notes_per_thread_rounded * 4 {
             notes_per_thread_rounded *= 2;
         }
         // Make the sub-Merkle trees in parallel
-        let tree_parts: Vec::<_> = conv_notes
+        let tree_parts: Vec<_> = conv_notes
             .par_chunks(notes_per_thread_rounded)
             .map(|x| FrozenCommitmentTree::new(&x))
             .collect();
-        // Convert conversion vector into tree so that Merkle paths can be obtained
+        // Convert conversion vector into tree so that Merkle paths can be
+        // obtained
         self.conversion_state.tree = FrozenCommitmentTree::merge(&tree_parts);
 
         // Load up the conversions currently being given as query results
@@ -726,7 +743,7 @@ where
         self.block
             .tree
             .update(&key, types::encode(&self.next_epoch_min_start_height))?;
-        
+
         let key = key_prefix
             .push(&"epoch_start_time".to_string())
             .map_err(Error::KeyError)?;

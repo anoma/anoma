@@ -1,15 +1,21 @@
 use std::borrow::Cow;
+use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
-use std::fs::File;
-use std::fs::OpenOptions;
+use std::fmt::Debug;
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::PathBuf;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
-use crate::cli::context::WalletKeypair;
 use anoma::proto::Tx;
-use anoma::types::address::{Address, btc, masp_tx_key};
+use anoma::types::address::{btc, masp, masp_tx_key, Address};
 use anoma::types::key::*;
+use anoma::types::masp::{PaymentAddress, TransferTarget};
 use anoma::types::nft::{self, Nft, NftToken};
-use anoma::types::storage::Epoch;
+use anoma::types::storage::{Epoch, Key, KeySeg};
+use anoma::types::token::{
+    CONVERSION_KEY_PREFIX, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
+};
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
     hash_tx, pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
@@ -17,10 +23,30 @@ use anoma::types::transaction::{
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
+use ff::PrimeField;
+use group::cofactor::CofactorGroup;
 use itertools::Either::*;
 use jsonpath_lib as jsonpath;
+use masp_primitives::asset_type::AssetType;
+use masp_primitives::consensus::{BranchId, TestNetwork};
+use masp_primitives::convert::AllowedConversion;
+use masp_primitives::keys::FullViewingKey;
+use masp_primitives::legacy::TransparentAddress;
+use masp_primitives::merkle_tree::{
+    CommitmentTree, IncrementalWitness, MerklePath,
+};
+use masp_primitives::note_encryption::*;
+use masp_primitives::primitives::{Diversifier, Note, ViewingKey};
+use masp_primitives::sapling::Node;
+use masp_primitives::transaction::builder::{self, *};
+use masp_primitives::transaction::components::{Amount, OutPoint, TxOut};
+use masp_primitives::transaction::{Transaction, TxId};
+use masp_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
+use masp_proofs::prover::LocalTxProver;
+use rand_core::{CryptoRng, OsRng, RngCore};
 use serde::Serialize;
+use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
@@ -37,59 +63,17 @@ use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
-use masp_primitives::transaction::Transaction;
-use masp_primitives::primitives::Note;
-use masp_primitives::consensus::TestNetwork;
-use masp_primitives::consensus::BranchId;
-use std::collections::HashSet;
-use masp_primitives::note_encryption::*;
-use masp_primitives::primitives::ViewingKey;
-use std::collections::HashMap;
-use masp_primitives::transaction::components::Amount;
-use masp_primitives::transaction::builder::{self, *};
-use rand_core::CryptoRng;
-use rand_core::RngCore;
-use masp_primitives::merkle_tree::CommitmentTree;
-use masp_primitives::sapling::Node;
-use ff::PrimeField;
-use masp_primitives::merkle_tree::IncrementalWitness;
-use masp_primitives::zip32::ExtendedSpendingKey;
-use masp_primitives::primitives::Diversifier;
-use rand_core::OsRng;
-use std::fmt::Debug;
-use masp_primitives::legacy::TransparentAddress;
-use masp_primitives::transaction::components::OutPoint;
-use masp_primitives::transaction::components::TxOut;
-use masp_proofs::prover::LocalTxProver;
-use sha2::Digest;
-use group::cofactor::CofactorGroup;
-use masp_primitives::zip32::ExtendedFullViewingKey;
-use masp_primitives::asset_type::AssetType;
-use masp_primitives::keys::FullViewingKey;
-use masp_primitives::merkle_tree::MerklePath;
 
 use super::{rpc, signing};
-use crate::cli::context::WalletAddress;
+use crate::cli::context::{WalletAddress, WalletKeypair};
 use crate::cli::{args, safe_exit, Context};
+use crate::client::rpc::{query_epoch, query_storage_value};
 use crate::client::tendermint_websocket_client::{
     Error, TendermintWebsocketClient, WebSocketAddress,
 };
 #[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
-use masp_primitives::transaction::TxId;
-use anoma::types::token::{HEAD_TX_KEY, TX_KEY_PREFIX};
-use anoma::types::storage::Key;
-use crate::client::rpc::query_storage_value;
-use anoma::types::storage::KeySeg;
-use anoma::types::address::masp;
-use std::path::PathBuf;
-use std::io::{Read, Write};
-use crate::client::rpc::query_epoch;
-use anoma::types::token::{PIN_KEY_PREFIX, CONVERSION_KEY_PREFIX};
-use masp_primitives::convert::AllowedConversion;
-use anoma::types::masp::TransferTarget;
-use anoma::types::masp::PaymentAddress;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -124,7 +108,8 @@ pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
         std::fs::read(data_path).expect("Expected a file at given data path")
     });
     let tx = Tx::new(tx_code, data);
-    let (ctx, initialized_accounts) = process_tx(ctx, &args.tx, tx, TxSigningKey::None).await;
+    let (ctx, initialized_accounts) =
+        process_tx(ctx, &args.tx, tx, TxSigningKey::None).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -205,7 +190,8 @@ pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, initialized_accounts) =
-        process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(args.source)).await;
+        process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(args.source))
+            .await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -313,7 +299,8 @@ pub async fn submit_init_validator(
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
     let tx = Tx::new(tx_code, Some(data));
     let (mut ctx, initialized_accounts) =
-        process_tx(ctx, &tx_args, tx, TxSigningKey::WalletAddress(source)).await;
+        process_tx(ctx, &tx_args, tx, TxSigningKey::WalletAddress(source))
+            .await;
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -426,7 +413,7 @@ pub fn to_viewing_key(esk: &ExtendedSpendingKey) -> FullViewingKey {
 /// Generate a valid diversifier, i.e. one that has a diversified base. Return
 /// also this diversified base.
 pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
-    rng: &mut R
+    rng: &mut R,
 ) -> (Diversifier, jubjub::SubgroupPoint) {
     let mut diversifier;
     let g_d;
@@ -458,7 +445,9 @@ pub fn is_amount_required(src: Amount, dest: Amount, delta: Amount) -> bool {
 }
 
 /// An extension of Option's cloned method for pair types
-fn clone_pair_option<T: Clone, U: Clone>(pr: Option<(&T, &U)>) -> Option<(T, U)> {
+fn clone_pair_option<T: Clone, U: Clone>(
+    pr: Option<(&T, &U)>,
+) -> Option<(T, U)> {
     pr.map(|(a, b)| (a.clone(), b.clone()))
 }
 
@@ -472,7 +461,8 @@ pub enum PinnedBalanceError {
 }
 
 /// Represents the amount used of different conversions
-type Conversions = HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>;
+type Conversions =
+    HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>;
 
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
@@ -550,11 +540,13 @@ impl ShieldedContext {
             // progress. In this case, immediately fail. This is unproblematic
             // because the data intended to be stored can always be re-fetched
             // from the blockchain.
-            let mut ctx_file = OpenOptions::new().write(true)
+            let mut ctx_file = OpenOptions::new()
+                .write(true)
                 .create_new(true)
                 .open(tmp_path.clone())?;
             let mut bytes = Vec::new();
-            self.serialize(&mut bytes).expect("cannot serialize shielded context");
+            self.serialize(&mut bytes)
+                .expect("cannot serialize shielded context");
             ctx_file.write_all(&bytes[..])?;
         }
         // Atomically update the old shielded context file with new data.
@@ -582,7 +574,7 @@ impl ShieldedContext {
         self.witness_map.extend(new_ctx.witness_map);
         self.spents.extend(new_ctx.spents);
     }
-    
+
     /// Fetch the current state of the multi-asset shielded pool into a
     /// ShieldedContext
     pub async fn fetch(
@@ -607,8 +599,8 @@ impl ShieldedContext {
             }
         }
 
-        // If unknown keys are being used, we need to scan older transactions for
-        // any unspent notes
+        // If unknown keys are being used, we need to scan older transactions
+        // for any unspent notes
         let (txs, mut tx_iter);
         if !unknown_keys.is_empty() {
             // Load all transactions accepted until this point
@@ -623,14 +615,18 @@ impl ShieldedContext {
             while tx_ctx.last_txid != self.last_txid {
                 if let Some(tx) = tx_iter.next() {
                     tx_ctx.scan_tx(&tx).expect("transaction scanned");
-                } else { break; }
+                } else {
+                    break;
+                }
             }
             // Merge the context data originating from the unknown keys into the
             // current context
             self.merge(tx_ctx);
         } else {
             // Load only transactions accepted from last_txid until this point
-            txs = Self::fetch_shielded_transfers(ledger_address, self.last_txid).await;
+            txs =
+                Self::fetch_shielded_transfers(ledger_address, self.last_txid)
+                    .await;
             tx_iter = txs.iter();
         }
         // Now that we possess the unspent notes corresponding to both old and
@@ -639,9 +635,9 @@ impl ShieldedContext {
             self.scan_tx(&tx).expect("transaction scanned");
         }
     }
-    
+
     /// Initialize a shielded transaction context that identifies notes
-    /// decryptable by any viewing key in the given set 
+    /// decryptable by any viewing key in the given set
     pub fn new(context_dir: PathBuf) -> ShieldedContext {
         // Make sure that MASP parameters are downloaded to enable MASP
         // transaction building and verification later on
@@ -661,11 +657,11 @@ impl ShieldedContext {
     }
 
     /// Obtain a chronologically-ordered list of all accepted shielded
-    /// transactions from the ledger. The ledger conceptually stores transactions
-    /// as a linked list. More concretely, the HEAD_TX_KEY location stores the
-    /// txid of the last accepted transaction, each transaction stores the txid
-    /// of the previous transaction, and each transaction is stored at a key
-    /// whose name is derived from its txid.
+    /// transactions from the ledger. The ledger conceptually stores
+    /// transactions as a linked list. More concretely, the HEAD_TX_KEY
+    /// location stores the txid of the last accepted transaction, each
+    /// transaction stores the txid of the previous transaction, and each
+    /// transaction is stored at a key whose name is derived from its txid.
     pub async fn fetch_shielded_transfers(
         ledger_address: &TendermintAddress,
         last_txid: Option<TxId>,
@@ -678,25 +674,27 @@ impl ShieldedContext {
             .push(&HEAD_TX_KEY.to_owned())
             .expect("Cannot obtain a storage key");
         // Query for the ID of the last accepted transaction
-        let mut head_txid_opt = query_storage_value::<TxId>(
-            client.clone(),
-            head_tx_key,
-        )
-            .await;
+        let mut head_txid_opt =
+            query_storage_value::<TxId>(client.clone(), head_tx_key).await;
         let mut shielded_txs = Vec::new();
         // While there are still more transactions in the linked list
         while let Some(head_txid) = head_txid_opt {
             // Stop at the given Tx ID exclusive
-            if head_txid_opt == last_txid { break; }
+            if head_txid_opt == last_txid {
+                break;
+            }
             // Construct the key for where the current transaction is stored
             let current_tx_key = Key::from(masp_addr.to_db_key())
                 .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
                 .expect("Cannot obtain a storage key");
             // Obtain the current transaction and a pointer to the next
-            let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
-                client.clone(),
-                current_tx_key,
-            ).await.unwrap();
+            let (current_tx, next_txid) =
+                query_storage_value::<(Transaction, Option<TxId>)>(
+                    client.clone(),
+                    current_tx_key,
+                )
+                .await
+                .unwrap();
             // Collect the current transaction
             shielded_txs.push(current_tx);
             head_txid_opt = next_txid;
@@ -705,7 +703,7 @@ impl ShieldedContext {
         shielded_txs.reverse();
         shielded_txs
     }
-    
+
     /// Applies the given transaction to the supplied context. More precisely,
     /// the shielded transaction's outputs are added to the commitment tree.
     /// Newly discovered notes are associated to the supplied viewing keys. Note
@@ -714,41 +712,43 @@ impl ShieldedContext {
     /// we have spent are updated. The witness map is maintained to make it
     /// easier to construct note merkle paths in other code. See
     /// https://zips.z.cash/protocol/protocol.pdf#scan
-    pub fn scan_tx(
-        &mut self,
-        tx: &Transaction,
-    ) -> Result<(), ()> {
+    pub fn scan_tx(&mut self, tx: &Transaction) -> Result<(), ()> {
         // Listen for notes sent to our viewing keys
         for so in &(*tx).shielded_outputs {
             // Create merkle tree leaf node from note commitment
             let node = Node::new(so.cmu.to_repr());
-            // Update each merkle tree in the witness map with the latest addition
+            // Update each merkle tree in the witness map with the latest
+            // addition
             for (_, witness) in self.witness_map.iter_mut() {
                 witness.append(node)?;
             }
             let note_pos = self.tree.size();
             self.tree.append(node)?;
-            // Finally, make it easier to construct merkle paths to this new note
+            // Finally, make it easier to construct merkle paths to this new
+            // note
             let witness = IncrementalWitness::<Node>::from_tree(&self.tree);
             self.witness_map.insert(note_pos, witness);
-            // Let's try to see if any of our viewing keys can decrypt latest note
+            // Let's try to see if any of our viewing keys can decrypt latest
+            // note
             for (vk, notes) in self.vks.iter_mut() {
                 let decres = try_sapling_note_decryption::<TestNetwork>(
                     0,
                     &vk.ivk().0,
                     &so.ephemeral_key.into_subgroup().unwrap(),
                     &so.cmu,
-                    &so.enc_ciphertext
+                    &so.enc_ciphertext,
                 );
                 // So this current viewing key does decrypt this current note...
                 if let Some((note, pa, memo)) = decres {
-                    // Add this note to list of notes decrypted by this viewing key
+                    // Add this note to list of notes decrypted by this viewing
+                    // key
                     notes.insert(note_pos);
                     // Compute the nullifier now to quickly recognize when spent
                     let nf = note.nf(vk, note_pos.try_into().unwrap());
                     self.note_map.insert(note_pos, note);
                     self.memo_map.insert(note_pos, memo);
-                    // The payment address' diversifier is required to spend note
+                    // The payment address' diversifier is required to spend
+                    // note
                     self.div_map.insert(note_pos, *pa.diversifier());
                     self.nf_map.insert(nf.0.try_into().unwrap(), note_pos);
                     break;
@@ -769,19 +769,21 @@ impl ShieldedContext {
     }
 
     /// Compute the total unspent notes associated with the viewing key in the
-    /// context. If the key is not in the context, then we do not know the balance
-    /// and hence we return None.
+    /// context. If the key is not in the context, then we do not know the
+    /// balance and hence we return None.
     pub fn compute_shielded_balance(&self, vk: &ViewingKey) -> Option<Amount> {
         // Cannot query the balance of a key that's not in the map
         if !self.vks.contains_key(vk) {
-            return None
+            return None;
         }
         let mut val_acc = Amount::zero();
         // Retrieve the notes that can be spent by this key
         if let Some(avail_notes) = self.vks.get(vk) {
             for note_idx in avail_notes {
                 // Spent notes cannot contribute a new transaction's pool
-                if self.spents.contains(note_idx) { continue; }
+                if self.spents.contains(note_idx) {
+                    continue;
+                }
                 // Get note associated with this ID
                 let note = self.note_map.get(note_idx).unwrap().clone();
                 // Finally add value to multi-asset accumulator
@@ -796,14 +798,19 @@ impl ShieldedContext {
     /// type.
     async fn query_allowed_conversion(
         client: HttpClient,
-        asset_type: &AssetType
+        asset_type: &AssetType,
     ) -> Option<(Address, Epoch, AllowedConversion, MerklePath<Node>)> {
         // The key with which to lookup allowed conversions
-        let conversion_key = anoma::types::storage::Key::from(masp().to_db_key())
-            .push(&(CONVERSION_KEY_PREFIX.to_owned() + &asset_type.to_string()))
-            .expect("Cannot obtain a storage key");
+        let conversion_key =
+            anoma::types::storage::Key::from(masp().to_db_key())
+                .push(
+                    &(CONVERSION_KEY_PREFIX.to_owned()
+                        + &asset_type.to_string()),
+                )
+                .expect("Cannot obtain a storage key");
         // Query for the ID of the last accepted transaction
-        let (addr, ep, conv, path) = query_storage_value(client, conversion_key).await?;
+        let (addr, ep, conv, path) =
+            query_storage_value(client, conversion_key).await?;
         Some((addr, ep, Amount::into(conv), path))
     }
 
@@ -819,18 +826,24 @@ impl ShieldedContext {
         // First get the unexchanged balance
         if let Some(balance) = self.compute_shielded_balance(vk) {
             // And then exchange balance into current asset types
-            Some(self.compute_exchanged_amount(
-                ledger_address,
-                balance,
-                HashMap::new()
-            ).await.0)
-        } else { None }
+            Some(
+                self.compute_exchanged_amount(
+                    ledger_address,
+                    balance,
+                    HashMap::new(),
+                )
+                .await
+                .0,
+            )
+        } else {
+            None
+        }
     }
 
-    /// Convert the given amount into the latest asset types whilst making a note
-    /// of the conversions that were used. Note that this function does not
-    /// assume that allowed conversions from the ledger are expressed in terms of
-    /// the latest asset types.
+    /// Convert the given amount into the latest asset types whilst making a
+    /// note of the conversions that were used. Note that this function does
+    /// not assume that allowed conversions from the ledger are expressed in
+    /// terms of the latest asset types.
     pub async fn compute_exchanged_amount(
         &self,
         ledger_address: TendermintAddress,
@@ -841,9 +854,13 @@ impl ShieldedContext {
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // Where we will store our exchanged value
         let mut val_acc = Amount::zero();
-        while let Some((asset_type, value)) = clone_pair_option(balance.components().next()) {
+        while let Some((asset_type, value)) =
+            clone_pair_option(balance.components().next())
+        {
             let comp = balance.project(asset_type.clone());
-            if let Some((conv, _wit, curr_value)) = conversions.get_mut(&asset_type) {
+            if let Some((conv, _wit, curr_value)) =
+                conversions.get_mut(&asset_type)
+            {
                 // Record how much more of the given conversion has been used
                 *curr_value += value as u64;
                 // If conversion if possible, accumulate the exchanged amount
@@ -851,9 +868,13 @@ impl ShieldedContext {
                 // We assume here that conversion always contains extactly -1
                 // units of the queried asset type
                 balance += conv * value.clone();
-            } else if let Some((_addr, _epoch, conv, wit)) = Self::query_allowed_conversion(client.clone(), &asset_type).await {
+            } else if let Some((_addr, _epoch, conv, wit)) =
+                Self::query_allowed_conversion(client.clone(), &asset_type)
+                    .await
+            {
                 // Note how much of the found conversion we are using
-                conversions.insert(asset_type, (conv.clone(), wit, value as u64));
+                conversions
+                    .insert(asset_type, (conv.clone(), wit, value as u64));
                 // If conversion if possible, accumulate the exchanged amount
                 let conv: Amount = conv.into();
                 // We assume here that conversion always contains extactly -1
@@ -878,7 +899,11 @@ impl ShieldedContext {
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
         target: Amount,
-    ) -> (Amount, Vec<(Diversifier, Note, MerklePath<Node>)>, Conversions) {
+    ) -> (
+        Amount,
+        Vec<(Diversifier, Note, MerklePath<Node>)>,
+        Conversions,
+    ) {
         let mut conversions = HashMap::new();
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
@@ -887,29 +912,40 @@ impl ShieldedContext {
             for note_idx in avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
-                if val_acc >= target { break; }
+                if val_acc >= target {
+                    break;
+                }
                 // Spent notes cannot contribute a new transaction's pool
-                if self.spents.contains(note_idx) { continue; }
+                if self.spents.contains(note_idx) {
+                    continue;
+                }
                 // Get note, merkle path, diversifier associated with this ID
                 let note = self.note_map.get(note_idx).unwrap().clone();
 
                 // The amount contributed by this note before conversion
                 let pre_contr = Amount::from(note.asset_type, note.value)
                     .expect("received note has invalid value or asset type");
-                let (contr, proposed_convs) = self.compute_exchanged_amount(
-                    ledger_address.clone(),
-                    pre_contr,
-                    conversions.clone()
-                ).await;
-                
+                let (contr, proposed_convs) = self
+                    .compute_exchanged_amount(
+                        ledger_address.clone(),
+                        pre_contr,
+                        conversions.clone(),
+                    )
+                    .await;
+
                 // Use this note only if it brings us closer to our target
-                if is_amount_required(val_acc.clone(), target.clone(), contr.clone()) {
+                if is_amount_required(
+                    val_acc.clone(),
+                    target.clone(),
+                    contr.clone(),
+                ) {
                     // Be sure to record the conversions used in computing
                     // accumulated value
                     val_acc += contr;
                     // Commit the conversions that were used to exchange
                     conversions = proposed_convs;
-                    let merkle_path = self.witness_map.get(note_idx).unwrap().path().unwrap();
+                    let merkle_path =
+                        self.witness_map.get(note_idx).unwrap().path().unwrap();
                     let diversifier = self.div_map.get(note_idx).unwrap();
                     // Commit this note to our transaction
                     notes.push((*diversifier, note, merkle_path));
@@ -931,10 +967,12 @@ impl ShieldedContext {
         // Check that the supplied viewing key corresponds to given payment
         // address
         let counter_owner = viewing_key.to_payment_address(
-            *masp_primitives::primitives::PaymentAddress::diversifier(&owner.into())
+            *masp_primitives::primitives::PaymentAddress::diversifier(
+                &owner.into(),
+            ),
         );
         match counter_owner {
-            Some(counter_owner) if counter_owner == owner.into() => {},
+            Some(counter_owner) if counter_owner == owner.into() => {}
             _ => return Err(PinnedBalanceError::InvalidViewingKey),
         }
         let client = HttpClient::new(ledger_address.clone()).unwrap();
@@ -945,19 +983,22 @@ impl ShieldedContext {
             .push(&(PIN_KEY_PREFIX.to_owned() + &owner.hash()))
             .expect("Cannot obtain a storage key");
         // Obtain the transaction pointer at the key
-        let (txid, tx_epoch) = query_storage_value::<(TxId, Epoch)>(
-            client.clone(),
-            pin_key,
-        ).await.ok_or(PinnedBalanceError::NoTransactionPinned)?;
+        let (txid, tx_epoch) =
+            query_storage_value::<(TxId, Epoch)>(client.clone(), pin_key)
+                .await
+                .ok_or(PinnedBalanceError::NoTransactionPinned)?;
         // Construct the key for where the pinned transaction is stored
         let tx_key = Key::from(masp_addr.to_db_key())
             .push(&(TX_KEY_PREFIX.to_owned() + &txid.to_string()))
             .expect("Cannot obtain a storage key");
         // Obtain the pointed to transaction
-        let (tx, _next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
-            client.clone(),
-            tx_key,
-        ).await.unwrap();
+        let (tx, _next_txid) =
+            query_storage_value::<(Transaction, Option<TxId>)>(
+                client.clone(),
+                tx_key,
+            )
+            .await
+            .unwrap();
         // Accumulate the combined output note value into this Amount
         let mut val_acc = Amount::zero();
         for so in &(*tx).shielded_outputs {
@@ -967,15 +1008,19 @@ impl ShieldedContext {
                 &viewing_key.ivk().0,
                 &so.ephemeral_key.into_subgroup().unwrap(),
                 &so.cmu,
-                &so.enc_ciphertext
+                &so.enc_ciphertext,
             );
             match decres {
                 // So the given viewing key does decrypt this current note...
                 Some((note, pa, _memo)) if pa == owner.into() => {
-                    val_acc += Amount::from_nonnegative(note.asset_type, note.value)
-                        .expect("found note with invalid value or asset type");
+                    val_acc +=
+                        Amount::from_nonnegative(note.asset_type, note.value)
+                            .expect(
+                                "found note with invalid value or asset type",
+                            );
                     break;
-                }, _ => {}
+                }
+                _ => {}
             }
         }
         Ok((val_acc, tx_epoch))
@@ -989,7 +1034,9 @@ async fn convert_amount(
     val: token::Amount,
 ) -> (AssetType, Amount) {
     // Typestamp the chosen token with the current epoch
-    let token_bytes = (token, epoch.0).try_to_vec().expect("token should serialize");
+    let token_bytes = (token, epoch.0)
+        .try_to_vec()
+        .expect("token should serialize");
     // Generate the unique asset identifier from the unique token address
     let asset_type = AssetType::new(token_bytes.as_ref())
         .expect("unable to create asset type");
@@ -1023,17 +1070,16 @@ async fn gen_shielded_transfer(
     let spending_keys = spending_key.clone().into_iter().collect();
     // Load the current shielded context given the spending key we possess
     let _ = ctx.shielded.load();
-    ctx.shielded.fetch(
-        &args.tx.ledger_address,
-        &spending_keys,
-        &vec![],
-    ).await;
+    ctx.shielded
+        .fetch(&args.tx.ledger_address, &spending_keys, &vec![])
+        .await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
     // Determine epoch in which to submit potential shielded transaction
-    let epoch = query_epoch(
-        args::Query { ledger_address: args.tx.ledger_address.clone() }
-    ).await;
+    let epoch = query_epoch(args::Query {
+        ledger_address: args.tx.ledger_address.clone(),
+    })
+    .await;
     // Context required for storing which notes are in the source's possesion
     let consensus_branch_id = BranchId::Sapling;
     let amt: u64 = args.amount.into();
@@ -1042,30 +1088,40 @@ async fn gen_shielded_transfer(
     // Now we build up the transaction within this object
     let mut builder = Builder::<TestNetwork, OsRng>::new(0u32);
     // Convert transaction amount into MASP types
-    let (asset_type, amount) = convert_amount(epoch, &ctx.get(&args.token), args.amount).await;
+    let (asset_type, amount) =
+        convert_amount(epoch, &ctx.get(&args.token), args.amount).await;
     // If there are shielded inputs
     if let Some(sk) = spending_key {
         // Transaction fees need to match the amount in the wrapper Transfer
         // when MASP source is used
-        let (_, fee) = convert_amount(epoch, &ctx.get(&args.tx.fee_token), args.tx.fee_amount).await;
+        let (_, fee) = convert_amount(
+            epoch,
+            &ctx.get(&args.tx.fee_token),
+            args.tx.fee_amount,
+        )
+        .await;
         builder.set_fee(fee.clone())?;
         let sk = sk.into();
         // If the gas is coming from the shielded pool, then our shielded inputs
         // must also cover the gas fee
-        let required_amt = if shielded_gas {
-            amount + fee
-        } else {
-            amount
-        };
+        let required_amt = if shielded_gas { amount + fee } else { amount };
         // Locate unspent notes that can help us meet the transaction amount
-        let (_, unspent_notes, used_convs) = ctx.shielded.collect_unspent_notes(
-            args.tx.ledger_address.clone(),
-            &to_viewing_key(&sk).vk,
-            required_amt,
-        ).await;
+        let (_, unspent_notes, used_convs) = ctx
+            .shielded
+            .collect_unspent_notes(
+                args.tx.ledger_address.clone(),
+                &to_viewing_key(&sk).vk,
+                required_amt,
+            )
+            .await;
         // Commit the notes found to our transaction
         for (diversifier, note, merkle_path) in unspent_notes {
-            builder.add_sapling_spend(sk.clone(), diversifier, note, merkle_path)?;
+            builder.add_sapling_spend(
+                sk.clone(),
+                diversifier,
+                note,
+                merkle_path,
+            )?;
         }
         // Commit the conversion notes used during summation
         for (conv, wit, value) in used_convs.values() {
@@ -1079,10 +1135,14 @@ async fn gen_shielded_transfer(
         builder.set_fee(Amount::zero())?;
         // We add a dummy UTXO to our transaction, but only the source of the
         // parent Transfer object is used to validate fund availability
-        let secp_sk = secp256k1::SecretKey::from_slice(&[0xcd; 32]).expect("secret key");
+        let secp_sk =
+            secp256k1::SecretKey::from_slice(&[0xcd; 32]).expect("secret key");
         let secp_ctx = secp256k1::Secp256k1::<secp256k1::SignOnly>::gen_new();
-        let secp_pk = secp256k1::PublicKey::from_secret_key(&secp_ctx, &secp_sk).serialize();
-        let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(&secp_pk));
+        let secp_pk =
+            secp256k1::PublicKey::from_secret_key(&secp_ctx, &secp_sk)
+                .serialize();
+        let hash =
+            ripemd160::Ripemd160::digest(&sha2::Sha256::digest(&secp_pk));
         let script = TransparentAddress::PublicKey(hash.into()).script();
         builder.add_transparent_input(
             secp_sk,
@@ -1090,38 +1150,48 @@ async fn gen_shielded_transfer(
             TxOut {
                 asset_type,
                 value: amt,
-                script_pubkey: script
-            }
+                script_pubkey: script,
+            },
         )?;
     }
     // Now handle the outputs of this transaction
     // If there is a shielded output
     if let Some(pa) = payment_address {
-        let ovk_opt = spending_key
-            .map(|x| ExtendedSpendingKey::from(x).expsk.ovk);
-        builder.add_sapling_output(ovk_opt, pa.into(), asset_type, amt, memo)?;
+        let ovk_opt =
+            spending_key.map(|x| ExtendedSpendingKey::from(x).expsk.ovk);
+        builder.add_sapling_output(
+            ovk_opt,
+            pa.into(),
+            asset_type,
+            amt,
+            memo,
+        )?;
     } else {
         // Embed the transparent target address into the shielded transaction so
-        // that it can be signed 
+        // that it can be signed
         let target = ctx.get(&args.target);
         let target_enc = target
             .address()
             .expect("target address should be transparent")
             .try_to_vec()
             .expect("target address encoding");
-        let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(target_enc.as_ref()));
+        let hash = ripemd160::Ripemd160::digest(&sha2::Sha256::digest(
+            target_enc.as_ref(),
+        ));
         builder.add_transparent_output(
             &TransparentAddress::PublicKey(hash.into()),
             asset_type,
-            amt
+            amt,
         )?;
     }
     // Build and return the constructed transaction
-    builder.build(
-        consensus_branch_id,
-        &LocalTxProver::with_default_location()
-            .expect("unable to load MASP Parameters")
-    ).map(|x| Some(x))
+    builder
+        .build(
+            consensus_branch_id,
+            &LocalTxProver::with_default_location()
+                .expect("unable to load MASP Parameters"),
+        )
+        .map(|x| Some(x))
 }
 
 pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
@@ -1182,7 +1252,7 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
             }
         }
     };
-    
+
     let tx_code = ctx.read_wasm(TX_TRANSFER_WASM);
     let masp_addr = masp();
     // For MASP sources, use a special sentinel key recognized by VPs as default
@@ -1195,7 +1265,11 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         } else if source == masp_addr {
             (TxSigningKey::SecretKey(masp_tx_key()), args.amount, token)
         } else {
-            (TxSigningKey::WalletAddress(args.source.to_address()), args.amount, token)
+            (
+                TxSigningKey::WalletAddress(args.source.to_address()),
+                args.amount,
+                token,
+            )
         };
     // If our chosen signer is the MASP sentinel key, then our shielded inputs
     // will need to cover the gas fees.
@@ -1208,7 +1282,7 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
         TransferTarget::PaymentAddress(pa) if pa.is_pinned() => Some(pa.hash()),
         _ => None,
     };
-    
+
     let transfer = token::Transfer {
         source,
         target,
@@ -1224,7 +1298,7 @@ pub async fn submit_transfer(mut ctx: Context, args: args::TxTransfer) {
     let data = transfer
         .try_to_vec()
         .expect("Encoding tx data shouldn't fail");
-    
+
     let tx = Tx::new(tx_code, Some(data));
     process_tx(ctx, &args.tx, tx, default_signer).await;
 }
@@ -1241,7 +1315,9 @@ pub async fn submit_init_nft(ctx: Context, args: args::NftCreate) {
         None => ctx.read_wasm(VP_NFT),
     };
 
-    let signer = TxSigningKey::WalletAddress(WalletAddress::new(nft.creator.clone().to_string()));
+    let signer = TxSigningKey::WalletAddress(WalletAddress::new(
+        nft.creator.clone().to_string(),
+    ));
 
     let data = CreateNft {
         tag: nft.tag.to_string(),
@@ -1282,7 +1358,9 @@ pub async fn submit_mint_nft(ctx: Context, args: args::NftMint) {
         }
     };
 
-    let signer = TxSigningKey::WalletAddress(WalletAddress::new(nft_creator_address.to_string()));
+    let signer = TxSigningKey::WalletAddress(WalletAddress::new(
+        nft_creator_address.to_string(),
+    ));
 
     let data = MintNft {
         address: args.nft_address,
@@ -1362,7 +1440,13 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
 
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.unwrap_or(args.validator);
-    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(default_signer)).await;
+    process_tx(
+        ctx,
+        &args.tx,
+        tx,
+        TxSigningKey::WalletAddress(default_signer),
+    )
+    .await;
 }
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
@@ -1430,7 +1514,13 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
 
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.unwrap_or(args.validator);
-    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(default_signer)).await;
+    process_tx(
+        ctx,
+        &args.tx,
+        tx,
+        TxSigningKey::WalletAddress(default_signer),
+    )
+    .await;
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
@@ -1498,7 +1588,13 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
 
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.unwrap_or(args.validator);
-    process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(default_signer)).await;
+    process_tx(
+        ctx,
+        &args.tx,
+        tx,
+        TxSigningKey::WalletAddress(default_signer),
+    )
+    .await;
 }
 
 /// Carries types that can be directly/indirectly used to sign a transaction.
@@ -1534,21 +1630,22 @@ async fn tx_signer(
         TxSigningKey::WalletKeypair(signing_key) => {
             let signing_key = ctx.get_cached(&signing_key);
             signing_key
-        }, TxSigningKey::WalletAddress(signer) => {
+        }
+        TxSigningKey::WalletAddress(signer) => {
             let signer = ctx.get(&signer);
             let signing_key = signing::find_keypair(
                 &mut ctx.wallet,
                 &signer,
                 args.ledger_address.clone(),
             )
-                .await;
+            .await;
             signing_key
-        }, TxSigningKey::SecretKey(signing_key) => {
-            signing_key
-        }, TxSigningKey::None => {
+        }
+        TxSigningKey::SecretKey(signing_key) => signing_key,
+        TxSigningKey::None => {
             panic!(
-                "All transactions must be signed; please either specify the key \
-                 or the address from which to look up the signing key."
+                "All transactions must be signed; please either specify the \
+                 key or the address from which to look up the signing key."
             );
         }
     }
@@ -1570,7 +1667,7 @@ async fn sign_tx(
 ) -> (Context, TxBroadcastData) {
     let keypair = tx_signer(&mut ctx, args, default).await;
     let tx = tx.sign(&keypair);
-    
+
     let epoch = rpc::query_epoch(args::Query {
         ledger_address: args.ledger_address.clone(),
     })

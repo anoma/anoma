@@ -3,20 +3,21 @@ pub mod defaults;
 mod keys;
 mod store;
 
-use std::fmt::Display;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::path::{Path, PathBuf};
-use std::{env, fs};
 use std::str::FromStr;
+use std::{env, fs};
 
-use masp_primitives::zip32::ExtendedFullViewingKey;
 use anoma::types::address::Address;
 use anoma::types::key::*;
+use anoma::types::masp::{
+    ExtendedSpendingKey, ExtendedViewingKey, PaymentAddress,
+};
+use borsh::{BorshDeserialize, BorshSerialize};
+use masp_primitives::zip32::ExtendedFullViewingKey;
 pub use store::wallet_file;
 use thiserror::Error;
-use anoma::types::masp::{PaymentAddress, ExtendedViewingKey, ExtendedSpendingKey};
-
-use borsh::{BorshSerialize, BorshDeserialize};
 
 use self::alias::Alias;
 pub use self::keys::{DecryptionError, StoredKeypair};
@@ -137,7 +138,8 @@ impl Wallet {
         let password = Self::new_password_prompt(unsafe_dont_encrypt);
         let (alias, key) = self.store.gen_spending_key(alias, password);
         // Cache the newly added key
-        self.decrypted_spendkey_cache.insert(alias.clone(), key.clone());
+        self.decrypted_spendkey_cache
+            .insert(alias.clone(), key.clone());
         (alias.into(), key)
     }
 
@@ -162,11 +164,9 @@ impl Wallet {
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => {
-                Ok(Store::gen_validator_keys(other.map(|res| {
-                    res.unwrap().clone()
-                })))
-            }
+            other => Ok(Store::gen_validator_keys(
+                other.map(|res| res.unwrap().clone()),
+            )),
         }
     }
 
@@ -223,9 +223,8 @@ impl Wallet {
         alias: impl AsRef<str>,
     ) -> Result<ExtendedSpendingKey, FindKeyError> {
         // Try cache first
-        if let Some(cached_key) = self
-            .decrypted_spendkey_cache
-            .get(&alias.as_ref().into())
+        if let Some(cached_key) =
+            self.decrypted_spendkey_cache.get(&alias.as_ref().into())
         {
             return Ok(cached_key.clone());
         }
@@ -245,7 +244,8 @@ impl Wallet {
         &mut self,
         alias: impl AsRef<str>,
     ) -> Result<&ExtendedViewingKey, FindKeyError> {
-        self.store.find_viewing_key(alias.as_ref())
+        self.store
+            .find_viewing_key(alias.as_ref())
             .ok_or(FindKeyError::KeyNotFound)
     }
 
@@ -318,11 +318,16 @@ impl Wallet {
     /// Decrypt stored key, if it's not stored un-encrypted.
     /// If a given storage key needs to be decrypted, prompt for password from
     /// stdin and if successfully decrypted, store it in a cache.
-    fn decrypt_stored_key<T: FromStr + Display + BorshSerialize + BorshDeserialize + Clone>(
+    fn decrypt_stored_key<
+        T: FromStr + Display + BorshSerialize + BorshDeserialize + Clone,
+    >(
         decrypted_key_cache: &mut HashMap<Alias, T>,
         stored_key: &StoredKeypair<T>,
         alias: Alias,
-    ) -> Result<T, FindKeyError>  where <T as std::str::FromStr>::Err: Display {
+    ) -> Result<T, FindKeyError>
+    where
+        <T as std::str::FromStr>::Err: Display,
+    {
         match stored_key {
             StoredKeypair::Encrypted(encrypted) => {
                 let password = read_password("Enter decryption password: ");
@@ -342,7 +347,10 @@ impl Wallet {
     /// Get all known keys by their alias, paired with PKH, if known.
     pub fn get_keys(
         &self,
-    ) -> HashMap<String, (&StoredKeypair<common::SecretKey>, Option<&PublicKeyHash>)> {
+    ) -> HashMap<
+        String,
+        (&StoredKeypair<common::SecretKey>, Option<&PublicKeyHash>),
+    > {
         self.store
             .get_keys()
             .into_iter()
@@ -383,7 +391,9 @@ impl Wallet {
     }
 
     /// Get all known viewing keys by their alias
-    pub fn get_spending_keys(&self) -> HashMap<String, &StoredKeypair<ExtendedSpendingKey>> {
+    pub fn get_spending_keys(
+        &self,
+    ) -> HashMap<String, &StoredKeypair<ExtendedSpendingKey>> {
         self.store
             .get_spending_keys()
             .iter()
@@ -451,7 +461,7 @@ impl Wallet {
             .insert_spending_key(
                 alias.into(),
                 StoredKeypair::new(spend_key, password).0,
-                ExtendedFullViewingKey::from(&spend_key.into()).into()
+                ExtendedFullViewingKey::from(&spend_key.into()).into(),
             )
             .map(Into::into)
     }

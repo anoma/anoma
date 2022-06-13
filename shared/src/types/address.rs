@@ -124,8 +124,8 @@ impl Address {
 
     /// Decode an address from Bech32m encoding
     pub fn decode(string: impl AsRef<str>) -> Result<Self> {
-        let (prefix, hash_base32, variant) =
-            bech32::decode(string.as_ref()).map_err(DecodeError::DecodeBech32)?;
+        let (prefix, hash_base32, variant) = bech32::decode(string.as_ref())
+            .map_err(DecodeError::DecodeBech32)?;
         if prefix != ADDRESS_HRP {
             return Err(DecodeError::UnexpectedBech32Prefix(
                 prefix,
@@ -494,8 +494,8 @@ pub fn masp_tx_key() -> crate::types::key::common::SecretKey {
     use crate::types::key::common;
     let bytes = [
         0, 27, 238, 157, 32, 131, 242, 184, 142, 146, 189, 24, 249, 68, 165,
-        205, 71, 213, 158, 25, 253, 52, 217, 87, 52, 171, 225, 110, 131,
-        238, 58, 94, 56,
+        205, 71, 213, 158, 25, 253, 52, 217, 87, 52, 171, 225, 110, 131, 238,
+        58, 94, 56,
     ];
     common::SecretKey::try_from_slice(bytes.as_ref()).unwrap()
 }
@@ -528,10 +528,9 @@ pub fn masp_rewards() -> HashMap<Address, i64> {
         (apfel(), 2),
         (kartoffel(), 0),
     ]
-        .into_iter()
-        .collect()
+    .into_iter()
+    .collect()
 }
-
 
 #[cfg(test)]
 pub mod tests {

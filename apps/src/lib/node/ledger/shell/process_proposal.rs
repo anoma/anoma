@@ -120,8 +120,9 @@ where
                         }
                     } else {
                         // If the public key corresponds to the MASP sentinel
-                        // transaction key, then the fee payer is effectively the
-                        // MASP, otherwise derive they payer from public key.
+                        // transaction key, then the fee payer is effectively
+                        // the MASP, otherwise derive
+                        // they payer from public key.
                         let fee_payer = if tx.pk != masp_tx_key().ref_to() {
                             tx.fee_payer()
                         } else {
@@ -131,7 +132,7 @@ where
                         let balance = self
                             .get_balance(&tx.fee.token, &fee_payer)
                             .unwrap_or_default();
-                        
+
                         if tx.fee.amount <= balance {
                             shim::response::TxResult {
                                 code: ErrorCodes::Ok.into(),

@@ -3,12 +3,12 @@ use std::cmp::max;
 
 use anoma::ledger::parameters::EpochDuration;
 use anoma::ledger::pos::PosParams;
+use anoma::ledger::storage::types;
 use anoma::types::address::Address;
 use anoma::types::key;
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
 use anoma::types::storage::{Key, PrefixValue};
-use anoma::types::token::{self, Amount, is_masp_conversion};
-use anoma::ledger::storage::types;
+use anoma::types::token::{self, is_masp_conversion, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
 #[cfg(not(feature = "ABCI"))]
@@ -120,7 +120,9 @@ where
             Ok((None, _gas)) => {
                 if let Some(asset_type) = is_masp_conversion(key) {
                     // Conversion values are constructed on request
-                    if let Some((addr, epoch, conv, pos)) = self.storage.conversion_state.assets.get(&asset_type) {
+                    if let Some((addr, epoch, conv, pos)) =
+                        self.storage.conversion_state.assets.get(&asset_type)
+                    {
                         let conv = (
                             addr,
                             epoch,
@@ -252,19 +254,18 @@ where
         match self.storage.has_key(key) {
             Ok((has_key, _gas)) => {
                 // Conversion values are constructed on request
-                let has_key = has_key ||
-                    is_masp_conversion(key).map_or(
-                        false,
-                        |asset_type| self.storage
+                let has_key = has_key
+                    || is_masp_conversion(key).map_or(false, |asset_type| {
+                        self.storage
                             .conversion_state
                             .assets
                             .contains_key(&asset_type)
-                    );
+                    });
                 response::Query {
                     value: has_key.try_to_vec().unwrap(),
                     ..Default::default()
                 }
-            },
+            }
             Err(err) => response::Query {
                 code: 2,
                 info: format!("Storage error: {}", err),
