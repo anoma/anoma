@@ -38,7 +38,6 @@ use crate::types::storage::{
 use crate::types::time::DateTimeUtc;
 use borsh::{BorshSerialize, BorshDeserialize};
 use masp_primitives::asset_type::AssetType;
-use masp_primitives::transaction::components::Amount;
 use std::collections::HashMap;
 use crate::types::address::*;
 use masp_primitives::sapling::Node;
@@ -637,15 +636,11 @@ where
                 .expect("unable to derive asset identifier");
             // The -1 allows each instance of the old asset to be cancelled
             // out/replaced with the new asset
-            current_convs.insert(addr.clone(), (
-                Amount::from(old_asset, -1).unwrap() +
-                    Amount::from(new_asset, 1).unwrap() +
-                    Amount::from(reward_asset, *reward).unwrap()
-            ).into());
+            current_convs.insert(addr.clone(), AllowedConversion::new(vec![(old_asset, -1), (new_asset, 1), (reward_asset, *reward)]));
             // Add a conversion from the previous asset type
             self.conversion_state.assets.insert(
                 old_asset,
-                (addr.clone(), self.last_epoch.prev(), Amount::zero().into(), 0)
+                (addr.clone(), self.last_epoch.prev(), AllowedConversion::new(None), 0)
             );
         }
 
