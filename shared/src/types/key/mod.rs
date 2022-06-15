@@ -19,6 +19,7 @@ use crate::types::address;
 
 pub mod common;
 pub mod ed25519;
+pub mod secp256k1;
 
 const PK_STORAGE_KEY: &str = "public_key";
 const PROTOCOL_PK_STORAGE_KEY: &str = "protocol_public_key";
@@ -126,18 +127,33 @@ pub trait TryFromRef<T: ?Sized>: Sized {
 }
 
 /// Type capturing signature scheme IDs
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum SchemeType {
     /// Type identifier for Ed25519-consensus
     Ed25519Consensus,
+    /// Type identifier for Secp256k1-consensus
+    Secp256k1Consensus,
     /// Type identifier for Common
     Common,
+}
+
+impl FromStr for SchemeType {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input.to_lowercase().as_str() {
+            "ed25519" => Ok(Self::Ed25519Consensus),
+            "secp256k1" => Ok(Self::Secp256k1Consensus),
+            "common" => Ok(Self::Common),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Represents a signature
 
 pub trait Signature:
-    Hash + PartialOrd + Serialize + BorshSerialize + BorshDeserialize
+    Hash + PartialOrd + Serialize + BorshSerialize + BorshDeserialize + BorshSchema
 {
     /// The scheme type of this implementation
     const TYPE: SchemeType;
@@ -164,6 +180,7 @@ pub trait Signature:
 pub trait PublicKey:
     BorshSerialize
     + BorshDeserialize
+    + BorshSchema
     + Ord
     + Clone
     + Display
@@ -199,6 +216,7 @@ pub trait PublicKey:
 pub trait SecretKey:
     BorshSerialize
     + BorshDeserialize
+    + BorshSchema
     + Display
     + Debug
     + RefTo<Self::PublicKey>
@@ -415,9 +433,24 @@ macro_rules! sigscheme_test {
                 println!("Public key: {}", public_key);
                 println!("Secret key: {}", secret_key);
             }
+
+            /// Run `cargo test gen_keypair -- --nocapture` to generate a
+            /// new keypair.
+            #[test]
+            fn gen_sign_verify() {
+                use rand::prelude::ThreadRng;
+                use rand::thread_rng;
+
+                let mut rng: ThreadRng = thread_rng();
+                let sk = <$type>::generate(&mut rng);
+                let sig = <$type>::sign(&sk, b"hello");
+                assert!(<$type>::verify_signature_raw(&sk.ref_to(), b"hello", &sig).is_ok());
+            }
         }
     };
 }
 
 #[cfg(test)]
 sigscheme_test! {ed25519_test, ed25519::SigScheme}
+#[cfg(test)]
+sigscheme_test! {secp256k1_test, secp256k1::SigScheme}
