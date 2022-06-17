@@ -259,10 +259,11 @@ impl Store {
     /// pointer to the key.
     pub fn gen_key(
         &mut self,
+        scheme: SchemeType,
         alias: Option<String>,
         password: Option<String>,
     ) -> (Alias, Rc<common::SecretKey>) {
-        let sk = gen_sk();
+        let sk = gen_sk(scheme);
         let pkh: PublicKeyHash = PublicKeyHash::from(&sk.ref_to());
         let (keypair_to_store, raw_keypair) = StoredKeypair::new(sk, password);
         let address = Address::Implicit(ImplicitAddress(pkh.clone()));
@@ -287,8 +288,9 @@ impl Store {
     /// Note that this removes the validator data.
     pub fn gen_validator_keys(
         protocol_keypair: Option<common::SecretKey>,
+        scheme: SchemeType
     ) -> ValidatorKeys {
-        let protocol_keypair = protocol_keypair.unwrap_or_else(gen_sk);
+        let protocol_keypair = protocol_keypair.unwrap_or_else(|| gen_sk(scheme));
         let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
             &mut StdRng::from_entropy(),
         );
@@ -500,12 +502,17 @@ pub fn wallet_file(store_dir: impl AsRef<Path>) -> PathBuf {
 }
 
 /// Generate a new secret key.
-pub fn gen_sk() -> common::SecretKey {
+pub fn gen_sk(scheme: SchemeType) -> common::SecretKey {
     use rand::rngs::OsRng;
     let mut csprng = OsRng {};
-    ed25519::SigScheme::generate(&mut csprng)
-        .try_to_sk()
-        .unwrap()
+    match scheme {
+        SchemeType::Ed25519Consensus =>
+            ed25519::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
+        SchemeType::Secp256k1Consensus =>
+            secp256k1::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
+        SchemeType::Common =>
+            common::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
+    }
 }
 
 #[cfg(all(test, feature = "dev"))]
@@ -515,7 +522,7 @@ mod test_wallet {
     #[test]
     fn test_toml_roundtrip() {
         let mut store = Store::new();
-        let validator_keys = Store::gen_validator_keys(None);
+        let validator_keys = Store::gen_validator_keys(None,SchemeType::Common);
         store.add_validator_data(
             Address::decode("atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5").unwrap(),
             validator_keys

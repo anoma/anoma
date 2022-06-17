@@ -45,12 +45,13 @@ pub fn main() -> Result<()> {
 fn key_and_address_gen(
     ctx: Context,
     args::KeyAndAddressGen {
+        scheme,
         alias,
         unsafe_dont_encrypt,
     }: args::KeyAndAddressGen,
 ) {
     let mut wallet = ctx.wallet;
-    let (alias, _key) = wallet.gen_key(alias, unsafe_dont_encrypt);
+    let (alias, _key) = wallet.gen_key(scheme, alias, unsafe_dont_encrypt);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully added a key and an address with alias: \"{}\"",

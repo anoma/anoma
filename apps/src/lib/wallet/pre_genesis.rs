@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use anoma::types::key::common;
+use anoma::types::key::{common, SchemeType};
 use ark_serialize::{Read, Write};
 use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
@@ -66,10 +66,11 @@ impl ValidatorWallet {
     /// Generate a new [`ValidatorWallet`] with required pre-genesis keys and
     /// store it as TOML at the given path.
     pub fn gen_and_store(
+        scheme: SchemeType,
         unsafe_dont_encrypt: bool,
         store_dir: &Path,
     ) -> std::io::Result<Self> {
-        let validator = Self::gen(unsafe_dont_encrypt);
+        let validator = Self::gen(scheme, unsafe_dont_encrypt);
         let data = validator.store.encode();
         let wallet_path = validator_file_name(store_dir);
         // Make sure the dir exists
@@ -140,14 +141,14 @@ impl ValidatorWallet {
 
     /// Generate a new [`Validator`] with required pre-genesis keys. Will prompt
     /// for password when `!unsafe_dont_encrypt`.
-    fn gen(unsafe_dont_encrypt: bool) -> Self {
+    fn gen(scheme: SchemeType, unsafe_dont_encrypt: bool) -> Self {
         let password = wallet::read_and_confirm_pwd(unsafe_dont_encrypt);
-        let (account_key, account_sk) = gen_key_to_store(&password);
-        let (consensus_key, consensus_sk) = gen_key_to_store(&password);
-        let (rewards_key, rewards_sk) = gen_key_to_store(&password);
+        let (account_key, account_sk) = gen_key_to_store(scheme, &password);
+        let (consensus_key, consensus_sk) = gen_key_to_store(scheme, &password);
+        let (rewards_key, rewards_sk) = gen_key_to_store(scheme, &password);
         let (tendermint_node_key, tendermint_node_sk) =
-            gen_key_to_store(&password);
-        let validator_keys = store::Store::gen_validator_keys(None);
+            gen_key_to_store(scheme, &password);
+        let validator_keys = store::Store::gen_validator_keys(None, SchemeType::Common);
         let store = ValidatorStore {
             account_key,
             consensus_key,
@@ -180,9 +181,10 @@ impl ValidatorStore {
 }
 
 fn gen_key_to_store(
+    scheme: SchemeType,
     password: &Option<String>,
 ) -> (StoredKeypair, Rc<common::SecretKey>) {
-    let sk = store::gen_sk();
+    let sk = store::gen_sk(scheme);
     StoredKeypair::new(sk, password.clone())
 }
 
