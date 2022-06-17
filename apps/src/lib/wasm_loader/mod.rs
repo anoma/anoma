@@ -100,9 +100,8 @@ impl Checksums {
     }
 }
 
-/// Download all the pre-build WASMs, or if they're already downloaded, verify
-/// their checksums. Download all the pre-build WASMs, or if they're already
-/// downloaded, verify their checksums.
+/// Download all the pre-built wasms, or if they're already downloaded, verify
+/// their checksums.
 pub async fn pre_fetch_wasm(wasm_directory: impl AsRef<Path>) {
     #[cfg(feature = "dev")]
     {

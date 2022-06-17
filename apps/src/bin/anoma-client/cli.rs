@@ -94,6 +94,9 @@ pub async fn main() -> Result<()> {
             Utils::JoinNetwork(JoinNetwork(args)) => {
                 utils::join_network(global_args, args).await
             }
+            Utils::FetchWasms(FetchWasms(args)) => {
+                utils::fetch_wasms(global_args, args).await
+            }
             Utils::InitNetwork(InitNetwork(args)) => {
                 utils::init_network(global_args, args)
             }
