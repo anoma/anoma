@@ -1463,6 +1463,7 @@ pub mod args {
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
+    const SCHEME: ArgDefault<SchemeType> = arg_default("scheme", DefaultFn(|| SchemeType::Ed25519Consensus));
     const SIGNER: ArgOpt<WalletAddress> = arg_opt("signer");
     const SIGNING_KEY_OPT: ArgOpt<WalletKeypair> = SIGNING_KEY.opt();
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
@@ -2727,6 +2728,8 @@ pub mod args {
     /// Wallet generate key and implicit address arguments
     #[derive(Clone, Debug)]
     pub struct KeyAndAddressGen {
+        /// Scheme type
+        pub scheme: SchemeType,
         /// Key alias
         pub alias: Option<String>,
         /// Don't encrypt the keypair
@@ -2735,16 +2738,23 @@ pub mod args {
 
     impl Args for KeyAndAddressGen {
         fn parse(matches: &ArgMatches) -> Self {
+            let scheme = SCHEME.parse(matches);
             let alias = ALIAS_OPT.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
             Self {
+                scheme,
                 alias,
                 unsafe_dont_encrypt,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(ALIAS_OPT.def().about(
+            app.arg(SCHEME.def().about(
+                "The type of key that should be generated. Argument must be \
+                either ed25519 or secp256k1. If none provided, the default key scheme \
+                is ed25519.",
+            ))
+            .arg(ALIAS_OPT.def().about(
                 "The key and address alias. If none provided, the alias will \
                  be the public key hash.",
             ))
@@ -3015,6 +3025,7 @@ pub mod args {
         pub alias: String,
         pub net_address: SocketAddr,
         pub unsafe_dont_encrypt: bool,
+        pub key_scheme: SchemeType,
     }
 
     impl Args for InitGenesisValidator {
@@ -3022,10 +3033,12 @@ pub mod args {
             let alias = ALIAS.parse(matches);
             let net_address = NET_ADDRESS.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            let key_scheme = SCHEME.parse(matches);
             Self {
                 alias,
                 net_address,
                 unsafe_dont_encrypt,
+                key_scheme,
             }
         }
 
@@ -3039,6 +3052,10 @@ pub mod args {
                 .arg(UNSAFE_DONT_ENCRYPT.def().about(
                     "UNSAFE: Do not encrypt the generated keypairs. Do not \
                      use this for keys used in a live network.",
+                ))
+                .arg(SCHEME.def().about(
+                    "The key scheme/type used for the validator keys. Currently \
+                    support ed25519 and secp256k1."
                 ))
         }
     }
