@@ -7,7 +7,7 @@ use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::types::address::Address;
-use anoma::types::storage::Key;
+use anoma::types::storage::{Key, TxIndex};
 use anoma::types::time::DurationSecs;
 use anoma::types::{key, token};
 use anoma::vm::prefix_iter::PrefixIterators;
@@ -33,6 +33,7 @@ pub struct TestTxEnv {
     pub iterators: PrefixIterators<'static, MockDB>,
     pub verifiers: BTreeSet<Address>,
     pub gas_meter: BlockGasMeter,
+    pub tx_index: TxIndex,
     pub result_buffer: Option<Vec<u8>>,
     pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
     pub vp_cache_dir: TempDir,
@@ -51,6 +52,7 @@ impl Default for TestTxEnv {
             write_log: WriteLog::default(),
             iterators: PrefixIterators::default(),
             gas_meter: BlockGasMeter::default(),
+            tx_index: TxIndex::default(),
             verifiers: BTreeSet::default(),
             result_buffer: None,
             vp_wasm_cache,
@@ -151,6 +153,7 @@ pub fn init_tx_env(
         iterators,
         verifiers,
         gas_meter,
+        tx_index,
         result_buffer,
         vp_wasm_cache,
         vp_cache_dir: _,
@@ -166,6 +169,7 @@ pub fn init_tx_env(
                 iterators,
                 verifiers,
                 gas_meter,
+                tx_index,
                 result_buffer,
                 vp_wasm_cache,
                 tx_wasm_cache,

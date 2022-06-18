@@ -60,7 +60,7 @@ pub mod tx {
     use anoma::types::ibc::IbcEvent;
     use anoma::types::internal::HostEnvResult;
     use anoma::types::storage::{
-        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
+        BlockHash, BlockHeight, Epoch, TxIndex, BLOCK_HASH_LENGTH,
     };
     use anoma::types::time::Rfc3339String;
     pub use borsh::{BorshDeserialize, BorshSerialize};
@@ -266,6 +266,11 @@ pub mod tx {
         Epoch(unsafe { anoma_tx_get_block_epoch() })
     }
 
+    /// Get index of the current transaction
+    pub fn get_tx_index() -> TxIndex {
+        TxIndex(unsafe { anoma_tx_get_tx_index() })
+    }
+
     /// Log a string. The message will be printed at the `tracing::Level::Info`.
     pub fn log_string<T: AsRef<str>>(msg: T) {
         let msg = msg.as_ref();
@@ -350,6 +355,9 @@ pub mod tx {
         // Get the current block epoch
         fn anoma_tx_get_block_epoch() -> u64;
 
+        // Get the current transaction index
+        fn anoma_tx_get_tx_index() -> u32;
+
         // Requires a node running with "Info" log level
         fn anoma_tx_log_string(str_ptr: u64, str_len: u64);
     }
@@ -366,7 +374,7 @@ pub mod vp {
     use anoma::types::internal::HostEnvResult;
     use anoma::types::key::*;
     use anoma::types::storage::{
-        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
+        BlockHash, BlockHeight, Epoch, TxIndex, BLOCK_HASH_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -505,6 +513,11 @@ pub mod vp {
         BlockHeight(unsafe { anoma_vp_get_block_height() })
     }
 
+    /// Get index of the current transaction
+    pub fn get_tx_index() -> TxIndex {
+        TxIndex(unsafe { anoma_vp_get_tx_index() })
+    }
+
     /// Get a block hash
     pub fn get_block_hash() -> BlockHash {
         let result = Vec::with_capacity(BLOCK_HASH_LENGTH);
@@ -631,6 +644,9 @@ pub mod vp {
 
         // Get the chain ID
         fn anoma_vp_get_chain_id(result_ptr: u64);
+
+        // Get the current transaction index
+        fn anoma_vp_get_tx_index() -> u32;
 
         // Get the current block height
         fn anoma_vp_get_block_height() -> u64;

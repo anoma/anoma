@@ -11,7 +11,7 @@ use crate::ledger::storage::{Storage, StorageHasher};
 use crate::ledger::{storage, vp_env};
 use crate::proto::Tx;
 use crate::types::address::{Address, InternalAddress};
-use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
+use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key, TxIndex};
 use crate::vm::prefix_iter::PrefixIterators;
 use crate::vm::WasmCacheAccess;
 
@@ -64,6 +64,8 @@ where
     pub write_log: &'a WriteLog,
     /// The transaction code is used for signature verification
     pub tx: &'a Tx,
+    /// The transaction index is used to obtain the shielded transaction's parent
+    pub tx_index: &'a TxIndex,
     /// VP WASM compilation cache
     #[cfg(feature = "wasm-runtime")]
     pub vp_wasm_cache: crate::vm::wasm::VpCache<CA>,
@@ -83,6 +85,7 @@ where
         storage: &'a Storage<DB, H>,
         write_log: &'a WriteLog,
         tx: &'a Tx,
+        tx_index: &'a TxIndex,
         gas_meter: VpGasMeter,
         #[cfg(feature = "wasm-runtime")]
         vp_wasm_cache: crate::vm::wasm::VpCache<CA>,
@@ -93,6 +96,7 @@ where
             storage,
             write_log,
             tx,
+            tx_index,
             #[cfg(feature = "wasm-runtime")]
             vp_wasm_cache,
             #[cfg(not(feature = "wasm-runtime"))]
@@ -265,6 +269,7 @@ where
                 self.write_log,
                 &mut *self.gas_meter.borrow_mut(),
                 self.tx,
+                self.tx_index,
                 &mut iterators,
                 verifiers,
                 &mut result_buffer,

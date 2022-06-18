@@ -1,6 +1,6 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::types::storage::BlockHash;
+use anoma::types::storage::{BlockHash, TxIndex};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -50,7 +50,7 @@ where
         let (height, new_epoch) =
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
-        for processed_tx in &req.txs {
+        for (tx_index, processed_tx) in req.txs.iter().enumerate() {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
             } else {
@@ -176,6 +176,7 @@ where
             match protocol::apply_tx(
                 tx_type,
                 tx_length,
+                TxIndex(tx_index.try_into().expect("transaction index out of bounds")),
                 &mut self.gas_meter,
                 &mut self.write_log,
                 &self.storage,

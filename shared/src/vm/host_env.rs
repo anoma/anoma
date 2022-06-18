@@ -21,7 +21,7 @@ use crate::types::address::{self, Address};
 use crate::types::ibc::IbcEvent;
 use crate::types::internal::HostEnvResult;
 use crate::types::key::*;
-use crate::types::storage::Key;
+use crate::types::storage::{Key, TxIndex};
 use crate::vm::memory::VmMemory;
 use crate::vm::prefix_iter::{PrefixIteratorId, PrefixIterators};
 use crate::vm::types::KeyVal;
@@ -96,6 +96,8 @@ where
     pub iterators: MutHostRef<'a, &'a PrefixIterators<'a, DB>>,
     /// Transaction gas meter.
     pub gas_meter: MutHostRef<'a, &'a BlockGasMeter>,
+    /// The transaction index is used to identify a shielded transaction's parent
+    pub tx_index: HostRef<'a, &'a TxIndex>,
     /// The verifiers whose validity predicates should be triggered.
     pub verifiers: MutHostRef<'a, &'a BTreeSet<Address>>,
     /// Cache for 2-step reads from host environment.
@@ -133,6 +135,7 @@ where
         write_log: &mut WriteLog,
         iterators: &mut PrefixIterators<'a, DB>,
         gas_meter: &mut BlockGasMeter,
+        tx_index: &TxIndex,
         verifiers: &mut BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
@@ -142,6 +145,7 @@ where
         let write_log = unsafe { MutHostRef::new(write_log) };
         let iterators = unsafe { MutHostRef::new(iterators) };
         let gas_meter = unsafe { MutHostRef::new(gas_meter) };
+        let tx_index = unsafe { HostRef::new(tx_index) };
         let verifiers = unsafe { MutHostRef::new(verifiers) };
         let result_buffer = unsafe { MutHostRef::new(result_buffer) };
         #[cfg(feature = "wasm-runtime")]
@@ -153,6 +157,7 @@ where
             write_log,
             iterators,
             gas_meter,
+            tx_index,
             verifiers,
             result_buffer,
             #[cfg(feature = "wasm-runtime")]
@@ -194,6 +199,7 @@ where
             write_log: self.write_log.clone(),
             iterators: self.iterators.clone(),
             gas_meter: self.gas_meter.clone(),
+            tx_index: self.tx_index.clone(),
             verifiers: self.verifiers.clone(),
             result_buffer: self.result_buffer.clone(),
             #[cfg(feature = "wasm-runtime")]
@@ -241,6 +247,8 @@ where
     pub gas_meter: MutHostRef<'a, &'a VpGasMeter>,
     /// The transaction code is used for signature verification
     pub tx: HostRef<'a, &'a Tx>,
+    /// The transaction index is used to identify a shielded transaction's parent
+    pub tx_index: HostRef<'a, &'a TxIndex>,
     /// The runner of the [`vp_eval`] function
     pub eval_runner: HostRef<'a, &'a EVAL>,
     /// Cache for 2-step reads from host environment.
@@ -305,6 +313,7 @@ where
         write_log: &WriteLog,
         gas_meter: &mut VpGasMeter,
         tx: &Tx,
+        tx_index: &TxIndex,
         iterators: &mut PrefixIterators<'a, DB>,
         verifiers: &BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
@@ -318,6 +327,7 @@ where
             write_log,
             gas_meter,
             tx,
+            tx_index,
             iterators,
             verifiers,
             result_buffer,
@@ -368,6 +378,7 @@ where
         write_log: &WriteLog,
         gas_meter: &mut VpGasMeter,
         tx: &Tx,
+        tx_index: &TxIndex,
         iterators: &mut PrefixIterators<'a, DB>,
         verifiers: &BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
@@ -379,6 +390,7 @@ where
         let storage = unsafe { HostRef::new(storage) };
         let write_log = unsafe { HostRef::new(write_log) };
         let tx = unsafe { HostRef::new(tx) };
+        let tx_index = unsafe { HostRef::new(tx_index) };
         let iterators = unsafe { MutHostRef::new(iterators) };
         let gas_meter = unsafe { MutHostRef::new(gas_meter) };
         let verifiers = unsafe { HostRef::new(verifiers) };
@@ -394,6 +406,7 @@ where
             iterators,
             gas_meter,
             tx,
+            tx_index,
             eval_runner,
             result_buffer,
             keys_changed,
@@ -421,6 +434,7 @@ where
             iterators: self.iterators.clone(),
             gas_meter: self.gas_meter.clone(),
             tx: self.tx.clone(),
+            tx_index: self.tx_index.clone(),
             eval_runner: self.eval_runner.clone(),
             result_buffer: self.result_buffer.clone(),
             keys_changed: self.keys_changed.clone(),
@@ -1455,6 +1469,42 @@ where
     Ok(height.0)
 }
 
+/// Getting the block height function exposed to the wasm VM Tx
+/// environment. The height is that of the block to which the current
+/// transaction is being applied.
+pub fn tx_get_tx_index<MEM, DB, H, CA>(
+    env: &TxEnv<MEM, DB, H, CA>,
+) -> TxResult<u32>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
+    let tx_index = unsafe { env.ctx.tx_index.get() };
+    tx_add_gas(env, crate::vm::host_env::gas::MIN_STORAGE_GAS)?;
+    Ok(tx_index.0)
+}
+
+/// Getting the block height function exposed to the wasm VM VP
+/// environment. The height is that of the block to which the current
+/// transaction is being applied.
+pub fn vp_get_tx_index<MEM, DB, H, EVAL, CA>(
+    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+) -> vp_env::Result<u32>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
+{
+    let gas_meter = unsafe { env.ctx.gas_meter.get() };
+    let tx_index = unsafe { env.ctx.tx_index.get() };
+    let tx_idx = vp_env::get_tx_index(gas_meter, tx_index)?;
+    Ok(tx_idx.0)
+}
+
 /// Getting the block hash function exposed to the wasm VM Tx environment. The
 /// hash is that of the block to which the current transaction is being applied.
 pub fn tx_get_block_hash<MEM, DB, H, CA>(
@@ -1767,6 +1817,7 @@ pub mod testing {
         iterators: &mut PrefixIterators<'static, DB>,
         verifiers: &mut BTreeSet<Address>,
         gas_meter: &mut BlockGasMeter,
+        tx_index: &TxIndex,
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
         #[cfg(feature = "wasm-runtime")] tx_wasm_cache: &mut TxCache<CA>,
@@ -1782,6 +1833,7 @@ pub mod testing {
             write_log,
             iterators,
             gas_meter,
+            tx_index,
             verifiers,
             result_buffer,
             #[cfg(feature = "wasm-runtime")]
@@ -1800,6 +1852,7 @@ pub mod testing {
         iterators: &mut PrefixIterators<'static, DB>,
         gas_meter: &mut VpGasMeter,
         tx: &Tx,
+        tx_index: &TxIndex,
         verifiers: &BTreeSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
         keys_changed: &BTreeSet<Key>,
@@ -1819,6 +1872,7 @@ pub mod testing {
             write_log,
             gas_meter,
             tx,
+            tx_index,
             iterators,
             verifiers,
             result_buffer,
