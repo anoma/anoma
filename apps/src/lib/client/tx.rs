@@ -41,7 +41,7 @@ use masp_primitives::primitives::{Diversifier, Note, ViewingKey};
 use masp_primitives::sapling::Node;
 use masp_primitives::transaction::builder::{self, *};
 use masp_primitives::transaction::components::{Amount, OutPoint, TxOut};
-use masp_primitives::transaction::{Transaction, TxId};
+use masp_primitives::transaction::Transaction;
 use masp_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 use masp_proofs::prover::LocalTxProver;
 use rand_core::{CryptoRng, OsRng, RngCore};
@@ -471,8 +471,8 @@ pub struct ShieldedContext {
     /// Location where this shielded context is saved
     #[borsh_skip]
     context_dir: PathBuf,
-    /// The last transaction ID to be processed in this context
-    last_txid: Option<TxId>,
+    /// The last transaction index to be processed in this context
+    last_txidx: u64,
     /// The commitment tree produced by scanning all transactions up to tx_pos
     tree: CommitmentTree<Node>,
     /// Maps viewing keys to applicable note positions
@@ -502,7 +502,7 @@ impl Default for ShieldedContext {
     fn default() -> ShieldedContext {
         ShieldedContext {
             context_dir: PathBuf::from(FILE_NAME),
-            last_txid: Option::default(),
+            last_txidx: u64::default(),
             tree: CommitmentTree::empty(),
             vks: HashMap::default(),
             nf_map: HashMap::default(),
@@ -563,7 +563,7 @@ impl ShieldedContext {
     /// context. It must be the case that the two shielded contexts share the
     /// same last transaction ID and share identical commitment trees.
     pub fn merge(&mut self, new_ctx: ShieldedContext) {
-        debug_assert_eq!(self.last_txid, new_ctx.last_txid);
+        debug_assert_eq!(self.last_txidx, new_ctx.last_txidx);
         // Merge by simply extending maps. Identical keys should contain
         // identical values, so overwriting should not be problematic.
         self.vks.extend(new_ctx.vks);
@@ -604,7 +604,7 @@ impl ShieldedContext {
         let (txs, mut tx_iter);
         if !unknown_keys.is_empty() {
             // Load all transactions accepted until this point
-            txs = Self::fetch_shielded_transfers(ledger_address, None).await;
+            txs = Self::fetch_shielded_transfers(ledger_address, 0).await;
             tx_iter = txs.iter();
             // Do this by constructing a shielding context only for unknown keys
             let mut tx_ctx = ShieldedContext::new(self.context_dir.clone());
@@ -612,7 +612,7 @@ impl ShieldedContext {
                 tx_ctx.vks.entry(vk).or_insert_with(HashSet::new);
             }
             // Update this unknown shielded context until it is level with self
-            while tx_ctx.last_txid != self.last_txid {
+            while tx_ctx.last_txidx != self.last_txidx {
                 if let Some(tx) = tx_iter.next() {
                     tx_ctx.scan_tx(tx);
                 } else {
@@ -625,7 +625,7 @@ impl ShieldedContext {
         } else {
             // Load only transactions accepted from last_txid until this point
             txs =
-                Self::fetch_shielded_transfers(ledger_address, self.last_txid)
+                Self::fetch_shielded_transfers(ledger_address, self.last_txidx)
                     .await;
             tx_iter = txs.iter();
         }
@@ -659,13 +659,12 @@ impl ShieldedContext {
 
     /// Obtain a chronologically-ordered list of all accepted shielded
     /// transactions from the ledger. The ledger conceptually stores
-    /// transactions as a linked list. More concretely, the HEAD_TX_KEY
-    /// location stores the txid of the last accepted transaction, each
-    /// transaction stores the txid of the previous transaction, and each
-    /// transaction is stored at a key whose name is derived from its txid.
+    /// transactions as a vector. More concretely, the HEAD_TX_KEY location
+    /// stores the index of the last accepted transaction and each transaction
+    /// is stored at a key derived from its index.
     pub async fn fetch_shielded_transfers(
         ledger_address: &TendermintAddress,
-        last_txid: Option<TxId>,
+        last_txidx: u64,
     ) -> Vec<Transaction> {
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // The address of the MASP account
@@ -674,23 +673,20 @@ impl ShieldedContext {
         let head_tx_key = Key::from(masp_addr.to_db_key())
             .push(&HEAD_TX_KEY.to_owned())
             .expect("Cannot obtain a storage key");
-        // Query for the ID of the last accepted transaction
-        let mut head_txid_opt =
-            query_storage_value::<TxId>(client.clone(), head_tx_key).await;
+        // Query for the index of the last accepted transaction
+        let head_txidx = query_storage_value::<u64>(client.clone(), head_tx_key)
+            .await
+            .unwrap_or(0);
         let mut shielded_txs = Vec::new();
-        // While there are still more transactions in the linked list
-        while let Some(head_txid) = head_txid_opt {
-            // Stop at the given Tx ID exclusive
-            if head_txid_opt == last_txid {
-                break;
-            }
+        // Fetch all the transactions we do not have yet
+        for i in last_txidx..head_txidx {
             // Construct the key for where the current transaction is stored
             let current_tx_key = Key::from(masp_addr.to_db_key())
-                .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
+                .push(&(TX_KEY_PREFIX.to_owned() + &i.to_string()))
                 .expect("Cannot obtain a storage key");
-            // Obtain the current transaction and a pointer to the next
-            let (current_tx, next_txid) =
-                query_storage_value::<(Transaction, Option<TxId>)>(
+            // Obtain the current transaction
+            let (_tx_epoch, current_tx) =
+                query_storage_value::<(Epoch, Transaction)>(
                     client.clone(),
                     current_tx_key,
                 )
@@ -698,10 +694,7 @@ impl ShieldedContext {
                 .unwrap();
             // Collect the current transaction
             shielded_txs.push(current_tx);
-            head_txid_opt = next_txid;
         }
-        // Since we iterated the transaction in reverse chronological order
-        shielded_txs.reverse();
         shielded_txs
     }
 
@@ -766,8 +759,7 @@ impl ShieldedContext {
                 self.spents.insert(*note_pos);
             }
         }
-        // To avoid state corruption caused by accidentaly replaying transaction
-        self.last_txid = Some(tx.txid());
+        self.last_txidx += 1;
     }
 
     /// Compute the total unspent notes associated with the viewing key in the
@@ -985,22 +977,21 @@ impl ShieldedContext {
             .push(&(PIN_KEY_PREFIX.to_owned() + &owner.hash()))
             .expect("Cannot obtain a storage key");
         // Obtain the transaction pointer at the key
-        let (txid, tx_epoch) =
-            query_storage_value::<(TxId, Epoch)>(client.clone(), pin_key)
-                .await
-                .ok_or(PinnedBalanceError::NoTransactionPinned)?;
+        let txidx = query_storage_value::<u64>(client.clone(), pin_key)
+            .await
+            .ok_or(PinnedBalanceError::NoTransactionPinned)?;
         // Construct the key for where the pinned transaction is stored
         let tx_key = Key::from(masp_addr.to_db_key())
-            .push(&(TX_KEY_PREFIX.to_owned() + &txid.to_string()))
+            .push(&(TX_KEY_PREFIX.to_owned() + &txidx.to_string()))
             .expect("Cannot obtain a storage key");
         // Obtain the pointed to transaction
-        let (tx, _next_txid) =
-            query_storage_value::<(Transaction, Option<TxId>)>(
+        let (tx_epoch, tx) =
+            query_storage_value::<(Epoch, Transaction)>(
                 client.clone(),
                 tx_key,
             )
             .await
-            .unwrap();
+            .expect("Ill-formed epoch, transaction pair");
         // Accumulate the combined output note value into this Amount
         let mut val_acc = Amount::zero();
         for so in &(*tx).shielded_outputs {

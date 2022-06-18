@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use anoma::types::address::{masp, Address, InternalAddress};
 use anoma::types::storage::{Key, KeySeg};
 use anoma::types::token;
-use masp_primitives::transaction::{Transaction, TxId};
+use masp_primitives::transaction::Transaction;
 
 /// Vp imports and functions.
 pub mod vp {
@@ -119,23 +119,20 @@ pub mod tx {
             let head_tx_key = Key::from(masp_addr.to_db_key())
                 .push(&HEAD_TX_KEY.to_owned())
                 .expect("Cannot obtain a storage key");
-            let prev_tx_id: Option<TxId> = tx::read(&head_tx_key.to_string());
-            let new_tx_key = Key::from(masp_addr.to_db_key())
+            let current_tx_idx: u64 = tx::read(&head_tx_key.to_string()).unwrap_or(0);
+            let current_tx_key = Key::from(masp_addr.to_db_key())
                 .push(
-                    &(TX_KEY_PREFIX.to_owned() + &shielded.txid().to_string()),
+                    &(TX_KEY_PREFIX.to_owned() + &current_tx_idx.to_string()),
                 )
                 .expect("Cannot obtain a storage key");
-            tx::write(&new_tx_key.to_string(), (shielded, prev_tx_id));
-            tx::write(&head_tx_key.to_string(), shielded.txid());
+            tx::write(&current_tx_key.to_string(), (tx::get_block_epoch(), shielded));
+            tx::write(&head_tx_key.to_string(), current_tx_idx + 1);
             // If storage key has been supplied, then pin this transaction to it
             if let Some(key) = key {
                 let pin_key = Key::from(masp_addr.to_db_key())
                     .push(&(PIN_KEY_PREFIX.to_owned() + key))
                     .expect("Cannot obtain a storage key");
-                tx::write(
-                    &pin_key.to_string(),
-                    (shielded.txid(), tx::get_block_epoch()),
-                );
+                tx::write(&pin_key.to_string(), current_tx_idx);
             }
         }
     }
