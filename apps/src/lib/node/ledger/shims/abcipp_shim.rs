@@ -19,6 +19,8 @@ use crate::config;
 use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
     BeginBlock, ProcessedTx,
 };
+use anoma::proto::Tx;
+use crate::node::ledger::shell::Error::TxDecoding;
 
 /// The shim wraps the shell, which implements ABCI++.
 /// The shim makes a crude translation between the ABCI interface currently used
@@ -95,6 +97,10 @@ impl AbcippShim {
                         .map_err(Error::from)
                         .and_then(|res| match res {
                             Response::ProcessProposal(resp) => {
+                                #[cfg(feature = "ABCI")]
+                                let tx = Tx::try_from(resp.tx.as_ref());
+                                #[cfg(not(feature = "ABCI"))]
+                                let tx = Tx::try_from(deliver_tx.tx.as_ref());
                                 self.block_txs.push(ProcessedTx {
                                     #[cfg(not(feature = "ABCI"))]
                                     tx: deliver_tx.tx,
@@ -102,7 +108,7 @@ impl AbcippShim {
                                     tx: resp.tx,
                                     result: resp.result,
                                 });
-                                Ok(Resp::DeliverTx(Default::default()))
+                                Ok(Resp::DeliverTx(tx.map_err(TxDecoding)?.into()))
                             }
                             _ => unreachable!(),
                         })

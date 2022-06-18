@@ -12,6 +12,30 @@ use super::generated::types;
 use crate::types::key::*;
 use crate::types::time::DateTimeUtc;
 use crate::types::transaction::hash_tx;
+#[cfg(feature = "ABCI")]
+#[cfg(feature = "ferveo-tpke")]
+use tendermint_proto_abci::abci::Event;
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::token::Transfer;
+#[cfg(feature = "ABCI")]
+#[cfg(feature = "ferveo-tpke")]
+use tendermint_proto_abci::abci::EventAttribute;
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::transaction::process_tx;
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::transaction::TxType;
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::transaction::DecryptedTx;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::abci::ResponseDeliverTx;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::abci::ResponseDeliverTx;
+#[cfg(not(feature = "ABCI"))]
+#[cfg(feature = "ferveo-tpke")]
+use tendermint_proto::abci::EventAttribute;
+#[cfg(not(feature = "ABCI"))]
+#[cfg(feature = "ferveo-tpke")]
+use tendermint_proto::abci::Event;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -153,6 +177,67 @@ impl From<Tx> for types::Tx {
             code: tx.code,
             data: tx.data,
             timestamp,
+        }
+    }
+}
+
+impl Into<ResponseDeliverTx> for Tx {
+    #[cfg(not(feature = "ferveo-tpke"))]
+    fn into(self) -> ResponseDeliverTx {
+        Default::default()
+    }
+    /// Annotate the Tx with meta-data based on its contents
+    #[cfg(feature = "ferveo-tpke")]
+    fn into(self) -> ResponseDeliverTx {
+        #[cfg(feature = "ABCI")]
+        fn encode_str(x: &str) -> Vec<u8> { x.as_bytes().to_vec() }
+        #[cfg(not(feature = "ABCI"))]
+        fn encode_str(x: &str) -> String { x.to_string() }
+        #[cfg(feature = "ABCI")]
+        fn encode_string(x: String) -> Vec<u8> { x.into_bytes() }
+        #[cfg(not(feature = "ABCI"))]
+        fn encode_string(x: String) -> String { x }
+        match process_tx(self) {
+            Ok(TxType::Decrypted(DecryptedTx::Decrypted(tx))) => {
+                let empty_vec = vec![];
+                let tx_data = tx.data.as_ref().unwrap_or(&empty_vec);
+                let signed = if let Ok(signed) = SignedTxData::try_from_slice(tx_data) {
+                    signed
+                } else {
+                    return Default::default()
+                };
+                if let Ok(transfer) = Transfer::try_from_slice(&signed.data.unwrap()[..]) {
+                    let events = vec![ Event {
+                        r#type: "transfer".to_string(),
+                        attributes: vec![
+                            EventAttribute {
+                                key: encode_str("source"),
+                                value: encode_string(transfer.source.encode()),
+                                index: true,
+                            }, EventAttribute {
+                                key: encode_str("target"),
+                                value: encode_string(transfer.target.encode()),
+                                index: true,
+                            }, EventAttribute {
+                                key: encode_str("token"),
+                                value: encode_string(transfer.token.encode()),
+                                index: true,
+                            }, EventAttribute {
+                                key: encode_str("amount"),
+                                value: encode_string(transfer.amount.to_string()),
+                                index: true,
+                            },
+                        ]
+                    }];
+                    ResponseDeliverTx {
+                        events,
+                        info: "Transfer tx".to_string(),
+                        ..Default::default()
+                    }
+                } else {
+                    Default::default()
+                }
+            }, _ => Default::default(),
         }
     }
 }
