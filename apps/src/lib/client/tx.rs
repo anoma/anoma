@@ -12,9 +12,9 @@ use anoma::types::address::{btc, masp, masp_tx_key, Address};
 use anoma::types::key::*;
 use anoma::types::masp::{PaymentAddress, TransferTarget};
 use anoma::types::nft::{self, Nft, NftToken};
-use anoma::types::storage::{Epoch, Key, KeySeg};
+use anoma::types::storage::{Epoch, Key, KeySeg, BlockHeight, TxIndex};
 use anoma::types::token::{
-    CONVERSION_KEY_PREFIX, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
+    Transfer, CONVERSION_KEY_PREFIX, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
 };
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
@@ -685,15 +685,18 @@ impl ShieldedContext {
                 .push(&(TX_KEY_PREFIX.to_owned() + &i.to_string()))
                 .expect("Cannot obtain a storage key");
             // Obtain the current transaction
-            let (_tx_epoch, current_tx) =
-                query_storage_value::<(Epoch, Transaction)>(
+            let (_tx_epoch, _tx_height, _tx_index, current_tx) =
+                query_storage_value::<(Epoch, BlockHeight, TxIndex, Transfer)>(
                     client.clone(),
                     current_tx_key,
                 )
                 .await
                 .unwrap();
             // Collect the current transaction
-            shielded_txs.push(current_tx);
+            shielded_txs.push(
+                current_tx.shielded
+                    .expect("shielded pool Transfers should have shielded part")
+            );
         }
         shielded_txs
     }
@@ -985,8 +988,8 @@ impl ShieldedContext {
             .push(&(TX_KEY_PREFIX.to_owned() + &txidx.to_string()))
             .expect("Cannot obtain a storage key");
         // Obtain the pointed to transaction
-        let (tx_epoch, tx) =
-            query_storage_value::<(Epoch, Transaction)>(
+        let (tx_epoch, _tx_height, _tx_index, tx) =
+            query_storage_value::<(Epoch, BlockHeight, TxIndex, Transfer)>(
                 client.clone(),
                 tx_key,
             )
@@ -994,7 +997,8 @@ impl ShieldedContext {
             .expect("Ill-formed epoch, transaction pair");
         // Accumulate the combined output note value into this Amount
         let mut val_acc = Amount::zero();
-        for so in &(*tx).shielded_outputs {
+        let tx = tx.shielded.expect("Pinned Transfers should have shielded part");
+        for so in &tx.shielded_outputs {
             // Let's try to see if our viewing key can decrypt current note
             let decres = try_sapling_note_decryption::<TestNetwork>(
                 0,

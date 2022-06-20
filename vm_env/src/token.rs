@@ -125,7 +125,20 @@ pub mod tx {
                     &(TX_KEY_PREFIX.to_owned() + &current_tx_idx.to_string()),
                 )
                 .expect("Cannot obtain a storage key");
-            tx::write(&current_tx_key.to_string(), (tx::get_block_epoch(), shielded));
+            // Save the Transfer object and its location within the blockchain so
+            // that clients do not have to separately look these up
+            let transfer = Transfer {
+                source: src.clone(),
+                target: dest.clone(),
+                token: token.clone(),
+                amount,
+                key: key.clone(),
+                shielded: Some(shielded.clone()),
+            };
+            tx::write(
+                &current_tx_key.to_string(),
+                (tx::get_block_epoch(), tx::get_block_height(), tx::get_tx_index(), transfer)
+            );
             tx::write(&head_tx_key.to_string(), current_tx_idx + 1);
             // If storage key has been supplied, then pin this transaction to it
             if let Some(key) = key {
