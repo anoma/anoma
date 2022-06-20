@@ -51,7 +51,7 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         // Tracks the accepted transactions
-        self.storage.block.results = BlockResults::default();
+        let mut results = BlockResults::default();
         for (tx_index, processed_tx) in req.txs.iter().enumerate() {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
@@ -197,7 +197,7 @@ where
                         self.write_log.commit_tx();
                         if !tx_result.contains_key("code") {
                             tx_result["code"] = ErrorCodes::Ok.into();
-                            self.storage.block.results.accept(tx_index);
+                            results.accept(tx_index);
                         }
                         if let Some(ibc_event) = &result.ibc_event {
                             // Add the IBC event besides the tx_result
@@ -244,6 +244,7 @@ where
             }
             response.events.push(tx_result.into());
         }
+        self.storage.block.results.push(results);
         self.reset_tx_queue_iter();
 
         if new_epoch {

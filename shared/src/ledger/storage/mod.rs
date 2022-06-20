@@ -107,7 +107,7 @@ pub struct BlockStorage<H: StorageHasher> {
     /// Epoch of the block
     pub epoch: Epoch,
     /// Results of applying transactions
-    pub results: BlockResults,
+    pub results: Vec<BlockResults>,
     /// Predecessor block epochs
     pub pred_epochs: Epochs,
 }
@@ -148,7 +148,7 @@ pub struct BlockStateRead {
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
     /// Results of applying transactions
-    pub results: BlockResults,
+    pub results: Vec<BlockResults>,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: TxQueue,
@@ -173,7 +173,7 @@ pub struct BlockStateWrite<'a> {
     /// Established address generator
     pub address_gen: &'a EstablishedAddressGen,
     /// Results of applying transactions
-    pub results: &'a BlockResults,
+    pub results: &'a Vec<BlockResults>,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: &'a TxQueue,
@@ -290,7 +290,7 @@ where
             height: BlockHeight::default(),
             epoch: Epoch::default(),
             pred_epochs: Epochs::default(),
-            results: BlockResults::default(),
+            results: Vec::default(),
         };
         Storage::<D, H> {
             db: D::open(db_path, cache),
@@ -321,7 +321,7 @@ where
             pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
-            results: last_results_bit_vec,
+            results,
             address_gen,
             #[cfg(feature = "ferveo-tpke")]
             tx_queue,
@@ -331,7 +331,7 @@ where
             self.block.hash = hash;
             self.block.height = height;
             self.block.epoch = epoch;
-            self.block.results = last_results_bit_vec;
+            self.block.results = results;
             self.block.pred_epochs = pred_epochs;
             self.last_height = height;
             self.last_epoch = epoch;
@@ -837,7 +837,7 @@ pub mod testing {
                 height: BlockHeight::default(),
                 epoch: Epoch::default(),
                 pred_epochs: Epochs::default(),
-                results: BlockResults::default(),
+                results: Vec::default(),
             };
             Self {
                 db: MockDB::default(),

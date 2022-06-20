@@ -871,11 +871,13 @@ mod test {
         let next_epoch_min_start_time = DateTimeUtc::now();
         let address_gen = EstablishedAddressGen::new("whatever");
         let tx_queue = TxQueue::default();
+        let results = Vec::default();
         let block = BlockStateWrite {
             merkle_tree_stores,
             hash: &hash,
             height,
             epoch,
+            results: &results,
             pred_epochs: &pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,

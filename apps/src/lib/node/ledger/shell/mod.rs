@@ -883,6 +883,7 @@ mod test_utils {
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
                 address_gen: &address_gen,
+                results: &Vec::default(),
                 tx_queue: &shell.storage.tx_queue,
             })
             .expect("Test failed");
