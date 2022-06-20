@@ -81,6 +81,83 @@ impl From<TxIndex> for u32 {
     }
 }
 
+/// Represents the accepted transactions in a block
+#[derive(
+    Clone,
+    BorshSerialize,
+    BorshDeserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Debug,
+    Serialize,
+    Deserialize,
+)]
+pub struct BlockResults(pub Vec<u8>);
+
+impl BlockResults {
+    /// Accept the tx at the given position
+    pub fn accept(&mut self, idx: usize) {
+        // Sufficiently extend range to contain index
+        for i in self.0.len()..((idx/7) + 1) {
+            // Update previous MSB to indicate new byte
+            self.0[i-1] |= 0x80u8;
+            // New bytes reject and have nothing following
+            self.0.push(0x7Fu8);
+        }
+        // Now indicate that the given transaction is accepted
+        self.0[idx / 7] &= !(0x01u8 << (idx % 7));
+    }
+    /// Reject the tx at the given position
+    pub fn reject(&mut self, idx: usize) {
+        // If index is out of range then it was already off
+        if idx/7 >= self.0.len() { return }
+        // Otherwise turn off the relevant bit
+        self.0[idx / 7] |= 0x01u8 << (idx % 7);
+        // Now maintain canonicity by popping rejected bytes
+        while self.0.len() > 1 && *self.0.last().unwrap() == 0x7Fu8 {
+            // Delete redundant last byte
+            self.0.pop();
+            // Turn off MSB of previous byte
+            *self.0.last_mut().unwrap() &= 0x7Fu8;
+        }
+    }
+    /// Check if the tx at the given position is accepted
+    pub fn is_accepted(&self, idx: usize) -> bool {
+        // Index beyond stored range implies rejection, otherwise check relevant
+        // bit vector entry
+        (idx/7 < self.0.len()) &&
+            (self.0[idx / 7] & (0x01u8 << (idx % 7))) == 0
+    }
+}
+
+impl Default for BlockResults {
+    fn default() -> Self {
+        // Results object always has at least one byte
+        Self(vec![0x7Fu8])
+    }
+}
+
+impl Display for BlockResults {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for byte in &self.0 {
+            for i in 0..7 {
+                if byte & (0x01u8 << i) == 0 {
+                    // Current index is accepted
+                    write!(f, "0")?
+                } else {
+                    // Current index is rejected
+                    write!(f, "1")?
+                }
+            }
+        }
+        // Everything else is rejected
+        write!(f, "1+")
+    }
+}
+
 /// Height of a block, i.e. the level.
 #[derive(
     Default,

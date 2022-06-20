@@ -321,6 +321,7 @@ impl DB for RocksDB {
         let mut epoch = None;
         let mut pred_epochs = None;
         let mut address_gen = None;
+        let mut results = None;
         for (key, bytes) in self.0.iterator_opt(
             IteratorMode::From(prefix.as_bytes(), Direction::Forward),
             read_opts,
@@ -366,6 +367,11 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
+                    "results" => {
+                        results = Some(
+                            types::decode(bytes).map_err(Error::CodingError)?,
+                        )
+                    }
                     "pred_epochs" => {
                         pred_epochs = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -384,14 +390,15 @@ impl DB for RocksDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (hash, epoch, pred_epochs, address_gen) {
-            (Some(hash), Some(epoch), Some(pred_epochs), Some(address_gen)) => {
+        match (hash, epoch, pred_epochs, address_gen, results) {
+            (Some(hash), Some(epoch), Some(pred_epochs), Some(address_gen), Some(results)) => {
                 Ok(Some(BlockStateRead {
                     merkle_tree_stores,
                     hash,
                     height,
                     epoch,
                     pred_epochs,
+                    results,
                     next_epoch_min_start_height,
                     next_epoch_min_start_time,
                     address_gen,
@@ -413,6 +420,7 @@ impl DB for RocksDB {
             height,
             epoch,
             pred_epochs,
+            results,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
             address_gen,
@@ -495,6 +503,13 @@ impl DB for RocksDB {
                 .push(&"epoch".to_owned())
                 .map_err(Error::KeyError)?;
             batch.put(key.to_string(), types::encode(&epoch));
+        }
+        // Block results
+        {
+            let key = prefix_key
+                .push(&"results".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&results));
         }
         // Predecessor block epochs
         {

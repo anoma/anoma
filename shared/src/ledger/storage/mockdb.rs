@@ -83,6 +83,7 @@ impl DB for MockDB {
         let mut epoch = None;
         let mut pred_epochs = None;
         let mut address_gen = None;
+        let mut results = None;
         for (path, bytes) in self
             .0
             .borrow()
@@ -121,6 +122,11 @@ impl DB for MockDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
+                    "results" => {
+                        results = Some(
+                            types::decode(bytes).map_err(Error::CodingError)?,
+                        )
+                    }
                     "pred_epochs" => {
                         pred_epochs = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -136,8 +142,8 @@ impl DB for MockDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (hash, epoch, pred_epochs, address_gen) {
-            (Some(hash), Some(epoch), Some(pred_epochs), Some(address_gen)) => {
+        match (hash, epoch, pred_epochs, address_gen, results) {
+            (Some(hash), Some(epoch), Some(pred_epochs), Some(address_gen), Some(results)) => {
                 Ok(Some(BlockStateRead {
                     merkle_tree_stores,
                     hash,
@@ -147,6 +153,7 @@ impl DB for MockDB {
                     next_epoch_min_start_height,
                     next_epoch_min_start_time,
                     address_gen,
+                    results,
                     #[cfg(feature = "ferveo-tpke")]
                     tx_queue,
                 }))
@@ -168,6 +175,7 @@ impl DB for MockDB {
             next_epoch_min_start_height,
             next_epoch_min_start_time,
             address_gen,
+            results,
             #[cfg(feature = "ferveo-tpke")]
             tx_queue,
         }: BlockStateWrite = state;
@@ -254,6 +262,9 @@ impl DB for MockDB {
         self.0
             .borrow_mut()
             .insert("height".to_owned(), types::encode(&height));
+        self.0
+            .borrow_mut()
+            .insert("results".to_owned(), types::encode(&results));
         Ok(())
     }
 
