@@ -12,11 +12,17 @@ use anoma::ledger::pos::types::{
 use anoma::ledger::pos::{
     self, is_validator_slashes_key, Bonds, Slash, Unbonds,
 };
-use anoma::types::address::Address;
+use anoma::proto::{Tx, SignedTxData};
+use anoma::types::address::{Address, tokens};
 use anoma::types::key::*;
 use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
 use anoma::types::storage::{Epoch, PrefixValue};
+use anoma::types::transaction::{process_tx, TxType, DecryptedTx};
+use anoma::types::transaction::AffineCurve;
+use anoma::types::transaction::PairingEngine;
+use anoma::types::transaction::EllipticCurve;
 use anoma::types::{address, storage, token};
+use anoma::types::token::Transfer;
 use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::{Either, Itertools};
 use masp_primitives::asset_type::AssetType;
@@ -78,6 +84,77 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
         ),
     }
     cli::safe_exit(1)
+}
+
+/// Extract the payload from the given Tx object
+fn extract_payload(tx: Tx) -> Option<Transfer> {
+    match process_tx(tx) {
+        Ok(TxType::Wrapper(wrapper_tx)) => {
+            let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
+            extract_payload(Tx::from(match wrapper_tx.decrypt(privkey) {
+                Ok(tx) => DecryptedTx::Decrypted(tx),
+                _ => DecryptedTx::Undecryptable(wrapper_tx.clone()),
+            }))
+        }
+        Ok(TxType::Decrypted(DecryptedTx::Decrypted(tx))) => {
+            let empty_vec = vec![];
+            let tx_data = tx.data.as_ref().unwrap_or(&empty_vec);
+            let signed = SignedTxData::try_from_slice(tx_data).ok()?;
+            Transfer::try_from_slice(&signed.data.unwrap()[..]).ok()
+        },
+        _ => None
+    }
+}
+
+/// Query the specified accepted transfers from the ledger
+pub async fn query_transfers(ctx: Context, args: args::Query) {
+    // Connect to the Tendermint server holding the transactions
+    let (client, driver) = WebSocketClient::new(args.ledger_address.clone()).await.unwrap();
+    let driver_handle = tokio::spawn(async move { driver.run().await });
+    let mut transfers = BTreeMap::new();
+    // Find all transactions to or from addresses in our address book
+    for (_alias, addr) in ctx.wallet.get_addresses() {
+        for prop in ["transfer.source", "transfer.target"] {
+            // Query transactions involving the current address
+            let tx_query = Query::eq(prop, addr.encode());
+            let txs = &client
+                .tx_search(tx_query, true, 1, 255, Order::Ascending)
+                .await
+                .expect("Unable to query for transaction with given hash")
+                .txs;
+            for response_tx in txs {
+                // Only process yet unprocessed transactions
+                if !transfers.contains_key(&(response_tx.height, response_tx.index)) {
+                    let tx = Tx::try_from(response_tx.tx.as_ref())
+                        .expect("Ill-formed Tx");
+                    if let Some(transfer) = extract_payload(tx) {
+                        transfers.insert((response_tx.height, response_tx.index), transfer);
+                    }
+                }
+            }
+        }
+    }
+    // To facilitate lookups of human-readable token names
+    let tokens = tokens();
+    for ((height, idx), transfer) in transfers {
+        println!("Height: {}, Index: {}, Transparent Transfer:", height, idx);
+        println!("  Source: {}", transfer.source);
+        println!("  Target: {}", transfer.target);
+        println!("  Amount: {}", transfer.amount);
+        println!(
+            "  Token: {}",
+            tokens.get(&transfer.token)
+                .cloned()
+                .unwrap_or(transfer.token.encode().as_str())
+        );
+    }
+    // Signal to the driver to terminate.
+    client.close().unwrap();
+    // Await the driver's termination to ensure proper connection closure.
+    let _ = driver_handle.await.unwrap_or_else(|x| {
+        eprintln!("{}", x);
+        cli::safe_exit(1)
+    });
 }
 
 /// Query token balance(s)
