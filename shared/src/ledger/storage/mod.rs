@@ -107,7 +107,7 @@ pub struct BlockStorage<H: StorageHasher> {
     /// Epoch of the block
     pub epoch: Epoch,
     /// Results of applying transactions
-    pub results: Vec<BlockResults>,
+    pub results: BlockResults,
     /// Predecessor block epochs
     pub pred_epochs: Epochs,
 }
@@ -148,7 +148,7 @@ pub struct BlockStateRead {
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
     /// Results of applying transactions
-    pub results: Vec<BlockResults>,
+    pub results: BlockResults,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: TxQueue,
@@ -173,7 +173,7 @@ pub struct BlockStateWrite<'a> {
     /// Established address generator
     pub address_gen: &'a EstablishedAddressGen,
     /// Results of applying transactions
-    pub results: &'a Vec<BlockResults>,
+    pub results: &'a BlockResults,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: &'a TxQueue,
@@ -258,6 +258,9 @@ pub trait DBIter<'iter> {
 
     /// Read account subspace key value pairs with the given prefix from the DB
     fn iter_prefix(&'iter self, prefix: &Key) -> Self::PrefixIter;
+
+    /// Read results subspace key value pairs from the DB
+    fn iter_results(&'iter self) -> Self::PrefixIter;
 }
 
 /// Atomic batch write.
@@ -290,7 +293,7 @@ where
             height: BlockHeight::default(),
             epoch: Epoch::default(),
             pred_epochs: Epochs::default(),
-            results: Vec::default(),
+            results: BlockResults::default(),
         };
         Storage::<D, H> {
             db: D::open(db_path, cache),
@@ -431,6 +434,13 @@ where
         prefix: &Key,
     ) -> (<D as DBIter<'_>>::PrefixIter, u64) {
         (self.db.iter_prefix(prefix), prefix.len() as _)
+    }
+
+    /// Returns a prefix iterator and the gas cost
+    pub fn iter_results(
+        &self,
+    ) -> (<D as DBIter<'_>>::PrefixIter, u64) {
+        (self.db.iter_results(), 0 as _)
     }
 
     /// Write a value to the specified subspace and returns the gas cost and the
@@ -837,7 +847,7 @@ pub mod testing {
                 height: BlockHeight::default(),
                 epoch: Epoch::default(),
                 pred_epochs: Epochs::default(),
-                results: Vec::default(),
+                results: BlockResults::default(),
             };
             Self {
                 db: MockDB::default(),

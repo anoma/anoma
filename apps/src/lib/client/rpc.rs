@@ -16,7 +16,7 @@ use anoma::proto::{Tx, SignedTxData};
 use anoma::types::address::{Address, tokens};
 use anoma::types::key::*;
 use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
-use anoma::types::storage::{Epoch, PrefixValue};
+use anoma::types::storage::{Epoch, PrefixValue, BlockResults};
 use anoma::types::transaction::{process_tx, TxType, DecryptedTx};
 use anoma::types::transaction::AffineCurve;
 use anoma::types::transaction::PairingEngine;
@@ -106,11 +106,40 @@ fn extract_payload(tx: Tx) -> Option<Transfer> {
     }
 }
 
+/// Query the results of the last committed block
+pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
+    let client = HttpClient::new(args.ledger_address).unwrap();
+    let path = Path::Results;
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, false)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => match Vec::<BlockResults>::try_from_slice(&response.value[..]) {
+            Ok(results) => {
+                return results;
+            }
+
+            Err(err) => {
+                eprintln!("Error decoding the results value: {}", err)
+            }
+        },
+        Code::Err(err) => eprintln!(
+            "Error in the query {} (error code {})",
+            response.info, err
+        ),
+    }
+    cli::safe_exit(1)
+}
+
 /// Query the specified accepted transfers from the ledger
 pub async fn query_transfers(ctx: Context, args: args::Query) {
     // Connect to the Tendermint server holding the transactions
     let (client, driver) = WebSocketClient::new(args.ledger_address.clone()).await.unwrap();
     let driver_handle = tokio::spawn(async move { driver.run().await });
+    // Required for filtering out rejected transactions from Tendermint responses
+    let block_results = query_results(args).await;
     let mut transfers = BTreeMap::new();
     // Find all transactions to or from addresses in our address book
     for (_alias, addr) in ctx.wallet.get_addresses() {
@@ -123,14 +152,18 @@ pub async fn query_transfers(ctx: Context, args: args::Query) {
                 .expect("Unable to query for transaction with given hash")
                 .txs;
             for response_tx in txs {
-                // Only process yet unprocessed transactions
-                if !transfers.contains_key(&(response_tx.height, response_tx.index)) {
-                    let tx = Tx::try_from(response_tx.tx.as_ref())
-                        .expect("Ill-formed Tx");
-                    if let Some(transfer) = extract_payload(tx) {
-                        transfers.insert((response_tx.height, response_tx.index), transfer);
+                let height = response_tx.height;
+                let idx = response_tx.index;
+                // Only process yet unprocessed transactions which have been
+                // accepted by node VPs
+                if !transfers.contains_key(&(height, idx)) &&
+                    block_results[u64::from(height) as usize].is_accepted(idx as usize) {
+                        let tx = Tx::try_from(response_tx.tx.as_ref())
+                            .expect("Ill-formed Tx");
+                        if let Some(transfer) = extract_payload(tx) {
+                            transfers.insert((response_tx.height, response_tx.index), transfer);
+                        }
                     }
-                }
             }
         }
     }

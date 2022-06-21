@@ -623,7 +623,7 @@ mod test_utils {
     use anoma::types::address::{xan, EstablishedAddressGen};
     use anoma::types::chain::ChainId;
     use anoma::types::key::*;
-    use anoma::types::storage::{BlockHash, Epoch};
+    use anoma::types::storage::{BlockHash, Epoch, BlockResults};
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
@@ -883,7 +883,7 @@ mod test_utils {
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
                 address_gen: &address_gen,
-                results: &Vec::default(),
+                results: &BlockResults::default(),
                 tx_queue: &shell.storage.tx_queue,
             })
             .expect("Test failed");

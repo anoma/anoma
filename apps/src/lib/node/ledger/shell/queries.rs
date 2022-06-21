@@ -7,7 +7,7 @@ use anoma::ledger::storage::types;
 use anoma::types::address::Address;
 use anoma::types::key;
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
-use anoma::types::storage::{Key, PrefixValue};
+use anoma::types::storage::{Key, PrefixValue, BlockResults};
 use anoma::types::token::{self, is_masp_conversion, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
@@ -44,6 +44,25 @@ where
                 Path::Epoch => {
                     let (epoch, _gas) = self.storage.get_last_epoch();
                     let value = anoma::ledger::storage::types::encode(&epoch);
+                    response::Query {
+                        value,
+                        ..Default::default()
+                    }
+                }
+                Path::Results => {
+                    let (iter, _gas) = self.storage.iter_results();
+                    let mut results = vec![
+                        BlockResults::default();
+                        self.storage.block.height.0 as usize + 1
+                    ];
+                    iter.for_each(|(key, value, _gas)| {
+                        let key = key.parse::<usize>()
+                            .expect("expected integer for block height");
+                        let value = BlockResults::try_from_slice(&value)
+                            .expect("expected BlockResults bytes");
+                        results[key] = value;
+                    });
+                    let value = anoma::ledger::storage::types::encode(&results);
                     response::Query {
                         value,
                         ..Default::default()
