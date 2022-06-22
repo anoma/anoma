@@ -465,10 +465,10 @@ type Conversions =
     HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>;
 
 /// Represents the changes that were made to a list of transparent accounts
-type TransferDelta = HashMap<Address, Amount<Address>>;
+pub type TransferDelta = HashMap<Address, Amount<Address>>;
 
 /// Represents the changes that were made to a list of shielded accounts
-type TransactionDelta = HashMap<ViewingKey, Amount>;
+pub type TransactionDelta = HashMap<ViewingKey, Amount>;
 
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
@@ -581,6 +581,16 @@ impl ShieldedContext {
         self.div_map.extend(new_ctx.div_map);
         self.witness_map.extend(new_ctx.witness_map);
         self.spents.extend(new_ctx.spents);
+        // The deltas are the exception because different keys can reveal
+        // different parts of the same transaction. Hence each delta needs to be
+        // merged separately.
+        for ((height, idx), (ntfer_delta, ntx_delta)) in new_ctx.delta_map {
+            let (tfer_delta, tx_delta) = self.delta_map
+                .entry((height, idx))
+                .or_insert((TransferDelta::new(), TransactionDelta::new()));
+            tfer_delta.extend(ntfer_delta);
+            tx_delta.extend(ntx_delta);
+        }
     }
 
     /// Fetch the current state of the multi-asset shielded pool into a
@@ -726,8 +736,6 @@ impl ShieldedContext {
         } else {
             return
         };
-        // For tracking the account changes caused by this Transfer
-        let mut transfer_delta = TransferDelta::new();
         // For tracking the account changes caused by this Transaction
         let mut transaction_delta = TransactionDelta::new();
         // To aid tracing nullifiers back to relevant account
@@ -799,10 +807,9 @@ impl ShieldedContext {
         let transparent_delta =
             Amount::from_nonnegative(tx.token.clone(), u64::from(tx.amount))
             .expect("invalid value for amount");
-        let balance = transfer_delta.entry(tx.source.clone()).or_insert(Amount::zero());
-        *balance -= &transparent_delta;
-        let balance = transfer_delta.entry(tx.target.clone()).or_insert(Amount::zero());
-        *balance += &transparent_delta;
+        let mut transfer_delta = TransferDelta::new();
+        transfer_delta.insert(tx.source.clone(), Amount::zero() - &transparent_delta);
+        transfer_delta.insert(tx.target.clone(), transparent_delta);
         self.delta_map.insert((height, index), (transfer_delta, transaction_delta));
         self.last_txidx += 1;
     }

@@ -13,10 +13,10 @@ use anoma::ledger::pos::{
     self, is_validator_slashes_key, Bonds, Slash, Unbonds,
 };
 use anoma::proto::{Tx, SignedTxData};
-use anoma::types::address::{Address, tokens};
+use anoma::types::address::{Address, tokens, masp};
 use anoma::types::key::*;
 use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
-use anoma::types::storage::{Epoch, PrefixValue, BlockResults};
+use anoma::types::storage::{Epoch, PrefixValue, BlockResults, BlockHeight, TxIndex};
 use anoma::types::transaction::{process_tx, TxType, DecryptedTx};
 use anoma::types::transaction::AffineCurve;
 use anoma::types::transaction::PairingEngine;
@@ -55,7 +55,7 @@ use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
-use crate::client::tx::{PinnedBalanceError, ShieldedContext, TxResponse};
+use crate::client::tx::{PinnedBalanceError, ShieldedContext, TxResponse, TransferDelta, TransactionDelta};
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -134,13 +134,24 @@ pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
 }
 
 /// Query the specified accepted transfers from the ledger
-pub async fn query_transfers(ctx: Context, args: args::Query) {
+pub async fn query_transfers(mut ctx: Context, args: args::Query) {
     // Connect to the Tendermint server holding the transactions
     let (client, driver) = WebSocketClient::new(args.ledger_address.clone()).await.unwrap();
     let driver_handle = tokio::spawn(async move { driver.run().await });
+    // Build up the context that will be queried for transactions
+    let _ = ctx.shielded.load();
+    let vks = ctx.wallet.get_viewing_keys();
+    let fvks: Vec<_> = vks.values()
+        .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+        .collect();
+    ctx.shielded
+        .fetch(&args.ledger_address, &[], &fvks)
+        .await;
+    // Save the update state so that future fetches can be short-circuited
+    let _ = ctx.shielded.save();
     // Required for filtering out rejected transactions from Tendermint responses
     let block_results = query_results(args).await;
-    let mut transfers = BTreeMap::new();
+    let mut transfers = ctx.shielded.get_tx_deltas().clone();
     // Find all transactions to or from addresses in our address book
     for (_alias, addr) in ctx.wallet.get_addresses() {
         for prop in ["transfer.source", "transfer.target"] {
@@ -152,34 +163,64 @@ pub async fn query_transfers(ctx: Context, args: args::Query) {
                 .expect("Unable to query for transaction with given hash")
                 .txs;
             for response_tx in txs {
-                let height = response_tx.height;
-                let idx = response_tx.index;
+                let height = BlockHeight(response_tx.height.value());
+                let idx = TxIndex(response_tx.index);
                 // Only process yet unprocessed transactions which have been
                 // accepted by node VPs
-                if !transfers.contains_key(&(height, idx)) &&
-                    block_results[u64::from(height) as usize].is_accepted(idx as usize) {
-                        let tx = Tx::try_from(response_tx.tx.as_ref())
-                            .expect("Ill-formed Tx");
-                        if let Some(transfer) = extract_payload(tx) {
-                            transfers.insert((response_tx.height, response_tx.index), transfer);
-                        }
+                let should_process = !transfers.contains_key(&(height, idx)) &&
+                    block_results[u64::from(height) as usize].is_accepted(idx.0 as usize);
+                if !should_process { continue }
+                let tx = Tx::try_from(response_tx.tx.as_ref())
+                    .expect("Ill-formed Tx");
+                if let Some(transfer) = extract_payload(tx) {
+                    // Skip MASP addresses as they are already handled by ShieldedContext
+                    if transfer.source == masp() || transfer.target == masp() {
+                        continue
                     }
+                    // Describe how a Transfer simply subtracts from one
+                    // account and adds the same to another
+                    let mut delta = TransferDelta::default();
+                    let tfer_delta = Amount::from_nonnegative(
+                        transfer.token.clone(),
+                        u64::from(transfer.amount)
+                    ).expect("invalid value for amount");
+                    delta.insert(transfer.source, Amount::zero() - &tfer_delta);
+                    delta.insert(transfer.target, tfer_delta);
+                    // No shielded accounts are affected by this Transfer
+                    transfers.insert((height, idx), (delta, TransactionDelta::new()));
+                }
             }
         }
     }
     // To facilitate lookups of human-readable token names
     let tokens = tokens();
-    for ((height, idx), transfer) in transfers {
+    // To enable ExtendedFullViewingKeys to be displayed instead of ViewingKeys
+    let fvk_map: HashMap<_, _> = vks.values()
+        .map(|fvk| (ExtendedFullViewingKey::from(*fvk).fvk.vk, fvk))
+        .collect();
+    // Now display historical shielded and transparent transactions
+    for ((height, idx), (tfer_delta, tx_delta)) in transfers {
         println!("Height: {}, Index: {}, Transparent Transfer:", height, idx);
-        println!("  Source: {}", transfer.source);
-        println!("  Target: {}", transfer.target);
-        println!("  Amount: {}", transfer.amount);
-        println!(
-            "  Token: {}",
-            tokens.get(&transfer.token)
-                .cloned()
-                .unwrap_or(transfer.token.encode().as_str())
-        );
+        // Display the transparent changes first
+        for (account, amt) in tfer_delta {
+            if account != masp() {
+                print!("  {}:", account);
+                for (addr, val) in amt.components() {
+                    let addr_enc = addr.encode();
+                    let readable = tokens.get(addr)
+                        .cloned()
+                        .unwrap_or(addr_enc.as_str());
+                    print!(" {} {}", token::Amount::from(*val as u64), readable);
+                }
+                println!();
+            }
+        }
+        // Then display the shielded changes afterwards
+        for (account, amt) in tx_delta {
+            if fvk_map.contains_key(&account) {
+                println!("  {}: {:?}", fvk_map[&account], amt);
+            }
+        }
     }
     // Signal to the driver to terminate.
     client.close().unwrap();
