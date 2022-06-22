@@ -12,7 +12,7 @@ export ANOMA_E2E_DEBUG=true
 export TM_LOG_LEVEL=debug
 export ANOMA_LOG=debug
 
-make build-wasm-scripts
+make -C wasm/wasm_source
 make checksum-wasm
 
 cargo test \
