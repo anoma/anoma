@@ -642,9 +642,9 @@ where
             // out/replaced with the new asset
             current_convs.insert(
                 addr.clone(),
-                (Amount::from(old_asset, -1).unwrap()
-                    + Amount::from(new_asset, 1).unwrap()
-                    + Amount::from(reward_asset, *reward).unwrap())
+                (Amount::from_pair(old_asset, -1).unwrap()
+                    + Amount::from_pair(new_asset, 1).unwrap()
+                    + Amount::from_pair(reward_asset, *reward).unwrap())
                 .into(),
             );
             // Add a conversion from the previous asset type

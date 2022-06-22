@@ -789,7 +789,7 @@ impl ShieldedContext {
                 // Get note associated with this ID
                 let note = self.note_map.get(note_idx).unwrap();
                 // Finally add value to multi-asset accumulator
-                val_acc += Amount::from(note.asset_type, note.value)
+                val_acc += Amount::from_pair(note.asset_type, note.value)
                     .expect("found note with invalid value or asset type");
             }
         }
@@ -925,7 +925,7 @@ impl ShieldedContext {
                 let note = *self.note_map.get(note_idx).unwrap();
 
                 // The amount contributed by this note before conversion
-                let pre_contr = Amount::from(note.asset_type, note.value)
+                let pre_contr = Amount::from_pair(note.asset_type, note.value)
                     .expect("received note has invalid value or asset type");
                 let (contr, proposed_convs) = self
                     .compute_exchanged_amount(
