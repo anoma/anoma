@@ -12,6 +12,7 @@ export ANOMA_E2E_DEBUG=true
 export TM_LOG_LEVEL=debug
 export ANOMA_LOG=debug
 
+make -C wasm/wasm_source deps
 make -C wasm/wasm_source
 make checksum-wasm
 
