@@ -5,6 +5,8 @@
 set -euox pipefail
 IFS=$'\n\t'
 
+echo "TENDERMINT: ${TENDERMINT}"
+
 export RUST_BACKTRACE=short
 export ANOMA_E2E_KEEP_TEMP=true
 export ANOMA_E2E_DEBUG=true
