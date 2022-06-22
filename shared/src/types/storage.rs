@@ -43,7 +43,7 @@ pub const VP_KEY_PREFIX: char = '?';
 /// The reserved storage key for validity predicates
 pub const RESERVED_VP_KEY: &str = "?";
 
-/// Height of a block, i.e. the level.
+/// Transaction index within block.
 #[derive(
     Default,
     Clone,

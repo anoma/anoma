@@ -20,7 +20,18 @@ const PINNED_PAYMENT_ADDRESS_HRP: &str = "ppatest";
 const EXT_SPENDING_KEY_HRP: &str = "xsktest";
 
 /// Wrapper for masp_primitive's FullViewingKey
-#[derive(Clone, Debug, Copy)]
+#[derive(
+    Clone,
+    Debug,
+    Copy,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+    Eq,
+    PartialEq,
+    PartialOrd,
+    Ord
+)]
 pub struct ExtendedViewingKey(masp_primitives::zip32::ExtendedFullViewingKey);
 
 impl Display for ExtendedViewingKey {
@@ -109,7 +120,18 @@ impl<'de> serde::Deserialize<'de> for ExtendedViewingKey {
 }
 
 /// Wrapper for masp_primitive's PaymentAddress
-#[derive(Clone, Debug, Copy, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(
+    Clone,
+    Debug,
+    Copy,
+    PartialOrd,
+    Ord,
+    Eq,
+    PartialEq,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize
+)]
 pub struct PaymentAddress(masp_primitives::primitives::PaymentAddress, bool);
 
 impl PaymentAddress {
@@ -385,7 +407,17 @@ impl TransferTarget {
 
 /// Represents the owner of arbitrary funds
 #[allow(clippy::large_enum_variant)]
-#[derive(Debug, Clone)]
+#[derive(
+    Debug,
+    Clone,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord
+)]
 pub enum BalanceOwner {
     /// A balance stored at a transparent address
     Address(Address),

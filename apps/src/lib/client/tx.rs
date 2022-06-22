@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, BTreeMap};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::fs::{File, OpenOptions};
@@ -464,6 +464,12 @@ pub enum PinnedBalanceError {
 type Conversions =
     HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>;
 
+/// Represents the changes that were made to a list of transparent accounts
+type TransferDelta = HashMap<Address, Amount<Address>>;
+
+/// Represents the changes that were made to a list of shielded accounts
+type TransactionDelta = HashMap<ViewingKey, Amount>;
+
 /// Represents the current state of the shielded pool from the perspective of
 /// the chosen viewing keys.
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -487,6 +493,8 @@ pub struct ShieldedContext {
     div_map: HashMap<usize, Diversifier>,
     /// Maps note positions to their witness (used to make merkle paths)
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
+    /// Tracks what each transaction does to various account balances
+    delta_map: BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)>,
     /// The set of note positions that have been spent
     spents: HashSet<usize>,
 }
@@ -497,7 +505,6 @@ const TMP_FILE_NAME: &str = "shielded.tmp";
 
 /// Default implementation to ease construction of TxContexts. Derive cannot be
 /// used here due to CommitmentTree not implementing Default.
-
 impl Default for ShieldedContext {
     fn default() -> ShieldedContext {
         ShieldedContext {
@@ -511,6 +518,7 @@ impl Default for ShieldedContext {
             div_map: HashMap::default(),
             witness_map: HashMap::default(),
             spents: HashSet::default(),
+            delta_map: BTreeMap::default(),
         }
     }
 }
@@ -613,8 +621,8 @@ impl ShieldedContext {
             }
             // Update this unknown shielded context until it is level with self
             while tx_ctx.last_txidx != self.last_txidx {
-                if let Some(tx) = tx_iter.next() {
-                    tx_ctx.scan_tx(tx);
+                if let Some(((height, idx), (_epoch, tx))) = tx_iter.next() {
+                    tx_ctx.scan_tx(*height, *idx, tx);
                 } else {
                     break;
                 }
@@ -631,8 +639,8 @@ impl ShieldedContext {
         }
         // Now that we possess the unspent notes corresponding to both old and
         // new keys up until tx_pos, proceed to scan the new transactions.
-        for tx in &mut tx_iter {
-            self.scan_tx(tx);
+        for ((height, idx), (_epoch, tx)) in &mut tx_iter {
+            self.scan_tx(*height, *idx, tx);
         }
     }
 
@@ -665,7 +673,7 @@ impl ShieldedContext {
     pub async fn fetch_shielded_transfers(
         ledger_address: &TendermintAddress,
         last_txidx: u64,
-    ) -> Vec<Transaction> {
+    ) -> BTreeMap<(BlockHeight, TxIndex), (Epoch, Transfer)> {
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // The address of the MASP account
         let masp_addr = masp();
@@ -677,7 +685,7 @@ impl ShieldedContext {
         let head_txidx = query_storage_value::<u64>(client.clone(), head_tx_key)
             .await
             .unwrap_or(0);
-        let mut shielded_txs = Vec::new();
+        let mut shielded_txs = BTreeMap::new();
         // Fetch all the transactions we do not have yet
         for i in last_txidx..head_txidx {
             // Construct the key for where the current transaction is stored
@@ -685,7 +693,7 @@ impl ShieldedContext {
                 .push(&(TX_KEY_PREFIX.to_owned() + &i.to_string()))
                 .expect("Cannot obtain a storage key");
             // Obtain the current transaction
-            let (_tx_epoch, _tx_height, _tx_index, current_tx) =
+            let (tx_epoch, tx_height, tx_index, current_tx) =
                 query_storage_value::<(Epoch, BlockHeight, TxIndex, Transfer)>(
                     client.clone(),
                     current_tx_key,
@@ -693,10 +701,7 @@ impl ShieldedContext {
                 .await
                 .unwrap();
             // Collect the current transaction
-            shielded_txs.push(
-                current_tx.shielded
-                    .expect("shielded pool Transfers should have shielded part")
-            );
+            shielded_txs.insert((tx_height, tx_index), (tx_epoch, current_tx));
         }
         shielded_txs
     }
@@ -709,9 +714,26 @@ impl ShieldedContext {
     /// we have spent are updated. The witness map is maintained to make it
     /// easier to construct note merkle paths in other code. See
     /// https://zips.z.cash/protocol/protocol.pdf#scan
-    pub fn scan_tx(&mut self, tx: &Transaction) {
+    pub fn scan_tx(
+        &mut self,
+        height: BlockHeight,
+        index: TxIndex,
+        tx: &Transfer
+    ) {
+        // Ignore purely transparent transactions
+        let shielded = if let Some(shielded) = &tx.shielded {
+            shielded
+        } else {
+            return
+        };
+        // For tracking the account changes caused by this Transfer
+        let mut transfer_delta = TransferDelta::new();
+        // For tracking the account changes caused by this Transaction
+        let mut transaction_delta = TransactionDelta::new();
+        // To aid tracing nullifiers back to relevant account
+        let mut note_to_vk = HashMap::new();
         // Listen for notes sent to our viewing keys
-        for so in &(*tx).shielded_outputs {
+        for so in &shielded.shielded_outputs {
             // Create merkle tree leaf node from note commitment
             let node = Node::new(so.cmu.to_repr());
             // Update each merkle tree in the witness map with the latest
@@ -750,20 +772,47 @@ impl ShieldedContext {
                     // note
                     self.div_map.insert(note_pos, *pa.diversifier());
                     self.nf_map.insert(nf.0, note_pos);
+                    // Note the account changes
+                    let balance = transaction_delta.entry(*vk).or_insert(Amount::zero());
+                    *balance += Amount::from_nonnegative(note.asset_type, note.value)
+                        .expect("found note with invalid value or asset type");
+                    note_to_vk.insert(note_pos, vk.clone());
                     break;
                 }
             }
         }
         // Cancel out those of our notes that have been spent
-        for ss in &(*tx).shielded_spends {
+        for ss in &shielded.shielded_spends {
             // If the shielded spend's nullifier is in our map, then target note
             // is rendered unusable
             if let Some(note_pos) = self.nf_map.get(&ss.nullifier) {
                 self.spents.insert(*note_pos);
+                // Note the account changes
+                let balance = transaction_delta.entry(note_to_vk[note_pos].clone())
+                    .or_insert(Amount::zero());
+                let note = self.note_map[note_pos];
+                *balance -= Amount::from_nonnegative(note.asset_type, note.value)
+                    .expect("found note with invalid value or asset type");
             }
         }
+        // Record the changes to the transparent accounts
+        let transparent_delta =
+            Amount::from_nonnegative(tx.token.clone(), u64::from(tx.amount))
+            .expect("invalid value for amount");
+        let balance = transfer_delta.entry(tx.source.clone()).or_insert(Amount::zero());
+        *balance -= &transparent_delta;
+        let balance = transfer_delta.entry(tx.target.clone()).or_insert(Amount::zero());
+        *balance += &transparent_delta;
+        self.delta_map.insert((height, index), (transfer_delta, transaction_delta));
         self.last_txidx += 1;
     }
+
+    /// Summarize the effects on shielded and transparent accounts of each
+    /// Transfer in this context
+    pub fn get_tx_deltas(&self) ->
+        &BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)> {
+            &self.delta_map
+        }
 
     /// Compute the total unspent notes associated with the viewing key in the
     /// context. If the key is not in the context, then we do not know the
@@ -784,7 +833,7 @@ impl ShieldedContext {
                 // Get note associated with this ID
                 let note = self.note_map.get(note_idx).unwrap();
                 // Finally add value to multi-asset accumulator
-                val_acc += Amount::from(note.asset_type, note.value)
+                val_acc += Amount::from_nonnegative(note.asset_type, note.value)
                     .expect("found note with invalid value or asset type");
             }
         }
@@ -920,7 +969,7 @@ impl ShieldedContext {
                 let note = *self.note_map.get(note_idx).unwrap();
 
                 // The amount contributed by this note before conversion
-                let pre_contr = Amount::from(note.asset_type, note.value)
+                let pre_contr = Amount::from_pair(note.asset_type, note.value)
                     .expect("received note has invalid value or asset type");
                 let (contr, proposed_convs) = self
                     .compute_exchanged_amount(
@@ -1025,7 +1074,7 @@ impl ShieldedContext {
 }
 
 /// Convert Anoma amount and token type to MASP equivalents
-async fn convert_amount(
+fn convert_amount(
     epoch: Epoch,
     token: &Address,
     val: token::Amount,
@@ -1039,7 +1088,7 @@ async fn convert_amount(
         .expect("unable to create asset type");
     // Combine the value and unit into one amount
     let amount = Amount::from_nonnegative(asset_type, u64::from(val))
-        .expect("invalid value or asset type for amount");
+        .expect("invalid value for amount");
     (asset_type, amount)
 }
 
@@ -1086,7 +1135,7 @@ async fn gen_shielded_transfer(
     let mut builder = Builder::<TestNetwork, OsRng>::new(0u32);
     // Convert transaction amount into MASP types
     let (asset_type, amount) =
-        convert_amount(epoch, &ctx.get(&args.token), args.amount).await;
+        convert_amount(epoch, &ctx.get(&args.token), args.amount);
     // If there are shielded inputs
     if let Some(sk) = spending_key {
         // Transaction fees need to match the amount in the wrapper Transfer
@@ -1095,8 +1144,7 @@ async fn gen_shielded_transfer(
             epoch,
             &ctx.get(&args.tx.fee_token),
             args.tx.fee_amount,
-        )
-        .await;
+        );
         builder.set_fee(fee.clone())?;
         // If the gas is coming from the shielded pool, then our shielded inputs
         // must also cover the gas fee
