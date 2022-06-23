@@ -633,7 +633,7 @@ fn masp_pinned_txs() -> Result<()> {
     client.exp_string("Supplied viewing key cannot decode transactions to")?;
     drop(client);
 
-    // Assert PPA(C) has not transaction pinned to it
+    // Assert PPA(C) has no transaction pinned to it
     let mut client = run!(
         test,
         Bin::Client,

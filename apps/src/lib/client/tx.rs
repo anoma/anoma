@@ -893,6 +893,35 @@ impl ShieldedContext {
         }
     }
 
+    /// Try to convert as much of the given asset type-value pair using the given
+    /// allowed conversion. usage is incremented by the amount of the conversion
+    /// used, the conversions are applied to the given input, and the trace
+    /// amount that could not be converted is moved from input to output.
+    fn apply_conversion(
+        conv: AllowedConversion,
+        asset_type: AssetType,
+        value: i64,
+        usage: &mut u64,
+        input: &mut Amount,
+        output: &mut Amount,
+    ) {
+        // If conversion if possible, accumulate the exchanged amount
+        let conv: Amount = conv.into();
+        // The amount required of current asset to qualify for conversion
+        let threshold = -conv[&asset_type];
+        // We should use an amount of the AllowedConversion that almost
+        // cancels the original amount
+        let required = value / threshold;
+        // Forget about the trace amount left over because we cannot
+        // realize its value
+        let trace = Amount::from_pair(asset_type, value % threshold).unwrap();
+        // Record how much more of the given conversion has been used
+        *usage += required as u64;
+        // Apply the conversions to input and move the trace amount to output
+        *input += conv * required - &trace;
+        *output += trace;
+    }
+
     /// Convert the given amount into the latest asset types whilst making a
     /// note of the conversions that were used. Note that this function does
     /// not assume that allowed conversions from the ledger are expressed in
@@ -900,47 +929,52 @@ impl ShieldedContext {
     pub async fn compute_exchanged_amount(
         &self,
         ledger_address: TendermintAddress,
-        mut balance: Amount,
+        mut input: Amount,
         mut conversions: Conversions,
     ) -> (Amount, Conversions) {
         // Establish connection with which to do exchange rate queries
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // Where we will store our exchanged value
-        let mut val_acc = Amount::zero();
+        let mut output = Amount::zero();
+        // Repeatedly exchange assets until it is no longer possible
         while let Some((asset_type, value)) =
-            clone_pair_option(balance.components().next())
+            clone_pair_option(input.components().next())
         {
-            let comp = balance.project(asset_type);
-            if let Some((conv, _wit, curr_value)) =
+            if let Some((conv, _wit, usage)) =
                 conversions.get_mut(&asset_type)
             {
-                // Record how much more of the given conversion has been used
-                *curr_value += value as u64;
-                // If conversion if possible, accumulate the exchanged amount
-                let conv: Amount = conv.clone().into();
-                // We assume here that conversion always contains extactly -1
-                // units of the queried asset type
-                balance += conv * value;
+                Self::apply_conversion(
+                    conv.clone(),
+                    asset_type,
+                    value,
+                    usage,
+                    &mut input,
+                    &mut output,
+                );
             } else if let Some((_addr, _epoch, conv, wit)) =
                 Self::query_allowed_conversion(client.clone(), &asset_type)
                     .await
             {
+                let mut usage = 0;
+                Self::apply_conversion(
+                    conv.clone(),
+                    asset_type,
+                    value,
+                    &mut usage,
+                    &mut input,
+                    &mut output,
+                );
                 // Note how much of the found conversion we are using
-                conversions
-                    .insert(asset_type, (conv.clone(), wit, value as u64));
-                // If conversion if possible, accumulate the exchanged amount
-                let conv: Amount = conv.into();
-                // We assume here that conversion always contains extactly -1
-                // units of the queried asset type
-                balance += conv * value;
+                conversions.insert(asset_type, (conv, wit, usage as u64));
             } else {
+                let comp = input.project(asset_type);
                 // Otherwise accumulate the amount as is
-                val_acc += comp.clone();
+                output += &comp;
                 // Strike from balance to avoid repeating computation
-                balance -= comp;
+                input -= comp;
             }
         }
-        (val_acc, conversions)
+        (output, conversions)
     }
 
     /// Collect enough unspent notes in this context to exceed the given amount

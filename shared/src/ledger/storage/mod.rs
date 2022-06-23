@@ -638,11 +638,15 @@ where
             // Dispence a transparent reward in parallel to the shielded rewards
             let token_key = self.read(&token::balance_key(addr, &masp_addr));
             if let Ok((Some(addr_balance), _)) = token_key {
-                // The reward for each unit of the current asset is a constant
-                // amount of the reward token.
+                // The reward for each reward.1 units of the current asset is
+                // reward.0 units of the reward token
                 let addr_bal: token::Amount =
                     types::decode(addr_balance).expect("invalid balance");
-                total_reward += addr_bal * *reward as u64;
+                // Since floor(a) + floor(b) <= floor(a+b), there will always be
+                // enough rewards to reimburse users
+                total_reward += token::Amount::from(
+                    (u64::from(addr_bal) / reward.1) * reward.0
+                );
             }
             // Construct MASP asset type with latest timestamp for this token
             let new_asset_bytes = (addr.clone(), self.last_epoch.0)
@@ -662,9 +666,9 @@ where
             // out/replaced with the new asset
             current_convs.insert(
                 addr.clone(),
-                (Amount::from_pair(old_asset, -1).unwrap()
-                    + Amount::from_pair(new_asset, 1).unwrap()
-                    + Amount::from_pair(reward_asset, *reward).unwrap())
+                (Amount::from_pair(old_asset, -(reward.1 as i64)).unwrap()
+                    + Amount::from_pair(new_asset, reward.1).unwrap()
+                    + Amount::from_pair(reward_asset, reward.0).unwrap())
                 .into(),
             );
             // Add a conversion from the previous asset type
