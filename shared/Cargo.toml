@@ -116,6 +116,7 @@ wasmer-engine-dylib = {version = "=2.2.0", optional = true}
 wasmer-engine-universal = {version = "=2.2.0", optional = true}
 wasmer-vm = {version = "2.2.0", optional = true}
 wasmparser = "0.83.0"
+zeroize = "1.5.5"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
