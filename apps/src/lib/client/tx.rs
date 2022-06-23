@@ -893,10 +893,11 @@ impl ShieldedContext {
         }
     }
 
-    /// Try to convert as much of the given asset type-value pair using the given
-    /// allowed conversion. usage is incremented by the amount of the conversion
-    /// used, the conversions are applied to the given input, and the trace
-    /// amount that could not be converted is moved from input to output.
+    /// Try to convert as much of the given asset type-value pair using the
+    /// given allowed conversion. usage is incremented by the amount of the
+    /// conversion used, the conversions are applied to the given input, and
+    /// the trace amount that could not be converted is moved from input to
+    /// output.
     fn apply_conversion(
         conv: AllowedConversion,
         asset_type: AssetType,
@@ -940,8 +941,7 @@ impl ShieldedContext {
         while let Some((asset_type, value)) =
             clone_pair_option(input.components().next())
         {
-            if let Some((conv, _wit, usage)) =
-                conversions.get_mut(&asset_type)
+            if let Some((conv, _wit, usage)) = conversions.get_mut(&asset_type)
             {
                 Self::apply_conversion(
                     conv.clone(),
