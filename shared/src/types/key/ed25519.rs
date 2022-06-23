@@ -9,6 +9,7 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
+use zeroize::{Zeroize};
 
 use super::{
     ParsePublicKeyError, ParseSecretKeyError, ParseSignatureError, RefTo,
@@ -122,8 +123,8 @@ impl FromStr for PublicKey {
 }
 
 /// Ed25519 secret key
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SecretKey(pub ed25519_consensus::SigningKey);
+#[derive(Debug, Serialize, Deserialize, Zeroize)]
+pub struct SecretKey(pub Box<ed25519_consensus::SigningKey>);
 
 impl super::SecretKey for SecretKey {
     type PublicKey = PublicKey;
@@ -157,13 +158,13 @@ impl RefTo<PublicKey> for SecretKey {
 
 impl Clone for SecretKey {
     fn clone(&self) -> SecretKey {
-        SecretKey(ed25519_consensus::SigningKey::from(self.0.to_bytes()))
+        SecretKey(Box::new(ed25519_consensus::SigningKey::from(self.0.to_bytes())))
     }
 }
 
 impl BorshDeserialize for SecretKey {
     fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-        Ok(SecretKey(
+        Ok(SecretKey(Box::new(
             ed25519_consensus::SigningKey::try_from(
                 <[u8; SECRET_KEY_LENGTH] as BorshDeserialize>::deserialize(
                     buf,
@@ -173,7 +174,7 @@ impl BorshDeserialize for SecretKey {
             .map_err(|e| {
                 std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
             })?,
-        ))
+        )))
     }
 }
 
@@ -215,6 +216,12 @@ impl FromStr for SecretKey {
         let vec = hex::decode(s).map_err(ParseSecretKeyError::InvalidHex)?;
         BorshDeserialize::try_from_slice(&vec)
             .map_err(ParseSecretKeyError::InvalidEncoding)
+    }
+}
+
+impl Drop for SecretKey {
+    fn drop(&mut self) {
+        self.0.zeroize();
     }
 }
 
@@ -325,7 +332,7 @@ impl super::SigScheme for SigScheme {
     where
         R: CryptoRng + RngCore,
     {
-        SecretKey(ed25519_consensus::SigningKey::new(csprng))
+        SecretKey(Box::new(ed25519_consensus::SigningKey::new(csprng)))
     }
 
     fn sign(keypair: &SecretKey, data: impl AsRef<[u8]>) -> Self::Signature {
