@@ -624,9 +624,7 @@ where
                     types::decode(addr_balance).expect("invalid balance");
                 // Since floor(a) + floor(b) <= floor(a+b), there will always be
                 // enough rewards to reimburse users
-                total_reward += token::Amount::from(
-                    (u64::from(addr_bal) / reward.1) * reward.0
-                );
+                total_reward += (addr_bal * *reward).0;
             }
             // Construct MASP asset type with latest timestamp for this token
             let new_asset_bytes = (addr.clone(), self.last_epoch.0)
