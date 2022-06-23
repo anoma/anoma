@@ -10,6 +10,7 @@
 //! `ANOMA_E2E_KEEP_TEMP=true`.
 
 use std::process::Command;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -818,6 +819,9 @@ fn masp_incentives() -> Result<()> {
     client.exp_string("BTC: 20")?;
     drop(client);
 
+    let amt20 = token::Amount::from_str("20").unwrap();
+    let amt30 = token::Amount::from_str("30").unwrap();
+
     // Assert XAN balance at VK(A) is 20*BTC_reward*(epoch_1-epoch_0)
     let mut client = run!(
         test,
@@ -835,7 +839,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        20 * masp_rewards[&btc()] * (ep1.0 - ep0.0) as i64
+        (amt20 * masp_rewards[&btc()]).0 * (ep1.0 - ep0.0)
     ))?;
     drop(client);
 
@@ -856,7 +860,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        20 * masp_rewards[&btc()] * (ep1.0 - ep0.0) as i64
+        (amt20 * masp_rewards[&btc()]).0 * (ep1.0 - ep0.0)
     ))?;
     drop(client);
 
@@ -898,7 +902,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        20 * masp_rewards[&btc()] * (ep2.0 - ep0.0) as i64
+        (amt20 * masp_rewards[&btc()]).0 * (ep2.0 - ep0.0)
     ))?;
     drop(client);
 
@@ -919,7 +923,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        20 * masp_rewards[&btc()] * (ep2.0 - ep0.0) as i64
+        (amt20 * masp_rewards[&btc()]).0 * (ep2.0 - ep0.0)
     ))?;
     drop(client);
 
@@ -1022,7 +1026,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        30 * masp_rewards[&eth()] * (ep4.0 - ep3.0) as i64
+        (amt30 * masp_rewards[&eth()]).0 * (ep4.0 - ep3.0)
     ))?;
     drop(client);
 
@@ -1044,8 +1048,8 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        (20 * masp_rewards[&btc()] * (ep4.0 - ep0.0) as i64)
-            + (30 * masp_rewards[&eth()] * (ep4.0 - ep3.0) as i64)
+        ((amt20 * masp_rewards[&btc()]).0 * (ep4.0 - ep0.0))
+            + ((amt30 * masp_rewards[&eth()]).0 * (ep4.0 - ep3.0))
     ))?;
     drop(client);
 
@@ -1109,7 +1113,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64
+        (amt30 * masp_rewards[&eth()]).0 * (ep5.0 - ep3.0)
     ))?;
     drop(client);
 
@@ -1131,8 +1135,8 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        (20 * masp_rewards[&btc()] * (ep5.0 - ep0.0) as i64)
-            + (30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64)
+        ((amt20 * masp_rewards[&btc()]).0 * (ep5.0 - ep0.0))
+            + ((amt30 * masp_rewards[&eth()]).0 * (ep5.0 - ep3.0))
     ))?;
     drop(client);
 
@@ -1196,7 +1200,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64
+        (amt20 * masp_rewards[&btc()]).0 * (ep6.0 - ep0.0)
     ))?;
     drop(client);
 
@@ -1218,8 +1222,8 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        (20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64)
-            + (30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64)
+        ((amt20 * masp_rewards[&btc()]).0 * (ep6.0 - ep0.0))
+            + ((amt30 * masp_rewards[&eth()]).0 * (ep5.0 - ep3.0))
     ))?;
     drop(client);
 
@@ -1243,7 +1247,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64
+        (amt20 * masp_rewards[&btc()]).0 * (ep6.0 - ep0.0)
     ))?;
     drop(client);
 
@@ -1264,7 +1268,7 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64
+        (amt30 * masp_rewards[&eth()]).0 * (ep5.0 - ep3.0)
     ))?;
     drop(client);
 
@@ -1286,8 +1290,8 @@ fn masp_incentives() -> Result<()> {
     )?;
     client.exp_string(&format!(
         "XAN: {}",
-        (20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64)
-            + (30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64)
+        ((amt20 * masp_rewards[&btc()]).0 * (ep6.0 - ep0.0))
+            + ((amt30 * masp_rewards[&eth()]).0 * (ep5.0 - ep3.0))
     ))?;
     drop(client);
 
@@ -1307,7 +1311,7 @@ fn masp_incentives() -> Result<()> {
             "--token",
             XAN,
             "--amount",
-            &(30 * masp_rewards[&eth()] * (ep5.0 - ep3.0) as i64).to_string(),
+            &((amt30 * masp_rewards[&eth()]).0 * (ep5.0 - ep3.0)).to_string(),
             "--ledger-address",
             &validator_one_rpc
         ],
@@ -1332,7 +1336,7 @@ fn masp_incentives() -> Result<()> {
             "--token",
             XAN,
             "--amount",
-            &(20 * masp_rewards[&btc()] * (ep6.0 - ep0.0) as i64).to_string(),
+            &((amt20 * masp_rewards[&btc()]).0 * (ep6.0 - ep0.0)).to_string(),
             "--ledger-address",
             &validator_one_rpc
         ],

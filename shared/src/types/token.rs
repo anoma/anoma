@@ -150,6 +150,18 @@ impl Mul<u64> for Amount {
     }
 }
 
+/// A combination of Euclidean division and fractions:
+/// x*(a,b) = (a*(x//b), x%b)
+impl Mul<(u64, u64)> for Amount {
+    type Output = (Amount, Amount);
+
+    fn mul(mut self, rhs: (u64, u64)) -> Self::Output {
+        let ant = Amount::from((self.micro / rhs.1) * rhs.0);
+        self.micro %= rhs.1;
+        (ant, self)
+    }
+}
+
 impl AddAssign for Amount {
     fn add_assign(&mut self, rhs: Self) {
         self.micro += rhs.micro
