@@ -337,7 +337,7 @@ fn masp_txs_and_queries() -> Result<()> {
     let test = setup::network(
         |genesis| {
             let parameters = ParametersConfig {
-                min_duration: 120,
+                min_duration: 3600,
                 ..genesis.parameters
             };
             GenesisConfig {
@@ -554,6 +554,9 @@ fn masp_txs_and_queries() -> Result<()> {
         ),
     ];
 
+    // Wait till epoch boundary
+    let _ep0 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+
     for (tx_args, tx_result) in &txs_args {
         for &dry_run in &[true, false] {
             let tx_args = if dry_run && tx_args[0] == "transfer" {
@@ -591,7 +594,7 @@ fn masp_pinned_txs() -> Result<()> {
     let test = setup::network(
         |genesis| {
             let parameters = ParametersConfig {
-                min_duration: 180,
+                min_duration: 3600,
                 ..genesis.parameters
             };
             GenesisConfig {
@@ -614,6 +617,9 @@ fn masp_pinned_txs() -> Result<()> {
     }
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
+    // Wait till epoch boundary
+    let _ep0 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Assert PPA(C) cannot be recognized by incorrect viewing key
     let mut client = run!(
@@ -652,9 +658,6 @@ fn masp_pinned_txs() -> Result<()> {
     client.send_line(AC_VIEWING_KEY)?;
     client.exp_string("has not yet been consumed")?;
     drop(client);
-
-    // Wait till epoch boundary
-    let _ep0 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Send 20 BTC from Albert to PPA(C)
     let mut client = run!(
