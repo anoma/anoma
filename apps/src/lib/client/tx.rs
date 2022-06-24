@@ -489,6 +489,8 @@ pub struct ShieldedContext {
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
     /// The set of note positions that have been spent
     spents: HashSet<usize>,
+    /// Maps asset types to their decodings
+    asset_types: HashMap<AssetType, (Address, Epoch)>,
 }
 
 /// Shielded context file name
@@ -511,6 +513,7 @@ impl Default for ShieldedContext {
             div_map: HashMap::default(),
             witness_map: HashMap::default(),
             spents: HashSet::default(),
+            asset_types: HashMap::default(),
         }
     }
 }
@@ -573,6 +576,7 @@ impl ShieldedContext {
         self.div_map.extend(new_ctx.div_map);
         self.witness_map.extend(new_ctx.witness_map);
         self.spents.extend(new_ctx.spents);
+        self.asset_types.extend(new_ctx.asset_types);
     }
 
     /// Fetch the current state of the multi-asset shielded pool into a
@@ -796,11 +800,38 @@ impl ShieldedContext {
         Some(val_acc)
     }
 
-    /// Query the ledger for the conversion that is allowed for the given asset
-    /// type.
-    async fn query_allowed_conversion(
+    /// Query the ledger for the decoding of the given asset type and cache it if
+    /// it is found.
+    pub async fn decode_asset_type(
+        &mut self,
         client: HttpClient,
-        asset_type: &AssetType,
+        asset_type: AssetType,
+    ) ->  Option<(Address, Epoch)> {
+        // Try to find the decoding in the cache
+        if let decoded @ Some(_) = self.asset_types.get(&asset_type) {
+            return decoded.cloned()
+        }
+        // The key with which to lookup allowed conversions
+        let conversion_key =
+            anoma::types::storage::Key::from(masp().to_db_key())
+                .push(
+                    &(CONVERSION_KEY_PREFIX.to_owned()
+                        + &asset_type.to_string()),
+                )
+                .expect("Cannot obtain a storage key");
+        // Query for the ID of the last accepted transaction
+        let (addr, ep, _conv, _path): (Address, _, Amount, MerklePath<Node>) =
+            query_storage_value(client, conversion_key).await?;
+        self.asset_types.insert(asset_type, (addr.clone(), ep));
+        Some((addr, ep))
+    }
+
+    /// Query the ledger for the conversion that is allowed for the given asset
+    /// type and cache the decoding.
+    async fn query_allowed_conversion(
+        &mut self,
+        client: HttpClient,
+        asset_type: AssetType,
     ) -> Option<(Address, Epoch, AllowedConversion, MerklePath<Node>)> {
         // The key with which to lookup allowed conversions
         let conversion_key =
@@ -811,8 +842,9 @@ impl ShieldedContext {
                 )
                 .expect("Cannot obtain a storage key");
         // Query for the ID of the last accepted transaction
-        let (addr, ep, conv, path) =
+        let (addr, ep, conv, path): (Address, _, _, _) =
             query_storage_value(client, conversion_key).await?;
+        self.asset_types.insert(asset_type, (addr.clone(), ep));
         Some((addr, ep, Amount::into(conv), path))
     }
 
@@ -821,7 +853,7 @@ impl ShieldedContext {
     /// asset types. If the key is not in the context, then we do not know the
     /// balance and hence we return None.
     pub async fn compute_exchanged_balance(
-        &self,
+        &mut self,
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
     ) -> Option<Amount> {
@@ -877,7 +909,7 @@ impl ShieldedContext {
     /// not assume that allowed conversions from the ledger are expressed in
     /// terms of the latest asset types.
     pub async fn compute_exchanged_amount(
-        &self,
+        &mut self,
         ledger_address: TendermintAddress,
         mut input: Amount,
         mut conversions: Conversions,
@@ -901,7 +933,7 @@ impl ShieldedContext {
                     &mut output,
                 );
             } else if let Some((_addr, _epoch, conv, wit)) =
-                Self::query_allowed_conversion(client.clone(), &asset_type)
+                self.query_allowed_conversion(client.clone(), asset_type)
                     .await
             {
                 let mut usage = 0;
@@ -931,7 +963,7 @@ impl ShieldedContext {
     /// notes and the corresponding diversifiers/merkle paths that were used to
     /// achieve the total value.
     pub async fn collect_unspent_notes(
-        &self,
+        &mut self,
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
         target: Amount,
@@ -944,8 +976,8 @@ impl ShieldedContext {
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = self.vks.get(vk) {
-            for note_idx in avail_notes {
+        if let Some(avail_notes) = self.vks.get(vk).cloned() {
+            for note_idx in &avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
                 if val_acc >= target {
