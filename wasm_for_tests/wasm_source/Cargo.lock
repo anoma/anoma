@@ -91,6 +91,7 @@ dependencies = [
  "pwasm-utils",
  "rand",
  "rand_core 0.6.3",
+ "rayon",
  "rust_decimal",
  "serde",
  "serde_json",

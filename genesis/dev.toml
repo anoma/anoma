@@ -144,7 +144,7 @@ sha256 = "e428a11f570d21dd3c871f5d35de6fe18098eb8ee0456b3e11a72ccdd8685cd0"
 # Minimum number of blocks in an epoch.
 min_num_of_blocks = 10
 # Minimum duration of an epoch (in seconds).
-min_duration = 60
+min_duration = 600
 # Maximum expected time per block (in seconds).
 max_expected_time_per_block = 30
 
