@@ -111,7 +111,7 @@ pub fn network(
     // Open the source genesis file
     let mut genesis = genesis_config::open_genesis_config(
         working_dir.join(SINGLE_NODE_NET_GENESIS),
-    );
+    )?;
 
     if !cfg!(feature = "ABCI") {
         // The ABCI ports start at `26670`, ABCI++ at `26670 +

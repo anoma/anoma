@@ -135,15 +135,15 @@ impl Store {
     /// the genesis file, if not found.
     pub fn load_or_new_from_genesis(
         store_dir: &Path,
-        load_genesis: impl FnOnce() -> GenesisConfig,
+        genesis_cfg: GenesisConfig,
     ) -> Result<Self, LoadStoreError> {
         Self::load(store_dir).or_else(|_| {
             #[cfg(not(feature = "dev"))]
-            let store = Self::new(load_genesis());
+            let store = Self::new(genesis_cfg);
             #[cfg(feature = "dev")]
             let store = {
                 // The function is unused in dev
-                let _ = load_genesis;
+                let _ = genesis_cfg;
                 Self::new()
             };
             store.save(store_dir).map_err(|err| {

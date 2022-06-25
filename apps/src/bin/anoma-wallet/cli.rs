@@ -12,7 +12,7 @@ use color_eyre::eyre::Result;
 use itertools::sorted;
 
 pub fn main() -> Result<()> {
-    let (cmd, ctx) = cli::anoma_wallet_cli();
+    let (cmd, ctx) = cli::anoma_wallet_cli()?;
     match cmd {
         cmds::AnomaWallet::Key(sub) => match sub {
             cmds::WalletKey::Gen(cmds::KeyGen(args)) => {

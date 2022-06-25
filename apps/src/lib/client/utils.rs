@@ -273,10 +273,10 @@ pub async fn join_network(
 
         let genesis_file_path =
             base_dir.join(format!("{}.toml", chain_id.as_str()));
-        let mut wallet =
-            Wallet::load_or_new_from_genesis(&chain_dir, move || {
-                genesis_config::open_genesis_config(genesis_file_path)
-            });
+        let mut wallet = Wallet::load_or_new_from_genesis(
+            &chain_dir,
+            genesis_config::open_genesis_config(genesis_file_path).unwrap(),
+        );
 
         let address = wallet
             .find_address(&validator_alias)
@@ -384,7 +384,8 @@ pub fn init_network(
         archive_dir,
     }: args::InitNetwork,
 ) {
-    let mut config = genesis_config::open_genesis_config(&genesis_path);
+    let mut config =
+        genesis_config::open_genesis_config(&genesis_path).unwrap();
 
     // Update the WASM checksums
     let checksums =

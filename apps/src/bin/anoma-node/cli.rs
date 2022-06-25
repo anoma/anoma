@@ -5,7 +5,7 @@ use anoma_apps::node::{gossip, ledger, matchmaker};
 use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
-    let (cmd, mut ctx) = cli::anoma_node_cli();
+    let (cmd, mut ctx) = cli::anoma_node_cli()?;
     if let Some(mode) = ctx.global_args.mode.clone() {
         ctx.config.ledger.tendermint.tendermint_mode = mode;
     }

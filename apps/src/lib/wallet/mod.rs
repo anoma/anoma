@@ -68,9 +68,9 @@ impl Wallet {
     /// addresses loaded from the genesis file, if not found.
     pub fn load_or_new_from_genesis(
         store_dir: &Path,
-        load_genesis: impl FnOnce() -> GenesisConfig,
+        genesis_cfg: GenesisConfig,
     ) -> Self {
-        let store = Store::load_or_new_from_genesis(store_dir, load_genesis)
+        let store = Store::load_or_new_from_genesis(store_dir, genesis_cfg)
             .unwrap_or_else(|err| {
                 eprintln!("Unable to load the wallet: {}", err);
                 cli::safe_exit(1)

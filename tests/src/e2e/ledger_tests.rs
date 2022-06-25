@@ -1678,7 +1678,7 @@ fn test_genesis_validators() -> Result<()> {
     // 2. Initialize a new network with the 2 validators
     let mut genesis = genesis_config::open_genesis_config(
         working_dir.join(setup::SINGLE_NODE_NET_GENESIS),
-    );
+    )?;
     let update_validator_config =
         |ix: u8, mut config: genesis_config::ValidatorConfig| {
             // Setup tokens balances and validity predicates

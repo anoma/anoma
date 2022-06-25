@@ -10,6 +10,7 @@ pub mod context;
 mod utils;
 
 use clap::{crate_authors, AppSettings, ArgMatches};
+use color_eyre::eyre::Result;
 pub use utils::safe_exit;
 use utils::*;
 
@@ -3059,7 +3060,7 @@ pub fn anoma_cli() -> (cmds::Anoma, String) {
     safe_exit(2);
 }
 
-pub fn anoma_node_cli() -> (cmds::AnomaNode, Context) {
+pub fn anoma_node_cli() -> Result<(cmds::AnomaNode, Context)> {
     let app = anoma_node_app();
     cmds::AnomaNode::parse_or_print_help(app)
 }
@@ -3069,7 +3070,7 @@ pub enum AnomaClient {
     WithContext(Box<(cmds::AnomaClientWithContext, Context)>),
 }
 
-pub fn anoma_client_cli() -> AnomaClient {
+pub fn anoma_client_cli() -> Result<AnomaClient> {
     let app = anoma_client_app();
     let mut app = cmds::AnomaClient::add_sub(app);
     let matches = app.clone().get_matches();
@@ -3078,11 +3079,11 @@ pub fn anoma_client_cli() -> AnomaClient {
             let global_args = args::Global::parse(&matches);
             match cmd {
                 cmds::AnomaClient::WithContext(sub_cmd) => {
-                    let context = Context::new(global_args);
-                    AnomaClient::WithContext(Box::new((sub_cmd, context)))
+                    let context = Context::new(global_args)?;
+                    Ok(AnomaClient::WithContext(Box::new((sub_cmd, context))))
                 }
                 cmds::AnomaClient::WithoutContext(sub_cmd) => {
-                    AnomaClient::WithoutContext(sub_cmd, global_args)
+                    Ok(AnomaClient::WithoutContext(sub_cmd, global_args))
                 }
             }
         }
@@ -3093,7 +3094,7 @@ pub fn anoma_client_cli() -> AnomaClient {
     }
 }
 
-pub fn anoma_wallet_cli() -> (cmds::AnomaWallet, Context) {
+pub fn anoma_wallet_cli() -> Result<(cmds::AnomaWallet, Context)> {
     let app = anoma_wallet_app();
     cmds::AnomaWallet::parse_or_print_help(app)
 }

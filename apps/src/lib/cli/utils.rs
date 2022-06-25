@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use std::str::FromStr;
 
 use clap::ArgMatches;
+use color_eyre::eyre::Result;
 
 use super::args;
 use super::context::{Context, FromContext};
@@ -16,14 +17,14 @@ pub trait Cmd: Sized {
     fn add_sub(app: App) -> App;
     fn parse(matches: &ArgMatches) -> Option<Self>;
 
-    fn parse_or_print_help(app: App) -> (Self, Context) {
+    fn parse_or_print_help(app: App) -> Result<(Self, Context)> {
         let mut app = Self::add_sub(app);
         let matches = app.clone().get_matches();
         match Self::parse(&matches) {
             Some(cmd) => {
                 let global_args = args::Global::parse(&matches);
-                let context = Context::new(global_args);
-                (cmd, context)
+                let context = Context::new(global_args)?;
+                Ok((cmd, context))
             }
             None => {
                 app.print_help().unwrap();

@@ -273,11 +273,10 @@ where
                     );
                     let wallet = wallet::Wallet::load_or_new_from_genesis(
                         wallet_path,
-                        move || {
-                            genesis::genesis_config::open_genesis_config(
-                                genesis_path,
-                            )
-                        },
+                        genesis::genesis_config::open_genesis_config(
+                            genesis_path,
+                        )
+                        .unwrap(),
                     );
                     wallet
                         .take_validator_data()
@@ -628,10 +627,10 @@ where
         let genesis_path = &self
             .base_dir
             .join(format!("{}.toml", self.chain_id.as_str()));
-        let mut wallet =
-            wallet::Wallet::load_or_new_from_genesis(wallet_path, move || {
-                genesis::genesis_config::open_genesis_config(genesis_path)
-            });
+        let mut wallet = wallet::Wallet::load_or_new_from_genesis(
+            wallet_path,
+            genesis::genesis_config::open_genesis_config(genesis_path).unwrap(),
+        );
         self.mode.get_validator_address().map(|addr| {
             let pk_bytes = self
                 .storage

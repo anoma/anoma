@@ -9,6 +9,7 @@ use std::str::FromStr;
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
+use color_eyre::eyre::Result;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -49,7 +50,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(global_args: args::Global) -> Self {
+    pub fn new(global_args: args::Global) -> Result<Self> {
         let global_config = read_or_try_new_global_config(&global_args);
         tracing::info!("Chain ID: {}", global_config.default_chain_id);
 
@@ -65,9 +66,10 @@ impl Context {
         let genesis_file_path = global_args
             .base_dir
             .join(format!("{}.toml", global_config.default_chain_id.as_str()));
-        let wallet = Wallet::load_or_new_from_genesis(&chain_dir, move || {
-            genesis_config::open_genesis_config(genesis_file_path)
-        });
+        let wallet = Wallet::load_or_new_from_genesis(
+            &chain_dir,
+            genesis_config::open_genesis_config(&genesis_file_path)?,
+        );
 
         // If the WASM dir specified, put it in the config
         match global_args.wasm_dir.as_ref() {
@@ -96,12 +98,12 @@ impl Context {
                 }
             }
         }
-        Self {
+        Ok(Self {
             global_args,
             wallet,
             global_config,
             config,
-        }
+        })
     }
 
     /// Parse and/or look-up the value from the context.
