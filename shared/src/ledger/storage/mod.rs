@@ -612,6 +612,15 @@ where
         &self.conversion_state
     }
 
+    // Construct MASP asset type with given timestamp for given token
+    fn encode_asset_type(addr: Address, epoch: Epoch) -> AssetType {
+        let new_asset_bytes = (addr, epoch.0)
+            .try_to_vec()
+            .expect("unable to serialize address and epoch");
+        AssetType::new(new_asset_bytes.as_ref())
+            .expect("unable to derive asset identifier")
+    }
+
     /// Update the MASP's allowed conversions
     fn update_allowed_conversions(&mut self) -> Result<()> {
         // The derived conversions will be placed in MASP address space
@@ -646,22 +655,13 @@ where
                 // enough rewards to reimburse users
                 total_reward += (addr_bal * *reward).0;
             }
-            // Construct MASP asset type with latest timestamp for this token
-            let new_asset_bytes = (addr.clone(), self.last_epoch.0)
-                .try_to_vec()
-                .expect("unable to serialize address and epoch");
-            let new_asset = AssetType::new(new_asset_bytes.as_ref())
-                .expect("unable to derive asset identifier");
-
-            // Provide an allowed conversion from previous timestamp
-            // Construct MASP asset type with old timestamp
-            let old_asset_bytes = (addr.clone(), self.last_epoch.0 - 1)
-                .try_to_vec()
-                .expect("unable to serialize address and epoch");
-            let old_asset = AssetType::new(old_asset_bytes.as_ref())
-                .expect("unable to derive asset identifier");
-            // The negative sign allows each instance of the old asset to be
+            // Provide an allowed conversion from previous timestamp. The
+            // negative sign allows each instance of the old asset to be
             // cancelled out/replaced with the new asset
+            let old_asset =
+                Self::encode_asset_type(addr.clone(), self.last_epoch.prev());
+            let new_asset =
+                Self::encode_asset_type(addr.clone(), self.last_epoch);
             current_convs.insert(
                 addr.clone(),
                 (Amount::from_pair(old_asset, -(reward.1 as i64)).unwrap()
@@ -746,14 +746,10 @@ where
         // Add purely decoding entries to the assets map. These will be
         // overwritten before the creation of the next commitment tree
         for addr in masp_rewards.keys() {
-            // Construct MASP asset type with latest timestamp for this token
-            let new_asset_bytes = (addr.clone(), self.last_epoch.0)
-                .try_to_vec()
-                .expect("unable to serialize address and epoch");
-            let new_asset = AssetType::new(new_asset_bytes.as_ref())
-                .expect("unable to derive asset identifier");
-            // Add the decoding entry for the new asset types. An uncommited
-            // node position is used since this is not a conversion
+            // Add the decoding entry for the new asset type. An uncommited
+            // node position is used since this is not a conversion.
+            let new_asset =
+                Self::encode_asset_type(addr.clone(), self.last_epoch);
             self.conversion_state.assets.insert(
                 new_asset,
                 (
