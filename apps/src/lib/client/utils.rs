@@ -340,7 +340,7 @@ pub async fn join_network(
                         ..
                     } = peer
                     {
-                        node_id.as_ref().unwrap() != peer_id
+                        node_id != *peer_id
                     } else {
                         true
                     }
@@ -358,12 +358,11 @@ pub async fn join_network(
 const TENDERMINT_NODE_ID_LENGTH: usize = 20;
 
 /// Derive Tendermint node ID from public key
-fn id_from_pk(pk: &common::PublicKey) -> Result<TendermintNodeId, ParsePublicKeyError> {
-    let pk_bytes = pk.try_to_vec();
-    let digest = Sha256::digest(pk_bytes.unwrap().as_slice());
+fn id_from_pk(pk: &common::PublicKey) -> TendermintNodeId {
+    let digest = Sha256::digest(pk.try_to_vec().unwrap().as_slice());
     let mut bytes = [0u8; TENDERMINT_NODE_ID_LENGTH];
     bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
-    Ok(TendermintNodeId::new(bytes))
+    TendermintNodeId::new(bytes)
 }
 
 /// Initialize a new test network from the given configuration.
@@ -461,7 +460,7 @@ pub fn init_network(
         });
 
         // Derive the node ID from the node key
-        let node_id: TendermintNodeId = id_from_pk(&node_pk).unwrap();
+        let node_id: TendermintNodeId = id_from_pk(&node_pk);
 
         // Build the list of persistent peers from the validators' node IDs
         let peer = TendermintAddress::from_str(&format!(
