@@ -660,8 +660,8 @@ where
                 .expect("unable to serialize address and epoch");
             let old_asset = AssetType::new(old_asset_bytes.as_ref())
                 .expect("unable to derive asset identifier");
-            // The -1 allows each instance of the old asset to be cancelled
-            // out/replaced with the new asset
+            // The negative sign allows each instance of the old asset to be
+            // cancelled out/replaced with the new asset
             current_convs.insert(
                 addr.clone(),
                 (Amount::from_pair(old_asset, -(reward.1 as i64)).unwrap()
@@ -743,12 +743,33 @@ where
         // obtained
         self.conversion_state.tree = FrozenCommitmentTree::merge(&tree_parts);
 
-        // Load up the conversions currently being given as query results
+        // Add purely decoding entries to the assets map. These will be
+        // overwritten before the creation of the next commitment tree
+        for addr in masp_rewards.keys() {
+            // Construct MASP asset type with latest timestamp for this token
+            let new_asset_bytes = (addr.clone(), self.last_epoch.0)
+                .try_to_vec()
+                .expect("unable to serialize address and epoch");
+            let new_asset = AssetType::new(new_asset_bytes.as_ref())
+                .expect("unable to derive asset identifier");
+            // Add the decoding entry for the new asset types. An uncommited
+            // node position is used since this is not a conversion
+            self.conversion_state.assets.insert(
+                new_asset,
+                (
+                    addr.clone(),
+                    self.last_epoch,
+                    Amount::zero().into(),
+                    self.conversion_state.tree.size(),
+                ),
+            );
+        }
+
+        // Save the current conversion state in order to avoid computing
+        // conversion commitments from scratch in the next epoch
         let state_key = key_prefix
             .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
             .map_err(Error::KeyError)?;
-        // Save the current conversion state in order to avoid computing
-        // conversion commitments from scratch in the next epoch
         self.write(&state_key, types::encode(&self.conversion_state))
             .expect("unable to save current conversion state");
         Ok(())
