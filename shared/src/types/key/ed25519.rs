@@ -312,7 +312,7 @@ impl super::SigScheme for SigScheme {
     type SecretKey = SecretKey;
     type Signature = Signature;
 
-    const TYPE: SchemeType = SchemeType::Ed25519Consensus;
+    const TYPE: SchemeType = SchemeType::Ed25519;
 
     #[cfg(feature = "rand")]
     fn generate<R>(csprng: &mut R) -> SecretKey
