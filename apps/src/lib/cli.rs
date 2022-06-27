@@ -1463,7 +1463,7 @@ pub mod args {
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
-    const SCHEME: ArgDefault<SchemeType> = arg_default("scheme", DefaultFn(|| SchemeType::Ed25519Consensus));
+    const SCHEME: ArgDefault<SchemeType> = arg_default("scheme", DefaultFn(|| SchemeType::Ed25519));
     const SIGNER: ArgOpt<WalletAddress> = arg_opt("signer");
     const SIGNING_KEY_OPT: ArgOpt<WalletKeypair> = SIGNING_KEY.opt();
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
@@ -3055,7 +3055,7 @@ pub mod args {
                 ))
                 .arg(SCHEME.def().about(
                     "The key scheme/type used for the validator keys. Currently \
-                    support ed25519 and secp256k1."
+                    supports ed25519 and secp256k1."
                 ))
         }
     }

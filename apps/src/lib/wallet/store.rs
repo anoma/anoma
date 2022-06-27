@@ -506,9 +506,9 @@ pub fn gen_sk(scheme: SchemeType) -> common::SecretKey {
     use rand::rngs::OsRng;
     let mut csprng = OsRng {};
     match scheme {
-        SchemeType::Ed25519Consensus =>
+        SchemeType::Ed25519 =>
             ed25519::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
-        SchemeType::Secp256k1Consensus =>
+        SchemeType::Secp256k1 =>
             secp256k1::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
         SchemeType::Common =>
             common::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),

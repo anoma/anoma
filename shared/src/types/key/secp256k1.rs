@@ -427,7 +427,7 @@ impl super::SigScheme for SigScheme {
     type SecretKey = SecretKey;
     type Signature = Signature;
 
-    const TYPE: SchemeType = SchemeType::Secp256k1Consensus;
+    const TYPE: SchemeType = SchemeType::Secp256k1;
 
     #[cfg(feature = "rand")]
     fn generate<R>(csprng: &mut R) -> SecretKey
