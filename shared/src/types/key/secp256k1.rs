@@ -25,7 +25,7 @@ use super::{
 
 /// secp256k1 public key
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct PublicKey(libsecp256k1::PublicKey);
+pub struct PublicKey(pub libsecp256k1::PublicKey);
 
 impl super::PublicKey for PublicKey {
     const TYPE: SchemeType = SigScheme::TYPE;
@@ -136,7 +136,7 @@ impl From<libsecp256k1::PublicKey> for PublicKey {
 
 /// Secp256k1 secret key
 #[derive(Debug, Clone)]
-pub struct SecretKey(libsecp256k1::SecretKey);
+pub struct SecretKey(pub libsecp256k1::SecretKey);
 
 impl super::SecretKey for SecretKey {
     type PublicKey = PublicKey;
@@ -278,7 +278,7 @@ impl RefTo<PublicKey> for SecretKey {
 
 /// Secp256k1 signature
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Signature(libsecp256k1::Signature);
+pub struct Signature(pub libsecp256k1::Signature);
 
 impl super::Signature for Signature {
     const TYPE: SchemeType = SigScheme::TYPE;
