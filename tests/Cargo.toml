@@ -23,6 +23,9 @@ ABCI-plus-plus = [
   "anoma_vm_env/ABCI-plus-plus",
 ]
 
+# re-enable once https://github.com/tendermint/tendermint/issues/8840 is fixed
+skip-tendermint-8840 = []
+
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing"]}
 anoma_vm_env = {path = "../vm_env", default-features = false}

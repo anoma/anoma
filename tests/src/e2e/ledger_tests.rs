@@ -66,6 +66,7 @@ fn run_ledger() -> Result<()> {
 /// 1. Run 2 genesis validator ledger nodes and 1 non-validator node
 /// 2. Submit a valid token transfer tx
 /// 3. Check that all the nodes processed the tx with the same result
+#[cfg(feature = "skip-tendermint-8840")]
 #[test]
 fn test_node_connectivity() -> Result<()> {
     // Setup 2 genesis validator nodes
