@@ -800,16 +800,16 @@ impl ShieldedContext {
         Some(val_acc)
     }
 
-    /// Query the ledger for the decoding of the given asset type and cache it if
-    /// it is found.
+    /// Query the ledger for the decoding of the given asset type and cache it
+    /// if it is found.
     pub async fn decode_asset_type(
         &mut self,
         client: HttpClient,
         asset_type: AssetType,
-    ) ->  Option<(Address, Epoch)> {
+    ) -> Option<(Address, Epoch)> {
         // Try to find the decoding in the cache
         if let decoded @ Some(_) = self.asset_types.get(&asset_type) {
-            return decoded.cloned()
+            return decoded.cloned();
         }
         // The key with which to lookup allowed conversions
         let conversion_key =
@@ -845,7 +845,12 @@ impl ShieldedContext {
         let (addr, ep, conv, path): (Address, _, _, _) =
             query_storage_value(client, conversion_key).await?;
         self.asset_types.insert(asset_type, (addr.clone(), ep));
-        Some((addr, ep, Amount::into(conv), path))
+        // If the conversion is 0, then we just have a pure decoding
+        if conv == Amount::zero() {
+            None
+        } else {
+            Some((addr, ep, Amount::into(conv), path))
+        }
     }
 
     /// Compute the total unspent notes associated with the viewing key in the
@@ -932,9 +937,9 @@ impl ShieldedContext {
                     &mut input,
                     &mut output,
                 );
-            } else if let Some((_addr, _epoch, conv, wit)) =
-                self.query_allowed_conversion(client.clone(), asset_type)
-                    .await
+            } else if let Some((_addr, _epoch, conv, wit)) = self
+                .query_allowed_conversion(client.clone(), asset_type)
+                .await
             {
                 let mut usage = 0;
                 Self::apply_conversion(
