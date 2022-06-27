@@ -482,7 +482,7 @@ pub struct ShieldedContext {
     /// The commitment tree produced by scanning all transactions up to tx_pos
     tree: CommitmentTree<Node>,
     /// Maps viewing keys to applicable note positions
-    vks: HashMap<ViewingKey, HashSet<usize>>,
+    pos_map: HashMap<ViewingKey, HashSet<usize>>,
     /// Maps a nullifier to the note position to which it applies
     nf_map: HashMap<[u8; 32], usize>,
     /// Maps note positions to their corresponding notes
@@ -499,6 +499,8 @@ pub struct ShieldedContext {
     spents: HashSet<usize>,
     /// Maps asset types to their decodings
     asset_types: HashMap<AssetType, (Address, Epoch)>,
+    /// Maps note positions to their corresponding viewing keys
+    vk_map: HashMap<usize, ViewingKey>,
 }
 
 /// Shielded context file name
@@ -513,7 +515,7 @@ impl Default for ShieldedContext {
             context_dir: PathBuf::from(FILE_NAME),
             last_txidx: u64::default(),
             tree: CommitmentTree::empty(),
-            vks: HashMap::default(),
+            pos_map: HashMap::default(),
             nf_map: HashMap::default(),
             note_map: HashMap::default(),
             memo_map: HashMap::default(),
@@ -522,6 +524,7 @@ impl Default for ShieldedContext {
             spents: HashSet::default(),
             delta_map: BTreeMap::default(),
             asset_types: HashMap::default(),
+            vk_map: HashMap::default(),
         }
     }
 }
@@ -577,7 +580,7 @@ impl ShieldedContext {
         debug_assert_eq!(self.last_txidx, new_ctx.last_txidx);
         // Merge by simply extending maps. Identical keys should contain
         // identical values, so overwriting should not be problematic.
-        self.vks.extend(new_ctx.vks);
+        self.pos_map.extend(new_ctx.pos_map);
         self.nf_map.extend(new_ctx.nf_map);
         self.note_map.extend(new_ctx.note_map);
         self.memo_map.extend(new_ctx.memo_map);
@@ -585,6 +588,7 @@ impl ShieldedContext {
         self.witness_map.extend(new_ctx.witness_map);
         self.spents.extend(new_ctx.spents);
         self.asset_types.extend(new_ctx.asset_types);
+        self.vk_map.extend(new_ctx.vk_map);
         // The deltas are the exception because different keys can reveal
         // different parts of the same transaction. Hence each delta needs to be
         // merged separately.
@@ -611,12 +615,12 @@ impl ShieldedContext {
         let mut unknown_keys = Vec::new();
         for esk in sks {
             let vk = to_viewing_key(esk).vk;
-            if !self.vks.contains_key(&vk) {
+            if !self.pos_map.contains_key(&vk) {
                 unknown_keys.push(vk);
             }
         }
         for vk in fvks {
-            if !self.vks.contains_key(vk) {
+            if !self.pos_map.contains_key(vk) {
                 unknown_keys.push(*vk);
             }
         }
@@ -631,7 +635,7 @@ impl ShieldedContext {
             // Do this by constructing a shielding context only for unknown keys
             let mut tx_ctx = ShieldedContext::new(self.context_dir.clone());
             for vk in unknown_keys {
-                tx_ctx.vks.entry(vk).or_insert_with(HashSet::new);
+                tx_ctx.pos_map.entry(vk).or_insert_with(HashSet::new);
             }
             // Update this unknown shielded context until it is level with self
             while tx_ctx.last_txidx != self.last_txidx {
@@ -742,8 +746,6 @@ impl ShieldedContext {
         };
         // For tracking the account changes caused by this Transaction
         let mut transaction_delta = TransactionDelta::new();
-        // To aid tracing nullifiers back to relevant account
-        let mut note_to_vk = HashMap::new();
         // Listen for notes sent to our viewing keys
         for so in &shielded.shielded_outputs {
             // Create merkle tree leaf node from note commitment
@@ -763,7 +765,7 @@ impl ShieldedContext {
             self.witness_map.insert(note_pos, witness);
             // Let's try to see if any of our viewing keys can decrypt latest
             // note
-            for (vk, notes) in self.vks.iter_mut() {
+            for (vk, notes) in self.pos_map.iter_mut() {
                 let decres = try_sapling_note_decryption::<TestNetwork>(
                     0,
                     &vk.ivk().0,
@@ -788,7 +790,7 @@ impl ShieldedContext {
                     let balance = transaction_delta.entry(*vk).or_insert(Amount::zero());
                     *balance += Amount::from_nonnegative(note.asset_type, note.value)
                         .expect("found note with invalid value or asset type");
-                    note_to_vk.insert(note_pos, vk.clone());
+                    self.vk_map.insert(note_pos, vk.clone());
                     break;
                 }
             }
@@ -800,7 +802,7 @@ impl ShieldedContext {
             if let Some(note_pos) = self.nf_map.get(&ss.nullifier) {
                 self.spents.insert(*note_pos);
                 // Note the account changes
-                let balance = transaction_delta.entry(note_to_vk[note_pos].clone())
+                let balance = transaction_delta.entry(self.vk_map[note_pos].clone())
                     .or_insert(Amount::zero());
                 let note = self.note_map[note_pos];
                 *balance -= Amount::from_nonnegative(note.asset_type, note.value)
@@ -830,12 +832,12 @@ impl ShieldedContext {
     /// balance and hence we return None.
     pub fn compute_shielded_balance(&self, vk: &ViewingKey) -> Option<Amount> {
         // Cannot query the balance of a key that's not in the map
-        if !self.vks.contains_key(vk) {
+        if !self.pos_map.contains_key(vk) {
             return None;
         }
         let mut val_acc = Amount::zero();
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = self.vks.get(vk) {
+        if let Some(avail_notes) = self.pos_map.get(vk) {
             for note_idx in avail_notes {
                 // Spent notes cannot contribute a new transaction's pool
                 if self.spents.contains(note_idx) {
@@ -1032,7 +1034,7 @@ impl ShieldedContext {
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
         // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = self.vks.get(vk).cloned() {
+        if let Some(avail_notes) = self.pos_map.get(vk).cloned() {
             for note_idx in &avail_notes {
                 // No more transaction inputs are required once we have met
                 // the target amount
