@@ -555,7 +555,7 @@ pub async fn query_shielded_balance(
             let balance = ctx
                 .shielded
                 .compute_exchanged_balance(
-                    args.query.ledger_address,
+                    client.clone(),
                     &viewing_key,
                 )
                 .await
@@ -594,7 +594,7 @@ pub async fn query_shielded_balance(
                 let balance = ctx
                     .shielded
                     .compute_exchanged_balance(
-                        args.query.ledger_address.clone(),
+                        client.clone(),
                         &viewing_key,
                     )
                     .await
@@ -680,7 +680,7 @@ pub async fn query_shielded_balance(
                 let balance = ctx
                     .shielded
                     .compute_exchanged_balance(
-                        args.query.ledger_address.clone(),
+                        client.clone(),
                         &viewing_key,
                     )
                     .await
@@ -707,7 +707,7 @@ pub async fn query_shielded_balance(
             let balance = ctx
                 .shielded
                 .compute_exchanged_balance(
-                    args.query.ledger_address,
+                    client.clone(),
                     &viewing_key,
                 )
                 .await
