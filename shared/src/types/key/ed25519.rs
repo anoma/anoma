@@ -30,8 +30,6 @@ impl super::PublicKey for PublicKey {
         pk: &PK,
     ) -> Result<Self, ParsePublicKeyError> {
         if PK::TYPE == super::common::PublicKey::TYPE {
-            // TODO remove once the wildcard match is used below
-            #[allow(clippy::bind_instead_of_map)]
             super::common::PublicKey::try_from_pk(pk).and_then(|x| match x {
                 super::common::PublicKey::Ed25519(epk) => Ok(epk),
                 _ => Err(ParsePublicKeyError::MismatchedScheme),
@@ -134,8 +132,6 @@ impl super::SecretKey for SecretKey {
         pk: &PK,
     ) -> Result<Self, ParseSecretKeyError> {
         if PK::TYPE == super::common::SecretKey::TYPE {
-            // TODO remove once the wildcard match is used below
-            #[allow(clippy::bind_instead_of_map)]
             super::common::SecretKey::try_from_sk(pk).and_then(|x| match x {
                 super::common::SecretKey::Ed25519(epk) => Ok(epk),
                 _ => Err(ParseSecretKeyError::MismatchedScheme),
@@ -229,8 +225,6 @@ impl super::Signature for Signature {
         pk: &PK,
     ) -> Result<Self, ParseSignatureError> {
         if PK::TYPE == super::common::Signature::TYPE {
-            // TODO remove once the wildcard match is used below
-            #[allow(clippy::bind_instead_of_map)]
             super::common::Signature::try_from_sig(pk).and_then(|x| match x {
                 super::common::Signature::Ed25519(epk) => Ok(epk),
                 _ => Err(ParseSignatureError::MismatchedScheme),
