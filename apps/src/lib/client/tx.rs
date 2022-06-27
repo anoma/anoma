@@ -859,7 +859,7 @@ impl ShieldedContext {
     /// balance and hence we return None.
     pub async fn compute_exchanged_balance(
         &mut self,
-        ledger_address: TendermintAddress,
+        client: HttpClient,
         vk: &ViewingKey,
     ) -> Option<Amount> {
         // First get the unexchanged balance
@@ -867,7 +867,7 @@ impl ShieldedContext {
             // And then exchange balance into current asset types
             Some(
                 self.compute_exchanged_amount(
-                    ledger_address,
+                    client,
                     balance,
                     HashMap::new(),
                 )
@@ -915,12 +915,10 @@ impl ShieldedContext {
     /// terms of the latest asset types.
     pub async fn compute_exchanged_amount(
         &mut self,
-        ledger_address: TendermintAddress,
+        client: HttpClient,
         mut input: Amount,
         mut conversions: Conversions,
     ) -> (Amount, Conversions) {
-        // Establish connection with which to do exchange rate queries
-        let client = HttpClient::new(ledger_address.clone()).unwrap();
         // Where we will store our exchanged value
         let mut output = Amount::zero();
         // Repeatedly exchange assets until it is no longer possible
@@ -977,6 +975,8 @@ impl ShieldedContext {
         Vec<(Diversifier, Note, MerklePath<Node>)>,
         Conversions,
     ) {
+        // Establish connection with which to do exchange rate queries
+        let client = HttpClient::new(ledger_address.clone()).unwrap();
         let mut conversions = HashMap::new();
         let mut val_acc = Amount::zero();
         let mut notes = Vec::new();
@@ -1000,7 +1000,7 @@ impl ShieldedContext {
                     .expect("received note has invalid value or asset type");
                 let (contr, proposed_convs) = self
                     .compute_exchanged_amount(
-                        ledger_address.clone(),
+                        client.clone(),
                         pre_contr,
                         conversions.clone(),
                     )
