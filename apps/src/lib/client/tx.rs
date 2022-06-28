@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::collections::hash_map::Entry;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
@@ -445,10 +446,8 @@ pub fn is_amount_required(src: Amount, dest: Amount, delta: Amount) -> bool {
 }
 
 /// An extension of Option's cloned method for pair types
-fn clone_pair_option<T: Clone, U: Clone>(
-    pr: Option<(&T, &U)>,
-) -> Option<(T, U)> {
-    pr.map(|(a, b)| (a.clone(), b.clone()))
+fn cloned_pair<T: Clone, U: Clone>((a, b): (&T, &U)) -> (T, U) {
+    (a.clone(), b.clone())
 }
 
 /// Errors that can occur when trying to retrieve pinned transaction
@@ -462,7 +461,7 @@ pub enum PinnedBalanceError {
 
 /// Represents the amount used of different conversions
 type Conversions =
-    HashMap<AssetType, (AllowedConversion, MerklePath<Node>, u64)>;
+    HashMap<AssetType, (AllowedConversion, MerklePath<Node>, i64)>;
 
 /// Represents the changes that were made to a list of transparent accounts
 pub type TransferDelta = HashMap<Address, Amount<Address>>;
@@ -881,28 +880,34 @@ impl ShieldedContext {
 
     /// Query the ledger for the conversion that is allowed for the given asset
     /// type and cache the decoding.
-    async fn query_allowed_conversion(
+    async fn query_allowed_conversion<'a>(
         &mut self,
         client: HttpClient,
         asset_type: AssetType,
-    ) -> Option<(Address, Epoch, AllowedConversion, MerklePath<Node>)> {
-        // The key with which to lookup allowed conversions
-        let conversion_key =
-            anoma::types::storage::Key::from(masp().to_db_key())
+        conversions: &'a mut Conversions,
+    ) -> Option<&'a mut (AllowedConversion, MerklePath<Node>, i64)> {
+        let conv_entry = conversions.entry(asset_type.clone());
+        if let Entry::Occupied(conv_entry) = conv_entry {
+            Some(conv_entry.into_mut())
+        } else {
+            // The key with which to lookup allowed conversions
+            let conversion_key =
+                anoma::types::storage::Key::from(masp().to_db_key())
                 .push(
                     &(CONVERSION_KEY_PREFIX.to_owned()
-                        + &asset_type.to_string()),
+                      + &asset_type.to_string()),
                 )
                 .expect("Cannot obtain a storage key");
-        // Query for the ID of the last accepted transaction
-        let (addr, ep, conv, path): (Address, _, _, _) =
-            query_storage_value(client, conversion_key).await?;
-        self.asset_types.insert(asset_type, (addr.clone(), ep));
-        // If the conversion is 0, then we just have a pure decoding
-        if conv == Amount::zero() {
-            None
-        } else {
-            Some((addr, ep, Amount::into(conv), path))
+            // Query for the ID of the last accepted transaction
+            let (addr, ep, conv, path): (Address, _, _, _) =
+                query_storage_value(client, conversion_key).await?;
+            self.asset_types.insert(asset_type, (addr.clone(), ep));
+            // If the conversion is 0, then we just have a pure decoding
+            if conv == Amount::zero() {
+                None
+            } else {
+                Some(conv_entry.or_insert((Amount::into(conv), path, 0)))
+            }
         }
     }
 
@@ -914,6 +919,7 @@ impl ShieldedContext {
         &mut self,
         client: HttpClient,
         vk: &ViewingKey,
+        target_epoch: Epoch,
     ) -> Option<Amount> {
         // First get the unexchanged balance
         if let Some(balance) = self.compute_shielded_balance(vk) {
@@ -922,6 +928,7 @@ impl ShieldedContext {
                 self.compute_exchanged_amount(
                     client,
                     balance,
+                    target_epoch,
                     HashMap::new(),
                 )
                 .await
@@ -941,7 +948,7 @@ impl ShieldedContext {
         conv: AllowedConversion,
         asset_type: AssetType,
         value: i64,
-        usage: &mut u64,
+        usage: &mut i64,
         input: &mut Amount,
         output: &mut Amount,
     ) {
@@ -956,7 +963,7 @@ impl ShieldedContext {
         // realize its value
         let trace = Amount::from_pair(asset_type, value % threshold).unwrap();
         // Record how much more of the given conversion has been used
-        *usage += required as u64;
+        *usage += required;
         // Apply the conversions to input and move the trace amount to output
         *input += conv * required - &trace;
         *output += trace;
@@ -970,16 +977,26 @@ impl ShieldedContext {
         &mut self,
         client: HttpClient,
         mut input: Amount,
+        target_epoch: Epoch,
         mut conversions: Conversions,
     ) -> (Amount, Conversions) {
         // Where we will store our exchanged value
         let mut output = Amount::zero();
         // Repeatedly exchange assets until it is no longer possible
         while let Some((asset_type, value)) =
-            clone_pair_option(input.components().next())
+            input.components().next().map(cloned_pair)
         {
-            if let Some((conv, _wit, usage)) = conversions.get_mut(&asset_type)
+            let target_asset_type = self
+                .decode_asset_type(client.clone(), asset_type)
+                .await
+                .map(|(addr, _epoch)| make_asset_type(target_epoch, &addr))
+                .unwrap_or(asset_type);
+            if let (Some((conv, _wit, usage)), false) =
+                (self
+                .query_allowed_conversion(client.clone(), asset_type, &mut conversions)
+                .await, asset_type == target_asset_type)
             {
+                // Not at the target asset type, not at the current asset type
                 Self::apply_conversion(
                     conv.clone(),
                     asset_type,
@@ -988,22 +1005,22 @@ impl ShieldedContext {
                     &mut input,
                     &mut output,
                 );
-            } else if let Some((_addr, _epoch, conv, wit)) = self
-                .query_allowed_conversion(client.clone(), asset_type)
-                .await
+            } else if let (Some((conv, _wit, usage)), false) =
+                (self
+                 .query_allowed_conversion(client.clone(), target_asset_type, &mut conversions)
+                 .await, asset_type == target_asset_type)
             {
-                let mut usage = 0;
+                // At the current asset type
                 Self::apply_conversion(
                     conv.clone(),
                     asset_type,
                     value,
-                    &mut usage,
+                    usage,
                     &mut input,
                     &mut output,
                 );
-                // Note how much of the found conversion we are using
-                conversions.insert(asset_type, (conv, wit, usage as u64));
             } else {
+                // At the target asset type
                 let comp = input.project(asset_type);
                 // Otherwise accumulate the amount as is
                 output += &comp;
@@ -1023,6 +1040,7 @@ impl ShieldedContext {
         ledger_address: TendermintAddress,
         vk: &ViewingKey,
         target: Amount,
+        target_epoch: Epoch,
     ) -> (
         Amount,
         Vec<(Diversifier, Note, MerklePath<Node>)>,
@@ -1055,6 +1073,7 @@ impl ShieldedContext {
                     .compute_exchanged_amount(
                         client.clone(),
                         pre_contr,
+                        target_epoch,
                         conversions.clone(),
                     )
                     .await;
@@ -1153,19 +1172,27 @@ impl ShieldedContext {
     }
 }
 
+/// Make asset type corresponding to given address and epoch
+fn make_asset_type(
+    epoch: Epoch,
+    token: &Address,
+) -> AssetType {
+    // Typestamp the chosen token with the current epoch
+    let token_bytes = (token, epoch.0)
+        .try_to_vec()
+        .expect("token should serialize");
+    // Generate the unique asset identifier from the unique token address
+    AssetType::new(token_bytes.as_ref())
+        .expect("unable to create asset type")
+}
+
 /// Convert Anoma amount and token type to MASP equivalents
 fn convert_amount(
     epoch: Epoch,
     token: &Address,
     val: token::Amount,
 ) -> (AssetType, Amount) {
-    // Typestamp the chosen token with the current epoch
-    let token_bytes = (token, epoch.0)
-        .try_to_vec()
-        .expect("token should serialize");
-    // Generate the unique asset identifier from the unique token address
-    let asset_type = AssetType::new(token_bytes.as_ref())
-        .expect("unable to create asset type");
+    let asset_type = make_asset_type(epoch, token);
     // Combine the value and unit into one amount
     let amount = Amount::from_nonnegative(asset_type, u64::from(val))
         .expect("invalid value for amount");
@@ -1236,6 +1263,7 @@ async fn gen_shielded_transfer(
                 args.tx.ledger_address.clone(),
                 &to_viewing_key(&sk).vk,
                 required_amt,
+                epoch,
             )
             .await;
         // Commit the notes found to our transaction
@@ -1245,7 +1273,7 @@ async fn gen_shielded_transfer(
         // Commit the conversion notes used during summation
         for (conv, wit, value) in used_convs.values() {
             if *value > 0 {
-                builder.add_convert(conv.clone(), *value, wit.clone())?;
+                builder.add_convert(conv.clone(), *value as u64, wit.clone())?;
             }
         }
     } else {

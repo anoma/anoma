@@ -557,6 +557,7 @@ pub async fn query_shielded_balance(
                 .compute_exchanged_balance(
                     client.clone(),
                     &viewing_key,
+                    epoch,
                 )
                 .await
                 .expect("context should contain viewing key");
@@ -596,6 +597,7 @@ pub async fn query_shielded_balance(
                     .compute_exchanged_balance(
                         client.clone(),
                         &viewing_key,
+                        epoch,
                     )
                     .await
                     .expect("context should contain viewing key");
@@ -682,6 +684,7 @@ pub async fn query_shielded_balance(
                     .compute_exchanged_balance(
                         client.clone(),
                         &viewing_key,
+                        epoch,
                     )
                     .await
                     .expect("context should contain viewing key");
@@ -709,6 +712,7 @@ pub async fn query_shielded_balance(
                 .compute_exchanged_balance(
                     client.clone(),
                     &viewing_key,
+                    epoch,
                 )
                 .await
                 .expect("context should contain viewing key");
