@@ -158,11 +158,11 @@ pub trait Signature:
     /// The scheme type of this implementation
     const TYPE: SchemeType;
     /// Convert from one Signature type to another
-    fn try_from_sig<PK: Signature>(
-        pk: &PK,
+    fn try_from_sig<SIG: Signature>(
+        sig: &SIG,
     ) -> Result<Self, ParseSignatureError> {
-        if PK::TYPE == Self::TYPE {
-            let sig_arr = pk.try_to_vec().unwrap();
+        if SIG::TYPE == Self::TYPE {
+            let sig_arr = sig.try_to_vec().unwrap();
             let res = Self::try_from_slice(sig_arr.as_ref());
             res.map_err(ParseSignatureError::InvalidEncoding)
         } else {
@@ -170,8 +170,8 @@ pub trait Signature:
         }
     }
     /// Convert from self to another SecretKey type
-    fn try_to_sig<PK: Signature>(&self) -> Result<PK, ParseSignatureError> {
-        PK::try_from_sig(self)
+    fn try_to_sig<SIG: Signature>(&self) -> Result<SIG, ParseSignatureError> {
+        SIG::try_from_sig(self)
     }
 }
 
