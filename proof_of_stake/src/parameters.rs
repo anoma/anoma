@@ -113,7 +113,7 @@ impl PosParams {
         }
 
         // Check that there is no more than 1 vote per token
-        if self.votes_per_token >= BasisPoints::new(10_000) {
+        if self.votes_per_token > BasisPoints::new(10_000) {
             errors.push(ValidationError::VotesPerTokenGreaterThanOne(
                 self.votes_per_token,
             ))
