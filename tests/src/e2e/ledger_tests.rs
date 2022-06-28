@@ -961,7 +961,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
-    let _bg_ledger = ledger.background();
+    let bg_ledger = ledger.background();
 
     let validator_one_rpc = Arc::new(get_actor_rpc(&test, &Who::Validator(0)));
 
@@ -1013,6 +1013,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         task.join().unwrap()?;
     }
     // Wait to commit a block
+    let mut ledger = bg_ledger.foreground();
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
 
     Ok(())
