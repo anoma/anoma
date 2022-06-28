@@ -14,9 +14,9 @@ use assert_cmd::assert::OutputAssertExt;
 use color_eyre::eyre::Result;
 use color_eyre::owo_colors::OwoColorize;
 use escargot::CargoBuild;
+use expectrl::session::Session;
+use expectrl::{Eof, WaitStatus};
 use eyre::eyre;
-use rexpect::process::wait::WaitStatus;
-use rexpect::session::{spawn_command, PtySession};
 use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
@@ -401,18 +401,62 @@ pub fn working_dir() -> PathBuf {
 
 /// A command under test
 pub struct AnomaCmd {
-    pub session: PtySession,
+    pub session: Session,
     pub cmd_str: String,
 }
 
+/// A command under test running on a background thread
+pub struct AnomaBgCmd {
+    join_handle: std::thread::JoinHandle<AnomaCmd>,
+    abort_send: std::sync::mpsc::Sender<()>,
+}
+
+impl AnomaBgCmd {
+    /// Re-gain control of a background command (created with
+    /// [`AnomaCmd::background()`]) to check its output.
+    pub fn foreground(self) -> AnomaCmd {
+        self.abort_send.send(()).unwrap();
+        self.join_handle.join().unwrap()
+    }
+}
+
 impl AnomaCmd {
+    /// Keep reading the session's output in a background thread to prevent the
+    /// buffer from filling up. Call [`AnomaBgCmd::foreground()`] on the
+    /// returned [`AnomaBgCmd`] to stop the loop and return back the original
+    /// command.
+    pub fn background(self) -> AnomaBgCmd {
+        let (abort_send, abort_recv) = std::sync::mpsc::channel();
+        let join_handle = std::thread::spawn(move || {
+            let mut cmd = self;
+            loop {
+                match abort_recv.try_recv() {
+                    Ok(())
+                    | Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                        return cmd;
+                    }
+                    Err(std::sync::mpsc::TryRecvError::Empty) => {}
+                }
+                cmd.session.is_matched(Eof).unwrap();
+            }
+        });
+        AnomaBgCmd {
+            join_handle,
+            abort_send,
+        }
+    }
+
     /// Assert that the process exited with success
     pub fn assert_success(&self) {
-        let status = self.session.process.wait().unwrap();
-        assert_eq!(
-            WaitStatus::Exited(self.session.process.child_pid, 0),
-            status
-        );
+        let status = self.session.wait().unwrap();
+        assert_eq!(WaitStatus::Exited(self.session.pid(), 0), status);
+    }
+
+    /// Assert that the process exited with failure
+    #[allow(dead_code)]
+    pub fn assert_failure(&self) {
+        let status = self.session.wait().unwrap();
+        assert_ne!(WaitStatus::Exited(self.session.pid(), 0), status);
     }
 
     /// Wait until provided string is seen on stdout of child process.
@@ -421,9 +465,16 @@ impl AnomaCmd {
     /// Wrapper over the inner `PtySession`'s functions with custom error
     /// reporting.
     pub fn exp_string(&mut self, needle: &str) -> Result<String> {
-        self.session
-            .exp_string(needle)
-            .map_err(|e| eyre!(format!("{}", e)))
+        let found = self
+            .session
+            .expect_eager(needle)
+            .map_err(|e| eyre!(format!("{}\n Needle: {}", e, needle)))?;
+        if found.is_empty() {
+            Err(eyre!(format!("Expected needle not found: {}", needle)))
+        } else {
+            String::from_utf8(found.before().to_vec())
+                .map_err(|e| eyre!(format!("{}", e)))
+        }
     }
 
     /// Wait until provided regex is seen on stdout of child process.
@@ -431,22 +482,40 @@ impl AnomaCmd {
     /// 1. the yet unread output
     /// 2. the matched regex
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
-    /// reporting.
+    /// Wrapper over the inner `Session`'s functions with custom error
+    /// reporting as well as converting bytes back to `String`.
     pub fn exp_regex(&mut self, regex: &str) -> Result<(String, String)> {
-        self.session
-            .exp_regex(regex)
-            .map_err(|e| eyre!(format!("{}", e)))
+        let found = self
+            .session
+            .expect_eager(expectrl::Regex(regex))
+            .map_err(|e| eyre!(format!("{}", e)))?;
+        if found.is_empty() {
+            Err(eyre!(format!("Expected regex not found: {}", regex)))
+        } else {
+            let unread = String::from_utf8(found.before().to_vec())
+                .map_err(|e| eyre!(format!("{}", e)))?;
+            let matched =
+                String::from_utf8(found.matches().next().unwrap().to_vec())
+                    .map_err(|e| eyre!(format!("{}", e)))?;
+            Ok((unread, matched))
+        }
     }
 
     /// Wait until we see EOF (i.e. child process has terminated)
     /// Return all the yet unread output
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
+    /// Wrapper over the inner `Session`'s functions with custom error
     /// reporting.
     #[allow(dead_code)]
     pub fn exp_eof(&mut self) -> Result<String> {
-        self.session.exp_eof().map_err(|e| eyre!(format!("{}", e)))
+        let found =
+            self.session.expect_eager(Eof).map_err(|e| eyre!("{}", e))?;
+        if found.is_empty() {
+            Err(eyre!("Expected EOF"))
+        } else {
+            String::from_utf8(found.before().to_vec())
+                .map_err(|e| eyre!(format!("{}", e)))
+        }
     }
 
     /// Send a control code to the running process and consume resulting output
@@ -455,7 +524,7 @@ impl AnomaCmd {
     /// E.g. `send_control('c')` sends ctrl-c. Upper/smaller case does not
     /// matter.
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
+    /// Wrapper over the inner `Session`'s functions with custom error
     /// reporting.
     pub fn send_control(&mut self, c: char) -> Result<()> {
         self.session
@@ -467,9 +536,9 @@ impl AnomaCmd {
     /// the input to appear.
     /// Return: number of bytes written
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
+    /// Wrapper over the inner `Session`'s functions with custom error
     /// reporting.
-    pub fn send_line(&mut self, line: &str) -> Result<usize> {
+    pub fn send_line(&mut self, line: &str) -> Result<()> {
         self.session
             .send_line(line)
             .map_err(|e| eyre!(format!("{}", e)))
@@ -484,48 +553,39 @@ impl Drop for AnomaCmd {
             "Waiting for command to finish".underline().yellow(),
             self.cmd_str,
         );
-        if let Err(error) = self.session.process.exit() {
-            eprintln!(
-                "\n{}: {}\n{}: {}",
-                "Error waiting for command to finish".underline().red(),
-                self.cmd_str,
-                "Error".underline().red(),
-                error,
-            );
-            return;
-        };
-        println!(
-            "\n{}: {}",
-            "Command finished".underline().green(),
-            self.cmd_str,
-        );
-        let output = match self.session.exp_eof() {
-            Ok(output) => output,
+        let _result = self.send_control('c');
+        match self.exp_eof() {
             Err(error) => {
                 eprintln!(
                     "\n{}: {}\n{}: {}",
-                    "Error reading output for command".underline().red(),
+                    "Error waiting for command to finish".underline().red(),
                     self.cmd_str,
                     "Error".underline().red(),
                     error,
                 );
-                return;
             }
-        };
-        let output = output.trim();
-        if !output.is_empty() {
-            println!(
-                "\n{}: {}\n\n{}",
-                "Unread output for command".underline().yellow(),
-                self.cmd_str,
-                output
-            );
-        } else {
-            println!(
-                "\n{}: {}",
-                "No unread output for command".underline().green(),
-                self.cmd_str
-            );
+            Ok(output) => {
+                println!(
+                    "\n{}: {}",
+                    "Command finished".underline().green(),
+                    self.cmd_str,
+                );
+                let output = output.trim();
+                if !output.is_empty() {
+                    println!(
+                        "\n{}: {}\n\n{}",
+                        "Unread output for command".underline().yellow(),
+                        self.cmd_str,
+                        output
+                    );
+                } else {
+                    println!(
+                        "\n{}: {}",
+                        "No unread output for command".underline().green(),
+                        self.cmd_str
+                    );
+                }
+            }
         }
     }
 }
@@ -611,9 +671,8 @@ where
         .args(args);
     let cmd_str = format!("{:?}", run_cmd);
 
-    let timeout_ms = timeout_sec.map(|sec| sec * 1_000);
     println!("{}: {}", "Running".underline().green(), cmd_str);
-    let mut session = spawn_command(run_cmd, timeout_ms).map_err(|e| {
+    let mut session = Session::spawn(run_cmd).map_err(|e| {
         eyre!(
             "\n\n{}: {}\n{}: {}\n{}: {}",
             "Failed to run".underline().red(),
@@ -624,33 +683,34 @@ where
             e
         )
     })?;
+    session.set_expect_timeout(timeout_sec.map(std::time::Duration::from_secs));
 
+    let mut cmd_process = AnomaCmd { session, cmd_str };
     if let Bin::Node = &bin {
         // When running a node command, we need to wait a bit before checking
         // status
         sleep(1);
 
         // If the command failed, try print out its output
-        if let Some(rexpect::process::wait::WaitStatus::Exited(_, result)) =
-            session.process.status()
+        if let Ok(WaitStatus::Exited(_, result)) = cmd_process.session.status()
         {
             if result != 0 {
+                let output = cmd_process.exp_eof().unwrap_or_else(|err| {
+                    format!("No output found, error: {}", err)
+                });
                 return Err(eyre!(
                     "\n\n{}: {}\n{}: {} \n\n{}: {}",
                     "Failed to run".underline().red(),
-                    cmd_str,
+                    cmd_process.cmd_str,
                     "Location".underline().red(),
                     loc,
                     "Output".underline().red(),
-                    session.exp_eof().unwrap_or_else(|err| format!(
-                        "No output found, error: {}",
-                        err
-                    ))
+                    output,
                 ));
             }
         }
     }
-    Ok(AnomaCmd { session, cmd_str })
+    Ok(cmd_process)
 }
 
 /// Sleep for given `seconds`.
