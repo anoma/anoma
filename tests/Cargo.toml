@@ -21,9 +21,10 @@ ABCI-plus-plus = [
   "anoma/ABCI-plus-plus",
   "anoma/ibc-mocks",
   "anoma_vm_env/ABCI-plus-plus",
+  "skip-tendermint-8840",
 ]
 
-# re-enable once https://github.com/tendermint/tendermint/issues/8840 is fixed
+# remove this everywhere once https://github.com/tendermint/tendermint/issues/8840 is fixed
 skip-tendermint-8840 = []
 
 [dependencies]
