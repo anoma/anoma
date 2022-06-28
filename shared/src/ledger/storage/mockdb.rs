@@ -6,16 +6,18 @@ use std::ops::Bound::{Excluded, Included};
 use std::path::Path;
 use std::str::FromStr;
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use super::merkle_tree::{MerkleTreeStoresRead, StoreType};
 use super::{
     BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error, Result, DB,
 };
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
-use crate::tendermint::block::Header;
-use crate::tendermint_proto::Protobuf;
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
-use crate::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
+use crate::types::storage::{
+    BlockHeight, Header, Key, KeySeg, KEY_SEGMENT_SEPARATOR,
+};
 use crate::types::time::DateTimeUtc;
 
 /// An in-memory DB for testing.
@@ -228,7 +230,7 @@ impl DB for MockDB {
                     .map_err(Error::KeyError)?;
                 self.0.borrow_mut().insert(
                     key.to_string(),
-                    h.encode_vec().expect("serialization failed"),
+                    h.try_to_vec().expect("serialization failed"),
                 );
             }
         }
@@ -283,7 +285,8 @@ impl DB for MockDB {
         let value = self.0.borrow().get(&key.to_string()).cloned();
         match value {
             Some(v) => Ok(Some(
-                Header::decode_vec(&v).map_err(Error::ProtobufCodingError)?,
+                BorshDeserialize::try_from_slice(&v[..])
+                    .map_err(Error::BorshCodingError)?,
             )),
             None => Ok(None),
         }

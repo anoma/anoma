@@ -13,6 +13,8 @@ use thiserror::Error;
 use super::transaction::WrapperTx;
 use crate::bytes::ByteBuf;
 use crate::types::address::{self, Address};
+use crate::types::hash::Hash;
+use crate::types::time::DateTimeUtc;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -96,6 +98,12 @@ impl From<BlockHeight> for u64 {
 )]
 pub struct BlockHash(pub [u8; BLOCK_HASH_LENGTH]);
 
+impl From<Hash> for BlockHash {
+    fn from(hash: Hash) -> Self {
+        BlockHash(hash.0)
+    }
+}
+
 impl TryFrom<i64> for BlockHeight {
     type Error = String;
 
@@ -131,6 +139,7 @@ impl TryFrom<&[u8]> for BlockHash {
         Ok(BlockHash(hash))
     }
 }
+
 impl TryFrom<Vec<u8>> for BlockHash {
     type Error = self::Error;
 
@@ -149,10 +158,30 @@ impl TryFrom<Vec<u8>> for BlockHash {
         Ok(BlockHash(hash))
     }
 }
+
 impl core::fmt::Debug for BlockHash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let hash = format!("{}", ByteBuf(&self.0));
         f.debug_tuple("BlockHash").field(&hash).finish()
+    }
+}
+
+/// The data from Tendermint header
+/// relevant for Anoma storage
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+pub struct Header {
+    /// Merkle root hash of block
+    pub hash: Hash,
+    /// Timestamp associated to block
+    pub time: DateTimeUtc,
+    /// Hash of the addresses of the next validator set
+    pub next_validators_hash: Hash,
+}
+
+impl Header {
+    /// The number of bytes when this header is encoded
+    pub fn encoded_len(&self) -> usize {
+        self.try_to_vec().unwrap().len()
     }
 }
 

@@ -56,7 +56,7 @@ use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
-use crate::client::tx::TxResponse;
+use crate::client::tendermint_rpc_types::TxResponse;
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -1526,7 +1526,6 @@ pub async fn query_tx_response(
 
 /// Lookup the results of applying the specified transaction to the
 /// blockchain.
-
 pub async fn query_result(_ctx: Context, args: args::QueryResult) {
     // First try looking up application event pertaining to given hash.
     let tx_response = query_tx_response(

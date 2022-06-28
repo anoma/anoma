@@ -9,19 +9,7 @@ pub mod write_log;
 use core::fmt::Debug;
 
 #[cfg(not(feature = "ABCI"))]
-use tendermint::block::Header;
-#[cfg(not(feature = "ABCI"))]
 use tendermint::merkle::proof::Proof;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Error as TmProtoError;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Error as TmProtoError;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::Header;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
@@ -42,7 +30,8 @@ use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
-    BlockHash, BlockHeight, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
+    BlockHash, BlockHeight, Epoch, Epochs, Header, Key, KeySeg,
+    BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
 
@@ -109,8 +98,8 @@ pub enum Error {
     MerkleTreeError(MerkleTreeError),
     #[error("DB error: {0}")]
     DBError(String),
-    #[error("Tendermint Protobuf error: {0}")]
-    ProtobufCodingError(TmProtoError),
+    #[error("Borsh (de)-serialization error: {0}")]
+    BorshCodingError(std::io::Error),
     #[error("Merkle tree at the height {height} is not stored")]
     NoMerkleTree { height: BlockHeight },
 }

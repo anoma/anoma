@@ -1,0 +1,14 @@
+- Ledger: Updated the version of Tendermint used for ABCI++ ([#1088](https://github.com/anoma/anoma/pull/1088))
+    - Add full support for ProcessProposal and FinalizeBlock
+    - Updated the shims
+    - Updated `tendermint-rs`, `ibc-rs`, and `tower-abci` deps
+    - Updated the proto definitions
+    - Added Tendermint's new method of a BFT timestamping
+    - Updated the format of Tendermint's new config
+    - Fixed booting up the tendermint node in the ledger with correct settings
+    - Refactored storage to account for the fact that tendermint no longer passes in block headers
+- Client: Configured Tendermints new event log and JSON RPC API for events querying ([#1088](https://github.com/anoma/anoma/pull/1088))
+    - Added necessary config parameters to our tendermint node's configuration
+    - Wrote a jsonrpc client for querying tendermint's event logs
+    - Refactored how txs are submitted in the client when the `ABCI-plus-plus` feature is
+      set to use jsonrpc calls instead of websockets.

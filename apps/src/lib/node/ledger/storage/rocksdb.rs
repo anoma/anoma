@@ -37,21 +37,14 @@ use anoma::ledger::storage::{
     MerkleTreeStoresRead, Result, StoreType, DB,
 };
 use anoma::types::storage::{
-    BlockHeight, Key, KeySeg, TxQueue, KEY_SEGMENT_SEPARATOR,
+    BlockHeight, Header, Key, KeySeg, TxQueue, KEY_SEGMENT_SEPARATOR,
 };
 use anoma::types::time::DateTimeUtc;
+use borsh::{BorshDeserialize, BorshSerialize};
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
 };
-#[cfg(not(feature = "ABCI"))]
-use tendermint::block::Header;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::Protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::block::Header;
 
 use crate::config::utils::num_of_threads;
 
@@ -503,7 +496,7 @@ impl DB for RocksDB {
                     .map_err(Error::KeyError)?;
                 batch.put(
                     key.to_string(),
-                    h.encode_vec().expect("serialization failed"),
+                    h.try_to_vec().expect("serialization failed"),
                 );
             }
         }
@@ -557,7 +550,8 @@ impl DB for RocksDB {
             .map_err(|e| Error::DBError(e.into_string()))?;
         match value {
             Some(v) => Ok(Some(
-                Header::decode_vec(&v).map_err(Error::ProtobufCodingError)?,
+                Header::try_from_slice(&v[..])
+                    .map_err(Error::BorshCodingError)?,
             )),
             None => Ok(None),
         }

@@ -79,6 +79,7 @@ byteorder = "1.4.2"
 clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color", "cargo"]}
 color-eyre = "0.5.10"
 config = "0.11.0"
+curl = "0.4.43"
 derivative = "2.2.0"
 directories = "4.0.1"
 ed25519-consensus = "1.2.0"
@@ -113,7 +114,7 @@ rocksdb = {version = "0.18.0", features = ['zstd'], default-features = false}
 rpassword = "5.0.1"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_bytes = "0.11.5"
-serde_json = "1.0.62"
+serde_json = {version = "1.0.62", features = ["raw_value"]}
 serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"
@@ -122,12 +123,12 @@ sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", b
 sysinfo = {version = "=0.21.1", default-features = false}
 tar = "0.4.37"
 # temporarily using fork work-around
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
-tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true}
+tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true}
 tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true}
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", rev = "95c52476bc37927218374f94ac8e2a19bd35bec9", optional = true, features = ["http-client", "websocket-client"]}
 tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true, features = ["http-client", "websocket-client"]}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 thiserror = "1.0.30"
@@ -137,7 +138,7 @@ tonic = "0.6.1"
 tower = "0.4"
 # Also, using the same version of tendermint-rs as we do here.
 # with a patch for https://github.com/penumbra-zone/tower-abci/issues/7.
-tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/abcipp-v0.23.5-tracing", optional = true}
+tower-abci = {git = "https://github.com/heliaxdev/tower-abci", rev = "f6463388fc319b6e210503b43b3aecf6faf6b200", optional = true}
 tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/rebase_v0.23.5_tracing", optional = true}
 tracing = "0.1.30"
 tracing-log = "0.1.2"

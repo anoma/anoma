@@ -103,18 +103,14 @@ impl Shell {
             Request::VerifyHeader(_req) => {
                 Ok(Response::VerifyHeader(self.verify_header(_req)))
             }
+            #[cfg(not(feature = "ABCI"))]
             Request::ProcessProposal(block) => {
-                #[cfg(not(feature = "ABCI"))]
-                {
-                    Ok(Response::ProcessProposal(self.process_proposal(block)))
-                }
-                #[cfg(feature = "ABCI")]
-                {
-                    Ok(Response::ProcessProposal(
-                        self.process_and_decode_proposal(block),
-                    ))
-                }
+                Ok(Response::ProcessProposal(self.process_proposal(block)))
             }
+            #[cfg(feature = "ABCI")]
+            Request::DeliverTx(deliver_tx) => Ok(Response::DeliverTx(
+                self.process_and_decode_proposal(deliver_tx),
+            )),
             #[cfg(not(feature = "ABCI"))]
             Request::RevertProposal(_req) => {
                 Ok(Response::RevertProposal(self.revert_proposal(_req)))
@@ -337,6 +333,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         tracing::info!("Tendermint node is no longer running.");
 
         drop(aborter);
+        if res.is_err() {
+            tracing::error!("{:?}", &res);
+        }
         res
     });
 

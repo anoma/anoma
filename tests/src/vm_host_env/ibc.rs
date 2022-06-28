@@ -1,6 +1,5 @@
 use core::time::Duration;
 use std::collections::{BTreeSet, HashMap};
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 use anoma::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
@@ -55,19 +54,13 @@ pub use anoma::ledger::ibc::storage::{
     consensus_state_key, next_sequence_ack_key, next_sequence_recv_key,
     next_sequence_send_key, port_key, receipt_key,
 };
-use anoma::ledger::ibc::vp::{Ibc, IbcToken};
+use anoma::ledger::ibc::vp::{
+    get_dummy_header as tm_dummy_header, Ibc, IbcToken,
+};
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
-use anoma::tendermint::account::Id as TmAccountId;
-use anoma::tendermint::block::header::{
-    Header as TmHeader, Version as TmVersion,
-};
-use anoma::tendermint::block::Height as TmHeight;
-use anoma::tendermint::chain::Id as TmChainId;
-use anoma::tendermint::hash::{AppHash, Hash as TmHash};
-use anoma::tendermint::time::Time as TmTime;
 use anoma::tendermint_proto::Protobuf;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
@@ -266,29 +259,6 @@ pub fn init_storage() -> (Address, Address) {
     let init_bal = Amount::from(1_000_000_000u64);
     tx_host_env::write(key.to_string(), init_bal);
     (token, account)
-}
-
-pub fn tm_dummy_header() -> TmHeader {
-    TmHeader {
-        version: TmVersion { block: 10, app: 0 },
-        chain_id: TmChainId::try_from("test_chain".to_owned())
-            .expect("Creating an TmChainId shouldn't fail"),
-        height: TmHeight::try_from(10_u64)
-            .expect("Creating a height shouldn't fail"),
-        time: TmTime::now(),
-        last_block_id: None,
-        last_commit_hash: None,
-        data_hash: None,
-        validators_hash: TmHash::None,
-        next_validators_hash: TmHash::None,
-        consensus_hash: TmHash::None,
-        app_hash: AppHash::try_from(vec![0])
-            .expect("Creating an AppHash shouldn't fail"),
-        last_results_hash: None,
-        evidence_hash: None,
-        proposer_address: TmAccountId::try_from(vec![0u8; 20])
-            .expect("Creating an AccountId shouldn't fail"),
-    }
 }
 
 pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {

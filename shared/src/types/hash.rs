@@ -1,14 +1,19 @@
 //! Types for working with 32 bytes hashes.
 
 use std::fmt::{self, Display};
+use std::ops::Deref;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::transaction;
+#[cfg(not(feature = "ABCI"))]
+use tendermint::Hash as TmHash;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::transaction;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::Hash as TmHash;
 use thiserror::Error;
 
 /// The length of the transaction hash string
@@ -29,6 +34,7 @@ pub type HashResult<T> = std::result::Result<T, Error>;
 #[derive(
     Clone,
     Debug,
+    Default,
     Hash,
     PartialEq,
     Eq,
@@ -52,6 +58,14 @@ impl Display for Hash {
 
 impl AsRef<[u8]> for Hash {
     fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl Deref for Hash {
+    type Target = [u8; 32];
+
+    fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
@@ -86,5 +100,11 @@ impl Hash {
     pub fn sha256(data: impl AsRef<[u8]>) -> Self {
         let digest = Sha256::digest(data.as_ref());
         Self(*digest.as_ref())
+    }
+}
+
+impl From<Hash> for TmHash {
+    fn from(hash: Hash) -> Self {
+        TmHash::Sha256(hash.0)
     }
 }

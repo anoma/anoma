@@ -11,22 +11,23 @@ pub mod shim {
         RequestApplySnapshotChunk, RequestCheckTx, RequestCommit, RequestEcho,
         RequestExtendVote, RequestFlush, RequestInfo, RequestInitChain,
         RequestListSnapshots, RequestLoadSnapshotChunk, RequestOfferSnapshot,
-        RequestPrepareProposal, RequestQuery, RequestVerifyVoteExtension,
-        ResponseApplySnapshotChunk, ResponseCheckTx, ResponseCommit,
-        ResponseEcho, ResponseExtendVote, ResponseFlush, ResponseInfo,
-        ResponseInitChain, ResponseListSnapshots, ResponseLoadSnapshotChunk,
-        ResponseOfferSnapshot, ResponsePrepareProposal, ResponseQuery,
+        RequestPrepareProposal, RequestProcessProposal, RequestQuery,
+        RequestVerifyVoteExtension, ResponseApplySnapshotChunk,
+        ResponseCheckTx, ResponseCommit, ResponseEcho, ResponseExtendVote,
+        ResponseFlush, ResponseInfo, ResponseInitChain, ResponseListSnapshots,
+        ResponseLoadSnapshotChunk, ResponseOfferSnapshot,
+        ResponsePrepareProposal, ResponseProcessProposal, ResponseQuery,
         ResponseVerifyVoteExtension,
     };
     #[cfg(feature = "ABCI")]
     use tendermint_proto_abci::abci::{
-        RequestApplySnapshotChunk, RequestCheckTx, RequestCommit, RequestEcho,
-        RequestFlush, RequestInfo, RequestInitChain, RequestListSnapshots,
-        RequestLoadSnapshotChunk, RequestOfferSnapshot, RequestQuery,
-        ResponseApplySnapshotChunk, ResponseCheckTx, ResponseCommit,
-        ResponseEcho, ResponseFlush, ResponseInfo, ResponseInitChain,
-        ResponseListSnapshots, ResponseLoadSnapshotChunk,
-        ResponseOfferSnapshot, ResponseQuery,
+        RequestApplySnapshotChunk, RequestCheckTx, RequestCommit,
+        RequestDeliverTx, RequestEcho, RequestFlush, RequestInfo,
+        RequestInitChain, RequestListSnapshots, RequestLoadSnapshotChunk,
+        RequestOfferSnapshot, RequestQuery, ResponseApplySnapshotChunk,
+        ResponseCheckTx, ResponseCommit, ResponseEcho, ResponseEndBlock,
+        ResponseFlush, ResponseInfo, ResponseInitChain, ResponseListSnapshots,
+        ResponseLoadSnapshotChunk, ResponseOfferSnapshot, ResponseQuery,
     };
     use thiserror::Error;
 
@@ -68,8 +69,10 @@ pub mod shim {
         PrepareProposal(RequestPrepareProposal),
         #[allow(dead_code)]
         VerifyHeader(request::VerifyHeader),
-        #[allow(dead_code)]
-        ProcessProposal(request::ProcessProposal),
+        #[cfg(not(feature = "ABCI"))]
+        ProcessProposal(RequestProcessProposal),
+        #[cfg(feature = "ABCI")]
+        DeliverTx(RequestDeliverTx),
         #[allow(dead_code)]
         #[cfg(not(feature = "ABCI"))]
         RevertProposal(request::RevertProposal),
@@ -135,7 +138,10 @@ pub mod shim {
         #[cfg(not(feature = "ABCI"))]
         PrepareProposal(ResponsePrepareProposal),
         VerifyHeader(response::VerifyHeader),
-        ProcessProposal(response::ProcessProposal),
+        #[cfg(not(feature = "ABCI"))]
+        ProcessProposal(ResponseProcessProposal),
+        #[cfg(feature = "ABCI")]
+        DeliverTx(request::ProcessedTx),
         #[cfg(not(feature = "ABCI"))]
         RevertProposal(response::RevertProposal),
         #[cfg(not(feature = "ABCI"))]
@@ -143,6 +149,8 @@ pub mod shim {
         #[cfg(not(feature = "ABCI"))]
         VerifyVoteExtension(ResponseVerifyVoteExtension),
         FinalizeBlock(response::FinalizeBlock),
+        #[cfg(feature = "ABCI")]
+        EndBlock(ResponseEndBlock),
         Commit(ResponseCommit),
         Flush(ResponseFlush),
         Echo(ResponseEcho),
@@ -195,30 +203,19 @@ pub mod shim {
 
     /// Custom types for request payloads
     pub mod request {
-        use std::convert::{TryFrom, TryInto};
+        use std::convert::TryFrom;
 
-        use anoma::types::storage::BlockHash;
+        use anoma::types::hash::Hash;
+        use anoma::types::storage::{BlockHash, Header};
+        use anoma::types::time::DateTimeUtc;
         #[cfg(not(feature = "ABCI"))]
-        use tendermint::block::Header;
-        #[cfg(not(feature = "ABCI"))]
-        use tendermint_proto::abci::{Evidence, RequestBeginBlock};
+        use tendermint_proto::abci::{
+            Misbehavior as Evidence, RequestFinalizeBlock,
+        };
         #[cfg(feature = "ABCI")]
         use tendermint_proto_abci::abci::{Evidence, RequestBeginBlock};
-        #[cfg(feature = "ABCI")]
-        use tendermint_stable::block::Header;
 
         pub struct VerifyHeader;
-
-        #[derive(Clone)]
-        pub struct ProcessProposal {
-            pub tx: super::TxBytes,
-        }
-
-        impl From<super::TxBytes> for ProcessProposal {
-            fn from(tx: super::TxBytes) -> Self {
-                Self { tx }
-            }
-        }
 
         #[cfg(not(feature = "ABCI"))]
         pub struct RevertProposal;
@@ -230,71 +227,73 @@ pub mod shim {
             pub result: super::response::TxResult,
         }
 
-        #[derive(Debug)]
-        pub struct BeginBlock {
-            pub hash: BlockHash,
-            pub header: Header,
-            pub byzantine_validators: Vec<Evidence>,
-        }
-
-        impl TryFrom<RequestBeginBlock> for BeginBlock {
-            type Error = super::Error;
-
-            fn try_from(req: RequestBeginBlock) -> Result<Self, super::Error> {
-                match (
-                    BlockHash::try_from(&*req.hash),
-                    req.header
-                        .clone()
-                        .expect("Missing block's header")
-                        .try_into(),
-                ) {
-                    (Ok(hash), Ok(header)) => Ok(BeginBlock {
-                        hash,
-                        header,
-                        byzantine_validators: req.byzantine_validators,
-                    }),
-                    (Ok(_), Err(msg)) => {
-                        tracing::error!("Unexpected block header {}", msg);
-                        Err(super::Error::ConvertReq(super::Req::BeginBlock(
-                            req,
-                        )))
-                    }
-                    (err @ Err(_), _) => {
-                        tracing::error!("{:#?}", err);
-                        Err(super::Error::ConvertReq(super::Req::BeginBlock(
-                            req,
-                        )))
-                    }
-                }
-            }
-        }
-
         pub struct FinalizeBlock {
             pub hash: BlockHash,
             pub header: Header,
             pub byzantine_validators: Vec<Evidence>,
             pub txs: Vec<ProcessedTx>,
-            pub reject_all_decrypted: bool,
+        }
+
+        #[cfg(not(feature = "ABCI"))]
+        impl From<RequestFinalizeBlock> for FinalizeBlock {
+            fn from(req: RequestFinalizeBlock) -> FinalizeBlock {
+                FinalizeBlock {
+                    hash: BlockHash::try_from(req.hash.as_slice()).unwrap(),
+                    header: Header {
+                        hash: Hash::try_from(req.hash.as_slice()).unwrap(),
+                        time: DateTimeUtc::try_from(req.time.unwrap()).unwrap(),
+                        next_validators_hash: Hash::try_from(
+                            req.next_validators_hash.as_slice(),
+                        )
+                        .unwrap(),
+                    },
+                    byzantine_validators: req.byzantine_validators,
+                    txs: vec![],
+                }
+            }
+        }
+
+        #[cfg(feature = "ABCI")]
+        impl From<RequestBeginBlock> for FinalizeBlock {
+            fn from(req: RequestBeginBlock) -> FinalizeBlock {
+                let header = req.header.unwrap();
+                FinalizeBlock {
+                    hash: BlockHash::default(),
+                    header: Header {
+                        hash: Hash::default(),
+                        time: DateTimeUtc::try_from(header.time.unwrap())
+                            .unwrap(),
+                        next_validators_hash: Hash::try_from(
+                            header.next_validators_hash.as_slice(),
+                        )
+                        .unwrap(),
+                    },
+                    byzantine_validators: req.byzantine_validators,
+                    txs: vec![],
+                }
+            }
         }
     }
 
     /// Custom types for response payloads
     pub mod response {
         #[cfg(not(feature = "ABCI"))]
-        use tendermint_proto::abci::{Event, ValidatorUpdate};
+        use tendermint_proto::abci::{
+            Event as TmEvent, ExecTxResult, ResponseFinalizeBlock,
+            ValidatorUpdate,
+        };
         #[cfg(not(feature = "ABCI"))]
         use tendermint_proto::types::ConsensusParams;
         #[cfg(feature = "ABCI")]
         use tendermint_proto_abci::abci::ConsensusParams;
         #[cfg(feature = "ABCI")]
-        use tendermint_proto_abci::abci::{Event, ValidatorUpdate};
-        #[cfg(not(feature = "ABCI"))]
-        use tower_abci::response;
+        use tendermint_proto_abci::abci::{Event as TmEvent, ValidatorUpdate};
         #[cfg(feature = "ABCI")]
         use tower_abci_old::response;
 
-        #[cfg(feature = "ABCI")]
-        use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;
+        use crate::node::ledger::events::Event;
+        #[cfg(not(feature = "ABCI"))]
+        use crate::node::ledger::events::EventLevel;
 
         #[derive(Debug, Default)]
         pub struct VerifyHeader;
@@ -305,38 +304,23 @@ pub mod shim {
             pub info: String,
         }
 
-        impl<T> From<T> for TxResult
-        where
-            T: std::error::Error,
-        {
-            fn from(err: T) -> Self {
-                TxResult {
-                    code: 1,
-                    info: err.to_string(),
+        #[cfg(not(feature = "ABCI"))]
+        impl From<TxResult> for ExecTxResult {
+            fn from(TxResult { code, info }: TxResult) -> Self {
+                ExecTxResult {
+                    code,
+                    info,
+                    ..Default::default()
                 }
             }
         }
 
-        #[derive(Debug, Default)]
-        pub struct ProcessProposal {
-            pub result: TxResult,
-            #[cfg(feature = "ABCI")]
-            pub tx: TxBytes,
-        }
-
         #[cfg(not(feature = "ABCI"))]
-        impl From<TxResult> for ProcessProposal {
-            fn from(result: TxResult) -> Self {
-                ProcessProposal { result }
-            }
-        }
-
-        #[cfg(feature = "ABCI")]
-        impl From<TxResult> for ProcessProposal {
-            fn from(result: TxResult) -> Self {
-                ProcessProposal {
-                    result,
-                    ..Default::default()
+        impl From<&ExecTxResult> for TxResult {
+            fn from(ExecTxResult { code, info, .. }: &ExecTxResult) -> Self {
+                TxResult {
+                    code: *code,
+                    info: info.clone(),
                 }
             }
         }
@@ -347,15 +331,59 @@ pub mod shim {
         #[derive(Debug, Default)]
         pub struct FinalizeBlock {
             pub events: Vec<Event>,
-            pub gas_used: u64,
             pub validator_updates: Vec<ValidatorUpdate>,
             pub consensus_param_updates: Option<ConsensusParams>,
         }
 
+        #[cfg(not(feature = "ABCI"))]
+        impl From<FinalizeBlock> for ResponseFinalizeBlock {
+            fn from(resp: FinalizeBlock) -> Self {
+                ResponseFinalizeBlock {
+                    tx_results: resp
+                        .events
+                        .iter()
+                        .filter(|event| matches!(event.level, EventLevel::Tx))
+                        .map(|event| ExecTxResult {
+                            code: event
+                                .get("code")
+                                .map(|code| code.parse::<u32>().unwrap())
+                                .unwrap_or_default(),
+                            log: event
+                                .get("log")
+                                .map(|log| log.to_owned())
+                                .unwrap_or_default(),
+                            info: event
+                                .get("info")
+                                .map(|info| info.to_owned())
+                                .unwrap_or_default(),
+                            gas_used: event
+                                .get("gas_used")
+                                .map(|gas| gas.parse::<i64>().unwrap())
+                                .unwrap_or_default(),
+                            ..Default::default()
+                        })
+                        .collect(),
+                    events: resp
+                        .events
+                        .into_iter()
+                        .map(TmEvent::from)
+                        .collect(),
+                    consensus_param_updates: resp.consensus_param_updates,
+                    validator_updates: resp.validator_updates,
+                    ..Default::default()
+                }
+            }
+        }
+
+        #[cfg(feature = "ABCI")]
         impl From<FinalizeBlock> for response::EndBlock {
             fn from(resp: FinalizeBlock) -> Self {
                 Self {
-                    events: resp.events,
+                    events: resp
+                        .events
+                        .into_iter()
+                        .map(TmEvent::from)
+                        .collect(),
                     validator_updates: resp.validator_updates,
                     consensus_param_updates: resp.consensus_param_updates,
                 }

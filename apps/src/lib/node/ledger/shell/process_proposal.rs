@@ -1,5 +1,14 @@
 //! Implementation of the ['VerifyHeader`], [`ProcessProposal`],
 //! and [`RevertProposal`] ABCI++ methods for the Shell
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::abci::response_process_proposal::ProposalStatus;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::abci::{
+    ExecTxResult, RequestProcessProposal, ResponseProcessProposal,
+};
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::abci::RequestDeliverTx;
+
 use super::*;
 
 impl<D, H> Shell<D, H>
@@ -15,10 +24,34 @@ where
         Default::default()
     }
 
-    /// Validate a transaction request. On success, the transaction will
-    /// included in the mempool and propagated to peers, otherwise it will be
-    /// rejected.
-    ///
+    /// Check all the txs in a block. Some txs may be incorrect,
+    /// but we only reject the entire block if the order of the
+    /// included txs violates the order decided upon in the previous
+    /// block.
+    #[cfg(not(feature = "ABCI"))]
+    pub fn process_proposal(
+        &mut self,
+        req: RequestProcessProposal,
+    ) -> ResponseProcessProposal {
+        let tx_results: Vec<ExecTxResult> = req
+            .txs
+            .iter()
+            .map(|tx_bytes| {
+                ExecTxResult::from(self.process_single_tx(tx_bytes))
+            })
+            .collect();
+
+        ResponseProcessProposal {
+            status: if tx_results.iter().any(|res| res.code > 3) {
+                ProposalStatus::Reject as i32
+            } else {
+                ProposalStatus::Accept as i32
+            },
+            tx_results,
+            ..Default::default()
+        }
+    }
+
     /// Checks if the Tx can be deserialized from bytes. Checks the fees and
     /// signatures of the fee payer for a transaction if it is a wrapper tx.
     ///
@@ -37,19 +70,15 @@ where
     /// INVARIANT: Any changes applied in this method must be reverted if the
     /// proposal is rejected (unless we can simply overwrite them in the
     /// next block).
-    pub fn process_proposal(
-        &mut self,
-        req: shim::request::ProcessProposal,
-    ) -> shim::response::ProcessProposal {
-        let tx = match Tx::try_from(req.tx.as_ref()) {
+    pub(crate) fn process_single_tx(&mut self, tx_bytes: &[u8]) -> TxResult {
+        let tx = match Tx::try_from(tx_bytes) {
             Ok(tx) => tx,
             Err(_) => {
-                return shim::response::TxResult {
+                return TxResult {
                     code: ErrorCodes::InvalidTx.into(),
                     info: "The submitted transaction was not deserializable"
                         .into(),
-                }
-                .into();
+                };
             }
         };
         // TODO: This should not be hardcoded
@@ -115,7 +144,7 @@ where
                             info: format!(
                                 "The ciphertext of the wrapped tx {} is \
                                  invalid",
-                                hash_tx(&req.tx)
+                                hash_tx(tx_bytes)
                             ),
                         }
                     } else {
@@ -125,14 +154,14 @@ where
                             .unwrap_or_default();
 
                         if tx.fee.amount <= balance {
-                            shim::response::TxResult {
+                            TxResult {
                                 code: ErrorCodes::Ok.into(),
                                 info: "Process proposal accepted this \
                                        transaction"
                                     .into(),
                             }
                         } else {
-                            shim::response::TxResult {
+                            TxResult {
                                 code: ErrorCodes::InvalidTx.into(),
                                 info: "The address given does not have \
                                        sufficient balance to pay fee"
@@ -143,7 +172,6 @@ where
                 }
             },
         }
-        .into()
     }
 
     /// If we are not using ABCI++, we check the wrapper,
@@ -151,14 +179,14 @@ where
     #[cfg(feature = "ABCI")]
     pub fn process_and_decode_proposal(
         &mut self,
-        req: shim::request::ProcessProposal,
-    ) -> shim::response::ProcessProposal {
+        req: RequestDeliverTx,
+    ) -> shim::request::ProcessedTx {
         // check the wrapper tx
         let req_tx = match Tx::try_from(req.tx.as_ref()) {
             Ok(tx) => tx,
             Err(_) => {
-                return shim::response::ProcessProposal {
-                    result: shim::response::TxResult {
+                return shim::request::ProcessedTx {
+                    result: TxResult {
                         code: ErrorCodes::InvalidTx.into(),
                         info: "The submitted transaction was not \
                                deserializable"
@@ -172,14 +200,12 @@ where
         match process_tx(req_tx.clone()) {
             Ok(TxType::Wrapper(_)) => {}
             Ok(TxType::Protocol(_)) => {
-                let tx_bytes = req.tx.clone();
-                let mut response = self.process_proposal(req);
-                response.tx = tx_bytes;
-                return response;
+                let result = self.process_single_tx(&req.tx);
+                return shim::request::ProcessedTx { tx: req.tx, result };
             }
             Ok(_) => {
-                return shim::response::ProcessProposal {
-                    result: shim::response::TxResult {
+                return shim::request::ProcessedTx {
+                    result: TxResult {
                         code: ErrorCodes::InvalidTx.into(),
                         info: "Transaction rejected: Non-encrypted \
                                transactions are not supported"
@@ -194,10 +220,10 @@ where
             }
         }
 
-        let mut wrapper_resp = self.process_proposal(req.clone());
+        let wrapper_resp = self.process_single_tx(&req.tx);
         let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
 
-        if wrapper_resp.result.code == 0 {
+        if wrapper_resp.code == 0 {
             // if the wrapper passed, decode it
             if let Ok(TxType::Wrapper(wrapper)) = process_tx(req_tx) {
                 let decoded = Tx::from(match wrapper.decrypt(privkey) {
@@ -208,25 +234,25 @@ where
                 // we are not checking that txs are out of order
                 self.storage.tx_queue.push(wrapper);
                 // check the decoded tx
-                let mut decoded_resp =
-                    self.process_proposal(shim::request::ProcessProposal {
-                        tx: decoded.clone(),
-                    });
-
-                // this ensures that emitted events are of the correct type
-                decoded_resp.tx = decoded;
+                let decoded_resp = self.process_single_tx(&decoded);
                 // this ensures that the tx queue is empty even if an error
-                // happend in [`process_proposal`].
+                // happened in [`process_proposal`].
                 self.storage.tx_queue.pop();
-                decoded_resp
+                shim::request::ProcessedTx {
+                    // this ensures that emitted events are of the correct type
+                    tx: decoded,
+                    result: decoded_resp,
+                }
             } else {
                 // This was checked above
                 unreachable!()
             }
         } else {
-            // this ensures that emitted events are of the correct type
-            wrapper_resp.tx = req.tx;
-            wrapper_resp
+            shim::request::ProcessedTx {
+                // this ensures that emitted events are of the correct type
+                tx: req.tx,
+                result: wrapper_resp,
+            }
         }
     }
 
@@ -262,8 +288,11 @@ mod test_process_proposal {
     use tendermint_proto_abci::google::protobuf::Timestamp;
 
     use super::*;
-    use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
-    use crate::node::ledger::shims::abcipp_shim_types::shim::request::ProcessProposal;
+    #[cfg(not(feature = "ABCI"))]
+    use crate::node::ledger::shell::test_utils::TestError;
+    use crate::node::ledger::shell::test_utils::{
+        gen_keypair, ProcessProposal, TestShell,
+    };
 
     /// Test that if a wrapper tx is not signed, it is rejected
     /// by [`process_proposal`].
@@ -292,9 +321,19 @@ mod test_process_proposal {
         )
         .to_bytes();
         #[allow(clippy::redundant_clone)]
-        let request = ProcessProposal { tx: tx.clone() };
+        let request = ProcessProposal {
+            txs: vec![tx.clone()],
+        };
 
-        let response = shell.process_proposal(request);
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
         assert_eq!(
             response.result.info,
@@ -368,9 +407,17 @@ mod test_process_proposal {
             panic!("Test failed");
         };
         let request = ProcessProposal {
-            tx: new_tx.to_bytes(),
+            txs: vec![new_tx.to_bytes()],
         };
-        let response = shell.process_proposal(request);
+        let response = if let [response] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            response.clone()
+        } else {
+            panic!("Test failed")
+        };
         let expected_error = "Signature verification failed: Invalid signature";
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
         assert!(
@@ -410,9 +457,17 @@ mod test_process_proposal {
         .sign(&keypair)
         .expect("Test failed");
         let request = ProcessProposal {
-            tx: wrapper.to_bytes(),
+            txs: vec![wrapper.to_bytes()],
         };
-        let response = shell.process_proposal(request);
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
         assert_eq!(
             response.result.info,
@@ -461,10 +516,18 @@ mod test_process_proposal {
         .expect("Test failed");
 
         let request = ProcessProposal {
-            tx: wrapper.to_bytes(),
+            txs: vec![wrapper.to_bytes()],
         };
 
-        let response = shell.process_proposal(request);
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
         assert_eq!(
             response.result.info,
@@ -507,16 +570,34 @@ mod test_process_proposal {
             txs.push(Tx::from(TxType::Decrypted(DecryptedTx::Decrypted(tx))));
         }
         let req_1 = ProcessProposal {
-            tx: txs[0].to_bytes(),
+            txs: vec![txs[0].to_bytes()],
         };
-        let response_1 = shell.process_proposal(req_1);
+        let response_1 = if let [resp] = shell
+            .process_proposal(req_1)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response_1.result.code, u32::from(ErrorCodes::Ok));
 
         let req_2 = ProcessProposal {
-            tx: txs[2].to_bytes(),
+            txs: vec![txs[2].to_bytes()],
         };
 
-        let response_2 = shell.process_proposal(req_2);
+        let response_2 = if let Err(TestError::RejectProposal(resp)) =
+            shell.process_proposal(req_2)
+        {
+            if let [resp] = resp.as_slice() {
+                resp.clone()
+            } else {
+                panic!("Test failed")
+            }
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response_2.result.code, u32::from(ErrorCodes::InvalidOrder));
         assert_eq!(
             response_2.result.info,
@@ -555,9 +636,19 @@ mod test_process_proposal {
         let tx =
             Tx::from(TxType::Decrypted(DecryptedTx::Undecryptable(wrapper)));
 
-        let request = ProcessProposal { tx: tx.to_bytes() };
+        let request = ProcessProposal {
+            txs: vec![tx.to_bytes()],
+        };
 
-        let response = shell.process_proposal(request);
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
         assert_eq!(
             response.result.info,
@@ -611,8 +702,18 @@ mod test_process_proposal {
             wrapper.sign(&keypair).expect("Test failed")
         };
 
-        let request = ProcessProposal { tx: tx.to_bytes() };
-        let response = shell.process_proposal(request);
+        let request = ProcessProposal {
+            txs: vec![tx.to_bytes()],
+        };
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
         #[cfg(feature = "ABCI")]
         {
@@ -674,9 +775,17 @@ mod test_process_proposal {
             wrapper.sign(&keypair).expect("Test failed")
         };
         let request = ProcessProposal {
-            tx: signed.to_bytes(),
+            txs: vec![signed.to_bytes()],
         };
-        let response = shell.process_proposal(request);
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
         #[cfg(feature = "ABCI")]
         {
@@ -711,8 +820,20 @@ mod test_process_proposal {
 
         let tx = Tx::from(TxType::Decrypted(DecryptedTx::Decrypted(tx)));
 
-        let request = ProcessProposal { tx: tx.to_bytes() };
-        let response = shell.process_proposal(request);
+        let request = ProcessProposal {
+            txs: vec![tx.to_bytes()],
+        };
+        let response = if let Err(TestError::RejectProposal(resp)) =
+            shell.process_proposal(request)
+        {
+            if let [resp] = resp.as_slice() {
+                resp.clone()
+            } else {
+                panic!("Test failed")
+            }
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::ExtraTxs));
         assert_eq!(
             response.result.info,
@@ -730,8 +851,18 @@ mod test_process_proposal {
             Some("transaction data".as_bytes().to_owned()),
         );
         let tx = Tx::from(TxType::Raw(tx));
-        let request = ProcessProposal { tx: tx.to_bytes() };
-        let response = shell.process_proposal(request);
+        let request = ProcessProposal {
+            txs: vec![tx.to_bytes()],
+        };
+        let response = if let [resp] = shell
+            .process_proposal(request)
+            .expect("Test failed")
+            .as_slice()
+        {
+            resp.clone()
+        } else {
+            panic!("Test failed")
+        };
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
         assert_eq!(
             response.result.info,

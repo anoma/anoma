@@ -1,11 +1,18 @@
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use anoma::types::storage::BlockHeight;
+#[cfg(feature = "ABCI")]
+use anoma::types::hash::Hash;
+#[cfg(feature = "ABCI")]
+use anoma::types::storage::BlockHash;
+#[cfg(feature = "ABCI")]
+use anoma::types::transaction::hash_tx;
 use futures::future::FutureExt;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::abci::RequestBeginBlock;
 use tokio::sync::mpsc::UnboundedSender;
 use tower::Service;
 #[cfg(not(feature = "ABCI"))]
@@ -14,11 +21,11 @@ use tower_abci::{BoxError, Request as Req, Response as Resp};
 use tower_abci_old::{BoxError, Request as Req, Response as Resp};
 
 use super::super::Shell;
-use super::abcipp_shim_types::shim::{request, Error, Request, Response};
+use super::abcipp_shim_types::shim::request::{FinalizeBlock, ProcessedTx};
+#[cfg(not(feature = "ABCI"))]
+use super::abcipp_shim_types::shim::response::TxResult;
+use super::abcipp_shim_types::shim::{Error, Request, Response};
 use crate::config;
-use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
-    BeginBlock, ProcessedTx,
-};
 
 /// The shim wraps the shell, which implements ABCI++.
 /// The shim makes a crude translation between the ABCI interface currently used
@@ -26,8 +33,9 @@ use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
 #[derive(Debug)]
 pub struct AbcippShim {
     service: Shell,
-    begin_block_request: Option<BeginBlock>,
-    block_txs: Vec<ProcessedTx>,
+    #[cfg(feature = "ABCI")]
+    begin_block_request: Option<RequestBeginBlock>,
+    processed_txs: Vec<ProcessedTx>,
     shell_recv: std::sync::mpsc::Receiver<(
         Req,
         tokio::sync::oneshot::Sender<Result<Resp, BoxError>>,
@@ -58,12 +66,24 @@ impl AbcippShim {
                     vp_wasm_compilation_cache,
                     tx_wasm_compilation_cache,
                 ),
+                #[cfg(feature = "ABCI")]
                 begin_block_request: None,
-                block_txs: vec![],
+                processed_txs: vec![],
                 shell_recv,
             },
             AbciService { shell_send },
         )
+    }
+
+    #[cfg(feature = "ABCI")]
+    /// Get the hash of the txs in the block
+    pub fn get_hash(&self) -> Hash {
+        let bytes: Vec<u8> = self
+            .processed_txs
+            .iter()
+            .flat_map(|processed| processed.tx.clone())
+            .collect();
+        hash_tx(bytes.as_slice())
     }
 
     /// Run the shell's blocking loop that receives messages from the
@@ -71,73 +91,81 @@ impl AbcippShim {
     pub fn run(mut self) {
         while let Ok((req, resp_sender)) = self.shell_recv.recv() {
             let resp = match req {
-                Req::BeginBlock(block) => {
-                    // we save this data to be forwarded to finalize later
-                    self.begin_block_request =
-                        Some(block.try_into().unwrap_or_else(|_| {
-                            panic!("Could not read begin block request");
-                        }));
-                    Ok(Resp::BeginBlock(Default::default()))
-                }
-                Req::DeliverTx(deliver_tx) => {
-                    // We call [`process_proposal`] to report back the validity
-                    // of the tx to tendermint.
-                    // Invariant: The service call with
-                    // `Request::ProcessProposal`
-                    // must always return `Response::ProcessProposal`
+                #[cfg(not(feature = "ABCI"))]
+                Req::ProcessProposal(proposal) => {
+                    let txs = proposal.txs.clone();
                     self.service
-                        .call(Request::ProcessProposal(
-                            #[cfg(not(feature = "ABCI"))]
-                            deliver_tx.tx.clone().into(),
-                            #[cfg(feature = "ABCI")]
-                            deliver_tx.tx.into(),
-                        ))
+                        .call(Request::ProcessProposal(proposal))
                         .map_err(Error::from)
                         .and_then(|res| match res {
                             Response::ProcessProposal(resp) => {
-                                self.block_txs.push(ProcessedTx {
-                                    #[cfg(not(feature = "ABCI"))]
-                                    tx: deliver_tx.tx,
-                                    #[cfg(feature = "ABCI")]
-                                    tx: resp.tx,
-                                    result: resp.result,
-                                });
+                                for (result, tx) in resp
+                                    .tx_results
+                                    .iter()
+                                    .map(TxResult::from)
+                                    .zip(txs.into_iter())
+                                {
+                                    self.processed_txs
+                                        .push(ProcessedTx { tx, result });
+                                }
+                                Ok(Resp::ProcessProposal(resp))
+                            }
+                            _ => unreachable!(),
+                        })
+                }
+                #[cfg(not(feature = "ABCI"))]
+                Req::FinalizeBlock(block) => {
+                    let mut txs = vec![];
+                    std::mem::swap(&mut txs, &mut self.processed_txs);
+                    let mut finalize_req: FinalizeBlock = block.into();
+                    finalize_req.txs = txs;
+                    self.service
+                        .call(Request::FinalizeBlock(finalize_req))
+                        .map_err(Error::from)
+                        .and_then(|res| match res {
+                            Response::FinalizeBlock(resp) => {
+                                Ok(Resp::FinalizeBlock(resp.into()))
+                            }
+                            _ => Err(Error::ConvertResp(res)),
+                        })
+                }
+                #[cfg(feature = "ABCI")]
+                Req::BeginBlock(block) => {
+                    // we save this data to be forwarded to finalize later
+                    self.begin_block_request = Some(block);
+                    Ok(Resp::BeginBlock(Default::default()))
+                }
+                #[cfg(feature = "ABCI")]
+                Req::DeliverTx(deliver_tx) => {
+                    // We call [`process_single_tx`] to report back the validity
+                    // of the tx to tendermint.
+                    self.service
+                        .call(Request::DeliverTx(deliver_tx))
+                        .map_err(Error::from)
+                        .and_then(|res| match res {
+                            Response::DeliverTx(resp) => {
+                                self.processed_txs.push(resp);
                                 Ok(Resp::DeliverTx(Default::default()))
                             }
                             _ => unreachable!(),
                         })
                 }
-                Req::EndBlock(end) => {
-                    BlockHeight::try_from(end.height).unwrap_or_else(|_| {
-                        panic!("Unexpected block height {}", end.height)
-                    });
+                #[cfg(feature = "ABCI")]
+                Req::EndBlock(_) => {
                     let mut txs = vec![];
-                    std::mem::swap(&mut txs, &mut self.block_txs);
-                    // If the wrapper txs were not properly submitted, reject
-                    // all txs
-                    let out_of_order =
-                        txs.iter().any(|tx| tx.result.code > 3u32);
-                    if out_of_order {
-                        // The wrapper txs will need to be decrypted again
-                        // and included in the proposed block after the current
-                        self.service.reset_tx_queue_iter();
-                    }
-                    let begin_block_request =
-                        self.begin_block_request.take().unwrap();
+                    std::mem::swap(&mut txs, &mut self.processed_txs);
+                    let mut end_block_request: FinalizeBlock =
+                        self.begin_block_request.take().unwrap().into();
+                    let hash = self.get_hash();
+                    end_block_request.hash = BlockHash::from(hash.clone());
+                    end_block_request.header.hash = hash;
+                    end_block_request.txs = txs;
                     self.service
-                        .call(Request::FinalizeBlock(request::FinalizeBlock {
-                            hash: begin_block_request.hash,
-                            header: begin_block_request.header,
-                            byzantine_validators: begin_block_request
-                                .byzantine_validators,
-                            txs,
-                            reject_all_decrypted: out_of_order,
-                        }))
+                        .call(Request::FinalizeBlock(end_block_request))
                         .map_err(Error::from)
                         .and_then(|res| match res {
                             Response::FinalizeBlock(resp) => {
-                                let x = Resp::EndBlock(resp.into());
-                                Ok(x)
+                                Ok(Resp::EndBlock(resp.into()))
                             }
                             _ => Err(Error::ConvertResp(res)),
                         })
