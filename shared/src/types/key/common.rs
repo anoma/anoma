@@ -135,23 +135,23 @@ impl super::SecretKey for SecretKey {
 
     const TYPE: SchemeType = SigScheme::TYPE;
 
-    fn try_from_sk<PK: super::SecretKey>(
-        pk: &PK,
+    fn try_from_sk<SK: super::SecretKey>(
+        sk: &SK,
     ) -> Result<Self, ParseSecretKeyError> {
-        if PK::TYPE == Self::TYPE {
-            Self::try_from_slice(pk.try_to_vec().unwrap().as_ref())
+        if SK::TYPE == Self::TYPE {
+            Self::try_from_slice(sk.try_to_vec().unwrap().as_ref())
                 .map_err(ParseSecretKeyError::InvalidEncoding)
-        } else if PK::TYPE == ed25519::SecretKey::TYPE {
+        } else if SK::TYPE == ed25519::SecretKey::TYPE {
             Ok(Self::Ed25519(
                 ed25519::SecretKey::try_from_slice(
-                    pk.try_to_vec().unwrap().as_ref(),
+                    sk.try_to_vec().unwrap().as_ref(),
                 )
                 .map_err(ParseSecretKeyError::InvalidEncoding)?,
             ))
-        } else if PK::TYPE == secp256k1::SecretKey::TYPE {
+        } else if SK::TYPE == secp256k1::SecretKey::TYPE {
             Ok(Self::Secp256k1(
                 secp256k1::SecretKey::try_from_slice(
-                    pk.try_to_vec().unwrap().as_ref(),
+                    sk.try_to_vec().unwrap().as_ref(),
                 )
                 .map_err(ParseSecretKeyError::InvalidEncoding)?,
             ))        } else {
@@ -209,23 +209,23 @@ pub enum Signature {
 impl super::Signature for Signature {
     const TYPE: SchemeType = SigScheme::TYPE;
 
-    fn try_from_sig<PK: super::Signature>(
-        pk: &PK,
+    fn try_from_sig<SIG: super::Signature>(
+        sig: &SIG,
     ) -> Result<Self, ParseSignatureError> {
-        if PK::TYPE == Self::TYPE {
-            Self::try_from_slice(pk.try_to_vec().unwrap().as_slice())
+        if SIG::TYPE == Self::TYPE {
+            Self::try_from_slice(sig.try_to_vec().unwrap().as_slice())
                 .map_err(ParseSignatureError::InvalidEncoding)
-        } else if PK::TYPE == ed25519::Signature::TYPE {
+        } else if SIG::TYPE == ed25519::Signature::TYPE {
             Ok(Self::Ed25519(
                 ed25519::Signature::try_from_slice(
-                    pk.try_to_vec().unwrap().as_slice(),
+                    sig.try_to_vec().unwrap().as_slice(),
                 )
                 .map_err(ParseSignatureError::InvalidEncoding)?,
             ))
-        } else if PK::TYPE == secp256k1::Signature::TYPE {
+        } else if SIG::TYPE == secp256k1::Signature::TYPE {
             Ok(Self::Secp256k1(
                 secp256k1::Signature::try_from_slice(
-                    pk.try_to_vec().unwrap().as_slice(),
+                    sig.try_to_vec().unwrap().as_slice(),
                 )
                 .map_err(ParseSignatureError::InvalidEncoding)?,
             ))
