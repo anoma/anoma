@@ -66,7 +66,8 @@ fn run_ledger() -> Result<()> {
 /// 1. Run 2 genesis validator ledger nodes and 1 non-validator node
 /// 2. Submit a valid token transfer tx
 /// 3. Check that all the nodes processed the tx with the same result
-#[cfg(not(feature = "skip-tendermint-8840"))]
+/// TODO: run this test for ABCI-plus-plus once https://github.com/tendermint/tendermint/issues/8840 is fixed
+#[cfg(not(feature = "ABCI-plus-plus"))]
 #[test]
 fn test_node_connectivity() -> Result<()> {
     // Setup 2 genesis validator nodes
@@ -1534,7 +1535,8 @@ fn generate_proposal_json(
 /// 3. Setup and start the 2 genesis validator nodes and a non-validator node
 /// 4. Submit a valid token transfer tx from one validator to the other
 /// 5. Check that all the nodes processed the tx with the same result
-#[cfg(not(feature = "skip-tendermint-8840"))]
+/// TODO: run this test for ABCI-plus-plus once https://github.com/tendermint/tendermint/issues/8840 is fixed
+#[cfg(not(feature = "ABCI-plus-plus"))]
 #[test]
 fn test_genesis_validators() -> Result<()> {
     use std::collections::HashMap;
