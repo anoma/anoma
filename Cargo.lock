@@ -92,10 +92,10 @@ dependencies = [
  "ferveo-common",
  "group-threshold-cryptography",
  "hex",
- "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-rebase-master)",
  "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
- "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-rebase-master)",
+ "ibc 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?rev=30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc)",
  "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5)",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?rev=30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc)",
  "ics23",
  "itertools 0.10.3",
  "loupe",
@@ -113,10 +113,10 @@ dependencies = [
  "sha2 0.9.9",
  "sparse-merkle-tree",
  "tempfile",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "test-log",
  "thiserror",
  "tonic-build",
@@ -196,14 +196,14 @@ dependencies = [
  "sysinfo",
  "tar",
  "tempfile",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
- "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
+ "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
- "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "test-log",
  "thiserror",
  "tokio",
@@ -212,8 +212,8 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tower",
- "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=bat/abcipp-rebase-master)",
  "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5_tracing)",
+ "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?rev=f6463388fc319b6e210503b43b3aecf6faf6b200)",
  "tracing 0.1.34",
  "tracing-log",
  "tracing-subscriber 0.3.11",
@@ -2796,33 +2796,6 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.12.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-rebase-master#83dbb07e8e1a51c03681966eaf31653250699196"
-dependencies = [
- "bytes 1.1.0",
- "derive_more",
- "flex-error",
- "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-rebase-master)",
- "ics23",
- "num-traits 0.2.15",
- "prost 0.9.0",
- "prost-types 0.9.0",
- "safe-regex",
- "serde 1.0.137",
- "serde_derive",
- "serde_json",
- "sha2 0.10.2",
- "subtle-encoding",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tendermint-light-client-verifier 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tendermint-testgen 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "time 0.3.9",
- "tracing 0.1.34",
-]
-
-[[package]]
-name = "ibc"
-version = "0.12.0"
 source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/v0.12.0_tm_v0.23.5#e14560ecfc3f275a63b5702e038cbabd2797b2b6"
 dependencies = [
  "bytes 1.1.0",
@@ -2848,16 +2821,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "ibc-proto"
-version = "0.16.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-rebase-master#83dbb07e8e1a51c03681966eaf31653250699196"
+name = "ibc"
+version = "0.12.0"
+source = "git+https://github.com/heliaxdev/ibc-rs?rev=30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc#30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc"
 dependencies = [
  "bytes 1.1.0",
+ "derive_more",
+ "flex-error",
+ "ibc-proto 0.16.0 (git+https://github.com/heliaxdev/ibc-rs?rev=30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc)",
+ "ics23",
+ "num-traits 0.2.15",
  "prost 0.9.0",
  "prost-types 0.9.0",
+ "safe-regex",
  "serde 1.0.137",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tonic",
+ "serde_derive",
+ "serde_json",
+ "sha2 0.10.2",
+ "subtle-encoding",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-light-client-verifier 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-testgen 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "time 0.3.9",
+ "tracing 0.1.34",
 ]
 
 [[package]]
@@ -2870,6 +2857,19 @@ dependencies = [
  "prost-types 0.9.0",
  "serde 1.0.137",
  "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tonic",
+]
+
+[[package]]
+name = "ibc-proto"
+version = "0.16.0"
+source = "git+https://github.com/heliaxdev/ibc-rs?rev=30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc#30b3495ac56c6c37c99bc69ef9f2e84c3309c6cc"
+dependencies = [
+ "bytes 1.1.0",
+ "prost 0.9.0",
+ "prost-types 0.9.0",
+ "serde 1.0.137",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tonic",
 ]
 
@@ -6344,34 +6344,6 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master#95c52476bc37927218374f94ac8e2a19bd35bec9"
-dependencies = [
- "async-trait",
- "bytes 1.1.0",
- "ed25519",
- "ed25519-dalek",
- "flex-error",
- "futures 0.3.21",
- "num-traits 0.2.15",
- "once_cell",
- "prost 0.9.0",
- "prost-types 0.9.0",
- "serde 1.0.137",
- "serde_bytes",
- "serde_json",
- "serde_repr",
- "sha2 0.9.9",
- "signature",
- "subtle 2.4.1",
- "subtle-encoding",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "time 0.3.9",
- "zeroize",
-]
-
-[[package]]
-name = "tendermint"
-version = "0.23.5"
 source = "git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5#a1439b37ac64fbcaf508021fc1e1aff07c18147e"
 dependencies = [
  "async-trait",
@@ -6398,16 +6370,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "tendermint-config"
+name = "tendermint"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master#95c52476bc37927218374f94ac8e2a19bd35bec9"
+source = "git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9#95c52476bc37927218374f94ac8e2a19bd35bec9"
 dependencies = [
+ "async-trait",
+ "bytes 1.1.0",
+ "ed25519",
+ "ed25519-dalek",
  "flex-error",
+ "futures 0.3.21",
+ "num-traits 0.2.15",
+ "once_cell",
+ "prost 0.9.0",
+ "prost-types 0.9.0",
  "serde 1.0.137",
+ "serde_bytes",
  "serde_json",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "toml",
- "url 2.2.2",
+ "serde_repr",
+ "sha2 0.9.9",
+ "signature",
+ "subtle 2.4.1",
+ "subtle-encoding",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "time 0.3.9",
+ "zeroize",
 ]
 
 [[package]]
@@ -6424,16 +6411,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "tendermint-light-client-verifier"
+name = "tendermint-config"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master#95c52476bc37927218374f94ac8e2a19bd35bec9"
+source = "git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9#95c52476bc37927218374f94ac8e2a19bd35bec9"
 dependencies = [
- "derive_more",
  "flex-error",
  "serde 1.0.137",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "time 0.3.9",
+ "serde_json",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "toml",
+ "url 2.2.2",
 ]
 
 [[package]]
@@ -6450,19 +6437,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "tendermint-proto"
+name = "tendermint-light-client-verifier"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master#95c52476bc37927218374f94ac8e2a19bd35bec9"
+source = "git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9#95c52476bc37927218374f94ac8e2a19bd35bec9"
 dependencies = [
- "bytes 1.1.0",
+ "derive_more",
  "flex-error",
- "num-derive",
- "num-traits 0.2.15",
- "prost 0.9.0",
- "prost-types 0.9.0",
  "serde 1.0.137",
- "serde_bytes",
- "subtle-encoding",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-rpc 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "time 0.3.9",
 ]
 
@@ -6484,36 +6467,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "tendermint-rpc"
+name = "tendermint-proto"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master#95c52476bc37927218374f94ac8e2a19bd35bec9"
+source = "git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9#95c52476bc37927218374f94ac8e2a19bd35bec9"
 dependencies = [
- "async-trait",
- "async-tungstenite",
  "bytes 1.1.0",
  "flex-error",
- "futures 0.3.21",
- "getrandom 0.2.6",
- "http",
- "hyper 0.14.19",
- "hyper-proxy",
- "hyper-rustls",
- "peg",
- "pin-project 1.0.10",
+ "num-derive",
+ "num-traits 0.2.15",
+ "prost 0.9.0",
+ "prost-types 0.9.0",
  "serde 1.0.137",
  "serde_bytes",
- "serde_json",
  "subtle-encoding",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
- "thiserror",
  "time 0.3.9",
- "tokio",
- "tracing 0.1.34",
- "url 2.2.2",
- "uuid",
- "walkdir",
 ]
 
 [[package]]
@@ -6550,18 +6517,36 @@ dependencies = [
 ]
 
 [[package]]
-name = "tendermint-testgen"
+name = "tendermint-rpc"
 version = "0.23.5"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master#95c52476bc37927218374f94ac8e2a19bd35bec9"
+source = "git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9#95c52476bc37927218374f94ac8e2a19bd35bec9"
 dependencies = [
- "ed25519-dalek",
- "gumdrop",
+ "async-trait",
+ "async-tungstenite",
+ "bytes 1.1.0",
+ "flex-error",
+ "futures 0.3.21",
+ "getrandom 0.2.6",
+ "http",
+ "hyper 0.14.19",
+ "hyper-proxy",
+ "hyper-rustls",
+ "peg",
+ "pin-project 1.0.10",
  "serde 1.0.137",
+ "serde_bytes",
  "serde_json",
- "simple-error",
- "tempfile",
- "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
+ "subtle-encoding",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-config 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
+ "thiserror",
  "time 0.3.9",
+ "tokio",
+ "tracing 0.1.34",
+ "url 2.2.2",
+ "uuid",
+ "walkdir",
 ]
 
 [[package]]
@@ -6576,6 +6561,21 @@ dependencies = [
  "simple-error",
  "tempfile",
  "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "time 0.3.9",
+]
+
+[[package]]
+name = "tendermint-testgen"
+version = "0.23.5"
+source = "git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9#95c52476bc37927218374f94ac8e2a19bd35bec9"
+dependencies = [
+ "ed25519-dalek",
+ "gumdrop",
+ "serde 1.0.137",
+ "serde_json",
+ "simple-error",
+ "tempfile",
+ "tendermint 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "time 0.3.9",
 ]
 
@@ -7004,13 +7004,13 @@ dependencies = [
 [[package]]
 name = "tower-abci"
 version = "0.1.0"
-source = "git+https://github.com/heliaxdev/tower-abci?branch=bat/abcipp-rebase-master#25a0c673ea6748730f86f7f20c933d0f07b50621"
+source = "git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5_tracing#73e43bf79fb21b4969cc09f79a0a40ce4cc7bb52"
 dependencies = [
  "bytes 1.1.0",
  "futures 0.3.21",
  "pin-project 1.0.10",
  "prost 0.9.0",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-rebase-master)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
  "tokio",
  "tokio-stream",
  "tokio-util 0.6.10",
@@ -7022,13 +7022,13 @@ dependencies = [
 [[package]]
 name = "tower-abci"
 version = "0.1.0"
-source = "git+https://github.com/heliaxdev/tower-abci?branch=yuji/rebase_v0.23.5_tracing#73e43bf79fb21b4969cc09f79a0a40ce4cc7bb52"
+source = "git+https://github.com/heliaxdev/tower-abci?rev=f6463388fc319b6e210503b43b3aecf6faf6b200#f6463388fc319b6e210503b43b3aecf6faf6b200"
 dependencies = [
  "bytes 1.1.0",
  "futures 0.3.21",
  "pin-project 1.0.10",
  "prost 0.9.0",
- "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.5)",
+ "tendermint-proto 0.23.5 (git+https://github.com/heliaxdev/tendermint-rs?rev=95c52476bc37927218374f94ac8e2a19bd35bec9)",
  "tokio",
  "tokio-stream",
  "tokio-util 0.6.10",
