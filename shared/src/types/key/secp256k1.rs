@@ -165,14 +165,8 @@ impl Serialize for SecretKey {
     where
         S: Serializer,
     {
-        // not sure if this is how I should be doing this!
-        // https://serde.rs/impl-serialize.html!
         let arr = self.0.serialize();
-        let mut seq = serializer.serialize_tuple(arr.len())?;
-        for elem in &arr[..] {
-            seq.serialize_element(elem)?;
-        }
-        seq.end()
+        serde::Serialize::serialize(&arr, serializer)
     }
 }
 
@@ -181,34 +175,10 @@ impl<'de> Deserialize<'de> for SecretKey {
     where
         D: serde::Deserializer<'de>
     {
-        struct ByteArrayVisitor;
-
-        impl<'de> Visitor<'de> for ByteArrayVisitor {
-            type Value = [u8; libsecp256k1::util::SECRET_KEY_SIZE];
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str(&format!("expecting an array of length {}", libsecp256k1::util::SECRET_KEY_SIZE))
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-                where
-                    A: SeqAccess<'de>,
-            {
-                let mut arr = [0u8; libsecp256k1::util::SECRET_KEY_SIZE];
-                #[allow(clippy::needless_range_loop)]
-                for i in 0..libsecp256k1::util::SECRET_KEY_SIZE {
-                    arr[i] = seq.next_element()?
-                        .ok_or_else(|| Error::invalid_length(i, &self))?;
-                }
-                Ok(arr)
-            }
-        }
-
-        let arr_res = deserializer.deserialize_tuple(libsecp256k1::util::SECRET_KEY_SIZE, ByteArrayVisitor)?;
+        let arr_res: [u8; libsecp256k1::util::SECRET_KEY_SIZE] = serde::Deserialize::deserialize(deserializer)?;
         let key = libsecp256k1::SecretKey::parse_slice(&arr_res)
             .map_err(D::Error::custom);
         Ok(SecretKey(key.unwrap()))
-
     }
 }
 
@@ -300,12 +270,18 @@ impl super::Signature for Signature {
     }
 }
 
+// Would ideally like Serialize, Deserialize to be implemented in libsecp256k1, may try to do so and merge
+// upstream in the future.
+
 impl Serialize for Signature {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> 
     where
         S: Serializer,
     {
         let arr = self.0.serialize();
+        // TODO: implement the line below, currently cannot support [u8; 64]
+        // serde::Serialize::serialize(&arr, serializer)
+
         let mut seq = serializer.serialize_tuple(arr.len())?;
         for elem in &arr[..] {
             seq.serialize_element(elem)?;
