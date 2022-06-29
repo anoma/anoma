@@ -943,7 +943,9 @@ impl ShieldedContext {
                 .query_allowed_conversion(client.clone(), asset_type, &mut conversions)
                 .await, asset_type == target_asset_type)
             {
-                // Not at the target asset type, not at the current asset type
+                // Not at the target asset type, not at the latest asset type.
+                // Apply conversion to get from current asset type to the latest
+                // asset type.
                 Self::apply_conversion(
                     conv.clone(),
                     asset_type,
@@ -957,7 +959,9 @@ impl ShieldedContext {
                  .query_allowed_conversion(client.clone(), target_asset_type, &mut conversions)
                  .await, asset_type == target_asset_type)
             {
-                // At the current asset type
+                // Not at the target asset type, yes at the latest asset type.
+                // Apply inverse conversion to get from latest asset type to
+                // the target asset type.
                 Self::apply_conversion(
                     conv.clone(),
                     asset_type,
@@ -967,11 +971,10 @@ impl ShieldedContext {
                     &mut output,
                 );
             } else {
-                // At the target asset type
+                // At the target asset type. Then move component over to output.
                 let comp = input.project(asset_type);
-                // Otherwise accumulate the amount as is
                 output += &comp;
-                // Strike from balance to avoid repeating computation
+                // Strike from input to avoid repeating computation
                 input -= comp;
             }
         }
@@ -1116,6 +1119,29 @@ impl ShieldedContext {
             }
         }
         Ok((val_acc, tx_epoch))
+    }
+
+    /// Compute the combined value of the output notes of the pinned transaction
+    /// at the given payment address if there's any. The asset types may be from
+    /// the epoch of the transaction or even before, so exchange all these
+    /// amounts to the epoch of the transaction in order to get the value that
+    /// would have been displayed in the epoch of the transaction.
+    pub async fn compute_exchanged_pinned_balance(
+        &mut self,
+        ledger_address: &TendermintAddress,
+        owner: PaymentAddress,
+        viewing_key: &ViewingKey,
+    ) -> Result<(Amount, Epoch), PinnedBalanceError> {
+        // Obtain the balance that will be exchanged
+        let (amt, ep) = Self::compute_pinned_balance(
+            ledger_address,
+            owner,
+            viewing_key
+        ).await?;
+        // Establish connection with which to do exchange rate queries
+        let client = HttpClient::new(ledger_address.clone()).unwrap();
+        // Finally, exchange the balance to the transaction's epoch
+        Ok((self.compute_exchanged_amount(client, amt, ep, HashMap::new()).await.0, ep))
     }
 }
 

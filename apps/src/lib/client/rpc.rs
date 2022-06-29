@@ -49,7 +49,7 @@ use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
-use crate::client::tx::{PinnedBalanceError, ShieldedContext, TxResponse};
+use crate::client::tx::{PinnedBalanceError, TxResponse};
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -229,6 +229,8 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
         .values()
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
+    // Build up the context that will be queried for asset decodings
+    let _ = ctx.shielded.load();
     // Establish connection with which to do exchange rate queries
     let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
     // Print the token balances by payment address
@@ -237,7 +239,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
         // Find the viewing key that can recognize payments the current payment
         // address
         for vk in &viewing_keys {
-            balance = ShieldedContext::compute_pinned_balance(
+            balance = ctx.shielded.compute_exchanged_pinned_balance(
                 &args.query.ledger_address,
                 owner,
                 vk,
@@ -262,7 +264,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
             };
             let vk = ExtendedFullViewingKey::from(fvk).fvk.vk;
             // Use the given viewing key to decrypt pinned transaction data
-            balance = ShieldedContext::compute_pinned_balance(
+            balance = ctx.shielded.compute_exchanged_pinned_balance(
                 &args.query.ledger_address,
                 owner,
                 &vk,
