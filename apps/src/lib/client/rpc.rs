@@ -239,12 +239,14 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
         // Find the viewing key that can recognize payments the current payment
         // address
         for vk in &viewing_keys {
-            balance = ctx.shielded.compute_exchanged_pinned_balance(
-                &args.query.ledger_address,
-                owner,
-                vk,
-            )
-            .await;
+            balance = ctx
+                .shielded
+                .compute_exchanged_pinned_balance(
+                    &args.query.ledger_address,
+                    owner,
+                    vk,
+                )
+                .await;
             if balance != Err(PinnedBalanceError::InvalidViewingKey) {
                 break;
             }
@@ -264,12 +266,14 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
             };
             let vk = ExtendedFullViewingKey::from(fvk).fvk.vk;
             // Use the given viewing key to decrypt pinned transaction data
-            balance = ctx.shielded.compute_exchanged_pinned_balance(
-                &args.query.ledger_address,
-                owner,
-                &vk,
-            )
-            .await
+            balance = ctx
+                .shielded
+                .compute_exchanged_pinned_balance(
+                    &args.query.ledger_address,
+                    owner,
+                    &vk,
+                )
+                .await
         }
         // Now print out the received quantities according to CLI arguments
         match (balance, args.token.as_ref()) {
@@ -405,11 +409,7 @@ pub async fn query_shielded_balance(
                 ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
             let balance = ctx
                 .shielded
-                .compute_exchanged_balance(
-                    client.clone(),
-                    &viewing_key,
-                    epoch,
-                )
+                .compute_exchanged_balance(client.clone(), &viewing_key, epoch)
                 .await
                 .expect("context should contain viewing key");
             // Compute the unique asset identifier from the token address
@@ -560,11 +560,7 @@ pub async fn query_shielded_balance(
                 ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
             let balance = ctx
                 .shielded
-                .compute_exchanged_balance(
-                    client.clone(),
-                    &viewing_key,
-                    epoch,
-                )
+                .compute_exchanged_balance(client.clone(), &viewing_key, epoch)
                 .await
                 .expect("context should contain viewing key");
             let mut found_any = false;
