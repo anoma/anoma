@@ -1180,15 +1180,20 @@ fn write_tendermint_node_key(
     node_sk: common::SecretKey,
 ) -> common::PublicKey {
     let node_pk: common::PublicKey = node_sk.ref_to();
-    // Convert and write the keypair into Tendermint
-    // node_key.json file
-    let node_keypair =
-        [node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()].concat();
 
-    let key_str = match node_sk {
-        common::SecretKey::Ed25519(_) => "Ed25519",
-        common::SecretKey::Secp256k1(_) => "Secp256k1",
+    // Convert and write the keypair into Tendermint node_key.json file.
+    // Tendermint requires concatenating the private-public keys for ed25519
+    // but does not for secp256k1.
+    let (node_keypair, key_str) = match node_sk {
+        common::SecretKey::Ed25519(_) => {
+            ([node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()].concat(),
+            "Ed25519")
+        },
+        common::SecretKey::Secp256k1(_) => {
+            (node_sk.try_to_vec().unwrap(), "Secp256k1")
+        },
     };
+
     let tm_node_keypair_json = json!({
         "priv_key": {
             "type": format!("tendermint/PrivKey{}",key_str),
