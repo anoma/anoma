@@ -360,19 +360,12 @@ const TENDERMINT_NODE_ID_LENGTH: usize = 20;
 /// Derive Tendermint node ID from public key
 fn id_from_pk(pk: &common::PublicKey) -> TendermintNodeId {
     let mut bytes = [0u8; TENDERMINT_NODE_ID_LENGTH];
-
-    match pk {
-        common::PublicKey::Ed25519(_) => {
-            let _pk: ed25519::PublicKey = pk.try_to_pk().unwrap();
-            let digest = Sha256::digest(_pk.try_to_vec().unwrap().as_slice());
-            bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
-        },
-        common::PublicKey::Secp256k1(_) => {
-            let _pk: secp256k1::PublicKey = pk.try_to_pk().unwrap();
-            let digest = Sha256::digest(_pk.try_to_vec().unwrap().as_slice());
-            bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
-        },
-    }
+    let pk_bytes = match pk {
+        common::PublicKey::Ed25519(_pk) => _pk.try_to_vec().unwrap(),
+        common::PublicKey::Secp256k1(_pk) => _pk.try_to_vec().unwrap(),
+    };
+    let digest = Sha256::digest(pk_bytes.as_slice());
+    bytes.copy_from_slice(&digest[..TENDERMINT_NODE_ID_LENGTH]);
     TendermintNodeId::new(bytes)
 }
 
