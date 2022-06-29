@@ -147,8 +147,8 @@ winapi = "0.3.9"
 jubjub = {version = "0.8" }
 bls12_381 = {version = "0.6" }
 #libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive" }
-masp_primitives = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive", features = ["transparent-inputs"] }
-masp_proofs = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive", features = ["bundled-prover", "download-params"] }
+masp_primitives = { version = "0.5.0", path="../../masp/masp_primitives", features = ["transparent-inputs"] }
+masp_proofs = { version = "0.5.0", path="../../masp/masp_proofs", features = ["bundled-prover", "download-params"] }
 zcash_primitives = { git = "https://github.com/zcash/librustzcash", rev = "2425a08" }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = {version = "0.11" }

@@ -119,10 +119,13 @@ wasmparser = "0.83.0"
 jubjub = { version = "0.8"}
 bls12_381 = { version = "0.6"}
 #libmasp = { git = "https://github.com/murisi/masp", branch = "murisi/masp-incentive" }
-masp_primitives = { git = "https://github.com/Scar26/masp", branch = "scar/masp-merge" }
-masp_proofs = { git = "https://github.com/Scar26/masp", branch = "scar/masp-merge" }
+masp_primitives = { version = "0.5.0", path="../../masp/masp_primitives" }
+masp_proofs = { version = "0.5.0", path="../../masp/masp_proofs" }
 bellman = { version = "0.11.1", features = ["groth16"] }
 ff = { version = "0.11" }
+blake2b_simd = "1.0.0"
+byteorder = "1"
+group = "0.11"
 
 [dev-dependencies]
 assert_matches = "1.5.0"

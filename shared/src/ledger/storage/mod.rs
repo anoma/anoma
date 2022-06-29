@@ -42,7 +42,7 @@ use std::collections::HashMap;
 use crate::types::address::*;
 use masp_primitives::sapling::Node;
 use ff::PrimeField;
-use masp_primitives::convert::AllowedConversion;
+use crate::types::masp::AllowedConversion;
 use masp_primitives::merkle_tree::FrozenCommitmentTree;
 use rayon::prelude::ParallelSlice;
 use rayon::iter::ParallelIterator;
@@ -640,7 +640,7 @@ where
             // Add a conversion from the previous asset type
             self.conversion_state.assets.insert(
                 old_asset,
-                (addr.clone(), self.last_epoch.prev(), AllowedConversion::new(None), 0)
+                (addr.clone(), self.last_epoch.prev(), AllowedConversion::new(vec![]), 0)
             );
         }
 

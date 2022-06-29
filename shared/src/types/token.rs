@@ -14,6 +14,7 @@ use thiserror::Error;
 use crate::types::address::{masp, Address, DecodeError as AddressError, InternalAddress};
 use crate::types::ibc::data::FungibleTokenPacketData;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
+use crate::types::transaction::components::{TxIn, TxOut};
 
 /// Amount in micro units. For different granularity another representation
 /// might be more appropriate.
@@ -347,7 +348,7 @@ pub struct Transfer {
     /// The unused storage location at which to place TxId
     pub key: Option<String>,
     /// Shielded transaction part
-    pub shielded: Option<Transaction>,
+    pub shielded: Option<Transaction<TxIn, TxOut>>,
 }
 
 #[allow(missing_docs)]

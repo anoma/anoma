@@ -13,6 +13,10 @@ pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
+pub mod components;
+pub mod legacy;
+pub mod builder;
+mod sighash;
 use std::collections::{BTreeSet, HashSet};
 use std::fmt;
 

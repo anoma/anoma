@@ -83,9 +83,11 @@ dependencies = [
  "assert_matches",
  "bech32",
  "bellman",
+ "blake2b_simd 1.0.0",
  "bls12_381",
  "borsh",
  "byte-unit",
+ "byteorder",
  "chrono",
  "clru",
  "derivative",
@@ -93,6 +95,7 @@ dependencies = [
  "ferveo",
  "ferveo-common",
  "ff",
+ "group",
  "group-threshold-cryptography",
  "hex",
  "ibc 0.12.0 (git+https://github.com/murisi/ibc-rs?branch=murisi/jsfix)",
@@ -103,8 +106,8 @@ dependencies = [
  "itertools 0.10.3",
  "jubjub",
  "loupe",
- "masp_primitives 0.5.0 (git+https://github.com/Scar26/masp?branch=scar/masp-merge)",
- "masp_proofs 0.5.0 (git+https://github.com/Scar26/masp?branch=scar/masp-merge)",
+ "masp_primitives 0.5.0",
+ "masp_proofs 0.5.0",
  "parity-wasm",
  "pretty_assertions",
  "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -179,8 +182,8 @@ dependencies = [
  "libc",
  "libloading",
  "libp2p",
- "masp_primitives 0.5.0 (git+https://github.com/murisi/masp?branch=murisi/masp-incentive)",
- "masp_proofs 0.5.0 (git+https://github.com/murisi/masp?branch=murisi/masp-incentive)",
+ "masp_primitives 0.5.0",
+ "masp_proofs 0.5.0",
  "message-io",
  "num-derive",
  "num-traits 0.2.15",
@@ -4022,7 +4025,6 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.5.0"
-source = "git+https://github.com/murisi/masp?branch=murisi/masp-incentive#6b1f0fde4c2191681930119b95827b1f5266aac7"
 dependencies = [
  "aes",
  "bip0039",
@@ -4055,7 +4057,7 @@ dependencies = [
 [[package]]
 name = "masp_primitives"
 version = "0.5.0"
-source = "git+https://github.com/Scar26/masp?branch=scar/masp-merge#a78fdb796af7497b03d3fc5e941c703a0c5e42fb"
+source = "git+https://github.com/murisi/masp?branch=murisi/masp-incentive#6b1f0fde4c2191681930119b95827b1f5266aac7"
 dependencies = [
  "aes",
  "bip0039",
@@ -4066,6 +4068,7 @@ dependencies = [
  "borsh",
  "byteorder",
  "chacha20poly1305 0.9.0",
+ "crypto_api_chachapoly",
  "ff",
  "fpe",
  "group",
@@ -4076,9 +4079,32 @@ dependencies = [
  "rand 0.8.5",
  "rand_core 0.6.3",
  "serde 1.0.137",
+ "sha2 0.9.9",
  "subtle 2.4.1",
  "zcash_encoding",
  "zcash_primitives",
+]
+
+[[package]]
+name = "masp_proofs"
+version = "0.5.0"
+dependencies = [
+ "bellman",
+ "blake2b_simd 1.0.0",
+ "bls12_381",
+ "byteorder",
+ "directories",
+ "ff",
+ "group",
+ "itertools 0.10.3",
+ "jubjub",
+ "lazy_static 1.4.0",
+ "masp_primitives 0.5.0",
+ "minreq",
+ "rand_core 0.6.3",
+ "wagyu-zcash-parameters",
+ "zcash_primitives",
+ "zcash_proofs",
 ]
 
 [[package]]
@@ -4097,30 +4123,6 @@ dependencies = [
  "jubjub",
  "lazy_static 1.4.0",
  "masp_primitives 0.5.0 (git+https://github.com/murisi/masp?branch=murisi/masp-incentive)",
- "minreq",
- "rand_core 0.6.3",
- "wagyu-zcash-parameters",
- "zcash_primitives",
- "zcash_proofs",
-]
-
-[[package]]
-name = "masp_proofs"
-version = "0.5.0"
-source = "git+https://github.com/Scar26/masp?branch=scar/masp-merge#a78fdb796af7497b03d3fc5e941c703a0c5e42fb"
-dependencies = [
- "bellman",
- "blake2b_simd 1.0.0",
- "bls12_381",
- "byteorder",
- "directories",
- "ff",
- "getrandom 0.2.7",
- "group",
- "itertools 0.10.3",
- "jubjub",
- "lazy_static 1.4.0",
- "masp_primitives 0.5.0 (git+https://github.com/Scar26/masp?branch=scar/masp-merge)",
  "rand_core 0.6.3",
  "zcash_primitives",
  "zcash_proofs",

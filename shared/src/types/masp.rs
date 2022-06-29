@@ -3,6 +3,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 use std::io::{Error, ErrorKind};
+use std::ops::AddAssign;
 
 use sha2::{Sha256, Digest};
 use bech32::{FromBase32, ToBase32};
@@ -16,6 +17,8 @@ const EXT_FULL_VIEWING_KEY_HRP: &str = "xfvktest";
 const PAYMENT_ADDRESS_HRP: &str = "patest";
 const PINNED_PAYMENT_ADDRESS_HRP: &str = "ppatest";
 const EXT_SPENDING_KEY_HRP: &str = "xsktest";
+const COIN: i64 = 1_0000_0000;
+const MAX_MONEY: i64 = 21_000_000 * COIN;
 
 /// Wrapper for masp_primitive's FullViewingKey
 #[derive(Clone, Debug, Copy)]
@@ -428,5 +431,56 @@ impl FromStr for MaspValue {
                      .map(Self::ExtendedSpendingKey))
             .or_else(|_err| ExtendedViewingKey::from_str(s)
                      .map(Self::FullViewingKey))
+    }
+}
+
+/// Represents an Allowed Conversion for MASP incentives
+#[derive(Clone, Debug, PartialEq)]
+pub struct AllowedConversion(pub masp_primitives::convert::AllowedConversion);
+
+impl AllowedConversion {
+    /// Constructs a new allowed conversion from a list of asset types and ratios
+    pub fn new(values: Vec<(masp_primitives::asset_type::AssetType, i64)>) -> Self {
+        Self(masp_primitives::convert::AllowedConversion::new(values))
+    }
+}
+
+impl BorshSerialize for AllowedConversion {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> borsh::maybestd::io::Result<()> {
+        BorshSerialize::serialize(&self, writer)
+    }
+}
+
+impl BorshDeserialize for AllowedConversion {
+    /// This deserialization is unsafe because it does not do the expensive
+    /// computation of checking whether the asset generator corresponds to the
+    /// deserialized amount.
+    fn deserialize(buf: &mut &[u8]) -> borsh::maybestd::io::Result<Self> {
+        let assets:  std::collections::BTreeMap<masp_primitives::asset_type::AssetType, i64> = BorshDeserialize::deserialize(buf)?;
+        Ok(AllowedConversion(masp_primitives::convert::AllowedConversion{ assets }))
+    }
+}
+
+impl AddAssign for AllowedConversion {
+    fn add_assign(&mut self, rhs: Self) {
+        let mut ret = self.clone();
+        for (atype, amount) in rhs.0.assets.iter() {
+            let ent = ret.0.assets[atype] + amount;
+            if ent == 0 {
+                ret.0.assets.remove(atype);
+            } else if -MAX_MONEY <= ent && ent <= MAX_MONEY {
+                ret.0.assets.insert(*atype, ent);
+            } else {
+                panic!("addition should remain in range");
+            }
+        }
+        *self = ret;
+    }
+}
+
+impl std::ops::Deref for AllowedConversion {
+    type Target = masp_primitives::convert::AllowedConversion;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

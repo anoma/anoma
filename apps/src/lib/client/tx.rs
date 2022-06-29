@@ -16,6 +16,12 @@ use anoma::types::transaction::{
 };
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
+use anoma::types::transaction::{
+    builder::{self, *},
+    legacy::TransparentAddress, components::OutPoint,
+    components::{TxIn, TxOut},
+};
+
 use async_std::io::{self, WriteExt};
 use borsh::{BorshSerialize, BorshDeserialize};
 use itertools::Either::*;
@@ -46,7 +52,6 @@ use masp_primitives::note_encryption::*;
 use masp_primitives::primitives::ViewingKey;
 use std::collections::HashMap;
 use masp_primitives::transaction::components::Amount;
-use masp_primitives::transaction::builder::{self, *};
 use rand_core::CryptoRng;
 use rand_core::RngCore;
 use masp_primitives::merkle_tree::CommitmentTree;
@@ -57,9 +62,6 @@ use masp_primitives::zip32::ExtendedSpendingKey;
 use masp_primitives::primitives::Diversifier;
 use rand_core::OsRng;
 use std::fmt::Debug;
-use masp_primitives::legacy::TransparentAddress;
-use masp_primitives::transaction::components::OutPoint;
-use masp_primitives::transaction::components::TxOut;
 use masp_proofs::prover::LocalTxProver;
 use sha2::Digest;
 use group::cofactor::CofactorGroup;
@@ -669,7 +671,7 @@ impl ShieldedContext {
     pub async fn fetch_shielded_transfers(
         ledger_address: &TendermintAddress,
         last_txid: Option<TxId>,
-    ) -> Vec<Transaction> {
+    ) -> Vec<Transaction<TxIn, TxOut>> {
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // The address of the MASP account
         let masp_addr = masp();
@@ -693,7 +695,7 @@ impl ShieldedContext {
                 .push(&(TX_KEY_PREFIX.to_owned() + &head_txid.to_string()))
                 .expect("Cannot obtain a storage key");
             // Obtain the current transaction and a pointer to the next
-            let (current_tx, next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
+            let (current_tx, next_txid) = query_storage_value::<(Transaction<TxIn, TxOut>, Option<TxId>)>(
                 client.clone(),
                 current_tx_key,
             ).await.unwrap();
@@ -716,7 +718,7 @@ impl ShieldedContext {
     /// https://zips.z.cash/protocol/protocol.pdf#scan
     pub fn scan_tx(
         &mut self,
-        tx: &Transaction,
+        tx: &Transaction<TxIn, TxOut>,
     ) -> Result<(), ()> {
         // Listen for notes sent to our viewing keys
         for so in &(*tx).shielded_outputs {
@@ -954,7 +956,7 @@ impl ShieldedContext {
             .push(&(TX_KEY_PREFIX.to_owned() + &txid.to_string()))
             .expect("Cannot obtain a storage key");
         // Obtain the pointed to transaction
-        let (tx, _next_txid) = query_storage_value::<(Transaction, Option<TxId>)>(
+        let (tx, _next_txid) = query_storage_value::<(Transaction<TxIn, TxOut>, Option<TxId>)>(
             client.clone(),
             tx_key,
         ).await.unwrap();
@@ -1010,7 +1012,7 @@ async fn gen_shielded_transfer(
     ctx: &mut Context,
     args: &args::TxTransfer,
     shielded_gas: bool,
-) -> Result<Option<(Transaction, TransactionMetadata)>, builder::Error> {
+) -> Result<Option<(Transaction<TxIn, TxOut>, TransactionMetadata)>, builder::Error> {
     // No shielded components are needed when neither source nor destination
     // are shielded
     let spending_key = ctx.get_cached(&args.source).spending_key();
