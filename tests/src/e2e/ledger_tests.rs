@@ -594,7 +594,7 @@ fn masp_pinned_txs() -> Result<()> {
     let test = setup::network(
         |genesis| {
             let parameters = ParametersConfig {
-                min_duration: 3600,
+                min_duration: 180,
                 ..genesis.parameters
             };
             GenesisConfig {
@@ -698,6 +698,47 @@ fn masp_pinned_txs() -> Result<()> {
     )?;
     client.send_line(AC_VIEWING_KEY)?;
     client.exp_string("Received 20 BTC")?;
+    drop(client);
+
+    // Assert PPA(C) has no XAN pinned to it
+    let mut client = run!(
+        test,
+        Bin::Client,
+        vec![
+            "balance",
+            "--owner",
+            AC_PAYMENT_ADDRESS,
+            "--token",
+            XAN,
+            "--ledger-address",
+            &validator_one_rpc
+        ],
+        Some(300)
+    )?;
+    client.send_line(AC_VIEWING_KEY)?;
+    client.exp_string("Received no shielded XAN")?;
+    drop(client);
+
+    // Wait till epoch boundary
+    let _ep1 = epoch_sleep(&test, &validator_one_rpc, 720)?;
+
+    // Assert PPA(C) does not XAN pinned to it on epoch boundary
+    let mut client = run!(
+        test,
+        Bin::Client,
+        vec![
+            "balance",
+            "--owner",
+            AC_PAYMENT_ADDRESS,
+            "--token",
+            XAN,
+            "--ledger-address",
+            &validator_one_rpc
+        ],
+        Some(300)
+    )?;
+    client.send_line(AC_VIEWING_KEY)?;
+    client.exp_string("Received no shielded XAN")?;
     drop(client);
 
     Ok(())
