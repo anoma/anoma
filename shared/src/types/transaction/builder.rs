@@ -10,9 +10,7 @@ use std::marker::PhantomData;
 use std::convert::TryInto;
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::transaction::components::amount::zec;
-#[cfg(feature = "transparent-inputs")]
 pub use secp256k1;
-#[cfg(feature = "transparent-inputs")]
 pub use ripemd160;
 
 use masp_primitives::merkle_tree::MerklePath;
@@ -34,8 +32,8 @@ use masp_primitives::{
 use super::sighash::{signature_hash_data, SIGHASH_ALL};
 
 use super::{
-    legacy::TransparentAddress,
-    components::{TxIn, TxOut},
+    legacy::{Script, TransparentAddress},
+    components::{OutPoint, TxIn, TxOut},
 };
 
 const DEFAULT_TX_EXPIRY_DELTA: u32 = 20;
@@ -185,20 +183,17 @@ impl SaplingOutput {
     }
 }
 
-#[cfg(feature = "transparent-inputs")]
 struct TransparentInputInfo {
     sk: secp256k1::SecretKey,
     pubkey: [u8; secp256k1::constants::PUBLIC_KEY_SIZE],
     coin: TxOut,
 }
 
-#[cfg(feature = "transparent-inputs")]
 struct TransparentInputs {
     secp: secp256k1::Secp256k1<secp256k1::SignOnly>,
     inputs: Vec<TransparentInputInfo>,
 }
 
-#[cfg(feature = "transparent-inputs")]
 impl Default for TransparentInputs {
     fn default() -> Self {
         TransparentInputs {
@@ -208,15 +203,10 @@ impl Default for TransparentInputs {
     }
 }
 
-#[cfg(not(feature = "transparent-inputs"))]
-#[derive(Default)]
-struct TransparentInputs;
-
 impl TransparentInputs {
-    #[cfg(feature = "transparent-inputs")]
     fn push(
         &mut self,
-        mtx: &mut TransactionData,
+        mtx: &mut TransactionData<TxIn, TxOut>,
         sk: secp256k1::SecretKey,
         utxo: OutPoint,
         coin: TxOut,
@@ -241,24 +231,15 @@ impl TransparentInputs {
     }
 
     fn value_sum(&self) -> Amount {
-        #[cfg(feature = "transparent-inputs")]
-        {
-            self.inputs
-                .iter()
-                .map(|input| Amount::from(input.coin.asset_type, input.coin.value).unwrap())
-                .sum::<Amount>()
-        }
-
-        #[cfg(not(feature = "transparent-inputs"))]
-        {
-            Amount::zero()
-        }
+        self.inputs
+            .iter()
+            .map(|input| Amount::from(input.coin.asset_type, input.coin.value).unwrap())
+            .sum::<Amount>()
     }
 
-    #[cfg(feature = "transparent-inputs")]
     fn apply_signatures(
         &self,
-        mtx: &mut TransactionData,
+        mtx: &mut TransactionData<TxIn, TxOut>,
         consensus_branch_id: consensus::BranchId,
     ) {
         let mut sighash = [0u8; 32];
@@ -282,8 +263,6 @@ impl TransparentInputs {
         }
     }
 
-    #[cfg(not(feature = "transparent-inputs"))]
-    fn apply_signatures(&self, _: &mut TransactionData<TxIn, TxOut>, _: consensus::BranchId) {}
 }
 
 /// Metadata about a transaction created by a [`Builder`].
@@ -497,7 +476,6 @@ impl<P: consensus::Parameters, R: RngCore + CryptoRng> Builder<P, R> {
     }
 
     /// Adds a transparent coin to be spent in this transaction.
-    #[cfg(feature = "transparent-inputs")]
     #[cfg_attr(docsrs, doc(cfg(feature = "transparent-inputs")))]
     pub fn add_transparent_input(
         &mut self,

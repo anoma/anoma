@@ -126,6 +126,8 @@ ff = { version = "0.11" }
 blake2b_simd = "1.0.0"
 byteorder = "1"
 group = "0.11"
+ripemd160 = { version = "0.9" }
+secp256k1 = { version = "0.20" }
 
 [dev-dependencies]
 assert_matches = "1.5.0"
