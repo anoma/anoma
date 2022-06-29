@@ -790,13 +790,13 @@ impl ShieldedContext {
                     self.nf_map.insert(nf.0, note_pos);
                     // Note the account changes
                     let balance =
-                        transaction_delta.entry(*vk).or_insert(Amount::zero());
+                        transaction_delta.entry(*vk).or_insert_with(Amount::zero);
                     *balance +=
                         Amount::from_nonnegative(note.asset_type, note.value)
                             .expect(
                                 "found note with invalid value or asset type",
                             );
-                    self.vk_map.insert(note_pos, vk.clone());
+                    self.vk_map.insert(note_pos, *vk);
                     break;
                 }
             }
@@ -809,8 +809,8 @@ impl ShieldedContext {
                 self.spents.insert(*note_pos);
                 // Note the account changes
                 let balance = transaction_delta
-                    .entry(self.vk_map[note_pos].clone())
-                    .or_insert(Amount::zero());
+                    .entry(self.vk_map[note_pos])
+                    .or_insert_with(Amount::zero);
                 let note = self.note_map[note_pos];
                 *balance -=
                     Amount::from_nonnegative(note.asset_type, note.value)

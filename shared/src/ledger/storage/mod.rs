@@ -439,7 +439,7 @@ where
 
     /// Returns a prefix iterator and the gas cost
     pub fn iter_results(&self) -> (<D as DBIter<'_>>::PrefixIter, u64) {
-        (self.db.iter_results(), 0 as _)
+        (self.db.iter_results(), 0)
     }
 
     /// Write a value to the specified subspace and returns the gas cost and the

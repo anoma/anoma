@@ -96,7 +96,7 @@ fn extract_payload(tx: Tx) -> Option<Transfer> {
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
             extract_payload(Tx::from(match wrapper_tx.decrypt(privkey) {
                 Ok(tx) => DecryptedTx::Decrypted(tx),
-                _ => DecryptedTx::Undecryptable(wrapper_tx.clone()),
+                _ => DecryptedTx::Undecryptable(wrapper_tx),
             }))
         }
         Ok(TxType::Decrypted(DecryptedTx::Decrypted(tx))) => {

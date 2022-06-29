@@ -57,6 +57,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// If the given tx is a successfully decrypted payload apply the necessary
 /// vps. Otherwise, we include the tx on chain with the gas charge added
 /// but no further validations.
+#[allow(clippy::too_many_arguments)]
 pub fn apply_tx<D, H, CA>(
     tx: TxType,
     tx_length: usize,

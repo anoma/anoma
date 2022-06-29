@@ -70,6 +70,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Execute a transaction code. Returns the set verifiers addresses requested by
 /// the transaction.
+#[allow(clippy::too_many_arguments)]
 pub fn tx<DB, H, CA>(
     storage: &Storage<DB, H>,
     write_log: &mut WriteLog,

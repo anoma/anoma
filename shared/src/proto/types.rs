@@ -181,15 +181,15 @@ impl From<Tx> for types::Tx {
     }
 }
 
-impl Into<ResponseDeliverTx> for Tx {
+impl From<Tx> for ResponseDeliverTx {
     #[cfg(not(feature = "ferveo-tpke"))]
-    fn into(self) -> ResponseDeliverTx {
+    fn from(_tx: Tx) -> ResponseDeliverTx {
         Default::default()
     }
 
     /// Annotate the Tx with meta-data based on its contents
     #[cfg(feature = "ferveo-tpke")]
-    fn into(self) -> ResponseDeliverTx {
+    fn from(tx: Tx) -> ResponseDeliverTx {
         #[cfg(feature = "ABCI")]
         fn encode_str(x: &str) -> Vec<u8> {
             x.as_bytes().to_vec()
@@ -206,7 +206,7 @@ impl Into<ResponseDeliverTx> for Tx {
         fn encode_string(x: String) -> String {
             x
         }
-        match process_tx(self) {
+        match process_tx(tx) {
             Ok(TxType::Decrypted(DecryptedTx::Decrypted(tx))) => {
                 let empty_vec = vec![];
                 let tx_data = tx.data.as_ref().unwrap_or(&empty_vec);
