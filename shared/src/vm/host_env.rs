@@ -96,7 +96,8 @@ where
     pub iterators: MutHostRef<'a, &'a PrefixIterators<'a, DB>>,
     /// Transaction gas meter.
     pub gas_meter: MutHostRef<'a, &'a BlockGasMeter>,
-    /// The transaction index is used to identify a shielded transaction's parent
+    /// The transaction index is used to identify a shielded transaction's
+    /// parent
     pub tx_index: HostRef<'a, &'a TxIndex>,
     /// The verifiers whose validity predicates should be triggered.
     pub verifiers: MutHostRef<'a, &'a BTreeSet<Address>>,
@@ -247,7 +248,8 @@ where
     pub gas_meter: MutHostRef<'a, &'a VpGasMeter>,
     /// The transaction code is used for signature verification
     pub tx: HostRef<'a, &'a Tx>,
-    /// The transaction index is used to identify a shielded transaction's parent
+    /// The transaction index is used to identify a shielded transaction's
+    /// parent
     pub tx_index: HostRef<'a, &'a TxIndex>,
     /// The runner of the [`vp_eval`] function
     pub eval_runner: HostRef<'a, &'a EVAL>,

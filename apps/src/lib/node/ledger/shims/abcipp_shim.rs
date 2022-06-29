@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use anoma::proto::Tx;
 use anoma::types::storage::BlockHeight;
 use futures::future::FutureExt;
 use tokio::sync::mpsc::UnboundedSender;
@@ -16,11 +17,10 @@ use tower_abci_old::{BoxError, Request as Req, Response as Resp};
 use super::super::Shell;
 use super::abcipp_shim_types::shim::{request, Error, Request, Response};
 use crate::config;
+use crate::node::ledger::shell::Error::TxDecoding;
 use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
     BeginBlock, ProcessedTx,
 };
-use anoma::proto::Tx;
-use crate::node::ledger::shell::Error::TxDecoding;
 
 /// The shim wraps the shell, which implements ABCI++.
 /// The shim makes a crude translation between the ABCI interface currently used
@@ -108,7 +108,9 @@ impl AbcippShim {
                                     tx: resp.tx,
                                     result: resp.result,
                                 });
-                                Ok(Resp::DeliverTx(tx.map_err(TxDecoding)?.into()))
+                                Ok(Resp::DeliverTx(
+                                    tx.map_err(TxDecoding)?.into(),
+                                ))
                             }
                             _ => unreachable!(),
                         })

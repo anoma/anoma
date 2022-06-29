@@ -278,9 +278,7 @@ impl DB for RocksDB {
             .get(results_path)
             .map_err(|e| Error::DBError(e.into_string()))?
         {
-            Some(bytes) => {
-                types::decode(bytes).map_err(Error::CodingError)?
-            }
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
             None => return Ok(None),
         };
 
@@ -733,9 +731,7 @@ impl<'iter> DBIter<'iter> for RocksDB {
         PersistentPrefixIterator(PrefixIterator::new(iter, db_prefix))
     }
 
-    fn iter_results(
-        &'iter self,
-    ) -> PersistentPrefixIterator<'iter> {
+    fn iter_results(&'iter self) -> PersistentPrefixIterator<'iter> {
         let db_prefix = "results/".to_owned();
         let prefix = "results".to_owned();
 

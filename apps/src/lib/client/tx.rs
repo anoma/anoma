@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet, BTreeMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::fs::{File, OpenOptions};
@@ -13,7 +13,7 @@ use anoma::types::address::{btc, masp, masp_tx_key, Address};
 use anoma::types::key::*;
 use anoma::types::masp::{PaymentAddress, TransferTarget};
 use anoma::types::nft::{self, Nft, NftToken};
-use anoma::types::storage::{Epoch, Key, KeySeg, BlockHeight, TxIndex};
+use anoma::types::storage::{BlockHeight, Epoch, Key, KeySeg, TxIndex};
 use anoma::types::token::{
     Transfer, CONVERSION_KEY_PREFIX, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
 };
@@ -493,7 +493,8 @@ pub struct ShieldedContext {
     /// Maps note positions to their witness (used to make merkle paths)
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
     /// Tracks what each transaction does to various account balances
-    delta_map: BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)>,
+    delta_map:
+        BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)>,
     /// The set of note positions that have been spent
     spents: HashSet<usize>,
     /// Maps asset types to their decodings
@@ -592,7 +593,8 @@ impl ShieldedContext {
         // different parts of the same transaction. Hence each delta needs to be
         // merged separately.
         for ((height, idx), (ntfer_delta, ntx_delta)) in new_ctx.delta_map {
-            let (tfer_delta, tx_delta) = self.delta_map
+            let (tfer_delta, tx_delta) = self
+                .delta_map
                 .entry((height, idx))
                 .or_insert((TransferDelta::new(), TransactionDelta::new()));
             tfer_delta.extend(ntfer_delta);
@@ -699,9 +701,10 @@ impl ShieldedContext {
             .push(&HEAD_TX_KEY.to_owned())
             .expect("Cannot obtain a storage key");
         // Query for the index of the last accepted transaction
-        let head_txidx = query_storage_value::<u64>(client.clone(), head_tx_key)
-            .await
-            .unwrap_or(0);
+        let head_txidx =
+            query_storage_value::<u64>(client.clone(), head_tx_key)
+                .await
+                .unwrap_or(0);
         let mut shielded_txs = BTreeMap::new();
         // Fetch all the transactions we do not have yet
         for i in last_txidx..head_txidx {
@@ -735,13 +738,13 @@ impl ShieldedContext {
         &mut self,
         height: BlockHeight,
         index: TxIndex,
-        tx: &Transfer
+        tx: &Transfer,
     ) {
         // Ignore purely transparent transactions
         let shielded = if let Some(shielded) = &tx.shielded {
             shielded
         } else {
-            return
+            return;
         };
         // For tracking the account changes caused by this Transaction
         let mut transaction_delta = TransactionDelta::new();
@@ -786,9 +789,13 @@ impl ShieldedContext {
                     self.div_map.insert(note_pos, *pa.diversifier());
                     self.nf_map.insert(nf.0, note_pos);
                     // Note the account changes
-                    let balance = transaction_delta.entry(*vk).or_insert(Amount::zero());
-                    *balance += Amount::from_nonnegative(note.asset_type, note.value)
-                        .expect("found note with invalid value or asset type");
+                    let balance =
+                        transaction_delta.entry(*vk).or_insert(Amount::zero());
+                    *balance +=
+                        Amount::from_nonnegative(note.asset_type, note.value)
+                            .expect(
+                                "found note with invalid value or asset type",
+                            );
                     self.vk_map.insert(note_pos, vk.clone());
                     break;
                 }
@@ -801,30 +808,36 @@ impl ShieldedContext {
             if let Some(note_pos) = self.nf_map.get(&ss.nullifier) {
                 self.spents.insert(*note_pos);
                 // Note the account changes
-                let balance = transaction_delta.entry(self.vk_map[note_pos].clone())
+                let balance = transaction_delta
+                    .entry(self.vk_map[note_pos].clone())
                     .or_insert(Amount::zero());
                 let note = self.note_map[note_pos];
-                *balance -= Amount::from_nonnegative(note.asset_type, note.value)
-                    .expect("found note with invalid value or asset type");
+                *balance -=
+                    Amount::from_nonnegative(note.asset_type, note.value)
+                        .expect("found note with invalid value or asset type");
             }
         }
         // Record the changes to the transparent accounts
         let transparent_delta =
             Amount::from_nonnegative(tx.token.clone(), u64::from(tx.amount))
-            .expect("invalid value for amount");
+                .expect("invalid value for amount");
         let mut transfer_delta = TransferDelta::new();
-        transfer_delta.insert(tx.source.clone(), Amount::zero() - &transparent_delta);
+        transfer_delta
+            .insert(tx.source.clone(), Amount::zero() - &transparent_delta);
         transfer_delta.insert(tx.target.clone(), transparent_delta);
-        self.delta_map.insert((height, index), (transfer_delta, transaction_delta));
+        self.delta_map
+            .insert((height, index), (transfer_delta, transaction_delta));
         self.last_txidx += 1;
     }
 
     /// Summarize the effects on shielded and transparent accounts of each
     /// Transfer in this context
-    pub fn get_tx_deltas(&self) ->
-        &BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)> {
-            &self.delta_map
-        }
+    pub fn get_tx_deltas(
+        &self,
+    ) -> &BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)>
+    {
+        &self.delta_map
+    }
 
     /// Compute the total unspent notes associated with the viewing key in the
     /// context. If the key is not in the context, then we do not know the
@@ -845,8 +858,9 @@ impl ShieldedContext {
                 // Get note associated with this ID
                 let note = self.note_map.get(note_idx).unwrap();
                 // Finally add value to multi-asset accumulator
-                val_acc += Amount::from_nonnegative(note.asset_type, note.value)
-                    .expect("found note with invalid value or asset type");
+                val_acc +=
+                    Amount::from_nonnegative(note.asset_type, note.value)
+                        .expect("found note with invalid value or asset type");
             }
         }
         Some(val_acc)
@@ -1156,7 +1170,9 @@ impl ShieldedContext {
             .expect("Ill-formed epoch, transaction pair");
         // Accumulate the combined output note value into this Amount
         let mut val_acc = Amount::zero();
-        let tx = tx.shielded.expect("Pinned Transfers should have shielded part");
+        let tx = tx
+            .shielded
+            .expect("Pinned Transfers should have shielded part");
         for so in &tx.shielded_outputs {
             // Let's try to see if our viewing key can decrypt current note
             let decres = try_sapling_note_decryption::<TestNetwork>(

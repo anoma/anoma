@@ -64,7 +64,8 @@ where
     pub write_log: &'a WriteLog,
     /// The transaction code is used for signature verification
     pub tx: &'a Tx,
-    /// The transaction index is used to obtain the shielded transaction's parent
+    /// The transaction index is used to obtain the shielded transaction's
+    /// parent
     pub tx_index: &'a TxIndex,
     /// VP WASM compilation cache
     #[cfg(feature = "wasm-runtime")]

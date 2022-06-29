@@ -13,7 +13,9 @@ use super::{
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
-use crate::types::storage::{BlockHeight, Key, KeySeg, BlockResults, KEY_SEGMENT_SEPARATOR};
+use crate::types::storage::{
+    BlockHeight, BlockResults, Key, KeySeg, KEY_SEGMENT_SEPARATOR,
+};
 use crate::types::time::DateTimeUtc;
 
 /// An in-memory DB for testing.
@@ -55,10 +57,13 @@ impl DB for MockDB {
         };
         // Block results
         let results_path = format!("results/{}", height.raw());
-        let results: BlockResults = match self.0.borrow().get(results_path.as_str()) {
-            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
-            None => return Ok(None),
-        };
+        let results: BlockResults =
+            match self.0.borrow().get(results_path.as_str()) {
+                Some(bytes) => {
+                    types::decode(bytes).map_err(Error::CodingError)?
+                }
+                None => return Ok(None),
+            };
 
         // Epoch start height and time
         let next_epoch_min_start_height: BlockHeight =

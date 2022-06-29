@@ -12,17 +12,18 @@ use anoma::ledger::pos::types::{
 use anoma::ledger::pos::{
     self, is_validator_slashes_key, Bonds, Slash, Unbonds,
 };
-use anoma::proto::{Tx, SignedTxData};
-use anoma::types::address::{Address, tokens, masp};
+use anoma::proto::{SignedTxData, Tx};
+use anoma::types::address::{masp, tokens, Address};
 use anoma::types::key::*;
 use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
-use anoma::types::storage::{Epoch, PrefixValue, BlockResults, BlockHeight, TxIndex};
-use anoma::types::transaction::{process_tx, TxType, DecryptedTx};
-use anoma::types::transaction::AffineCurve;
-use anoma::types::transaction::PairingEngine;
-use anoma::types::transaction::EllipticCurve;
-use anoma::types::{address, storage, token};
+use anoma::types::storage::{
+    BlockHeight, BlockResults, Epoch, PrefixValue, TxIndex,
+};
 use anoma::types::token::Transfer;
+use anoma::types::transaction::{
+    process_tx, AffineCurve, DecryptedTx, EllipticCurve, PairingEngine, TxType,
+};
+use anoma::types::{address, storage, token};
 use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Itertools;
 use masp_primitives::asset_type::AssetType;
@@ -55,7 +56,9 @@ use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
-use crate::client::tx::{PinnedBalanceError, TxResponse, TransferDelta, TransactionDelta};
+use crate::client::tx::{
+    PinnedBalanceError, TransactionDelta, TransferDelta, TxResponse,
+};
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -101,8 +104,8 @@ fn extract_payload(tx: Tx) -> Option<Transfer> {
             let tx_data = tx.data.as_ref().unwrap_or(&empty_vec);
             let signed = SignedTxData::try_from_slice(tx_data).ok()?;
             Transfer::try_from_slice(&signed.data.unwrap()[..]).ok()
-        },
-        _ => None
+        }
+        _ => None,
     }
 }
 
@@ -116,15 +119,17 @@ pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
         .await
         .unwrap();
     match response.code {
-        Code::Ok => match Vec::<BlockResults>::try_from_slice(&response.value[..]) {
-            Ok(results) => {
-                return results;
-            }
+        Code::Ok => {
+            match Vec::<BlockResults>::try_from_slice(&response.value[..]) {
+                Ok(results) => {
+                    return results;
+                }
 
-            Err(err) => {
-                eprintln!("Error decoding the results value: {}", err)
+                Err(err) => {
+                    eprintln!("Error decoding the results value: {}", err)
+                }
             }
-        },
+        }
         Code::Err(err) => eprintln!(
             "Error in the query {} (error code {})",
             response.info, err
@@ -136,20 +141,22 @@ pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
 /// Query the specified accepted transfers from the ledger
 pub async fn query_transfers(mut ctx: Context, args: args::Query) {
     // Connect to the Tendermint server holding the transactions
-    let (client, driver) = WebSocketClient::new(args.ledger_address.clone()).await.unwrap();
+    let (client, driver) = WebSocketClient::new(args.ledger_address.clone())
+        .await
+        .unwrap();
     let driver_handle = tokio::spawn(async move { driver.run().await });
     // Build up the context that will be queried for transactions
     let _ = ctx.shielded.load();
     let vks = ctx.wallet.get_viewing_keys();
-    let fvks: Vec<_> = vks.values()
+    let fvks: Vec<_> = vks
+        .values()
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
-    ctx.shielded
-        .fetch(&args.ledger_address, &[], &fvks)
-        .await;
+    ctx.shielded.fetch(&args.ledger_address, &[], &fvks).await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
-    // Required for filtering out rejected transactions from Tendermint responses
+    // Required for filtering out rejected transactions from Tendermint
+    // responses
     let block_results = query_results(args).await;
     let mut transfers = ctx.shielded.get_tx_deltas().clone();
     // Find all transactions to or from addresses in our address book
@@ -167,27 +174,35 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                 let idx = TxIndex(response_tx.index);
                 // Only process yet unprocessed transactions which have been
                 // accepted by node VPs
-                let should_process = !transfers.contains_key(&(height, idx)) &&
-                    block_results[u64::from(height) as usize].is_accepted(idx.0 as usize);
-                if !should_process { continue }
+                let should_process = !transfers.contains_key(&(height, idx))
+                    && block_results[u64::from(height) as usize]
+                        .is_accepted(idx.0 as usize);
+                if !should_process {
+                    continue;
+                }
                 let tx = Tx::try_from(response_tx.tx.as_ref())
                     .expect("Ill-formed Tx");
                 if let Some(transfer) = extract_payload(tx) {
-                    // Skip MASP addresses as they are already handled by ShieldedContext
+                    // Skip MASP addresses as they are already handled by
+                    // ShieldedContext
                     if transfer.source == masp() || transfer.target == masp() {
-                        continue
+                        continue;
                     }
                     // Describe how a Transfer simply subtracts from one
                     // account and adds the same to another
                     let mut delta = TransferDelta::default();
                     let tfer_delta = Amount::from_nonnegative(
                         transfer.token.clone(),
-                        u64::from(transfer.amount)
-                    ).expect("invalid value for amount");
+                        u64::from(transfer.amount),
+                    )
+                    .expect("invalid value for amount");
                     delta.insert(transfer.source, Amount::zero() - &tfer_delta);
                     delta.insert(transfer.target, tfer_delta);
                     // No shielded accounts are affected by this Transfer
-                    transfers.insert((height, idx), (delta, TransactionDelta::new()));
+                    transfers.insert(
+                        (height, idx),
+                        (delta, TransactionDelta::new()),
+                    );
                 }
             }
         }
@@ -195,7 +210,8 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
     // To facilitate lookups of human-readable token names
     let tokens = tokens();
     // To enable ExtendedFullViewingKeys to be displayed instead of ViewingKeys
-    let fvk_map: HashMap<_, _> = vks.values()
+    let fvk_map: HashMap<_, _> = vks
+        .values()
         .map(|fvk| (ExtendedFullViewingKey::from(*fvk).fvk.vk, fvk))
         .collect();
     // Now display historical shielded and transparent transactions
@@ -207,10 +223,13 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                 print!("  {}:", account);
                 for (addr, val) in amt.components() {
                     let addr_enc = addr.encode();
-                    let readable = tokens.get(addr)
-                        .cloned()
-                        .unwrap_or(addr_enc.as_str());
-                    print!(" {} {}", token::Amount::from(*val as u64), readable);
+                    let readable =
+                        tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
+                    print!(
+                        " {} {}",
+                        token::Amount::from(*val as u64),
+                        readable
+                    );
                 }
                 println!();
             }

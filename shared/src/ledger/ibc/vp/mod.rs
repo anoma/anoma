@@ -582,7 +582,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
@@ -613,7 +620,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
@@ -684,7 +698,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(client_state_key);
@@ -734,7 +755,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
@@ -781,7 +809,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
@@ -854,7 +889,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
@@ -933,7 +975,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
@@ -999,7 +1048,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
@@ -1051,7 +1107,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
@@ -1122,7 +1185,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
@@ -1201,7 +1271,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
@@ -1275,7 +1352,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
@@ -1307,7 +1391,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(port_key(&get_port_id()));
@@ -1340,7 +1431,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         let cap_key = capability_key(index);
@@ -1415,7 +1513,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
@@ -1496,7 +1601,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
@@ -1582,7 +1694,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
@@ -1659,7 +1778,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(commitment_key);
@@ -1744,7 +1870,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(receipt_key);
@@ -1785,7 +1918,14 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, &tx_index, gas_meter, vp_wasm_cache);
+        let ctx = Ctx::new(
+            &storage,
+            &write_log,
+            &tx,
+            &tx_index,
+            gas_meter,
+            vp_wasm_cache,
+        );
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(ack_key);

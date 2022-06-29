@@ -47,7 +47,8 @@ use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
-    BlockHash, BlockHeight, BlockResults, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
+    BlockHash, BlockHeight, BlockResults, Epoch, Epochs, Key, KeySeg,
+    BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
 use crate::types::token;
@@ -437,9 +438,7 @@ where
     }
 
     /// Returns a prefix iterator and the gas cost
-    pub fn iter_results(
-        &self,
-    ) -> (<D as DBIter<'_>>::PrefixIter, u64) {
+    pub fn iter_results(&self) -> (<D as DBIter<'_>>::PrefixIter, u64) {
         (self.db.iter_results(), 0 as _)
     }
 

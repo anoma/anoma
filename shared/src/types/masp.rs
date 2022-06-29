@@ -30,7 +30,7 @@ const EXT_SPENDING_KEY_HRP: &str = "xsktest";
     Eq,
     PartialEq,
     PartialOrd,
-    Ord
+    Ord,
 )]
 pub struct ExtendedViewingKey(masp_primitives::zip32::ExtendedFullViewingKey);
 
@@ -130,7 +130,7 @@ impl<'de> serde::Deserialize<'de> for ExtendedViewingKey {
     PartialEq,
     Hash,
     BorshSerialize,
-    BorshDeserialize
+    BorshDeserialize,
 )]
 pub struct PaymentAddress(masp_primitives::primitives::PaymentAddress, bool);
 
@@ -416,7 +416,7 @@ impl TransferTarget {
     PartialEq,
     Eq,
     PartialOrd,
-    Ord
+    Ord,
 )]
 pub enum BalanceOwner {
     /// A balance stored at a transparent address

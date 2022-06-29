@@ -119,14 +119,14 @@ pub mod tx {
             let head_tx_key = Key::from(masp_addr.to_db_key())
                 .push(&HEAD_TX_KEY.to_owned())
                 .expect("Cannot obtain a storage key");
-            let current_tx_idx: u64 = tx::read(&head_tx_key.to_string()).unwrap_or(0);
+            let current_tx_idx: u64 =
+                tx::read(&head_tx_key.to_string()).unwrap_or(0);
             let current_tx_key = Key::from(masp_addr.to_db_key())
-                .push(
-                    &(TX_KEY_PREFIX.to_owned() + &current_tx_idx.to_string()),
-                )
+                .push(&(TX_KEY_PREFIX.to_owned() + &current_tx_idx.to_string()))
                 .expect("Cannot obtain a storage key");
-            // Save the Transfer object and its location within the blockchain so
-            // that clients do not have to separately look these up
+            // Save the Transfer object and its location within the blockchain
+            // so that clients do not have to separately look these
+            // up
             let transfer = Transfer {
                 source: src.clone(),
                 target: dest.clone(),
@@ -137,7 +137,12 @@ pub mod tx {
             };
             tx::write(
                 &current_tx_key.to_string(),
-                (tx::get_block_epoch(), tx::get_block_height(), tx::get_tx_index(), transfer)
+                (
+                    tx::get_block_epoch(),
+                    tx::get_block_height(),
+                    tx::get_tx_index(),
+                    transfer,
+                ),
             );
             tx::write(&head_tx_key.to_string(), current_tx_idx + 1);
             // If storage key has been supplied, then pin this transaction to it

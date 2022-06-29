@@ -243,7 +243,10 @@ where
 
 /// Getting the block epoch. The epoch is that of the block to which the
 /// current transaction is being applied.
-pub fn get_tx_index(gas_meter: &mut VpGasMeter, tx_index: &TxIndex) -> Result<TxIndex> {
+pub fn get_tx_index(
+    gas_meter: &mut VpGasMeter,
+    tx_index: &TxIndex,
+) -> Result<TxIndex> {
     add_gas(gas_meter, MIN_STORAGE_GAS)?;
     Ok(*tx_index)
 }

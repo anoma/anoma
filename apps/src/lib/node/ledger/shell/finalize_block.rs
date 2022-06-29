@@ -1,6 +1,6 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::types::storage::{BlockHash, TxIndex, BlockResults};
+use anoma::types::storage::{BlockHash, BlockResults, TxIndex};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -178,7 +178,11 @@ where
             match protocol::apply_tx(
                 tx_type,
                 tx_length,
-                TxIndex(tx_index.try_into().expect("transaction index out of bounds")),
+                TxIndex(
+                    tx_index
+                        .try_into()
+                        .expect("transaction index out of bounds"),
+                ),
                 &mut self.gas_meter,
                 &mut self.write_log,
                 &self.storage,

@@ -623,7 +623,7 @@ mod test_utils {
     use anoma::types::address::{xan, EstablishedAddressGen};
     use anoma::types::chain::ChainId;
     use anoma::types::key::*;
-    use anoma::types::storage::{BlockHash, Epoch, BlockResults};
+    use anoma::types::storage::{BlockHash, BlockResults, Epoch};
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
