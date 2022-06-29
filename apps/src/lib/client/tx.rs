@@ -1,11 +1,11 @@
 use std::borrow::Cow;
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, BTreeMap};
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::collections::hash_map::Entry;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
@@ -879,34 +879,34 @@ impl ShieldedContext {
     }
 
     /// Query the ledger for the conversion that is allowed for the given asset
-    /// type and cache the decoding.
+    /// type and cache it.
     async fn query_allowed_conversion<'a>(
         &mut self,
         client: HttpClient,
         asset_type: AssetType,
         conversions: &'a mut Conversions,
     ) -> Option<&'a mut (AllowedConversion, MerklePath<Node>, i64)> {
-        let conv_entry = conversions.entry(asset_type.clone());
-        if let Entry::Occupied(conv_entry) = conv_entry {
-            Some(conv_entry.into_mut())
-        } else {
-            // The key with which to lookup allowed conversions
-            let conversion_key =
-                anoma::types::storage::Key::from(masp().to_db_key())
-                .push(
-                    &(CONVERSION_KEY_PREFIX.to_owned()
-                      + &asset_type.to_string()),
-                )
-                .expect("Cannot obtain a storage key");
-            // Query for the ID of the last accepted transaction
-            let (addr, ep, conv, path): (Address, _, _, _) =
-                query_storage_value(client, conversion_key).await?;
-            self.asset_types.insert(asset_type, (addr.clone(), ep));
-            // If the conversion is 0, then we just have a pure decoding
-            if conv == Amount::zero() {
-                None
-            } else {
-                Some(conv_entry.or_insert((Amount::into(conv), path, 0)))
+        match conversions.entry(asset_type) {
+            Entry::Occupied(conv_entry) => Some(conv_entry.into_mut()),
+            Entry::Vacant(conv_entry) => {
+                // The key with which to lookup allowed conversions
+                let conversion_key =
+                    anoma::types::storage::Key::from(masp().to_db_key())
+                        .push(
+                            &(CONVERSION_KEY_PREFIX.to_owned()
+                                + &asset_type.to_string()),
+                        )
+                        .expect("Cannot obtain a storage key");
+                // Query for the ID of the last accepted transaction
+                let (addr, ep, conv, path): (Address, _, _, _) =
+                    query_storage_value(client, conversion_key).await?;
+                self.asset_types.insert(asset_type, (addr, ep));
+                // If the conversion is 0, then we just have a pure decoding
+                if conv == Amount::zero() {
+                    None
+                } else {
+                    Some(conv_entry.insert((Amount::into(conv), path, 0)))
+                }
             }
         }
     }
@@ -991,11 +991,15 @@ impl ShieldedContext {
                 .await
                 .map(|(addr, _epoch)| make_asset_type(target_epoch, &addr))
                 .unwrap_or(asset_type);
-            if let (Some((conv, _wit, usage)), false) =
-                (self
-                .query_allowed_conversion(client.clone(), asset_type, &mut conversions)
-                .await, asset_type == target_asset_type)
-            {
+            if let (Some((conv, _wit, usage)), false) = (
+                self.query_allowed_conversion(
+                    client.clone(),
+                    asset_type,
+                    &mut conversions,
+                )
+                .await,
+                asset_type == target_asset_type,
+            ) {
                 // Not at the target asset type, not at the latest asset type.
                 // Apply conversion to get from current asset type to the latest
                 // asset type.
@@ -1007,11 +1011,15 @@ impl ShieldedContext {
                     &mut input,
                     &mut output,
                 );
-            } else if let (Some((conv, _wit, usage)), false) =
-                (self
-                 .query_allowed_conversion(client.clone(), target_asset_type, &mut conversions)
-                 .await, asset_type == target_asset_type)
-            {
+            } else if let (Some((conv, _wit, usage)), false) = (
+                self.query_allowed_conversion(
+                    client.clone(),
+                    target_asset_type,
+                    &mut conversions,
+                )
+                .await,
+                asset_type == target_asset_type,
+            ) {
                 // Not at the target asset type, yes at the latest asset type.
                 // Apply inverse conversion to get from latest asset type to
                 // the target asset type.
@@ -1186,30 +1194,29 @@ impl ShieldedContext {
         viewing_key: &ViewingKey,
     ) -> Result<(Amount, Epoch), PinnedBalanceError> {
         // Obtain the balance that will be exchanged
-        let (amt, ep) = Self::compute_pinned_balance(
-            ledger_address,
-            owner,
-            viewing_key
-        ).await?;
+        let (amt, ep) =
+            Self::compute_pinned_balance(ledger_address, owner, viewing_key)
+                .await?;
         // Establish connection with which to do exchange rate queries
         let client = HttpClient::new(ledger_address.clone()).unwrap();
         // Finally, exchange the balance to the transaction's epoch
-        Ok((self.compute_exchanged_amount(client, amt, ep, HashMap::new()).await.0, ep))
+        Ok((
+            self.compute_exchanged_amount(client, amt, ep, HashMap::new())
+                .await
+                .0,
+            ep,
+        ))
     }
 }
 
 /// Make asset type corresponding to given address and epoch
-fn make_asset_type(
-    epoch: Epoch,
-    token: &Address,
-) -> AssetType {
+fn make_asset_type(epoch: Epoch, token: &Address) -> AssetType {
     // Typestamp the chosen token with the current epoch
     let token_bytes = (token, epoch.0)
         .try_to_vec()
         .expect("token should serialize");
     // Generate the unique asset identifier from the unique token address
-    AssetType::new(token_bytes.as_ref())
-        .expect("unable to create asset type")
+    AssetType::new(token_bytes.as_ref()).expect("unable to create asset type")
 }
 
 /// Convert Anoma amount and token type to MASP equivalents
@@ -1299,7 +1306,11 @@ async fn gen_shielded_transfer(
         // Commit the conversion notes used during summation
         for (conv, wit, value) in used_convs.values() {
             if *value > 0 {
-                builder.add_convert(conv.clone(), *value as u64, wit.clone())?;
+                builder.add_convert(
+                    conv.clone(),
+                    *value as u64,
+                    wit.clone(),
+                )?;
             }
         }
     } else {
