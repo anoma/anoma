@@ -494,7 +494,7 @@ pub struct ShieldedContext {
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
     /// Tracks what each transaction does to various account balances
     delta_map:
-        BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)>,
+        BTreeMap<(BlockHeight, TxIndex), (Epoch, TransferDelta, TransactionDelta)>,
     /// The set of note positions that have been spent
     spents: HashSet<usize>,
     /// Maps asset types to their decodings
@@ -592,11 +592,11 @@ impl ShieldedContext {
         // The deltas are the exception because different keys can reveal
         // different parts of the same transaction. Hence each delta needs to be
         // merged separately.
-        for ((height, idx), (ntfer_delta, ntx_delta)) in new_ctx.delta_map {
-            let (tfer_delta, tx_delta) = self
+        for ((height, idx), (ep, ntfer_delta, ntx_delta)) in new_ctx.delta_map {
+            let (_ep, tfer_delta, tx_delta) = self
                 .delta_map
                 .entry((height, idx))
-                .or_insert((TransferDelta::new(), TransactionDelta::new()));
+                .or_insert((ep, TransferDelta::new(), TransactionDelta::new()));
             tfer_delta.extend(ntfer_delta);
             tx_delta.extend(ntx_delta);
         }
@@ -640,8 +640,8 @@ impl ShieldedContext {
             }
             // Update this unknown shielded context until it is level with self
             while tx_ctx.last_txidx != self.last_txidx {
-                if let Some(((height, idx), (_epoch, tx))) = tx_iter.next() {
-                    tx_ctx.scan_tx(*height, *idx, tx);
+                if let Some(((height, idx), (epoch, tx))) = tx_iter.next() {
+                    tx_ctx.scan_tx(*height, *idx, *epoch, tx);
                 } else {
                     break;
                 }
@@ -658,8 +658,8 @@ impl ShieldedContext {
         }
         // Now that we possess the unspent notes corresponding to both old and
         // new keys up until tx_pos, proceed to scan the new transactions.
-        for ((height, idx), (_epoch, tx)) in &mut tx_iter {
-            self.scan_tx(*height, *idx, tx);
+        for ((height, idx), (epoch, tx)) in &mut tx_iter {
+            self.scan_tx(*height, *idx, *epoch, tx);
         }
     }
 
@@ -738,6 +738,7 @@ impl ShieldedContext {
         &mut self,
         height: BlockHeight,
         index: TxIndex,
+        epoch: Epoch,
         tx: &Transfer,
     ) {
         // Ignore purely transparent transactions
@@ -826,7 +827,7 @@ impl ShieldedContext {
             .insert(tx.source.clone(), Amount::zero() - &transparent_delta);
         transfer_delta.insert(tx.target.clone(), transparent_delta);
         self.delta_map
-            .insert((height, index), (transfer_delta, transaction_delta));
+            .insert((height, index), (epoch, transfer_delta, transaction_delta));
         self.last_txidx += 1;
     }
 
@@ -834,7 +835,7 @@ impl ShieldedContext {
     /// Transfer in this context
     pub fn get_tx_deltas(
         &self,
-    ) -> &BTreeMap<(BlockHeight, TxIndex), (TransferDelta, TransactionDelta)>
+    ) -> &BTreeMap<(BlockHeight, TxIndex), (Epoch, TransferDelta, TransactionDelta)>
     {
         &self.delta_map
     }
