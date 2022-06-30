@@ -82,6 +82,7 @@ dependencies = [
  "wasmer-engine-universal",
  "wasmer-vm",
  "wasmparser 0.83.0",
+ "zeroize",
 ]
 
 [[package]]
@@ -3301,9 +3302,9 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "zeroize"
-version = "1.5.4"
+version = "1.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7eb5728b8afd3f280a869ce1d4c554ffaed35f45c231fc41bfbd0381bef50317"
+checksum = "20b578acffd8516a6c3f2a1bdefc1ec37e547bb4e0fb8b6b01a4cafc886b4442"
 dependencies = [
  "zeroize_derive",
 ]
