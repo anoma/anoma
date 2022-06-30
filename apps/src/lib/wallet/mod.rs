@@ -8,6 +8,9 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::{env, fs};
+use serde::{Deserialize, Serialize};
+use bimap::BiHashMap;
+
 
 use anoma::types::address::Address;
 use anoma::types::key::*;
@@ -16,7 +19,7 @@ use thiserror::Error;
 
 use self::alias::Alias;
 pub use self::keys::{DecryptionError, StoredKeypair};
-use self::store::Store;
+use self::store::{Store};
 pub use self::store::{ValidatorData, ValidatorKeys};
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
@@ -308,9 +311,10 @@ impl Wallet {
         &mut self,
         alias: impl AsRef<str>,
         address: Address,
+        addresstype: AddressType
     ) -> Option<String> {
         self.store
-            .insert_address(alias.into(), address)
+            .insert_address(alias.into(), address, addresstype)
             .map(Into::into)
     }
 
@@ -382,4 +386,14 @@ pub fn read_password(prompt_msg: &str) -> String {
         cli::safe_exit(1)
     }
     pwd
+}
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct AddressBook {
+    pub tokens: BiHashMap<Alias, Address>,
+    pub other: BiHashMap<Alias, Address>,
+}
+#[derive(Debug)]
+pub enum AddressType {
+    Token,
+    Other
 }

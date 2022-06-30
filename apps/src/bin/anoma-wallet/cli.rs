@@ -6,7 +6,7 @@ use std::io::{self, Write};
 use anoma::types::key::*;
 use anoma_apps::cli;
 use anoma_apps::cli::{args, cmds, Context};
-use anoma_apps::wallet::DecryptionError;
+use anoma_apps::wallet::{DecryptionError, AddressType};
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use itertools::sorted;
@@ -207,8 +207,9 @@ fn address_find(ctx: Context, args: args::AddressFind) {
 /// Add an address to the wallet.
 fn address_add(ctx: Context, args: args::AddressAdd) {
     let mut wallet = ctx.wallet;
+    //TODO: Allow token addresses to be added through the above method as well? Currently hardocoded to Other
     if wallet
-        .add_address(args.alias.clone().to_lowercase(), args.address)
+        .add_address(args.alias.clone().to_lowercase(), args.address, AddressType::Other)
         .is_none()
     {
         eprintln!("Address not added");

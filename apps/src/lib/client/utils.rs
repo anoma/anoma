@@ -36,7 +36,7 @@ use crate::config::{
 };
 use crate::node::gossip;
 use crate::node::ledger::tendermint_node;
-use crate::wallet::Wallet;
+use crate::wallet::{Wallet, AddressType};
 use crate::wasm_loader;
 
 pub const NET_ACCOUNTS_DIR: &str = "setup";
@@ -418,8 +418,8 @@ pub fn init_network(
         );
 
         // Write keypairs to wallet
-        wallet.add_address(name.clone(), address);
-        wallet.add_address(format!("{}-reward", &name), reward_address);
+        wallet.add_address(name.clone(), address, AddressType::Other);
+        wallet.add_address(format!("{}-reward", &name), reward_address, AddressType::Other);
 
         // Check if there's a matchmaker configured for this validator node
         match (
@@ -516,7 +516,7 @@ pub fn init_network(
             if config.address.is_none() {
                 let address = address::gen_established_address("token");
                 config.address = Some(address.to_string());
-                wallet.add_address(name.clone(), address);
+                wallet.add_address(name.clone(), address, AddressType::Token);
             }
             if config.vp.is_none() {
                 config.vp = Some("vp_token".to_string());
@@ -811,7 +811,7 @@ fn init_established_account(
     if config.address.is_none() {
         let address = address::gen_established_address("established");
         config.address = Some(address.to_string());
-        wallet.add_address(&name, address);
+        wallet.add_address(&name, address, AddressType::Other);
     }
     if config.public_key.is_none() {
         println!("Generating established account {} key...", name.as_ref());
@@ -868,7 +868,7 @@ fn init_genesis_validator_aux(
         address::gen_established_address("genesis validator address");
     let validator_address_alias = alias.clone();
     if wallet
-        .add_address(validator_address_alias.clone(), validator_address.clone())
+        .add_address(validator_address_alias.clone(), validator_address.clone(), AddressType::Other)
         .is_none()
     {
         cli::safe_exit(1)
@@ -878,7 +878,7 @@ fn init_genesis_validator_aux(
         address::gen_established_address("genesis validator reward address");
     let rewards_address_alias = format!("{}-rewards", alias);
     if wallet
-        .add_address(rewards_address_alias.clone(), rewards_address.clone())
+        .add_address(rewards_address_alias.clone(), rewards_address.clone(), AddressType::Other)
         .is_none()
     {
         cli::safe_exit(1)

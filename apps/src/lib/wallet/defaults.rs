@@ -11,9 +11,10 @@ pub use dev::{
     validator_address, validator_keypair, validator_keys,
 };
 
-use super::store::AddressBook;
+
 use crate::config::genesis::genesis_config::GenesisConfig;
 use crate::wallet::alias::Alias;
+use crate::wallet::AddressBook;
 
 /// The default addresses with their aliases.
 pub fn addresses_from_genesis(genesis: GenesisConfig) -> AddressBook {
@@ -83,7 +84,7 @@ mod dev {
     use borsh::BorshDeserialize;
 
     use crate::wallet::alias::Alias;
-    use crate::wallet::store::AddressBook;
+    use crate::wallet::AddressBook;
 
     /// Generate a new protocol signing keypair and DKG session keypair
     pub fn validator_keys() -> (common::SecretKey, DkgKeypair) {
