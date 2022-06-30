@@ -106,7 +106,10 @@ impl Store {
         }
         store
             .addresses
-            .extend(super::defaults::addresses().into_iter());
+            .extend(super::defaults::addressbook().other.into_iter());
+        store
+            .addresses
+            .extend(super::defaults::addressbook().tokens.into_iter());
         store
     }
 

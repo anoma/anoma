@@ -5,10 +5,10 @@ use anoma::types::address::Address;
 use anoma::types::key::*;
 #[cfg(feature = "dev")]
 pub use dev::{
-    addresses, albert_address, albert_keypair, bertha_address, bertha_keypair,
-    christel_address, christel_keypair, daewon_address, daewon_keypair, keys,
-    matchmaker_address, matchmaker_keypair, validator_address,
-    validator_keypair, validator_keys,
+    addressbook, albert_address, albert_keypair, bertha_address,
+    bertha_keypair, christel_address, christel_keypair, daewon_address,
+    daewon_keypair, keys, matchmaker_address, matchmaker_keypair,
+    validator_address, validator_keypair, validator_keys,
 };
 
 use super::store::AddressBook;
@@ -83,6 +83,7 @@ mod dev {
     use borsh::BorshDeserialize;
 
     use crate::wallet::alias::Alias;
+    use crate::wallet::store::AddressBook;
 
     /// Generate a new protocol signing keypair and DKG session keypair
     pub fn validator_keys() -> (common::SecretKey, DkgKeypair) {
@@ -116,8 +117,9 @@ mod dev {
     }
 
     /// The default addresses with their aliases.
-    pub fn addresses() -> Vec<(Alias, Address)> {
-        let mut addresses: Vec<(Alias, Address)> = vec![
+    pub fn addressbook() -> AddressBook {
+        let mut addressbook = AddressBook::default();
+        let addresses: Vec<(Alias, Address)> = vec![
             ("pos".into(), pos::ADDRESS),
             ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
             ("governance".into(), governance::vp::ADDRESS),
@@ -128,11 +130,12 @@ mod dev {
             ("christel".into(), christel_address()),
             ("daewon".into(), daewon_address()),
         ];
+        addressbook.other.extend(addresses.into_iter());
         let token_addresses = address::tokens()
             .into_iter()
             .map(|(addr, alias)| (alias.into(), addr));
-        addresses.extend(token_addresses);
-        addresses
+        addressbook.tokens.extend(token_addresses);
+        addressbook
     }
 
     /// An established user address for testing & development
