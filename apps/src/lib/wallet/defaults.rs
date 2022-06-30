@@ -11,17 +11,21 @@ pub use dev::{
     validator_keypair, validator_keys,
 };
 
+use super::store::AddressBook;
 use crate::config::genesis::genesis_config::GenesisConfig;
 use crate::wallet::alias::Alias;
 
 /// The default addresses with their aliases.
-pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
+pub fn addresses_from_genesis(genesis: GenesisConfig) -> AddressBook {
     // Internal addresses
-    let mut addresses: Vec<(Alias, Address)> = vec![
+    let mut addressbook = AddressBook::default();
+    let addresses: Vec<(Alias, Address)> = vec![
         ("pos".into(), pos::ADDRESS),
         ("pos_slash_pool".into(), pos::SLASH_POOL_ADDRESS),
         ("governance".into(), governance::vp::ADDRESS),
     ];
+
+    addressbook.other.extend(addresses);
     // Genesis validators
     let validator_addresses =
         genesis.validator.into_iter().map(|(alias, validator)| {
@@ -31,7 +35,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
                 Address::decode(validator.address.unwrap()).unwrap(),
             )
         });
-    addresses.extend(validator_addresses);
+    addressbook.other.extend(validator_addresses);
     // Genesis tokens
     if let Some(accounts) = genesis.token {
         let token_addresses = accounts.into_iter().map(|(alias, token)| {
@@ -41,7 +45,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
                 Address::decode(token.address.unwrap()).unwrap(),
             )
         });
-        addresses.extend(token_addresses);
+        addressbook.tokens.extend(token_addresses);
     }
     // Genesis established accounts
     if let Some(accounts) = genesis.established {
@@ -52,7 +56,7 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
                 Address::decode(established.address.unwrap()).unwrap(),
             )
         });
-        addresses.extend(est_addresses);
+        addressbook.other.extend(est_addresses);
     }
     // Genesis implicit accounts
     if let Some(accounts) = genesis.implicit {
@@ -65,9 +69,9 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
                     (alias.into(), addr)
                 })
             });
-        addresses.extend(imp_addresses);
+        addressbook.other.extend(imp_addresses);
     }
-    addresses
+    addressbook
 }
 
 #[cfg(feature = "dev")]

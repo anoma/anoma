@@ -61,6 +61,17 @@ pub struct Store {
     /// Special keys if the wallet belongs to a validator
     pub(crate) validator_data: Option<ValidatorData>,
 }
+#[derive(Default)]
+pub struct AddressBook {
+    pub tokens: BiHashMap<Alias, Address>,
+    pub other: BiHashMap<Alias, Address>,
+}
+
+// impl AddressBook{
+//     fn new() -> Self {
+
+//     }
+// };
 
 #[derive(Error, Debug)]
 pub enum LoadStoreError {
@@ -102,7 +113,14 @@ impl Store {
     /// Add addresses from a genesis configuration.
     pub fn add_genesis_addresses(&mut self, genesis: GenesisConfig) {
         self.addresses.extend(
-            super::defaults::addresses_from_genesis(genesis).into_iter(),
+            super::defaults::addresses_from_genesis(genesis.clone())
+                .other
+                .into_iter(),
+        );
+        self.addresses.extend(
+            super::defaults::addresses_from_genesis(genesis)
+                .tokens
+                .into_iter(),
         );
     }
 
