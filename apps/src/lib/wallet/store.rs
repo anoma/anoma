@@ -54,24 +54,50 @@ pub struct Store {
     /// Cryptographic keypairs
     keys: HashMap<Alias, StoredKeypair>,
     /// Anoma address book
-    addresses: BiHashMap<Alias, Address>,
+    addresses: AddressBook,
     /// Known mappings of public key hashes to their aliases in the `keys`
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
     /// Special keys if the wallet belongs to a validator
     pub(crate) validator_data: Option<ValidatorData>,
 }
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct AddressBook {
     pub tokens: BiHashMap<Alias, Address>,
     pub other: BiHashMap<Alias, Address>,
 }
 
-// impl AddressBook{
-//     fn new() -> Self {
+impl AddressBook{
+    fn extend(&mut self, otherbook: &AddressBook) {
+        self.tokens.extend(otherbook.tokens.clone().into_iter());
+        self.other.extend(otherbook.other.clone().into_iter());
+    }
+    
+    fn get_by_alias(&self, alias: &Alias) -> Option<&Address> {
+        self.tokens.get_by_left(alias).or_else(|| self.other.get_by_left(alias))
 
-//     }
-// };
+    }
+
+    fn get_by_address(&self, address: &Address) -> Option<&Alias> {
+        self.tokens.get_by_right(address).or_else(|| self.other.get_by_right(address))
+
+    }
+
+    fn all(&self) -> BiHashMap<Alias, Address> {
+        let mut all = self.other.clone();
+        all.extend(self.tokens.clone());
+        all
+    }
+
+    fn contains_alias(&self, alias: &Alias) -> bool{
+        self.tokens.contains_left(alias) || self.other.contains_left(alias)
+    }
+
+    fn contains_address(&self, address: &Address) -> bool{
+        self.tokens.contains_right(address) || self.other.contains_right(address)
+    }
+
+}
 
 #[derive(Error, Debug)]
 pub enum LoadStoreError {
@@ -106,24 +132,14 @@ impl Store {
         }
         store
             .addresses
-            .extend(super::defaults::addressbook().other.into_iter());
-        store
-            .addresses
-            .extend(super::defaults::addressbook().tokens.into_iter());
+            .extend(&super::defaults::addressbook());
         store
     }
 
     /// Add addresses from a genesis configuration.
     pub fn add_genesis_addresses(&mut self, genesis: GenesisConfig) {
         self.addresses.extend(
-            super::defaults::addresses_from_genesis(genesis.clone())
-                .other
-                .into_iter(),
-        );
-        self.addresses.extend(
-            super::defaults::addresses_from_genesis(genesis)
-                .tokens
-                .into_iter(),
+            &super::defaults::addresses_from_genesis(genesis)
         );
     }
 
@@ -246,12 +262,12 @@ impl Store {
 
     /// Find the stored address by an alias.
     pub fn find_address(&self, alias: impl AsRef<str>) -> Option<&Address> {
-        self.addresses.get_by_left(&alias.into())
+        self.addresses.get_by_alias(&alias.into())
     }
 
     /// Find an alias by the address if it's in the wallet.
     pub fn find_alias(&self, address: &Address) -> Option<&Alias> {
-        self.addresses.get_by_right(address)
+        self.addresses.get_by_address(address)
     }
 
     /// Get all known keys by their alias, paired with PKH, if known.
@@ -275,8 +291,8 @@ impl Store {
     }
 
     /// Get all known addresses by their alias, paired with PKH, if known.
-    pub fn get_addresses(&self) -> &BiHashMap<Alias, Address> {
-        &self.addresses
+    pub fn get_addresses(&self) -> BiHashMap<Alias, Address> {
+        self.addresses.all()
     }
 
     /// Generate a new keypair and insert it into the store with the provided
@@ -389,7 +405,7 @@ impl Store {
                 alias = address.encode()
             );
         }
-        if self.addresses.contains_left(&alias) {
+        if self.addresses.contains_alias(&alias) {
             match show_overwrite_confirmation(&alias, "an address") {
                 ConfirmationResponse::Replace => {}
                 ConfirmationResponse::Reselect(new_alias) => {
@@ -398,7 +414,8 @@ impl Store {
                 ConfirmationResponse::Skip => return None,
             }
         }
-        self.addresses.insert(alias.clone(), address);
+        //TODO: NEED TO ADD FUNCTIONALITY FOR TOKENS, atm all addresses get added to other type
+        self.addresses.other.insert(alias.clone(), address);
         Some(alias)
     }
 
@@ -440,7 +457,7 @@ impl Store {
                 (&tendermint_node_pk).into(),
             ),
         ];
-        self.addresses.extend(addresses.into_iter());
+        self.addresses.other.extend(addresses.into_iter());
 
         let pkhs = [
             ((&account_pk).into(), account_key_alias),
