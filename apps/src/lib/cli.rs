@@ -1099,7 +1099,7 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
-    pub struct QueryTransfers(pub args::Query);
+    pub struct QueryTransfers(pub args::QueryTransfers);
 
     impl SubCmd for QueryTransfers {
         const CMD: &'static str = "show-transfers";
@@ -1107,13 +1107,13 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches
                 .subcommand_matches(Self::CMD)
-                .map(|matches| QueryTransfers(args::Query::parse(matches)))
+                .map(|matches| QueryTransfers(args::QueryTransfers::parse(matches)))
         }
 
         fn def() -> App {
             App::new(Self::CMD)
                 .about("Query the accepted transfers to date.")
-                .add_args::<args::Query>()
+                .add_args::<args::QueryTransfers>()
         }
     }
 
@@ -2035,6 +2035,44 @@ pub mod args {
                     TOKEN_OPT
                         .def()
                         .about("The token's address whose balance to query."),
+                )
+        }
+    }
+
+    /// Query historical transfer(s)
+    #[derive(Clone, Debug)]
+    pub struct QueryTransfers {
+        /// Common query args
+        pub query: Query,
+        /// Address of an owner
+        pub owner: Option<WalletBalanceOwner>,
+        /// Address of a token
+        pub token: Option<WalletAddress>,
+    }
+
+    impl Args for QueryTransfers {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let owner = BALANCE_OWNER.parse(matches);
+            let token = TOKEN_OPT.parse(matches);
+            Self {
+                query,
+                owner,
+                token,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(
+                    BALANCE_OWNER
+                        .def()
+                        .about("The account address that queried transfers must involve."),
+                )
+                .arg(
+                    TOKEN_OPT
+                        .def()
+                        .about("The token address that queried transfers must involve."),
                 )
         }
     }

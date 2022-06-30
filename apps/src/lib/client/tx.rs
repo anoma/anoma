@@ -1231,6 +1231,30 @@ impl ShieldedContext {
             ep,
         ))
     }
+
+    /// Convert an amount whose units are AssetTypes to one whose units are
+    /// Addresses that they decode to. All asset types not corresponding to
+    /// the given epoch are ignored.
+    pub async fn decode_amount(
+        &mut self,
+        client: HttpClient,
+        amt: Amount,
+        target_epoch: Epoch
+    ) -> Amount<Address> {
+        let mut res = Amount::zero();
+        for (asset_type, val) in amt.components() {
+            // Decode the asset type
+            let decoded = self.decode_asset_type(client.clone(), *asset_type)
+                .await;
+            // Only assets with the target timestamp count
+            match decoded {
+                Some((addr, epoch)) if epoch == target_epoch =>
+                    res += &Amount::from_pair(addr, *val).unwrap(),
+                _ => {},
+            }
+        }
+        res
+    }
 }
 
 /// Make asset type corresponding to given address and epoch

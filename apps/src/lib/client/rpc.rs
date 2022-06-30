@@ -152,10 +152,10 @@ pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
 }
 
 /// Query the specified accepted transfers from the ledger
-pub async fn query_transfers(mut ctx: Context, args: args::Query) {
+pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
     const TXS_PER_PAGE: u8 = 100;
     // Connect to the Tendermint server holding the transactions
-    let client = HttpClient::new(args.ledger_address.clone()).unwrap();
+    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
     // Build up the context that will be queried for transactions
     let _ = ctx.shielded.load();
     let vks = ctx.wallet.get_viewing_keys();
@@ -163,18 +163,33 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
         .values()
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
-    ctx.shielded.fetch(&args.ledger_address, &[], &fvks).await;
+    ctx.shielded.fetch(&args.query.ledger_address, &[], &fvks).await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
     // Required for filtering out rejected transactions from Tendermint
     // responses
-    let block_results = query_results(args).await;
+    let block_results = query_results(args.query).await;
     let mut transfers = ctx.shielded.get_tx_deltas().clone();
-    // Find all transactions to or from addresses in our address book
-    for (_alias, addr) in ctx.wallet.get_addresses() {
+    // Construct the set of addresses relevant to user's query
+    let query_owner = args.owner.as_ref().map(|x| ctx.get_cached(x));
+    let relevant_addrs = match &query_owner {
+        Some(BalanceOwner::Address(owner)) => vec![owner.clone()],
+        // MASP objects are dealt with outside of tx_search
+        Some(BalanceOwner::FullViewingKey(_viewing_key)) => vec![],
+        Some(BalanceOwner::PaymentAddress(_owner)) => vec![],
+        // Unspecified owner means all known addresses are considered relevant
+        None => ctx.wallet.get_addresses().into_values().collect(),
+    };
+    let query_token = args.token.as_ref().map(|x| ctx.get(x));
+    // Find all transactions to or from the relevant address set
+    for addr in relevant_addrs {
         for prop in ["transfer.source", "transfer.target"] {
             // Query transactions involving the current address
-            let tx_query = Query::eq(prop, addr.encode());
+            let mut tx_query = Query::eq(prop, addr.encode());
+            // Elaborate the query if requested by the user
+            if let Some(token) = &query_token {
+                tx_query = tx_query.and_eq("transfer.token", token.encode());
+            }
             for page in 1.. {
                 let txs = &client
                     .tx_search(
@@ -249,6 +264,41 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
         .collect();
     // Now display historical shielded and transparent transactions
     for ((height, idx), (epoch, tfer_delta, tx_delta)) in transfers {
+        // Check if this transfer pertains to the supplied owner
+        let mut relevant = match &query_owner {
+            Some(BalanceOwner::FullViewingKey(fvk)) =>
+                tx_delta.contains_key(&ExtendedFullViewingKey::from(*fvk).fvk.vk),
+            Some(BalanceOwner::Address(owner)) =>
+                tfer_delta.contains_key(owner),
+            Some(BalanceOwner::PaymentAddress(_owner)) => false,
+            None => true,
+        };
+        // Realize and decode the shielded changes to enable relevance check
+        let mut shielded_accounts = HashMap::new();
+        for (acc, amt) in tx_delta {
+            // Realize the rewards that would have been attained upon the
+            // transaction's reception
+            let amt = ctx
+                .shielded
+                .compute_exchanged_amount(
+                    client.clone(),
+                    amt,
+                    epoch,
+                    Conversions::new(),
+                )
+                .await
+                .0;
+            let dec = ctx.shielded.decode_amount(client.clone(), amt, epoch).await;
+            shielded_accounts.insert(acc, dec);
+        }
+        // Check if this transfer pertains to the supplied token
+        relevant &= match &query_token {
+            Some(token) => tfer_delta.values().any(|x| x[&token] != 0) ||
+                shielded_accounts.values().any(|x| x[&token] != 0),
+            None => true,
+        };
+        // Filter out those entries that do not satisfy user query
+        if !relevant { continue }
         println!("Height: {}, Index: {}, Transparent Transfer:", height, idx);
         // Display the transparent changes first
         for (account, amt) in tfer_delta {
@@ -268,33 +318,10 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
             }
         }
         // Then display the shielded changes afterwards
-        for (account, amt) in tx_delta {
+        for (account, amt) in shielded_accounts {
             if fvk_map.contains_key(&account) {
-                // Realize the rewards that would have been attained upon the
-                // transaction's reception
-                let amt = ctx
-                    .shielded
-                    .compute_exchanged_amount(
-                        client.clone(),
-                        amt,
-                        epoch,
-                        Conversions::new(),
-                    )
-                    .await
-                    .0;
                 print!("  {}:", fvk_map[&account]);
-                for (asset_type, val) in amt.components() {
-                    // Decode the asset type
-                    let decoded = ctx
-                        .shielded
-                        .decode_asset_type(client.clone(), *asset_type)
-                        .await;
-                    // Only assets with the current transaction's timestamp
-                    // count
-                    let addr = match decoded {
-                        Some(decoded) if decoded.1 == epoch => decoded.0,
-                        _ => continue,
-                    };
+                for (addr, val) in amt.components() {
                     let addr_enc = addr.encode();
                     let readable =
                         tokens.get(&addr).cloned().unwrap_or(addr_enc.as_str());
