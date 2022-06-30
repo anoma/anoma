@@ -132,50 +132,51 @@ audit:
 test: test-unit test-e2e test-wasm
 
 test-e2e:
-	RUST_BACKTRACE=1 $(cargo) test e2e -- --test-threads=1
+	RUST_BACKTRACE=1 $(cargo) test e2e -- --test-threads=1 -Z unstable-options --report-time
 
 test-e2e-abci-plus-plus:
 	RUST_BACKTRACE=1 $(cargo) test e2e \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
 		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus" \
-		-- --test-threads=1
+		-- --test-threads=1 -Z unstable-options --report-time
 
 test-unit-abci-plus-plus:
 	$(cargo) test \
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
-		--features "testing std ABCI-plus-plus" && \
+		--features "testing std ABCI-plus-plus" -- -Z unstable-options --report-time && \
 	$(cargo) test --manifest-path ./proof_of_stake/Cargo.toml \
 		--features "testing" && \
 	$(cargo) test \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
-		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks" && \
+		--features "testing wasm-runtime ABCI-plus-plus ibc-mocks" -- -Z unstable-options --report-time && \
 	$(cargo) test \
 		--manifest-path ./tests/Cargo.toml \
 		--no-default-features \
 		--features "wasm-runtime ABCI-plus-plus anoma_apps/ABCI-plus-plus" \
-		-- --skip e2e && \
+		-- --skip e2e -Z unstable-options --report-time && \
 	$(cargo) test \
 		--manifest-path ./vm_env/Cargo.toml \
 		--no-default-features \
 		--features "ABCI-plus-plus"
+		-- -Z unstable-options --report-time
 
 test-unit:
 	$(cargo) test --no-default-features \
 		--features "wasm-runtime ABCI ibc-mocks-abci" \
-		-- --skip e2e
+		-- --skip e2e -Z unstable-options --report-time
 
 test-wasm:
-	make -C $(wasms) test
+	make -C $(wasms) test -- -Z unstable-options --report-time
 
 test-wasm-template = $(cargo) test --manifest-path $(wasm)/Cargo.toml
 test-wasm-templates:
 	$(foreach wasm,$(wasm_templates),$(test-wasm-template) && ) true
 
 test-debug:
-	$(debug-cargo) test -- --nocapture
+	$(debug-cargo) test -- --nocapture -- -Z unstable-options --report-time
 
 fmt-wasm = $(cargo) +$(nightly) fmt --manifest-path $(wasm)/Cargo.toml
 fmt:
