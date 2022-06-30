@@ -21,7 +21,8 @@ use anoma::types::storage::{
 };
 use anoma::types::token::Transfer;
 use anoma::types::transaction::{
-    process_tx, AffineCurve, DecryptedTx, EllipticCurve, PairingEngine, TxType, WrapperTx,
+    process_tx, AffineCurve, DecryptedTx, EllipticCurve, PairingEngine, TxType,
+    WrapperTx,
 };
 use anoma::types::{address, storage, token};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -57,7 +58,8 @@ use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::{
-    PinnedBalanceError, TransactionDelta, TransferDelta, TxResponse,
+    Conversions, PinnedBalanceError, TransactionDelta, TransferDelta,
+    TxResponse,
 };
 use crate::node::ledger::rpc::Path;
 
@@ -90,24 +92,33 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
 }
 
 /// Extract the payload from the given Tx object
-fn extract_payload(tx: Tx, wrapper: &mut Option<WrapperTx>, transfer: &mut Option<Transfer>) {
+fn extract_payload(
+    tx: Tx,
+    wrapper: &mut Option<WrapperTx>,
+    transfer: &mut Option<Transfer>,
+) {
     match process_tx(tx) {
         Ok(TxType::Wrapper(wrapper_tx)) => {
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
-            extract_payload(Tx::from(match wrapper_tx.decrypt(privkey) {
-                Ok(tx) => DecryptedTx::Decrypted(tx),
-                _ => DecryptedTx::Undecryptable(wrapper_tx.clone()),
-            }), wrapper, transfer);
+            extract_payload(
+                Tx::from(match wrapper_tx.decrypt(privkey) {
+                    Ok(tx) => DecryptedTx::Decrypted(tx),
+                    _ => DecryptedTx::Undecryptable(wrapper_tx.clone()),
+                }),
+                wrapper,
+                transfer,
+            );
             *wrapper = Some(wrapper_tx);
         }
         Ok(TxType::Decrypted(DecryptedTx::Decrypted(tx))) => {
             let empty_vec = vec![];
             let tx_data = tx.data.as_ref().unwrap_or(&empty_vec);
-            let _ = SignedTxData::try_from_slice(tx_data).map(
-                |signed| Transfer::try_from_slice(&signed.data.unwrap()[..]).map(
-                |tfer| *transfer = Some(tfer)));
+            let _ = SignedTxData::try_from_slice(tx_data).map(|signed| {
+                Transfer::try_from_slice(&signed.data.unwrap()[..])
+                    .map(|tfer| *transfer = Some(tfer))
+            });
         }
-        _ => {},
+        _ => {}
     }
 }
 
@@ -166,7 +177,13 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
             let tx_query = Query::eq(prop, addr.encode());
             for page in 1.. {
                 let txs = &client
-                    .tx_search(tx_query.clone(), true, page, TXS_PER_PAGE, Order::Ascending)
+                    .tx_search(
+                        tx_query.clone(),
+                        true,
+                        page,
+                        TXS_PER_PAGE,
+                        Order::Ascending,
+                    )
                     .await
                     .expect("Unable to query for transactions")
                     .txs;
@@ -175,9 +192,10 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                     let idx = TxIndex(response_tx.index);
                     // Only process yet unprocessed transactions which have been
                     // accepted by node VPs
-                    let should_process = !transfers.contains_key(&(height, idx))
+                    let should_process = !transfers
+                        .contains_key(&(height, idx))
                         && block_results[u64::from(height) as usize]
-                        .is_accepted(idx.0 as usize);
+                            .is_accepted(idx.0 as usize);
                     if !should_process {
                         continue;
                     }
@@ -186,10 +204,13 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                     let mut wrapper = None;
                     let mut transfer = None;
                     extract_payload(tx, &mut wrapper, &mut transfer);
-                    if let (Some(wrapper), Some(transfer)) = (wrapper, transfer) {
+                    if let (Some(wrapper), Some(transfer)) = (wrapper, transfer)
+                    {
                         // Skip MASP addresses as they are already handled by
                         // ShieldedContext
-                        if transfer.source == masp() || transfer.target == masp() {
+                        if transfer.source == masp()
+                            || transfer.target == masp()
+                        {
                             continue;
                         }
                         // Describe how a Transfer simply subtracts from one
@@ -199,8 +220,11 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                             transfer.token.clone(),
                             u64::from(transfer.amount),
                         )
-                            .expect("invalid value for amount");
-                        delta.insert(transfer.source, Amount::zero() - &tfer_delta);
+                        .expect("invalid value for amount");
+                        delta.insert(
+                            transfer.source,
+                            Amount::zero() - &tfer_delta,
+                        );
                         delta.insert(transfer.target, tfer_delta);
                         // No shielded accounts are affected by this Transfer
                         transfers.insert(
@@ -210,7 +234,9 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                     }
                 }
                 // An incomplete page signifies no more transactions
-                if (txs.len() as u8) < TXS_PER_PAGE { break }
+                if (txs.len() as u8) < TXS_PER_PAGE {
+                    break;
+                }
             }
         }
     }
@@ -244,6 +270,18 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
         // Then display the shielded changes afterwards
         for (account, amt) in tx_delta {
             if fvk_map.contains_key(&account) {
+                // Realize the rewards that would have been attained upon the
+                // transaction's reception
+                let amt = ctx
+                    .shielded
+                    .compute_exchanged_amount(
+                        client.clone(),
+                        amt,
+                        epoch,
+                        Conversions::new(),
+                    )
+                    .await
+                    .0;
                 print!("  {}:", fvk_map[&account]);
                 for (asset_type, val) in amt.components() {
                     // Decode the asset type
@@ -258,10 +296,13 @@ pub async fn query_transfers(mut ctx: Context, args: args::Query) {
                         _ => continue,
                     };
                     let addr_enc = addr.encode();
-                    let readable = tokens.get(&addr)
-                        .cloned()
-                        .unwrap_or(addr_enc.as_str());
-                    print!(" {} {}", token::Amount::from(*val as u64), readable);
+                    let readable =
+                        tokens.get(&addr).cloned().unwrap_or(addr_enc.as_str());
+                    print!(
+                        " {} {}",
+                        token::Amount::from(*val as u64),
+                        readable
+                    );
                 }
                 println!();
             }

@@ -460,7 +460,7 @@ pub enum PinnedBalanceError {
 }
 
 /// Represents the amount used of different conversions
-type Conversions =
+pub type Conversions =
     HashMap<AssetType, (AllowedConversion, MerklePath<Node>, i64)>;
 
 /// Represents the changes that were made to a list of transparent accounts
@@ -493,8 +493,10 @@ pub struct ShieldedContext {
     /// Maps note positions to their witness (used to make merkle paths)
     witness_map: HashMap<usize, IncrementalWitness<Node>>,
     /// Tracks what each transaction does to various account balances
-    delta_map:
-        BTreeMap<(BlockHeight, TxIndex), (Epoch, TransferDelta, TransactionDelta)>,
+    delta_map: BTreeMap<
+        (BlockHeight, TxIndex),
+        (Epoch, TransferDelta, TransactionDelta),
+    >,
     /// The set of note positions that have been spent
     spents: HashSet<usize>,
     /// Maps asset types to their decodings
@@ -790,8 +792,9 @@ impl ShieldedContext {
                     self.div_map.insert(note_pos, *pa.diversifier());
                     self.nf_map.insert(nf.0, note_pos);
                     // Note the account changes
-                    let balance =
-                        transaction_delta.entry(*vk).or_insert_with(Amount::zero);
+                    let balance = transaction_delta
+                        .entry(*vk)
+                        .or_insert_with(Amount::zero);
                     *balance +=
                         Amount::from_nonnegative(note.asset_type, note.value)
                             .expect(
@@ -826,8 +829,10 @@ impl ShieldedContext {
         transfer_delta
             .insert(tx.source.clone(), Amount::zero() - &transparent_delta);
         transfer_delta.insert(tx.target.clone(), transparent_delta);
-        self.delta_map
-            .insert((height, index), (epoch, transfer_delta, transaction_delta));
+        self.delta_map.insert(
+            (height, index),
+            (epoch, transfer_delta, transaction_delta),
+        );
         self.last_txidx += 1;
     }
 
@@ -835,8 +840,10 @@ impl ShieldedContext {
     /// Transfer in this context
     pub fn get_tx_deltas(
         &self,
-    ) -> &BTreeMap<(BlockHeight, TxIndex), (Epoch, TransferDelta, TransactionDelta)>
-    {
+    ) -> &BTreeMap<
+        (BlockHeight, TxIndex),
+        (Epoch, TransferDelta, TransactionDelta),
+    > {
         &self.delta_map
     }
 
