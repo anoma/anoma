@@ -420,7 +420,9 @@ macro_rules! sigscheme_test {
             fn zeroize_keypair() {
                 use rand::thread_rng;
 
-                let sk = ed25519::SecretKey(Box::new(ed25519_consensus::SigningKey::new(thread_rng())));
+                let sk = ed25519::SecretKey(Box::new(
+                    ed25519_consensus::SigningKey::new(thread_rng()),
+                ));
                 let len = sk.0.as_bytes().len();
                 let ptr = sk.0.as_bytes().as_ptr();
 
@@ -429,7 +431,6 @@ macro_rules! sigscheme_test {
                 assert_eq!(&[0u8; 32], unsafe {
                     core::slice::from_raw_parts(ptr, len)
                 });
-
             }
         }
     };

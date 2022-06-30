@@ -9,7 +9,7 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
-use zeroize::{Zeroize};
+use zeroize::Zeroize;
 
 use super::{
     ParsePublicKeyError, ParseSecretKeyError, ParseSignatureError, RefTo,
@@ -158,7 +158,9 @@ impl RefTo<PublicKey> for SecretKey {
 
 impl Clone for SecretKey {
     fn clone(&self) -> SecretKey {
-        SecretKey(Box::new(ed25519_consensus::SigningKey::from(self.0.to_bytes())))
+        SecretKey(Box::new(ed25519_consensus::SigningKey::from(
+            self.0.to_bytes(),
+        )))
     }
 }
 
