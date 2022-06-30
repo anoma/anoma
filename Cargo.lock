@@ -101,7 +101,7 @@ dependencies = [
  "loupe",
  "parity-wasm",
  "pretty_assertions",
- "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proptest",
  "prost 0.9.0",
  "prost-types 0.9.0",
  "pwasm-utils",
@@ -175,7 +175,7 @@ dependencies = [
  "once_cell",
  "orion",
  "pathdiff",
- "proptest 1.0.0 (git+https://github.com/heliaxdev/proptest?branch=tomas/sm)",
+ "proptest",
  "prost 0.9.0",
  "prost-types 0.9.0",
  "rand 0.8.5",
@@ -245,7 +245,7 @@ name = "anoma_proof_of_stake"
 version = "0.5.0"
 dependencies = [
  "borsh",
- "proptest 1.0.0 (git+https://github.com/heliaxdev/proptest?branch=tomas/sm)",
+ "proptest",
  "thiserror",
 ]
 
@@ -4824,6 +4824,7 @@ dependencies = [
 [[package]]
 name = "proptest"
 version = "1.0.0"
+<<<<<<< HEAD
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e0d9cc07f18492d879586c92b485def06bc850da3118075cd45d50e9c95b0e5"
 dependencies = [
@@ -4844,6 +4845,8 @@ dependencies = [
 [[package]]
 name = "proptest"
 version = "1.0.0"
+=======
+>>>>>>> bf4391b9c (deps: updated proptest state-machine branch)
 source = "git+https://github.com/heliaxdev/proptest?branch=tomas/sm#b9517a726c032897a8b41c215147f44588b33dcc"
 dependencies = [
  "bit-set",

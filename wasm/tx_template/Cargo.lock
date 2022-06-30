@@ -1698,8 +1698,7 @@ dependencies = [
 [[package]]
 name = "proptest"
 version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e0d9cc07f18492d879586c92b485def06bc850da3118075cd45d50e9c95b0e5"
+source = "git+https://github.com/heliaxdev/proptest?branch=tomas/sm#b9517a726c032897a8b41c215147f44588b33dcc"
 dependencies = [
  "bit-set",
  "bitflags",
