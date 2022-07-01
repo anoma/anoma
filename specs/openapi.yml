@@ -1,0 +1,130 @@
+openapi: 3.0.3
+info:
+  title: Anoma
+  description: Interacting with an Anoma blockchain via Tendermint RPC
+  version: 0.6.1
+servers:
+  - url: http://127.0.0.1:26657
+    description: Tendermint RPC endpoint for an Anoma ledger
+paths:
+  /:
+    post:
+      summary: Interact with the Anoma blockchain via Tendermint RPC
+      operationId: abci_query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  description: Should be unique between requests
+                  type: integer
+                  example: 58392
+                method:
+                  description: The Tendermint RPC method being called which in this case should always be abci_query
+                  type: string
+                  enum:
+                    - "abci_query"
+                params:
+                  type: object
+                  required:
+                    - path
+                  properties:
+                    path:
+                      description: Path as will be recognized by the ledger
+                      oneOf:
+                        - type: string
+                          enum:
+                            - "epoch"
+                            - "dry_run_tx"
+                          description: >
+                            * `epoch` - Epoch at the given block height
+                            * `dry_run_tx` - Dry run a transaction
+                        - type: string
+                          description: Read a storage value with exact storage key
+                          pattern: r"^value\/(\w|\/)+$"
+                        - type: string
+                          description: Read a range of storage values with a matching key prefix
+                          pattern: r"^prefix\/(\w|\/)+$"
+                        - type: string
+                          description: Check if the given storage key exists
+                          pattern: r"^has_key\/(\w|\/)+$"
+                    data:
+                      description: Optional data to go along with the query (base64-encoded if necessary)
+                      type: string
+                      example: "abcd"
+                      default: ""
+                    height:
+                      description: Height as a base64 encoded integer (0 means latest)
+                      type: string
+                      example: "1"
+                      default: "0"
+                    prove:
+                      description: Include proofs of the transaction's inclusion in the block
+                      type: boolean
+                      example: true
+                      default: false
+            examples:
+              epoch_latest:
+                summary: Get the latest epoch
+                value:
+                  {
+                    "id": 2,
+                    "method": "abci_query",
+                    "params": { "path": "epoch" },
+                  }
+              epoch_at_height:
+                summary: Get the epoch at a given height
+                value:
+                  {
+                    "id": 2,
+                    "method": "abci_query",
+                    "params": { "path": "epoch", "height": 2 },
+                  }
+      responses:
+        "200":
+          description: Response of the submitted query
+          content:
+            application/json:
+              schema:
+                $ref: "https://docs.tendermint.com/v0.34/rpc/openapi.yaml#/components/schemas/ABCIQueryResponse"
+              examples:
+                epoch_latest:
+                  value:
+                    {
+                      "jsonrpc": "2.0",
+                      "id": 2,
+                      "result":
+                        {
+                          "response":
+                            {
+                              "code": 0,
+                              "log": "",
+                              "info": "",
+                              "index": "0",
+                              "key": null,
+                              "value": "lQAAAAAAAAA=",
+                              "proofOps": null,
+                              "height": "0",
+                              "codespace": "",
+                            },
+                        },
+                    }
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "https://docs.tendermint.com/v0.34/rpc/openapi.yaml#/components/schemas/ErrorResponse"
+              example:
+                {
+                  "jsonrpc": "2.0",
+                  "error":
+                    {
+                      "code": -32700,
+                      "message": "Parse error. Invalid JSON",
+                      "data": "error unmarshaling request: invalid character 'd' after object key:value pair",
+                    },
+                }
