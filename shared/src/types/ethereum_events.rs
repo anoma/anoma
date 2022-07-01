@@ -112,7 +112,7 @@ impl BorshSerialize for FractionalVotingPower {
         writer: &mut W,
     ) -> std::io::Result<()> {
         let (numer, denom): (u64, u64) =
-            TryFrom::<&FractionalVotingPower>::try_from(&self).map_err(
+            TryFrom::<&FractionalVotingPower>::try_from(self).map_err(
                 |err| {
                     std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
