@@ -27,13 +27,12 @@ use itertools::Either::*;
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
-use tendermint_rpc::Client;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::endpoint::broadcast::tx_sync::Response;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::query::{EventType, Query};
 #[cfg(not(feature = "ABCI"))]
-use tendermint_rpc::HttpClient;
+use tendermint_rpc::{Client, HttpClient};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 #[cfg(feature = "ABCI")]
