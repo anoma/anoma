@@ -9,27 +9,20 @@
 //! To keep the temporary files created by a test, use env var
 //! `ANOMA_E2E_KEEP_TEMP=true`.
 
-use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
-use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::process::Command;
-use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use anoma::types::chain::ChainId;
 use anoma::types::token;
 use anoma_apps::config::genesis::genesis_config::{
-    self, GenesisConfig, ParametersConfig, PosParamsConfig,
-    ValidatorPreGenesisConfig,
+    GenesisConfig, ParametersConfig, PosParamsConfig,
 };
-use anoma_apps::config::Config;
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use serde_json::json;
 use setup::constants::*;
-use tempfile::tempdir;
 
 use super::setup::working_dir;
 use crate::e2e::helpers::{
@@ -73,6 +66,8 @@ fn run_ledger() -> Result<()> {
 /// 1. Run 2 genesis validator ledger nodes and 1 non-validator node
 /// 2. Submit a valid token transfer tx
 /// 3. Check that all the nodes processed the tx with the same result
+/// TODO: run this test for ABCI-plus-plus once https://github.com/tendermint/tendermint/issues/8840 is fixed
+#[cfg(not(feature = "ABCI-plus-plus"))]
 #[test]
 fn test_node_connectivity() -> Result<()> {
     // Setup 2 genesis validator nodes
@@ -1558,8 +1553,21 @@ fn generate_proposal_json(
 /// 3. Setup and start the 2 genesis validator nodes and a non-validator node
 /// 4. Submit a valid token transfer tx from one validator to the other
 /// 5. Check that all the nodes processed the tx with the same result
+/// TODO: run this test for ABCI-plus-plus once https://github.com/tendermint/tendermint/issues/8840 is fixed
+#[cfg(not(feature = "ABCI-plus-plus"))]
 #[test]
 fn test_genesis_validators() -> Result<()> {
+    use std::collections::HashMap;
+    use std::net::SocketAddr;
+    use std::str::FromStr;
+
+    use anoma::types::chain::ChainId;
+    use anoma_apps::config::genesis::genesis_config::{
+        self, ValidatorPreGenesisConfig,
+    };
+    use anoma_apps::config::Config;
+    use tempfile::tempdir;
+
     // This test is not using the `setup::network`, because we're setting up
     // custom genesis validators
     setup::INIT.call_once(|| {

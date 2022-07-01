@@ -4,7 +4,7 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_wasm_for_tests"
 resolver = "2"
-version = "0.6.0"
+version = "0.6.1"
 
 [lib]
 crate-type = ["cdylib"]
