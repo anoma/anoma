@@ -1,3 +1,7 @@
+// TODO: temporarily allow dead code in this file while we are still in
+// eth-bridge-integration branch - the purpose is to share symbols in WIP
+// branches
+#![allow(dead_code)]
 //! Types to do with interfacing with the Ethereum blockchain
 use std::fmt::Debug;
 
