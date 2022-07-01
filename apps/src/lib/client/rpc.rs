@@ -222,8 +222,7 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                     let mut transfer = None;
                     extract_payload(tx, &mut wrapper, &mut transfer);
                     // Epoch data is not needed for transparent transactions
-                    let epoch =
-                        wrapper.map(|x| x.epoch).unwrap_or_default();
+                    let epoch = wrapper.map(|x| x.epoch).unwrap_or_default();
                     if let Some(transfer) = transfer {
                         // Skip MASP addresses as they are already handled by
                         // ShieldedContext
@@ -578,19 +577,12 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
             (Ok((balance, epoch)), None) => {
                 let mut found_any = false;
                 // Print balances by human-readable token names
-                for (asset_type, value) in balance.components() {
+                let balance = ctx
+                    .shielded
+                    .decode_amount(client.clone(), balance, epoch)
+                    .await;
+                for (addr, value) in balance.components() {
                     let asset_value = token::Amount::from(*value as u64);
-                    // Decode the asset type
-                    let decoded = ctx
-                        .shielded
-                        .decode_asset_type(client.clone(), *asset_type)
-                        .await;
-                    // Only assets with the current transaction's timestamp
-                    // count
-                    let addr = match decoded {
-                        Some(decoded) if decoded.1 == epoch => decoded.0,
-                        _ => continue,
-                    };
                     if !found_any {
                         println!(
                             "Payment address {} was consumed during epoch {}. \
@@ -602,7 +594,7 @@ pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
                     let addr_enc = addr.encode();
                     println!(
                         "  {}: {}",
-                        tokens.get(&addr).cloned().unwrap_or(addr_enc.as_str()),
+                        tokens.get(addr).cloned().unwrap_or(addr_enc.as_str()),
                         asset_value,
                     );
                 }
@@ -832,29 +824,19 @@ pub async fn query_shielded_balance(
                 .expect("context should contain viewing key");
             let mut found_any = false;
             // Print balances by human-readable token names
-            for (asset_type, value) in balance.components() {
-                // Decode the asset type
+            let balance = ctx
+                .shielded
+                .decode_amount(client.clone(), balance, epoch)
+                .await;
+            for (addr, value) in balance.components() {
                 let asset_value = token::Amount::from(*value as u64);
-                let decoded = ctx
-                    .shielded
-                    .decode_asset_type(client.clone(), *asset_type)
-                    .await;
-                match decoded {
-                    Some((addr, asset_epoch)) if asset_epoch == epoch => {
-                        // Only asset types with the current timestamp count
-                        let addr_enc = addr.encode();
-                        println!(
-                            "{}: {}",
-                            tokens
-                                .get(&addr)
-                                .cloned()
-                                .unwrap_or(addr_enc.as_str()),
-                            asset_value
-                        );
-                        found_any = true;
-                    }
-                    _ => {}
-                }
+                let addr_enc = addr.encode();
+                println!(
+                    "{}: {}",
+                    tokens.get(addr).cloned().unwrap_or(addr_enc.as_str()),
+                    asset_value
+                );
+                found_any = true;
             }
             if !found_any {
                 println!("No shielded balance found for given key");
