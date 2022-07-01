@@ -163,7 +163,9 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
         .values()
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
-    ctx.shielded.fetch(&args.query.ledger_address, &[], &fvks).await;
+    ctx.shielded
+        .fetch(&args.query.ledger_address, &[], &fvks)
+        .await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
     // Required for filtering out rejected transactions from Tendermint
@@ -219,8 +221,10 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                     let mut wrapper = None;
                     let mut transfer = None;
                     extract_payload(tx, &mut wrapper, &mut transfer);
-                    if let (Some(wrapper), Some(transfer)) = (wrapper, transfer)
-                    {
+                    // Epoch data is not needed for transparent transactions
+                    let epoch =
+                        wrapper.map(|x| x.epoch).unwrap_or_default();
+                    if let Some(transfer) = transfer {
                         // Skip MASP addresses as they are already handled by
                         // ShieldedContext
                         if transfer.source == masp()
@@ -244,7 +248,7 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                         // No shielded accounts are affected by this Transfer
                         transfers.insert(
                             (height, idx),
-                            (wrapper.epoch, delta, TransactionDelta::new()),
+                            (epoch, delta, TransactionDelta::new()),
                         );
                     }
                 }
@@ -266,10 +270,11 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
     for ((height, idx), (epoch, tfer_delta, tx_delta)) in transfers {
         // Check if this transfer pertains to the supplied owner
         let mut relevant = match &query_owner {
-            Some(BalanceOwner::FullViewingKey(fvk)) =>
-                tx_delta.contains_key(&ExtendedFullViewingKey::from(*fvk).fvk.vk),
-            Some(BalanceOwner::Address(owner)) =>
-                tfer_delta.contains_key(owner),
+            Some(BalanceOwner::FullViewingKey(fvk)) => tx_delta
+                .contains_key(&ExtendedFullViewingKey::from(*fvk).fvk.vk),
+            Some(BalanceOwner::Address(owner)) => {
+                tfer_delta.contains_key(owner)
+            }
             Some(BalanceOwner::PaymentAddress(_owner)) => false,
             None => true,
         };
@@ -288,17 +293,22 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                 )
                 .await
                 .0;
-            let dec = ctx.shielded.decode_amount(client.clone(), amt, epoch).await;
+            let dec =
+                ctx.shielded.decode_amount(client.clone(), amt, epoch).await;
             shielded_accounts.insert(acc, dec);
         }
         // Check if this transfer pertains to the supplied token
         relevant &= match &query_token {
-            Some(token) => tfer_delta.values().any(|x| x[&token] != 0) ||
-                shielded_accounts.values().any(|x| x[&token] != 0),
+            Some(token) => {
+                tfer_delta.values().any(|x| x[token] != 0)
+                    || shielded_accounts.values().any(|x| x[token] != 0)
+            }
             None => true,
         };
         // Filter out those entries that do not satisfy user query
-        if !relevant { continue }
+        if !relevant {
+            continue;
+        }
         println!("Height: {}, Index: {}, Transparent Transfer:", height, idx);
         // Display the transparent changes first
         for (account, amt) in tfer_delta {
@@ -324,7 +334,7 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                 for (addr, val) in amt.components() {
                     let addr_enc = addr.encode();
                     let readable =
-                        tokens.get(&addr).cloned().unwrap_or(addr_enc.as_str());
+                        tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
                     print!(
                         " {} {}",
                         token::Amount::from(*val as u64),

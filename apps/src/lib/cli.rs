@@ -1105,9 +1105,9 @@ pub mod cmds {
         const CMD: &'static str = "show-transfers";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
-            matches
-                .subcommand_matches(Self::CMD)
-                .map(|matches| QueryTransfers(args::QueryTransfers::parse(matches)))
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryTransfers(args::QueryTransfers::parse(matches))
+            })
         }
 
         fn def() -> App {
@@ -2064,16 +2064,12 @@ pub mod args {
 
         fn def(app: App) -> App {
             app.add_args::<Query>()
-                .arg(
-                    BALANCE_OWNER
-                        .def()
-                        .about("The account address that queried transfers must involve."),
-                )
-                .arg(
-                    TOKEN_OPT
-                        .def()
-                        .about("The token address that queried transfers must involve."),
-                )
+                .arg(BALANCE_OWNER.def().about(
+                    "The account address that queried transfers must involve.",
+                ))
+                .arg(TOKEN_OPT.def().about(
+                    "The token address that queried transfers must involve.",
+                ))
         }
     }
 
