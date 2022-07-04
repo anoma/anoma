@@ -554,7 +554,7 @@ impl Drop for AnomaCmd {
         // attempt to clean up the process
         println!(
             "{}: {}",
-            "Waiting for command to finish".underline().yellow(),
+            "Sending Ctrl+C to command".underline().yellow(),
             self.cmd_str,
         );
         let _result = self.send_control('c');
@@ -562,7 +562,7 @@ impl Drop for AnomaCmd {
             Err(error) => {
                 eprintln!(
                     "\n{}: {}\n{}: {}",
-                    "Error waiting for command to finish".underline().red(),
+                    "Error ensuring command is finished".underline().red(),
                     self.cmd_str,
                     "Error".underline().red(),
                     error,
