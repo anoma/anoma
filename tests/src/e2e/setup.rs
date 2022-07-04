@@ -470,7 +470,7 @@ impl AnomaCmd {
     pub fn exp_string(&mut self, needle: &str) -> Result<String> {
         let found = self
             .session
-            .expect(needle)
+            .expect_eager(needle)
             .map_err(|e| eyre!(format!("{}\n Needle: {}", e, needle)))?;
         if found.is_empty() {
             Err(eyre!(format!("Expected needle not found: {}", needle)))
@@ -490,7 +490,7 @@ impl AnomaCmd {
     pub fn exp_regex(&mut self, regex: &str) -> Result<(String, String)> {
         let found = self
             .session
-            .expect(expectrl::Regex(regex))
+            .expect_eager(expectrl::Regex(regex))
             .map_err(|e| eyre!(format!("{}", e)))?;
         if found.is_empty() {
             Err(eyre!(format!("Expected regex not found: {}", regex)))
@@ -511,7 +511,8 @@ impl AnomaCmd {
     /// reporting.
     #[allow(dead_code)]
     pub fn exp_eof(&mut self) -> Result<String> {
-        let found = self.session.expect(Eof).map_err(|e| eyre!("{}", e))?;
+        let found =
+            self.session.expect_eager(Eof).map_err(|e| eyre!("{}", e))?;
         if found.is_empty() {
             Err(eyre!("Expected EOF"))
         } else {

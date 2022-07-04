@@ -2030,9 +2030,8 @@ checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
 
 [[package]]
 name = "expectrl"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2795e11f4ee3124984d454f25ac899515a5fa6d956562ef2b147fef6050b02f8"
+version = "0.4.0"
+source = "git+https://github.com/heliaxdev/expectrl.git?branch=tomas/expect-eager-2#9982bb2fd32560b359619dafe92964656406d36e"
 dependencies = [
  "conpty",
  "nix 0.23.1",
