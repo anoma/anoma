@@ -205,7 +205,7 @@ pub trait PublicKey:
             Err(ParsePublicKeyError::MismatchedScheme)
         }
     }
-    /// Convert from self to another SecretKey type
+    /// Convert from self to another PublicKey type
     fn try_to_pk<PK: PublicKey>(&self) -> Result<PK, ParsePublicKeyError> {
         PK::try_from_pk(self)
     }
@@ -434,8 +434,7 @@ macro_rules! sigscheme_test {
                 println!("Secret key: {}", secret_key);
             }
 
-            /// Run `cargo test gen_keypair -- --nocapture` to generate a
-            /// new keypair.
+            /// Sign a simple message and verify the signature.
             #[test]
             fn gen_sign_verify() {
                 use rand::prelude::ThreadRng;

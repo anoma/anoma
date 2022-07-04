@@ -7,8 +7,6 @@ use std::io::{ErrorKind, Write};
 use std::str::FromStr;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::Serializer;
-
-//use libsecp256k1::util::SECRET_KEY_SIZE;
 use sha2::{Digest, Sha256};
 
 #[cfg(feature = "rand")]
