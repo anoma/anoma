@@ -49,7 +49,7 @@ borsh = "0.9.1"
 color-eyre = "0.5.11"
 # NOTE: enable "print" feature to see output from builds ran by e2e tests
 escargot = {version = "0.5.7"} # , features = ["print"]}
-expectrl = {git = "https://github.com/heliaxdev/expectrl.git", branch = "tomas/expect-eager-2"}
+expectrl = {version = "=0.5.2"}
 eyre = "0.6.5"
 file-serve = "0.2.0"
 fs_extra = "1.2.0"
