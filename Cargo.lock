@@ -275,7 +275,6 @@ dependencies = [
  "pretty_assertions",
  "proptest",
  "prost 0.9.0",
- "retry",
  "serde_json",
  "sha2 0.9.9",
  "tempfile",
@@ -5512,15 +5511,6 @@ checksum = "52e44394d2086d010551b14b53b1f24e31647570cd1deb0379e2c21b329aba00"
 dependencies = [
  "hostname",
  "quick-error 1.2.3",
-]
-
-[[package]]
-name = "retry"
-version = "1.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac95c60a949a63fd2822f4964939662d8f2c16c4fa0624fd954bc6e703b9a3f6"
-dependencies = [
- "rand 0.8.5",
 ]
 
 [[package]]

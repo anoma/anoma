@@ -1,5 +1,4 @@
 use std::ffi::OsStr;
-use std::fmt::Display;
 use std::io::Stdout;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
@@ -21,8 +20,6 @@ use expectrl::session::Session;
 use expectrl::stream::log::LoggedStream;
 use expectrl::{Eof, WaitStatus};
 use eyre::eyre;
-use retry::delay::Fixed;
-use retry::retry;
 use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
@@ -411,12 +408,6 @@ pub struct AnomaCmd {
     pub cmd_str: String,
 }
 
-impl Display for AnomaCmd {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Command: {}", self.cmd_str)
-    }
-}
-
 /// A command under test running on a background thread
 pub struct AnomaBgCmd {
     join_handle: std::thread::JoinHandle<AnomaCmd>,
@@ -460,23 +451,7 @@ impl AnomaCmd {
 
     /// Assert that the process exited with success
     pub fn assert_success(&self) {
-        println!("Waiting for {} to exit...", self);
-        let status = retry(Fixed::from_millis(1000).take(10), || {
-            let alive = match self.session.is_alive() {
-                Ok(alive) => alive,
-                Err(err) => {
-                    panic!("Error waiting for {} to exit: {:?}", self, err)
-                }
-            };
-            if alive {
-                println!("Waiting 1 sec as {} is still alive", self);
-                sleep(1);
-                Err("session is still alive")
-            } else {
-                Ok(self.session.wait().unwrap())
-            }
-        })
-        .unwrap();
+        let status = self.session.wait().unwrap();
         assert_eq!(WaitStatus::Exited(self.session.pid(), 0), status);
     }
 
