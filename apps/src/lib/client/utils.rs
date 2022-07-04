@@ -1178,12 +1178,12 @@ fn write_tendermint_node_key(
     // Tendermint requires concatenating the private-public keys for ed25519
     // but does not for secp256k1.
     let (node_keypair, key_str) = match node_sk {
-        common::SecretKey::Ed25519(_) => {
-            ([node_sk.try_to_vec().unwrap(), node_pk.try_to_vec().unwrap()].concat(),
+        common::SecretKey::Ed25519(sk) => {
+            ([sk.try_to_vec().unwrap(), sk.ref_to().try_to_vec().unwrap()].concat(),
             "Ed25519")
         },
-        common::SecretKey::Secp256k1(_) => {
-            (node_sk.try_to_vec().unwrap(), "Secp256k1")
+        common::SecretKey::Secp256k1(sk) => {
+            (sk.try_to_vec().unwrap(), "Secp256k1")
         },
     };
 
