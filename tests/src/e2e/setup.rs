@@ -1,4 +1,6 @@
 use std::ffi::OsStr;
+use std::fmt::Display;
+use std::fs::{File, OpenOptions};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -14,9 +16,13 @@ use assert_cmd::assert::OutputAssertExt;
 use color_eyre::eyre::Result;
 use color_eyre::owo_colors::OwoColorize;
 use escargot::CargoBuild;
+use expectrl::process::unix::{PtyStream, UnixProcess};
 use expectrl::session::Session;
+use expectrl::stream::log::LoggedStream;
 use expectrl::{Eof, WaitStatus};
 use eyre::eyre;
+use itertools::Itertools;
+use rand::Rng;
 use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
@@ -401,8 +407,20 @@ pub fn working_dir() -> PathBuf {
 
 /// A command under test
 pub struct AnomaCmd {
-    pub session: Session,
+    pub session: Session<UnixProcess, LoggedStream<PtyStream, File>>,
     pub cmd_str: String,
+    pub log_path: PathBuf,
+}
+
+impl Display for AnomaCmd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}\n(logs at: {})",
+            self.cmd_str,
+            self.log_path.to_string_lossy()
+        )
+    }
 }
 
 /// A command under test running on a background thread
@@ -465,15 +483,18 @@ impl AnomaCmd {
     /// Wrapper over the inner `PtySession`'s functions with custom error
     /// reporting.
     pub fn exp_string(&mut self, needle: &str) -> Result<String> {
-        let found = self
-            .session
-            .expect_eager(needle)
-            .map_err(|e| eyre!(format!("{}\n Needle: {}", e, needle)))?;
+        let found = self.session.expect_eager(needle).map_err(|e| {
+            eyre!("{}\nCommand: {}\n Needle: {}", e, self, needle)
+        })?;
         if found.is_empty() {
-            Err(eyre!(format!("Expected needle not found: {}", needle)))
+            Err(eyre!(
+                "Expected needle not found\nCommand: {}\n Needle: {}",
+                self,
+                needle
+            ))
         } else {
             String::from_utf8(found.before().to_vec())
-                .map_err(|e| eyre!(format!("{}", e)))
+                .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))
         }
     }
 
@@ -488,15 +509,19 @@ impl AnomaCmd {
         let found = self
             .session
             .expect_eager(expectrl::Regex(regex))
-            .map_err(|e| eyre!(format!("{}", e)))?;
+            .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))?;
         if found.is_empty() {
-            Err(eyre!(format!("Expected regex not found: {}", regex)))
+            Err(eyre!(
+                "Expected regex not found: {}\nCommand: {}",
+                regex,
+                self
+            ))
         } else {
             let unread = String::from_utf8(found.before().to_vec())
-                .map_err(|e| eyre!(format!("{}", e)))?;
+                .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))?;
             let matched =
                 String::from_utf8(found.matches().next().unwrap().to_vec())
-                    .map_err(|e| eyre!(format!("{}", e)))?;
+                    .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))?;
             Ok((unread, matched))
         }
     }
@@ -508,13 +533,15 @@ impl AnomaCmd {
     /// reporting.
     #[allow(dead_code)]
     pub fn exp_eof(&mut self) -> Result<String> {
-        let found =
-            self.session.expect_eager(Eof).map_err(|e| eyre!("{}", e))?;
+        let found = self
+            .session
+            .expect_eager(Eof)
+            .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))?;
         if found.is_empty() {
-            Err(eyre!("Expected EOF"))
+            Err(eyre!("Expected EOF\nCommand: {}", self))
         } else {
             String::from_utf8(found.before().to_vec())
-                .map_err(|e| eyre!(format!("{}", e)))
+                .map_err(|e| eyre!(format!("Error: {}\nCommand: {}", e, self)))
         }
     }
 
@@ -529,7 +556,7 @@ impl AnomaCmd {
     pub fn send_control(&mut self, c: char) -> Result<()> {
         self.session
             .send_control(c)
-            .map_err(|e| eyre!(format!("{}", e)))
+            .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))
     }
 
     /// send line to repl (and flush output) and then, if echo_on=true wait for
@@ -541,7 +568,7 @@ impl AnomaCmd {
     pub fn send_line(&mut self, line: &str) -> Result<()> {
         self.session
             .send_line(line)
-            .map_err(|e| eyre!(format!("{}", e)))
+            .map_err(|e| eyre!("Error: {}\nCommand: {}", e, self))
     }
 }
 
@@ -550,7 +577,7 @@ impl Drop for AnomaCmd {
         // attempt to clean up the process
         println!(
             "{}: {}",
-            "Waiting for command to finish".underline().yellow(),
+            "> Sending Ctrl+C to command".underline().yellow(),
             self.cmd_str,
         );
         let _result = self.send_control('c');
@@ -558,7 +585,7 @@ impl Drop for AnomaCmd {
             Err(error) => {
                 eprintln!(
                     "\n{}: {}\n{}: {}",
-                    "Error waiting for command to finish".underline().red(),
+                    "> Error ensuring command is finished".underline().red(),
                     self.cmd_str,
                     "Error".underline().red(),
                     error,
@@ -567,21 +594,21 @@ impl Drop for AnomaCmd {
             Ok(output) => {
                 println!(
                     "\n{}: {}",
-                    "Command finished".underline().green(),
+                    "> Command finished".underline().green(),
                     self.cmd_str,
                 );
                 let output = output.trim();
                 if !output.is_empty() {
                     println!(
                         "\n{}: {}\n\n{}",
-                        "Unread output for command".underline().yellow(),
+                        "> Unread output for command".underline().yellow(),
                         self.cmd_str,
                         output
                     );
                 } else {
                     println!(
                         "\n{}: {}",
-                        "No unread output for command".underline().green(),
+                        "> No unread output for command".underline().green(),
                         self.cmd_str
                     );
                 }
@@ -661,6 +688,7 @@ where
 
     run_cmd
         .env("ANOMA_LOG", "anoma=info")
+        .env("ANOMA_LOG_COLOR", "false")
         .current_dir(working_dir)
         .args(&[
             "--base-dir",
@@ -668,11 +696,14 @@ where
             "--mode",
             mode,
         ])
+        .stderr(std::process::Stdio::inherit())
         .args(args);
-    let cmd_str = format!("{:?}", run_cmd);
+    let args: String =
+        run_cmd.get_args().map(|s| s.to_string_lossy()).join(" ");
+    let cmd_str =
+        format!("{} {}", run_cmd.get_program().to_string_lossy(), args);
 
-    println!("{}: {}", "Running".underline().green(), cmd_str);
-    let mut session = Session::spawn(run_cmd).map_err(|e| {
+    let session = Session::spawn(run_cmd).map_err(|e| {
         eyre!(
             "\n\n{}: {}\n{}: {}\n{}: {}",
             "Failed to run".underline().red(),
@@ -683,9 +714,29 @@ where
             e
         )
     })?;
+
+    let log_path = {
+        let mut rng = rand::thread_rng();
+        let log_dir = base_dir.as_ref().join("logs");
+        fs::create_dir_all(&log_dir)?;
+        log_dir.join(&format!("{}-{}.log", bin_name, rng.gen::<u64>()))
+    };
+    let logger = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&log_path)?;
+    let mut session = session.with_log(logger).unwrap();
+
     session.set_expect_timeout(timeout_sec.map(std::time::Duration::from_secs));
 
-    let mut cmd_process = AnomaCmd { session, cmd_str };
+    let mut cmd_process = AnomaCmd {
+        session,
+        cmd_str,
+        log_path,
+    };
+
+    println!("{}:\n{}", "> Running".underline().green(), &cmd_process);
+
     if let Bin::Node = &bin {
         // When running a node command, we need to wait a bit before checking
         // status
