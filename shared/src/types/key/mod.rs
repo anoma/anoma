@@ -443,7 +443,10 @@ macro_rules! sigscheme_test {
                 let mut rng: ThreadRng = thread_rng();
                 let sk = <$type>::generate(&mut rng);
                 let sig = <$type>::sign(&sk, b"hello");
-                assert!(<$type>::verify_signature_raw(&sk.ref_to(), b"hello", &sig).is_ok());
+                assert!(
+                    <$type>::verify_signature_raw(&sk.ref_to(), b"hello", &sig)
+                        .is_ok()
+                );
             }
         }
     };

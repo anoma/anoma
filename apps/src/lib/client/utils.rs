@@ -13,7 +13,6 @@ use borsh::BorshSerialize;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-
 use prost::bytes::Bytes;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
@@ -268,7 +267,9 @@ pub async fn join_network(
             .tendermint_node_key
             .try_to_sk()
             .unwrap_or_else(|_err| {
-                eprintln!("Tendermint node key must be common (need to change?)");
+                eprintln!(
+                    "Tendermint node key must be common (need to change?)"
+                );
                 cli::safe_exit(1)
             });
 
@@ -523,12 +524,11 @@ pub fn init_network(
         .unwrap_or_else(|| {
             let alias = format!("{}-consensus-key", name);
             println!("Generating validator {} consensus key...", name);
-            let (_alias, keypair) =
-                wallet.gen_key(
-                    SchemeType::Common,
-                    Some(alias),
-                    unsafe_dont_encrypt
-                );
+            let (_alias, keypair) = wallet.gen_key(
+                SchemeType::Common,
+                Some(alias),
+                unsafe_dont_encrypt,
+            );
 
             // Write consensus key for Tendermint
             tendermint_node::write_validator_key(
@@ -547,12 +547,11 @@ pub fn init_network(
         .unwrap_or_else(|| {
             let alias = format!("{}-account-key", name);
             println!("Generating validator {} account key...", name);
-            let (_alias, keypair) =
-                wallet.gen_key(
-                    SchemeType::Common,
-                    Some(alias),
-                    unsafe_dont_encrypt
-                );
+            let (_alias, keypair) = wallet.gen_key(
+                SchemeType::Common,
+                Some(alias),
+                unsafe_dont_encrypt,
+            );
             keypair.ref_to()
         });
 
@@ -566,12 +565,11 @@ pub fn init_network(
                 "Generating validator {} staking reward account key...",
                 name
             );
-            let (_alias, keypair) =
-                wallet.gen_key(
-                    SchemeType::Common,
-                    Some(alias),
-                    unsafe_dont_encrypt
-                );
+            let (_alias, keypair) = wallet.gen_key(
+                SchemeType::Common,
+                Some(alias),
+                unsafe_dont_encrypt,
+            );
             keypair.ref_to()
         });
 
@@ -582,12 +580,11 @@ pub fn init_network(
         .unwrap_or_else(|| {
             let alias = format!("{}-protocol-key", name);
             println!("Generating validator {} protocol signing key...", name);
-            let (_alias, keypair) =
-                wallet.gen_key(
-                    SchemeType::Common,
-                    Some(alias),
-                    unsafe_dont_encrypt
-                );
+            let (_alias, keypair) = wallet.gen_key(
+                SchemeType::Common,
+                Some(alias),
+                unsafe_dont_encrypt,
+            );
             keypair.ref_to()
         });
 
@@ -742,12 +739,11 @@ pub fn init_network(
                     "Generating implicit account {} key and address ...",
                     name
                 );
-                let (_alias, keypair) =
-                    wallet.gen_key(
-                        SchemeType::Common,
-                        Some(name.clone()),
-                        unsafe_dont_encrypt
-                    );
+                let (_alias, keypair) = wallet.gen_key(
+                    SchemeType::Common,
+                    Some(name.clone()),
+                    unsafe_dont_encrypt,
+                );
                 let public_key =
                     genesis_config::HexString(keypair.ref_to().to_string());
                 config.public_key = Some(public_key);
@@ -1178,13 +1174,14 @@ fn write_tendermint_node_key(
     // Tendermint requires concatenating the private-public keys for ed25519
     // but does not for secp256k1.
     let (node_keypair, key_str) = match node_sk {
-        common::SecretKey::Ed25519(sk) => {
-            ([sk.try_to_vec().unwrap(), sk.ref_to().try_to_vec().unwrap()].concat(),
-            "Ed25519")
-        },
+        common::SecretKey::Ed25519(sk) => (
+            [sk.try_to_vec().unwrap(), sk.ref_to().try_to_vec().unwrap()]
+                .concat(),
+            "Ed25519",
+        ),
         common::SecretKey::Secp256k1(sk) => {
             (sk.try_to_vec().unwrap(), "Secp256k1")
-        },
+        }
     };
 
     let tm_node_keypair_json = json!({

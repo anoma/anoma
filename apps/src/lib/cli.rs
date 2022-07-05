@@ -1463,7 +1463,8 @@ pub mod args {
     const REWARDS_CODE_PATH: ArgOpt<PathBuf> = arg_opt("rewards-code-path");
     const REWARDS_KEY: ArgOpt<WalletPublicKey> = arg_opt("rewards-key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
-    const SCHEME: ArgDefault<SchemeType> = arg_default("scheme", DefaultFn(|| SchemeType::Ed25519));
+    const SCHEME: ArgDefault<SchemeType> =
+        arg_default("scheme", DefaultFn(|| SchemeType::Ed25519));
     const SIGNER: ArgOpt<WalletAddress> = arg_opt("signer");
     const SIGNING_KEY_OPT: ArgOpt<WalletKeypair> = SIGNING_KEY.opt();
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
@@ -1738,8 +1739,8 @@ pub mod args {
                     "The source account's address that signs the transaction.",
                 ))
                 .arg(SCHEME.def().about(
-                    "The key scheme/type used for the validator keys. Currently \
-                    supports ed25519 and secp256k1."
+                    "The key scheme/type used for the validator keys. \
+                     Currently supports ed25519 and secp256k1.",
                 ))
                 .arg(VALIDATOR_ACCOUNT_KEY.def().about(
                     "A public key for the validator account. A new one will \
@@ -2758,8 +2759,8 @@ pub mod args {
         fn def(app: App) -> App {
             app.arg(SCHEME.def().about(
                 "The type of key that should be generated. Argument must be \
-                either ed25519 or secp256k1. If none provided, the default key scheme \
-                is ed25519.",
+                 either ed25519 or secp256k1. If none provided, the default \
+                 key scheme is ed25519.",
             ))
             .arg(ALIAS_OPT.def().about(
                 "The key and address alias. If none provided, the alias will \
@@ -3061,8 +3062,8 @@ pub mod args {
                      use this for keys used in a live network.",
                 ))
                 .arg(SCHEME.def().about(
-                    "The key scheme/type used for the validator keys. Currently \
-                    supports ed25519 and secp256k1."
+                    "The key scheme/type used for the validator keys. \
+                     Currently supports ed25519 and secp256k1.",
                 ))
         }
     }

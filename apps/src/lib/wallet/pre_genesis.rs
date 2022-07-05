@@ -148,7 +148,8 @@ impl ValidatorWallet {
         let (rewards_key, rewards_sk) = gen_key_to_store(scheme, &password);
         let (tendermint_node_key, tendermint_node_sk) =
             gen_key_to_store(scheme, &password);
-        let validator_keys = store::Store::gen_validator_keys(None, SchemeType::Common);
+        let validator_keys =
+            store::Store::gen_validator_keys(None, SchemeType::Common);
         let store = ValidatorStore {
             account_key,
             consensus_key,

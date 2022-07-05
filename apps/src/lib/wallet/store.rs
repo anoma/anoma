@@ -288,9 +288,10 @@ impl Store {
     /// Note that this removes the validator data.
     pub fn gen_validator_keys(
         protocol_keypair: Option<common::SecretKey>,
-        scheme: SchemeType
+        scheme: SchemeType,
     ) -> ValidatorKeys {
-        let protocol_keypair = protocol_keypair.unwrap_or_else(|| gen_sk(scheme));
+        let protocol_keypair =
+            protocol_keypair.unwrap_or_else(|| gen_sk(scheme));
         let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
             &mut StdRng::from_entropy(),
         );
@@ -506,12 +507,15 @@ pub fn gen_sk(scheme: SchemeType) -> common::SecretKey {
     use rand::rngs::OsRng;
     let mut csprng = OsRng {};
     match scheme {
-        SchemeType::Ed25519 =>
-            ed25519::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
-        SchemeType::Secp256k1 =>
-            secp256k1::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
-        SchemeType::Common =>
-            common::SigScheme::generate(&mut csprng).try_to_sk().unwrap(),
+        SchemeType::Ed25519 => ed25519::SigScheme::generate(&mut csprng)
+            .try_to_sk()
+            .unwrap(),
+        SchemeType::Secp256k1 => secp256k1::SigScheme::generate(&mut csprng)
+            .try_to_sk()
+            .unwrap(),
+        SchemeType::Common => common::SigScheme::generate(&mut csprng)
+            .try_to_sk()
+            .unwrap(),
     }
 }
 
@@ -522,7 +526,8 @@ mod test_wallet {
     #[test]
     fn test_toml_roundtrip_ed25519() {
         let mut store = Store::new();
-        let validator_keys = Store::gen_validator_keys(None,SchemeType::Ed25519);
+        let validator_keys =
+            Store::gen_validator_keys(None, SchemeType::Ed25519);
         store.add_validator_data(
             Address::decode("atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5").unwrap(),
             validator_keys
@@ -534,7 +539,8 @@ mod test_wallet {
     #[test]
     fn test_toml_roundtrip_secp256k1() {
         let mut store = Store::new();
-        let validator_keys = Store::gen_validator_keys(None,SchemeType::Secp256k1);
+        let validator_keys =
+            Store::gen_validator_keys(None, SchemeType::Secp256k1);
         store.add_validator_data(
             Address::decode("atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5").unwrap(),
             validator_keys

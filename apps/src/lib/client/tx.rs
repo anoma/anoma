@@ -22,7 +22,6 @@ use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
 use borsh::BorshSerialize;
-
 use itertools::Either::*;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
@@ -193,7 +192,7 @@ pub async fn submit_init_validator(
             .gen_key(
                 scheme,
                 Some(validator_key_alias.clone()),
-                unsafe_dont_encrypt
+                unsafe_dont_encrypt,
             )
             .1
             .ref_to()
@@ -206,7 +205,7 @@ pub async fn submit_init_validator(
                 .gen_key(
                     scheme,
                     Some(consensus_key_alias.clone()),
-                    unsafe_dont_encrypt
+                    unsafe_dont_encrypt,
                 )
                 .1
         });
@@ -218,7 +217,7 @@ pub async fn submit_init_validator(
                 .gen_key(
                     scheme,
                     Some(rewards_key_alias.clone()),
-                    unsafe_dont_encrypt
+                    unsafe_dont_encrypt,
                 )
                 .1
                 .ref_to()

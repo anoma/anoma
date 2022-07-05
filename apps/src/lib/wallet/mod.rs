@@ -135,7 +135,7 @@ impl Wallet {
             Some(Err(err)) => Err(err),
             other => Ok(Store::gen_validator_keys(
                 other.map(|res| res.unwrap().as_ref().clone()),
-                SchemeType::Common
+                SchemeType::Common,
             )),
         }
     }

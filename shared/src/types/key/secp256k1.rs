@@ -5,21 +5,19 @@ use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::io::{ErrorKind, Write};
 use std::str::FromStr;
-use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use serde::Serializer;
-use sha2::{Digest, Sha256};
 
+use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "rand")]
 use rand::{CryptoRng, RngCore};
-use serde::{Deserialize,Serialize};
 use serde::de::{Error, SeqAccess, Visitor};
 use serde::ser::SerializeTuple;
+use serde::{Deserialize, Serialize, Serializer};
+use sha2::{Digest, Sha256};
 
 use super::{
     ParsePublicKeyError, ParseSecretKeyError, ParseSignatureError, RefTo,
     SchemeType, SigScheme as SigSchemeTrait, VerifySigError,
 };
-
 
 /// secp256k1 public key
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -50,9 +48,9 @@ impl BorshDeserialize for PublicKey {
         // deserialize the bytes first
         let pk = libsecp256k1::PublicKey::parse_compressed(
             buf.get(0..libsecp256k1::util::COMPRESSED_PUBLIC_KEY_SIZE)
-            .ok_or_else(|| std::io::Error::from(ErrorKind::UnexpectedEof))?
-            .try_into()
-            .unwrap(),
+                .ok_or_else(|| std::io::Error::from(ErrorKind::UnexpectedEof))?
+                .try_into()
+                .unwrap(),
         )
         .map_err(|e| {
             std::io::Error::new(
@@ -100,13 +98,17 @@ impl Hash for PublicKey {
 
 impl PartialOrd for PublicKey {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.0.serialize_compressed().partial_cmp(&other.0.serialize_compressed())
+        self.0
+            .serialize_compressed()
+            .partial_cmp(&other.0.serialize_compressed())
     }
 }
 
 impl Ord for PublicKey {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.serialize_compressed().cmp(&other.0.serialize_compressed())
+        self.0
+            .serialize_compressed()
+            .cmp(&other.0.serialize_compressed())
     }
 }
 
@@ -159,7 +161,7 @@ impl super::SecretKey for SecretKey {
 }
 
 impl Serialize for SecretKey {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> 
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -171,9 +173,10 @@ impl Serialize for SecretKey {
 impl<'de> Deserialize<'de> for SecretKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>
+        D: serde::Deserializer<'de>,
     {
-        let arr_res: [u8; libsecp256k1::util::SECRET_KEY_SIZE] = serde::Deserialize::deserialize(deserializer)?;
+        let arr_res: [u8; libsecp256k1::util::SECRET_KEY_SIZE] =
+            serde::Deserialize::deserialize(deserializer)?;
         let key = libsecp256k1::SecretKey::parse_slice(&arr_res)
             .map_err(D::Error::custom);
         Ok(SecretKey(key.unwrap()))
@@ -268,11 +271,11 @@ impl super::Signature for Signature {
     }
 }
 
-// Would ideally like Serialize, Deserialize to be implemented in libsecp256k1, may try to do so and merge
-// upstream in the future.
+// Would ideally like Serialize, Deserialize to be implemented in libsecp256k1,
+// may try to do so and merge upstream in the future.
 
 impl Serialize for Signature {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> 
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -290,8 +293,8 @@ impl Serialize for Signature {
 
 impl<'de> Deserialize<'de> for Signature {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de>
+    where
+        D: serde::Deserializer<'de>,
     {
         struct ByteArrayVisitor;
 
@@ -299,7 +302,10 @@ impl<'de> Deserialize<'de> for Signature {
             type Value = [u8; libsecp256k1::util::SIGNATURE_SIZE];
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str(&format!("an array of length {}", libsecp256k1::util::SIGNATURE_SIZE))
+                formatter.write_str(&format!(
+                    "an array of length {}",
+                    libsecp256k1::util::SIGNATURE_SIZE
+                ))
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<[u8; 64], A::Error>
@@ -309,18 +315,21 @@ impl<'de> Deserialize<'de> for Signature {
                 let mut arr = [0u8; libsecp256k1::util::SIGNATURE_SIZE];
                 #[allow(clippy::needless_range_loop)]
                 for i in 0..libsecp256k1::util::SIGNATURE_SIZE {
-                    arr[i] = seq.next_element()?
+                    arr[i] = seq
+                        .next_element()?
                         .ok_or_else(|| Error::invalid_length(i, &self))?;
                 }
                 Ok(arr)
             }
         }
 
-        let arr_res = deserializer.deserialize_tuple(libsecp256k1::util::SIGNATURE_SIZE, ByteArrayVisitor)?;
+        let arr_res = deserializer.deserialize_tuple(
+            libsecp256k1::util::SIGNATURE_SIZE,
+            ByteArrayVisitor,
+        )?;
         let sig = libsecp256k1::Signature::parse_standard(&arr_res)
             .map_err(D::Error::custom);
         Ok(Signature(sig.unwrap()))
-
     }
 }
 
@@ -433,13 +442,11 @@ impl super::SigScheme for SigScheme {
         let check = libsecp256k1::verify(message, &sig.0, &pk.0);
         match check {
             true => Ok(()),
-            false => Err(VerifySigError::SigVerifyError(
-                format!("Error verifying secp256k1 signature: {}",libsecp256k1::Error::InvalidSignature)
-            )),
+            false => Err(VerifySigError::SigVerifyError(format!(
+                "Error verifying secp256k1 signature: {}",
+                libsecp256k1::Error::InvalidSignature
+            ))),
         }
-
-
-
     }
 
     fn verify_signature_raw(
@@ -450,13 +457,13 @@ impl super::SigScheme for SigScheme {
         let hash = Sha256::digest(data.as_ref());
         let message = &libsecp256k1::Message::parse_slice(hash.as_ref())
             .expect("Error parsing raw data");
-        let check = libsecp256k1::verify(message,&sig.0, &pk.0);
+        let check = libsecp256k1::verify(message, &sig.0, &pk.0);
         match check {
             true => Ok(()),
-            false => Err(VerifySigError::SigVerifyError(
-                format!("Error verifying secp256k1 signature: {}",libsecp256k1::Error::InvalidSignature)
-            )),
+            false => Err(VerifySigError::SigVerifyError(format!(
+                "Error verifying secp256k1 signature: {}",
+                libsecp256k1::Error::InvalidSignature
+            ))),
         }
-
     }
 }

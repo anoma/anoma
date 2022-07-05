@@ -9,8 +9,9 @@ use rand::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 
 use super::{
-    ed25519, secp256k1, ParsePublicKeyError, ParseSecretKeyError, ParseSignatureError,
-    RefTo, SchemeType, SigScheme as SigSchemeTrait, VerifySigError,
+    ed25519, secp256k1, ParsePublicKeyError, ParseSecretKeyError,
+    ParseSignatureError, RefTo, SchemeType, SigScheme as SigSchemeTrait,
+    VerifySigError,
 };
 
 /// Public key
@@ -100,11 +101,11 @@ impl Serialize for SecretKey {
     {
         // String encoded, because toml doesn't support enums
         let prefix = match self {
-            SecretKey::Ed25519(_)   => "ED25519_SK_PREFIX",
+            SecretKey::Ed25519(_) => "ED25519_SK_PREFIX",
             SecretKey::Secp256k1(_) => "SECP256K1_SK_PREFIX",
         };
-        let keypair_string = format!("{}{}",prefix,self);
-        Serialize::serialize(&keypair_string,serializer)
+        let keypair_string = format!("{}{}", prefix, self);
+        Serialize::serialize(&keypair_string, serializer)
     }
 }
 
@@ -120,7 +121,9 @@ impl<'de> Deserialize<'de> for SecretKey {
                 .map_err(D::Error::custom)?;
         if let Some(raw) = keypair_string.strip_prefix("ED25519_SK_PREFIX") {
             SecretKey::from_str(raw).map_err(D::Error::custom)
-        } else if let Some(raw) = keypair_string.strip_prefix("SECP256K1_SK_PREFIX") {
+        } else if let Some(raw) =
+            keypair_string.strip_prefix("SECP256K1_SK_PREFIX")
+        {
             SecretKey::from_str(raw).map_err(D::Error::custom)
         } else {
             Err(D::Error::custom(
@@ -154,7 +157,8 @@ impl super::SecretKey for SecretKey {
                     sk.try_to_vec().unwrap().as_ref(),
                 )
                 .map_err(ParseSecretKeyError::InvalidEncoding)?,
-            ))        } else {
+            ))
+        } else {
             Err(ParseSecretKeyError::MismatchedScheme)
         }
     }
