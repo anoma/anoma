@@ -65,7 +65,7 @@ impl BorshDeserialize for PublicKey {
 
 impl BorshSerialize for PublicKey {
     fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write(&self.0.serialize_compressed())?;
+        writer.write_all(&self.0.serialize_compressed())?;
         Ok(())
     }
 }
@@ -436,7 +436,7 @@ impl super::SigScheme for SigScheme {
         let bytes = &data
             .try_to_vec()
             .map_err(VerifySigError::DataEncodingError)?[..];
-        let hash = Sha256::digest(bytes.as_ref());
+        let hash = Sha256::digest(bytes);
         let message = &libsecp256k1::Message::parse_slice(hash.as_ref())
             .expect("Error parsing given data");
         let check = libsecp256k1::verify(message, &sig.0, &pk.0);
@@ -454,7 +454,7 @@ impl super::SigScheme for SigScheme {
         data: &[u8],
         sig: &Self::Signature,
     ) -> Result<(), VerifySigError> {
-        let hash = Sha256::digest(data.as_ref());
+        let hash = Sha256::digest(data);
         let message = &libsecp256k1::Message::parse_slice(hash.as_ref())
             .expect("Error parsing raw data");
         let check = libsecp256k1::verify(message, &sig.0, &pk.0);
