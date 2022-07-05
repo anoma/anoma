@@ -17,6 +17,7 @@ use escargot::CargoBuild;
 use expectrl::session::Session;
 use expectrl::{Eof, WaitStatus};
 use eyre::eyre;
+use itertools::Itertools;
 use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
@@ -550,7 +551,7 @@ impl Drop for AnomaCmd {
         // attempt to clean up the process
         println!(
             "{}: {}",
-            "Waiting for command to finish".underline().yellow(),
+            "Sending Ctrl+C to command".underline().yellow(),
             self.cmd_str,
         );
         let _result = self.send_control('c');
@@ -558,7 +559,7 @@ impl Drop for AnomaCmd {
             Err(error) => {
                 eprintln!(
                     "\n{}: {}\n{}: {}",
-                    "Error waiting for command to finish".underline().red(),
+                    "Error ensuring command is finished".underline().red(),
                     self.cmd_str,
                     "Error".underline().red(),
                     error,
@@ -668,8 +669,12 @@ where
             "--mode",
             mode,
         ])
+        .stderr(std::process::Stdio::inherit())
         .args(args);
-    let cmd_str = format!("{:?}", run_cmd);
+    let args: String =
+        run_cmd.get_args().map(|s| s.to_string_lossy()).join(" ");
+    let cmd_str =
+        format!("{} {}", run_cmd.get_program().to_string_lossy(), args);
 
     println!("{}: {}", "Running".underline().green(), cmd_str);
     let mut session = Session::spawn(run_cmd).map_err(|e| {
