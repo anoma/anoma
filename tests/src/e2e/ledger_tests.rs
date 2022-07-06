@@ -478,9 +478,10 @@ fn invalid_transactions() -> Result<()> {
     client.exp_string("Transaction is invalid")?;
     client.exp_string(r#""code": "1"#)?;
 
-    client.assert_success();
     let mut ledger = bg_ledger.foreground();
-    ledger.exp_string("some VPs rejected transaction")?;
+    ledger.exp_string("some VPs rejected ")?;
+
+    client.assert_success();
 
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
