@@ -476,8 +476,6 @@ fn invalid_transactions() -> Result<()> {
     ];
 
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
-    let mut ledger = bg_ledger.foreground();
-    ledger.exp_string("some VPs rejected ")?;
     if !cfg!(feature = "ABCI") {
         client.exp_string("Transaction accepted")?;
     }
@@ -485,8 +483,10 @@ fn invalid_transactions() -> Result<()> {
     client.exp_string("Transaction is invalid")?;
     client.exp_string(r#""code": "1"#)?;
 
+    let mut ledger = bg_ledger.foreground();
+    ledger.exp_string("some VPs rejected ")?;
+
     client.assert_success();
-    ledger.exp_string("some VPs rejected transaction")?;
 
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
