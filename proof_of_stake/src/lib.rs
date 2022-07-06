@@ -921,7 +921,7 @@ pub enum BondError<Address: Display + Debug> {
     InactiveValidator(Address),
     #[error("Voting power overflow: {0}")]
     VotingPowerOverflow(TryFromIntError),
-    #[error("Given zero amount to unbond")]
+    #[error("Given zero amount to bond")]
     ZeroAmount,
 }
 
