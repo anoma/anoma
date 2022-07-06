@@ -452,10 +452,9 @@ pub fn init_network(
             format!("validator {name} Tendermint node key"),
             &config.tendermint_node_key,
         )
-        .map(|pk| common::PublicKey::try_from_pk(&pk).unwrap())
         .unwrap_or_else(|| {
-            // Generate a node key
-            let node_sk = common::SigScheme::generate(&mut rng);
+            // Generate a node key with ed25519 as default
+            let node_sk = common::SecretKey::Ed25519(ed25519::SigScheme::generate(&mut rng));
 
             let node_pk = write_tendermint_node_key(&tm_home_dir, node_sk);
 
