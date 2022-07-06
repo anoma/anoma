@@ -40,6 +40,7 @@ pub struct EthereumEvent {
 
 impl EthereumEvent {
     /// SHA256 of the Borsh serialization of the [`EthereumEvent`].
+    #[allow(dead_code)]
     fn hash(&self) -> Result<Hash, std::io::Error> {
         let bytes = self.try_to_vec()?;
         Ok(Hash::sha256(&bytes))
