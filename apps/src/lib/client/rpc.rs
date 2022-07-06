@@ -58,6 +58,7 @@ use tendermint_stable::abci::Code;
 use crate::cli::{self, args, Context};
 use crate::client::tx::TxResponse;
 use crate::node::ledger::rpc::Path;
+use crate::wallet::{AddressType};
 
 /// Query the epoch of the last committed block
 pub async fn query_epoch(args: args::Query) -> Epoch {
@@ -113,7 +114,11 @@ pub async fn query_raw_bytes(_ctx: Context, args: args::QueryRawBytes) {
 /// Query token balance(s)
 pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
+    // TODO: Change this to instead pull from an AddressBook object defined in wallet.store
+    // Currently only does this for anomac balance with no arguments ...
     let tokens = address::tokens();
+    let tokens_improved = ctx.wallet.get_addresses_by_type(AddressType::Token);
+
     match (args.token, args.owner) {
         (Some(token), Some(owner)) => {
             let token = ctx.get(&token);
@@ -177,14 +182,14 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
         (None, None) => {
             let stdout = io::stdout();
             let mut w = stdout.lock();
-            for (token, currency_code) in tokens {
-                let key = token::balance_prefix(&token);
+            for (alias, address) in tokens_improved {
+                let key = token::balance_prefix(&address);
                 let balances =
                     query_storage_prefix::<token::Amount>(client.clone(), key)
                         .await;
                 match balances {
                     Some(balances) => {
-                        writeln!(w, "Token {}:", currency_code).unwrap();
+                        writeln!(w, "Token {}:", alias).unwrap();
                         for (key, balance) in balances {
                             let owner =
                                 token::is_any_token_balance_key(&key).unwrap();
@@ -197,7 +202,7 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                         }
                     }
                     None => {
-                        println!("No balances for token {}", token.encode())
+                        println!("No balances for token {}", address.encode())
                     }
                 }
             }
