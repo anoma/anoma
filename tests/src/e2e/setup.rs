@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::Once;
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{env, fs, mem, thread, time};
 
 use anoma::types::chain::ChainId;
@@ -416,7 +417,7 @@ impl Display for AnomaCmd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}\n(logs at: {})",
+            "{}\nLogs: {}",
             self.cmd_str,
             self.log_path.to_string_lossy()
         )
@@ -696,7 +697,6 @@ where
             "--mode",
             mode,
         ])
-        .stderr(std::process::Stdio::inherit())
         .args(args);
     let args: String =
         run_cmd.get_args().map(|s| s.to_string_lossy()).join(" ");
@@ -719,7 +719,15 @@ where
         let mut rng = rand::thread_rng();
         let log_dir = base_dir.as_ref().join("logs");
         fs::create_dir_all(&log_dir)?;
-        log_dir.join(&format!("{}-{}.log", bin_name, rng.gen::<u64>()))
+        log_dir.join(&format!(
+            "{}-{}-{}.log",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_micros(),
+            bin_name,
+            rng.gen::<u64>()
+        ))
     };
     let logger = OpenOptions::new()
         .write(true)
