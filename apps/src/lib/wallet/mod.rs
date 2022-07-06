@@ -302,6 +302,16 @@ impl Wallet {
             .collect()
     }
 
+    pub fn get_addresses_by_type(&self, addresstype: AddressType) -> HashMap<String, Address> {
+        self.store
+            .get_addresses_by_type(addresstype)
+            .iter()
+            .map(|(alias, value)| (alias.into(), value.clone()))
+            .collect()
+    }
+
+
+
     /// Add a new address with the given alias. If the alias is already used,
     /// will ask whether the existing alias should be replaced, a different
     /// alias is desired, or the alias creation should be cancelled. Return

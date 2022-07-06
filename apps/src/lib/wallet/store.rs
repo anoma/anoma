@@ -291,6 +291,14 @@ impl Store {
         self.addresses.all()
     }
 
+    pub fn get_addresses_by_type(&self, addresstype: AddressType) -> BiHashMap<Alias, Address> {
+        match addresstype {
+            AddressType::Token => return self.addresses.tokens.clone(),
+            AddressType::Other => return self.addresses.other.clone(),
+        }
+    }
+
+
     /// Generate a new keypair and insert it into the store with the provided
     /// alias. If none provided, the alias will be the public key hash.
     /// If no password is provided, the keypair will be stored raw without

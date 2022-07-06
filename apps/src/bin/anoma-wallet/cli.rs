@@ -173,19 +173,41 @@ fn key_export(ctx: Context, args::KeyExport { alias }: args::KeyExport) {
 /// List all known addresses.
 fn address_list(ctx: Context) {
     let wallet = ctx.wallet;
+    let known_tokens = wallet.get_addresses_by_type(AddressType::Token);
+    let known_other_addresses = wallet.get_addresses_by_type(AddressType::Other);
     let known_addresses = wallet.get_addresses();
     if known_addresses.is_empty() {
         println!(
             "No known addresses. Try `address gen --alias my-addr` to \
-             generate a new implicit address."
+            generate a new implicit address."
         );
     } else {
         let stdout = io::stdout();
         let mut w = stdout.lock();
-        writeln!(w, "Known addresses:").unwrap();
-        for (alias, address) in sorted(known_addresses) {
-            writeln!(w, "  \"{}\": {}", alias, address.to_pretty_string())
-                .unwrap();
+        if known_tokens.is_empty() {
+            println!(
+                "No known token addresses."
+            );
+        }
+        else {
+            writeln!(w, "Known Tokens:").unwrap();
+            for (alias, address) in sorted(known_tokens) {
+                writeln!(w, "  \"{}\": {}", alias, address.to_pretty_string())
+                    .unwrap();
+            }
+        }
+
+        if known_other_addresses.is_empty(){
+            println!(
+                "No known other addresses. Try `address gen --alias my-addr` to \
+                generate a new implicit address."
+            );
+        } else {
+            writeln!(w, "Known Other Addresses:").unwrap();
+            for (alias, address) in sorted(known_other_addresses) {
+                writeln!(w, "  \"{}\": {}", alias, address.to_pretty_string())
+                    .unwrap();
+            }
         }
     }
 }
