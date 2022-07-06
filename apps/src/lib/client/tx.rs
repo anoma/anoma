@@ -1123,7 +1123,7 @@ pub async fn broadcast_tx(
 
     #[cfg(not(feature = "ABCI"))]
     let response = wrapper_tx_subscription
-        .broadcast_tx(tx.to_bytes().into())
+        .broadcast_tx_sync(tx.to_bytes().into())
         .await
         .map_err(|err| WsError::Response(format!("{:?}", err)))?;
 
