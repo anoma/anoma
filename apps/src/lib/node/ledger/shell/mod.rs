@@ -540,6 +540,7 @@ where
     /// Commit a block. Persist the application state and return the Merkle root
     /// hash.
     pub fn commit(&mut self) -> response::Commit {
+        let mut response = response::Commit::default();
         // commit changes from the write-log to storage
         self.write_log
             .commit_block(&mut self.storage)
@@ -558,7 +559,8 @@ where
             root,
             self.storage.last_height,
         );
-        response::Commit::default()
+        response.data = root.0;
+        response
     }
 
     /// Validate a transaction request. On success, the transaction will
@@ -571,9 +573,10 @@ where
     ) -> response::CheckTx {
         let mut response = response::CheckTx::default();
         match Tx::try_from(tx_bytes).map_err(Error::TxDecoding) {
-            Ok(_) => {}
-            Err(_) => {
+            Ok(_) => response.log = String::from("Mempool validation passed"),
+            Err(msg) => {
                 response.code = 1;
+                response.log = msg.to_string();
             }
         }
         response
