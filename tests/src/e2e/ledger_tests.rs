@@ -250,8 +250,6 @@ fn ledger_txs_and_queries() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
 
-    let _bg_ledger = ledger.background();
-
     let vp_user = wasm_abs_path(VP_USER_WASM);
     let vp_user = vp_user.to_string_lossy();
     let tx_no_op = wasm_abs_path(TX_NO_OP_WASM);
@@ -431,8 +429,6 @@ fn invalid_transactions() -> Result<()> {
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
 
-    let bg_ledger = ledger.background();
-
     // 2. Submit a an invalid transaction (trying to mint tokens should fail
     // in the token's VP)
     let tx_data_path = test.base_dir.path().join("tx.data");
@@ -479,7 +475,6 @@ fn invalid_transactions() -> Result<()> {
     client.exp_string(r#""code": "1"#)?;
 
     client.assert_success();
-    let mut ledger = bg_ledger.foreground();
     ledger.exp_string("some VPs rejected transaction")?;
 
     // Wait to commit a block
@@ -501,7 +496,6 @@ fn invalid_transactions() -> Result<()> {
 
     // There should be previous state now
     ledger.exp_string("Last state root hash:")?;
-    let _bg_ledger = ledger.background();
 
     // 5. Submit an invalid transactions (invalid token address)
     let tx_args = vec![
@@ -588,7 +582,6 @@ fn pos_bonds() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
-    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -786,7 +779,6 @@ fn pos_init_validator() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
-    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -956,7 +948,6 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
-    let bg_ledger = ledger.background();
 
     let validator_one_rpc = Arc::new(get_actor_rpc(&test, &Who::Validator(0)));
 
@@ -1008,7 +999,6 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         task.join().unwrap()?;
     }
     // Wait to commit a block
-    let mut ledger = bg_ledger.foreground();
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
 
     Ok(())
@@ -1048,7 +1038,6 @@ fn proposal_submission() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
-    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -1400,7 +1389,6 @@ fn proposal_offline() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
-    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
