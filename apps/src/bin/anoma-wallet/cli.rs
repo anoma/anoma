@@ -203,6 +203,7 @@ fn address_list(ctx: Context) {
                 generate a new implicit address."
             );
         } else {
+            writeln!(w, "\n").unwrap();
             writeln!(w, "Known Other Addresses:").unwrap();
             for (alias, address) in sorted(known_other_addresses) {
                 writeln!(w, "  \"{}\": {}", alias, address.to_pretty_string())
