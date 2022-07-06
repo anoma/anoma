@@ -558,16 +558,9 @@ where
             root,
             self.storage.last_height,
         );
-        #[cfg(feature = "ABCI")]
-        {
-            let mut response = response::Commit::default();
-            response.data = root.0;
-            response
-        }
-        #[cfg(not(feature = "ABCI"))]
-        {
-            response::Commit::default()
-        }
+        let mut response = response::Commit::default();
+        response.data = root.0;
+        response
     }
 
     /// Validate a transaction request. On success, the transaction will
