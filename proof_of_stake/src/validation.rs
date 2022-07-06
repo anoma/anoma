@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
+use std::marker::PhantomData;
 use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -14,7 +15,7 @@ use crate::btree_set::BTreeSetShims;
 use crate::epoched::DynEpochOffset;
 use crate::parameters::PosParams;
 use crate::types::{
-    BondId, Bonds, Epoch, Slashes, TotalVotingPowers, Unbonds,
+    BondId, Bonds, Epoch, Slash, Slashes, TotalVotingPowers, Unbonds,
     ValidatorConsensusKeys, ValidatorSets, ValidatorState, ValidatorStates,
     ValidatorTotalDeltas, ValidatorVotingPowers, VotingPower, VotingPowerDelta,
     WeightedValidator,
@@ -313,6 +314,16 @@ pub struct NewValidator {
     voting_power: VotingPower,
 }
 
+/// Validation constants
+#[derive(Clone, Debug)]
+struct Constants {
+    current_epoch: Epoch,
+    pipeline_epoch: Epoch,
+    unbonding_epoch: Epoch,
+    pipeline_offset: u64,
+    unbonding_offset: u64,
+}
+
 /// Validate the given list of PoS data `changes`. Returns empty list, if all
 /// the changes are valid.
 #[must_use]
@@ -375,955 +386,36 @@ where
         + BorshSchema
         + PartialEq,
 {
-    let current_epoch = current_epoch.into();
-    use DataUpdate::*;
-    use ValidatorUpdate::*;
-
+    let current_epoch: Epoch = current_epoch.into();
     let pipeline_offset = DynEpochOffset::PipelineLen.value(params);
     let unbonding_offset = DynEpochOffset::UnbondingLen.value(params);
     let pipeline_epoch = current_epoch + pipeline_offset;
     let unbonding_epoch = current_epoch + unbonding_offset;
+    let constants = Constants {
+        current_epoch,
+        pipeline_epoch,
+        unbonding_epoch,
+        pipeline_offset,
+        unbonding_offset,
+    };
 
     let mut errors = vec![];
 
-    let mut balance_delta = TokenChange::default();
-    // Changes of validators' bonds
-    let mut bond_delta: HashMap<Address, TokenChange> = HashMap::default();
-    // Changes of validators' unbonds
-    let mut unbond_delta: HashMap<Address, TokenChange> = HashMap::default();
-
-    // Changes of all validator total deltas (up to `unbonding_epoch`)
-    let mut total_deltas: HashMap<Address, TokenChange> = HashMap::default();
-    // Accumulative stake calculated from validator total deltas for each epoch
-    // in which it has changed (the tuple of values are in pre and post state)
-    let mut total_stake_by_epoch: HashMap<
-        Epoch,
-        HashMap<Address, (TokenAmount, TokenAmount)>,
-    > = HashMap::default();
-    // Total voting power delta calculated from validators' total deltas
-    let mut expected_total_voting_power_delta_by_epoch: HashMap<
-        Epoch,
-        VotingPowerDelta,
-    > = HashMap::default();
-    // Changes of validators' voting power data
-    let mut voting_power_by_epoch: HashMap<
-        Epoch,
-        HashMap<Address, VotingPower>,
-    > = HashMap::default();
-
-    let mut validator_set_pre: Option<ValidatorSets<Address>> = None;
-    let mut validator_set_post: Option<ValidatorSets<Address>> = None;
-
-    let mut total_voting_power_delta_by_epoch: HashMap<
-        Epoch,
-        VotingPowerDelta,
-    > = HashMap::default();
-
-    let mut new_validators: HashMap<Address, NewValidator> = HashMap::default();
-
-    for change in changes {
-        match change {
-            Validator { address, update } => match update {
-                State(data) => match (data.pre, data.post) {
-                    (None, Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        // Before pipeline epoch, the state must be `Pending`
-                        for epoch in
-                            Epoch::iter_range(current_epoch, pipeline_offset)
-                        {
-                            match post.get(epoch) {
-                                Some(ValidatorState::Pending) => {}
-                                _ => errors.push(
-                                    Error::InvalidNewValidatorState(
-                                        epoch.into(),
-                                    ),
-                                ),
-                            }
-                        }
-                        // At pipeline epoch, the state must be `Candidate`
-                        match post.get(pipeline_epoch) {
-                            Some(ValidatorState::Candidate) => {}
-                            _ => errors.push(Error::InvalidNewValidatorState(
-                                pipeline_epoch.into(),
-                            )),
-                        }
-                        let validator =
-                            new_validators.entry(address.clone()).or_default();
-                        validator.has_state = true;
-                    }
-                    (Some(pre), Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        use ValidatorState::*;
-                        // Before pipeline epoch, the only allowed state change
-                        // is from `Inactive` to `Pending`
-                        for epoch in
-                            Epoch::iter_range(current_epoch, pipeline_offset)
-                        {
-                            match (pre.get(epoch), post.get(epoch)) {
-                                (Some(Inactive), Some(Pending)) => {}
-                                (Some(state_pre), Some(state_post))
-                                    if state_pre == state_post => {}
-                                _ => errors.push(
-                                    Error::InvalidValidatorStateUpdate(
-                                        epoch.into(),
-                                    ),
-                                ),
-                            }
-                        }
-                        // Check allowed state changes at pipeline epoch
-                        match (
-                            pre.get(pipeline_epoch),
-                            post.get(pipeline_epoch),
-                        ) {
-                            (
-                                Some(Pending),
-                                Some(Candidate) | Some(Inactive),
-                            )
-                            | (Some(Candidate), Some(Inactive))
-                            | (
-                                Some(Inactive),
-                                Some(Candidate) | Some(Pending),
-                            ) => {}
-                            _ => errors.push(Error::InvalidNewValidatorState(
-                                pipeline_epoch.into(),
-                            )),
-                        }
-                    }
-                    (Some(_), None) => errors
-                        .push(Error::ValidatorStateIsRequired(address.clone())),
-                    (None, None) => continue,
-                },
-                ConsensusKey(data) => match (data.pre, data.post) {
-                    (None, Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        // The value must be known at pipeline epoch
-                        match post.get(pipeline_epoch) {
-                            Some(_) => {}
-                            _ => errors.push(
-                                Error::MissingNewValidatorConsensusKey(
-                                    pipeline_epoch.into(),
-                                ),
-                            ),
-                        }
-                        let validator =
-                            new_validators.entry(address.clone()).or_default();
-                        validator.has_consensus_key = true;
-                    }
-                    (Some(pre), Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        // Before pipeline epoch, the key must not change
-                        for epoch in
-                            Epoch::iter_range(current_epoch, pipeline_offset)
-                        {
-                            match (pre.get(epoch), post.get(epoch)) {
-                                (Some(key_pre), Some(key_post))
-                                    if key_pre == key_post =>
-                                {
-                                    continue;
-                                }
-                                _ => errors.push(
-                                    Error::InvalidValidatorConsensusKeyUpdate(
-                                        epoch.into(),
-                                    ),
-                                ),
-                            }
-                        }
-                    }
-                    (Some(_), None) => errors
-                        .push(Error::ValidatorStateIsRequired(address.clone())),
-                    (None, None) => continue,
-                },
-                StakingRewardAddress(data) => match (data.pre, data.post) {
-                    (Some(_), Some(post)) => {
-                        if post == address {
-                            errors.push(
-                                Error::StakingRewardAddressEqValidator(
-                                    address.clone(),
-                                ),
-                            );
-                        }
-                    }
-                    (None, Some(post)) => {
-                        if post == address {
-                            errors.push(
-                                Error::StakingRewardAddressEqValidator(
-                                    address.clone(),
-                                ),
-                            );
-                        }
-                        let validator =
-                            new_validators.entry(address.clone()).or_default();
-                        validator.has_staking_reward_address = true;
-                    }
-                    _ => errors.push(Error::StakingRewardAddressIsRequired(
-                        address.clone(),
-                    )),
-                },
-                TotalDeltas(data) => match (data.pre, data.post) {
-                    (Some(pre), Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        // Changes of all total deltas (up to `unbonding_epoch`)
-                        let mut deltas = TokenChange::default();
-                        // Sum of pre total deltas
-                        let mut pre_deltas_sum = TokenChange::default();
-                        // Sum of post total deltas
-                        let mut post_deltas_sum = TokenChange::default();
-                        // Iter from the first epoch to the last epoch of `post`
-                        for epoch in Epoch::iter_range(
-                            current_epoch,
-                            unbonding_offset + 1,
-                        ) {
-                            // Changes of all total deltas (up to
-                            // `unbonding_epoch`)
-                            let mut delta = TokenChange::default();
-                            // Find the delta in `pre`
-                            if let Some(change) = {
-                                if epoch == current_epoch {
-                                    // On the first epoch, we have to get the
-                                    // sum of all deltas at and before that
-                                    // epoch as the `pre` could have been set in
-                                    // an older epoch
-                                    pre.get(epoch)
-                                } else {
-                                    pre.get_delta_at_epoch(epoch).copied()
-                                }
-                            } {
-                                delta -= change;
-                                pre_deltas_sum += change;
-                            }
-                            // Find the delta in `post`
-                            if let Some(change) = post.get_delta_at_epoch(epoch)
-                            {
-                                delta += *change;
-                                post_deltas_sum += *change;
-                                let stake_pre: i128 =
-                                    Into::into(pre_deltas_sum);
-                                let stake_post: i128 =
-                                    Into::into(post_deltas_sum);
-                                match (
-                                    u64::try_from(stake_pre),
-                                    u64::try_from(stake_post),
-                                ) {
-                                    (Ok(stake_pre), Ok(stake_post)) => {
-                                        let stake_pre =
-                                            TokenAmount::from(stake_pre);
-                                        let stake_post =
-                                            TokenAmount::from(stake_post);
-                                        total_stake_by_epoch
-                                            .entry(epoch)
-                                            .or_insert_with(HashMap::default)
-                                            .insert(
-                                                address.clone(),
-                                                (stake_pre, stake_post),
-                                            );
-                                    }
-                                    _ => errors.push(
-                                        Error::InvalidValidatorTotalDeltas(
-                                            address.clone(),
-                                            stake_post,
-                                        ),
-                                    ),
-                                }
-                            }
-                            deltas += delta;
-                            // A total delta can only be increased at
-                            // `pipeline_offset` from bonds and decreased at
-                            // `unbonding_offset` from unbonding
-                            if delta > TokenChange::default()
-                                && epoch != pipeline_epoch
-                            {
-                                errors.push(Error::EpochedDataWrongEpoch {
-                                    got: epoch.into(),
-                                    expected: vec![pipeline_epoch.into()],
-                                })
-                            }
-                            if delta < TokenChange::default()
-                                && epoch != unbonding_epoch
-                            {
-                                errors.push(Error::EpochedDataWrongEpoch {
-                                    got: epoch.into(),
-                                    expected: vec![unbonding_epoch.into()],
-                                })
-                            }
-                        }
-                        if post_deltas_sum < TokenChange::default() {
-                            errors.push(Error::NegativeValidatorTotalDeltasSum(
-                                address.clone(),
-                            ))
-                        }
-                        if deltas != TokenChange::default() {
-                            let deltas_entry = total_deltas
-                                .entry(address.clone())
-                                .or_default();
-                            *deltas_entry += deltas;
-                        }
-                    }
-                    (None, Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        // Changes of all total deltas (up to `unbonding_epoch`)
-                        let mut deltas = TokenChange::default();
-                        for epoch in Epoch::iter_range(
-                            current_epoch,
-                            unbonding_offset + 1,
-                        ) {
-                            if let Some(change) = post.get_delta_at_epoch(epoch)
-                            {
-                                // A new total delta can only be initialized
-                                // at `pipeline_offset` (from bonds) and updated
-                                // at `unbonding_offset` (from unbonding)
-                                if epoch != pipeline_epoch
-                                    && epoch != unbonding_epoch
-                                {
-                                    errors.push(Error::EpochedDataWrongEpoch {
-                                        got: epoch.into(),
-                                        expected: vec![pipeline_epoch.into()],
-                                    })
-                                }
-                                deltas += *change;
-                                let stake: i128 = Into::into(deltas);
-                                match u64::try_from(stake) {
-                                    Ok(stake) => {
-                                        let stake = TokenAmount::from(stake);
-                                        total_stake_by_epoch
-                                            .entry(epoch)
-                                            .or_insert_with(HashMap::default)
-                                            .insert(
-                                                address.clone(),
-                                                (0.into(), stake),
-                                            );
-                                    }
-                                    Err(_) => errors.push(
-                                        Error::InvalidValidatorTotalDeltas(
-                                            address.clone(),
-                                            stake,
-                                        ),
-                                    ),
-                                }
-                            }
-                        }
-                        if deltas < TokenChange::default() {
-                            errors.push(Error::NegativeValidatorTotalDeltasSum(
-                                address.clone(),
-                            ))
-                        }
-                        if deltas != TokenChange::default() {
-                            let deltas_entry = total_deltas
-                                .entry(address.clone())
-                                .or_default();
-                            *deltas_entry += deltas;
-                        }
-                        let validator =
-                            new_validators.entry(address.clone()).or_default();
-                        validator.has_total_deltas = true;
-                    }
-                    (Some(_), None) => {
-                        errors.push(Error::MissingValidatorTotalDeltas(address))
-                    }
-                    (None, None) => continue,
-                },
-                VotingPowerUpdate(data) => match (&data.pre, data.post) {
-                    (Some(_), Some(post)) | (None, Some(post)) => {
-                        if post.last_update() != current_epoch {
-                            errors.push(Error::InvalidLastUpdate)
-                        }
-                        let mut voting_power = VotingPowerDelta::default();
-                        // Iter from the current epoch to the last epoch of
-                        // `post`
-                        for epoch in Epoch::iter_range(
-                            current_epoch,
-                            unbonding_offset + 1,
-                        ) {
-                            if let Some(delta_post) =
-                                post.get_delta_at_epoch(epoch)
-                            {
-                                voting_power += *delta_post;
-
-                                // If the delta is not the same as in pre-state,
-                                // accumulate the expected total voting power
-                                // change
-                                let delta_pre = data
-                                    .pre
-                                    .as_ref()
-                                    .and_then(|data| {
-                                        if epoch == current_epoch {
-                                            // On the first epoch, we have to
-                                            // get the sum of all deltas at and
-                                            // before that epoch as the `pre`
-                                            // could have been set in an older
-                                            // epoch
-                                            data.get(epoch)
-                                        } else {
-                                            data.get_delta_at_epoch(epoch)
-                                                .copied()
-                                        }
-                                    })
-                                    .unwrap_or_default();
-                                if delta_pre != *delta_post {
-                                    let current_delta =
-                                    expected_total_voting_power_delta_by_epoch
-                                        .entry(epoch)
-                                        .or_insert_with(Default::default);
-                                    *current_delta += *delta_post - delta_pre;
-                                }
-
-                                let vp: i64 = Into::into(voting_power);
-                                match u64::try_from(vp) {
-                                    Ok(vp) => {
-                                        let vp = VotingPower::from(vp);
-                                        voting_power_by_epoch
-                                            .entry(epoch)
-                                            .or_insert_with(HashMap::default)
-                                            .insert(address.clone(), vp);
-                                    }
-                                    Err(_) => errors.push(
-                                        Error::InvalidValidatorVotingPower(
-                                            address.clone(),
-                                            vp,
-                                        ),
-                                    ),
-                                }
-                            }
-                        }
-                        if data.pre.is_none() {
-                            let validator = new_validators
-                                .entry(address.clone())
-                                .or_default();
-                            validator.has_voting_power = true;
-                            validator.voting_power = post
-                                .get_at_offset(
-                                    current_epoch,
-                                    DynEpochOffset::PipelineLen,
-                                    params,
-                                )
-                                .unwrap_or_default()
-                                .try_into()
-                                .unwrap_or_default()
-                        }
-                    }
-                    (Some(_), None) => errors.push(
-                        Error::MissingValidatorVotingPower(address.clone()),
-                    ),
-                    (None, None) => continue,
-                },
-            },
-            Balance(data) => match (data.pre, data.post) {
-                (None, Some(post)) => balance_delta += TokenChange::from(post),
-                (Some(pre), Some(post)) => {
-                    balance_delta -= TokenChange::from(pre);
-                    balance_delta += TokenChange::from(post);
-                }
-                (Some(_), None) => errors.push(Error::MissingBalance),
-                (None, None) => continue,
-            },
-            Bond { id, data, slashes } => match (data.pre, data.post) {
-                // Bond may be updated from newly bonded tokens and unbonding
-                (Some(pre), Some(post)) => {
-                    if post.last_update() != current_epoch {
-                        errors.push(Error::InvalidLastUpdate)
-                    }
-                    let pre_offset: u64 =
-                        match current_epoch.checked_sub(pre.last_update()) {
-                            Some(offset) => offset.into(),
-                            None => {
-                                // If the last_update > current_epoch, the check
-                                // above must have failed with
-                                // `Error::InvalidLastUpdate`
-                                continue;
-                            }
-                        };
-
-                    // Pre-bonds keyed by their `start_epoch`
-                    let mut pre_bonds: HashMap<Epoch, TokenChange> =
-                        HashMap::default();
-                    // We have to slash only the difference between post and
-                    // pre, not both pre and post to avoid rounding errors
-                    let mut slashed_deltas: HashMap<Epoch, TokenChange> =
-                        HashMap::default();
-                    let mut neg_deltas: HashMap<Epoch, TokenChange> =
-                        Default::default();
-                    // Iter from the first epoch of `pre` to the last epoch of
-                    // `post`
-                    for epoch in Epoch::iter_range(
-                        pre.last_update(),
-                        pre_offset + unbonding_offset + 1,
-                    ) {
-                        if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in bond.pos_deltas.iter() {
-                                let delta = TokenChange::from(*delta);
-                                slashed_deltas.insert(*start_epoch, -delta);
-                                pre_bonds.insert(*start_epoch, delta);
-                            }
-                            let ins_epoch = if epoch <= current_epoch {
-                                current_epoch
-                            } else {
-                                epoch
-                            };
-                            let entry =
-                                neg_deltas.entry(ins_epoch).or_default();
-                            *entry -= TokenChange::from(bond.neg_deltas);
-                        }
-                        if let Some(bond) = post.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in bond.pos_deltas.iter() {
-                                // An empty bond must be deleted
-                                if *delta == TokenAmount::default() {
-                                    errors.push(Error::EmptyBond(id.clone()))
-                                }
-                                // On the current epoch, all bond's
-                                // `start_epoch`s must be equal or lower than
-                                // `current_epoch`. For all others, the
-                                // `start_epoch` must be equal
-                                // to the `epoch` at which it's set.
-                                if (epoch == current_epoch
-                                    && *start_epoch > current_epoch)
-                                    || (epoch != current_epoch
-                                        && *start_epoch != epoch)
-                                {
-                                    errors.push(Error::InvalidBondStartEpoch {
-                                        id: id.clone(),
-                                        got: (*start_epoch).into(),
-                                        expected: epoch.into(),
-                                    })
-                                }
-                                let delta = TokenChange::from(*delta);
-                                match slashed_deltas.get_mut(start_epoch) {
-                                    Some(pre_delta) => {
-                                        if *pre_delta + delta == 0_i128.into() {
-                                            slashed_deltas.remove(start_epoch);
-                                        } else {
-                                            *pre_delta += delta;
-                                        }
-                                    }
-                                    None => {
-                                        slashed_deltas
-                                            .insert(*start_epoch, delta);
-                                    }
-                                }
-
-                                // Anywhere other than at `pipeline_offset`
-                                // where new bonds are added, check against the
-                                // data in `pre_bonds` to ensure that no new
-                                // bond has been added and that the deltas are
-                                // equal or lower to `pre_bonds` deltas.
-                                // Note that any bonds from any epoch can be
-                                // unbonded, even if they are not yet active.
-                                if epoch != pipeline_epoch {
-                                    match pre_bonds.get(start_epoch) {
-                                        Some(pre_delta) => {
-                                            if &delta != pre_delta {
-                                                errors.push(
-                                                Error::InvalidNewBondEpoch {
-                                                    id: id.clone(),
-                                                    got: epoch.into(),
-                                                    expected: pipeline_epoch
-                                                        .into(),
-                                                });
-                                            }
-                                        }
-                                        None => {
-                                            errors.push(
-                                                Error::InvalidNewBondEpoch {
-                                                    id: id.clone(),
-                                                    got: epoch.into(),
-                                                    expected: (current_epoch
-                                                        + pipeline_offset)
-                                                        .into(),
-                                                },
-                                            );
-                                        }
-                                    }
-                                }
-                            }
-                            if epoch != unbonding_epoch {
-                                match neg_deltas.get(&epoch) {
-                                    Some(deltas) => {
-                                        if -*deltas
-                                            != TokenChange::from(
-                                                bond.neg_deltas,
-                                            )
-                                        {
-                                            errors.push(
-                                                Error::InvalidNegDeltaEpoch {
-                                                    id: id.clone(),
-                                                    got: epoch.into(),
-                                                    expected: unbonding_epoch
-                                                        .into(),
-                                                },
-                                            )
-                                        }
-                                    }
-                                    None => {
-                                        if bond.neg_deltas != 0.into() {
-                                            errors.push(
-                                                Error::InvalidNegDeltaEpoch {
-                                                    id: id.clone(),
-                                                    got: epoch.into(),
-                                                    expected: unbonding_epoch
-                                                        .into(),
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            let entry = neg_deltas.entry(epoch).or_default();
-                            *entry += TokenChange::from(bond.neg_deltas);
-                        }
-                    }
-                    // Check slashes
-                    for (start_epoch, delta) in slashed_deltas.iter_mut() {
-                        for slash in &slashes {
-                            if slash.epoch >= *start_epoch {
-                                let raw_delta: i128 = (*delta).into();
-                                let current_slashed =
-                                    TokenChange::from(slash.rate * raw_delta);
-                                *delta -= current_slashed;
-                            }
-                        }
-                    }
-                    let total = slashed_deltas
-                        .values()
-                        .fold(TokenChange::default(), |acc, delta| {
-                            acc + *delta
-                        })
-                        - neg_deltas
-                            .values()
-                            .fold(TokenChange::default(), |acc, delta| {
-                                acc + *delta
-                            });
-
-                    if total != TokenChange::default() {
-                        let bond_entry =
-                            bond_delta.entry(id.validator).or_default();
-                        *bond_entry += total;
-                    }
-                }
-                // Bond may be created from newly bonded tokens only
-                (None, Some(post)) => {
-                    if post.last_update() != current_epoch {
-                        errors.push(Error::InvalidLastUpdate)
-                    }
-                    let mut total_delta = TokenChange::default();
-                    for epoch in
-                        Epoch::iter_range(current_epoch, unbonding_offset + 1)
-                    {
-                        if let Some(bond) = post.get_delta_at_epoch(epoch) {
-                            // A new bond must be initialized at
-                            // `pipeline_offset`
-                            if epoch != pipeline_epoch
-                                && !bond.pos_deltas.is_empty()
-                            {
-                                dbg!(&bond.pos_deltas);
-                                errors.push(Error::EpochedDataWrongEpoch {
-                                    got: epoch.into(),
-                                    expected: vec![pipeline_epoch.into()],
-                                })
-                            }
-                            if epoch != unbonding_epoch
-                                && bond.neg_deltas != 0.into()
-                            {
-                                errors.push(Error::InvalidNegDeltaEpoch {
-                                    id: id.clone(),
-                                    got: epoch.into(),
-                                    expected: unbonding_epoch.into(),
-                                })
-                            }
-                            for (start_epoch, delta) in bond.pos_deltas.iter() {
-                                if *start_epoch != epoch {
-                                    errors.push(Error::InvalidBondStartEpoch {
-                                        id: id.clone(),
-                                        got: (*start_epoch).into(),
-                                        expected: epoch.into(),
-                                    })
-                                }
-                                let mut delta = *delta;
-                                // Check slashes
-                                for slash in &slashes {
-                                    if slash.epoch >= *start_epoch {
-                                        let raw_delta: u64 = delta.into();
-                                        let current_slashed = TokenAmount::from(
-                                            slash.rate * raw_delta,
-                                        );
-                                        delta -= current_slashed;
-                                    }
-                                }
-                                let delta = TokenChange::from(delta);
-                                total_delta += delta
-                            }
-                            total_delta -= TokenChange::from(bond.neg_deltas)
-                        }
-                    }
-                    // An empty bond must be deleted
-                    if total_delta == TokenChange::default() {
-                        errors.push(Error::EmptyBond(id.clone()))
-                    }
-                    let bond_entry =
-                        bond_delta.entry(id.validator).or_default();
-                    *bond_entry += total_delta;
-                }
-                // Bond may be deleted when all the tokens are unbonded
-                (Some(pre), None) => {
-                    let mut total_delta = TokenChange::default();
-                    for index in 0..pipeline_offset + 1 {
-                        let index = index as usize;
-                        let epoch = pre.last_update() + index;
-                        if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in &bond.pos_deltas {
-                                let mut delta = *delta;
-                                // Check slashes
-                                for slash in &slashes {
-                                    if slash.epoch >= *start_epoch {
-                                        let raw_delta: u64 = delta.into();
-                                        let current_slashed = TokenAmount::from(
-                                            slash.rate * raw_delta,
-                                        );
-                                        delta -= current_slashed;
-                                    }
-                                }
-                                let delta = TokenChange::from(delta);
-                                total_delta -= delta
-                            }
-                            total_delta += TokenChange::from(bond.neg_deltas)
-                        }
-                    }
-                    let bond_entry =
-                        bond_delta.entry(id.validator).or_default();
-                    *bond_entry += total_delta;
-                }
-                (None, None) => continue,
-            },
-            Unbond { id, data, slashes } => match (data.pre, data.post) {
-                // Unbond may be updated from newly unbonded tokens
-                (Some(pre), Some(post)) => {
-                    if post.last_update() != current_epoch {
-                        errors.push(Error::InvalidLastUpdate)
-                    }
-                    let pre_offset: u64 =
-                        match current_epoch.checked_sub(pre.last_update()) {
-                            Some(offset) => offset.into(),
-                            None => {
-                                // If the last_update > current_epoch, the check
-                                // above must have failed with
-                                // `Error::InvalidLastUpdate`
-                                continue;
-                            }
-                        };
-
-                    // We have to slash only the difference between post and
-                    // pre, not both pre and post to avoid rounding errors
-                    let mut slashed_deltas: HashMap<
-                        (Epoch, Epoch),
-                        TokenChange,
-                    > = HashMap::default();
-                    // Iter from the first epoch of `pre` to the last epoch of
-                    // `post`
-                    for epoch in Epoch::iter_range(
-                        pre.last_update(),
-                        pre_offset + unbonding_offset + 1,
-                    ) {
-                        if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
-                            for ((start_epoch, end_epoch), delta) in
-                                unbond.deltas.iter()
-                            {
-                                let delta = TokenChange::from(*delta);
-                                slashed_deltas
-                                    .insert((*start_epoch, *end_epoch), -delta);
-                            }
-                        }
-                        if let Some(unbond) = post.get_delta_at_epoch(epoch) {
-                            for ((start_epoch, end_epoch), delta) in
-                                unbond.deltas.iter()
-                            {
-                                let delta = TokenChange::from(*delta);
-                                let key = (*start_epoch, *end_epoch);
-                                match slashed_deltas.get_mut(&key) {
-                                    Some(pre_delta) => {
-                                        if *pre_delta + delta == 0_i128.into() {
-                                            slashed_deltas.remove(&key);
-                                        } else {
-                                            *pre_delta += delta;
-                                        }
-                                    }
-                                    None => {
-                                        slashed_deltas.insert(key, delta);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // Check slashes
-                    for ((start_epoch, end_epoch), delta) in
-                        slashed_deltas.iter_mut()
-                    {
-                        for slash in &slashes {
-                            if slash.epoch >= *start_epoch
-                                && slash.epoch <= *end_epoch
-                            {
-                                let raw_delta: i128 = (*delta).into();
-                                let current_slashed =
-                                    TokenChange::from(slash.rate * raw_delta);
-                                *delta -= current_slashed;
-                            }
-                        }
-                    }
-                    let total = slashed_deltas
-                        .values()
-                        .fold(TokenChange::default(), |acc, delta| {
-                            acc + *delta
-                        });
-                    if total != TokenChange::default() {
-                        let unbond_entry =
-                            unbond_delta.entry(id.validator).or_default();
-                        *unbond_entry += total;
-                    }
-                }
-                // Unbond may be created from a bond
-                (None, Some(post)) => {
-                    if post.last_update() != current_epoch {
-                        errors.push(Error::InvalidLastUpdate)
-                    }
-                    let mut total_delta = TokenChange::default();
-                    for epoch in Epoch::iter_range(
-                        post.last_update(),
-                        unbonding_offset + 1,
-                    ) {
-                        if let Some(unbond) = post.get_delta_at_epoch(epoch) {
-                            for ((start_epoch, end_epoch), delta) in
-                                unbond.deltas.iter()
-                            {
-                                let mut delta = *delta;
-                                // Check and apply slashes, if any
-                                for slash in &slashes {
-                                    if slash.epoch >= *start_epoch
-                                        && slash.epoch <= *end_epoch
-                                    {
-                                        let raw_delta: u64 = delta.into();
-                                        let current_slashed = TokenAmount::from(
-                                            slash.rate * raw_delta,
-                                        );
-                                        delta -= current_slashed;
-                                    }
-                                }
-                                let delta = TokenChange::from(delta);
-                                total_delta += delta;
-                            }
-                        }
-                    }
-                    let unbond_entry =
-                        unbond_delta.entry(id.validator).or_default();
-                    *unbond_entry += total_delta;
-                }
-                // Unbond may be deleted when all the tokens are withdrawn
-                (Some(pre), None) => {
-                    let mut total_delta = TokenChange::default();
-                    for epoch in Epoch::iter_range(
-                        pre.last_update(),
-                        unbonding_offset + 1,
-                    ) {
-                        if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
-                            for ((start_epoch, end_epoch), delta) in
-                                unbond.deltas.iter()
-                            {
-                                let mut delta = *delta;
-                                // Check and apply slashes, if any
-                                for slash in &slashes {
-                                    if slash.epoch >= *start_epoch
-                                        && slash.epoch <= *end_epoch
-                                    {
-                                        let raw_delta: u64 = delta.into();
-                                        let current_slashed = TokenAmount::from(
-                                            slash.rate * raw_delta,
-                                        );
-                                        delta -= current_slashed;
-                                    }
-                                }
-                                let delta = TokenChange::from(delta);
-                                total_delta -= delta;
-                            }
-                        }
-                    }
-                    let unbond_entry =
-                        unbond_delta.entry(id.validator).or_default();
-                    *unbond_entry += total_delta;
-                }
-                (None, None) => continue,
-            },
-            ValidatorSet(data) => match (data.pre, data.post) {
-                (Some(pre), Some(post)) => {
-                    if post.last_update() != current_epoch {
-                        errors.push(Error::InvalidLastUpdate)
-                    }
-                    validator_set_pre = Some(pre);
-                    validator_set_post = Some(post);
-                }
-                _ => errors.push(Error::MissingValidatorSet),
-            },
-            TotalVotingPower(data) => match (data.pre, data.post) {
-                (Some(pre), Some(post)) => {
-                    if post.last_update() != current_epoch {
-                        errors.push(Error::InvalidLastUpdate)
-                    }
-                    // Iter from the first epoch to the last epoch of `post`
-                    for epoch in Epoch::iter_range(
-                        post.last_update(),
-                        unbonding_offset + 1,
-                    ) {
-                        // Find the delta in `pre`
-                        let delta_pre = (if epoch == post.last_update() {
-                            // On the first epoch, we have to get the
-                            // sum of all deltas at and before that
-                            // epoch as the `pre` could have been set in
-                            // an older epoch
-                            pre.get(epoch)
-                        } else {
-                            pre.get_delta_at_epoch(epoch).copied()
-                        })
-                        .unwrap_or_default();
-                        // Find the delta in `post`
-                        let delta_post = post
-                            .get_delta_at_epoch(epoch)
-                            .copied()
-                            .unwrap_or_default();
-                        if delta_pre != delta_post {
-                            total_voting_power_delta_by_epoch
-                                .insert(epoch, delta_post - delta_pre);
-                        }
-                    }
-                }
-                _ => errors.push(Error::MissingTotalVotingPower),
-            },
-            ValidatorAddressRawHash { raw_hash, data } => {
-                match (data.pre, data.post) {
-                    (None, Some((address, expected_raw_hash))) => {
-                        if raw_hash != expected_raw_hash {
-                            errors.push(Error::InvalidAddressRawHash(
-                                raw_hash,
-                                expected_raw_hash,
-                            ))
-                        }
-                        let validator =
-                            new_validators.entry(address.clone()).or_default();
-                        validator.has_address_raw_hash = true;
-                    }
-                    (pre, post) if pre != post => {
-                        errors.push(Error::InvalidRawHashUpdate)
-                    }
-                    _ => continue,
-                }
-            }
-        }
-    }
+    let Accumulator {
+        balance_delta,
+        bond_delta,
+        unbond_delta,
+        total_deltas,
+        total_stake_by_epoch,
+        expected_total_voting_power_delta_by_epoch,
+        voting_power_by_epoch,
+        validator_set_pre,
+        validator_set_post,
+        total_voting_power_delta_by_epoch,
+        new_validators,
+    } = Validate::<Address, TokenAmount, TokenChange, PublicKey>::accumulate_changes(
+        changes, params, &constants, &mut errors
+    );
 
     // Check total deltas against bonds
     for (validator, total_delta) in total_deltas.iter() {
@@ -1768,4 +860,1293 @@ where
     }
 
     errors
+}
+
+#[derive(Clone, Debug)]
+struct Accumulator<Address, TokenAmount, TokenChange>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    TokenAmount: Display
+        + Clone
+        + Copy
+        + Debug
+        + Default
+        + Eq
+        + Add<Output = TokenAmount>
+        + Sub<Output = TokenAmount>
+        + AddAssign
+        + SubAssign
+        + Into<u64>
+        + From<u64>
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    TokenChange: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + Sub<Output = TokenChange>
+        + Neg<Output = TokenChange>
+        + SubAssign
+        + AddAssign
+        + From<TokenAmount>
+        + Into<i128>
+        + From<i128>
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+{
+    balance_delta: TokenChange,
+    /// Changes of validators' bonds
+    bond_delta: HashMap<Address, TokenChange>,
+    /// Changes of validators' unbonds
+    unbond_delta: HashMap<Address, TokenChange>,
+
+    /// Changes of all validator total deltas (up to `unbonding_epoch`)
+    total_deltas: HashMap<Address, TokenChange>,
+    /// Stake calculated from validator total deltas for each epoch
+    /// in which it has changed (the tuple of values are in pre and post state)
+    total_stake_by_epoch:
+        HashMap<Epoch, HashMap<Address, (TokenAmount, TokenAmount)>>,
+    /// Total voting power delta calculated from validators' total deltas
+    expected_total_voting_power_delta_by_epoch:
+        HashMap<Epoch, VotingPowerDelta>,
+    /// Changes of validators' voting power data
+    voting_power_by_epoch: HashMap<Epoch, HashMap<Address, VotingPower>>,
+    validator_set_pre: Option<ValidatorSets<Address>>,
+    validator_set_post: Option<ValidatorSets<Address>>,
+    total_voting_power_delta_by_epoch: HashMap<Epoch, VotingPowerDelta>,
+    new_validators: HashMap<Address, NewValidator>,
+}
+
+/// Accumulator of storage changes
+impl<Address, TokenAmount, TokenChange> Default
+    for Accumulator<Address, TokenAmount, TokenChange>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    TokenAmount: Display
+        + Clone
+        + Copy
+        + Debug
+        + Default
+        + Eq
+        + Add<Output = TokenAmount>
+        + Sub<Output = TokenAmount>
+        + AddAssign
+        + SubAssign
+        + Into<u64>
+        + From<u64>
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    TokenChange: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + Sub<Output = TokenChange>
+        + Neg<Output = TokenChange>
+        + SubAssign
+        + AddAssign
+        + From<TokenAmount>
+        + Into<i128>
+        + From<i128>
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+{
+    fn default() -> Self {
+        Self {
+            balance_delta: Default::default(),
+            bond_delta: Default::default(),
+            unbond_delta: Default::default(),
+            total_deltas: Default::default(),
+            total_stake_by_epoch: Default::default(),
+            expected_total_voting_power_delta_by_epoch: Default::default(),
+            voting_power_by_epoch: Default::default(),
+            validator_set_pre: Default::default(),
+            validator_set_post: Default::default(),
+            total_voting_power_delta_by_epoch: Default::default(),
+            new_validators: Default::default(),
+        }
+    }
+}
+
+/// An empty local type to re-use trait bounds for the functions associated with
+/// `Validate` in the `impl` below
+struct Validate<Address, TokenAmount, TokenChange, PublicKey> {
+    address: PhantomData<Address>,
+    token_amount: PhantomData<TokenAmount>,
+    token_change: PhantomData<TokenChange>,
+    public_key: PhantomData<PublicKey>,
+}
+
+impl<Address, TokenAmount, TokenChange, PublicKey>
+    Validate<Address, TokenAmount, TokenChange, PublicKey>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    TokenAmount: Display
+        + Clone
+        + Copy
+        + Debug
+        + Default
+        + Eq
+        + Add<Output = TokenAmount>
+        + Sub<Output = TokenAmount>
+        + AddAssign
+        + SubAssign
+        + Into<u64>
+        + From<u64>
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    TokenChange: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + Sub<Output = TokenChange>
+        + Neg<Output = TokenChange>
+        + SubAssign
+        + AddAssign
+        + From<TokenAmount>
+        + Into<i128>
+        + From<i128>
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema,
+    PublicKey: Debug
+        + Clone
+        + BorshDeserialize
+        + BorshSerialize
+        + BorshSchema
+        + PartialEq,
+{
+    fn accumulate_changes(
+        changes: Vec<DataUpdate<Address, TokenAmount, TokenChange, PublicKey>>,
+        params: &PosParams,
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+    ) -> Accumulator<Address, TokenAmount, TokenChange> {
+        use DataUpdate::*;
+        use ValidatorUpdate::*;
+
+        let mut accumulator = Accumulator::default();
+        let Accumulator {
+            balance_delta,
+            bond_delta,
+            unbond_delta,
+            total_deltas,
+            total_stake_by_epoch,
+            expected_total_voting_power_delta_by_epoch,
+            voting_power_by_epoch,
+            validator_set_pre,
+            validator_set_post,
+            total_voting_power_delta_by_epoch,
+            new_validators,
+        } = &mut accumulator;
+
+        for change in changes {
+            match change {
+                Validator { address, update } => match update {
+                    State(data) => Self::validator_state(
+                        constants,
+                        errors,
+                        new_validators,
+                        address,
+                        data,
+                    ),
+                    ConsensusKey(data) => Self::validator_consensus_key(
+                        constants,
+                        errors,
+                        new_validators,
+                        address,
+                        data,
+                    ),
+                    StakingRewardAddress(data) => {
+                        Self::validator_staking_reward_address(
+                            errors,
+                            new_validators,
+                            address,
+                            data,
+                        )
+                    }
+
+                    TotalDeltas(data) => Self::validator_total_deltas(
+                        constants,
+                        errors,
+                        total_deltas,
+                        total_stake_by_epoch,
+                        new_validators,
+                        address,
+                        data,
+                    ),
+                    VotingPowerUpdate(data) => Self::validator_voting_power(
+                        params,
+                        constants,
+                        errors,
+                        voting_power_by_epoch,
+                        expected_total_voting_power_delta_by_epoch,
+                        new_validators,
+                        address,
+                        data,
+                    ),
+                },
+                Balance(data) => Self::balance(errors, balance_delta, data),
+                Bond { id, data, slashes } => {
+                    Self::bond(constants, errors, bond_delta, id, data, slashes)
+                }
+                Unbond { id, data, slashes } => Self::unbond(
+                    constants,
+                    errors,
+                    unbond_delta,
+                    id,
+                    data,
+                    slashes,
+                ),
+                ValidatorSet(data) => Self::validator_set(
+                    constants,
+                    errors,
+                    validator_set_pre,
+                    validator_set_post,
+                    data,
+                ),
+                TotalVotingPower(data) => Self::total_voting_power(
+                    constants,
+                    errors,
+                    total_voting_power_delta_by_epoch,
+                    data,
+                ),
+                ValidatorAddressRawHash { raw_hash, data } => {
+                    Self::validator_address_raw_hash(
+                        errors,
+                        new_validators,
+                        raw_hash,
+                        data,
+                    )
+                }
+            }
+        }
+
+        accumulator
+    }
+
+    fn validator_state(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        new_validators: &mut HashMap<Address, NewValidator>,
+        address: Address,
+        data: Data<ValidatorStates>,
+    ) {
+        match (data.pre, data.post) {
+            (None, Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                // Before pipeline epoch, the state must be `Pending`
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.pipeline_offset,
+                ) {
+                    match post.get(epoch) {
+                        Some(ValidatorState::Pending) => {}
+                        _ => errors.push(Error::InvalidNewValidatorState(
+                            epoch.into(),
+                        )),
+                    }
+                }
+                // At pipeline epoch, the state must be `Candidate`
+                match post.get(constants.pipeline_epoch) {
+                    Some(ValidatorState::Candidate) => {}
+                    _ => errors.push(Error::InvalidNewValidatorState(
+                        constants.pipeline_epoch.into(),
+                    )),
+                }
+                // Add the validator to the accumulator
+                let validator = new_validators.entry(address).or_default();
+                validator.has_state = true;
+            }
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                use ValidatorState::*;
+                // Before pipeline epoch, the only allowed state change
+                // is from `Inactive` to `Pending`
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.pipeline_offset,
+                ) {
+                    match (pre.get(epoch), post.get(epoch)) {
+                        (Some(Inactive), Some(Pending)) => {}
+                        (Some(state_pre), Some(state_post))
+                            if state_pre == state_post => {}
+                        _ => errors.push(Error::InvalidValidatorStateUpdate(
+                            epoch.into(),
+                        )),
+                    }
+                }
+                // Check allowed state changes at pipeline epoch
+                match (
+                    pre.get(constants.pipeline_epoch),
+                    post.get(constants.pipeline_epoch),
+                ) {
+                    (Some(Pending), Some(Candidate) | Some(Inactive))
+                    | (Some(Candidate), Some(Inactive))
+                    | (Some(Inactive), Some(Candidate) | Some(Pending)) => {}
+                    _ => errors.push(Error::InvalidNewValidatorState(
+                        constants.pipeline_epoch.into(),
+                    )),
+                }
+            }
+            (Some(_), None) => {
+                errors.push(Error::ValidatorStateIsRequired(address))
+            }
+            (None, None) => {}
+        }
+    }
+
+    fn validator_consensus_key(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        new_validators: &mut HashMap<Address, NewValidator>,
+        address: Address,
+        data: Data<ValidatorConsensusKeys<PublicKey>>,
+    ) {
+        match (data.pre, data.post) {
+            (None, Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                // The value must be known at pipeline epoch
+                match post.get(constants.pipeline_epoch) {
+                    Some(_) => {}
+                    _ => errors.push(Error::MissingNewValidatorConsensusKey(
+                        constants.pipeline_epoch.into(),
+                    )),
+                }
+                let validator = new_validators.entry(address).or_default();
+                validator.has_consensus_key = true;
+            }
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                // Before pipeline epoch, the key must not change
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.pipeline_offset,
+                ) {
+                    match (pre.get(epoch), post.get(epoch)) {
+                        (Some(key_pre), Some(key_post))
+                            if key_pre == key_post =>
+                        {
+                            continue;
+                        }
+                        _ => errors.push(
+                            Error::InvalidValidatorConsensusKeyUpdate(
+                                epoch.into(),
+                            ),
+                        ),
+                    }
+                }
+            }
+            (Some(_), None) => {
+                errors.push(Error::ValidatorStateIsRequired(address))
+            }
+            (None, None) => {}
+        }
+    }
+
+    fn validator_staking_reward_address(
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        new_validators: &mut HashMap<Address, NewValidator>,
+        address: Address,
+        data: Data<Address>,
+    ) {
+        match (data.pre, data.post) {
+            (Some(_), Some(post)) => {
+                if post == address {
+                    errors
+                        .push(Error::StakingRewardAddressEqValidator(address));
+                }
+            }
+            (None, Some(post)) => {
+                if post == address {
+                    errors.push(Error::StakingRewardAddressEqValidator(
+                        address.clone(),
+                    ));
+                }
+                let validator = new_validators.entry(address).or_default();
+                validator.has_staking_reward_address = true;
+            }
+            _ => errors.push(Error::StakingRewardAddressIsRequired(address)),
+        }
+    }
+
+    fn validator_total_deltas(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        total_deltas: &mut HashMap<Address, TokenChange>,
+        total_stake_by_epoch: &mut HashMap<
+            Epoch,
+            HashMap<Address, (TokenAmount, TokenAmount)>,
+        >,
+        new_validators: &mut HashMap<Address, NewValidator>,
+        address: Address,
+        data: Data<ValidatorTotalDeltas<TokenChange>>,
+    ) {
+        match (data.pre, data.post) {
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                // Changes of all total deltas (up to `unbonding_epoch`)
+                let mut deltas = TokenChange::default();
+                // Sum of pre total deltas
+                let mut pre_deltas_sum = TokenChange::default();
+                // Sum of post total deltas
+                let mut post_deltas_sum = TokenChange::default();
+                // Iter from the first epoch to the last epoch of `post`
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.unbonding_offset + 1,
+                ) {
+                    // Changes of all total deltas (up to
+                    // `unbonding_epoch`)
+                    let mut delta = TokenChange::default();
+                    // Find the delta in `pre`
+                    if let Some(change) = {
+                        if epoch == constants.current_epoch {
+                            // On the first epoch, we have to get the
+                            // sum of all deltas at and before that
+                            // epoch as the `pre` could have been set in
+                            // an older epoch
+                            pre.get(epoch)
+                        } else {
+                            pre.get_delta_at_epoch(epoch).copied()
+                        }
+                    } {
+                        delta -= change;
+                        pre_deltas_sum += change;
+                    }
+                    // Find the delta in `post`
+                    if let Some(change) = post.get_delta_at_epoch(epoch) {
+                        delta += *change;
+                        post_deltas_sum += *change;
+                        let stake_pre: i128 = Into::into(pre_deltas_sum);
+                        let stake_post: i128 = Into::into(post_deltas_sum);
+                        match (
+                            u64::try_from(stake_pre),
+                            u64::try_from(stake_post),
+                        ) {
+                            (Ok(stake_pre), Ok(stake_post)) => {
+                                let stake_pre = TokenAmount::from(stake_pre);
+                                let stake_post = TokenAmount::from(stake_post);
+                                total_stake_by_epoch
+                                    .entry(epoch)
+                                    .or_insert_with(HashMap::default)
+                                    .insert(
+                                        address.clone(),
+                                        (stake_pre, stake_post),
+                                    );
+                            }
+                            _ => {
+                                errors.push(Error::InvalidValidatorTotalDeltas(
+                                    address.clone(),
+                                    stake_post,
+                                ))
+                            }
+                        }
+                    }
+                    deltas += delta;
+                    // A total delta can only be increased at
+                    // `pipeline_offset` from bonds and decreased at
+                    // `unbonding_offset` from unbonding
+                    if delta > TokenChange::default()
+                        && epoch != constants.pipeline_epoch
+                    {
+                        errors.push(Error::EpochedDataWrongEpoch {
+                            got: epoch.into(),
+                            expected: vec![constants.pipeline_epoch.into()],
+                        })
+                    }
+                    if delta < TokenChange::default()
+                        && epoch != constants.unbonding_epoch
+                    {
+                        errors.push(Error::EpochedDataWrongEpoch {
+                            got: epoch.into(),
+                            expected: vec![constants.unbonding_epoch.into()],
+                        })
+                    }
+                }
+                if post_deltas_sum < TokenChange::default() {
+                    errors.push(Error::NegativeValidatorTotalDeltasSum(
+                        address.clone(),
+                    ))
+                }
+                if deltas != TokenChange::default() {
+                    let deltas_entry = total_deltas.entry(address).or_default();
+                    *deltas_entry += deltas;
+                }
+            }
+            (None, Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                // Changes of all total deltas (up to `unbonding_epoch`)
+                let mut deltas = TokenChange::default();
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.unbonding_offset + 1,
+                ) {
+                    if let Some(change) = post.get_delta_at_epoch(epoch) {
+                        // A new total delta can only be initialized
+                        // at `pipeline_offset` (from bonds) and updated
+                        // at `unbonding_offset` (from unbonding)
+                        if epoch != constants.pipeline_epoch
+                            && epoch != constants.unbonding_epoch
+                        {
+                            errors.push(Error::EpochedDataWrongEpoch {
+                                got: epoch.into(),
+                                expected: vec![constants.pipeline_epoch.into()],
+                            })
+                        }
+                        deltas += *change;
+                        let stake: i128 = Into::into(deltas);
+                        match u64::try_from(stake) {
+                            Ok(stake) => {
+                                let stake = TokenAmount::from(stake);
+                                total_stake_by_epoch
+                                    .entry(epoch)
+                                    .or_insert_with(HashMap::default)
+                                    .insert(address.clone(), (0.into(), stake));
+                            }
+                            Err(_) => {
+                                errors.push(Error::InvalidValidatorTotalDeltas(
+                                    address.clone(),
+                                    stake,
+                                ))
+                            }
+                        }
+                    }
+                }
+                if deltas < TokenChange::default() {
+                    errors.push(Error::NegativeValidatorTotalDeltasSum(
+                        address.clone(),
+                    ))
+                }
+                if deltas != TokenChange::default() {
+                    let deltas_entry =
+                        total_deltas.entry(address.clone()).or_default();
+                    *deltas_entry += deltas;
+                }
+                let validator = new_validators.entry(address).or_default();
+                validator.has_total_deltas = true;
+            }
+            (Some(_), None) => {
+                errors.push(Error::MissingValidatorTotalDeltas(address))
+            }
+            (None, None) => {}
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn validator_voting_power(
+        params: &PosParams,
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        voting_power_by_epoch: &mut HashMap<
+            Epoch,
+            HashMap<Address, VotingPower>,
+        >,
+        expected_total_voting_power_delta_by_epoch: &mut HashMap<
+            Epoch,
+            VotingPowerDelta,
+        >,
+        new_validators: &mut HashMap<Address, NewValidator>,
+        address: Address,
+        data: Data<ValidatorVotingPowers>,
+    ) {
+        match (&data.pre, data.post) {
+            (Some(_), Some(post)) | (None, Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                let mut voting_power = VotingPowerDelta::default();
+                // Iter from the current epoch to the last epoch of
+                // `post`
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.unbonding_offset + 1,
+                ) {
+                    if let Some(delta_post) = post.get_delta_at_epoch(epoch) {
+                        voting_power += *delta_post;
+
+                        // If the delta is not the same as in pre-state,
+                        // accumulate the expected total voting power
+                        // change
+                        let delta_pre = data
+                            .pre
+                            .as_ref()
+                            .and_then(|data| {
+                                if epoch == constants.current_epoch {
+                                    // On the first epoch, we have to
+                                    // get the sum of all deltas at and
+                                    // before that epoch as the `pre`
+                                    // could have been set in an older
+                                    // epoch
+                                    data.get(epoch)
+                                } else {
+                                    data.get_delta_at_epoch(epoch).copied()
+                                }
+                            })
+                            .unwrap_or_default();
+                        if delta_pre != *delta_post {
+                            let current_delta =
+                                expected_total_voting_power_delta_by_epoch
+                                    .entry(epoch)
+                                    .or_insert_with(Default::default);
+                            *current_delta += *delta_post - delta_pre;
+                        }
+
+                        let vp: i64 = Into::into(voting_power);
+                        match u64::try_from(vp) {
+                            Ok(vp) => {
+                                let vp = VotingPower::from(vp);
+                                voting_power_by_epoch
+                                    .entry(epoch)
+                                    .or_insert_with(HashMap::default)
+                                    .insert(address.clone(), vp);
+                            }
+                            Err(_) => {
+                                errors.push(Error::InvalidValidatorVotingPower(
+                                    address.clone(),
+                                    vp,
+                                ))
+                            }
+                        }
+                    }
+                }
+                if data.pre.is_none() {
+                    let validator = new_validators.entry(address).or_default();
+                    validator.has_voting_power = true;
+                    validator.voting_power = post
+                        .get_at_offset(
+                            constants.current_epoch,
+                            DynEpochOffset::PipelineLen,
+                            params,
+                        )
+                        .unwrap_or_default()
+                        .try_into()
+                        .unwrap_or_default()
+                }
+            }
+            (Some(_), None) => {
+                errors.push(Error::MissingValidatorVotingPower(address))
+            }
+            (None, None) => {}
+        }
+    }
+
+    fn balance(
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        balance_delta: &mut TokenChange,
+        data: Data<TokenAmount>,
+    ) {
+        match (data.pre, data.post) {
+            (None, Some(post)) => *balance_delta += TokenChange::from(post),
+            (Some(pre), Some(post)) => {
+                *balance_delta +=
+                    TokenChange::from(post) - TokenChange::from(pre);
+            }
+            (Some(_), None) => errors.push(Error::MissingBalance),
+            (None, None) => {}
+        }
+    }
+
+    fn bond(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        bond_delta: &mut HashMap<Address, TokenChange>,
+        id: BondId<Address>,
+        data: Data<Bonds<TokenAmount>>,
+        slashes: Vec<Slash>,
+    ) {
+        match (data.pre, data.post) {
+            // Bond may be updated from newly bonded tokens and unbonding
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                let pre_offset: u64 = match constants
+                    .current_epoch
+                    .checked_sub(pre.last_update())
+                {
+                    Some(offset) => offset.into(),
+                    None => {
+                        // If the last_update > current_epoch, the check
+                        // above must have failed with
+                        // `Error::InvalidLastUpdate`
+                        return;
+                    }
+                };
+
+                // Pre-bonds keyed by their `start_epoch`
+                let mut pre_bonds: HashMap<Epoch, TokenChange> =
+                    HashMap::default();
+                // We have to slash only the difference between post and
+                // pre, not both pre and post to avoid rounding errors
+                let mut slashed_deltas: HashMap<Epoch, TokenChange> =
+                    HashMap::default();
+                let mut neg_deltas: HashMap<Epoch, TokenChange> =
+                    Default::default();
+                // Iter from the first epoch of `pre` to the last epoch of
+                // `post`
+                for epoch in Epoch::iter_range(
+                    pre.last_update(),
+                    pre_offset + constants.unbonding_offset + 1,
+                ) {
+                    if let Some(bond) = pre.get_delta_at_epoch(epoch) {
+                        for (start_epoch, delta) in bond.pos_deltas.iter() {
+                            let delta = TokenChange::from(*delta);
+                            slashed_deltas.insert(*start_epoch, -delta);
+                            pre_bonds.insert(*start_epoch, delta);
+                        }
+                        let ins_epoch = if epoch <= constants.current_epoch {
+                            constants.current_epoch
+                        } else {
+                            epoch
+                        };
+                        let entry = neg_deltas.entry(ins_epoch).or_default();
+                        *entry -= TokenChange::from(bond.neg_deltas);
+                    }
+                    if let Some(bond) = post.get_delta_at_epoch(epoch) {
+                        for (start_epoch, delta) in bond.pos_deltas.iter() {
+                            // An empty bond must be deleted
+                            if *delta == TokenAmount::default() {
+                                errors.push(Error::EmptyBond(id.clone()))
+                            }
+                            // On the current epoch, all bond's
+                            // `start_epoch`s must be equal or lower than
+                            // `current_epoch`. For all others, the
+                            // `start_epoch` must be equal
+                            // to the `epoch` at which it's set.
+                            if (epoch == constants.current_epoch
+                                && *start_epoch > constants.current_epoch)
+                                || (epoch != constants.current_epoch
+                                    && *start_epoch != epoch)
+                            {
+                                errors.push(Error::InvalidBondStartEpoch {
+                                    id: id.clone(),
+                                    got: (*start_epoch).into(),
+                                    expected: epoch.into(),
+                                })
+                            }
+                            let delta = TokenChange::from(*delta);
+                            match slashed_deltas.get_mut(start_epoch) {
+                                Some(pre_delta) => {
+                                    if *pre_delta + delta == 0_i128.into() {
+                                        slashed_deltas.remove(start_epoch);
+                                    } else {
+                                        *pre_delta += delta;
+                                    }
+                                }
+                                None => {
+                                    slashed_deltas.insert(*start_epoch, delta);
+                                }
+                            }
+
+                            // Anywhere other than at `pipeline_offset`
+                            // where new bonds are added, check against the
+                            // data in `pre_bonds` to ensure that no new
+                            // bond has been added and that the deltas are
+                            // equal or lower to `pre_bonds` deltas.
+                            // Note that any bonds from any epoch can be
+                            // unbonded, even if they are not yet active.
+                            if epoch != constants.pipeline_epoch {
+                                match pre_bonds.get(start_epoch) {
+                                    Some(pre_delta) => {
+                                        if &delta != pre_delta {
+                                            errors.push(
+                                                Error::InvalidNewBondEpoch {
+                                                    id: id.clone(),
+                                                    got: epoch.into(),
+                                                    expected: constants
+                                                        .pipeline_epoch
+                                                        .into(),
+                                                },
+                                            );
+                                        }
+                                    }
+                                    None => {
+                                        errors.push(
+                                            Error::InvalidNewBondEpoch {
+                                                id: id.clone(),
+                                                got: epoch.into(),
+                                                expected: (constants
+                                                    .current_epoch
+                                                    + constants
+                                                        .pipeline_offset)
+                                                    .into(),
+                                            },
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                        if epoch != constants.unbonding_epoch {
+                            match neg_deltas.get(&epoch) {
+                                Some(deltas) => {
+                                    if -*deltas
+                                        != TokenChange::from(bond.neg_deltas)
+                                    {
+                                        errors.push(
+                                            Error::InvalidNegDeltaEpoch {
+                                                id: id.clone(),
+                                                got: epoch.into(),
+                                                expected: constants
+                                                    .unbonding_epoch
+                                                    .into(),
+                                            },
+                                        )
+                                    }
+                                }
+                                None => {
+                                    if bond.neg_deltas != 0.into() {
+                                        errors.push(
+                                            Error::InvalidNegDeltaEpoch {
+                                                id: id.clone(),
+                                                got: epoch.into(),
+                                                expected: constants
+                                                    .unbonding_epoch
+                                                    .into(),
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        let entry = neg_deltas.entry(epoch).or_default();
+                        *entry += TokenChange::from(bond.neg_deltas);
+                    }
+                }
+                // Check slashes
+                for (start_epoch, delta) in slashed_deltas.iter_mut() {
+                    for slash in &slashes {
+                        if slash.epoch >= *start_epoch {
+                            let raw_delta: i128 = (*delta).into();
+                            let current_slashed =
+                                TokenChange::from(slash.rate * raw_delta);
+                            *delta -= current_slashed;
+                        }
+                    }
+                }
+                let total = slashed_deltas
+                    .values()
+                    .fold(TokenChange::default(), |acc, delta| acc + *delta)
+                    - neg_deltas
+                        .values()
+                        .fold(TokenChange::default(), |acc, delta| {
+                            acc + *delta
+                        });
+
+                if total != TokenChange::default() {
+                    let bond_entry =
+                        bond_delta.entry(id.validator).or_default();
+                    *bond_entry += total;
+                }
+            }
+            // Bond may be created from newly bonded tokens only
+            (None, Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                let mut total_delta = TokenChange::default();
+                for epoch in Epoch::iter_range(
+                    constants.current_epoch,
+                    constants.unbonding_offset + 1,
+                ) {
+                    if let Some(bond) = post.get_delta_at_epoch(epoch) {
+                        // A new bond must be initialized at
+                        // `pipeline_offset`
+                        if epoch != constants.pipeline_epoch
+                            && !bond.pos_deltas.is_empty()
+                        {
+                            dbg!(&bond.pos_deltas);
+                            errors.push(Error::EpochedDataWrongEpoch {
+                                got: epoch.into(),
+                                expected: vec![constants.pipeline_epoch.into()],
+                            })
+                        }
+                        if epoch != constants.unbonding_epoch
+                            && bond.neg_deltas != 0.into()
+                        {
+                            errors.push(Error::InvalidNegDeltaEpoch {
+                                id: id.clone(),
+                                got: epoch.into(),
+                                expected: constants.unbonding_epoch.into(),
+                            })
+                        }
+                        for (start_epoch, delta) in bond.pos_deltas.iter() {
+                            if *start_epoch != epoch {
+                                errors.push(Error::InvalidBondStartEpoch {
+                                    id: id.clone(),
+                                    got: (*start_epoch).into(),
+                                    expected: epoch.into(),
+                                })
+                            }
+                            let mut delta = *delta;
+                            // Check slashes
+                            for slash in &slashes {
+                                if slash.epoch >= *start_epoch {
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = TokenAmount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    delta -= current_slashed;
+                                }
+                            }
+                            let delta = TokenChange::from(delta);
+                            total_delta += delta
+                        }
+                        total_delta -= TokenChange::from(bond.neg_deltas)
+                    }
+                }
+                // An empty bond must be deleted
+                if total_delta == TokenChange::default() {
+                    errors.push(Error::EmptyBond(id.clone()))
+                }
+                let bond_entry = bond_delta.entry(id.validator).or_default();
+                *bond_entry += total_delta;
+            }
+            // Bond may be deleted when all the tokens are unbonded
+            (Some(pre), None) => {
+                let mut total_delta = TokenChange::default();
+                for index in 0..constants.pipeline_offset + 1 {
+                    let index = index as usize;
+                    let epoch = pre.last_update() + index;
+                    if let Some(bond) = pre.get_delta_at_epoch(epoch) {
+                        for (start_epoch, delta) in &bond.pos_deltas {
+                            let mut delta = *delta;
+                            // Check slashes
+                            for slash in &slashes {
+                                if slash.epoch >= *start_epoch {
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = TokenAmount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    delta -= current_slashed;
+                                }
+                            }
+                            let delta = TokenChange::from(delta);
+                            total_delta -= delta
+                        }
+                        total_delta += TokenChange::from(bond.neg_deltas)
+                    }
+                }
+                let bond_entry = bond_delta.entry(id.validator).or_default();
+                *bond_entry += total_delta;
+            }
+            (None, None) => {}
+        }
+    }
+
+    fn unbond(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        unbond_delta: &mut HashMap<Address, TokenChange>,
+        id: BondId<Address>,
+        data: Data<Unbonds<TokenAmount>>,
+        slashes: Vec<Slash>,
+    ) {
+        match (data.pre, data.post) {
+            // Unbond may be updated from newly unbonded tokens
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                let pre_offset: u64 = match constants
+                    .current_epoch
+                    .checked_sub(pre.last_update())
+                {
+                    Some(offset) => offset.into(),
+                    None => {
+                        // If the last_update > current_epoch, the check
+                        // above must have failed with
+                        // `Error::InvalidLastUpdate`
+                        return;
+                    }
+                };
+
+                // We have to slash only the difference between post and
+                // pre, not both pre and post to avoid rounding errors
+                let mut slashed_deltas: HashMap<(Epoch, Epoch), TokenChange> =
+                    HashMap::default();
+                // Iter from the first epoch of `pre` to the last epoch of
+                // `post`
+                for epoch in Epoch::iter_range(
+                    pre.last_update(),
+                    pre_offset + constants.unbonding_offset + 1,
+                ) {
+                    if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
+                        for ((start_epoch, end_epoch), delta) in
+                            unbond.deltas.iter()
+                        {
+                            let delta = TokenChange::from(*delta);
+                            slashed_deltas
+                                .insert((*start_epoch, *end_epoch), -delta);
+                        }
+                    }
+                    if let Some(unbond) = post.get_delta_at_epoch(epoch) {
+                        for ((start_epoch, end_epoch), delta) in
+                            unbond.deltas.iter()
+                        {
+                            let delta = TokenChange::from(*delta);
+                            let key = (*start_epoch, *end_epoch);
+                            match slashed_deltas.get_mut(&key) {
+                                Some(pre_delta) => {
+                                    if *pre_delta + delta == 0_i128.into() {
+                                        slashed_deltas.remove(&key);
+                                    } else {
+                                        *pre_delta += delta;
+                                    }
+                                }
+                                None => {
+                                    slashed_deltas.insert(key, delta);
+                                }
+                            }
+                        }
+                    }
+                }
+                // Check slashes
+                for ((start_epoch, end_epoch), delta) in
+                    slashed_deltas.iter_mut()
+                {
+                    for slash in &slashes {
+                        if slash.epoch >= *start_epoch
+                            && slash.epoch <= *end_epoch
+                        {
+                            let raw_delta: i128 = (*delta).into();
+                            let current_slashed =
+                                TokenChange::from(slash.rate * raw_delta);
+                            *delta -= current_slashed;
+                        }
+                    }
+                }
+                let total = slashed_deltas
+                    .values()
+                    .fold(TokenChange::default(), |acc, delta| acc + *delta);
+                if total != TokenChange::default() {
+                    let unbond_entry =
+                        unbond_delta.entry(id.validator).or_default();
+                    *unbond_entry += total;
+                }
+            }
+            // Unbond may be created from a bond
+            (None, Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                let mut total_delta = TokenChange::default();
+                for epoch in Epoch::iter_range(
+                    post.last_update(),
+                    constants.unbonding_offset + 1,
+                ) {
+                    if let Some(unbond) = post.get_delta_at_epoch(epoch) {
+                        for ((start_epoch, end_epoch), delta) in
+                            unbond.deltas.iter()
+                        {
+                            let mut delta = *delta;
+                            // Check and apply slashes, if any
+                            for slash in &slashes {
+                                if slash.epoch >= *start_epoch
+                                    && slash.epoch <= *end_epoch
+                                {
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = TokenAmount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    delta -= current_slashed;
+                                }
+                            }
+                            let delta = TokenChange::from(delta);
+                            total_delta += delta;
+                        }
+                    }
+                }
+                let unbond_entry =
+                    unbond_delta.entry(id.validator).or_default();
+                *unbond_entry += total_delta;
+            }
+            // Unbond may be deleted when all the tokens are withdrawn
+            (Some(pre), None) => {
+                let mut total_delta = TokenChange::default();
+                for epoch in Epoch::iter_range(
+                    pre.last_update(),
+                    constants.unbonding_offset + 1,
+                ) {
+                    if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
+                        for ((start_epoch, end_epoch), delta) in
+                            unbond.deltas.iter()
+                        {
+                            let mut delta = *delta;
+                            // Check and apply slashes, if any
+                            for slash in &slashes {
+                                if slash.epoch >= *start_epoch
+                                    && slash.epoch <= *end_epoch
+                                {
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = TokenAmount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    delta -= current_slashed;
+                                }
+                            }
+                            let delta = TokenChange::from(delta);
+                            total_delta -= delta;
+                        }
+                    }
+                }
+                let unbond_entry =
+                    unbond_delta.entry(id.validator).or_default();
+                *unbond_entry += total_delta;
+            }
+            (None, None) => {}
+        }
+    }
+
+    fn validator_set(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        validator_set_pre: &mut Option<ValidatorSets<Address>>,
+        validator_set_post: &mut Option<ValidatorSets<Address>>,
+        data: Data<ValidatorSets<Address>>,
+    ) {
+        match (data.pre, data.post) {
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                *validator_set_pre = Some(pre);
+                *validator_set_post = Some(post);
+            }
+            _ => errors.push(Error::MissingValidatorSet),
+        }
+    }
+
+    fn total_voting_power(
+        constants: &Constants,
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        total_voting_power_delta_by_epoch: &mut HashMap<
+            Epoch,
+            VotingPowerDelta,
+        >,
+        data: Data<TotalVotingPowers>,
+    ) {
+        match (data.pre, data.post) {
+            (Some(pre), Some(post)) => {
+                if post.last_update() != constants.current_epoch {
+                    errors.push(Error::InvalidLastUpdate)
+                }
+                // Iter from the first epoch to the last epoch of `post`
+                for epoch in Epoch::iter_range(
+                    post.last_update(),
+                    constants.unbonding_offset + 1,
+                ) {
+                    // Find the delta in `pre`
+                    let delta_pre = (if epoch == post.last_update() {
+                        // On the first epoch, we have to get the
+                        // sum of all deltas at and before that
+                        // epoch as the `pre` could have been set in
+                        // an older epoch
+                        pre.get(epoch)
+                    } else {
+                        pre.get_delta_at_epoch(epoch).copied()
+                    })
+                    .unwrap_or_default();
+                    // Find the delta in `post`
+                    let delta_post = post
+                        .get_delta_at_epoch(epoch)
+                        .copied()
+                        .unwrap_or_default();
+                    if delta_pre != delta_post {
+                        total_voting_power_delta_by_epoch
+                            .insert(epoch, delta_post - delta_pre);
+                    }
+                }
+            }
+            _ => errors.push(Error::MissingTotalVotingPower),
+        }
+    }
+
+    fn validator_address_raw_hash(
+        errors: &mut Vec<Error<Address, TokenChange>>,
+        new_validators: &mut HashMap<Address, NewValidator>,
+        raw_hash: String,
+        data: Data<(Address, String)>,
+    ) {
+        match (data.pre, data.post) {
+            (None, Some((address, expected_raw_hash))) => {
+                if raw_hash != expected_raw_hash {
+                    errors.push(Error::InvalidAddressRawHash(
+                        raw_hash,
+                        expected_raw_hash,
+                    ))
+                }
+                let validator = new_validators.entry(address).or_default();
+                validator.has_address_raw_hash = true;
+            }
+            (pre, post) if pre != post => {
+                errors.push(Error::InvalidRawHashUpdate)
+            }
+            _ => {}
+        }
+    }
 }
