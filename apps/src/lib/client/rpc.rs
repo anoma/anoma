@@ -114,10 +114,7 @@ pub async fn query_raw_bytes(_ctx: Context, args: args::QueryRawBytes) {
 /// Query token balance(s)
 pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
-    // TODO: Change this to instead pull from an AddressBook object defined in wallet.store
-    // Currently only does this for anomac balance with no arguments ...
-    let tokens = address::tokens();
-    let tokens_improved = ctx.wallet.get_addresses_by_type(AddressType::Token);
+    let all_tokens = ctx.wallet.get_addresses_by_type(AddressType::Token);
 
     match (args.token, args.owner) {
         (Some(token), Some(owner)) => {
@@ -182,7 +179,7 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
         (None, None) => {
             let stdout = io::stdout();
             let mut w = stdout.lock();
-            for (alias, address) in tokens_improved {
+            for (alias, address) in all_tokens {
                 let key = token::balance_prefix(&address);
                 let balances =
                     query_storage_prefix::<token::Amount>(client.clone(), key)
