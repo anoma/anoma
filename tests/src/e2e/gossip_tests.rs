@@ -127,9 +127,9 @@ fn match_intents() -> Result<()> {
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
     let bg_ledger = ledger.background();
 
-    let intent_a_path_input = test.base_dir.path().join("intent.A.data");
-    let intent_b_path_input = test.base_dir.path().join("intent.B.data");
-    let intent_c_path_input = test.base_dir.path().join("intent.C.data");
+    let intent_a_path_input = test.test_dir.path().join("intent.A.data");
+    let intent_b_path_input = test.test_dir.path().join("intent.B.data");
+    let intent_c_path_input = test.test_dir.path().join("intent.C.data");
 
     let albert = find_address(&test, ALBERT)?;
     let bertha = find_address(&test, BERTHA)?;
