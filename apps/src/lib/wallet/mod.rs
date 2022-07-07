@@ -302,7 +302,7 @@ impl Wallet {
             .collect()
     }
 
-    pub fn get_addresses_by_type(&self, addresstype: AddressType) -> HashMap<String, Address> {
+    pub fn get_addresses_by_type(&self, addresstype: AddressType) -> BiHashMap<String, Address> {
         self.store
             .get_addresses_by_type(addresstype)
             .iter()

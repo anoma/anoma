@@ -24,7 +24,7 @@ use anoma::types::governance::{
 use anoma::types::key::*;
 use anoma::types::storage::{Epoch, PrefixValue};
 use anoma::types::token::{balance_key, Amount};
-use anoma::types::{address, storage, token};
+use anoma::types::{storage, token};
 use async_std::fs::{self};
 use async_std::path::PathBuf;
 use async_std::prelude::*;
@@ -121,9 +121,9 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
             let token = ctx.get(&token);
             let owner = ctx.get(&owner);
             let key = token::balance_key(&token, &owner);
-            let currency_code = tokens
-                .get(&token)
-                .map(|c| Cow::Borrowed(*c))
+            let currency_code = all_tokens
+                .get_by_right(&token)
+                .map(|c| Cow::Borrowed(c))
                 .unwrap_or_else(|| Cow::Owned(token.to_string()));
             match query_storage_value::<token::Amount>(&client, &key).await {
                 Some(balance) => {
@@ -137,7 +137,7 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
         (None, Some(owner)) => {
             let owner = ctx.get(&owner);
             let mut found_any = false;
-            for (token, currency_code) in tokens {
+            for (currency_code, token) in all_tokens {
                 let key = token::balance_key(&token, &owner);
                 if let Some(balance) =
                     query_storage_value::<token::Amount>(&client, &key).await
@@ -157,9 +157,9 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                 query_storage_prefix::<token::Amount>(client, key).await;
             match balances {
                 Some(balances) => {
-                    let currency_code = tokens
-                        .get(&token)
-                        .map(|c| Cow::Borrowed(*c))
+                    let currency_code = all_tokens
+                        .get_by_right(&token)
+                        .map(|c| Cow::Borrowed(c))
                         .unwrap_or_else(|| Cow::Owned(token.to_string()));
                     let stdout = io::stdout();
                     let mut w = stdout.lock();
