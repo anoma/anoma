@@ -314,7 +314,7 @@ steps:
       from_secret: aws_access_key_id
     AWS_SECRET_ACCESS_KEY:
       from_secret: aws_secret_access_key
-    SCCACHE_BUCKET: heliax-drone-cache-v2
+    SCCACHE_BUCKET: heliax-drone-cache-v3
     SCCACHE_S3_KEY_PREFIX: sccache-build
   depends_on:
   - download-scripts
