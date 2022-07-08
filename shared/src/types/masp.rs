@@ -13,7 +13,7 @@ use crate::types::address::{
 };
 
 /// human-readable part of Bech32m encoded address
-// TODO use "a" for live network
+// TODO remove "test" suffix for live network
 const EXT_FULL_VIEWING_KEY_HRP: &str = "xfvktest";
 const PAYMENT_ADDRESS_HRP: &str = "patest";
 const PINNED_PAYMENT_ADDRESS_HRP: &str = "ppatest";

@@ -55,6 +55,8 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
+use masp_primitives::sapling::Node;
+use masp_primitives::merkle_tree::MerklePath;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::{
@@ -1561,6 +1563,37 @@ fn process_unbonds_query(
         }
     }
     (total, withdrawable)
+}
+
+/// Query a conversion.
+pub async fn query_conversion(
+    client: HttpClient,
+    asset_type: AssetType,
+) -> Option<(Address, Epoch, Amount, MerklePath<Node>)>
+{
+    let path = Path::Conversion(asset_type);
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, false)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => match BorshDeserialize::try_from_slice(&response.value[..]) {
+            Ok(value) => return Some(value),
+            Err(err) => eprintln!("Error decoding the conversion: {}", err),
+        },
+        Code::Err(err) => {
+            if err == 1 {
+                return None;
+            } else {
+                eprintln!(
+                    "Error in the query {} (error code {})",
+                    response.info, err
+                )
+            }
+        }
+    }
+    cli::safe_exit(1)
 }
 
 /// Query a storage value and decode it with [`BorshDeserialize`].

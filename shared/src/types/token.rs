@@ -6,7 +6,6 @@ use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use masp_primitives::asset_type::AssetType;
 use masp_primitives::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -241,7 +240,7 @@ pub const HEAD_TX_KEY: &str = "head-tx";
 /// Key segment prefix for shielded transaction key
 pub const TX_KEY_PREFIX: &str = "tx-";
 /// Key segment prefix for MASP conversions
-pub const CONVERSION_KEY_PREFIX: &str = "conv-";
+pub const CONVERSION_KEY_PREFIX: &str = "conv";
 /// Key segment prefix for pinned shielded transactions
 pub const PIN_KEY_PREFIX: &str = "pin-";
 
@@ -320,19 +319,6 @@ pub fn is_masp_key(key: &Key) -> bool {
             true
         }
         _ => false,
-    }
-}
-
-/// Check if the given storage key is a masp conversion
-pub fn is_masp_conversion(key: &Key) -> Option<AssetType> {
-    match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(key)]
-            if *addr == masp() && key.starts_with(CONVERSION_KEY_PREFIX) =>
-        {
-            key.strip_prefix(CONVERSION_KEY_PREFIX)
-                .and_then(|asset_str| AssetType::from_str(asset_str).ok())
-        }
-        _ => None,
     }
 }
 

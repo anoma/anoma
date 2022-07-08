@@ -15,7 +15,7 @@ use anoma::types::masp::{PaymentAddress, TransferTarget};
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::{BlockHeight, Epoch, Key, KeySeg, TxIndex};
 use anoma::types::token::{
-    Transfer, CONVERSION_KEY_PREFIX, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
+    Transfer, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
 };
 use anoma::types::transaction::nft::{CreateNft, MintNft};
 use anoma::types::transaction::{
@@ -66,6 +66,7 @@ use tendermint_rpc_abci::query::{EventType, Query};
 use tendermint_rpc_abci::{Client, HttpClient};
 
 use super::{rpc, signing};
+use crate::client::rpc::query_conversion;
 use crate::cli::context::{WalletAddress, WalletKeypair};
 use crate::cli::{args, safe_exit, Context};
 use crate::client::rpc::{query_epoch, query_storage_value};
@@ -885,17 +886,9 @@ impl ShieldedContext {
         if let decoded @ Some(_) = self.asset_types.get(&asset_type) {
             return decoded.cloned();
         }
-        // The key with which to lookup allowed conversions
-        let conversion_key =
-            anoma::types::storage::Key::from(masp().to_db_key())
-                .push(
-                    &(CONVERSION_KEY_PREFIX.to_owned()
-                        + &asset_type.to_string()),
-                )
-                .expect("Cannot obtain a storage key");
         // Query for the ID of the last accepted transaction
         let (addr, ep, _conv, _path): (Address, _, Amount, MerklePath<Node>) =
-            query_storage_value(client, conversion_key).await?;
+            query_conversion(client, asset_type).await?;
         self.asset_types.insert(asset_type, (addr.clone(), ep));
         Some((addr, ep))
     }
@@ -911,17 +904,9 @@ impl ShieldedContext {
         match conversions.entry(asset_type) {
             Entry::Occupied(conv_entry) => Some(conv_entry.into_mut()),
             Entry::Vacant(conv_entry) => {
-                // The key with which to lookup allowed conversions
-                let conversion_key =
-                    anoma::types::storage::Key::from(masp().to_db_key())
-                        .push(
-                            &(CONVERSION_KEY_PREFIX.to_owned()
-                                + &asset_type.to_string()),
-                        )
-                        .expect("Cannot obtain a storage key");
                 // Query for the ID of the last accepted transaction
                 let (addr, ep, conv, path): (Address, _, _, _) =
-                    query_storage_value(client, conversion_key).await?;
+                    query_conversion(client, asset_type).await?;
                 self.asset_types.insert(asset_type, (addr, ep));
                 // If the conversion is 0, then we just have a pure decoding
                 if conv == Amount::zero() {
@@ -1136,7 +1121,8 @@ impl ShieldedContext {
     /// Compute the combined value of the output notes of the transaction pinned
     /// at the given payment address. This computation uses the supplied viewing
     /// keys to try to decrypt the output notes. If no transaction is pinned at
-    /// the given payment address, then return None.
+    /// the given payment address fails with
+    /// `PinnedBalanceError::NoTransactionPinned`.
     pub async fn compute_pinned_balance(
         ledger_address: &TendermintAddress,
         owner: PaymentAddress,

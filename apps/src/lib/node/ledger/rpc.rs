@@ -4,12 +4,14 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
+use masp_primitives::asset_type::AssetType;
 use anoma::types::storage;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Path as AbciPath;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Path as AbciPath;
 use thiserror::Error;
+use anoma::types::token::CONVERSION_KEY_PREFIX;
 
 /// RPC query path
 #[derive(Debug, Clone)]
@@ -26,6 +28,8 @@ pub enum Path {
     Prefix(storage::Key),
     /// Check if the given storage key exists
     HasKey(storage::Key),
+    /// Conversion associated with given asset type
+    Conversion(AssetType),
 }
 
 #[derive(Debug, Clone)]
@@ -58,6 +62,9 @@ impl Display for Path {
             Path::HasKey(storage_key) => {
                 write!(f, "{}/{}", HAS_KEY_PREFIX, storage_key)
             }
+            Path::Conversion(asset_type) => {
+                write!(f, "{}/{}", CONVERSION_KEY_PREFIX, asset_type)
+            }
         }
     }
 }
@@ -86,6 +93,11 @@ impl FromStr for Path {
                         .map_err(PathParseError::InvalidStorageKey)?;
                     Ok(Self::HasKey(key))
                 }
+                Some((CONVERSION_KEY_PREFIX, asset_type)) => {
+                    let key = AssetType::from_str(asset_type)
+                        .map_err(PathParseError::InvalidAssetType)?;
+                    Ok(Self::Conversion(key))
+                }
                 _ => Err(PathParseError::InvalidPath(s.to_string())),
             },
         }
@@ -108,4 +120,6 @@ pub enum PathParseError {
     InvalidPath(String),
     #[error("Invalid storage key: {0}")]
     InvalidStorageKey(storage::Error),
+    #[error("Unrecognized asset type: {0}")]
+    InvalidAssetType(std::io::Error),
 }

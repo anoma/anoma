@@ -23,10 +23,7 @@ where
     /// An encrypted keypair
     Encrypted(EncryptedKeypair<T>),
     /// An raw (unencrypted) keypair
-    Raw(
-        // Wrapped in `Rc` to avoid reference lifetimes when we borrow the key
-        T,
-    ),
+    Raw(T),
 }
 
 impl<T: BorshSerialize + BorshDeserialize + Display + FromStr> Serialize

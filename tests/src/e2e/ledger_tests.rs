@@ -1339,7 +1339,8 @@ fn masp_incentives() -> Result<()> {
     ))?;
     drop(client);
 
-    // Wait till epoch boundary
+    // Wait till epoch boundary to prevent conversion expiry during transaction
+    // construction
     let _ep8 = epoch_sleep(&test, &validator_one_rpc, 720)?;
 
     // Send 30*ETH_reward*(epoch_5-epoch_3) XAN from SK(B) to Christel
