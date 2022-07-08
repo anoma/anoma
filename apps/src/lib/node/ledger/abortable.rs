@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use tokio::task::JoinHandle;
 use tokio::sync::mpsc::{self, UnboundedSender, UnboundedReceiver};
 
@@ -13,10 +15,11 @@ pub struct Aborter {
 }
 
 impl Aborter {
-    fn spawn_abortable<A, F>(&self, who: AbortingTask, abortable: A) -> JoinHandle<()>
+    pub fn spawn_abortable<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
     where
         A: FnOnce(AbortGuard) -> F,
-        F: Future<Output = ()>,
+        F: Future<Output = R> + Send + 'static,
+        R: Send + 'static,
     {
         let abort = AbortGuard {
             who,
