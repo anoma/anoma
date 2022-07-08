@@ -11,6 +11,7 @@ pub type AbortingTask = &'static str;
 pub struct AbortableSpawner {
     abort_send: UnboundedSender<AbortingTask>,
     abort_recv: UnboundedReceiver<AbortingTask>,
+    _cleanup: Vec<Box<dyn FnOnce()>>,
 }
 
 impl AbortableSpawner {
@@ -20,6 +21,7 @@ impl AbortableSpawner {
         Self {
             abort_send,
             abort_recv,
+            _cleanup: Vec::new(),
         }
     }
 
