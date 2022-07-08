@@ -97,7 +97,7 @@ paths:
                   }
       responses:
         "200":
-          description: Response of the submitted query
+          description: Response of the submitted query, which may have been successful or may have errored at the application level.
           content:
             application/json:
               schema:
@@ -160,8 +160,29 @@ paths:
                             },
                         },
                     }
+                invalid_storage_key:
+                  value:
+                    {
+                      "jsonrpc": "2.0",
+                      "id": 2,
+                      "result":
+                        {
+                          "response":
+                            {
+                              "code": 1,
+                              "log": "",
+                              "info": "RPC error: Invalid storage key: Error parsing address: Error decoding address from Bech32m: invalid length",
+                              "index": "0",
+                              "key": null,
+                              "value": null,
+                              "proofOps": null,
+                              "height": "0",
+                              "codespace": "",
+                            },
+                        },
+                    }
         "500":
-          description: Error
+          description: Tendermint-level error
           content:
             application/json:
               schema:
