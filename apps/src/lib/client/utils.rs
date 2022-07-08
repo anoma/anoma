@@ -349,6 +349,7 @@ pub async fn join_network(
         .await
         .unwrap();
     }
+    fetch_wasms_aux(&base_dir, &chain_id).await;
 
     println!("Successfully configured for chain ID {}", chain_id);
 }
