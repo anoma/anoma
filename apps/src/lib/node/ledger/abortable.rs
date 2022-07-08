@@ -24,6 +24,18 @@ impl AbortableSpawner {
         }
     }
 
+    /// Spawns a new task into the asynchronous runtime, with an [`Aborter`] that shall
+    /// be dropped when it is no longer running.
+    ///
+    /// For instance:
+    ///
+    /// ```rust
+    /// let spawner = AbortableSpawner::new();
+    /// spawner.spawn_abortable("ExampleTask", |aborter| async {
+    ///     drop(aborter);
+    ///     println!("I have signaled a control task that I am no longer running!");
+    /// });
+    /// ```
     pub fn spawn_abortable<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
