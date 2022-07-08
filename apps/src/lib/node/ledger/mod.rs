@@ -29,7 +29,7 @@ use tower_abci::{response, split, Server};
 #[cfg(feature = "ABCI")]
 use tower_abci_old::{response, split, Server};
 
-use self::abortable::Aborter;
+use self::abortable::AbortableSpawner;
 use self::shims::abcipp_shim::AbciService;
 use crate::config::utils::num_of_threads;
 use crate::config::TendermintMode;
@@ -299,8 +299,8 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .expect("expected RFC3339 genesis_time");
     let tendermint_config = config.tendermint.clone();
 
-    // Create an `Aborter` for signalling shut down from the shell or from Tendermint
-    let aborter = Aborter::new();
+    // Create an `AbortableSpawner` for signalling shut down from the shell or from Tendermint
+    let spawner = AbortableSpawner::new();
 
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
@@ -312,7 +312,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
 
     // Start Tendermint node
-    let tendermint_node = aborter.spawn_abortable("Tendermint", move |aborter| async move {
+    let tendermint_node = spawner.spawn_abortable("Tendermint", move |aborter| async move {
         let res = tendermint_node::run(
             tendermint_dir,
             chain_id,
@@ -340,7 +340,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         let (bc_abort_send, bc_abort_recv) =
             tokio::sync::oneshot::channel::<()>();
         Some((
-            aborter.spawn_abortable("Broadcaster", move |aborter| async move {
+            spawner.spawn_abortable("Broadcaster", move |aborter| async move {
                 // Construct a service for broadcasting protocol txs from the
                 // ledger
                 let mut broadcaster =
@@ -370,7 +370,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     );
 
     // Start the ABCI server
-    let abci = aborter.spawn_abortable("ABCI", move |aborter| async move {
+    let abci = spawner.spawn_abortable("ABCI", move |aborter| async move {
         let res = run_abci(abci_service, ledger_address).await;
 
         drop(aborter);
@@ -388,7 +388,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .expect("Must be able to start a thread for the shell");
 
     // Wait for interrupt signal or abort message
-    let aborted = aborter.wait()
+    let aborted = spawner.wait()
         .await
         .child_terminated();
 
@@ -489,3 +489,7 @@ async fn run_abci(
         .await
         .map_err(|err| Error::TowerServer(err.to_string()))
 }
+
+//async fn run_tendermint(config: &config::Ledger) -> JoinHandle<()> {
+//    todo!()
+//}

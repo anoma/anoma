@@ -4,18 +4,18 @@ use tokio::task::JoinHandle;
 use tokio::sync::mpsc::{self, UnboundedSender, UnboundedReceiver};
 
 /// Serves to identify an aborting async task, which is spawned
-/// with an [`Aborter`].
+/// with an [`AbortableSpawner`].
 pub type AbortingTask = &'static str;
 
 /// A panic-proof handle for aborting a future. Will abort during stack
 /// unwinding and its drop method sends abort message with `who` inside it.
-pub struct Aborter {
+pub struct AbortableSpawner {
     abort_send: UnboundedSender<AbortingTask>,
     abort_recv: UnboundedReceiver<AbortingTask>,
 }
 
-impl Aborter {
-    /// Creates a new [`Aborter`].
+impl AbortableSpawner {
+    /// Creates a new [`AbortableSpawner`].
     pub fn new() -> Self {
         let (abort_send, abort_recv) = mpsc::unbounded_channel();
         Self {
@@ -26,11 +26,11 @@ impl Aborter {
 
     pub fn spawn_abortable<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
     where
-        A: FnOnce(AbortGuard) -> F,
+        A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
         R: Send + 'static,
     {
-        let abort = AbortGuard {
+        let abort = Aborter {
             who,
             sender: self.abort_send.clone(),
         };
@@ -47,12 +47,12 @@ impl Aborter {
 
 /// A panic-proof handle for aborting a future. Will abort during stack
 /// unwinding and its drop method sends abort message with `who` inside it.
-pub struct AbortGuard {
+pub struct Aborter {
     sender: mpsc::UnboundedSender<&'static str>,
     who: &'static str,
 }
 
-impl Drop for AbortGuard {
+impl Drop for Aborter {
     fn drop(&mut self) {
         // Send abort message, ignore result
         let _ = self.sender.send(self.who);
@@ -65,7 +65,7 @@ impl Drop for AbortGuard {
 /// Returns a boolean to indicate which scenario occurred.
 /// `true` means that the latter happened
 ///
-/// It is used by the [`Aborter`].
+/// It is used by the [`AbortableSpawner`].
 #[cfg(unix)]
 async fn wait_for_abort(
     mut abort_recv: UnboundedReceiver<AbortingTask>,
@@ -168,7 +168,7 @@ async fn wait_for_abort(
 pub enum AborterStatus {
     /// The ledger process received a shutdown signal.
     UserShutdownLedger,
-    /// One of the child processes terminates, signaling the [`Aborter`].
+    /// One of the child processes terminates, signaling the [`AbortableSpawner`].
     ChildProcessTerminated,
 }
 
