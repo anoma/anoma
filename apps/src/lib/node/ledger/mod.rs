@@ -287,8 +287,6 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         Byte::from_bytes(block_cache_size_bytes as u128)
             .get_appropriate_unit(true)
     );
-    let db_cache =
-        rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
 
     let tendermint_dir = config.tendermint_dir();
     let ledger_address = config.shell.ledger_address.to_string();
@@ -373,6 +371,8 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     };
 
     // Construct our ABCI application.
+    let db_cache =
+        rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
     let ledger_address = config.shell.ledger_address;
     let (shell, abci_service) = AbcippShim::new(
         config,
