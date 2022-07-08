@@ -11,7 +11,14 @@ pub type AbortingTask = &'static str;
 pub struct AbortableSpawner {
     abort_send: UnboundedSender<AbortingTask>,
     abort_recv: UnboundedReceiver<AbortingTask>,
-    _cleanup: Vec<Box<dyn FnOnce()>>,
+    cleanup_jobs: Vec<Box<dyn FnOnce()>>,
+}
+
+/// Contains the state of an on-going [`AbortableSpawner`] task spawn.
+pub struct WithCleanup<'a, A> {
+    who: AbortingTask,
+    abortable: A,
+    spawner: &'a mut AbortableSpawner,
 }
 
 impl AbortableSpawner {
@@ -21,7 +28,7 @@ impl AbortableSpawner {
         Self {
             abort_send,
             abort_recv,
-            _cleanup: Vec::new(),
+            cleanup_jobs: Vec::new(),
         }
     }
 
@@ -32,12 +39,42 @@ impl AbortableSpawner {
     ///
     /// ```rust
     /// let spawner = AbortableSpawner::new();
-    /// spawner.spawn_abortable("ExampleTask", |aborter| async {
-    ///     drop(aborter);
-    ///     println!("I have signaled a control task that I am no longer running!");
-    /// });
+    /// spawner
+    ///     .spawn_abortable("ExampleTask", |aborter| async {
+    ///         drop(aborter);
+    ///         println!("I have signaled a control task that I am no longer running!");
+    ///     })
+    ///     .with_no_cleanup();
     /// ```
-    pub fn spawn_abortable<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
+    ///
+    /// The return type of this method is [`WithCleanup`], such that a cleanup routine, after the
+    /// abort is received, can be executed.
+    pub fn spawn_abortable<'a, A>(&'a mut self, who: AbortingTask, abortable: A) -> WithCleanup<'a, A> {
+        WithCleanup {
+            who,
+            abortable,
+            spawner: self,
+        }
+    }
+
+    /// This future will resolve when:
+    ///
+    ///   1. User sends a shutdown signal
+    ///   2. One of the child processes terminates, sending a message on `drop`
+    ///
+    /// These two scenarios are represented by the [`AborterStatus`] enum.
+    pub async fn wait_for_abort(self) -> AborterStatus {
+        let status = wait_for_abort(self.abort_recv).await;
+
+        for job in self.cleanup_jobs {
+            todo!()
+        }
+
+        status
+    }
+
+    /// This method is responsible for actually spawning the async task into the runtime.
+    fn spawn_abortable_task<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
@@ -49,15 +86,39 @@ impl AbortableSpawner {
         };
         tokio::spawn(abortable(abort))
     }
+}
 
-    /// This future will resolve when:
-    ///
-    ///   1. User sends a shutdown signal
-    ///   2. One of the child processes terminates, sending a message on `drop`
-    ///
-    /// These two scenarios are represented by the [`AborterStatus`] enum.
-    pub async fn wait_for_abort(self) -> AborterStatus {
-        wait_for_abort(self.abort_recv).await
+impl<'a, A> WithCleanup<'a, A> {
+    pub fn with_no_cleanup<F, R>(self) -> JoinHandle<R>
+    where
+        A: FnOnce(Aborter) -> F,
+        F: Future<Output = R> + Send + 'static,
+        R: Send + 'static,
+    {
+        self.spawner.spawn_abortable_task(self.who, self.abortable)
+    }
+
+    pub fn with_conditional_cleanup<F, R, C>(self, cond: bool, cleanup: C) -> JoinHandle<R>
+    where
+        A: FnOnce(Aborter) -> F,
+        F: Future<Output = R> + Send + 'static,
+        R: Send + 'static,
+        C: FnOnce() + 'static,
+    {
+        if cond {
+            self.spawner.cleanup_jobs.push(Box::new(cleanup));
+        }
+        self.with_no_cleanup()
+    }
+
+    pub fn with_cleanup<F, R, C>(self, cleanup: C) -> JoinHandle<R>
+    where
+        A: FnOnce(Aborter) -> F,
+        F: Future<Output = R> + Send + 'static,
+        R: Send + 'static,
+        C: FnOnce() + 'static,
+    {
+        self.with_conditional_cleanup(true, cleanup)
     }
 }
 

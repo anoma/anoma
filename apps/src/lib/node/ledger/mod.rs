@@ -225,7 +225,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let tendermint_config = config.tendermint.clone();
 
     // Create an `AbortableSpawner` for signalling shut down from the shell or from Tendermint
-    let spawner = AbortableSpawner::new();
+    let mut spawner = AbortableSpawner::new();
 
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
@@ -255,7 +255,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             tracing::error!("{:?}", &res);
         }
         res
-    });
+    }).with_no_cleanup();
 
     let broadcaster = if matches!(
         config.tendermint.tendermint_mode,
@@ -274,7 +274,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
                 tracing::info!("Broadcaster is no longer running.");
 
                 drop(aborter);
-            }),
+            }).with_no_cleanup(),
             bc_abort_send,
         ))
     } else {
@@ -302,7 +302,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
 
         drop(aborter);
         res
-    });
+    }).with_no_cleanup();
 
     // Run the shell in the main thread
     let thread_builder =
