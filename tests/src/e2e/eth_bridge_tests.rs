@@ -89,7 +89,7 @@ fn unauthorized_tx_cannot_write_storage() {
         }
         // TODO: we should check here explicitly with the ledger via a
         //  Tendermint RPC call that the path `value/#EthBridge/queue`
-        //  is unchanged rather than relying solely  on looking at anomac
+        //  is unchanged rather than relying solely on looking at anomac
         //  stdout.
         anomac_tx.exp_string("Transaction is invalid").unwrap();
         anomac_tx
