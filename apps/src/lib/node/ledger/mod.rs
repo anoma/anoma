@@ -207,86 +207,11 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 /// the ledger may submit txs to the chain. All must be alive for correct
 /// functioning.
 async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
-    // Prefetch needed wasm artifacts
-    wasm_loader::pre_fetch_wasm(&wasm_dir).await;
-
-    // Find the system available memory
-    let available_memory_bytes = Lazy::new(|| {
-        let sys = System::new_with_specifics(RefreshKind::new().with_memory());
-        let available_memory_bytes = sys.available_memory() * 1024;
-        tracing::info!(
-            "Available memory: {}",
-            Byte::from_bytes(available_memory_bytes as u128)
-                .get_appropriate_unit(true)
-        );
-        available_memory_bytes
-    });
-
-    // Find the VP WASM compilation cache size
-    let vp_wasm_compilation_cache =
-        match config.shell.vp_wasm_compilation_cache_bytes {
-            Some(vp_wasm_compilation_cache) => {
-                tracing::info!(
-                    "VP WASM compilation cache size set from the configuration"
-                );
-                vp_wasm_compilation_cache
-            }
-            None => {
-                tracing::info!(
-                    "VP WASM compilation cache size not configured, using 1/6 \
-                     of available memory."
-                );
-                *available_memory_bytes / 6
-            }
-        };
-    tracing::info!(
-        "VP WASM compilation cache size: {}",
-        Byte::from_bytes(vp_wasm_compilation_cache as u128)
-            .get_appropriate_unit(true)
-    );
-
-    // Find the tx WASM compilation cache size
-    let tx_wasm_compilation_cache =
-        match config.shell.tx_wasm_compilation_cache_bytes {
-            Some(tx_wasm_compilation_cache) => {
-                tracing::info!(
-                    "Tx WASM compilation cache size set from the configuration"
-                );
-                tx_wasm_compilation_cache
-            }
-            None => {
-                tracing::info!(
-                    "Tx WASM compilation cache size not configured, using 1/6 \
-                     of available memory."
-                );
-                *available_memory_bytes / 6
-            }
-        };
-    tracing::info!(
-        "Tx WASM compilation cache size: {}",
-        Byte::from_bytes(tx_wasm_compilation_cache as u128)
-            .get_appropriate_unit(true)
-    );
-
-    // Setup DB cache, it must outlive the DB instance that's in the shell
-    let block_cache_size_bytes = match config.shell.block_cache_bytes {
-        Some(block_cache_bytes) => {
-            tracing::info!("Block cache set from the configuration.",);
-            block_cache_bytes
-        }
-        None => {
-            tracing::info!(
-                "Block cache size not configured, using 1/3 of available \
-                 memory."
-            );
-            *available_memory_bytes / 3
-        }
-    };
-    tracing::info!(
-        "RocksDB block cache size: {}",
-        Byte::from_bytes(block_cache_size_bytes as u128)
-            .get_appropriate_unit(true)
-    );
+    let RunAuxSetup {
+        vp_wasm_compilation_cache,
+        tx_wasm_compilation_cache,
+        block_cache_size_bytes,
+    } = run_aux_setup(&config, &wasm_dir).await;
 
     let tendermint_dir = config.tendermint_dir();
     let ledger_address = config.shell.ledger_address.to_string();
@@ -494,3 +419,101 @@ async fn run_abci(
 //async fn run_tendermint(config: &config::Ledger) -> JoinHandle<()> {
 //    todo!()
 //}
+
+/// A [`RunAuxSetup`] stores some variables used to start child
+/// processes of the ledger.
+struct RunAuxSetup {
+    vp_wasm_compilation_cache: u64,
+    tx_wasm_compilation_cache: u64,
+    block_cache_size_bytes: u64,
+}
+
+/// Return some variables used to start child processes of the ledger.
+async fn run_aux_setup(config: &config::Ledger, wasm_dir: &PathBuf) -> RunAuxSetup {
+    // Prefetch needed wasm artifacts
+    wasm_loader::pre_fetch_wasm(wasm_dir).await;
+
+    // Find the system available memory
+    let available_memory_bytes = Lazy::new(|| {
+        let sys = System::new_with_specifics(RefreshKind::new().with_memory());
+        let available_memory_bytes = sys.available_memory() * 1024;
+        tracing::info!(
+            "Available memory: {}",
+            Byte::from_bytes(available_memory_bytes as u128)
+                .get_appropriate_unit(true)
+        );
+        available_memory_bytes
+    });
+
+    // Find the VP WASM compilation cache size
+    let vp_wasm_compilation_cache =
+        match config.shell.vp_wasm_compilation_cache_bytes {
+            Some(vp_wasm_compilation_cache) => {
+                tracing::info!(
+                    "VP WASM compilation cache size set from the configuration"
+                );
+                vp_wasm_compilation_cache
+            }
+            None => {
+                tracing::info!(
+                    "VP WASM compilation cache size not configured, using 1/6 \
+                     of available memory."
+                );
+                *available_memory_bytes / 6
+            }
+        };
+    tracing::info!(
+        "VP WASM compilation cache size: {}",
+        Byte::from_bytes(vp_wasm_compilation_cache as u128)
+            .get_appropriate_unit(true)
+    );
+
+    // Find the tx WASM compilation cache size
+    let tx_wasm_compilation_cache =
+        match config.shell.tx_wasm_compilation_cache_bytes {
+            Some(tx_wasm_compilation_cache) => {
+                tracing::info!(
+                    "Tx WASM compilation cache size set from the configuration"
+                );
+                tx_wasm_compilation_cache
+            }
+            None => {
+                tracing::info!(
+                    "Tx WASM compilation cache size not configured, using 1/6 \
+                     of available memory."
+                );
+                *available_memory_bytes / 6
+            }
+        };
+    tracing::info!(
+        "Tx WASM compilation cache size: {}",
+        Byte::from_bytes(tx_wasm_compilation_cache as u128)
+            .get_appropriate_unit(true)
+    );
+
+    // Setup DB cache, it must outlive the DB instance that's in the shell
+    let block_cache_size_bytes = match config.shell.block_cache_bytes {
+        Some(block_cache_bytes) => {
+            tracing::info!("Block cache set from the configuration.",);
+            block_cache_bytes
+        }
+        None => {
+            tracing::info!(
+                "Block cache size not configured, using 1/3 of available \
+                 memory."
+            );
+            *available_memory_bytes / 3
+        }
+    };
+    tracing::info!(
+        "RocksDB block cache size: {}",
+        Byte::from_bytes(block_cache_size_bytes as u128)
+            .get_appropriate_unit(true)
+    );
+
+    RunAuxSetup {
+        vp_wasm_compilation_cache,
+        tx_wasm_compilation_cache,
+        block_cache_size_bytes,
+    }
+}
