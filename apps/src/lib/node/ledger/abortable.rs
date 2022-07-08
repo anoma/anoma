@@ -50,9 +50,12 @@ impl AbortableSpawner {
     }
 
     /// This future will resolve when:
+    ///
     ///   1. User sends a shutdown signal
     ///   2. One of the child processes terminates, sending a message on `drop`
-    pub async fn wait(self) -> AborterStatus {
+    ///
+    /// These two scenarios are represented by the [`AborterStatus`] enum.
+    pub async fn wait_for_abort(self) -> AborterStatus {
         wait_for_abort(self.abort_recv).await
     }
 }
@@ -71,13 +74,6 @@ impl Drop for Aborter {
     }
 }
 
-/// Function that blocks until either
-///   1. User sends a shutdown signal
-///   2. One of the child processes terminates, sending a message on `drop`
-/// Returns a boolean to indicate which scenario occurred.
-/// `true` means that the latter happened
-///
-/// It is used by the [`AbortableSpawner`].
 #[cfg(unix)]
 async fn wait_for_abort(
     mut abort_recv: UnboundedReceiver<AbortingTask>,
@@ -176,11 +172,13 @@ async fn wait_for_abort(
     AborterStatus::UserShutdownLedger
 }
 
+/// An [`AborterStatus`] represents one of two possible causes that resulted
+/// in shutting down the ledger.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum AborterStatus {
     /// The ledger process received a shutdown signal.
     UserShutdownLedger,
-    /// One of the child processes terminates, signaling the [`AbortableSpawner`].
+    /// One of the ledger's child processes terminated, signaling the [`AbortableSpawner`].
     ChildProcessTerminated,
 }
 

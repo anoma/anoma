@@ -388,7 +388,8 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .expect("Must be able to start a thread for the shell");
 
     // Wait for interrupt signal or abort message
-    let aborted = spawner.wait()
+    let aborted = spawner
+        .wait_for_abort()
         .await
         .child_terminated();
 
