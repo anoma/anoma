@@ -210,7 +210,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let RunAuxSetup {
         vp_wasm_compilation_cache,
         tx_wasm_compilation_cache,
-        block_cache_size_bytes,
+        db_block_cache_size_bytes,
     } = run_aux_setup(&config, &wasm_dir).await;
 
     let tendermint_dir = config.tendermint_dir();
@@ -281,9 +281,11 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         None
     };
 
-    // Construct our ABCI application.
+    // Setup DB cache, it must outlive the DB instance that's in the shell
     let db_cache =
-        rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
+        rocksdb::Cache::new_lru_cache(db_block_cache_size_bytes as usize).unwrap();
+
+    // Construct our ABCI application.
     let ledger_address = config.shell.ledger_address;
     let (shell, abci_service) = AbcippShim::new(
         config,
@@ -425,7 +427,7 @@ async fn run_abci(
 struct RunAuxSetup {
     vp_wasm_compilation_cache: u64,
     tx_wasm_compilation_cache: u64,
-    block_cache_size_bytes: u64,
+    db_block_cache_size_bytes: u64,
 }
 
 /// Return some variables used to start child processes of the ledger.
@@ -491,8 +493,8 @@ async fn run_aux_setup(config: &config::Ledger, wasm_dir: &PathBuf) -> RunAuxSet
             .get_appropriate_unit(true)
     );
 
-    // Setup DB cache, it must outlive the DB instance that's in the shell
-    let block_cache_size_bytes = match config.shell.block_cache_bytes {
+    // Find the RocksDB block cache size
+    let db_block_cache_size_bytes = match config.shell.block_cache_bytes {
         Some(block_cache_bytes) => {
             tracing::info!("Block cache set from the configuration.",);
             block_cache_bytes
@@ -507,13 +509,13 @@ async fn run_aux_setup(config: &config::Ledger, wasm_dir: &PathBuf) -> RunAuxSet
     };
     tracing::info!(
         "RocksDB block cache size: {}",
-        Byte::from_bytes(block_cache_size_bytes as u128)
+        Byte::from_bytes(db_block_cache_size_bytes as u128)
             .get_appropriate_unit(true)
     );
 
     RunAuxSetup {
         vp_wasm_compilation_cache,
         tx_wasm_compilation_cache,
-        block_cache_size_bytes,
+        db_block_cache_size_bytes,
     }
 }
