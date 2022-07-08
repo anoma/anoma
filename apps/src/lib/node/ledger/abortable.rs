@@ -7,8 +7,7 @@ use tokio::sync::mpsc::{self, UnboundedSender, UnboundedReceiver};
 /// with an [`AbortableSpawner`].
 pub type AbortingTask = &'static str;
 
-/// A panic-proof handle for aborting a future. Will abort during stack
-/// unwinding and its drop method sends abort message with `who` inside it.
+/// An [`AbortableSpawner`] will spawn abortable tasks into the asynchronous runtime.
 pub struct AbortableSpawner {
     abort_send: UnboundedSender<AbortingTask>,
     abort_recv: UnboundedReceiver<AbortingTask>,
