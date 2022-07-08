@@ -237,27 +237,43 @@ pub fn reset(tendermint_dir: impl AsRef<Path>) -> Result<()> {
 
 /// Convert a common signing scheme validator key into JSON for
 /// Tendermint
-fn validator_key_to_json<SK: SecretKey>(
+fn validator_key_to_json(
     address: &Address,
-    sk: &SK,
+    sk: &common::SecretKey,
 ) -> std::result::Result<serde_json::Value, ParseSecretKeyError> {
     let address = address.raw_hash().unwrap();
-    ed25519::SecretKey::try_from_sk(sk).map(|sk| {
-        let pk: ed25519::PublicKey = sk.ref_to();
-        let ck_arr =
-            [sk.try_to_vec().unwrap(), pk.try_to_vec().unwrap()].concat();
-        json!({
-            "address": address,
-            "pub_key": {
-                "type": "tendermint/PubKeyEd25519",
-                "value": base64::encode(pk.try_to_vec().unwrap()),
-            },
-            "priv_key": {
-                "type": "tendermint/PrivKeyEd25519",
-                "value": base64::encode(ck_arr),
-            }
-        })
-    })
+
+    let (id_str, pk_arr, kp_arr) = match sk {
+        common::SecretKey::Ed25519(_) => {
+            let sk_ed: ed25519::SecretKey = sk.try_to_sk().unwrap();
+            let keypair = [
+                sk_ed.try_to_vec().unwrap(),
+                sk_ed.ref_to().try_to_vec().unwrap(),
+            ]
+            .concat();
+            ("Ed25519", sk_ed.ref_to().try_to_vec().unwrap(), keypair)
+        }
+        common::SecretKey::Secp256k1(_) => {
+            let sk_sec: secp256k1::SecretKey = sk.try_to_sk().unwrap();
+            (
+                "Secp256k1",
+                sk_sec.ref_to().try_to_vec().unwrap(),
+                sk_sec.try_to_vec().unwrap(),
+            )
+        }
+    };
+
+    Ok(json!({
+        "address": address,
+        "pub_key": {
+            "type": format!("tendermint/PubKey{}",id_str),
+            "value": base64::encode(pk_arr),
+        },
+        "priv_key": {
+            "type": format!("tendermint/PrivKey{}",id_str),
+            "value": base64::encode(kp_arr),
+        }
+    }))
 }
 
 /// Initialize validator private key for Tendermint
