@@ -320,6 +320,8 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .await
         .child_terminated();
 
+    // NOTE: cleanup started
+
     // Abort the ABCI service task
     abci.abort();
 
@@ -354,6 +356,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
                 .map(|results| (results.0, results.1, ()))
         }
     };
+
+    // NOTE: cleanup ended
+
     match res {
         Ok((tendermint_res, abci_res, _)) => {
             // we ignore errors on user-initiated shutdown
