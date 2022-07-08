@@ -299,9 +299,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .expect("expected RFC3339 genesis_time");
     let tendermint_config = config.tendermint.clone();
 
-    // Channel for signalling shut down from the shell or from Tendermint
-    let (abort_send, abort_recv) =
-        tokio::sync::mpsc::unbounded_channel::<&'static str>();
+    // Create an `Aborter` for signalling shut down from the shell or from Tendermint
+    let aborter = Aborter::new();
+
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
     let (broadcaster_sender, broadcaster_receiver) =
@@ -312,14 +312,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
 
     // Start Tendermint node
-    let abort_send_for_tm = abort_send.clone();
-    let tendermint_node = tokio::spawn(async move {
-        // On panic or exit, the `Drop` of `AbortSender` will send abort message
-        let aborter = Aborter {
-            sender: abort_send_for_tm,
-            who: "Tendermint",
-        };
-
+    let tendermint_node = aborter.spawn_abortable("Tendermint", move |aborter| async move {
         let res = tendermint_node::run(
             tendermint_dir,
             chain_id,
@@ -346,19 +339,12 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         // Channel for signalling shut down to broadcaster
         let (bc_abort_send, bc_abort_recv) =
             tokio::sync::oneshot::channel::<()>();
-        let abort_send_for_broadcaster = abort_send.clone();
         Some((
-            tokio::spawn(async move {
+            aborter.spawn_abortable("Broadcaster", move |aborter| async move {
                 // Construct a service for broadcasting protocol txs from the
                 // ledger
                 let mut broadcaster =
                     Broadcaster::new(&rpc_address, broadcaster_receiver);
-                // On panic or exit, the `Drop` of `AbortSender` will send abort
-                // message
-                let aborter = Aborter {
-                    sender: abort_send_for_broadcaster,
-                    who: "Broadcaster",
-                };
                 broadcaster.run(bc_abort_recv).await;
                 tracing::info!("Broadcaster is no longer running.");
 
@@ -384,14 +370,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     );
 
     // Start the ABCI server
-    let abci = tokio::spawn(async move {
-        // On panic or exit, the `Drop` of `AbortSender` will send abort
-        // message
-        let aborter = Aborter {
-            sender: abort_send,
-            who: "ABCI",
-        };
-
+    let abci = aborter.spawn_abortable("ABCI", move |aborter| async move {
         let res = run_abci(abci_service, ledger_address).await;
 
         drop(aborter);
@@ -409,7 +388,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .expect("Must be able to start a thread for the shell");
 
     // Wait for interrupt signal or abort message
-    let aborted = wait_for_abort(abort_recv).await;
+    let aborted = aborter.wait()
+        .await
+        .child_terminated();
 
     // Abort the ABCI service task
     abci.abort();
