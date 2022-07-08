@@ -133,8 +133,8 @@ impl<'a, A> WithCleanup<'a, A> {
 /// A panic-proof handle for aborting a future. Will abort during stack
 /// unwinding and its drop method sends abort message with `who` inside it.
 pub struct Aborter {
-    sender: mpsc::UnboundedSender<&'static str>,
-    who: &'static str,
+    sender: mpsc::UnboundedSender<AbortingTask>,
+    who: AbortingTask,
 }
 
 impl Drop for Aborter {
