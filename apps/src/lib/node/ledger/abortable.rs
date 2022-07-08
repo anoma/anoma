@@ -48,7 +48,7 @@ impl AbortableSpawner {
     /// ```
     ///
     /// The return type of this method is [`WithCleanup`], such that a cleanup routine, after the
-    /// abort is received, can be executed.
+    /// abort is received, can be configured to execute.
     pub fn spawn_abortable<'a, A>(&'a mut self, who: AbortingTask, abortable: A) -> WithCleanup<'a, A> {
         WithCleanup {
             who,
@@ -89,6 +89,8 @@ impl AbortableSpawner {
 }
 
 impl<'a, A> WithCleanup<'a, A> {
+    /// No cleanup routine will be executed for the associated task.
+    #[inline]
     pub fn with_no_cleanup<F, R>(self) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
@@ -98,6 +100,9 @@ impl<'a, A> WithCleanup<'a, A> {
         self.spawner.spawn_abortable_task(self.who, self.abortable)
     }
 
+    /// A cleanup routine `cleanup` may be executed for the associated task,
+    /// if `cond` evaluates to `true`.
+    #[inline]
     pub fn with_conditional_cleanup<F, R, C>(self, cond: bool, cleanup: C) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
@@ -111,6 +116,8 @@ impl<'a, A> WithCleanup<'a, A> {
         self.with_no_cleanup()
     }
 
+    /// A cleanup routine `cleanup` will be executed for the associated task.
+    #[inline]
     pub fn with_cleanup<F, R, C>(self, cleanup: C) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
