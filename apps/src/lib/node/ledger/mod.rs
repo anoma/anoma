@@ -1,3 +1,4 @@
+mod abortable;
 mod broadcaster;
 pub mod events;
 pub mod protocol;
@@ -28,6 +29,7 @@ use tower_abci::{response, split, Server};
 #[cfg(feature = "ABCI")]
 use tower_abci_old::{response, split, Server};
 
+use self::abortable::Aborter;
 use self::shims::abcipp_shim::AbciService;
 use crate::config::utils::num_of_threads;
 use crate::config::TendermintMode;
@@ -505,20 +507,6 @@ async fn run_abci(
         .listen(ledger_address)
         .await
         .map_err(|err| Error::TowerServer(err.to_string()))
-}
-
-/// A panic-proof handle for aborting a future. Will abort during stack
-/// unwinding and its drop method sends abort message with `who` inside it.
-struct Aborter {
-    sender: tokio::sync::mpsc::UnboundedSender<&'static str>,
-    who: &'static str,
-}
-
-impl Drop for Aborter {
-    fn drop(&mut self) {
-        // Send abort message, ignore result
-        let _ = self.sender.send(self.who);
-    }
 }
 
 /// Function that blocks until either
