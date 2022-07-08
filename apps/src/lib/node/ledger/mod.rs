@@ -386,47 +386,6 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     }
 }
 
-/// Runs the an asynchronous ABCI server with four sub-components for consensus,
-/// mempool, snapshot, and info.
-async fn run_abci(
-    abci_service: AbciService,
-    ledger_address: SocketAddr,
-) -> shell::Result<()> {
-    // Split it into components.
-    let (consensus, mempool, snapshot, info) = split::service(abci_service, 5);
-
-    // Hand those components to the ABCI server, but customize request behavior
-    // for each category
-    let server = Server::builder()
-        .consensus(consensus)
-        .snapshot(snapshot)
-        .mempool(
-            ServiceBuilder::new()
-                .load_shed()
-                .buffer(1024)
-                .service(mempool),
-        )
-        .info(
-            ServiceBuilder::new()
-                .load_shed()
-                .buffer(100)
-                .rate_limit(50, std::time::Duration::from_secs(1))
-                .service(info),
-        )
-        .finish()
-        .unwrap();
-
-    // Run the server with the ABCI service
-    server
-        .listen(ledger_address)
-        .await
-        .map_err(|err| Error::TowerServer(err.to_string()))
-}
-
-//async fn run_tendermint(config: &config::Ledger) -> JoinHandle<()> {
-//    todo!()
-//}
-
 /// A [`RunAuxSetup`] stores some variables used to start child
 /// processes of the ledger.
 struct RunAuxSetup {
@@ -524,3 +483,44 @@ async fn run_aux_setup(config: &config::Ledger, wasm_dir: &PathBuf) -> RunAuxSet
         db_block_cache_size_bytes,
     }
 }
+
+/// Runs the an asynchronous ABCI server with four sub-components for consensus,
+/// mempool, snapshot, and info.
+async fn run_abci(
+    abci_service: AbciService,
+    ledger_address: SocketAddr,
+) -> shell::Result<()> {
+    // Split it into components.
+    let (consensus, mempool, snapshot, info) = split::service(abci_service, 5);
+
+    // Hand those components to the ABCI server, but customize request behavior
+    // for each category
+    let server = Server::builder()
+        .consensus(consensus)
+        .snapshot(snapshot)
+        .mempool(
+            ServiceBuilder::new()
+                .load_shed()
+                .buffer(1024)
+                .service(mempool),
+        )
+        .info(
+            ServiceBuilder::new()
+                .load_shed()
+                .buffer(100)
+                .rate_limit(50, std::time::Duration::from_secs(1))
+                .service(info),
+        )
+        .finish()
+        .unwrap();
+
+    // Run the server with the ABCI service
+    server
+        .listen(ledger_address)
+        .await
+        .map_err(|err| Error::TowerServer(err.to_string()))
+}
+
+//async fn run_tendermint(config: &config::Ledger) -> JoinHandle<()> {
+//    todo!()
+//}
