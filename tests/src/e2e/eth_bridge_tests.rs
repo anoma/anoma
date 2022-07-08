@@ -6,13 +6,14 @@ use crate::e2e::setup::constants::{
 use crate::e2e::setup::{Bin, Who};
 use crate::{run, run_as};
 
+/// this is the predictable bech32m address of the internal EthBridge account
 const ETH_BRIDGE_ADDRESS: &str = "atest1v9hx7w36g42ysgzzwf5kgem9ypqkgerjv4ehxgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpq8f99ew";
 
 /// # Examples
 ///
 /// ```
-/// let storage_key = storage_key("queue");
-/// assert_eq!(storage_key, "#atest1v9hx7w36g42ysgzzwf5kgem9ypqkgerjv4ehxgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpq8f99ew/queue");
+/// let storage_key = storage_key("ERC20/0x6B175474E89094C44Da98b954EedeAC495271d0F/supply");
+/// assert_eq!(storage_key, "#atest1v9hx7w36g42ysgzzwf5kgem9ypqkgerjv4ehxgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpq8f99ew/ERC20/0x6B175474E89094C44Da98b954EedeAC495271d0F/supply");
 /// ```
 fn storage_key(path: &str) -> String {
     format!("#{ETH_BRIDGE_ADDRESS}/{}", path)
@@ -41,8 +42,13 @@ fn everything() {
     anoman_ledger.exp_string("Committed block hash").unwrap();
     let _bg_ledger = anoman_ledger.background();
 
-    let tx_data_path = test.base_dir.path().join("queue_storage_key.txt");
-    std::fs::write(&tx_data_path, &storage_key("queue")[..]).unwrap();
+    let tx_data_path = test.base_dir.path().join("dai_supply_storage_key.txt");
+    std::fs::write(
+        &tx_data_path,
+        &storage_key("ERC20/0x6B175474E89094C44Da98b954EedeAC495271d0F/supply")
+            [..],
+    )
+    .unwrap();
 
     let tx_code_path = wasm_abs_path(TX_WRITE_STORAGE_KEY_WASM);
 
