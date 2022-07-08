@@ -83,6 +83,18 @@ paths:
                     "method": "abci_query",
                     "params": { "path": "epoch", "height": 2 },
                   }
+              get_account_public_key:
+                summary: Get the public key for an account which has been initialized with a validity predicate, with proof
+                value:
+                  {
+                    "id": 2,
+                    "method": "abci_query",
+                    "params":
+                      {
+                        "path": "value/#atest1v4ehgw36g4pyg3j9x3qnjd3cxgmyz3fk8qcrys3hxdp5xwfnx3zyxsj9xgunxsfjg5u5xvzyzrrqtn/public_key",
+                        "prove": true,
+                      },
+                  }
       responses:
         "200":
           description: Response of the submitted query
@@ -107,6 +119,42 @@ paths:
                               "key": null,
                               "value": "lQAAAAAAAAA=",
                               "proofOps": null,
+                              "height": "0",
+                              "codespace": "",
+                            },
+                        },
+                    }
+                get_account_public_key:
+                  value:
+                    {
+                      "jsonrpc": "2.0",
+                      "id": 2,
+                      "result":
+                        {
+                          "response":
+                            {
+                              "code": 0,
+                              "log": "",
+                              "info": "",
+                              "index": "0",
+                              "key": null,
+                              "value": "ABdruiwJLZ4w4Z/MoD+aW3fH4vkc9+QhGOCGmDr1oVz+",
+                              "proofOps":
+                                {
+                                  "ops":
+                                    [
+                                      {
+                                        "type": "ics23_CommitmentProof",
+                                        "key": "I2F0ZXN0MXY0ZWhndzM2ZzRweWczajl4M3FuamQzY3hnbXl6M2ZrOHFjcnlzM2h4ZHA1eHdmbngzenl4c2o5eGd1bnhzZmpnNXU1eHZ6eXpycnF0bi9wdWJsaWNfa2V5",
+                                        "data": "Cu0CCmAjYXRlc3QxdjRlaGd3MzZnNHB5ZzNqOXgzcW5qZDNjeGdteXozZms4cWNyeXMzaHhkcDV4d2ZueDN6eXhzajl4Z3VueHNmamc1dTV4dnp5enJycXRuL3B1YmxpY19rZXkSIQAXa7osCS2eMOGfzKA/mlt3x+L5HPfkIRjghpg69aFc/hooCAEQARgBKiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACIkCAESIOQIgEOVb0Hv2eOTmYDks2uP4L4gs0RgmV2wUisInkbQIiQIARog04WfgQqfT2X9aD9qhA/fWy6LS6JjdmkpmUfkK9hoKOwiJAgBEiB+tFAPUElWCcCpAL4khjoihfs19F7tfdagbWWE44kCESIkCAEaIBtq2MVGbblK4zgD3h5vxQNKiCU+dmaHLQSpzWvBT3lwIiQIARogwl8LV3ECHOBxasQriaEAE/dgSZnKZ6vBm6Zm7vTED0Y=",
+                                      },
+                                      {
+                                        "type": "ics23_CommitmentProof",
+                                        "key": "I2F0ZXN0MXY0ZWhndzM2ZzRweWczajl4M3FuamQzY3hnbXl6M2ZrOHFjcnlzM2h4ZHA1eHdmbngzenl4c2o5eGd1bnhzZmpnNXU1eHZ6eXpycnF0bi9wdWJsaWNfa2V5",
+                                        "data": "CnkKB2FjY291bnQSIMMIWmruLiaYEqu6LGhBd6QS74N0WncwSIe+tIux4F+BGiYIARABKiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACIkCAESIG3BkVXL0ICjUIY1bV7YSPruEfFZLIB2vlL7lpwQ3ycX",
+                                      },
+                                    ],
+                                },
                               "height": "0",
                               "codespace": "",
                             },
