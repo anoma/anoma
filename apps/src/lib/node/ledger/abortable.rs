@@ -15,6 +15,15 @@ pub struct Aborter {
 }
 
 impl Aborter {
+    /// Creates a new [`Aborter`].
+    pub fn new() -> Self {
+        let (abort_send, abort_recv) = mpsc::unbounded_channel();
+        Self {
+            abort_send,
+            abort_recv,
+        }
+    }
+
     pub fn spawn_abortable<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
     where
         A: FnOnce(AbortGuard) -> F,
