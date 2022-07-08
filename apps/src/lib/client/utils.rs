@@ -361,6 +361,7 @@ pub async fn fetch_wasms(
 }
 
 pub async fn fetch_wasms_aux(base_dir: &Path, chain_id: &ChainId) {
+    println!("Fetching wasms for chain ID {}...", chain_id);
     let wasm_dir = {
         let mut path = base_dir.to_owned();
         path.push(chain_id.as_str());
