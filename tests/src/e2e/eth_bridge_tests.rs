@@ -67,34 +67,25 @@ fn unauthorized_tx_cannot_write_storage() {
         &ledger_addr,
     ];
 
-    for &dry_run in &[true, false] {
-        let tx_args = if dry_run {
-            vec![tx_args.clone(), vec!["--dry-run"]].concat()
-        } else {
-            tx_args.clone()
-        };
-        let mut anomac_tx = run!(
-            test,
-            Bin::Client,
-            tx_args,
-            Some(CLIENT_COMMAND_TIMEOUT_SECONDS)
-        )
-        .unwrap();
+    let mut anomac_tx = run!(
+        test,
+        Bin::Client,
+        tx_args,
+        Some(CLIENT_COMMAND_TIMEOUT_SECONDS)
+    )
+    .unwrap();
 
-        if !dry_run {
-            if !cfg!(feature = "ABCI") {
-                anomac_tx.exp_string("Transaction accepted").unwrap();
-            }
-            anomac_tx.exp_string("Transaction applied").unwrap();
-        }
-        // TODO: we should check here explicitly with the ledger via a
-        //  Tendermint RPC call that the path `value/#EthBridge/queue`
-        //  is unchanged rather than relying solely on looking at anomac
-        //  stdout.
-        anomac_tx.exp_string("Transaction is invalid").unwrap();
-        anomac_tx
-            .exp_string(&format!("Rejected: {}", ETH_BRIDGE_ADDRESS))
-            .unwrap();
-        anomac_tx.assert_success();
+    if !cfg!(feature = "ABCI") {
+        anomac_tx.exp_string("Transaction accepted").unwrap();
     }
+    anomac_tx.exp_string("Transaction applied").unwrap();
+    // TODO: we should check here explicitly with the ledger via a
+    //  Tendermint RPC call that the path `value/#EthBridge/queue`
+    //  is unchanged rather than relying solely on looking at anomac
+    //  stdout.
+    anomac_tx.exp_string("Transaction is invalid").unwrap();
+    anomac_tx
+        .exp_string(&format!("Rejected: {}", ETH_BRIDGE_ADDRESS))
+        .unwrap();
+    anomac_tx.assert_success();
 }
