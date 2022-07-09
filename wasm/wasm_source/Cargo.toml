@@ -50,11 +50,11 @@ tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
 [patch.crates-io]
-tendermint = {git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix"}
-tendermint-light-client-verifier = {git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix"}
-tendermint-proto = {git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix"}
-tendermint-rpc = {git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix"}
-tendermint-testgen = {git = "https://github.com/murisi/tendermint-rs", branch = "murisi/jsfix"}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-light-client-verifier = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-testgen = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
 # TODO temp patch for <https://github.com/near/borsh-rs/issues/82>, <https://github.com/near/borsh-rs/issues/84> and more tba.
 borsh = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
 borsh-derive = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
