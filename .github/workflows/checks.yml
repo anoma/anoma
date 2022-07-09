@@ -6,6 +6,10 @@ on:
       - master
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   clippy-fmt:
     runs-on: ${{ matrix.os }}
@@ -13,12 +17,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
+    env:
+      CARGO_INCREMENTAL: 0
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Setup rust toolchain
         uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-05-20
+          components: clippy, rustfmt
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
       - name: Run clippy
         run: make clippy
       - name: Run fmt
@@ -38,8 +49,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-05-20
-          target: wasm32-unknown-unknown
           components: clippy, rustfmt
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
       - name: Run clippy
         run: make clippy-abci-plus-plus
 
