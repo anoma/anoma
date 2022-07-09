@@ -51,7 +51,7 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         // Tracks the accepted transactions
-        self.storage.block.results = BlockResults::default();
+        self.storage.block.results = BlockResults::with_len(req.txs.len());
         for (tx_index, processed_tx) in req.txs.iter().enumerate() {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx

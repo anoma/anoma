@@ -5,8 +5,10 @@ use std::num::ParseIntError;
 use std::ops::Add;
 use std::str::FromStr;
 
+use bit_vec::BitVec;
+use borsh::maybestd::io::Write;
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use thiserror::Error;
 
 #[cfg(feature = "ferveo-tpke")]
@@ -81,11 +83,26 @@ impl From<TxIndex> for u32 {
     }
 }
 
+fn serialize_bitvec<S>(x: &BitVec, s: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    Serialize::serialize(&x.to_bytes(), s)
+}
+
+fn deserialize_bitvec<'de, D>(
+    deserializer: D,
+) -> std::result::Result<BitVec, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: Vec<u8> = Deserialize::deserialize(deserializer)?;
+    Ok(BitVec::from_bytes(&s))
+}
+
 /// Represents the accepted transactions in a block
 #[derive(
     Clone,
-    BorshSerialize,
-    BorshDeserialize,
     PartialEq,
     Eq,
     PartialOrd,
@@ -94,71 +111,46 @@ impl From<TxIndex> for u32 {
     Debug,
     Serialize,
     Deserialize,
+    Default,
 )]
-pub struct BlockResults(pub Vec<u8>);
+pub struct BlockResults(
+    #[serde(serialize_with = "serialize_bitvec")]
+    #[serde(deserialize_with = "deserialize_bitvec")]
+    BitVec,
+);
 
 impl BlockResults {
+    /// Create `len` rejection results
+    pub fn with_len(len: usize) -> Self {
+        BlockResults(BitVec::from_elem(len, true))
+    }
+
     /// Accept the tx at the given position
     pub fn accept(&mut self, idx: usize) {
-        // Sufficiently extend range to contain index
-        for i in self.0.len()..((idx / 7) + 1) {
-            // Update previous MSB to indicate new byte
-            self.0[i - 1] |= 0x80u8;
-            // New bytes reject and have nothing following
-            self.0.push(0x7Fu8);
-        }
-        // Now indicate that the given transaction is accepted
-        self.0[idx / 7] &= !(0x01u8 << (idx % 7));
+        self.0.set(idx, false)
     }
 
     /// Reject the tx at the given position
     pub fn reject(&mut self, idx: usize) {
-        // If index is out of range then it was already off
-        if idx / 7 >= self.0.len() {
-            return;
-        }
-        // Otherwise turn off the relevant bit
-        self.0[idx / 7] |= 0x01u8 << (idx % 7);
-        // Now maintain canonicity by popping rejected bytes
-        while self.0.len() > 1 && *self.0.last().unwrap() == 0x7Fu8 {
-            // Delete redundant last byte
-            self.0.pop();
-            // Turn off MSB of previous byte
-            *self.0.last_mut().unwrap() &= 0x7Fu8;
-        }
+        self.0.set(idx, true)
     }
 
     /// Check if the tx at the given position is accepted
     pub fn is_accepted(&self, idx: usize) -> bool {
-        // Index beyond stored range implies rejection, otherwise check relevant
-        // bit vector entry
-        (idx / 7 < self.0.len())
-            && (self.0[idx / 7] & (0x01u8 << (idx % 7))) == 0
+        !self.0[idx]
     }
 }
 
-impl Default for BlockResults {
-    fn default() -> Self {
-        // Results object always has at least one byte
-        Self(vec![0x7Fu8])
+impl BorshSerialize for BlockResults {
+    fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        BorshSerialize::serialize(&self.0.to_bytes(), writer)
     }
 }
 
-impl Display for BlockResults {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for byte in &self.0 {
-            for i in 0..7 {
-                if byte & (0x01u8 << i) == 0 {
-                    // Current index is accepted
-                    write!(f, "0")?
-                } else {
-                    // Current index is rejected
-                    write!(f, "1")?
-                }
-            }
-        }
-        // Everything else is rejected
-        write!(f, "1+")
+impl BorshDeserialize for BlockResults {
+    fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
+        let vec: Vec<_> = BorshDeserialize::deserialize(buf)?;
+        Ok(Self(BitVec::from_bytes(&vec)))
     }
 }
 

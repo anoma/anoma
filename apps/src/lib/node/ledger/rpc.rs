@@ -4,14 +4,14 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
-use masp_primitives::asset_type::AssetType;
 use anoma::types::storage;
+use anoma::types::token::CONVERSION_KEY_PREFIX;
+use masp_primitives::asset_type::AssetType;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Path as AbciPath;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Path as AbciPath;
 use thiserror::Error;
-use anoma::types::token::CONVERSION_KEY_PREFIX;
 
 /// RPC query path
 #[derive(Debug, Clone)]

@@ -83,6 +83,7 @@ dependencies = [
  "assert_matches",
  "bech32",
  "bellman",
+ "bit-vec",
  "bls12_381",
  "borsh",
  "byte-unit",

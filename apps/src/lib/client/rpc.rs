@@ -28,7 +28,9 @@ use anoma::types::{address, storage, token};
 use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Itertools;
 use masp_primitives::asset_type::AssetType;
+use masp_primitives::merkle_tree::MerklePath;
 use masp_primitives::primitives::ViewingKey;
+use masp_primitives::sapling::Node;
 use masp_primitives::transaction::components::Amount;
 use masp_primitives::zip32::ExtendedFullViewingKey;
 #[cfg(not(feature = "ABCI"))]
@@ -55,8 +57,6 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
-use masp_primitives::sapling::Node;
-use masp_primitives::merkle_tree::MerklePath;
 
 use crate::cli::{self, args, Context};
 use crate::client::tx::{
@@ -1569,8 +1569,7 @@ fn process_unbonds_query(
 pub async fn query_conversion(
     client: HttpClient,
     asset_type: AssetType,
-) -> Option<(Address, Epoch, Amount, MerklePath<Node>)>
-{
+) -> Option<(Address, Epoch, Amount, MerklePath<Node>)> {
     let path = Path::Conversion(asset_type);
     let data = vec![];
     let response = client
@@ -1578,7 +1577,8 @@ pub async fn query_conversion(
         .await
         .unwrap();
     match response.code {
-        Code::Ok => match BorshDeserialize::try_from_slice(&response.value[..]) {
+        Code::Ok => match BorshDeserialize::try_from_slice(&response.value[..])
+        {
             Ok(value) => return Some(value),
             Err(err) => eprintln!("Error decoding the conversion: {}", err),
         },

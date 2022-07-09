@@ -89,7 +89,10 @@ where
                     } else {
                         response::Query {
                             code: 1,
-                            info: format!("No conversion found for asset type: {}", asset_type),
+                            info: format!(
+                                "No conversion found for asset type: {}",
+                                asset_type
+                            ),
                             proof_ops: None,
                             ..Default::default()
                         }
@@ -272,12 +275,10 @@ where
     /// Query to check if a storage key exists.
     fn has_storage_key(&self, key: &Key) -> response::Query {
         match self.storage.has_key(key) {
-            Ok((has_key, _gas)) => {
-                response::Query {
-                    value: has_key.try_to_vec().unwrap(),
-                    ..Default::default()
-                }
-            }
+            Ok((has_key, _gas)) => response::Query {
+                value: has_key.try_to_vec().unwrap(),
+                ..Default::default()
+            },
             Err(err) => response::Query {
                 code: 2,
                 info: format!("Storage error: {}", err),

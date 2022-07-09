@@ -67,6 +67,7 @@ dependencies = [
  "ark-serialize",
  "bech32",
  "bellman",
+ "bit-vec",
  "bls12_381",
  "borsh",
  "chrono",

@@ -66,10 +66,9 @@ use tendermint_rpc_abci::query::{EventType, Query};
 use tendermint_rpc_abci::{Client, HttpClient};
 
 use super::{rpc, signing};
-use crate::client::rpc::query_conversion;
 use crate::cli::context::{WalletAddress, WalletKeypair};
 use crate::cli::{args, safe_exit, Context};
-use crate::client::rpc::{query_epoch, query_storage_value};
+use crate::client::rpc::{query_conversion, query_epoch, query_storage_value};
 use crate::client::tendermint_websocket_client::{
     Error, TendermintWebsocketClient, WebSocketAddress,
 };

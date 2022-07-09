@@ -67,6 +67,7 @@ ark-bls12-381 = {version = "0.3"}
 ark-ec = {version = "0.3", optional = true}
 ark-serialize = "0.3"
 bech32 = "0.8.0"
+bit-vec = "0.6.3"
 borsh = "0.9.0"
 chrono = "0.4.19"
 # Using unreleased commit on top of version 0.5.0 that adds Sync to the CLruCache
