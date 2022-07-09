@@ -1601,7 +1601,9 @@ where
     CA: WasmCacheAccess,
 {
     let storage = unsafe { env.ctx.storage.get() };
-    let (header, gas) = storage.get_block_header();
+    let (header, gas) = storage
+        .get_block_header(None)
+        .map_err(TxRuntimeError::StorageError)?;
     Ok(match header {
         Some(h) => {
             let time = h

@@ -279,6 +279,7 @@ dependencies = [
  "escargot",
  "eyre",
  "fs_extra",
+ "hex",
  "itertools 0.10.3",
  "libp2p",
  "pretty_assertions",

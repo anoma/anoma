@@ -25,7 +25,9 @@ use anoma::ledger::pos::anoma_proof_of_stake::types::{
 };
 use anoma::ledger::pos::anoma_proof_of_stake::PosBase;
 use anoma::ledger::storage::write_log::WriteLog;
-use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
+use anoma::ledger::storage::{
+    DBIter, Sha256Hasher, Storage, StorageHasher, DB,
+};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
 use anoma::types::address::{masp, masp_tx_key};
@@ -176,10 +178,8 @@ pub enum MempoolTxType {
 }
 
 #[derive(Debug)]
-pub struct Shell<
-    D = storage::PersistentDB,
-    H = storage::PersistentStorageHasher,
-> where
+pub struct Shell<D = storage::PersistentDB, H = Sha256Hasher>
+where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
@@ -876,6 +876,7 @@ mod test_utils {
             .db
             .write_block(BlockStateWrite {
                 merkle_tree_stores: stores,
+                header: None,
                 hash: &hash,
                 height: BlockHeight(1),
                 epoch: Epoch(0),

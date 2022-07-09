@@ -4,6 +4,27 @@
 
 ### BUG FIXES
 
+- Ledger: Set the counterparty connection ID when the connection ack
+  ([#968](https://github.com/anoma/anoma/issues/968))
+- Ledger: Set the counterparty channel ID when the ack
+  ([#980](https://github.com/anoma/anoma/issues/980))
+
+### FEATURES
+
+- Ledger: Change the storage hasher to SHA256
+  ([#968](https://github.com/anoma/anoma/issues/968))
+
+### IMPROVEMENTS
+
+- Ledger: write/get block header to get an old consensus state
+  ([#974](https://github.com/anoma/anoma/issues/974))
+
+## v0.5.0
+
+Anoma 0.5.0 is a scheduled minor release.
+
+### BUG FIXES
+
 - WASM: Fix WASM cache exponential backoff
   ([#834](https://github.com/anoma/anoma/issues/834))
 - Ledger: Temporarily downgrade back to wasmer v1.0.2 until

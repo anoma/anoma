@@ -25,6 +25,7 @@
 //!   - `diffs`: diffs in account subspaces' key-vals
 //!     - `new/{dyn}`: value set in block height `h`
 //!     - `old/{dyn}`: value from predecessor block height
+//!   - `header`: block's header
 
 use std::cmp::Ordering;
 use std::path::Path;
@@ -43,6 +44,14 @@ use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
 };
+#[cfg(not(feature = "ABCI"))]
+use tendermint::block::Header;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::block::Header;
 
 use crate::config::utils::num_of_threads;
 
@@ -367,6 +376,9 @@ impl DB for RocksDB {
                         }
                         None => unknown_key_error(path)?,
                     },
+                    "header" => {
+                        // the block header doesn't have to be restored
+                    }
                     "hash" => {
                         hash = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -421,6 +433,7 @@ impl DB for RocksDB {
         let mut batch = WriteBatch::default();
         let BlockStateWrite {
             merkle_tree_stores,
+            header,
             hash,
             height,
             epoch,
@@ -495,6 +508,18 @@ impl DB for RocksDB {
                 );
             }
         }
+        // Block header
+        {
+            if let Some(h) = header {
+                let key = prefix_key
+                    .push(&"header".to_owned())
+                    .map_err(Error::KeyError)?;
+                batch.put(
+                    key.to_string(),
+                    h.encode_vec().expect("serialization failed"),
+                );
+            }
+        }
         // Block hash
         {
             let key = prefix_key
@@ -537,6 +562,23 @@ impl DB for RocksDB {
 
         // Flush without waiting
         self.flush(false)
+    }
+
+    fn read_block_header(&self, height: BlockHeight) -> Result<Option<Header>> {
+        let prefix_key = Key::from(height.to_db_key());
+        let key = prefix_key
+            .push(&"header".to_owned())
+            .map_err(Error::KeyError)?;
+        let value = self
+            .0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?;
+        match value {
+            Some(v) => Ok(Some(
+                Header::decode_vec(&v).map_err(Error::ProtobufCodingError)?,
+            )),
+            None => Ok(None),
+        }
     }
 
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
@@ -897,6 +939,7 @@ mod test {
         let results = BlockResults::default();
         let block = BlockStateWrite {
             merkle_tree_stores,
+            header: None,
             hash: &hash,
             height,
             epoch,

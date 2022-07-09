@@ -73,7 +73,7 @@ use anoma::tendermint_proto::Protobuf;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
 use anoma::types::ibc::IbcEvent;
-use anoma::types::storage::{BlockHeight, Key, TxIndex};
+use anoma::types::storage::{BlockHash, BlockHeight, Key, TxIndex};
 use anoma::types::time::Rfc3339String;
 use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
@@ -245,6 +245,9 @@ pub fn init_storage(storage: &mut TestStorage) -> (Address, Address) {
     init_genesis_storage(storage);
     // block header to check timeout timestamp
     storage.set_header(tm_dummy_header()).unwrap();
+    storage
+        .begin_block(BlockHash::default(), BlockHeight(1))
+        .unwrap();
 
     // initialize a token
     let code = std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
@@ -357,7 +360,7 @@ pub fn prepare_opened_channel(
 }
 
 pub fn msg_create_client() -> MsgCreateAnyClient {
-    let height = Height::new(1, 10);
+    let height = Height::new(0, 1);
     let header = MockHeader {
         height,
         timestamp: Timestamp::now(),
@@ -372,7 +375,7 @@ pub fn msg_create_client() -> MsgCreateAnyClient {
 }
 
 pub fn msg_update_client(client_id: ClientId) -> MsgUpdateAnyClient {
-    let height = Height::new(1, 11);
+    let height = Height::new(0, 2);
     let header = MockHeader {
         height,
         timestamp: Timestamp::now(),
@@ -463,7 +466,7 @@ pub fn msg_connection_open_confirm(
 }
 
 fn dummy_proofs() -> Proofs {
-    let height = Height::new(1, 10);
+    let height = Height::new(0, 1);
     let consensus_proof =
         ConsensusProof::new(vec![0].try_into().unwrap(), height).unwrap();
     Proofs::new(

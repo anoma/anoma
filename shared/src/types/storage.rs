@@ -297,6 +297,14 @@ impl From<DbKeySeg> for Key {
     }
 }
 
+impl FromStr for Key {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Key::parse(s)
+    }
+}
+
 impl Key {
     /// Parses string and returns a key
     pub fn parse(string: impl AsRef<str>) -> Result<Self> {

@@ -178,6 +178,7 @@ pub mod cmds {
                 .subcommand(QueryVotingPower::def().display_order(3))
                 .subcommand(QuerySlashes::def().display_order(3))
                 .subcommand(QueryResult::def().display_order(3))
+                .subcommand(QueryRawBytes::def().display_order(3))
                 // Intents
                 .subcommand(Intent::def().display_order(4))
                 .subcommand(SubscribeTopic::def().display_order(4))
@@ -206,6 +207,7 @@ pub mod cmds {
                 Self::parse_with_ctx(matches, QueryVotingPower);
             let query_slashes = Self::parse_with_ctx(matches, QuerySlashes);
             let query_result = Self::parse_with_ctx(matches, QueryResult);
+            let query_raw_bytes = Self::parse_with_ctx(matches, QueryRawBytes);
             let intent = Self::parse_with_ctx(matches, Intent);
             let subscribe_topic = Self::parse_with_ctx(matches, SubscribeTopic);
             let utils = SubCmd::parse(matches).map(Self::WithoutContext);
@@ -226,6 +228,7 @@ pub mod cmds {
                 .or(query_voting_power)
                 .or(query_slashes)
                 .or(query_result)
+                .or(query_raw_bytes)
                 .or(intent)
                 .or(subscribe_topic)
                 .or(utils)
@@ -281,6 +284,7 @@ pub mod cmds {
         QueryBonds(QueryBonds),
         QueryVotingPower(QueryVotingPower),
         QuerySlashes(QuerySlashes),
+        QueryRawBytes(QueryRawBytes),
         // Gossip cmds
         Intent(Intent),
         SubscribeTopic(SubscribeTopic),
@@ -1197,6 +1201,25 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct QueryRawBytes(pub args::QueryRawBytes);
+
+    impl SubCmd for QueryRawBytes {
+        const CMD: &'static str = "query-bytes";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                QueryRawBytes(args::QueryRawBytes::parse(matches))
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query the raw bytes of a given storage key")
+                .add_args::<args::QueryRawBytes>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct TxInitNft(pub args::NftCreate);
 
     impl SubCmd for TxInitNft {
@@ -1389,7 +1412,7 @@ pub mod args {
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::*;
     use anoma::types::masp::MaspValue;
-    use anoma::types::storage::Epoch;
+    use anoma::types::storage::{self, Epoch};
     use anoma::types::token;
     use anoma::types::transaction::GasLimit;
     use libp2p::Multiaddr;
@@ -1461,6 +1484,7 @@ pub mod args {
             let raw = "127.0.0.1:26657";
             TendermintAddress::from_str(raw).unwrap()
         }));
+
     const LEDGER_ADDRESS: Arg<TendermintAddress> = arg("ledger-address");
     const LOCALHOST: ArgFlag = flag("localhost");
     const MASP_VALUE: Arg<MaspValue> = arg("value");
@@ -1484,6 +1508,7 @@ pub mod args {
     const SIGNING_KEY: Arg<WalletKeypair> = arg("signing-key");
     const SOURCE: Arg<WalletAddress> = arg("source");
     const SOURCE_OPT: ArgOpt<WalletAddress> = SOURCE.opt();
+    const STORAGE_KEY: Arg<storage::Key> = arg("storage-key");
     const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<WalletAddress> = TOKEN.opt();
     const TOKEN: Arg<WalletAddress> = arg("token");
@@ -2231,7 +2256,27 @@ pub mod args {
             )
         }
     }
+    /// Query the raw bytes of given storage key
+    #[derive(Clone, Debug)]
+    pub struct QueryRawBytes {
+        /// The storage key to query
+        pub storage_key: storage::Key,
+        /// Common query args
+        pub query: Query,
+    }
 
+    impl Args for QueryRawBytes {
+        fn parse(matches: &ArgMatches) -> Self {
+            let storage_key = STORAGE_KEY.parse(matches);
+            let query = Query::parse(matches);
+            Self { storage_key, query }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(STORAGE_KEY.def().about("Storage key"))
+        }
+    }
     /// Intent arguments
     #[derive(Clone, Debug)]
     pub struct Intent {

@@ -11,6 +11,8 @@ use super::{
     BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error, Result, DB,
 };
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
+use crate::tendermint::block::Header;
+use crate::tendermint_proto::Protobuf;
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
@@ -122,6 +124,9 @@ impl DB for MockDB {
                         }
                         None => unknown_key_error(path)?,
                     },
+                    "header" => {
+                        // the block header doesn't have to be restored
+                    }
                     "hash" => {
                         hash = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -173,6 +178,7 @@ impl DB for MockDB {
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
         let BlockStateWrite {
             merkle_tree_stores,
+            header,
             hash,
             height,
             epoch,
@@ -227,6 +233,18 @@ impl DB for MockDB {
                 );
             }
         }
+        // Block header
+        {
+            if let Some(h) = header {
+                let key = prefix_key
+                    .push(&"header".to_owned())
+                    .map_err(Error::KeyError)?;
+                self.0.borrow_mut().insert(
+                    key.to_string(),
+                    h.encode_vec().expect("serialization failed"),
+                );
+            }
+        }
         // Block hash
         {
             let key = prefix_key
@@ -275,6 +293,20 @@ impl DB for MockDB {
                 .insert(results_path, types::encode(&results));
         }
         Ok(())
+    }
+
+    fn read_block_header(&self, height: BlockHeight) -> Result<Option<Header>> {
+        let prefix_key = Key::from(height.to_db_key());
+        let key = prefix_key
+            .push(&"header".to_owned())
+            .map_err(Error::KeyError)?;
+        let value = self.0.borrow().get(&key.to_string()).cloned();
+        match value {
+            Some(v) => Ok(Some(
+                Header::decode_vec(&v).map_err(Error::ProtobufCodingError)?,
+            )),
+            None => Ok(None),
+        }
     }
 
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {

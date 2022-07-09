@@ -371,6 +371,29 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
     }
 }
 
+/// Query the raw bytes of given storage key
+pub async fn query_raw_bytes(_ctx: Context, args: args::QueryRawBytes) {
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
+    let path = Path::Value(args.storage_key);
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, false)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => {
+            println!("{}", hex::encode(&response.value));
+        }
+        Code::Err(err) => {
+            eprintln!(
+                "Error in the query {}  (error code {})",
+                response.info, err
+            );
+            cli::safe_exit(1)
+        }
+    }
+}
+
 /// Query token balance(s)
 pub async fn query_balance(mut ctx: Context, args: args::QueryBalance) {
     // Query the balances of shielded or transparent account types depending on

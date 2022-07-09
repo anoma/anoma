@@ -24,6 +24,14 @@ use rayon::prelude::ParallelSlice;
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::merkle::proof::Proof;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Error as TmProtoError;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Error as TmProtoError;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 #[cfg(feature = "ABCI")]
@@ -126,8 +134,10 @@ pub enum Error {
     CodingError(types::Error),
     #[error("Merkle tree error: {0}")]
     MerkleTreeError(MerkleTreeError),
-    #[error("Merkle tree error: {0}")]
+    #[error("DB error: {0}")]
     DBError(String),
+    #[error("Tendermint Protobuf error: {0}")]
+    ProtobufCodingError(TmProtoError),
 }
 
 /// The block's state as stored in the database.
@@ -159,6 +169,8 @@ pub struct BlockStateRead {
 pub struct BlockStateWrite<'a> {
     /// Merkle tree stores
     pub merkle_tree_stores: MerkleTreeStoresWrite<'a>,
+    /// Header of the block
+    pub header: Option<&'a Header>,
     /// Hash of the block
     pub hash: &'a BlockHash,
     /// Height of the block
@@ -201,6 +213,9 @@ pub trait DB: std::fmt::Debug {
 
     /// Write block's metadata
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()>;
+
+    /// Read the block header with the given height from the DB
+    fn read_block_header(&self, height: BlockHeight) -> Result<Option<Header>>;
 
     /// Read the latest value for account subspace key from the DB
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>>;
@@ -384,6 +399,7 @@ where
     pub fn commit(&mut self) -> Result<()> {
         let state = BlockStateWrite {
             merkle_tree_stores: self.block.tree.stores(),
+            header: self.header.as_ref(),
             hash: &self.block.hash,
             height: self.block.height,
             epoch: self.block.epoch,
@@ -565,8 +581,23 @@ where
     }
 
     /// Get the block header
-    pub fn get_block_header(&self) -> (Option<Header>, u64) {
-        (self.header.clone(), MIN_STORAGE_GAS)
+    pub fn get_block_header(
+        &self,
+        height: Option<BlockHeight>,
+    ) -> Result<(Option<Header>, u64)> {
+        match height {
+            Some(h) if h == self.get_block_height().0 => {
+                Ok((self.header.clone(), MIN_STORAGE_GAS))
+            }
+            Some(h) => match self.db.read_block_header(h)? {
+                Some(header) => {
+                    let gas = header.encoded_len() as u64;
+                    Ok((Some(header), gas))
+                }
+                None => Ok((None, MIN_STORAGE_GAS)),
+            },
+            None => Ok((self.header.clone(), MIN_STORAGE_GAS)),
+        }
     }
 
     /// Initialize a new epoch when the current epoch is finished. Returns

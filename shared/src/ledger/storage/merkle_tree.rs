@@ -494,6 +494,12 @@ impl StorageHasher for Sha256Hasher {
     }
 }
 
+impl fmt::Debug for Sha256Hasher {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Sha256Hasher")
+    }
+}
+
 impl From<StorageError> for Error {
     fn from(error: StorageError) -> Self {
         Error::InvalidKey(error)

@@ -367,6 +367,7 @@ mod tests {
     use crate::types::ibc::data::{PacketAck, PacketReceipt};
     use crate::vm::wasm;
     use crate::types::storage::TxIndex;
+    use crate::types::storage::{BlockHash, BlockHeight};
 
     fn get_client_id() -> ClientId {
         ClientId::from_str("test_client").expect("Creating a client ID failed")
@@ -382,6 +383,9 @@ mod tests {
         storage
             .set_header(get_dummy_header())
             .expect("Setting a dummy header shouldn't fail");
+        storage
+            .begin_block(BlockHash::default(), BlockHeight(1))
+            .unwrap();
 
         // insert a mock client type
         let client_id = get_client_id();
@@ -392,7 +396,7 @@ mod tests {
             .expect("write failed");
         // insert a mock client state
         let client_state_key = client_state_key(&get_client_id());
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
@@ -559,7 +563,7 @@ mod tests {
     fn test_create_client() {
         let (storage, mut write_log) = insert_init_states();
 
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
@@ -840,7 +844,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
@@ -858,7 +862,7 @@ mod tests {
             Some(proof_client),
             Some(proof_consensus),
             None,
-            height,
+            Height::new(0, 1),
         )
         .unwrap();
         let msg = MsgConnectionOpenTry {
@@ -931,7 +935,7 @@ mod tests {
         write_log.write(&conn_key, bytes).expect("write failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let header = MockHeader {
             height,
             timestamp: Timestamp::now(),
@@ -950,7 +954,7 @@ mod tests {
             Some(proof_client),
             Some(proof_consensus),
             None,
-            height,
+            Height::new(0, 1),
         )
         .unwrap();
         let tx_code = vec![];
@@ -1016,7 +1020,7 @@ mod tests {
         write_log.write(&conn_key, bytes).expect("write failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let proof_conn = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_consensus = ConsensusProof::new(
@@ -1143,7 +1147,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let proof_channel = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_consensus = ConsensusProof::new(
@@ -1228,7 +1232,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let proof_channel = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_consensus = ConsensusProof::new(
@@ -1314,7 +1318,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let height = Height::new(1, 10);
+        let height = Height::new(0, 1);
         let proof_channel = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_client = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proof_consensus = ConsensusProof::new(
@@ -1486,7 +1490,7 @@ mod tests {
             }),
             sender: Signer::new("sender"),
             receiver: Signer::new("receiver"),
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
 
@@ -1499,9 +1503,13 @@ mod tests {
         let packet = packet_from_message(&msg, sequence, &counterparty);
         // insert a commitment
         let commitment = hash(&packet);
+        let mut commitment_bytes = vec![];
+        commitment
+            .encode(&mut commitment_bytes)
+            .expect("encoding shouldn't fail");
         let key = commitment_key(&get_port_id(), &get_channel_id(), sequence);
         write_log
-            .write(&key, commitment.as_bytes().to_vec())
+            .write(&key, commitment_bytes)
             .expect("write failed");
         write_log.commit_tx();
 
@@ -1570,12 +1578,12 @@ mod tests {
             destination_port: get_port_id(),
             destination_channel: get_channel_id(),
             data: vec![0],
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
         let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
-            Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
+            Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
                 .unwrap();
         let msg = MsgRecvPacket {
             packet,
@@ -1643,7 +1651,7 @@ mod tests {
             destination_port: counterparty.port_id().clone(),
             destination_channel: counterparty.channel_id().unwrap().clone(),
             data: vec![0],
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
         // insert an opened connection
@@ -1671,7 +1679,7 @@ mod tests {
         let ack = PacketAck::default().encode_to_vec();
         let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
-            Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
+            Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
                 .unwrap();
         let msg = MsgAcknowledgement {
             packet,
@@ -1748,7 +1756,7 @@ mod tests {
             }),
             sender: Signer::new("sender"),
             receiver: Signer::new("receiver"),
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
 
@@ -1764,8 +1772,12 @@ mod tests {
             &packet.source_channel,
             sequence,
         );
+        let mut commitment_bytes = vec![];
+        commitment
+            .encode(&mut commitment_bytes)
+            .expect("encoding shouldn't fail");
         write_log
-            .write(&commitment_key, commitment.as_bytes().to_vec())
+            .write(&commitment_key, commitment_bytes)
             .expect("write failed");
         let event = make_send_packet_event(packet);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1831,12 +1843,12 @@ mod tests {
             destination_port: get_port_id(),
             destination_channel: get_channel_id(),
             data: vec![0],
-            timeout_height: Height::new(1, 100),
+            timeout_height: Height::new(0, 100),
             timeout_timestamp,
         };
         let proof_packet = CommitmentProofBytes::try_from(vec![0]).unwrap();
         let proofs =
-            Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
+            Proofs::new(proof_packet, None, None, None, Height::new(0, 1))
                 .unwrap();
         let msg = MsgRecvPacket {
             packet,
