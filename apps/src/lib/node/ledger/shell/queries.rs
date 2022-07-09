@@ -11,6 +11,7 @@ use anoma::types::storage::{BlockResults, Key, PrefixValue};
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
+use masp_primitives::asset_type::AssetType;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::{ProofOp, ProofOps};
 #[cfg(not(feature = "ABCI"))]
@@ -71,32 +72,7 @@ where
                     }
                 }
                 Path::Conversion(asset_type) => {
-                    // Conversion values are constructed on request
-                    if let Some((addr, epoch, conv, pos)) =
-                        self.storage.conversion_state.assets.get(&asset_type)
-                    {
-                        let conv = (
-                            addr,
-                            epoch,
-                            Into::<masp_primitives::transaction::components::Amount>::into(conv.clone()),
-                            self.storage.conversion_state.tree.path(*pos)
-                        );
-                        response::Query {
-                            value: types::encode(&conv),
-                            proof_ops: None,
-                            ..Default::default()
-                        }
-                    } else {
-                        response::Query {
-                            code: 1,
-                            info: format!(
-                                "No conversion found for asset type: {}",
-                                asset_type
-                            ),
-                            proof_ops: None,
-                            ..Default::default()
-                        }
-                    }
+                    self.read_conversion(&asset_type)
                 }
                 Path::Value(storage_key) => {
                     self.read_storage_value(&storage_key, query.prove)
@@ -111,6 +87,38 @@ where
                 info: format!("RPC error: {}", err),
                 ..Default::default()
             },
+        }
+    }
+
+    /// Query to read a conversion from storage
+    pub fn read_conversion(&self, asset_type: &AssetType) -> response::Query {
+        // Conversion values are constructed on request
+        if let Some((addr, epoch, conv, pos)) =
+            self.storage.conversion_state.assets.get(&asset_type)
+        {
+            let conv = (
+                addr,
+                epoch,
+                Into::<masp_primitives::transaction::components::Amount>::into(
+                    conv.clone(),
+                ),
+                self.storage.conversion_state.tree.path(*pos),
+            );
+            response::Query {
+                value: types::encode(&conv),
+                proof_ops: None,
+                ..Default::default()
+            }
+        } else {
+            response::Query {
+                code: 1,
+                info: format!(
+                    "No conversion found for asset type: {}",
+                    asset_type
+                ),
+                proof_ops: None,
+                ..Default::default()
+            }
         }
     }
 
