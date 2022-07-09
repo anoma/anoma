@@ -50,27 +50,7 @@ where
                         ..Default::default()
                     }
                 }
-                Path::Results => {
-                    let (iter, _gas) = self.storage.iter_results();
-                    let mut results = vec![
-                        BlockResults::default();
-                        self.storage.block.height.0 as usize
-                            + 1
-                    ];
-                    iter.for_each(|(key, value, _gas)| {
-                        let key = key
-                            .parse::<usize>()
-                            .expect("expected integer for block height");
-                        let value = BlockResults::try_from_slice(&value)
-                            .expect("expected BlockResults bytes");
-                        results[key] = value;
-                    });
-                    let value = anoma::ledger::storage::types::encode(&results);
-                    response::Query {
-                        value,
-                        ..Default::default()
-                    }
-                }
+                Path::Results => self.read_results(),
                 Path::Conversion(asset_type) => {
                     self.read_conversion(&asset_type)
                 }
@@ -87,6 +67,28 @@ where
                 info: format!("RPC error: {}", err),
                 ..Default::default()
             },
+        }
+    }
+
+    /// Query to read block results from storage
+    pub fn read_results(&self) -> response::Query {
+        let (iter, _gas) = self.storage.iter_results();
+        let mut results = vec![
+            BlockResults::default();
+            self.storage.block.height.0 as usize + 1
+        ];
+        iter.for_each(|(key, value, _gas)| {
+            let key = key
+                .parse::<usize>()
+                .expect("expected integer for block height");
+            let value = BlockResults::try_from_slice(&value)
+                .expect("expected BlockResults bytes");
+            results[key] = value;
+        });
+        let value = anoma::ledger::storage::types::encode(&results);
+        response::Query {
+            value,
+            ..Default::default()
         }
     }
 
