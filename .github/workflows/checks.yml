@@ -20,15 +20,14 @@ jobs:
         toolchain: [ nightly-2022-05-20 ]
         make:
           - name: Clippy ABCI
-            task: clippy
+            task: make check && make clippy
           - name: Clippy ABCI++
-            task: clippy-abci-plus-plus
+            task: make clippy-check && clippy-abci-plus-plus
         include:
           - os: ubuntu-latest
             sccache-path: /home/runner/.cache/sccache
     env:
       CARGO_INCREMENTAL: 0
-      RUSTC_WRAPPER: sccache
       SCCACHE_CACHE_SIZE: 20G
       SCCACHE_DIR: ${{ matrix.sccache-path }}
       # SCCACHE_RECACHE: 1
@@ -56,8 +55,10 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-          profile: default
+          profile: minimal
           override: true
+      - name: Install rustup components
+        run: rustup component add rustfmt clippy miri --toolchain ${{ matrix.toolchain }}
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: false
@@ -76,6 +77,8 @@ jobs:
           restore-keys: ${{ runner.os }}-sccache-
       - name: Start sccache server
         run: sccache --start-server
+      - name: Check
+        run: make check
       - name: ${{ matrix.make.name }}
         run: make ${{ matrix.make.task }}
       - name: Print sccache stats
@@ -90,9 +93,6 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
         toolchain: [ nightly-2022-05-20 ]
-        make:
-          - name: Format
-            task: fmt-check
         include:
           - os:  ubuntu-latest
             sccache-path: /home/runner/.cache/sccache
@@ -125,8 +125,10 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-          profile: default
+          profile: minimal
           override: true
+      - name: Install rustup components
+        run: rustup component add rustfmt clippy miri --toolchain ${{ matrix.toolchain }}
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: false
@@ -145,8 +147,8 @@ jobs:
           restore-keys: ${{ runner.os }}-sccache-
       - name: Start sccache server
         run: sccache --start-server
-      - name: ${{ matrix.make.name }}
-        run: make ${{ matrix.make.task }}
+      - name: Format
+        run: make check && make fmt-check
       - name: Print sccache stats
         run: sccache --show-stats
       - name: Stop sccache server
