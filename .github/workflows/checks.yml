@@ -17,41 +17,64 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
+        toolchain: [ nightly-2022-05-20 ]
+        make:
+          - name: Clippy ABCI
+            task: clippy
+          - name: Clippy ABCI++
+            task: clippy-abci-plus-plus
+        include:
+          - os:  ubuntu-latest
+            sccache-path: /home/runner/.cache/sccache
     env:
       CARGO_INCREMENTAL: 0
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      - name: Install sccache (ubuntu-latest)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          LINK: https://github.com/mozilla/sccache/releases/download
+          SCCACHE_VERSION: 0.2.13
+        run: |
+          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
+          mkdir -p $HOME/.local/bin
+          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH          
+      - name: Install sccache (macos-latest)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install sccache          
       - name: Setup rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-05-20
+          toolchain: ${{ matrix.toolchain }}
           components: clippy, rustfmt
-      - name: Cache
-        uses: Swatinem/rust-cache@v1
-      - name: Run clippy
-        run: make clippy
-      - name: Run fmt
-        run: make fmt-check
-
-  clippy-fmt-abci-plus-plus:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: false
         with:
-          toolchain: nightly-2022-05-20
-          components: clippy, rustfmt
-      - name: Cache
-        uses: Swatinem/rust-cache@v1
-      - name: Run clippy
-        run: make clippy-abci-plus-plus
-
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git            
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - name: Save sccache
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: ${{ matrix.sccache-path }}
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+                        ${{ runner.os }}-sccache-
+      - name: Start sccache server
+        run: sccache --start-server
+      - name: ${{ matrix.make.name }}
+        run: make ${{ matrix.make.task }}
+      - name: Print sccache stats
+        run: sccache --show-stats
+      - name: Stop sccache server
+        run: sccache --stop-server || true
