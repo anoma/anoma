@@ -1,0 +1,45 @@
+name: Build and run tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  clippy-fmt:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+      - name: Run clippy
+        run: make clippy
+      - name: Run fmt
+        run: make fmt-check
+
+  clippy-fmt-abci-plus-plus:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-05-20
+          target: wasm32-unknown-unknown
+          components: clippy, rustfmt
+      - name: Run clippy
+        run: make clippy-abci-plus-plus
+
