@@ -53,7 +53,7 @@ pub fn main() -> Result<()> {
             cmds::WalletMasp::ListPayAddrs(cmds::MaspListPayAddrs) => {
                 payment_addresses_list(ctx)
             }
-            cmds::WalletMasp::ListSpendKeys(cmds::MaspListSpendKeys(args)) => {
+            cmds::WalletMasp::ListKeys(cmds::MaspListKeys(args)) => {
                 spending_keys_list(ctx, args)
             }
             cmds::WalletMasp::FindAddrKey(cmds::MaspFindAddrKey(args)) => {
@@ -92,8 +92,8 @@ fn address_key_find(
         // Otherwise alias cannot be referring to any shielded value
         println!(
             "No shielded address or key with alias {} found. Use the commands \
-             `masp list-payment-addrs`, `masp lists-spending-keys`, and `masp \
-             list-viewing-keys` to see all the known addresses and keys.",
+             `masp list-addrs` and `masp list-keys` to see all the known \
+             addresses and keys.",
             alias.to_lowercase()
         );
     }
@@ -102,10 +102,10 @@ fn address_key_find(
 /// List spending keys.
 fn spending_keys_list(
     ctx: Context,
-    args::SpendKeysList {
+    args::MaspKeysList {
         decrypt,
         unsafe_show_secret,
-    }: args::SpendKeysList,
+    }: args::MaspKeysList,
 ) {
     let wallet = ctx.wallet;
     let known_view_keys = wallet.get_viewing_keys();
@@ -175,8 +175,8 @@ fn payment_addresses_list(ctx: Context) {
     let known_addresses = wallet.get_payment_addrs();
     if known_addresses.is_empty() {
         println!(
-            "No known payment addresses. Try `masp gen-payment-addr --alias \
-             my-addr` to generate a new payment address."
+            "No known payment addresses. Try `masp gen-addr --alias my-addr` \
+             to generate a new payment address."
         );
     } else {
         let stdout = io::stdout();

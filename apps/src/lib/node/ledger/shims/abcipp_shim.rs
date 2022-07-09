@@ -97,6 +97,10 @@ impl AbcippShim {
                         .map_err(Error::from)
                         .and_then(|res| match res {
                             Response::ProcessProposal(resp) => {
+                                // The transaction's data is used in the
+                                // response to add transfer event via
+                                // `impl From<Tx> for ResponseDeliverTx`
+                                // conversion.
                                 #[cfg(feature = "ABCI")]
                                 let tx = Tx::try_from(resp.tx.as_ref());
                                 #[cfg(not(feature = "ABCI"))]

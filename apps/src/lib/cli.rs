@@ -454,7 +454,7 @@ pub mod cmds {
         GenSpendKey(MaspGenSpendKey),
         AddAddrKey(MaspAddAddrKey),
         ListPayAddrs(MaspListPayAddrs),
-        ListSpendKeys(MaspListSpendKeys),
+        ListKeys(MaspListKeys),
         FindAddrKey(MaspFindAddrKey),
     }
 
@@ -467,7 +467,7 @@ pub mod cmds {
                 let gensk = SubCmd::parse(matches).map(Self::GenSpendKey);
                 let addak = SubCmd::parse(matches).map(Self::AddAddrKey);
                 let listpa = SubCmd::parse(matches).map(Self::ListPayAddrs);
-                let listsk = SubCmd::parse(matches).map(Self::ListSpendKeys);
+                let listsk = SubCmd::parse(matches).map(Self::ListKeys);
                 let findak = SubCmd::parse(matches).map(Self::FindAddrKey);
                 gensk.or(genpa).or(addak).or(listpa).or(listsk).or(findak)
             })
@@ -485,7 +485,7 @@ pub mod cmds {
                 .subcommand(MaspGenPayAddr::def())
                 .subcommand(MaspAddAddrKey::def())
                 .subcommand(MaspListPayAddrs::def())
-                .subcommand(MaspListSpendKeys::def())
+                .subcommand(MaspListKeys::def())
                 .subcommand(MaspFindAddrKey::def())
         }
     }
@@ -512,21 +512,21 @@ pub mod cmds {
 
     /// List all known shielded keys
     #[derive(Clone, Debug)]
-    pub struct MaspListSpendKeys(pub args::SpendKeysList);
+    pub struct MaspListKeys(pub args::MaspKeysList);
 
-    impl SubCmd for MaspListSpendKeys {
+    impl SubCmd for MaspListKeys {
         const CMD: &'static str = "list-keys";
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches
                 .subcommand_matches(Self::CMD)
-                .map(|matches| Self(args::SpendKeysList::parse(matches)))
+                .map(|matches| Self(args::MaspKeysList::parse(matches)))
         }
 
         fn def() -> App {
             App::new(Self::CMD)
                 .about("Lists all shielded keys in the wallet")
-                .add_args::<args::SpendKeysList>()
+                .add_args::<args::MaspKeysList>()
         }
     }
 
@@ -2786,12 +2786,12 @@ pub mod args {
 
     /// Wallet list shielded keys arguments
     #[derive(Clone, Debug)]
-    pub struct SpendKeysList {
+    pub struct MaspKeysList {
         pub decrypt: bool,
         pub unsafe_show_secret: bool,
     }
 
-    impl Args for SpendKeysList {
+    impl Args for MaspKeysList {
         fn parse(matches: &ArgMatches) -> Self {
             let decrypt = DECRYPT.parse(matches);
             let unsafe_show_secret = UNSAFE_SHOW_SECRET.parse(matches);
