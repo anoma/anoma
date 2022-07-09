@@ -96,7 +96,7 @@ where
     pub fn read_conversion(&self, asset_type: &AssetType) -> response::Query {
         // Conversion values are constructed on request
         if let Some((addr, epoch, conv, pos)) =
-            self.storage.conversion_state.assets.get(&asset_type)
+            self.storage.conversion_state.assets.get(asset_type)
         {
             let conv = (
                 addr,

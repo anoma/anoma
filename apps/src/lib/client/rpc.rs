@@ -1,7 +1,7 @@
 //! Client RPC queries
 
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
 use std::io::{self, Write};
 use std::str::FromStr;
@@ -153,11 +153,20 @@ pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
     cli::safe_exit(1)
 }
 
-/// Query the specified accepted transfers from the ledger
-pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
+/// Obtain the known effects of all accepted shielded and transparent
+/// transactions. If an owner is specified, then restrict the set to only
+/// transactions crediting/debiting the given owner. If token is specified, then
+/// restrict set to only transactions involving the given token.
+pub async fn query_tx_deltas(
+    ctx: &mut Context,
+    ledger_address: TendermintAddress,
+    query_owner: &Option<BalanceOwner>,
+    query_token: &Option<Address>,
+) -> BTreeMap<(BlockHeight, TxIndex), (Epoch, TransferDelta, TransactionDelta)>
+{
     const TXS_PER_PAGE: u8 = 100;
     // Connect to the Tendermint server holding the transactions
-    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
+    let client = HttpClient::new(ledger_address.clone()).unwrap();
     // Build up the context that will be queried for transactions
     let _ = ctx.shielded.load();
     let vks = ctx.wallet.get_viewing_keys();
@@ -165,17 +174,14 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
         .values()
         .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
         .collect();
-    ctx.shielded
-        .fetch(&args.query.ledger_address, &[], &fvks)
-        .await;
+    ctx.shielded.fetch(&ledger_address, &[], &fvks).await;
     // Save the update state so that future fetches can be short-circuited
     let _ = ctx.shielded.save();
     // Required for filtering out rejected transactions from Tendermint
     // responses
-    let block_results = query_results(args.query).await;
+    let block_results = query_results(args::Query { ledger_address }).await;
     let mut transfers = ctx.shielded.get_tx_deltas().clone();
     // Construct the set of addresses relevant to user's query
-    let query_owner = args.owner.as_ref().map(|x| ctx.get_cached(x));
     let relevant_addrs = match &query_owner {
         Some(BalanceOwner::Address(owner)) => vec![owner.clone()],
         // MASP objects are dealt with outside of tx_search
@@ -184,7 +190,6 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
         // Unspecified owner means all known addresses are considered relevant
         None => ctx.wallet.get_addresses().into_values().collect(),
     };
-    let query_token = args.token.as_ref().map(|x| ctx.get(x));
     // Find all transactions to or from the relevant address set
     for addr in relevant_addrs {
         for prop in ["transfer.source", "transfer.target"] {
@@ -260,13 +265,31 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
             }
         }
     }
+    transfers
+}
+
+/// Query the specified accepted transfers from the ledger
+pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
+    let query_token = args.token.as_ref().map(|x| ctx.get(x));
+    let query_owner = args.owner.as_ref().map(|x| ctx.get_cached(x));
+    // Obtain the effects of all shielded and transparent transactions
+    let transfers = query_tx_deltas(
+        &mut ctx,
+        args.query.ledger_address.clone(),
+        &query_owner,
+        &query_token,
+    )
+    .await;
     // To facilitate lookups of human-readable token names
     let tokens = tokens();
+    let vks = ctx.wallet.get_viewing_keys();
     // To enable ExtendedFullViewingKeys to be displayed instead of ViewingKeys
     let fvk_map: HashMap<_, _> = vks
         .values()
         .map(|fvk| (ExtendedFullViewingKey::from(*fvk).fvk.vk, fvk))
         .collect();
+    // Connect to the Tendermint server holding the transactions
+    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
     // Now display historical shielded and transparent transactions
     for ((height, idx), (epoch, tfer_delta, tx_delta)) in transfers {
         // Check if this transfer pertains to the supplied owner
