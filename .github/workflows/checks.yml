@@ -56,7 +56,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-          profile: minimal
+          profile: default
           override: true
       - name: Cache cargo registry
         uses: actions/cache@v2
@@ -125,7 +125,8 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-          components: clippy, rustfmt
+          profile: default
+          override: true
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: false
