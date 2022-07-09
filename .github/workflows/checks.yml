@@ -24,7 +24,7 @@ jobs:
           - name: Clippy ABCI++
             task: clippy-abci-plus-plus
         include:
-          - os:  ubuntu-latest
+          - os: ubuntu-latest
             sccache-path: /home/runner/.cache/sccache
     env:
       CARGO_INCREMENTAL: 0
@@ -56,7 +56,8 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-          components: clippy, rustfmt
+          profile: minimal
+          override: true
       - name: Cache cargo registry
         uses: actions/cache@v2
         continue-on-error: false
@@ -97,6 +98,9 @@ jobs:
             sccache-path: /home/runner/.cache/sccache
     env:
       CARGO_INCREMENTAL: 0
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 20G
+      SCCACHE_DIR: ${{ matrix.sccache-path }}
 
     steps:
       - name: Checkout repo
