@@ -594,7 +594,7 @@ fn masp_pinned_txs() -> Result<()> {
     let test = setup::network(
         |genesis| {
             let parameters = ParametersConfig {
-                min_duration: 180,
+                min_duration: 60,
                 ..genesis.parameters
             };
             GenesisConfig {
@@ -755,7 +755,7 @@ fn masp_incentives() -> Result<()> {
     let test = setup::network(
         |genesis| {
             let parameters = ParametersConfig {
-                min_duration: 180,
+                min_duration: 120,
                 ..genesis.parameters
             };
             GenesisConfig {
