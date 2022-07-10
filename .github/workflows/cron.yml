@@ -1,14 +1,6 @@
-name: Build docs
-
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  schedule:
+    - cron: "0 3 * * 1,3,5"
 
 jobs:
   clippy-fmt:
@@ -19,9 +11,13 @@ jobs:
         os: [ubuntu-latest]
         nightly_version: [nightly-2022-05-20]
         make:
-          - name: Build docs
-            command: build-doc
-            cache_subkey: docs
+          - name: Audit
+            command: audit
+            cache_subkey: audit
+            cache_version: v1
+          - name: Unused dependencies
+            command: udeps
+            cache_subkey: udeps
             cache_version: v1
 
     env:
@@ -62,14 +58,8 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-
       - name: Install cargo tool
-        run: |
-            cargo install mdbook
-            cargo install mdbook-mermaid
-            cargo install mdbook-linkcheck
+        run: cargo install ${{ matrix.make.command }}
       - name: ${{ matrix.make.name }}
         run: make ${{ matrix.make.command }}
-      - name: Publish docs
-        if: ${{ github.ref == 'refs/heads/master' }}
-        run: echo "Publishing... "
       - name: Clean cache folder
         run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache

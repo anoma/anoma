@@ -11,13 +11,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  clippy-fmt:
+  docs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        nightly_version: [ nightly-2022-05-20 ]
+        os: [ubuntu-latest]
+        nightly_version: [nightly-2022-05-20]
         make:
           - name: Clippy
             command: clippy
@@ -31,14 +31,13 @@ jobs:
             command: check && make fmt-check
             cache_subkey: fmt
             cache_version: v1
-            
+
     env:
       CARGO_INCREMENTAL: 0
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      
       - name: Setup rust toolchain
         uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
         with:

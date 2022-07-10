@@ -129,6 +129,9 @@ reset-ledger-abci-plus-plus:
 audit:
 	$(cargo) audit $(foreach ignore,$(audit-ignores), --ignore $(ignore))
 
+udeps:
+	$(cargo) +$(nightly) udeps --all-targets
+
 test: test-unit test-e2e test-wasm
 
 test-e2e:
