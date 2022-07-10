@@ -141,6 +141,7 @@ pub mod main {
             target,
             token,
             amount,
+            key: _,
             shielded: _,
         } = transfer;
         let target_key = token::balance_key(&token, &target);
