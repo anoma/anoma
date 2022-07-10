@@ -14,7 +14,7 @@ jobs:
   clippy-fmt:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
         toolchain: [ nightly-2022-05-20 ]
@@ -28,7 +28,7 @@ jobs:
             cache_subkey: clippy-abci
             cache_version: v1
           - name: Format
-            command: fmt-check
+            command: check && make fmt-check
             cache_subkey: fmt
             cache_version: v1
             
@@ -40,9 +40,8 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
         with:
-          toolchain: ${{ matrix.toolchain }}
           target: wasm32-unknown-unknown
           profile: default
           override: true
