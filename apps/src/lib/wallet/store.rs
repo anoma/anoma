@@ -305,14 +305,6 @@ impl Store {
         &self.spend_keys
     }
 
-    fn generate_keypair() -> common::SecretKey {
-        use rand::rngs::OsRng;
-        let mut csprng = OsRng {};
-        ed25519::SigScheme::generate(&mut csprng)
-            .try_to_sk()
-            .unwrap()
-    }
-
     fn generate_spending_key() -> ExtendedSpendingKey {
         use rand::rngs::OsRng;
         let mut spend_key = [0; 32];
