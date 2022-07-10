@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docs:
+  clippy-fmt:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
