@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        toolchain: [ nightly-2022-05-20 ]
+        nightly_version: [ nightly-2022-05-20 ]
         make:
           - name: Clippy
             command: clippy
@@ -45,6 +45,12 @@ jobs:
           target: wasm32-unknown-unknown
           profile: default
           override: true
+      - name: Setup rust nightly
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+        with:
+          toolchain: ${{ nightly_version }}
+          target: wasm32-unknown-unknown
+          profile: default
       - name: Cache cargo
         uses: actions/cache@v3
         continue-on-error: false
