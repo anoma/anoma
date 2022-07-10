@@ -22,9 +22,15 @@ jobs:
           - name: Clippy
             command: clippy
             cache_subkey: clippy
+            cache_version: v1
           - name: Clippy ABCI++
             command: clippy-abci-plus-plus
             cache_subkey: clippy-abci
+            cache_version: v1
+          - name: Format
+            command: fmt-check
+            cache_subkey: fmt
+            cache_version: v1
             
     env:
       CARGO_INCREMENTAL: 0
@@ -55,13 +61,11 @@ jobs:
             ./wasm/tx_template/target
             ./wasm/vp_template/target
             ./wasm_for_tests/wasm_source/target
-          key: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-cargo-
+          key: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-
       - name: Rustup check
         run: rustup show
       - name: ${{ matrix.make.name }}
         run: make ${{ matrix.make.command }}
       - name: Clean cache folder
-        run: | 
-            cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache
-            cargo-cache
+        run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
