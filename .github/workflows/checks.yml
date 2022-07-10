@@ -58,7 +58,7 @@ jobs:
         run: make check
       - name: Clean cache folder
         run: | 
-            cargo install (--git git://github.com/matthiaskrgr/cargo-cache OR cargo-cache) --no-default-features --features ci-autoclean cargo-cache
+            cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache
             cargo-cache
 
   # fmt:
