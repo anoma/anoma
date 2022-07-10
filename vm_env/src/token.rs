@@ -7,6 +7,7 @@ use masp_primitives::transaction::Transaction;
 
 /// Vp imports and functions.
 pub mod vp {
+    use anoma::types::storage::KeySeg;
     pub use anoma::types::token::*;
 
     use super::*;
@@ -22,8 +23,9 @@ pub mod vp {
         let all_checked = keys_changed.iter().all(|key| {
             match token::is_balance_key(token, key) {
                 None => {
-                    // deny any other keys
-                    false
+                    // Unknown changes to this address space are disallowed, but
+                    // unknown changes anywhere else are permitted
+                    key.segments.get(0) != Some(&token.to_db_key())
                 }
                 Some(owner) => {
                     // accumulate the change
@@ -38,9 +40,12 @@ pub mod vp {
                         _ => vp::read_pre(&key).unwrap_or_default(),
                     };
                     let post: Amount = match owner {
-                        Address::Internal(
-                            InternalAddress::IbcMint | InternalAddress::IbcBurn,
-                        ) => vp::read_temp(&key).unwrap_or_default(),
+                        Address::Internal(InternalAddress::IbcMint) => {
+                            vp::read_temp(&key).unwrap_or_else(Amount::max)
+                        }
+                        Address::Internal(InternalAddress::IbcBurn) => {
+                            vp::read_temp(&key).unwrap_or_default()
+                        }
                         _ => vp::read_post(&key).unwrap_or_default(),
                     };
                     let this_change = post.change() - pre.change();

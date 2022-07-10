@@ -19,7 +19,8 @@ where
 {
     /// The epoch in which this data was last updated
     last_update: Epoch,
-    data: Vec<Option<Data>>,
+    /// The vector of possible values
+    pub data: Vec<Option<Data>>,
     offset: PhantomData<Offset>,
 }
 
@@ -38,7 +39,8 @@ where
 {
     /// The epoch in which this data was last updated
     last_update: Epoch,
-    data: Vec<Option<Data>>,
+    /// The vector of possible values
+    pub data: Vec<Option<Data>>,
     offset: PhantomData<Offset>,
 }
 
@@ -187,11 +189,6 @@ where
         params: &PosParams,
     ) {
         let epoch = current_epoch.into();
-        debug_assert!(
-            epoch >= self.last_update,
-            "The current epoch must be greater than or equal to the last \
-             update"
-        );
         let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
         let shift: usize =
@@ -248,7 +245,6 @@ where
         params: &PosParams,
     ) {
         let offset = offset.value(params) as usize;
-        debug_assert!(offset <= Offset::value(params) as usize);
         let epoch = current_epoch.into();
         self.update_data(epoch, params);
 
@@ -402,10 +398,7 @@ where
 
     /// Find the delta value for the given epoch, if any. Returns `None` when
     /// the given epoch is lower than `self.last_update`.
-    pub(crate) fn get_delta_at_epoch(
-        &self,
-        epoch: impl Into<Epoch>,
-    ) -> Option<&Data> {
+    pub fn get_delta_at_epoch(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
         let epoch = epoch.into();
         epoch.checked_sub(self.last_update).and_then(|index| {
             let index: usize = index.into();
@@ -421,11 +414,6 @@ where
         params: &PosParams,
     ) {
         let epoch = current_epoch.into();
-        debug_assert!(
-            epoch >= self.last_update,
-            "The current epoch must be greater than or equal to the last \
-             update"
-        );
         let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
         let shift: usize =
@@ -504,7 +492,6 @@ where
         params: &PosParams,
     ) {
         let offset = offset.value(params) as usize;
-        debug_assert!(offset <= Offset::value(params) as usize);
         let epoch = current_epoch.into();
         self.update_data(epoch, params);
 
@@ -528,7 +515,6 @@ where
         self.update_data(current_epoch, params);
         let offset =
             (u64::from(update_epoch) - u64::from(current_epoch)) as usize;
-        debug_assert!(offset <= Offset::value(params) as usize);
 
         self.data[offset] = self.data[offset].as_ref().map_or_else(
             || Some(value.clone()),
@@ -574,8 +560,8 @@ mod tests {
     use proptest::state_machine::{AbstractStateMachine, StateMachineTest};
 
     use super::*;
+    use crate::parameters::testing::arb_pos_params;
     use crate::types::tests::arb_epoch;
-    use crate::types::BasisPoints;
 
     prop_state_machine! {
         #[test]
@@ -1189,46 +1175,6 @@ mod tests {
             let offset = Offset::value(params);
             assert!(data.data.len() <= (offset + 1) as usize);
         }
-    }
-
-    fn arb_pos_params() -> impl Strategy<Value = PosParams> {
-        (
-            10..500_u64,
-            1..10_u64,
-            1..10_000_u64,
-            1..1_000_u64,
-            1..1_000_u64,
-            1..10_000_u64,
-            1..10_000_u64,
-        )
-            .prop_flat_map(
-                |(
-                    max_validator_slots,
-                    pipeline_len,
-                    votes_per_token,
-                    block_proposer_reward,
-                    block_vote_reward,
-                    duplicate_vote_slash_rate,
-                    light_client_attack_slash_rate,
-                )| {
-                    (pipeline_len + 1..pipeline_len + 10).prop_map(
-                        move |unbonding_len| PosParams {
-                            max_validator_slots,
-                            pipeline_len,
-                            unbonding_len,
-                            votes_per_token: BasisPoints::new(votes_per_token),
-                            block_proposer_reward,
-                            block_vote_reward,
-                            duplicate_vote_slash_rate: BasisPoints::new(
-                                duplicate_vote_slash_rate,
-                            ),
-                            light_client_attack_slash_rate: BasisPoints::new(
-                                light_client_attack_slash_rate,
-                            ),
-                        },
-                    )
-                },
-            )
     }
 
     fn arb_offset(

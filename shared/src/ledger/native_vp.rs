@@ -114,8 +114,13 @@ where
     /// Storage read prior state (before tx execution). It will try to read from
     /// the storage.
     pub fn read_pre(&self, key: &Key) -> Result<Option<Vec<u8>>> {
-        vp_env::read_pre(&mut *self.gas_meter.borrow_mut(), self.storage, key)
-            .map_err(Error::ContextError)
+        vp_env::read_pre(
+            &mut *self.gas_meter.borrow_mut(),
+            self.storage,
+            self.write_log,
+            key,
+        )
+        .map_err(Error::ContextError)
     }
 
     /// Storage read posterior state (after tx execution). It will try to read

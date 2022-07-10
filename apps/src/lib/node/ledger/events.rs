@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::fmt::{self, Display};
 use std::ops::{Index, IndexMut};
 
+use anoma::ledger::governance::utils::ProposalEvent;
 use anoma::types::ibc::IbcEvent;
 use anoma::types::transaction::{hash_tx, TxType};
 use borsh::BorshSerialize;
@@ -9,17 +11,27 @@ use borsh::BorshSerialize;
 use tendermint_proto::abci::EventAttribute;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::EventAttribute;
+use thiserror::Error;
+
+/// Indicates if an event is emitted do to
+/// an individual Tx or the nature of a finalized block
+#[derive(Clone, Debug)]
+pub enum EventLevel {
+    Block,
+    Tx,
+}
 
 /// Custom events that can be queried from Tendermint
 /// using a websocket client
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Event {
     pub event_type: EventType,
+    pub level: EventLevel,
     pub attributes: HashMap<String, String>,
 }
 
 /// The two types of custom events we currently use
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum EventType {
     // The transaction was accepted to be included in a block
     Accepted,
@@ -27,6 +39,8 @@ pub enum EventType {
     Applied,
     // The IBC transaction was applied during block finalization
     Ibc(String),
+    // The proposal that has been executed
+    Proposal,
 }
 
 #[cfg(not(feature = "ABCI"))]
@@ -36,6 +50,7 @@ impl Display for EventType {
             EventType::Accepted => write!(f, "accepted"),
             EventType::Applied => write!(f, "applied"),
             EventType::Ibc(t) => write!(f, "{}", t),
+            EventType::Proposal => write!(f, "proposal"),
         }?;
         Ok(())
     }
@@ -48,6 +63,7 @@ impl Display for EventType {
             EventType::Accepted => write!(f, "applied"),
             EventType::Applied => write!(f, "applied"),
             EventType::Ibc(t) => write!(f, "{}", t),
+            EventType::Proposal => write!(f, "proposal"),
         }?;
         Ok(())
     }
@@ -61,6 +77,7 @@ impl Event {
             TxType::Wrapper(wrapper) => {
                 let mut event = Event {
                     event_type: EventType::Accepted,
+                    level: EventLevel::Tx,
                     attributes: HashMap::new(),
                 };
                 event["hash"] = if !cfg!(feature = "ABCI") {
@@ -78,6 +95,7 @@ impl Event {
             TxType::Decrypted(decrypted) => {
                 let mut event = Event {
                     event_type: EventType::Applied,
+                    level: EventLevel::Tx,
                     attributes: HashMap::new(),
                 };
                 event["hash"] = decrypted.hash_commitment().to_string();
@@ -86,6 +104,7 @@ impl Event {
             tx @ TxType::Protocol(_) => {
                 let mut event = Event {
                     event_type: EventType::Applied,
+                    level: EventLevel::Tx,
                     attributes: HashMap::new(),
                 };
                 event["hash"] = hash_tx(
@@ -102,8 +121,15 @@ impl Event {
         event
     }
 
+    /// Check if the events keys contains a given string
     pub fn contains_key(&self, key: &str) -> bool {
         self.attributes.contains_key(key)
+    }
+
+    /// Get the value corresponding to a given key, if it exists.
+    /// Else return None.
+    pub fn get(&self, key: &str) -> Option<&String> {
+        self.attributes.get(key)
     }
 }
 
@@ -128,7 +154,18 @@ impl From<IbcEvent> for Event {
     fn from(ibc_event: IbcEvent) -> Self {
         Self {
             event_type: EventType::Ibc(ibc_event.event_type),
+            level: EventLevel::Tx,
             attributes: ibc_event.attributes,
+        }
+    }
+}
+
+impl From<ProposalEvent> for Event {
+    fn from(proposal_event: ProposalEvent) -> Self {
+        Self {
+            event_type: EventType::Proposal,
+            level: EventLevel::Block,
+            attributes: proposal_event.attributes,
         }
     }
 }
@@ -188,31 +225,52 @@ impl Attributes {
     }
 }
 
-impl From<&serde_json::Value> for Attributes {
-    fn from(json: &serde_json::Value) -> Self {
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("Json missing `attributes` field")]
+    MissingAttributes,
+    #[error("Attributes missing key: {0}")]
+    MissingKey(String),
+    #[error("Attributes missing value: {0}")]
+    MissingValue(String),
+}
+
+impl TryFrom<&serde_json::Value> for Attributes {
+    type Error = Error;
+
+    fn try_from(json: &serde_json::Value) -> Result<Self, Self::Error> {
         let mut attributes = HashMap::new();
         let attrs: Vec<serde_json::Value> = serde_json::from_value(
             json.get("attributes")
-                .expect("Tendermint event missing attributes")
+                .ok_or(Error::MissingAttributes)?
                 .clone(),
         )
         .unwrap();
+
         for attr in attrs {
             attributes.insert(
                 serde_json::from_value(
                     attr.get("key")
-                        .expect("Attributes JSON missing key")
+                        .ok_or_else(|| {
+                            Error::MissingKey(
+                                serde_json::to_string(&attr).unwrap(),
+                            )
+                        })?
                         .clone(),
                 )
                 .unwrap(),
                 serde_json::from_value(
                     attr.get("value")
-                        .expect("Attributes JSON missing value")
+                        .ok_or_else(|| {
+                            Error::MissingValue(
+                                serde_json::to_string(&attr).unwrap(),
+                            )
+                        })?
                         .clone(),
                 )
                 .unwrap(),
             );
         }
-        Attributes(attributes)
+        Ok(Attributes(attributes))
     }
 }

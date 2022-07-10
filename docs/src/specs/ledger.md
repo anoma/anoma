@@ -52,7 +52,7 @@ The fields of a `WrapperTx` are:
 
    Please refer to the [signing of the default transactions](ledger/default-transactions.md#signing-transactions) to learn how to construct inner transaction's signatures which will be accepted by the [default validity predicates](ledger/default-validity-predicates.md).
 
-   Note that currently the key doesn't change and so it stay constant for the duration of a chain and `<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator()` may be used to encrypt the inner transaction for now as done by the the [`WrapperTx::new` method](https://docs.anoma.network/master/rustdoc/anoma/types/transaction/wrapper/wrapper_tx/struct.WrapperTx.html#method.new) (depends on <https://github.com/anoma/anoma/issues/669>).
+   Note that currently the key doesn't change and so it stay constant for the duration of a chain and `<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator()` may be used to encrypt the inner transaction for now as done by the the [`WrapperTx::new` method](https://dev.anoma.net/master/rustdoc/anoma/types/transaction/wrapper/wrapper_tx/struct.WrapperTx.html#method.new) (depends on <https://github.com/anoma/anoma/issues/669>).
 
 - `tx_hash`: A SHA-256 hash of the inner transaction. This MUST match the hash of decrypted `inner_tx`.
 
@@ -122,11 +122,10 @@ If the transaction executed successfully, it is followed [Validity predicates ch
 
 For the transaction to be valid, all the triggered validity predicates must accept it.
 
-First, the addresses whose validity predicates should be triggered by the transaction are determined. In this process, the addresses get associated with a set of modified storage keys that are relevant to the address:
+First, the addresses whose validity predicates should be triggered by the transaction are determined:
 
-1. The addresses set by the transaction (see `insert_verifier` in [transaction host environment functions](#transaction-host-environment-functions)) are associated with *all* the modified storage keys.
-1. The storage keys that were modified by the transaction are associated with the addresses included in the storage keys. Note that a storage key may contain more than one address, in which case all its addresses are associated with this key.
-1. All these addresses are additionally associated with the storage key to the validity predicates of any newly initialized accounts' by the transaction (see `init_account` in [transaction host environment functions](#transaction-host-environment-functions)).
+1. The addresses set by the transaction (see `insert_verifier` in [transaction host environment functions](#transaction-host-environment-functions)) are included in the verifiers set.
+1. The storage keys that were modified by the transaction are inspected for addresses included in the storage key segments and these are also included in the verifiers set. Note that a storage key may contain more than one address, in which case all its addresses are included. This however excludes addresses of established accounts that were initialized in this transaction as they do not exist prior to transaction execution and a validity predicate will be associated with an initialized account only after the transaction is applied and accepted. This is intended as it allows users to initialize their account's storage without a validity predicate check.
 
 For all these addresses, attempt to read their validity predicate WASM code from the storage. For each validity predicate look-up, charge storage read gas and WASM compilation gas, proportional to the bytes length of the validity predicate. If any of the validity predicates look-ups fails, or any validity rejects the transaction or fails anywhere in the execution, the whole transaction is rejected. If the transaction is rejected, the protocol MUST charge the gas used by the transaction and discard any storage changes that the transaction attempted to perform.
 

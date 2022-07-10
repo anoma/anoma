@@ -1,24 +1,25 @@
 # Introduction
+
 Welcome to Anoma's docs!
 
 ## About Anoma
+
 [Anoma](https://anoma.network/) is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties. To learn more about the protocol, we recommend the following resources:
+
 - [Introduction to Anoma Medium article](https://medium.com/anomanetwork/introducing-anoma-a-blockchain-for-private-asset-agnostic-bartering-dcc47ac42d9f)
 - [Anoma's Whitepaper](https://anoma.network/papers/whitepaper.pdf)
 - [Anoma's Vision paper](https://anoma.network/papers/vision-paper.pdf)
-
-### Anoma's current testnet: Feigenbaum
-Feigenbaum is the name of Anoma's first public testnet. Find `feigenbaum` on [Github](https://github.com/anoma/anoma/releases).
 
 > ⚠️ Here lay dragons: this codebase is still experimental, try at your own risk!
 
 ## About the documentation
 
-The three main sections of this book are:
+The two main sections of this book are:
 
-- [User Guide](./user-guide): explains basic concepts and interactions
 - [Exploration](./explore): documents the process of exploring the design and implementation space for Anoma
 - [Specifications](./specs): implementation independent technical specifications
+
+The Anoma user guide and networks documentation can be found at <https://docs.anoma.net>.
 
 ### The source
 

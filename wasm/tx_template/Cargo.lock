@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "anoma"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "anoma_proof_of_stake",
  "ark-bls12-381",
@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_macros"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "quote",
  "syn",
@@ -123,20 +123,22 @@ dependencies = [
 
 [[package]]
 name = "anoma_proof_of_stake"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "borsh",
+ "proptest",
  "thiserror",
 ]
 
 [[package]]
 name = "anoma_tests"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "anoma",
  "anoma_vm_env",
  "chrono",
  "concat-idents",
+ "derivative",
  "prost",
  "serde_json",
  "sha2 0.9.9",
@@ -148,7 +150,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_tx_prelude"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "anoma_vm_env",
  "sha2 0.10.2",
@@ -156,7 +158,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_vm_env"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "anoma",
  "anoma_macros",
@@ -2207,8 +2209,7 @@ dependencies = [
 [[package]]
 name = "proptest"
 version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e0d9cc07f18492d879586c92b485def06bc850da3118075cd45d50e9c95b0e5"
+source = "git+https://github.com/heliaxdev/proptest?branch=tomas/sm#b9517a726c032897a8b41c215147f44588b33dcc"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -3342,7 +3343,7 @@ checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 
 [[package]]
 name = "tx_template"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "anoma_tests",
  "anoma_tx_prelude",

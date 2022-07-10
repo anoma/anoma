@@ -9,21 +9,19 @@ wasms := tx_memory_limit
 wasms += tx_mint_tokens
 wasms += tx_no_op
 wasms += tx_read_storage_key
+wasms += tx_write_storage_key
 wasms += vp_always_false
 wasms += vp_always_true
 wasms += vp_eval
 wasms += vp_memory_limit
 wasms += vp_read_storage_key
+wasms += tx_proposal_code
 
 
 # Build all wasms
 all: 
 	make $(wasms)
 	make opt-wasm
-
-# `cargo check` all wasms
-check:
-	$(foreach wasm,$(wasms),make check_$(wasm) && ) true
 
 # `cargo check` all wasms
 check:
@@ -36,6 +34,9 @@ test:
 # `cargo clippy` all wasms
 clippy:
 	$(foreach wasm,$(wasms),make clippy_$(wasm) && ) true
+
+clippy-fix:
+	$(cargo) +$(nightly) clippy --fix -Z unstable-options --all-targets --allow-dirty --allow-staged
 
 fmt:
 	$(cargo) +$(nightly) fmt --all
@@ -59,6 +60,10 @@ $(patsubst %,test_%,$(wasms)): test_%:
 # `cargo watch` one of the wasms, e.g. `make watch_tx_no_op`
 $(patsubst %,watch_%,$(wasms)): watch_%:
 	$(cargo) watch --features $*
+
+# `cargo clippy` one of the wasms, e.g. `make clippy_tx_no_op`
+$(patsubst %,clippy_%,$(wasms)): clippy_%:
+	$(cargo) +$(nightly) clippy --all-targets --features $* -- -D warnings
 
 clean-wasm = rm ../$(wasm).wasm
 clean:

@@ -97,8 +97,7 @@ pub mod vp {
     pub use anoma::types::nft::*;
     use anoma::types::storage::Key;
 
-    use crate::imports::tx;
-    use crate::imports::vp::{self};
+    use crate::imports::vp;
 
     enum KeyType {
         Metadata(Address, String),
@@ -165,7 +164,7 @@ pub mod vp {
         verifiers: &BTreeSet<Address>,
     ) -> bool {
         let creator_key = get_creator_key(nft_address).to_string();
-        let creator_address: Address = tx::read(creator_key).unwrap();
+        let creator_address: Address = vp::read_pre(creator_key).unwrap();
         verifiers.contains(&creator_address)
     }
 

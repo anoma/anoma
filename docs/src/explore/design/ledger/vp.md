@@ -25,7 +25,7 @@ fn validate_tx(
 ) -> bool;
 ```
 
-The host functions available to call from inside the VP code can be found in [docs generated from code](https://docs.anoma.network/master/rustdoc/anoma_vm_env/imports/vp/index.html#functions).
+The host functions available to call from inside the VP code can be found in [docs generated from code](https://dev.anoma.net/master/rustdoc/anoma_vm_env/imports/vp/index.html#functions).
 
 ## Native VPs
 
@@ -37,7 +37,7 @@ The Proof-of-Stake slash pool is a simple account with a native VP which can rec
 
 ## Fungible token VP
 
-The [fungible token VP](https://github.com/anoma/anoma/tree/master/wasm/wasm_source) allows to associate accounts balances of a specific token under its account. 
+The [fungible token VP](https://github.com/anoma/anoma/tree/master/wasm/wasm_source) allows to associate accounts balances of a specific token under its account.
 
 For illustration, users `Albert` and `Bertha` might hold some amount of token with the address `XAN`. Their balances would be stored in the `XAN`'s storage sub-space under the storage keys `@XAN/balance/@Albert` and `@XAN/balance/@Bertha`, respectively. When `Albert` or `Bertha` attempt to transact with their `XAN` tokens, its validity predicate would be triggered to check:
 

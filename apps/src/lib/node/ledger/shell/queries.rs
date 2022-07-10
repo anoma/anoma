@@ -39,6 +39,20 @@ where
     /// INVARIANT: This method must be stateless.
     pub fn query(&self, query: request::Query) -> response::Query {
         use rpc::Path;
+        let height = match query.height {
+            0 => self.storage.get_block_height().0,
+            1.. => BlockHeight(query.height as u64),
+            _ => {
+                return response::Query {
+                    code: 1,
+                    info: format!(
+                        "The query height is invalid: {}",
+                        query.height
+                    ),
+                    ..Default::default()
+                };
+            }
+        };
         match Path::from_str(&query.path) {
             Ok(path) => match path {
                 Path::DryRunTx => self.dry_run_tx(&query.data),
@@ -55,10 +69,10 @@ where
                     self.read_conversion(&asset_type)
                 }
                 Path::Value(storage_key) => {
-                    self.read_storage_value(&storage_key, query.prove)
+                    self.read_storage_value(&storage_key, height, query.prove)
                 }
                 Path::Prefix(storage_key) => {
-                    self.read_storage_prefix(&storage_key, query.prove)
+                    self.read_storage_prefix(&storage_key, height, query.prove)
                 }
                 Path::HasKey(storage_key) => self.has_storage_key(&storage_key),
             },
@@ -131,8 +145,12 @@ where
         token: &Address,
         owner: &Address,
     ) -> std::result::Result<Amount, String> {
-        let query_resp =
-            self.read_storage_value(&token::balance_key(token, owner), false);
+        let height = self.storage.get_block_height().0;
+        let query_resp = self.read_storage_value(
+            &token::balance_key(token, owner),
+            height,
+            false,
+        );
         if query_resp.code != 0 {
             Err(format!(
                 "Unable to read token {} balance of the given address {}",
@@ -152,12 +170,17 @@ where
     pub fn read_storage_value(
         &self,
         key: &Key,
+        height: BlockHeight,
         is_proven: bool,
     ) -> response::Query {
-        match self.storage.read(key) {
+        match self.storage.read_with_height(key, height) {
             Ok((Some(value), _gas)) => {
                 let proof_ops = if is_proven {
-                    match self.storage.get_existence_proof(key, value.clone()) {
+                    match self.storage.get_existence_proof(
+                        key,
+                        value.clone(),
+                        height,
+                    ) {
                         Ok(proof) => Some(proof.into()),
                         Err(err) => {
                             return response::Query {
@@ -178,7 +201,7 @@ where
             }
             Ok((None, _gas)) => {
                 let proof_ops = if is_proven {
-                    match self.storage.get_non_existence_proof(key) {
+                    match self.storage.get_non_existence_proof(key, height) {
                         Ok(proof) => Some(proof.into()),
                         Err(err) => {
                             return response::Query {
@@ -212,8 +235,19 @@ where
     pub fn read_storage_prefix(
         &self,
         key: &Key,
+        height: BlockHeight,
         is_proven: bool,
     ) -> response::Query {
+        if height != self.storage.get_block_height().0 {
+            return response::Query {
+                code: 2,
+                info: format!(
+                    "Prefix read works with only the latest height: height {}",
+                    height
+                ),
+                ..Default::default()
+            };
+        }
         let (iter, _gas) = self.storage.iter_prefix(key);
         let mut iter = iter.peekable();
         if iter.peek().is_none() {
@@ -237,10 +271,11 @@ where
                     let proof_ops = if is_proven {
                         let mut ops = vec![];
                         for PrefixValue { key, value } in &values {
-                            match self
-                                .storage
-                                .get_existence_proof(key, value.clone())
-                            {
+                            match self.storage.get_existence_proof(
+                                key,
+                                value.clone(),
+                                height,
+                            ) {
                                 Ok(p) => {
                                     let mut cur_ops: Vec<ProofOp> = p
                                         .ops

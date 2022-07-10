@@ -35,7 +35,7 @@ fn main() {
         File::create("./version.rs").expect("cannot write version");
     let pre = "pub fn anoma_version() -> &'static str { \"";
     let post = "\" }";
-    let _result = match version_string {
+    match version_string {
         Some(version_string) => {
             version_rs
                 .write_all(pre.as_bytes())

@@ -1,7 +1,5 @@
 [book]
 authors = ["Heliax R&D Team"]
-edit-url-template = "https://github.com/anoma/anoma/edit/master/docs/{path}"
-git-repository-url = "https://github.com/anoma/anoma"
 language = "en"
 multilingual = false
 site-url = "https://docs.anoma.network/master/"
@@ -9,9 +7,12 @@ src = "src"
 title = "Anoma - DOCS"
 
 [output.html]
-additional-css = ["assets/custom.css"]
+edit-url-template = "https://github.com/anoma/anoma/edit/master/docs/{path}"
+git-repository-url = "https://github.com/anoma/anoma"
+additional-css = ["assets/custom.css", "assets/mdbook-admonish.css"]
 additional-js = ["assets/mermaid.min.js", "assets/mermaid-init.js"]
 mathjax-support = true
+git-branch = "master"
 
 [output.html.search]
 expand = true
@@ -21,3 +22,11 @@ expand = true
 [preprocessor]
 [preprocessor.mermaid]
 command = "mdbook-mermaid"
+
+[preprocessor.open-on-gh]
+command = "mdbook-open-on-gh"
+renderer = ["html"]
+
+[preprocessor.admonish]
+command = "mdbook-admonish"
+assets_version = "1.0.0" # do not edit: managed by `mdbook-admonish install`

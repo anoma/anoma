@@ -780,30 +780,37 @@ pub trait IbcActions {
 
     /// Get and increment the sequence
     fn get_and_inc_sequence(&self, key: &Key) -> Result<Sequence> {
-        if let Some(v) = self.read_ibc_data(key) {
-            let index: [u8; 8] = v.try_into().map_err(|_| {
-                Error::Sequence(format!(
-                    "The sequence index wasn't u64: Key {}",
-                    key
-                ))
-            })?;
-            let index: u64 = u64::from_be_bytes(index);
-            self.write_ibc_data(key, (index + 1).to_be_bytes());
-            Ok(index.into())
-        } else {
+        let index = match self.read_ibc_data(key) {
+            Some(v) => {
+                let index: [u8; 8] = v.try_into().map_err(|_| {
+                    Error::Sequence(format!(
+                        "The sequence index wasn't u64: Key {}",
+                        key
+                    ))
+                })?;
+                u64::from_be_bytes(index)
+            }
             // when the sequence has never been used, returns the initial value
-            Ok(1.into())
-        }
+            None => 1,
+        };
+        self.write_ibc_data(key, (index + 1).to_be_bytes());
+        Ok(index.into())
     }
 
     /// Bind a new port
     fn bind_port(&self, port_id: &PortId) -> Result<()> {
-        let index_key = storage::capability_index_key();
-        let cap_index = self.get_and_inc_counter(&index_key)?;
         let port_key = storage::port_key(port_id);
-        self.write_ibc_data(&port_key, cap_index.to_be_bytes());
-        let cap_key = storage::capability_key(cap_index);
-        self.write_ibc_data(&cap_key, port_id.as_bytes());
+        match self.read_ibc_data(&port_key) {
+            Some(_) => {}
+            None => {
+                // create a new capability and claim it
+                let index_key = storage::capability_index_key();
+                let cap_index = self.get_and_inc_counter(&index_key)?;
+                self.write_ibc_data(&port_key, cap_index.to_be_bytes());
+                let cap_key = storage::capability_key(cap_index);
+                self.write_ibc_data(&cap_key, port_id.as_bytes());
+            }
+        }
         Ok(())
     }
 

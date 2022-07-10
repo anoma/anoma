@@ -20,6 +20,8 @@ use crate::ibc::core::ics04_channel::handler::verify::{
     verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
     verify_packet_recv_proofs,
 };
+use crate::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use crate::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
 use crate::ibc::core::ics04_channel::msgs::PacketMsg;
 use crate::ibc::core::ics04_channel::packet::{Packet, Sequence};
 use crate::ibc::core::ics24_host::identifier::{
@@ -27,7 +29,6 @@ use crate::ibc::core::ics24_host::identifier::{
 };
 use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ibc::proofs::Proofs;
-use crate::ibc::timestamp::Expiry;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::Key;
@@ -134,34 +135,32 @@ where
                             commitment_key.0, commitment_key.1,
                         ))
                     })?;
+                let ibc_msg = IbcMessage::decode(tx_data)?;
                 match channel.state() {
                     State::Open => {
-                        // "PacketAcknowledgement"
-                        let ibc_msg = IbcMessage::decode(tx_data)?;
-                        let msg = ibc_msg.msg_acknowledgement()?;
-                        let commitment_pre = self
-                            .get_packet_commitment_pre(&commitment_key)
-                            .map_err(|e| Error::InvalidPacket(e.to_string()))?;
-                        self.validate_packet_commitment(
-                            &msg.packet,
-                            commitment_pre,
-                        )
-                        .map_err(|e| Error::InvalidPacket(e.to_string()))?;
-                        self.validate_ack_packet(&commitment_key, &msg.packet)?;
-                        let port_channel_id = PortChannelId {
-                            port_id: commitment_key.0,
-                            channel_id: commitment_key.1,
-                        };
-                        self.verify_ack_proof(
-                            &port_channel_id,
-                            msg.proofs.height(),
-                            &msg.packet,
-                            msg.acknowledgement.clone(),
-                            &msg.proofs,
-                        )
+                        // "PacketAcknowledgement" or timeout for the unordered
+                        // channel
+                        match &ibc_msg.0 {
+                            Ics26Envelope::Ics4PacketMsg(
+                                PacketMsg::AckPacket(msg),
+                            ) => self.validate_ack_packet(&commitment_key, msg),
+                            Ics26Envelope::Ics4PacketMsg(
+                                PacketMsg::ToPacket(_),
+                            )
+                            | Ics26Envelope::Ics4PacketMsg(
+                                PacketMsg::ToClosePacket(_),
+                            ) => {
+                                self.validate_timeout(&commitment_key, &ibc_msg)
+                            }
+                            _ => Err(Error::InvalidChannel(format!(
+                                "The channel state is invalid: Port {}, \
+                                 Channel {}",
+                                commitment_key.0, commitment_key.1
+                            ))),
+                        }
                     }
                     State::Closed => {
-                        self.validate_timeout(&commitment_key, tx_data)
+                        self.validate_timeout(&commitment_key, &ibc_msg)
                     }
                     _ => Err(Error::InvalidChannel(format!(
                         "The channel state is invalid: Port {}, Channel {}",
@@ -189,18 +188,7 @@ where
                 let receipt_key = port_channel_sequence_id(key)?;
                 let ibc_msg = IbcMessage::decode(tx_data)?;
                 let msg = ibc_msg.msg_recv_packet()?;
-                let packet = &msg.packet;
-                self.validate_recv_packet(&receipt_key, packet)?;
-                let port_channel_id = PortChannelId {
-                    port_id: receipt_key.0,
-                    channel_id: receipt_key.1,
-                };
-                self.verify_recv_proof(
-                    &port_channel_id,
-                    msg.proofs.height(),
-                    packet,
-                    &msg.proofs,
-                )
+                self.validate_recv_packet(&receipt_key, &msg)
             }
             _ => Err(Error::InvalidStateChange(
                 "The state change of the receipt is invalid".to_owned(),
@@ -261,9 +249,9 @@ where
     fn validate_recv_packet(
         &self,
         port_channel_seq_id: &(PortId, ChannelId, Sequence),
-        packet: &Packet,
+        msg: &MsgRecvPacket,
     ) -> Result<()> {
-        self.validate_packet(port_channel_seq_id, packet, Phase::Recv)?;
+        self.validate_packet(port_channel_seq_id, &msg.packet, Phase::Recv)?;
 
         self.get_packet_receipt(port_channel_seq_id).map_err(|_| {
             Error::InvalidPacket(format!(
@@ -283,21 +271,29 @@ where
                     port_channel_seq_id.2
                 ))
             })?;
-
-        Ok(())
+        let port_channel_id = PortChannelId {
+            port_id: port_channel_seq_id.0.clone(),
+            channel_id: port_channel_seq_id.1.clone(),
+        };
+        self.verify_recv_proof(
+            &port_channel_id,
+            msg.proofs.height(),
+            &msg.packet,
+            &msg.proofs,
+        )
     }
 
     fn validate_ack_packet(
         &self,
         port_channel_seq_id: &(PortId, ChannelId, Sequence),
-        packet: &Packet,
+        msg: &MsgAcknowledgement,
     ) -> Result<()> {
-        self.validate_packet(port_channel_seq_id, packet, Phase::Ack)?;
+        self.validate_packet(port_channel_seq_id, &msg.packet, Phase::Ack)?;
 
         let prev_commitment = self
             .get_packet_commitment_pre(port_channel_seq_id)
             .map_err(|e| Error::InvalidPacket(e.to_string()))?;
-        self.validate_packet_commitment(packet, prev_commitment)?;
+        self.validate_packet_commitment(&msg.packet, prev_commitment)?;
 
         if self.get_packet_commitment(port_channel_seq_id).is_ok() {
             return Err(Error::InvalidPacket(
@@ -305,7 +301,17 @@ where
             ));
         }
 
-        Ok(())
+        let port_channel_id = PortChannelId {
+            port_id: port_channel_seq_id.0.clone(),
+            channel_id: port_channel_seq_id.1.clone(),
+        };
+        self.verify_ack_proof(
+            &port_channel_id,
+            msg.proofs.height(),
+            &msg.packet,
+            msg.acknowledgement.clone(),
+            &msg.proofs,
+        )
     }
 
     fn validate_packet(
@@ -416,17 +422,7 @@ where
                     .map_err(|e| Error::InvalidPacket(e.to_string()))?;
             }
             Phase::Recv => {
-                // check timeout height
-                if packet.timeout_height <= self.host_height() {
-                    return Err(Error::InvalidPacket(
-                        "The packet has timed out".to_owned(),
-                    ));
-                }
-                // check timeout timestamp
-                if self
-                    .host_timestamp()
-                    .check_expiry(&packet.timeout_timestamp)
-                    != Expiry::NotExpired
+                if packet.timed_out(&self.host_timestamp(), self.host_height())
                 {
                     return Err(Error::InvalidPacket(
                         "The packet has timed out".to_owned(),
@@ -520,20 +516,19 @@ where
     fn validate_timeout(
         &self,
         commitment_key: &(PortId, ChannelId, Sequence),
-        tx_data: &[u8],
+        ibc_msg: &IbcMessage,
     ) -> Result<()> {
-        let ibc_msg = IbcMessage::decode(tx_data)?;
-        let (height, proofs, packet, next_sequence_recv) = match ibc_msg.0 {
+        let (height, proofs, packet, next_sequence_recv) = match &ibc_msg.0 {
             Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => (
                 msg.proofs.height(),
                 msg.proofs.clone(),
-                msg.packet,
+                msg.packet.clone(),
                 msg.next_sequence_recv,
             ),
             Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(msg)) => (
                 msg.proofs.height(),
                 msg.proofs.clone(),
-                msg.packet,
+                msg.packet.clone(),
                 msg.next_sequence_recv,
             ),
             _ => {
@@ -676,16 +671,6 @@ where
         current_height: Height,
         packet: &Packet,
     ) -> Result<()> {
-        // timeout height
-        if !packet.timeout_height.is_zero()
-            && packet.timeout_height < current_height
-        {
-            return Err(Error::InvalidPacket(format!(
-                "The packet has timed out: Timeout height {}, Current height \
-                 {}",
-                packet.timeout_height, current_height,
-            )));
-        }
         // timeout timestamp
         let consensus_state =
             match self.client_consensus_state(client_id, current_height) {
@@ -699,16 +684,18 @@ where
                 }
             };
         let current_timestamp = consensus_state.timestamp();
-        match current_timestamp.check_expiry(&packet.timeout_timestamp) {
-            Expiry::NotExpired => Ok(()),
-            Expiry::Expired => Err(Error::InvalidPacket(format!(
-                "The packet has timed out: Timeout timestamp {}, Current \
-                 timestamp {}",
-                packet.timeout_timestamp, current_timestamp
-            ))),
-            Expiry::InvalidTimestamp => Err(Error::InvalidPacket(
-                "The timestamp of the packet is invalid".to_owned(),
-            )),
+
+        if packet.timed_out(&current_timestamp, current_height) {
+            Err(Error::InvalidPacket(format!(
+                "The packet has timed out: Timeout height {}, Timeout \
+                 timestamp {}, Current height {}, Current timestamp {}",
+                packet.timeout_height,
+                packet.timeout_timestamp,
+                current_height,
+                current_timestamp
+            )))
+        } else {
+            Ok(())
         }
     }
 }

@@ -41,7 +41,7 @@ pub struct BlockGasMeter {
 }
 
 /// Gas metering in a validity predicate
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct VpGasMeter {
     /// The gas used in the transaction before the VP run
     initial_gas: u64,
@@ -151,6 +151,11 @@ impl VpGasMeter {
             return Err(Error::TransactionGasExceedededError);
         }
         Ok(())
+    }
+
+    /// Add the compiling cost proportionate to the code length
+    pub fn add_compiling_fee(&mut self, bytes_len: usize) -> Result<()> {
+        self.add(bytes_len as u64 * COMPILE_GAS_PER_BYTE)
     }
 }
 

@@ -1,6 +1,5 @@
 use core::time::Duration;
 use std::collections::{BTreeSet, HashMap};
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 use anoma::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
@@ -55,20 +54,13 @@ pub use anoma::ledger::ibc::storage::{
     consensus_state_key, next_sequence_ack_key, next_sequence_recv_key,
     next_sequence_send_key, port_key, receipt_key,
 };
-use anoma::ledger::ibc::vp::{Ibc, IbcToken};
+use anoma::ledger::ibc::vp::{
+    get_dummy_header as tm_dummy_header, Ibc, IbcToken,
+};
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
-use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
-use anoma::tendermint::account::Id as TmAccountId;
-use anoma::tendermint::block::header::{
-    Header as TmHeader, Version as TmVersion,
-};
-use anoma::tendermint::block::Height as TmHeight;
-use anoma::tendermint::chain::Id as TmChainId;
-use anoma::tendermint::hash::{AppHash, Hash as TmHash};
-use anoma::tendermint::time::Time as TmTime;
 use anoma::tendermint_proto::Protobuf;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
@@ -184,12 +176,16 @@ pub fn init_ibc_vp_from_tx<'a>(
     tx_env: &'a TestTxEnv,
     tx: &'a Tx,
 ) -> (TestIbcVp<'a>, TempDir) {
-    let keys_changed = tx_env
+    let (verifiers, keys_changed) = tx_env
         .write_log
-        .verifiers_changed_keys(&BTreeSet::new())
-        .get(&Address::Internal(InternalAddress::Ibc))
-        .cloned()
-        .expect("no IBC address");
+        .verifiers_and_changed_keys(&tx_env.verifiers);
+    let addr = Address::Internal(InternalAddress::Ibc);
+    if !verifiers.contains(&addr) {
+        panic!(
+            "IBC address {} isn't part of the tx verifiers set: {:#?}",
+            addr, verifiers
+        );
+    }
     let (vp_wasm_cache, vp_cache_dir) =
         wasm::compilation_cache::common::testing::cache();
 
@@ -212,12 +208,16 @@ pub fn init_token_vp_from_tx<'a>(
     tx: &'a Tx,
     addr: &Address,
 ) -> (TestIbcTokenVp<'a>, TempDir) {
-    let keys_changed = tx_env
+    let (verifiers, keys_changed) = tx_env
         .write_log
-        .verifiers_changed_keys(&BTreeSet::new())
-        .get(addr)
-        .cloned()
-        .expect("no token address");
+        .verifiers_and_changed_keys(&tx_env.verifiers);
+    if !verifiers.contains(addr) {
+        panic!(
+            "The given token address {} isn't part of the tx verifiers set: \
+             {:#?}",
+            addr, verifiers
+        );
+    }
     let (vp_wasm_cache, vp_cache_dir) =
         wasm::compilation_cache::common::testing::cache();
 
@@ -240,14 +240,16 @@ pub fn init_token_vp_from_tx<'a>(
     )
 }
 
-/// Initialize the test storage
-pub fn init_storage(storage: &mut TestStorage) -> (Address, Address) {
-    init_genesis_storage(storage);
-    // block header to check timeout timestamp
-    storage.set_header(tm_dummy_header()).unwrap();
-    storage
-        .begin_block(BlockHash::default(), BlockHeight(1))
-        .unwrap();
+/// Initialize the test storage. Requires initialized [`tx_host_env::ENV`].
+pub fn init_storage() -> (Address, Address) {
+    tx_host_env::with(|env| {
+        init_genesis_storage(&mut env.storage);
+        // block header to check timeout timestamp
+        env.storage.set_header(tm_dummy_header()).unwrap();
+        env.storage
+            .begin_block(BlockHash::default(), BlockHeight(1))
+            .unwrap();
+    });
 
     // initialize a token
     let code = std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
@@ -259,29 +261,6 @@ pub fn init_storage(storage: &mut TestStorage) -> (Address, Address) {
     let init_bal = Amount::from(1_000_000_000u64);
     tx_host_env::write(key.to_string(), init_bal);
     (token, account)
-}
-
-pub fn tm_dummy_header() -> TmHeader {
-    TmHeader {
-        version: TmVersion { block: 10, app: 0 },
-        chain_id: TmChainId::try_from("test_chain".to_owned())
-            .expect("Creating an TmChainId shouldn't fail"),
-        height: TmHeight::try_from(10_u64)
-            .expect("Creating a height shouldn't fail"),
-        time: TmTime::now(),
-        last_block_id: None,
-        last_commit_hash: None,
-        data_hash: None,
-        validators_hash: TmHash::None,
-        next_validators_hash: TmHash::None,
-        consensus_hash: TmHash::None,
-        app_hash: AppHash::try_from(vec![0])
-            .expect("Creating an AppHash shouldn't fail"),
-        last_results_hash: None,
-        evidence_hash: None,
-        proposer_address: TmAccountId::try_from(vec![0u8; 20])
-            .expect("Creating an AccountId shouldn't fail"),
-    }
 }
 
 pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {
@@ -335,6 +314,7 @@ pub fn prepare_opened_connection(
 
 pub fn prepare_opened_channel(
     conn_id: &ConnectionId,
+    is_ordered: bool,
 ) -> (PortId, ChannelId, HashMap<Key, Vec<u8>>) {
     let mut writes = HashMap::new();
 
@@ -353,6 +333,9 @@ pub fn prepare_opened_channel(
     let msg = msg_channel_open_init(port_id.clone(), conn_id.clone());
     let mut channel = msg.channel;
     open_channel(&mut channel);
+    if !is_ordered {
+        channel.ordering = Order::Unordered;
+    }
     let bytes = channel.encode_vec().expect("encoding failed");
     writes.insert(key, bytes);
 

@@ -2,16 +2,20 @@
 use std::collections::BTreeSet;
 use std::panic;
 
+use anoma::ledger::eth_bridge::vp::EthBridge;
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter};
+use anoma::ledger::governance::GovernanceVp;
 use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
 use anoma::ledger::pos::{self, PosVP};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
+use anoma::ledger::treasury::TreasuryVp;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::{Key, TxIndex};
+use anoma::types::storage;
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
@@ -44,6 +48,12 @@ pub enum Error {
     ParametersNativeVpError(parameters::Error),
     #[error("IBC Token native VP: {0}")]
     IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
+    #[error("Governance native VP error: {0}")]
+    GovernanceNativeVpError(anoma::ledger::governance::vp::Error),
+    #[error("Treasury native VP error: {0}")]
+    TreasuryNativeVpError(anoma::ledger::treasury::Error),
+    #[error("Ethereum bridge native VP error: {0}")]
+    EthBridgeNativeVpError(anoma::ledger::eth_bridge::vp::Error),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
 }
@@ -160,12 +170,6 @@ where
     .map_err(Error::TxRunnerError)
 }
 
-/// A validity predicate
-enum Vp<'a> {
-    Wasm(Vec<u8>),
-    Native(&'a InternalAddress),
-}
-
 /// Check the acceptance of a transaction by validity predicates
 fn check_vps<D, H, CA>(
     tx: &Tx,
@@ -181,39 +185,14 @@ where
     H: 'static + StorageHasher + Sync,
     CA: 'static + WasmCacheAccess + Sync,
 {
-    let verifiers = write_log.verifiers_changed_keys(verifiers_from_tx);
-
-    // collect the VPs for the verifiers
-    let verifiers: Vec<(Address, BTreeSet<Key>, Vp)> = verifiers
-        .iter()
-        .filter(|(addr, _)| !matches!(addr, Address::Implicit(_)))
-        .map(|(addr, keys)| {
-            let vp = match addr {
-                Address::Internal(addr) => Vp::Native(addr),
-                Address::Established(_) => {
-                    let (vp, gas) = storage
-                        .validity_predicate(addr)
-                        .map_err(Error::StorageError)?;
-                    gas_meter.add(gas).map_err(Error::GasError)?;
-                    let vp =
-                        vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
-
-                    gas_meter
-                        .add_compiling_fee(vp.len())
-                        .map_err(Error::GasError)?;
-                    Vp::Wasm(vp)
-                }
-                Address::Implicit(_) => unreachable!(),
-            };
-
-            Ok((addr.clone(), keys.clone(), vp))
-        })
-        .collect::<std::result::Result<_, _>>()?;
+    let (verifiers, keys_changed) =
+        write_log.verifiers_and_changed_keys(verifiers_from_tx);
 
     let initial_gas = gas_meter.get_current_transaction_gas();
 
     let vps_result = execute_vps(
         verifiers,
+        keys_changed,
         tx,
         tx_index,
         storage,
@@ -232,7 +211,8 @@ where
 
 /// Execute verifiers' validity predicates
 fn execute_vps<D, H, CA>(
-    verifiers: Vec<(Address, BTreeSet<Key>, Vp)>,
+    verifiers: BTreeSet<Address>,
+    keys_changed: BTreeSet<storage::Key>,
     tx: &Tx,
     tx_index: &TxIndex,
     storage: &Storage<D, H>,
@@ -245,31 +225,40 @@ where
     H: 'static + StorageHasher + Sync,
     CA: 'static + WasmCacheAccess + Sync,
 {
-    let verifiers_addr = verifiers
-        .iter()
-        .map(|(addr, _, _)| addr)
-        .cloned()
-        .collect::<BTreeSet<_>>();
-
     verifiers
         .par_iter()
-        .try_fold(VpsResult::default, |mut result, (addr, keys, vp)| {
+        // TODO temporary pending on <https://github.com/anoma/anoma/issues/193>
+        .filter(|addr| !matches!(addr, Address::Implicit(_)))
+        .try_fold(VpsResult::default, |mut result, addr| {
             let mut gas_meter = VpGasMeter::new(initial_gas);
-            let accept = match &vp {
-                Vp::Wasm(vp) => wasm::run::vp(
-                    vp,
-                    tx,
-                    tx_index,
-                    addr,
-                    storage,
-                    write_log,
-                    &mut gas_meter,
-                    keys,
-                    &verifiers_addr,
-                    vp_wasm_cache.clone(),
-                )
-                .map_err(Error::VpRunnerError),
-                Vp::Native(internal_addr) => {
+            let accept = match &addr {
+                Address::Established(_) => {
+                    let (vp, gas) = storage
+                        .validity_predicate(addr)
+                        .map_err(Error::StorageError)?;
+                    gas_meter.add(gas).map_err(Error::GasError)?;
+                    let vp =
+                        vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
+
+                    gas_meter
+                        .add_compiling_fee(vp.len())
+                        .map_err(Error::GasError)?;
+
+                    wasm::run::vp(
+                        vp,
+                        tx,
+                        tx_index,
+                        addr,
+                        storage,
+                        write_log,
+                        &mut gas_meter,
+                        &keys_changed,
+                        &verifiers,
+                        vp_wasm_cache.clone(),
+                    )
+                    .map_err(Error::VpRunnerError)
+                }
+                Address::Internal(internal_addr) => {
                     let ctx = native_vp::Ctx::new(
                         storage,
                         write_log,
@@ -286,17 +275,18 @@ where
                     let accepted: Result<bool> = match internal_addr {
                         InternalAddress::PoS => {
                             let pos = PosVP { ctx };
-                            let verifiers_addr_ref = &verifiers_addr;
+                            let verifiers_addr_ref = &verifiers;
                             let pos_ref = &pos;
                             // TODO this is temporarily ran in a new thread to
                             // avoid crashing the ledger (required `UnwindSafe`
                             // and `RefUnwindSafe` in
                             // shared/src/ledger/pos/vp.rs)
+                            let keys_changed_ref = &keys_changed;
                             let result = match panic::catch_unwind(move || {
                                 pos_ref
                                     .validate_tx(
                                         tx_data,
-                                        keys,
+                                        keys_changed_ref,
                                         verifiers_addr_ref,
                                     )
                                     .map_err(Error::PosNativeVpError)
@@ -317,7 +307,7 @@ where
                         InternalAddress::Ibc => {
                             let ibc = Ibc { ctx };
                             let result = ibc
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
                                 .map_err(Error::IbcNativeVpError);
                             // Take the gas meter back out of the context
                             gas_meter = ibc.ctx.gas_meter.into_inner();
@@ -326,7 +316,7 @@ where
                         InternalAddress::Parameters => {
                             let parameters = ParametersVp { ctx };
                             let result = parameters
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
                                 .map_err(Error::ParametersNativeVpError);
                             // Take the gas meter back out of the context
                             gas_meter = parameters.ctx.gas_meter.into_inner();
@@ -339,21 +329,47 @@ where
                                 (*internal_addr).clone(),
                             ))
                         }
+                        InternalAddress::Governance => {
+                            let governance = GovernanceVp { ctx };
+                            let result = governance
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
+                                .map_err(Error::GovernanceNativeVpError);
+                            gas_meter = governance.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::Treasury => {
+                            let treasury = TreasuryVp { ctx };
+                            let result = treasury
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
+                                .map_err(Error::TreasuryNativeVpError);
+                            gas_meter = treasury.ctx.gas_meter.into_inner();
+                            result
+                        }
                         InternalAddress::IbcEscrow(_)
                         | InternalAddress::IbcBurn
                         | InternalAddress::IbcMint => {
                             // validate the transfer
                             let ibc_token = IbcToken { ctx };
                             let result = ibc_token
-                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
                                 .map_err(Error::IbcTokenNativeVpError);
                             gas_meter = ibc_token.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::EthBridge => {
+                            let bridge = EthBridge { ctx };
+                            let result = bridge
+                                .validate_tx(tx_data, &keys_changed, &verifiers)
+                                .map_err(Error::EthBridgeNativeVpError);
+                            gas_meter = bridge.ctx.gas_meter.into_inner();
                             result
                         }
                     };
 
                     accepted
                 }
+                // TODO temporary pending on <https://github.com/anoma/anoma/issues/193>
+                Address::Implicit(_) => unreachable!(),
             };
 
             // Returning error from here will short-circuit the VP parallel
@@ -390,8 +406,10 @@ fn merge_vp_results(
     mut b: VpsResult,
     initial_gas: u64,
 ) -> Result<VpsResult> {
-    let accepted_vps = a.accepted_vps.union(&b.accepted_vps).cloned().collect();
-    let rejected_vps = a.rejected_vps.union(&b.rejected_vps).cloned().collect();
+    let mut accepted_vps = a.accepted_vps;
+    let mut rejected_vps = a.rejected_vps;
+    accepted_vps.extend(b.accepted_vps);
+    rejected_vps.extend(b.rejected_vps);
     let mut errors = a.errors;
     errors.append(&mut b.errors);
     let mut gas_used = a.gas_used;

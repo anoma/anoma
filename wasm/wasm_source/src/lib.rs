@@ -8,6 +8,8 @@ pub mod tx_ibc;
 pub mod tx_init_account;
 #[cfg(feature = "tx_init_nft")]
 pub mod tx_init_nft;
+#[cfg(feature = "tx_init_proposal")]
+pub mod tx_init_proposal;
 #[cfg(feature = "tx_init_validator")]
 pub mod tx_init_validator;
 #[cfg(feature = "tx_mint_nft")]
@@ -18,6 +20,8 @@ pub mod tx_transfer;
 pub mod tx_unbond;
 #[cfg(feature = "tx_update_vp")]
 pub mod tx_update_vp;
+#[cfg(feature = "tx_vote_proposal")]
+pub mod tx_vote_proposal;
 #[cfg(feature = "tx_withdraw")]
 pub mod tx_withdraw;
 

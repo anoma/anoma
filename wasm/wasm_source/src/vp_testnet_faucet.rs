@@ -104,13 +104,13 @@ mod tests {
     /// Test that no-op transaction (i.e. no storage modifications) accepted.
     #[test]
     fn test_no_op_transaction() {
-        let mut env = TestVpEnv::default();
-        init_vp_env(&mut env);
-
         let tx_data: Vec<u8> = vec![];
-        let addr: Address = env.addr;
+        let addr: Address = address::testing::established_address_1();
         let keys_changed: BTreeSet<storage::Key> = BTreeSet::default();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
+
+        // The VP env must be initialized before calling `validate_tx`
+        vp_host_env::init();
 
         assert!(validate_tx(tx_data, addr, keys_changed, verifiers));
     }
@@ -134,17 +134,19 @@ mod tests {
         tx_env.credit_tokens(&source, &token, amount);
 
         // Initialize VP environment from a transaction
-        let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+        vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
             tx_host_env::token::transfer(
                 &source, address, &token, amount, &None, &None,
             );
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
+        vp_host_env::set(vp_env);
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -163,15 +165,17 @@ mod tests {
         tx_env.spawn_accounts([&vp_owner]);
 
         // Initialize VP environment from a transaction
-        let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+        vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
             tx_host_env::update_validity_predicate(address, &vp_code);
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
+        vp_host_env::set(vp_env);
         assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -194,12 +198,12 @@ mod tests {
         tx_env.write_public_key(&vp_owner, public_key);
 
         // Initialize VP environment from a transaction
-        let mut vp_env =
-            init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
-                // Update VP in a transaction
-                tx_host_env::update_validity_predicate(address, &vp_code);
-            });
+        vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
+            // Update VP in a transaction
+            tx_host_env::update_validity_predicate(address, &vp_code);
+        });
 
+        let mut vp_env = vp_host_env::take();
         let tx = vp_env.tx.clone();
         let signed_tx = tx.sign(&keypair);
         let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
@@ -207,6 +211,7 @@ mod tests {
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
+        vp_host_env::set(vp_env);
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -246,15 +251,17 @@ mod tests {
         tx_env.credit_tokens(&vp_owner, &token, amount);
 
         // Initialize VP environment from a transaction
-        let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+        vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
         // Apply transfer in a transaction
         tx_host_env::token::transfer(address, &target, &token, amount, &None, &None);
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
         vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
+        vp_host_env::set(vp_env);
         assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -277,15 +284,17 @@ mod tests {
         tx_env.credit_tokens(&vp_owner, &token, amount);
 
         // Initialize VP environment from a transaction
-        let vp_env = init_vp_env_from_tx(vp_owner.clone(), tx_env, |address| {
+        vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
         // Apply transfer in a transaction
         tx_host_env::token::transfer(address, &target, &token, amount, &None, &None);
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
         vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
+        vp_host_env::set(vp_env);
         assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
     }
 
@@ -311,16 +320,16 @@ mod tests {
             tx_env.write_public_key(&vp_owner, public_key);
 
             // Initialize VP environment from a transaction
-            let mut vp_env =
-                init_vp_env_from_tx(vp_owner.clone(), tx_env, |_address| {
-                    // Write or delete some data in the transaction
-                    if let Some(value) = &storage_value {
-                        tx_host_env::write(storage_key.to_string(), value);
-                    } else {
-                        tx_host_env::delete(storage_key.to_string());
-                    }
-                });
+            vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |_address| {
+                // Write or delete some data in the transaction
+                if let Some(value) = &storage_value {
+                    tx_host_env::write(storage_key.to_string(), value);
+                } else {
+                    tx_host_env::delete(storage_key.to_string());
+                }
+            });
 
+            let mut vp_env = vp_host_env::take();
             let tx = vp_env.tx.clone();
             let signed_tx = tx.sign(&keypair);
             let tx_data: Vec<u8> = signed_tx.data.as_ref().cloned().unwrap();
@@ -328,6 +337,7 @@ mod tests {
             let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
             let verifiers: BTreeSet<Address> = BTreeSet::default();
+            vp_host_env::set(vp_env);
             assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
         }
     }

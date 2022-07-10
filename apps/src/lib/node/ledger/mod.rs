@@ -10,7 +10,10 @@ pub mod tendermint_node;
 use std::convert::TryInto;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::str::FromStr;
 
+use anoma::ledger::governance::storage as gov_storage;
+use anoma::types::storage::Key;
 use byte_unit::Byte;
 use futures::future::TryFutureExt;
 use once_cell::unsync::Lazy;
@@ -58,6 +61,34 @@ const ENV_VAR_RAYON_THREADS: &str = "ANOMA_RAYON_THREADS";
 //```
 
 impl Shell {
+    fn load_proposals(&mut self) {
+        let proposals_key = gov_storage::get_commiting_proposals_prefix(
+            self.storage.last_epoch.0,
+        );
+
+        let (proposal_iter, _) = self.storage.iter_prefix(&proposals_key);
+        for (key, _, _) in proposal_iter {
+            let key =
+                Key::from_str(key.as_str()).expect("Key should be parsable");
+            if gov_storage::get_commit_proposal_epoch(&key).unwrap()
+                != self.storage.last_epoch.0
+            {
+                // NOTE: `iter_prefix` iterate over the matching prefix. In this
+                // case  a proposal with grace_epoch 110 will be
+                // matched by prefixes  1, 11 and 110. Thus we
+                // have to skip to the next iteration of
+                //  the cycle for all the prefixes that don't actually match
+                //  the desired epoch.
+                continue;
+            }
+
+            let proposal_id = gov_storage::get_commit_proposal_id(&key);
+            if let Some(id) = proposal_id {
+                self.proposal_data.insert(id);
+            }
+        }
+    }
+
     fn call(&mut self, req: Request) -> Result<Response, Error> {
         match req {
             Request::InitChain(init) => {
@@ -72,18 +103,14 @@ impl Shell {
             Request::VerifyHeader(_req) => {
                 Ok(Response::VerifyHeader(self.verify_header(_req)))
             }
+            #[cfg(not(feature = "ABCI"))]
             Request::ProcessProposal(block) => {
-                #[cfg(not(feature = "ABCI"))]
-                {
-                    Ok(Response::ProcessProposal(self.process_proposal(block)))
-                }
-                #[cfg(feature = "ABCI")]
-                {
-                    Ok(Response::ProcessProposal(
-                        self.process_and_decode_proposal(block),
-                    ))
-                }
+                Ok(Response::ProcessProposal(self.process_proposal(block)))
             }
+            #[cfg(feature = "ABCI")]
+            Request::DeliverTx(deliver_tx) => Ok(Response::DeliverTx(
+                self.process_and_decode_proposal(deliver_tx),
+            )),
             #[cfg(not(feature = "ABCI"))]
             Request::RevertProposal(_req) => {
                 Ok(Response::RevertProposal(self.revert_proposal(_req)))
@@ -97,6 +124,7 @@ impl Shell {
                 Response::VerifyVoteExtension(self.verify_vote_extension(_req)),
             ),
             Request::FinalizeBlock(finalize) => {
+                self.load_proposals();
                 self.finalize_block(finalize).map(Response::FinalizeBlock)
             }
             Request::Commit(_) => Ok(Response::Commit(self.commit())),
@@ -305,6 +333,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         tracing::info!("Tendermint node is no longer running.");
 
         drop(aborter);
+        if res.is_err() {
+            tracing::error!("{:?}", &res);
+        }
         res
     });
 
@@ -328,11 +359,10 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
                     sender: abort_send_for_broadcaster,
                     who: "Broadcaster",
                 };
-                let res = broadcaster.run(bc_abort_recv).await;
+                broadcaster.run(bc_abort_recv).await;
                 tracing::info!("Broadcaster is no longer running.");
 
                 drop(aborter);
-                res
             }),
             bc_abort_send,
         ))
@@ -504,7 +534,7 @@ async fn wait_for_abort(
     let mut sigterm = signal(SignalKind::terminate()).unwrap();
     let mut sighup = signal(SignalKind::hangup()).unwrap();
     let mut sigpipe = signal(SignalKind::pipe()).unwrap();
-    let _ = tokio::select! {
+    tokio::select! {
         signal = tokio::signal::ctrl_c() => {
             match signal {
                 Ok(()) => tracing::info!("Received interrupt signal, exiting..."),

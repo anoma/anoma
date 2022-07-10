@@ -355,6 +355,17 @@ pub fn is_total_voting_power_key(key: &Key) -> bool {
     }
 }
 
+/// Get validator address from bond key
+pub fn get_validator_address_from_bond(key: &Key) -> Option<Address> {
+    match key.get_at(3) {
+        Some(segment) => match segment {
+            DbKeySeg::AddressSeg(addr) => Some(addr.clone()),
+            DbKeySeg::StringSeg(_) => None,
+        },
+        None => None,
+    }
+}
+
 impl<D, H> PosBase for Storage<D, H>
 where
     D: storage::DB + for<'iter> storage::DBIter<'iter>,

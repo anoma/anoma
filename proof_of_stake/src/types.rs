@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
-use std::ops::{Add, AddAssign, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 
@@ -339,13 +339,43 @@ pub enum SlashType {
 
 /// ‱ (Parts per ten thousand). This can be multiplied by any type that
 /// implements [`Into<u64>`] or [`Into<i128>`].
-#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    BorshDeserialize,
+    BorshSerialize,
+    BorshSchema,
+    PartialOrd,
+    Ord,
+    PartialEq,
+    Eq,
+    Hash,
+)]
 pub struct BasisPoints(u64);
 
 impl VotingPower {
     /// Convert token amount into a voting power.
     pub fn from_tokens(tokens: impl Into<u64>, params: &PosParams) -> Self {
-        Self(params.votes_per_token * tokens.into() / 1_000_000)
+        // The token amount is expected to be in micro units
+        let whole_tokens = tokens.into() / 1_000_000;
+        Self(params.votes_per_token * whole_tokens)
+    }
+}
+
+impl Add for VotingPower {
+    type Output = VotingPower;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl Sub for VotingPower {
+    type Output = VotingPower;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
     }
 }
 
@@ -355,7 +385,9 @@ impl VotingPowerDelta {
         change: impl Into<i128>,
         params: &PosParams,
     ) -> Result<Self, TryFromIntError> {
-        let delta: i128 = params.votes_per_token * change.into() / 1_000_000;
+        // The token amount is expected to be in micro units
+        let whole_tokens = change.into() / 1_000_000;
+        let delta: i128 = params.votes_per_token * whole_tokens;
         let delta: i64 = TryFrom::try_from(delta)?;
         Ok(Self(delta))
     }
@@ -365,9 +397,10 @@ impl VotingPowerDelta {
         tokens: impl Into<u64>,
         params: &PosParams,
     ) -> Result<Self, TryFromIntError> {
-        let delta: i64 = TryFrom::try_from(
-            params.votes_per_token * tokens.into() / 1_000_000,
-        )?;
+        // The token amount is expected to be in micro units
+        let whole_tokens = tokens.into() / 1_000_000;
+        let delta: i64 =
+            TryFrom::try_from(params.votes_per_token * whole_tokens)?;
         Ok(Self(delta))
     }
 }
@@ -605,17 +638,15 @@ impl From<VotingPower> for u64 {
     }
 }
 
-impl Add for VotingPower {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
-    }
-}
-
 impl AddAssign for VotingPower {
     fn add_assign(&mut self, rhs: Self) {
         self.0 += rhs.0
+    }
+}
+
+impl SubAssign for VotingPower {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0
     }
 }
 

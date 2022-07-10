@@ -2,7 +2,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 use std::num::ParseIntError;
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Rem, Sub};
 use std::str::FromStr;
 
 use bit_vec::BitVec;
@@ -14,8 +14,9 @@ use thiserror::Error;
 #[cfg(feature = "ferveo-tpke")]
 use super::transaction::WrapperTx;
 use crate::bytes::ByteBuf;
-use crate::types::address::{self, Address, InternalAddress};
-use crate::types::token::BALANCE_STORAGE_KEY;
+use crate::types::address::{self, Address};
+use crate::types::hash::Hash;
+use crate::types::time::DateTimeUtc;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -208,6 +209,12 @@ impl From<BlockHeight> for u64 {
 )]
 pub struct BlockHash(pub [u8; BLOCK_HASH_LENGTH]);
 
+impl From<Hash> for BlockHash {
+    fn from(hash: Hash) -> Self {
+        BlockHash(hash.0)
+    }
+}
+
 impl TryFrom<i64> for BlockHeight {
     type Error = String;
 
@@ -243,6 +250,7 @@ impl TryFrom<&[u8]> for BlockHash {
         Ok(BlockHash(hash))
     }
 }
+
 impl TryFrom<Vec<u8>> for BlockHash {
     type Error = self::Error;
 
@@ -261,10 +269,30 @@ impl TryFrom<Vec<u8>> for BlockHash {
         Ok(BlockHash(hash))
     }
 }
+
 impl core::fmt::Debug for BlockHash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let hash = format!("{}", ByteBuf(&self.0));
         f.debug_tuple("BlockHash").field(&hash).finish()
+    }
+}
+
+/// The data from Tendermint header
+/// relevant for Anoma storage
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+pub struct Header {
+    /// Merkle root hash of block
+    pub hash: Hash,
+    /// Timestamp associated to block
+    pub time: DateTimeUtc,
+    /// Hash of the addresses of the next validator set
+    pub next_validators_hash: Hash,
+}
+
+impl Header {
+    /// The number of bytes when this header is encoded
+    pub fn encoded_len(&self) -> usize {
+        self.try_to_vec().unwrap().len()
     }
 }
 
@@ -342,6 +370,11 @@ impl Key {
         addresses
     }
 
+    /// Return the segment at the index parameter
+    pub fn get_at(&self, index: usize) -> Option<&DbKeySeg> {
+        self.segments.get(index)
+    }
+
     /// Returns the length
     pub fn len(&self) -> usize {
         self.to_string().len()
@@ -371,16 +404,6 @@ impl Key {
             }
             _ => None,
         }
-    }
-
-    /// Check if the given key can be updated
-    pub fn is_updatable(&self) -> bool {
-        !matches!(&self.segments[..], [
-            DbKeySeg::AddressSeg(_),
-            DbKeySeg::StringSeg(key),
-            DbKeySeg::AddressSeg(Address::Internal(
-                InternalAddress::IbcBurn | InternalAddress::IbcMint)),
-        ] if key == BALANCE_STORAGE_KEY)
     }
 
     /// Returns a key from the given DB key path that has the height and
@@ -624,9 +647,71 @@ impl Add<u64> for Epoch {
     }
 }
 
+impl Sub<u64> for Epoch {
+    type Output = Epoch;
+
+    fn sub(self, rhs: u64) -> Self::Output {
+        Self(self.0 - rhs)
+    }
+}
+
+impl Mul<u64> for Epoch {
+    type Output = Epoch;
+
+    fn mul(self, rhs: u64) -> Self::Output {
+        Self(self.0 * rhs)
+    }
+}
+
+impl Div<u64> for Epoch {
+    type Output = Epoch;
+
+    fn div(self, rhs: u64) -> Self::Output {
+        Self(self.0 / rhs)
+    }
+}
+
+impl Rem<u64> for Epoch {
+    type Output = u64;
+
+    fn rem(self, rhs: u64) -> Self::Output {
+        Self(self.0 % rhs).0
+    }
+}
+
+impl Sub for Epoch {
+    type Output = Epoch;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl Add for Epoch {
+    type Output = Epoch;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl Mul for Epoch {
+    type Output = Epoch;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self(self.0 * rhs.0)
+    }
+}
+
 impl From<Epoch> for u64 {
     fn from(epoch: Epoch) -> Self {
         epoch.0
+    }
+}
+
+impl From<u64> for Epoch {
+    fn from(value: u64) -> Self {
+        Self(value)
     }
 }
 

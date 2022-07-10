@@ -1,6 +1,8 @@
 //! This crate contains library code for transaction WASM. Most of the code is
 //! re-exported from the `anoma_vm_env` crate.
 
+#![doc(html_favicon_url = "https://dev.anoma.net/master/favicon.png")]
+#![doc(html_logo_url = "https://dev.anoma.net/master/rustdoc-logo.png")]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 

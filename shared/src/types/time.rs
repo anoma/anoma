@@ -1,10 +1,15 @@
 //! Types for dealing with time and durations.
 
 use std::convert::{TryFrom, TryInto};
+use std::fmt::Display;
 use std::ops::{Add, Sub};
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 pub use chrono::{DateTime, Duration, TimeZone, Utc};
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::google::protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::google::protobuf;
 
 use crate::tendermint::time::Time;
 use crate::tendermint::Error as TendermintError;
@@ -55,6 +60,12 @@ impl From<DurationSecs> for std::time::Duration {
     }
 }
 
+impl Display for DurationSecs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 /// A duration in nanos precision.
 #[derive(
     Clone,
@@ -97,6 +108,11 @@ impl DateTimeUtc {
     /// Returns a DateTimeUtc which corresponds to the current date.
     pub fn now() -> Self {
         Self(Utc::now())
+    }
+
+    /// Returns an rfc3339 string or an error.
+    pub fn to_rfc3339(&self) -> String {
+        chrono::DateTime::to_rfc3339(&self.0)
     }
 }
 
@@ -182,6 +198,17 @@ impl From<DateTimeUtc> for prost_types::Timestamp {
         let seconds = dt.0.timestamp();
         let nanos = dt.0.timestamp_subsec_nanos() as i32;
         prost_types::Timestamp { seconds, nanos }
+    }
+}
+
+impl TryFrom<protobuf::Timestamp> for DateTimeUtc {
+    type Error = prost_types::TimestampOutOfSystemRangeError;
+
+    fn try_from(timestamp: protobuf::Timestamp) -> Result<Self, Self::Error> {
+        Self::try_from(prost_types::Timestamp {
+            seconds: timestamp.seconds,
+            nanos: timestamp.nanos,
+        })
     }
 }
 

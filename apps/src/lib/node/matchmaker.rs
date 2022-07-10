@@ -27,7 +27,8 @@ use super::gossip::rpc::matchmakers::{
 };
 use crate::cli::args;
 use crate::client::rpc;
-use crate::client::tx::{broadcast_tx, TxBroadcastData};
+use crate::client::tendermint_rpc_types::TxBroadcastData;
+use crate::client::tx::broadcast_tx;
 use crate::{cli, config, wasm_loader};
 
 /// Run a matchmaker

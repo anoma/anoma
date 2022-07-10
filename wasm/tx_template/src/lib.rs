@@ -16,12 +16,12 @@ mod tests {
     #[test]
     fn test_no_op_transaction() {
         // The environment must be initialized first
-        let mut env = TestTxEnv::default();
-        init_tx_env(&mut env);
+        tx_host_env::init();
 
         let tx_data = vec![];
         apply_tx(tx_data);
 
+        let env = tx_host_env::take();
         assert!(env.all_touched_storage_keys().is_empty());
     }
 }

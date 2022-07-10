@@ -5,14 +5,15 @@
 
 ## Overview
 
-[Anoma](https://anoma.network/) is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties. To learn more about Anoma's vision, take a look at the [Anoma Vision Paper](https://anoma.network/papers/vision-paper.pdf) or [Anoma's Whitepaper](https://anoma.network/papers/whitepaper.pdf).
+[Anoma](https://anoma.network/) is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties. To learn more about Anoma's vision, take a look at the [Anoma Vision Paper](https://anoma.net/vision-paper.pdf) or [Anoma's Whitepaper](https://anoma.net/whitepaper.pdf).
 
 This is an implementation of the Anoma protocol in Rust.
 
 ## 📓 Docs
 
-- [docs](https://docs.anoma.network/master/): built from [docs mdBook](./docs/)
-- [rustdoc](https://docs.anoma.network/master/rustdoc/anoma/): built from the source
+- [user docs](https://docs.anoma.net/): built from [anoma/docs mdBook](https://github.com/anoma/docs)
+- [dev docs](https://dev.anoma.net/master/): built from [docs mdBook](./docs/) in this repo
+- [rustdoc](https://dev.anoma.net/master/rustdoc/anoma/): built from the source
 
 ## Warning
 
@@ -28,7 +29,7 @@ make install
 
 After installation, the main `anoma` executable will be available on path.
 
-To find how to use it, check out the [User Guide section of the docs](https://docs.anoma.network/master/user-guide/).
+To find how to use it, check out the [User Guide section of the docs](https://docs.anoma.net/user-guide/).
 
 If you have Nix, you may opt to build and install Anoma using Nix. The Nix
 integration also takes care of making a compatible version of Tendermint
@@ -43,7 +44,7 @@ nix-env -f . -iA anoma
 ```
 
 For more detailed instructions and more install options, see the [Install
-section](https://docs.anoma.network/master/user-guide/install.html) of the User
+section](https://docs.anoma.net/user-guide/install.html) of the User
 Guide.
 
 ## ⚙️ Development
@@ -128,7 +129,7 @@ nix run .#generateCargoNix
 nix run .#generateCargoNixABCI-plus-plus
 ```
 
-### Before submitting a PR, pls make sure to run the following:
+### Before submitting a PR, pls make sure to run the following
 
 ```shell
 # Format the code

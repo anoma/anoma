@@ -14,14 +14,14 @@ use assert_cmd::assert::OutputAssertExt;
 use color_eyre::eyre::Result;
 use color_eyre::owo_colors::OwoColorize;
 use escargot::CargoBuild;
+use expectrl::session::Session;
+use expectrl::{Eof, WaitStatus};
 use eyre::eyre;
-use rexpect::process::wait::WaitStatus;
-use rexpect::session::{spawn_command, PtySession};
 use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
 /// process
-static INIT: Once = Once::new();
+pub static INIT: Once = Once::new();
 
 const APPS_PACKAGE: &str = "anoma_apps";
 
@@ -35,7 +35,7 @@ const ENV_VAR_KEEP_TEMP: &str = "ANOMA_E2E_KEEP_TEMP";
 /// This file must contain a single validator with alias "validator-0".
 /// To add more validators, use the [`add_validators`] function in the call to
 /// setup the [`network`].
-const SINGLE_NODE_NET_GENESIS: &str = "genesis/e2e-tests-single-node.toml";
+pub const SINGLE_NODE_NET_GENESIS: &str = "genesis/e2e-tests-single-node.toml";
 /// An E2E test network.
 #[derive(Debug)]
 pub struct Network {
@@ -148,6 +148,7 @@ pub fn network(
         "e2e-test",
         "--localhost",
         "--dont-archive",
+        "--allow-duplicate-ip",
         "--wasm-checksums-path",
         &checksums_path,
     ];
@@ -187,53 +188,12 @@ pub fn network(
     )
     .unwrap();
 
-    // Copy the built WASM files from "wasm" directory in the root of the
-    // project.
-    let built_wasm_dir = working_dir.join(config::DEFAULT_WASM_DIR);
-    let opts = fs_extra::dir::DirOptions { depth: 1 };
-    let wasm_files: Vec<_> =
-        fs_extra::dir::get_dir_content2(&built_wasm_dir, &opts)
-            .unwrap()
-            .files
-            .into_iter()
-            .map(PathBuf::from)
-            .filter(|path| {
-                matches!(path.extension().and_then(OsStr::to_str), Some("wasm"))
-            })
-            .map(|path| path.file_name().unwrap().to_string_lossy().to_string())
-            .collect();
-    if wasm_files.is_empty() {
-        panic!(
-            "No WASM files found in {}. Please build or download them them \
-             first.",
-            built_wasm_dir.to_string_lossy()
-        );
-    }
-    let target_wasm_dir = chain_dir.join(config::DEFAULT_WASM_DIR);
-    for file in &wasm_files {
-        std::fs::copy(
-            working_dir.join("wasm").join(&file),
-            target_wasm_dir.join(&file),
-        )
-        .unwrap();
-    }
-
-    // Copy the built WASM files from "wasm" directory to each validator dir
-    for validator_name in genesis.validator.keys() {
-        let target_wasm_dir = chain_dir
-            .join(utils::NET_ACCOUNTS_DIR)
-            .join(validator_name)
-            .join(config::DEFAULT_BASE_DIR)
-            .join(net.chain_id.as_str())
-            .join(config::DEFAULT_WASM_DIR);
-        for file in &wasm_files {
-            std::fs::copy(
-                working_dir.join("wasm").join(&file),
-                target_wasm_dir.join(&file),
-            )
-            .unwrap();
-        }
-    }
+    copy_wasm_to_chain_dir(
+        &working_dir,
+        &chain_dir,
+        &net.chain_id,
+        genesis.validator.keys(),
+    );
 
     Ok(Test {
         working_dir,
@@ -441,18 +401,62 @@ pub fn working_dir() -> PathBuf {
 
 /// A command under test
 pub struct AnomaCmd {
-    pub session: PtySession,
+    pub session: Session,
     pub cmd_str: String,
 }
 
+/// A command under test running on a background thread
+pub struct AnomaBgCmd {
+    join_handle: std::thread::JoinHandle<AnomaCmd>,
+    abort_send: std::sync::mpsc::Sender<()>,
+}
+
+impl AnomaBgCmd {
+    /// Re-gain control of a background command (created with
+    /// [`AnomaCmd::background()`]) to check its output.
+    pub fn foreground(self) -> AnomaCmd {
+        self.abort_send.send(()).unwrap();
+        self.join_handle.join().unwrap()
+    }
+}
+
 impl AnomaCmd {
+    /// Keep reading the session's output in a background thread to prevent the
+    /// buffer from filling up. Call [`AnomaBgCmd::foreground()`] on the
+    /// returned [`AnomaBgCmd`] to stop the loop and return back the original
+    /// command.
+    pub fn background(self) -> AnomaBgCmd {
+        let (abort_send, abort_recv) = std::sync::mpsc::channel();
+        let join_handle = std::thread::spawn(move || {
+            let mut cmd = self;
+            loop {
+                match abort_recv.try_recv() {
+                    Ok(())
+                    | Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                        return cmd;
+                    }
+                    Err(std::sync::mpsc::TryRecvError::Empty) => {}
+                }
+                cmd.session.is_matched(Eof).unwrap();
+            }
+        });
+        AnomaBgCmd {
+            join_handle,
+            abort_send,
+        }
+    }
+
     /// Assert that the process exited with success
     pub fn assert_success(&self) {
-        let status = self.session.process.wait().unwrap();
-        assert_eq!(
-            WaitStatus::Exited(self.session.process.child_pid, 0),
-            status
-        );
+        let status = self.session.wait().unwrap();
+        assert_eq!(WaitStatus::Exited(self.session.pid(), 0), status);
+    }
+
+    /// Assert that the process exited with failure
+    #[allow(dead_code)]
+    pub fn assert_failure(&self) {
+        let status = self.session.wait().unwrap();
+        assert_ne!(WaitStatus::Exited(self.session.pid(), 0), status);
     }
 
     /// Wait until provided string is seen on stdout of child process.
@@ -461,9 +465,16 @@ impl AnomaCmd {
     /// Wrapper over the inner `PtySession`'s functions with custom error
     /// reporting.
     pub fn exp_string(&mut self, needle: &str) -> Result<String> {
-        self.session
-            .exp_string(needle)
-            .map_err(|e| eyre!(format!("{}", e)))
+        let found = self
+            .session
+            .expect_eager(needle)
+            .map_err(|e| eyre!(format!("{}\n Needle: {}", e, needle)))?;
+        if found.is_empty() {
+            Err(eyre!(format!("Expected needle not found: {}", needle)))
+        } else {
+            String::from_utf8(found.before().to_vec())
+                .map_err(|e| eyre!(format!("{}", e)))
+        }
     }
 
     /// Wait until provided regex is seen on stdout of child process.
@@ -471,22 +482,40 @@ impl AnomaCmd {
     /// 1. the yet unread output
     /// 2. the matched regex
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
-    /// reporting.
+    /// Wrapper over the inner `Session`'s functions with custom error
+    /// reporting as well as converting bytes back to `String`.
     pub fn exp_regex(&mut self, regex: &str) -> Result<(String, String)> {
-        self.session
-            .exp_regex(regex)
-            .map_err(|e| eyre!(format!("{}", e)))
+        let found = self
+            .session
+            .expect_eager(expectrl::Regex(regex))
+            .map_err(|e| eyre!(format!("{}", e)))?;
+        if found.is_empty() {
+            Err(eyre!(format!("Expected regex not found: {}", regex)))
+        } else {
+            let unread = String::from_utf8(found.before().to_vec())
+                .map_err(|e| eyre!(format!("{}", e)))?;
+            let matched =
+                String::from_utf8(found.matches().next().unwrap().to_vec())
+                    .map_err(|e| eyre!(format!("{}", e)))?;
+            Ok((unread, matched))
+        }
     }
 
     /// Wait until we see EOF (i.e. child process has terminated)
     /// Return all the yet unread output
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
+    /// Wrapper over the inner `Session`'s functions with custom error
     /// reporting.
     #[allow(dead_code)]
     pub fn exp_eof(&mut self) -> Result<String> {
-        self.session.exp_eof().map_err(|e| eyre!(format!("{}", e)))
+        let found =
+            self.session.expect_eager(Eof).map_err(|e| eyre!("{}", e))?;
+        if found.is_empty() {
+            Err(eyre!("Expected EOF"))
+        } else {
+            String::from_utf8(found.before().to_vec())
+                .map_err(|e| eyre!(format!("{}", e)))
+        }
     }
 
     /// Send a control code to the running process and consume resulting output
@@ -495,7 +524,7 @@ impl AnomaCmd {
     /// E.g. `send_control('c')` sends ctrl-c. Upper/smaller case does not
     /// matter.
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
+    /// Wrapper over the inner `Session`'s functions with custom error
     /// reporting.
     pub fn send_control(&mut self, c: char) -> Result<()> {
         self.session
@@ -507,9 +536,9 @@ impl AnomaCmd {
     /// the input to appear.
     /// Return: number of bytes written
     ///
-    /// Wrapper over the inner `PtySession`'s functions with custom error
+    /// Wrapper over the inner `Session`'s functions with custom error
     /// reporting.
-    pub fn send_line(&mut self, line: &str) -> Result<usize> {
+    pub fn send_line(&mut self, line: &str) -> Result<()> {
         self.session
             .send_line(line)
             .map_err(|e| eyre!(format!("{}", e)))
@@ -518,20 +547,46 @@ impl AnomaCmd {
 
 impl Drop for AnomaCmd {
     fn drop(&mut self) {
-        // Clean up the process, if its still running
-        if let Ok(output) = self.session.exp_eof() {
-            let output = output.trim();
-            if !output.is_empty() {
-                println!(
-                    "\n\n{}: {}\n{}: {}",
-                    "Command".underline().yellow(),
+        // attempt to clean up the process
+        println!(
+            "{}: {}",
+            "Waiting for command to finish".underline().yellow(),
+            self.cmd_str,
+        );
+        let _result = self.send_control('c');
+        match self.exp_eof() {
+            Err(error) => {
+                eprintln!(
+                    "\n{}: {}\n{}: {}",
+                    "Error waiting for command to finish".underline().red(),
                     self.cmd_str,
-                    "Unread output".underline().yellow(),
-                    output,
+                    "Error".underline().red(),
+                    error,
                 );
             }
+            Ok(output) => {
+                println!(
+                    "\n{}: {}",
+                    "Command finished".underline().green(),
+                    self.cmd_str,
+                );
+                let output = output.trim();
+                if !output.is_empty() {
+                    println!(
+                        "\n{}: {}\n\n{}",
+                        "Unread output for command".underline().yellow(),
+                        self.cmd_str,
+                        output
+                    );
+                } else {
+                    println!(
+                        "\n{}: {}",
+                        "No unread output for command".underline().green(),
+                        self.cmd_str
+                    );
+                }
+            }
         }
-        let _ = self.session.process.exit();
     }
 }
 
@@ -563,7 +618,7 @@ where
         Ok(val) => val.to_ascii_lowercase() != "false",
         _ => false,
     };
-    let cmd = if !cfg!(feature = "ABCI") {
+    let build_cmd = if !cfg!(feature = "ABCI") {
         CargoBuild::new()
             .package(APPS_PACKAGE)
             .manifest_path(manifest_path)
@@ -583,14 +638,29 @@ where
             .env("ANOMA_DEV", "false")
             .bin(bin_name)
     };
-    let cmd = if run_debug {
-        cmd
+    let build_cmd = if run_debug {
+        build_cmd
     } else {
         // Use the same build settings as `make build-release`
-        cmd.release()
+        build_cmd.release()
     };
-    let mut cmd = cmd.run().unwrap().command();
-    cmd.env("ANOMA_LOG", "anoma=debug")
+    let now = time::Instant::now();
+    // ideally we would print the compile command here, but escargot doesn't
+    // implement Display or Debug for CargoBuild
+    println!(
+        "\n{}: {}",
+        "`cargo build` starting".underline().bright_blue(),
+        bin_name
+    );
+    let mut run_cmd = build_cmd.run().unwrap().command();
+    println!(
+        "\n{}: {}ms",
+        "`cargo build` finished after".underline().bright_blue(),
+        now.elapsed().as_millis()
+    );
+
+    run_cmd
+        .env("ANOMA_LOG", "anoma=info")
         .current_dir(working_dir)
         .args(&[
             "--base-dir",
@@ -599,11 +669,10 @@ where
             mode,
         ])
         .args(args);
-    let cmd_str = format!("{:?}", cmd);
+    let cmd_str = format!("{:?}", run_cmd);
 
-    let timeout_ms = timeout_sec.map(|sec| sec * 1_000);
     println!("{}: {}", "Running".underline().green(), cmd_str);
-    let mut session = spawn_command(cmd, timeout_ms).map_err(|e| {
+    let mut session = Session::spawn(run_cmd).map_err(|e| {
         eyre!(
             "\n\n{}: {}\n{}: {}\n{}: {}",
             "Failed to run".underline().red(),
@@ -614,33 +683,34 @@ where
             e
         )
     })?;
+    session.set_expect_timeout(timeout_sec.map(std::time::Duration::from_secs));
 
+    let mut cmd_process = AnomaCmd { session, cmd_str };
     if let Bin::Node = &bin {
         // When running a node command, we need to wait a bit before checking
         // status
         sleep(1);
 
         // If the command failed, try print out its output
-        if let Some(rexpect::process::wait::WaitStatus::Exited(_, result)) =
-            session.process.status()
+        if let Ok(WaitStatus::Exited(_, result)) = cmd_process.session.status()
         {
             if result != 0 {
+                let output = cmd_process.exp_eof().unwrap_or_else(|err| {
+                    format!("No output found, error: {}", err)
+                });
                 return Err(eyre!(
                     "\n\n{}: {}\n{}: {} \n\n{}: {}",
                     "Failed to run".underline().red(),
-                    cmd_str,
+                    cmd_process.cmd_str,
                     "Location".underline().red(),
                     loc,
                     "Output".underline().red(),
-                    session.exp_eof().unwrap_or_else(|err| format!(
-                        "No output found, error: {}",
-                        err
-                    ))
+                    output,
                 ));
             }
         }
     }
-    Ok(AnomaCmd { session, cmd_str })
+    Ok(cmd_process)
 }
 
 /// Sleep for given `seconds`.
@@ -683,6 +753,9 @@ pub mod constants {
     // A viewing key derived from C_VIEWING_KEY
     pub const AC_PAYMENT_ADDRESS: &str = "ppatest1rjs986uryqf6qf7v0yrkgmn0kds857xkehk6cd6e8xlqpujsqx69gh08n7m77yxw2emsylq9wx2";
 
+    //  Native VP aliases
+    pub const GOVERNANCE_ADDRESS: &str = "governance";
+
     // Fungible token addresses
     pub const XAN: &str = "XAN";
     pub const BTC: &str = "BTC";
@@ -698,14 +771,74 @@ pub mod constants {
     pub const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
     pub const VP_USER_WASM: &str = "wasm/vp_user.wasm";
     pub const TX_NO_OP_WASM: &str = "wasm_for_tests/tx_no_op.wasm";
+    pub const TX_INIT_PROPOSAL: &str = "wasm_for_tests/tx_init_proposal.wasm";
+    pub const TX_WRITE_STORAGE_KEY_WASM: &str =
+        "wasm_for_tests/tx_write_storage_key.wasm";
     pub const VP_ALWAYS_TRUE_WASM: &str = "wasm_for_tests/vp_always_true.wasm";
     pub const VP_ALWAYS_FALSE_WASM: &str =
         "wasm_for_tests/vp_always_false.wasm";
     pub const TX_MINT_TOKENS_WASM: &str = "wasm_for_tests/tx_mint_tokens.wasm";
+    pub const TX_PROPOSAL_CODE: &str = "wasm_for_tests/tx_proposal_code.wasm";
 
     /// Find the absolute path to one of the WASM files above
     pub fn wasm_abs_path(file_name: &str) -> PathBuf {
         let working_dir = fs::canonicalize("..").unwrap();
         working_dir.join(file_name)
+    }
+}
+
+/// Copy WASM files from the `wasm` directory to every node's chain dir.
+pub fn copy_wasm_to_chain_dir<'a>(
+    working_dir: &Path,
+    chain_dir: &Path,
+    chain_id: &ChainId,
+    genesis_validator_keys: impl Iterator<Item = &'a String>,
+) {
+    // Copy the built WASM files from "wasm" directory in the root of the
+    // project.
+    let built_wasm_dir = working_dir.join(config::DEFAULT_WASM_DIR);
+    let opts = fs_extra::dir::DirOptions { depth: 1 };
+    let wasm_files: Vec<_> =
+        fs_extra::dir::get_dir_content2(&built_wasm_dir, &opts)
+            .unwrap()
+            .files
+            .into_iter()
+            .map(PathBuf::from)
+            .filter(|path| {
+                matches!(path.extension().and_then(OsStr::to_str), Some("wasm"))
+            })
+            .map(|path| path.file_name().unwrap().to_string_lossy().to_string())
+            .collect();
+    if wasm_files.is_empty() {
+        panic!(
+            "No WASM files found in {}. Please build or download them them \
+             first.",
+            built_wasm_dir.to_string_lossy()
+        );
+    }
+    let target_wasm_dir = chain_dir.join(config::DEFAULT_WASM_DIR);
+    for file in &wasm_files {
+        std::fs::copy(
+            working_dir.join("wasm").join(&file),
+            target_wasm_dir.join(&file),
+        )
+        .unwrap();
+    }
+
+    // Copy the built WASM files from "wasm" directory to each validator dir
+    for validator_name in genesis_validator_keys {
+        let target_wasm_dir = chain_dir
+            .join(utils::NET_ACCOUNTS_DIR)
+            .join(validator_name)
+            .join(config::DEFAULT_BASE_DIR)
+            .join(chain_id.as_str())
+            .join(config::DEFAULT_WASM_DIR);
+        for file in &wasm_files {
+            std::fs::copy(
+                working_dir.join("wasm").join(&file),
+                target_wasm_dir.join(&file),
+            )
+            .unwrap();
+        }
     }
 }

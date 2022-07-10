@@ -1,4 +1,5 @@
 //! IBC validity predicate for client module
+use std::convert::TryInto;
 use std::str::FromStr;
 
 use thiserror::Error;
@@ -27,6 +28,7 @@ use crate::ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
 use crate::ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
 use crate::ibc::core::ics02_client::msgs::ClientMsg;
 use crate::ibc::core::ics04_channel::context::ChannelReader;
+use crate::ibc::core::ics23_commitment::commitment::CommitmentRoot;
 use crate::ibc::core::ics24_host::identifier::ClientId;
 use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ledger::storage::{self, StorageHasher};
@@ -571,7 +573,12 @@ where
             .add(gas)
             .map_err(|_| Ics02Error::implementation_specific())?;
         match header {
-            Some(h) => Ok(TmConsensusState::from(h).wrap_any()),
+            Some(h) => Ok(TmConsensusState {
+                root: CommitmentRoot::from_bytes(h.hash.as_slice()),
+                timestamp: h.time.try_into().unwrap(),
+                next_validators_hash: h.next_validators_hash.into(),
+            }
+            .wrap_any()),
             None => Err(Ics02Error::missing_raw_header()),
         }
     }

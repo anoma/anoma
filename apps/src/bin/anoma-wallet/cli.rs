@@ -140,7 +140,7 @@ fn spending_keys_list(
             // Print those too if they are available and requested.
             if unsafe_show_secret {
                 if let Some(spending_key) = spending_key_opt {
-                    match spending_key.get(decrypt) {
+                    match spending_key.get(decrypt, None) {
                         // Here the spending key is unencrypted or successfully
                         // decrypted
                         Ok(spending_key) => {
@@ -383,7 +383,7 @@ fn key_list(
             if let Some(pkh) = pkh {
                 writeln!(w, "    Public key hash: {}", pkh).unwrap();
             }
-            match stored_keypair.get(decrypt) {
+            match stored_keypair.get(decrypt, None) {
                 Ok(keypair) => {
                     writeln!(w, "    Public key: {}", keypair.ref_to())
                         .unwrap();

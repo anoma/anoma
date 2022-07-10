@@ -4,8 +4,10 @@ use std::collections::HashMap;
 #[cfg(not(feature = "dev"))]
 use std::path::Path;
 
+use anoma::ledger::governance::parameters::GovParams;
 use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::{GenesisValidator, PosParams};
+use anoma::ledger::treasury::parameters::TreasuryParams;
 use anoma::types::address::Address;
 #[cfg(not(feature = "dev"))]
 use anoma::types::chain::ChainId;
@@ -24,9 +26,11 @@ pub mod genesis_config {
     use std::path::Path;
     use std::str::FromStr;
 
+    use anoma::ledger::governance::parameters::GovParams;
     use anoma::ledger::parameters::{EpochDuration, Parameters};
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
+    use anoma::ledger::treasury::parameters::TreasuryParams;
     use anoma::types::address::Address;
     use anoma::types::key::dkg_session_keys::DkgPublicKey;
     use anoma::types::key::*;
@@ -34,6 +38,7 @@ pub mod genesis_config {
     use anoma::types::{storage, token};
     use hex;
     use serde::{Deserialize, Serialize};
+    use thiserror::Error;
 
     use super::{
         EstablishedAccount, Genesis, ImplicitAccount, TokenAccount, Validator,
@@ -68,10 +73,13 @@ pub mod genesis_config {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Error, Debug)]
     pub enum HexKeyError {
+        #[error("Invalid hex string: {0:?}")]
         InvalidHexString(hex::FromHexError),
+        #[error("Invalid sha256 checksum: {0}")]
         InvalidSha256(TryFromSliceError),
+        #[error("Invalid public key: {0}")]
         InvalidPublicKey(ParsePublicKeyError),
     }
 
@@ -109,11 +117,50 @@ pub mod genesis_config {
         pub parameters: ParametersConfig,
         // PoS parameters
         pub pos_params: PosParamsConfig,
+        // Governance parameters
+        pub gov_params: GovernanceParamsConfig,
+        // Treasury parameters
+        pub treasury_params: TreasuryParamasConfig,
         // Wasm definitions
         pub wasm: HashMap<String, WasmConfig>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct GovernanceParamsConfig {
+        // Min funds to stake to submit a proposal
+        // XXX: u64 doesn't work with toml-rs!
+        pub min_proposal_fund: u64,
+        // Maximum size of proposal in kibibytes (KiB)
+        // XXX: u64 doesn't work with toml-rs!
+        pub max_proposal_code_size: u64,
+        // Proposal period length in epoch
+        // XXX: u64 doesn't work with toml-rs!
+        pub min_proposal_period: u64,
+        // Maximum number of characters in the proposal content
+        // XXX: u64 doesn't work with toml-rs!
+        pub max_proposal_content_size: u64,
+        // Minimum number of epoch between end and grace epoch
+        // XXX: u64 doesn't work with toml-rs!
+        pub min_proposal_grace_epochs: u64,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct TreasuryParamasConfig {
+        // Maximum funds that can be moved from treasury in a single transfer
+        // XXX: u64 doesn't work with toml-rs!
+        pub max_proposal_fund_transfer: u64,
+    }
+
+    /// Validator pre-genesis configuration can be created with client utils
+    /// `init-genesis-validator` command and added to a genesis for
+    /// `init-network` cmd and that can be subsequently read by `join-network`
+    /// cmd to setup a genesis validator node.
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct ValidatorPreGenesisConfig {
+        pub validator: HashMap<String, ValidatorConfig>,
+    }
+
+    #[derive(Clone, Default, Debug, Deserialize, Serialize)]
     pub struct ValidatorConfig {
         // Public key for consensus. (default: generate)
         pub consensus_public_key: Option<HexString>,
@@ -132,10 +179,10 @@ pub mod genesis_config {
         pub staking_reward_address: Option<String>,
         // Total number of tokens held at genesis.
         // XXX: u64 doesn't work with toml-rs!
-        pub tokens: u64,
+        pub tokens: Option<u64>,
         // Unstaked balance at genesis.
         // XXX: u64 doesn't work with toml-rs!
-        pub non_staked_balance: u64,
+        pub non_staked_balance: Option<u64>,
         // Filename of validator VP. (default: default validator VP)
         pub validator_vp: Option<String>,
         // Filename of staking reward account VP. (default: user VP)
@@ -152,6 +199,9 @@ pub mod genesis_config {
         /// not part of the gossipsub where intents are being propagated and
         /// hence cannot run matchmakers
         pub intent_gossip_seed: Option<bool>,
+        /// Tendermint node key is used to derive Tendermint node ID for node
+        /// authentication
+        pub tendermint_node_key: Option<HexString>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -255,7 +305,7 @@ pub mod genesis_config {
                     &config.staking_reward_address.as_ref().unwrap(),
                 )
                 .unwrap(),
-                tokens: token::Amount::whole(config.tokens),
+                tokens: token::Amount::whole(config.tokens.unwrap_or_default()),
                 consensus_key: config
                     .consensus_public_key
                     .as_ref()
@@ -287,7 +337,9 @@ pub mod genesis_config {
                 .unwrap()
                 .to_dkg_public_key()
                 .unwrap(),
-            non_staked_balance: token::Amount::whole(config.non_staked_balance),
+            non_staked_balance: token::Amount::whole(
+                config.non_staked_balance.unwrap_or_default(),
+            ),
             validator_vp_code_path: validator_vp_config.filename.to_owned(),
             validator_vp_sha256: validator_vp_config
                 .sha256
@@ -493,6 +545,22 @@ pub mod genesis_config {
             tx_whitelist: config.parameters.tx_whitelist.unwrap_or_default(),
         };
 
+        let gov_params = GovParams {
+            min_proposal_fund: config.gov_params.min_proposal_fund,
+            max_proposal_code_size: config.gov_params.max_proposal_code_size,
+            min_proposal_period: config.gov_params.min_proposal_period,
+            max_proposal_content_size: config
+                .gov_params
+                .max_proposal_content_size,
+            min_proposal_grace_epochs: config
+                .gov_params
+                .min_proposal_grace_epochs,
+        };
+
+        let treasury_params = TreasuryParams {
+            max_proposal_fund_transfer: 10_000,
+        };
+
         let pos_params = PosParams {
             max_validator_slots: config.pos_params.max_validator_slots,
             pipeline_len: config.pos_params.pipeline_len,
@@ -518,6 +586,8 @@ pub mod genesis_config {
             implicit_accounts: implicit_accounts.into_values().collect(),
             parameters,
             pos_params,
+            gov_params,
+            treasury_params,
         };
         genesis.init();
         genesis
@@ -551,6 +621,8 @@ pub struct Genesis {
     pub implicit_accounts: Vec<ImplicitAccount>,
     pub parameters: Parameters,
     pub pos_params: PosParams,
+    pub gov_params: GovParams,
+    pub treasury_params: TreasuryParams,
 }
 
 impl Genesis {
@@ -703,7 +775,7 @@ pub fn genesis() -> Genesis {
     let parameters = Parameters {
         epoch_duration: EpochDuration {
             min_num_of_blocks: 10,
-            min_duration: anoma::types::time::Duration::minutes(10).into(),
+            min_duration: anoma::types::time::Duration::seconds(60).into(),
         },
         max_expected_time_per_block: anoma::types::time::DurationSecs(30),
         vp_whitelist: vec![],
@@ -792,6 +864,8 @@ pub fn genesis() -> Genesis {
         token_accounts,
         parameters,
         pos_params: PosParams::default(),
+        gov_params: GovParams::default(),
+        treasury_params: TreasuryParams::default(),
     }
 }
 

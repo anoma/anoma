@@ -1,6 +1,7 @@
 mod alias;
 pub mod defaults;
 mod keys;
+pub mod pre_genesis;
 mod store;
 
 use std::collections::HashMap;
@@ -43,6 +44,20 @@ pub enum FindKeyError {
 }
 
 impl Wallet {
+    /// Load a wallet from the store file.
+    pub fn load(store_dir: &Path) -> Option<Self> {
+        let store = Store::load(store_dir).unwrap_or_else(|err| {
+            eprintln!("Unable to load the wallet: {}", err);
+            cli::safe_exit(1)
+        });
+        Some(Self {
+            store_dir: store_dir.to_path_buf(),
+            store,
+            decrypted_key_cache: HashMap::default(),
+            decrypted_spendkey_cache: HashMap::default(),
+        })
+    }
+
     /// Load a wallet from the store file or create a new wallet without any
     /// keys or addresses.
     pub fn load_or_new(store_dir: &Path) -> Self {
@@ -123,7 +138,7 @@ impl Wallet {
         alias: Option<String>,
         unsafe_dont_encrypt: bool,
     ) -> (String, common::SecretKey) {
-        let password = Self::new_password_prompt(unsafe_dont_encrypt);
+        let password = read_and_confirm_pwd(unsafe_dont_encrypt);
         let (alias, key) = self.store.gen_key(alias, password);
         // Cache the newly added key
         self.decrypted_key_cache.insert(alias.clone(), key.clone());
@@ -163,9 +178,9 @@ impl Wallet {
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => {
-                Ok(Store::gen_validator_keys(other.map(|res| res.unwrap())))
-            }
+            other => Ok(Store::gen_validator_keys(
+                other.map(|res| res.unwrap()),
+            )),
         }
     }
 
@@ -474,11 +489,47 @@ impl Wallet {
             .insert_payment_addr(alias.into(), payment_addr)
             .map(Into::into)
     }
+    /// Extend this wallet from pre-genesis validator wallet.
+    pub fn extend_from_pre_genesis_validator(
+        &mut self,
+        validator_address: Address,
+        validator_alias: Alias,
+        other: pre_genesis::ValidatorWallet,
+    ) {
+        self.store.extend_from_pre_genesis_validator(
+            validator_address,
+            validator_alias,
+            other,
+        )
+    }
+}
+
+/// Read the password for encryption from the file/env/stdin with confirmation.
+pub fn read_and_confirm_pwd(unsafe_dont_encrypt: bool) -> Option<String> {
+    let password = if unsafe_dont_encrypt {
+        println!("Warning: The keypair will NOT be encrypted.");
+        None
+    } else {
+        Some(read_password("Enter your encryption password: "))
+    };
+    // Bis repetita for confirmation.
+    let to_confirm = if unsafe_dont_encrypt {
+        None
+    } else {
+        Some(read_password(
+            "To confirm, please enter the same encryption password once more: ",
+        ))
+    };
+    if to_confirm != password {
+        eprintln!("Your two inputs do not match!");
+        cli::safe_exit(1)
+    }
+    password
 }
 
 /// Read the password for encryption/decryption from the file/env/stdin. Panics
 /// if all options are empty/invalid.
-fn read_password(prompt_msg: &str) -> String {
+pub fn read_password(prompt_msg: &str) -> String {
     let pwd = match env::var("ANOMA_WALLET_PASSWORD_FILE") {
         Ok(path) => fs::read_to_string(path)
             .expect("Something went wrong reading the file"),

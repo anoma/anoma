@@ -12,7 +12,7 @@ use anoma::vm::wasm::{self, VpCache};
 use anoma::vm::{self, WasmCacheRwAccess};
 use tempfile::TempDir;
 
-use crate::tx::{init_tx_env, TestTxEnv};
+use crate::tx::{tx_host_env, TestTxEnv};
 
 /// This module combines the native host function implementations from
 /// `native_vp_host_env` with the functions exposed to the vp wasm
@@ -56,7 +56,7 @@ impl Default for TestVpEnv {
             storage: TestStorage::default(),
             write_log: WriteLog::default(),
             iterators: PrefixIterators::default(),
-            gas_meter: VpGasMeter::new(0),
+            gas_meter: VpGasMeter::default(),
             tx: Tx::new(vec![], None),
             tx_index: TxIndex::default(),
             keys_changed: BTreeSet::default(),
@@ -75,98 +75,8 @@ impl TestVpEnv {
     }
 
     pub fn get_verifiers(&self) -> BTreeSet<Address> {
-        let mut verifiers: BTreeSet<Address> = self
-            .write_log
-            .verifiers_changed_keys(&BTreeSet::default())
-            .keys()
-            .cloned()
-            .collect();
-        verifiers.extend(self.verifiers.clone());
-        verifiers
+        self.write_log.verifiers_and_changed_keys(&self.verifiers).0
     }
-}
-
-/// Initialize the host environment inside the [`vp_host_env`] module by running
-/// a transaction. The transaction is expected to modify the storage sub-space
-/// of the given address `addr` or to add it to the set of verifiers using
-/// [`super::tx::tx_host_env::insert_verifier`].
-pub fn init_vp_env_from_tx(
-    addr: Address,
-    mut tx_env: TestTxEnv,
-    mut apply_tx: impl FnMut(&Address),
-) -> TestVpEnv {
-    // Write an empty validity predicate for the address, because it's used to
-    // check if the address exists when we write into its storage
-    let vp_key = Key::validity_predicate(&addr);
-    tx_env.storage.write(&vp_key, vec![]).unwrap();
-
-    init_tx_env(&mut tx_env);
-    apply_tx(&addr);
-
-    let verifiers_from_tx = &tx_env.verifiers;
-    let verifiers_changed_keys =
-        tx_env.write_log.verifiers_changed_keys(verifiers_from_tx);
-    let verifiers = verifiers_changed_keys.keys().cloned().collect();
-    let keys_changed = verifiers_changed_keys
-        .get(&addr)
-        .unwrap_or_else(|| {
-            panic!(
-                "The VP for the given address has not been triggered by the \
-                 transaction, {:#?}",
-                verifiers_changed_keys
-            )
-        })
-        .to_owned();
-
-    let mut vp_env = TestVpEnv {
-        addr,
-        storage: tx_env.storage,
-        write_log: tx_env.write_log,
-        keys_changed,
-        verifiers,
-        ..Default::default()
-    };
-
-    init_vp_env(&mut vp_env);
-    vp_env
-}
-
-/// Initialize the host environment inside the [`vp_host_env`] module.
-pub fn init_vp_env(
-    TestVpEnv {
-        addr,
-        storage,
-        write_log,
-        iterators,
-        gas_meter,
-        tx,
-        tx_index,
-        keys_changed,
-        verifiers,
-        eval_runner,
-        result_buffer,
-        vp_wasm_cache,
-        vp_cache_dir: _,
-    }: &mut TestVpEnv,
-) {
-    vp_host_env::ENV.with(|env| {
-        *env.borrow_mut() = Some({
-            vm::host_env::testing::vp_env(
-                addr,
-                storage,
-                write_log,
-                iterators,
-                gas_meter,
-                tx,
-                tx_index,
-                verifiers,
-                result_buffer,
-                keys_changed,
-                eval_runner,
-                vp_wasm_cache,
-            )
-        })
-    });
 }
 
 /// This module allows to test code with vp host environment functions.
@@ -176,10 +86,10 @@ pub fn init_vp_env(
 mod native_vp_host_env {
 
     use std::cell::RefCell;
+    use std::pin::Pin;
 
     use anoma::ledger::storage::Sha256Hasher;
     use anoma::vm::host_env::*;
-    use anoma::vm::memory::testing::NativeMemory;
     use anoma::vm::WasmCacheRwAccess;
     // TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)
     use concat_idents::concat_idents;
@@ -195,17 +105,100 @@ mod native_vp_host_env {
     #[cfg(not(feature = "wasm-runtime"))]
     pub struct VpEval;
 
-    pub type TestVpEnv = VpEnv<
-        'static,
-        NativeMemory,
-        MockDB,
-        Sha256Hasher,
-        VpEval,
-        WasmCacheRwAccess,
-    >;
-
     thread_local! {
-        pub static ENV: RefCell<Option<TestVpEnv>> = RefCell::new(None);
+        /// A [`TestVpEnv`] that can be used for VP host env functions calls
+        /// that implements the WASM host environment in native environment.
+        pub static ENV: RefCell<Option<Pin<Box<TestVpEnv>>>> =
+            RefCell::new(None);
+    }
+
+    /// Initialize the VP environment in [`ENV`]. This will be used in the
+    /// host env function calls via macro `native_host_fn!`.
+    pub fn init() {
+        ENV.with(|env| {
+            let test_env = TestVpEnv::default();
+            *env.borrow_mut() = Some(Box::pin(test_env));
+        });
+    }
+
+    /// Set the VP host environment in [`ENV`] from the given [`TestVpEnv`].
+    /// This will be used in the host env function calls via
+    /// macro `native_host_fn!`.
+    pub fn set(test_env: TestVpEnv) {
+        ENV.with(|env| {
+            *env.borrow_mut() = Some(Box::pin(test_env));
+        });
+    }
+
+    /// Mutably borrow the [`TestVpEnv`] from [`ENV`]. The [`ENV`] must be
+    /// initialized.
+    pub fn with<T>(f: impl Fn(&mut TestVpEnv) -> T) -> T {
+        ENV.with(|env| {
+            let mut env = env.borrow_mut();
+            let mut env = env
+                .as_mut()
+                .expect(
+                    "Did you forget to initialize the ENV? (e.g. call to \
+                     `vp_host_env::init()`)",
+                )
+                .as_mut();
+            f(&mut *env)
+        })
+    }
+
+    /// Take the [`TestVpEnv`] out of [`ENV`]. The [`ENV`] must be initialized.
+    pub fn take() -> TestVpEnv {
+        ENV.with(|env| {
+            let mut env = env.borrow_mut();
+            let env = env.take().expect(
+                "Did you forget to initialize the ENV? (e.g. call to \
+                 `vp_host_env::init()`)",
+            );
+            let env = Pin::into_inner(env);
+            *env
+        })
+    }
+
+    /// Initialize the VP host environment in [`ENV`] by running a transaction.
+    /// The transaction is expected to modify the storage sub-space of the given
+    /// address `addr` or to add it to the set of verifiers using
+    /// [`tx_host_env::insert_verifier`].
+    pub fn init_from_tx(
+        addr: Address,
+        mut tx_env: TestTxEnv,
+        mut apply_tx: impl FnMut(&Address),
+    ) {
+        // Write an empty validity predicate for the address, because it's used
+        // to check if the address exists when we write into its storage
+        let vp_key = Key::validity_predicate(&addr);
+        tx_env.storage.write(&vp_key, vec![]).unwrap();
+
+        tx_host_env::set(tx_env);
+        apply_tx(&addr);
+
+        let tx_env = tx_host_env::take();
+        let verifiers_from_tx = &tx_env.verifiers;
+        let (verifiers, keys_changed) = tx_env
+            .write_log
+            .verifiers_and_changed_keys(verifiers_from_tx);
+        if !verifiers.contains(&addr) {
+            panic!(
+                "The VP for the given address has not been triggered by the \
+                 transaction, {:#?}",
+                keys_changed
+            );
+        }
+
+        let vp_env = TestVpEnv {
+            addr,
+            storage: tx_env.storage,
+            write_log: tx_env.write_log,
+            keys_changed,
+            verifiers,
+            ..Default::default()
+        };
+
+        set(vp_env);
     }
 
     #[cfg(not(feature = "wasm-runtime"))]
@@ -237,10 +230,36 @@ mod native_vp_host_env {
                 concat_idents!(extern_fn_name = anoma, _, $fn {
                     #[no_mangle]
                     extern "C" fn extern_fn_name( $($arg: $type),* ) {
-                        ENV.with(|env| {
-                            let env = env.borrow_mut();
-                            let env = env.as_ref().expect("Did you forget to
-    initialize the ENV?");
+                        with(|TestVpEnv {
+                                addr,
+                                storage,
+                                write_log,
+                                iterators,
+                                gas_meter,
+                            tx,
+                            tx_index,
+                                keys_changed,
+                                verifiers,
+                                eval_runner,
+                                result_buffer,
+                                vp_wasm_cache,
+                                vp_cache_dir: _,
+                            }: &mut TestVpEnv| {
+
+                            let env = vm::host_env::testing::vp_env(
+                                addr,
+                                storage,
+                                write_log,
+                                iterators,
+                                gas_meter,
+                                tx,
+                                tx_index,
+                                verifiers,
+                                result_buffer,
+                                keys_changed,
+                                eval_runner,
+                                vp_wasm_cache,
+                            );
 
                             // Call the `host_env` function and unwrap any
                             // runtime errors
@@ -255,10 +274,36 @@ mod native_vp_host_env {
                 concat_idents!(extern_fn_name = anoma, _, $fn {
                     #[no_mangle]
                     extern "C" fn extern_fn_name( $($arg: $type),* ) -> $ret {
-                        ENV.with(|env| {
-                            let env = env.borrow_mut();
-                            let env = env.as_ref().expect("Did you forget to
-    initialize the ENV?");
+                        with(|TestVpEnv {
+                                addr,
+                                storage,
+                                write_log,
+                                iterators,
+                                gas_meter,
+                            tx,
+                            tx_index,
+                                keys_changed,
+                                verifiers,
+                                eval_runner,
+                                result_buffer,
+                                vp_wasm_cache,
+                                vp_cache_dir: _,
+                            }: &mut TestVpEnv| {
+
+                            let env = vm::host_env::testing::vp_env(
+                                addr,
+                                storage,
+                                write_log,
+                                iterators,
+                                gas_meter,
+                                tx,
+                                tx_index,
+                                verifiers,
+                                result_buffer,
+                                keys_changed,
+                                eval_runner,
+                                vp_wasm_cache,
+                            );
 
                             // Call the `host_env` function and unwrap any
                             // runtime errors

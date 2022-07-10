@@ -6,7 +6,7 @@ license = "GPL-3.0"
 name = "mm_token_exch"
 readme = "../../README.md"
 resolver = "2"
-version = "0.5.0"
+version = "0.6.1"
 
 [lib]
 crate-type = ["dylib"]

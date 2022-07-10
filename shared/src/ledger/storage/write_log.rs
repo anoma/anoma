@@ -5,16 +5,17 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use thiserror::Error;
 
-use crate::ledger::storage::{self, Storage, StorageHasher};
+use crate::ledger;
+use crate::ledger::storage::{Storage, StorageHasher};
 use crate::types::address::{Address, EstablishedAddressGen};
 use crate::types::ibc::IbcEvent;
-use crate::types::storage::Key;
+use crate::types::storage;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Storage error applying a write log: {0}")]
-    StorageError(storage::Error),
+    StorageError(ledger::storage::Error),
     #[error("Trying to update a temporary value")]
     UpdateTemporaryValue,
     #[error(
@@ -63,9 +64,9 @@ pub struct WriteLog {
     address_gen: Option<EstablishedAddressGen>,
     /// All the storage modification accepted by validity predicates are stored
     /// in block write-log, before being committed to the storage
-    block_write_log: HashMap<Key, StorageModification>,
+    block_write_log: HashMap<storage::Key, StorageModification>,
     /// The storage modifications for the current transaction
-    tx_write_log: HashMap<Key, StorageModification>,
+    tx_write_log: HashMap<storage::Key, StorageModification>,
     /// The IBC event for the current transaction
     ibc_event: Option<IbcEvent>,
 }
@@ -84,7 +85,10 @@ impl Default for WriteLog {
 impl WriteLog {
     /// Read a value at the given key and return the value and the gas cost,
     /// returns [`None`] if the key is not present in the write log
-    pub fn read(&self, key: &Key) -> (Option<&StorageModification>, u64) {
+    pub fn read(
+        &self,
+        key: &storage::Key,
+    ) -> (Option<&StorageModification>, u64) {
         // try to read from tx write log first
         match self.tx_write_log.get(key).or_else(|| {
             // if not found, then try to read from block write log
@@ -109,12 +113,44 @@ impl WriteLog {
         }
     }
 
+    /// Read a value before the latest tx execution at the given key and return
+    /// the value and the gas cost, returns [`None`] if the key is not present
+    /// in the write log
+    pub fn read_pre(
+        &self,
+        key: &storage::Key,
+    ) -> (Option<&StorageModification>, u64) {
+        // try to read from tx write log first
+        match self.block_write_log.get(key) {
+            Some(v) => {
+                let gas = match v {
+                    StorageModification::Write { ref value } => {
+                        key.len() + value.len()
+                    }
+                    StorageModification::Delete => key.len(),
+                    StorageModification::InitAccount { ref vp } => {
+                        key.len() + vp.len()
+                    }
+                    StorageModification::Temp { ref value } => {
+                        key.len() + value.len()
+                    }
+                };
+                (Some(v), gas as _)
+            }
+            None => (None, key.len() as _),
+        }
+    }
+
     /// Write a key and a value and return the gas cost and the size difference
     /// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a
     /// validity predicate of a new account that's not yet committed to storage.
     /// Fails with [`Error::UpdateTemporaryValue`] when attempting to update a
     /// temporary value.
-    pub fn write(&mut self, key: &Key, value: Vec<u8>) -> Result<(u64, i64)> {
+    pub fn write(
+        &mut self,
+        key: &storage::Key,
+        value: Vec<u8>,
+    ) -> Result<(u64, i64)> {
         let len = value.len();
         let gas = key.len() + len;
         let size_diff = match self
@@ -147,7 +183,7 @@ impl WriteLog {
     /// temporary value after deleting.
     pub fn write_temp(
         &mut self,
-        key: &Key,
+        key: &storage::Key,
         value: Vec<u8>,
     ) -> Result<(u64, i64)> {
         let len = value.len();
@@ -181,7 +217,7 @@ impl WriteLog {
     /// difference.
     /// Fails with [`Error::DeleteVp`] for a validity predicate key, which are
     /// not possible to delete.
-    pub fn delete(&mut self, key: &Key) -> Result<(u64, i64)> {
+    pub fn delete(&mut self, key: &storage::Key) -> Result<(u64, i64)> {
         if key.is_validity_predicate().is_some() {
             return Err(Error::DeleteVp);
         }
@@ -217,7 +253,7 @@ impl WriteLog {
             self.address_gen.get_or_insert(storage_address_gen.clone());
         let addr =
             address_gen.generate_address("TODO more randomness".as_bytes());
-        let key = Key::validity_predicate(&addr);
+        let key = storage::Key::validity_predicate(&addr);
         let gas = (key.len() + vp.len()) as _;
         self.tx_write_log
             .insert(key, StorageModification::InitAccount { vp });
@@ -237,7 +273,7 @@ impl WriteLog {
     /// Get the storage keys changed and accounts keys initialized in the
     /// current transaction. The account keys point to the validity predicates
     /// of the newly created accounts.
-    pub fn get_keys(&self) -> BTreeSet<Key> {
+    pub fn get_keys(&self) -> BTreeSet<storage::Key> {
         self.tx_write_log.keys().cloned().collect()
     }
 
@@ -246,7 +282,9 @@ impl WriteLog {
     /// (right). The first vector excludes keys of validity predicates of
     /// newly initialized accounts, but may include keys of other data
     /// written into newly initialized accounts.
-    pub fn get_partitioned_keys(&self) -> (BTreeSet<&Key>, HashSet<&Address>) {
+    pub fn get_partitioned_keys(
+        &self,
+    ) -> (BTreeSet<&storage::Key>, HashSet<&Address>) {
         use itertools::{Either, Itertools};
         self.tx_write_log.iter().partition_map(|(key, value)| {
             match (key.is_validity_predicate(), value) {
@@ -288,6 +326,9 @@ impl WriteLog {
     /// accepted by all the triggered validity predicates. Starts a new
     /// transaction write log.
     pub fn commit_tx(&mut self) {
+        self.tx_write_log.retain(|_, v| {
+            !matches!(v, StorageModification::Temp { value: _ })
+        });
         let tx_write_log = std::mem::replace(
             &mut self.tx_write_log,
             HashMap::with_capacity(100),
@@ -308,15 +349,13 @@ impl WriteLog {
         storage: &mut Storage<DB, H>,
     ) -> Result<()>
     where
-        DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+        DB: 'static
+            + ledger::storage::DB
+            + for<'iter> ledger::storage::DBIter<'iter>,
         H: StorageHasher,
     {
         let mut batch = Storage::<DB, H>::batch();
-        for (key, entry) in self
-            .block_write_log
-            .iter()
-            .filter(|(k, _)| k.is_updatable())
-        {
+        for (key, entry) in self.block_write_log.iter() {
             match entry {
                 StorageModification::Write { value } => {
                     storage
@@ -349,64 +388,40 @@ impl WriteLog {
         Ok(())
     }
 
-    /// Get the storage keys that have been changed in the write log, grouped by
-    /// their verifiers, whose VPs will be triggered by the changes.
+    /// Get the verifiers set whose validity predicates should validate the
+    /// current transaction changes and the storage keys that have been
+    /// modified created, updated and deleted via the write log.
     ///
     /// Note that some storage keys may comprise of multiple addresses, in which
-    /// case every address will be the verifier of the key.
-    pub fn verifiers_changed_keys(
+    /// case every address will be included in the verifiers set.
+    pub fn verifiers_and_changed_keys(
         &self,
         verifiers_from_tx: &BTreeSet<Address>,
-    ) -> HashMap<Address, BTreeSet<Key>> {
-        let (changed_keys, initialized_accounts) = self.get_partitioned_keys();
-        let mut verifiers =
-            verifiers_from_tx
-                .iter()
-                .fold(HashMap::new(), |mut acc, addr| {
-                    let changed_keys: BTreeSet<Key> =
-                        changed_keys.iter().map(|&key| key.clone()).collect();
-                    acc.insert(addr.clone(), changed_keys);
-                    acc
-                });
+    ) -> (BTreeSet<Address>, BTreeSet<storage::Key>) {
+        let changed_keys: BTreeSet<storage::Key> = self.get_keys();
+        let initialized_accounts = self.get_initialized_accounts();
+        let mut verifiers = verifiers_from_tx.clone();
 
         // get changed keys grouped by the address
-        for key in changed_keys {
+        for key in changed_keys.iter() {
             for addr in &key.find_addresses() {
                 if verifiers_from_tx.contains(addr)
                     || initialized_accounts.contains(addr)
                 {
                     // We can skip this when the address has been added from the
-                    // Tx above, which associates with this address all the
-                    // changed storage keys, even if their address is not
-                    // included in the key.
+                    // Tx above.
                     // Also skip if it's an address of a newly initialized
                     // account, because anything can be written into an
                     // account's storage in the same tx in which it's
-                    // initialized.
+                    // initialized (there is no VP in the state prior to tx
+                    // execution).
                     continue;
                 }
                 // Add the address as a verifier
-                match verifiers.get_mut(addr) {
-                    Some(keys) => {
-                        keys.insert(key.clone());
-                    }
-                    None => {
-                        let keys: BTreeSet<Key> =
-                            vec![key.clone()].into_iter().collect();
-                        verifiers.insert(addr.clone(), keys);
-                    }
-                }
+                verifiers.insert(addr.clone());
             }
         }
-        // The new accounts should be validated by every verifier's VP
-        for initialized_account in initialized_accounts {
-            for (_verifier, keys) in verifiers.iter_mut() {
-                // The key for an initialized account points to its VP
-                let vp_key = Key::validity_predicate(initialized_account);
-                keys.insert(vp_key);
-            }
-        }
-        verifiers
+        (verifiers, changed_keys)
     }
 }
 
@@ -416,12 +431,13 @@ mod tests {
     use proptest::prelude::*;
 
     use super::*;
-    use crate::types::address;
+    use crate::types::{address, storage};
 
     #[test]
     fn test_crud_value() {
         let mut write_log = WriteLog::default();
-        let key = Key::parse("key").expect("cannot parse the key string");
+        let key =
+            storage::Key::parse("key").expect("cannot parse the key string");
 
         // read a non-existing key
         let (value, gas) = write_log.read(&key);
@@ -488,7 +504,7 @@ mod tests {
         // init
         let init_vp = "initialized".as_bytes().to_vec();
         let (addr, gas) = write_log.init_account(&address_gen, init_vp.clone());
-        let vp_key = Key::validity_predicate(&addr);
+        let vp_key = storage::Key::validity_predicate(&addr);
         assert_eq!(gas, (vp_key.len() + init_vp.len()) as u64);
 
         // read
@@ -512,7 +528,7 @@ mod tests {
 
         let init_vp = "initialized".as_bytes().to_vec();
         let (addr, _) = write_log.init_account(&address_gen, init_vp);
-        let vp_key = Key::validity_predicate(&addr);
+        let vp_key = storage::Key::validity_predicate(&addr);
 
         // update should fail
         let updated_vp = "updated".as_bytes().to_vec();
@@ -527,7 +543,7 @@ mod tests {
 
         let init_vp = "initialized".as_bytes().to_vec();
         let (addr, _) = write_log.init_account(&address_gen, init_vp);
-        let vp_key = Key::validity_predicate(&addr);
+        let vp_key = storage::Key::validity_predicate(&addr);
 
         // delete should fail
         let result = write_log.delete(&vp_key).unwrap_err();
@@ -538,7 +554,7 @@ mod tests {
     fn test_delete_vp_should_fail() {
         let mut write_log = WriteLog::default();
         let addr = address::testing::established_address_1();
-        let vp_key = Key::validity_predicate(&addr);
+        let vp_key = storage::Key::validity_predicate(&addr);
 
         // delete should fail
         let result = write_log.delete(&vp_key).unwrap_err();
@@ -552,10 +568,14 @@ mod tests {
         let mut write_log = WriteLog::default();
         let address_gen = EstablishedAddressGen::new("test");
 
-        let key1 = Key::parse("key1").expect("cannot parse the key string");
-        let key2 = Key::parse("key2").expect("cannot parse the key string");
-        let key3 = Key::parse("key3").expect("cannot parse the key string");
-        let key4 = Key::parse("key4").expect("cannot parse the key string");
+        let key1 =
+            storage::Key::parse("key1").expect("cannot parse the key string");
+        let key2 =
+            storage::Key::parse("key2").expect("cannot parse the key string");
+        let key3 =
+            storage::Key::parse("key3").expect("cannot parse the key string");
+        let key4 =
+            storage::Key::parse("key4").expect("cannot parse the key string");
 
         // initialize an account
         let vp1 = "vp1".as_bytes().to_vec();
@@ -604,63 +624,55 @@ mod tests {
             (verifiers_from_tx in testing::arb_verifiers_from_tx())
             (tx_write_log in testing::arb_tx_write_log(verifiers_from_tx.clone()),
                 verifiers_from_tx in Just(verifiers_from_tx))
-        -> (BTreeSet<Address>, HashMap<Key, StorageModification>) {
+        -> (BTreeSet<Address>, HashMap<storage::Key, StorageModification>) {
             (verifiers_from_tx, tx_write_log)
         }
     }
 
     proptest! {
         /// Test [`WriteLog::verifiers_changed_keys`] that:
-        /// 1. Every address from `verifiers_from_tx` is associated with all the
-        ///    changed storage keys.
-        /// 2. Every changed storage key is associated with all the addresses
-        ///    included in the key except for the addresses of newly
-        ///    initialized accounts.
+        /// 1. Every address from `verifiers_from_tx` is included in the
+        ///    verifiers set.
+        /// 2. Every address included in the changed storage keys is included in
+        ///    the verifiers set.
         /// 3. Addresses of newly initialized accounts are not verifiers, so
         ///    that anything can be written into an account's storage in the
         ///    same tx in which it's initialized.
-        /// 4. Every address is associated with all the newly initialized
-        ///    accounts keys to their validity predicates.
+        /// 4. The validity predicates of all the newly initialized accounts are
+        ///    included in the changed keys set.
         #[test]
         fn verifiers_changed_key_tx_all_key(
             (verifiers_from_tx, tx_write_log) in arb_verifiers_changed_key_tx_all_key(),
         ) {
             let write_log = WriteLog { tx_write_log, ..WriteLog::default() };
-            let all_keys = write_log.get_keys();
 
-            let verifiers_changed_keys = write_log.verifiers_changed_keys(&verifiers_from_tx);
+            let (verifiers, changed_keys) = write_log.verifiers_and_changed_keys(&verifiers_from_tx);
 
             println!("verifiers_from_tx {:#?}", verifiers_from_tx);
             for verifier_from_tx in verifiers_from_tx {
-                assert!(verifiers_changed_keys.contains_key(&verifier_from_tx));
-                let keys = verifiers_changed_keys.get(&verifier_from_tx).unwrap().clone();
                 // Test for 1.
-                assert_eq!(&keys, &all_keys);
+                assert!(verifiers.contains(&verifier_from_tx));
             }
 
             let (_changed_keys, initialized_accounts) = write_log.get_partitioned_keys();
-            for (_verifier_addr, keys) in verifiers_changed_keys.iter() {
-                for key in keys {
+            for key in changed_keys.iter() {
                     for addr_from_key in &key.find_addresses() {
                         if !initialized_accounts.contains(addr_from_key) {
-                            let keys = verifiers_changed_keys.get(addr_from_key).unwrap();
                             // Test for 2.
-                            assert!(keys.contains(key));
+                            assert!(verifiers.contains(addr_from_key));
                         }
                     }
-                }
             }
 
-            println!("verifiers_changed_keys {:#?}", verifiers_changed_keys);
+            println!("verifiers {:#?}", verifiers);
+            println!("changed_keys {:#?}", changed_keys);
             println!("initialized_accounts {:#?}", initialized_accounts);
             for initialized_account in initialized_accounts {
                 // Test for 3.
-                assert!(!verifiers_changed_keys.contains_key(initialized_account));
-                for (_verifier_addr, keys) in verifiers_changed_keys.iter() {
-                    // Test for 4.
-                    let vp_key = Key::validity_predicate(initialized_account);
-                    assert!(keys.contains(&vp_key));
-                }
+                assert!(!verifiers.contains(initialized_account));
+                // Test for 4.
+                let vp_key = storage::Key::validity_predicate(initialized_account);
+                assert!(changed_keys.contains(&vp_key));
             }
         }
     }
@@ -676,11 +688,11 @@ pub mod testing {
     use crate::types::address::testing::arb_address;
     use crate::types::storage::testing::arb_key;
 
-    /// Generate an arbitrary tx write log of [`HashMap<Key,
+    /// Generate an arbitrary tx write log of [`HashMap<storage::Key,
     /// StorageModification>`].
     pub fn arb_tx_write_log(
         verifiers_from_tx: BTreeSet<Address>,
-    ) -> impl Strategy<Value = HashMap<Key, StorageModification>> + 'static
+    ) -> impl Strategy<Value = HashMap<storage::Key, StorageModification>> + 'static
     {
         arb_key().prop_flat_map(move |key| {
             // If the key is a validity predicate key and its owner is in the

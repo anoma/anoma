@@ -279,8 +279,8 @@ pub mod tx {
         }
     }
 
-    /// These host functions are implemented in the Anoma's [`host_env`]
-    /// module. The environment provides calls to them via this C interface.
+    // These host functions are implemented in the Anoma's [`host_env`]
+    // module. The environment provides calls to them via this C interface.
     extern "C" {
         // Read variable-length data when we don't know the size up-front,
         // returns the size of the value (can be 0), or -1 if the key is
@@ -592,8 +592,8 @@ pub mod vp {
         HostEnvResult::is_success(result)
     }
 
-    /// These host functions are implemented in the Anoma's [`host_env`]
-    /// module. The environment provides calls to them via this C interface.
+    // These host functions are implemented in the Anoma's [`host_env`]
+    // module. The environment provides calls to them via this C interface.
     extern "C" {
         // Read variable-length prior state when we don't know the size
         // up-front, returns the size of the value (can be 0), or -1 if

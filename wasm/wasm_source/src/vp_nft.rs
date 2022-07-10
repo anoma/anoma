@@ -38,7 +38,7 @@ mod tests {
     use anoma::types::nft::{self, NftToken};
     use anoma::types::transaction::nft::{CreateNft, MintNft};
     use anoma_tests::log::test;
-    use anoma_tests::tx::{self, tx_host_env, TestTxEnv};
+    use anoma_tests::tx::{tx_host_env, TestTxEnv};
     use anoma_tests::vp::*;
 
     use super::*;
@@ -50,7 +50,6 @@ mod tests {
     #[test]
     fn test_no_op_transaction() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_creator = address::testing::established_address_2();
         tx_env.spawn_accounts([&nft_creator]);
@@ -59,6 +58,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_creator.clone(),
@@ -68,18 +68,20 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.write_log.commit_tx();
 
-        let vp_env =
-            init_vp_env_from_tx(nft_address.clone(), tx_env, |address| {
-                // Apply transfer in a transaction
-                tx_host_env::insert_verifier(address)
-            });
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |address| {
+            // Apply transfer in a transaction
+            tx_host_env::insert_verifier(address)
+        });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
 
@@ -87,7 +89,6 @@ mod tests {
     #[test]
     fn test_mint_no_tokens() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_creator = address::testing::established_address_2();
         tx_env.spawn_accounts([&nft_creator]);
@@ -96,6 +97,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_creator.clone(),
@@ -105,23 +107,25 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.write_log.commit_tx();
 
-        let vp_env =
-            init_vp_env_from_tx(nft_address.clone(), tx_env, |address| {
-                // Apply transfer in a transaction
-                tx_host_env::nft::mint_tokens(MintNft {
-                    address: nft_address.clone(),
-                    tokens: vec![],
-                    creator: nft_creator.clone(),
-                });
-                tx_host_env::insert_verifier(address)
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |address| {
+            // Apply transfer in a transaction
+            tx_host_env::nft::mint_tokens(MintNft {
+                address: nft_address.clone(),
+                tokens: vec![],
+                creator: nft_creator.clone(),
             });
+            tx_host_env::insert_verifier(address)
+        });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
 
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -130,7 +134,6 @@ mod tests {
     #[test]
     fn test_mint_tokens() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_creator = address::testing::established_address_2();
         let nft_token_owner = address::testing::established_address_1();
@@ -140,6 +143,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_creator.clone(),
@@ -149,9 +153,10 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
-        let vp_env = init_vp_env_from_tx(nft_address.clone(), tx_env, |_| {
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |_| {
             // Apply transfer in a transaction
             tx_host_env::nft::mint_tokens(MintNft {
                 address: nft_address.clone(),
@@ -169,10 +174,12 @@ mod tests {
             });
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
 
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -181,7 +188,6 @@ mod tests {
     #[test]
     fn test_mint_tokens_wrong_owner() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_creator = address::testing::established_address_2();
         let nft_token_owner = address::testing::established_address_1();
@@ -191,6 +197,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_creator.clone(),
@@ -200,9 +207,10 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
-        let vp_env = init_vp_env_from_tx(nft_address.clone(), tx_env, |_| {
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |_| {
             // Apply transfer in a transaction
             tx_host_env::nft::mint_tokens(MintNft {
                 address: nft_address.clone(),
@@ -220,10 +228,12 @@ mod tests {
             });
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
 
         assert!(!validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -232,7 +242,6 @@ mod tests {
     #[test]
     fn test_mint_tokens_with_approvals_authorized() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_creator = address::testing::established_address_2();
         let nft_token_owner = address::testing::established_address_1();
@@ -249,6 +258,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_creator.clone(),
@@ -258,8 +268,10 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
+        tx_host_env::set(tx_env);
         tx_host_env::nft::mint_tokens(MintNft {
             address: nft_address.clone(),
             creator: nft_creator.clone(),
@@ -275,14 +287,12 @@ mod tests {
             }],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
-        let vp_env = init_vp_env_from_tx(nft_address.clone(), tx_env, |_| {
-            let approval_key = nft::get_token_approval_key(
-                &nft_address,
-                1.to_string().as_ref(),
-            )
-            .to_string();
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |_| {
+            let approval_key =
+                nft::get_token_approval_key(&nft_address, "1").to_string();
             tx_host_env::write(
                 approval_key,
                 [&nft_token_approval_2, &nft_token_approval],
@@ -290,10 +300,12 @@ mod tests {
             tx_host_env::insert_verifier(&nft_token_approval);
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
 
         assert!(validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -302,7 +314,6 @@ mod tests {
     #[test]
     fn test_mint_tokens_with_approvals_not_authorized() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_creator = address::testing::established_address_2();
         let nft_token_owner = address::testing::established_address_1();
@@ -319,6 +330,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_creator.clone(),
@@ -328,8 +340,10 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
+        tx_host_env::set(tx_env);
         tx_host_env::nft::mint_tokens(MintNft {
             address: nft_address.clone(),
             creator: nft_creator.clone(),
@@ -345,14 +359,12 @@ mod tests {
             }],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
-        let vp_env = init_vp_env_from_tx(nft_address.clone(), tx_env, |_| {
-            let approval_key = nft::get_token_approval_key(
-                &nft_address,
-                1.to_string().as_ref(),
-            )
-            .to_string();
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |_| {
+            let approval_key =
+                nft::get_token_approval_key(&nft_address, "1").to_string();
             tx_host_env::write(
                 approval_key,
                 [&nft_token_approval_2, &nft_token_approval],
@@ -360,10 +372,12 @@ mod tests {
             tx_host_env::insert_verifier(&nft_token_approval_2);
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
 
         assert!(!validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }
@@ -372,7 +386,6 @@ mod tests {
     #[test]
     fn test_cant_change_owner() {
         let mut tx_env = TestTxEnv::default();
-        tx::init_tx_env(&mut tx_env);
 
         let nft_owner = address::testing::established_address_2();
         let another_address = address::testing::established_address_1();
@@ -382,6 +395,7 @@ mod tests {
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
+        tx_host_env::set(tx_env);
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             tag: "v1".to_string(),
             creator: nft_owner.clone(),
@@ -391,17 +405,20 @@ mod tests {
             tokens: vec![],
         });
 
+        let mut tx_env = tx_host_env::take();
         tx_env.commit_tx_and_block();
 
-        let vp_env = init_vp_env_from_tx(nft_address.clone(), tx_env, |_| {
+        vp_host_env::init_from_tx(nft_address.clone(), tx_env, |_| {
             let creator_key = nft::get_creator_key(&nft_address).to_string();
             tx_host_env::write(creator_key, &another_address);
         });
 
+        let vp_env = vp_host_env::take();
         let tx_data: Vec<u8> = vec![];
         let keys_changed: BTreeSet<storage::Key> =
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = vp_env.get_verifiers();
+        vp_host_env::set(vp_env);
 
         assert!(!validate_tx(tx_data, nft_address, keys_changed, verifiers));
     }

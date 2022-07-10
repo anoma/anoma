@@ -53,15 +53,40 @@ pub fn add_gas(gas_meter: &mut VpGasMeter, used_gas: u64) -> Result<()> {
 pub fn read_pre<DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &Storage<DB, H>,
+    write_log: &WriteLog,
     key: &Key,
 ) -> Result<Option<Vec<u8>>>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
 {
-    let (value, gas) = storage.read(key).map_err(RuntimeError::StorageError)?;
+    let (log_val, gas) = write_log.read_pre(key);
     add_gas(gas_meter, gas)?;
-    Ok(value)
+    match log_val {
+        Some(&write_log::StorageModification::Write { ref value }) => {
+            Ok(Some(value.clone()))
+        }
+        Some(&write_log::StorageModification::Delete) => {
+            // Given key has been deleted
+            Ok(None)
+        }
+        Some(&write_log::StorageModification::InitAccount {
+            ref vp, ..
+        }) => {
+            // Read the VP of a new account
+            Ok(Some(vp.clone()))
+        }
+        Some(&write_log::StorageModification::Temp { .. }) => {
+            Err(RuntimeError::ReadTemporaryValueError)
+        }
+        None => {
+            // When not found in write log, try to read from the storage
+            let (value, gas) =
+                storage.read(key).map_err(RuntimeError::StorageError)?;
+            add_gas(gas_meter, gas)?;
+            Ok(value)
+        }
+    }
 }
 
 /// Storage read posterior state (after tx execution). It will try to read from
@@ -120,6 +145,7 @@ pub fn read_temp(
         Some(&write_log::StorageModification::Temp { ref value }) => {
             Ok(Some(value.clone()))
         }
+        None => Ok(None),
         _ => Err(RuntimeError::ReadPermanentValueError),
     }
 }

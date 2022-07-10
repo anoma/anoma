@@ -6,13 +6,17 @@ license = "GPL-3.0"
 name = "anoma_proof_of_stake"
 readme = "../README.md"
 resolver = "2"
-version = "0.5.0"
+version = "0.6.1"
+
+[features]
+default = []
+# testing helpers
+testing = ["proptest"]
 
 [dependencies]
 borsh = "0.9.1"
 thiserror = "1.0.30"
+# A fork with state machine testing
+proptest = {git = "https://github.com/heliaxdev/proptest", branch = "tomas/sm", optional = true}
 
 [dev-dependencies]
-# A fork with state machine testing
-proptest = {git = "https://github.com/heliaxdev/proptest", branch = "tomas/sm"}
-# proptest = {path = "../../proptest/proptest"}

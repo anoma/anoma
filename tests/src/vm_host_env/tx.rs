@@ -6,6 +6,7 @@ use anoma::ledger::parameters::{self, EpochDuration};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::write_log::WriteLog;
+use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::storage::{Key, TxIndex};
 use anoma::types::time::DurationSecs;
@@ -14,6 +15,7 @@ use anoma::vm::prefix_iter::PrefixIterators;
 use anoma::vm::wasm::{self, TxCache, VpCache};
 use anoma::vm::{self, WasmCacheRwAccess};
 use anoma_vm_env::tx_prelude::BorshSerialize;
+use derivative::Derivative;
 use tempfile::TempDir;
 
 /// This module combines the native host function implementations from
@@ -27,7 +29,10 @@ pub mod tx_host_env {
 }
 
 /// Host environment structures required for transactions.
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct TestTxEnv {
+    #[derivative(Debug = "ignore")]
     pub storage: TestStorage,
     pub write_log: WriteLog,
     pub iterators: PrefixIterators<'static, MockDB>,
@@ -39,6 +44,7 @@ pub struct TestTxEnv {
     pub vp_cache_dir: TempDir,
     pub tx_wasm_cache: TxCache<WasmCacheRwAccess>,
     pub tx_cache_dir: TempDir,
+    pub tx: Tx,
 }
 impl Default for TestTxEnv {
     fn default() -> Self {
@@ -59,6 +65,7 @@ impl Default for TestTxEnv {
             vp_cache_dir,
             tx_wasm_cache,
             tx_cache_dir,
+            tx: Tx::new(vec![], None),
         }
     }
 }
@@ -66,6 +73,10 @@ impl Default for TestTxEnv {
 impl TestTxEnv {
     pub fn all_touched_storage_keys(&self) -> BTreeSet<Key> {
         self.write_log.get_keys()
+    }
+
+    pub fn get_verifiers(&self) -> BTreeSet<Address> {
+        self.write_log.verifiers_and_changed_keys(&self.verifiers).0
     }
 
     pub fn init_parameters(
@@ -144,40 +155,6 @@ impl TestTxEnv {
     }
 }
 
-/// Initialize the host environment inside the [`tx_host_env`] module.
-#[allow(dead_code)]
-pub fn init_tx_env(
-    TestTxEnv {
-        storage,
-        write_log,
-        iterators,
-        verifiers,
-        gas_meter,
-        tx_index,
-        result_buffer,
-        vp_wasm_cache,
-        vp_cache_dir: _,
-        tx_wasm_cache,
-        tx_cache_dir: _,
-    }: &mut TestTxEnv,
-) {
-    tx_host_env::ENV.with(|env| {
-        *env.borrow_mut() = Some({
-            vm::host_env::testing::tx_env(
-                storage,
-                write_log,
-                iterators,
-                verifiers,
-                gas_meter,
-                tx_index,
-                result_buffer,
-                vp_wasm_cache,
-                tx_wasm_cache,
-            )
-        })
-    });
-}
-
 /// This module allows to test code with tx host environment functions.
 /// It keeps a thread-local global `TxEnv`, which is passed to any of
 /// invoked host environment functions and so it must be initialized
@@ -185,17 +162,70 @@ pub fn init_tx_env(
 mod native_tx_host_env {
 
     use std::cell::RefCell;
+    use std::pin::Pin;
 
-    use anoma::ledger::storage::Sha256Hasher;
     use anoma::vm::host_env::*;
-    use anoma::vm::memory::testing::NativeMemory;
     // TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)
     use concat_idents::concat_idents;
 
     use super::*;
 
     thread_local! {
-        pub static ENV: RefCell<Option<TxEnv<'static, NativeMemory, MockDB, Sha256Hasher, WasmCacheRwAccess>>> = RefCell::new(None);
+        /// A [`TestTxEnv`] that can be used for tx host env functions calls
+        /// that implements the WASM host environment in native environment.
+        pub static ENV: RefCell<Option<Pin<Box<TestTxEnv>>>> =
+            RefCell::new(None);
+    }
+
+    /// Initialize the tx host environment in [`ENV`]. This will be used in the
+    /// host env function calls via macro `native_host_fn!`.
+    pub fn init() {
+        ENV.with(|env| {
+            let test_env = TestTxEnv::default();
+            *env.borrow_mut() = Some(Box::pin(test_env));
+        });
+    }
+
+    /// Set the tx host environment in [`ENV`] from the given [`TestTxEnv`].
+    /// This will be used in the host env function calls via
+    /// macro `native_host_fn!`.
+    pub fn set(test_env: TestTxEnv) {
+        ENV.with(|env| {
+            *env.borrow_mut() = Some(Box::pin(test_env));
+        });
+    }
+
+    /// Mutably borrow the [`TestTxEnv`] from [`ENV`]. The [`ENV`] must be
+    /// initialized.
+    pub fn with<T>(f: impl Fn(&mut TestTxEnv) -> T) -> T {
+        ENV.with(|env| {
+            let mut env = env.borrow_mut();
+            let mut env = env
+                .as_mut()
+                .expect(
+                    "Did you forget to initialize the ENV? (e.g. call to \
+                     `tx_host_env::init()`)",
+                )
+                .as_mut();
+            f(&mut *env)
+        })
+    }
+
+    /// Take the [`TestTxEnv`] out of [`ENV`]. The [`ENV`] must be initialized.
+    pub fn take() -> TestTxEnv {
+        ENV.with(|env| {
+            let mut env = env.borrow_mut();
+            let env = env.take().expect(
+                "Did you forget to initialize the ENV? (e.g. call to \
+                 `tx_host_env::init()`)",
+            );
+            let env = Pin::into_inner(env);
+            *env
+        })
+    }
+
+    pub fn commit_tx_and_block() {
+        with(|env| env.commit_tx_and_block())
     }
 
     /// A helper macro to create implementations of the host environment
@@ -207,13 +237,36 @@ mod native_tx_host_env {
                 concat_idents!(extern_fn_name = anoma, _, $fn {
                     #[no_mangle]
                     extern "C" fn extern_fn_name( $($arg: $type),* ) {
-                        ENV.with(|env| {
-                            let env = env.borrow_mut();
-                            let env = env.as_ref().expect("Did you forget to initialize the ENV?");
+                        with(|TestTxEnv {
+                                storage,
+                                write_log,
+                                iterators,
+                                verifiers,
+                                gas_meter,
+                            result_buffer,
+                            tx_index,
+                                vp_wasm_cache,
+                                vp_cache_dir: _,
+                                tx_wasm_cache,
+                                tx_cache_dir: _,
+                                tx: _,
+                            }: &mut TestTxEnv| {
+
+                            let tx_env = vm::host_env::testing::tx_env(
+                                storage,
+                                write_log,
+                                iterators,
+                                verifiers,
+                                gas_meter,
+                                tx_index,
+                                result_buffer,
+                                vp_wasm_cache,
+                                tx_wasm_cache,
+                            );
 
                             // Call the `host_env` function and unwrap any
                             // runtime errors
-                            $fn( &env, $($arg),* ).unwrap()
+                            $fn( &tx_env, $($arg),* ).unwrap()
                         })
                     }
                 });
@@ -224,13 +277,36 @@ mod native_tx_host_env {
                 concat_idents!(extern_fn_name = anoma, _, $fn {
                     #[no_mangle]
                     extern "C" fn extern_fn_name( $($arg: $type),* ) -> $ret {
-                        ENV.with(|env| {
-                            let env = env.borrow_mut();
-                            let env = env.as_ref().expect("Did you forget to initialize the ENV?");
+                        with(|TestTxEnv {
+                            tx_index,
+                                storage,
+                                write_log,
+                                iterators,
+                                verifiers,
+                                gas_meter,
+                                result_buffer,
+                                vp_wasm_cache,
+                                vp_cache_dir: _,
+                                tx_wasm_cache,
+                                tx_cache_dir: _,
+                                tx: _,
+                            }: &mut TestTxEnv| {
+
+                            let tx_env = vm::host_env::testing::tx_env(
+                                storage,
+                                write_log,
+                                iterators,
+                                verifiers,
+                                gas_meter,
+                                tx_index,
+                                result_buffer,
+                                vp_wasm_cache,
+                                tx_wasm_cache,
+                            );
 
                             // Call the `host_env` function and unwrap any
                             // runtime errors
-                            $fn( &env, $($arg),* ).unwrap()
+                            $fn( &tx_env, $($arg),* ).unwrap()
                         })
                     }
                 });

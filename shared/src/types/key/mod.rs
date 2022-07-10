@@ -42,7 +42,7 @@ pub fn is_pk_key(key: &Key) -> Option<&Address> {
     }
 }
 
-/// Obtain a storage key for user's public key.
+/// Obtain a storage key for user's protocol public key.
 pub fn protocol_pk_key(owner: &Address) -> storage::Key {
     Key::from(owner.to_db_key())
         .push(&PROTOCOL_PK_STORAGE_KEY.to_owned())

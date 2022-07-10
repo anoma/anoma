@@ -92,7 +92,7 @@ pub async fn run(
     };
 
     // init and run a tendermint node child process
-    let output = if !cfg!(featuer = "ABCI") {
+    let output = if !cfg!(feature = "ABCI") {
         Command::new(&tendermint_path)
             .args(&["init", &mode, "--home", &home_dir_string])
             .output()
@@ -130,8 +130,14 @@ pub async fn run(
             .await;
         }
     }
-
-    write_tm_genesis(&home_dir, chain_id, genesis_time).await;
+    #[cfg(not(feature = "ABCI"))]
+    {
+        write_tm_genesis(&home_dir, chain_id, genesis_time, &config).await;
+    }
+    #[cfg(feature = "ABCI")]
+    {
+        write_tm_genesis(&home_dir, chain_id, genesis_time).await;
+    }
 
     update_tendermint_config(&home_dir, config).await?;
 
@@ -201,6 +207,19 @@ pub fn reset(tendermint_dir: impl AsRef<Path>) -> Result<()> {
     let tendermint_path = from_env_or_default()?;
     let tendermint_dir = tendermint_dir.as_ref().to_string_lossy();
     // reset all the Tendermint state, if any
+    #[cfg(not(feature = "ABCI"))]
+    std::process::Command::new(tendermint_path)
+        .args(&[
+            "reset",
+            "unsafe-all",
+            // NOTE: log config: https://docs.tendermint.com/master/nodes/logging.html#configuring-log-levels
+            // "--log-level=\"*debug\"",
+            "--home",
+            &tendermint_dir,
+        ])
+        .output()
+        .expect("Failed to reset tendermint node's data");
+    #[cfg(feature = "ABCI")]
     std::process::Command::new(tendermint_path)
         .args(&[
             "unsafe-reset-all",
@@ -330,12 +349,19 @@ async fn update_tendermint_config(
     config.p2p.persistent_peers = tendermint_config.p2p_persistent_peers;
     config.p2p.pex = tendermint_config.p2p_pex;
     config.p2p.allow_duplicate_ip = tendermint_config.p2p_allow_duplicate_ip;
+    #[cfg(feature = "ABCI")]
+    {
+        config.p2p.addr_book_strict = tendermint_config.p2p_addr_book_strict;
+    }
 
     // In "dev", only produce blocks when there are txs or when the AppHash
     // changes
     config.consensus.create_empty_blocks = true; // !cfg!(feature = "dev");
-    config.consensus.timeout_commit =
-        tendermint_config.consensus_timeout_commit;
+    #[cfg(feature = "ABCI")]
+    {
+        config.consensus.timeout_commit =
+            tendermint_config.consensus_timeout_commit;
+    }
 
     // We set this to true as we don't want any invalid tx be re-applied. This
     // also implies that it's not possible for an invalid tx to become valid
@@ -357,6 +383,16 @@ async fn update_tendermint_config(
     config.instrumentation.namespace =
         tendermint_config.instrumentation_namespace;
 
+    // setup the events log
+    #[cfg(not(feature = "ABCI"))]
+    {
+        // keep events for one minute
+        config.rpc.event_log_window_size =
+            std::time::Duration::from_secs(59).into();
+        // we do not limit the size of the events log
+        config.rpc.event_log_max_items = 0;
+    }
+
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
@@ -374,6 +410,7 @@ async fn write_tm_genesis(
     home_dir: impl AsRef<Path>,
     chain_id: ChainId,
     genesis_time: DateTimeUtc,
+    #[cfg(not(feature = "ABCI"))] config: &config::Tendermint,
 ) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("genesis.json");
@@ -394,6 +431,11 @@ async fn write_tm_genesis(
     genesis.genesis_time = genesis_time
         .try_into()
         .expect("Couldn't convert DateTimeUtc to Tendermint Time");
+    #[cfg(not(feature = "ABCI"))]
+    {
+        genesis.consensus_params.timeout.commit =
+            config.consensus_timeout_commit.into()
+    }
 
     let mut file = OpenOptions::new()
         .write(true)

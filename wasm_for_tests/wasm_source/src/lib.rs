@@ -22,6 +22,27 @@ pub mod main {
     }
 }
 
+/// A tx to be used as proposal_code
+#[cfg(feature = "tx_proposal_code")]
+pub mod main {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(_tx_data: Vec<u8>) {
+        // governance
+        let target_key = storage::get_min_proposal_grace_epoch_key();
+        write(&target_key.to_string(), 9_u64);
+
+        // treasury
+        let target_key = treasury_storage::get_max_transferable_fund_key();
+        write(&target_key.to_string(), token::Amount::whole(20_000));
+
+        // parameters
+        let target_key = parameters_storage::get_tx_whitelist_storage_key();
+        write(&target_key.to_string(), vec!["hash"]);
+    }
+}
+
 /// A tx that attempts to read the given key from storage.
 #[cfg(feature = "tx_read_storage_key")]
 pub mod main {
@@ -30,9 +51,75 @@ pub mod main {
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
         // Allocates a memory of size given from the `tx_data (usize)`
-        let key = storage::Key::try_from_slice(&tx_data[..]).unwrap();
+        let key = Key::try_from_slice(&tx_data[..]).unwrap();
         log_string(format!("key {}", key));
         let _result: Vec<u8> = read(key.to_string()).unwrap();
+    }
+}
+
+/// A tx that attempts to write arbitrary data to the given key
+#[cfg(feature = "tx_write_storage_key")]
+pub mod main {
+    use anoma_vm_env::tx_prelude::*;
+
+    const TX_NAME: &str = "tx_write";
+
+    const ARBITRARY_VALUE: &str = "arbitrary value";
+
+    fn log(msg: &str) {
+        log_string(format!("[{}] {}", TX_NAME, msg))
+    }
+
+    fn fatal(msg: &str, err: impl std::error::Error) -> ! {
+        log(&format!("ERROR: {} - {:?}", msg, err));
+        panic!()
+    }
+
+    fn fatal_msg(msg: &str) -> ! {
+        log(msg);
+        panic!()
+    }
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed = match SignedTxData::try_from_slice(&tx_data[..]) {
+            Ok(signed) => {
+                log("got signed data");
+                signed
+            }
+            Err(error) => fatal("getting signed data", error),
+        };
+        let data = match signed.data {
+            Some(data) => {
+                log(&format!("got data ({} bytes)", data.len()));
+                data
+            }
+            None => {
+                fatal_msg("no data provided");
+            }
+        };
+        let key = match String::from_utf8(data) {
+            Ok(key) => {
+                log(&format!("parsed key from data: {}", key));
+                key
+            }
+            Err(error) => fatal("getting key", error),
+        };
+        let val: Option<Vec<u8>> = read(key.as_str());
+        match val {
+            Some(val) => {
+                let val = String::from_utf8(val).unwrap();
+                log(&format!("preexisting val is {}", val));
+            }
+            None => {
+                log("no preexisting val");
+            }
+        }
+        log(&format!(
+            "attempting to write new value {} to key {}",
+            ARBITRARY_VALUE, key
+        ));
+        write(key.as_str(), ARBITRARY_VALUE);
     }
 }
 
@@ -45,8 +132,7 @@ pub mod main {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let transfer =
             token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
         log_string(format!("apply_tx called to mint tokens: {:#?}", transfer));
@@ -74,8 +160,8 @@ pub mod main {
     fn validate_tx(
         _tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         true
     }
@@ -90,8 +176,8 @@ pub mod main {
     fn validate_tx(
         _tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         false
     }
@@ -107,8 +193,8 @@ pub mod main {
     fn validate_tx(
         tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         use validity_predicate::EvalVp;
         let EvalVp { vp_code, input }: EvalVp =
@@ -127,8 +213,8 @@ pub mod main {
     fn validate_tx(
         tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         let len = usize::try_from_slice(&tx_data[..]).unwrap();
         log_string(format!("allocate len {}", len));
@@ -149,11 +235,11 @@ pub mod main {
     fn validate_tx(
         tx_data: Vec<u8>,
         _addr: Address,
-        _keys_changed: HashSet<storage::Key>,
-        _verifiers: HashSet<Address>,
+        _keys_changed: BTreeSet<storage::Key>,
+        _verifiers: BTreeSet<Address>,
     ) -> bool {
         // Allocates a memory of size given from the `tx_data (usize)`
-        let key = storage::Key::try_from_slice(&tx_data[..]).unwrap();
+        let key = Key::try_from_slice(&tx_data[..]).unwrap();
         log_string(format!("key {}", key));
         let _result: Vec<u8> = read_pre(key.to_string()).unwrap();
         true

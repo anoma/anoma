@@ -11,6 +11,7 @@ mm := libmm_token_exch
 
 # Path to the wasm source for the provided txs and VPs
 wasms := wasm/wasm_source
+wasms_for_tests := wasm_for_tests/wasm_source
 # Paths for all the wasm templates
 wasm_templates := wasm/tx_template wasm/vp_template
 
@@ -51,6 +52,7 @@ check-wasm = $(cargo) check --target wasm32-unknown-unknown --manifest-path $(wa
 check:
 	$(cargo) check && \
 	make -C $(wasms) check && \
+	make -C $(wasms_for_tests) check && \
 	$(foreach wasm,$(wasm_templates),$(check-wasm) && ) true
 
 check-abci-plus-plus:
@@ -63,6 +65,7 @@ clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)
 clippy:
 	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
 	make -C $(wasms) clippy && \
+	make -C $(wasms_for_tests) clippy && \
 	$(foreach wasm,$(wasm_templates),$(clippy-wasm) && ) true
 
 clippy-abci-plus-plus:
@@ -70,7 +73,9 @@ clippy-abci-plus-plus:
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
 		--features "std testing ABCI-plus-plus" && \
-	$(cargo) +$(nightly) clippy --all-targets --manifest-path ./proof_of_stake/Cargo.toml && \
+	$(cargo) +$(nightly) clippy --all-targets \
+		--manifest-path ./proof_of_stake/Cargo.toml \
+		--features "testing" && \
 	$(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
@@ -96,7 +101,7 @@ install: tendermint
 	find "target/release/" -type f \
 		\( -name "$(mm).dll" -o -name "$(mm).dylib" -o -name "$(mm).so" \) \
 		-exec install -d {} ${HOME}/.cargo/lib/ \; && \
-	ANOMA_DEV=false $(cargo) install --path ./apps
+	ANOMA_DEV=false $(cargo) install --path ./apps --locked
 
 tendermint:
 	./scripts/install/get_tendermint.sh
@@ -141,7 +146,8 @@ test-unit-abci-plus-plus:
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
 		--features "testing std ABCI-plus-plus" && \
-	$(cargo) test --manifest-path ./proof_of_stake/Cargo.toml && \
+	$(cargo) test --manifest-path ./proof_of_stake/Cargo.toml \
+		--features "testing" && \
 	$(cargo) test \
 		--manifest-path ./shared/Cargo.toml \
 		--no-default-features \
@@ -234,5 +240,6 @@ test-miri:
 	$(cargo) +$(nightly) miri setup
 	$(cargo) +$(nightly) clean
 	MIRIFLAGS="-Zmiri-disable-isolation" $(cargo) +$(nightly) miri test
+
 
 .PHONY : build check build-release clippy install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker build-wasm-scripts clean-wasm-scripts dev-deps test-miri

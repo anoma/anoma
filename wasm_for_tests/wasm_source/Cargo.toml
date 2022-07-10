@@ -4,7 +4,7 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_wasm_for_tests"
 resolver = "2"
-version = "0.5.0"
+version = "0.6.1"
 
 [lib]
 crate-type = ["cdylib"]
@@ -16,11 +16,13 @@ tx_memory_limit = []
 tx_mint_tokens = []
 tx_no_op = []
 tx_read_storage_key = []
+tx_write_storage_key = []
 vp_always_false = []
 vp_always_true = []
 vp_eval = []
 vp_memory_limit = []
 vp_read_storage_key = []
+tx_proposal_code = []
 
 [dependencies]
 anoma_tx_prelude = {path = "../../tx_prelude"}
@@ -29,6 +31,13 @@ anoma_vp_prelude = {path = "../../vp_prelude"}
 borsh = "0.9.1"
 wee_alloc = "0.4.5"
 getrandom = { version = "0.2", features = ["custom"] }
+
+[patch.crates-io]
+# TODO temp patch for <https://github.com/near/borsh-rs/issues/82>, <https://github.com/near/borsh-rs/issues/84> and more tba.
+borsh = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+borsh-derive = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+borsh-derive-internal = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
+borsh-schema-derive-internal = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
 
 [dev-dependencies]
 anoma_tests = {path = "../../tests"}

@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::address::Address;
 
-/// A tx data type to initialize a new validator account and its staking reward
-/// account.
+/// A data type containing information used to update the DKG session key
 #[derive(
     Debug,
     Clone,

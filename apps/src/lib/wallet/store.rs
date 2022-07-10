@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::io::prelude::*;
-use std::io::{self, ErrorKind, Write};
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -19,8 +19,9 @@ use masp_primitives::zip32::ExtendedFullViewingKey;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use super::alias::Alias;
+use super::alias::{self, Alias};
 use super::keys::StoredKeypair;
+use super::pre_genesis;
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
 
@@ -130,7 +131,7 @@ impl Store {
 
     /// Load the store file or create a new one without any keys or addresses.
     pub fn load_or_new(store_dir: &Path) -> Result<Self, LoadStoreError> {
-        Self::load_or_new_aux(store_dir, || {
+        Self::load(store_dir).or_else(|_| {
             let store = Self::default();
             store.save(store_dir).map_err(|err| {
                 LoadStoreError::StoreNewWallet(err.to_string())
@@ -145,7 +146,7 @@ impl Store {
         store_dir: &Path,
         load_genesis: impl FnOnce() -> GenesisConfig,
     ) -> Result<Self, LoadStoreError> {
-        Self::load_or_new_aux(store_dir, || {
+        Self::load(store_dir).or_else(|_| {
             #[cfg(not(feature = "dev"))]
             let store = Self::new(load_genesis());
             #[cfg(feature = "dev")]
@@ -161,11 +162,8 @@ impl Store {
         })
     }
 
-    /// Load the store file or create a new with the provided function.
-    fn load_or_new_aux(
-        store_dir: &Path,
-        new_store: impl FnOnce() -> Result<Self, LoadStoreError>,
-    ) -> Result<Self, LoadStoreError> {
+    /// Attempt to load the store file.
+    pub fn load(store_dir: &Path) -> Result<Self, LoadStoreError> {
         let wallet_file = wallet_file(store_dir);
         match FileLock::lock(
             wallet_file.to_str().unwrap(),
@@ -182,19 +180,10 @@ impl Store {
                 })?;
                 Store::decode(store).map_err(LoadStoreError::Decode)
             }
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => {
-                    println!(
-                        "No wallet found at {:?}. Creating a new one.",
-                        wallet_file
-                    );
-                    new_store()
-                }
-                _ => Err(LoadStoreError::ReadWallet(
-                    wallet_file.to_string_lossy().into_owned(),
-                    err.to_string(),
-                )),
-            },
+            Err(err) => Err(LoadStoreError::ReadWallet(
+                wallet_file.to_string_lossy().into_owned(),
+                err.to_string(),
+            )),
         }
     }
 
@@ -342,10 +331,9 @@ impl Store {
         alias: Option<String>,
         password: Option<String>,
     ) -> (Alias, common::SecretKey) {
-        let keypair = Self::generate_keypair();
-        let pkh: PublicKeyHash = PublicKeyHash::from(&keypair.ref_to());
-        let (keypair_to_store, raw_keypair) =
-            StoredKeypair::new(keypair, password);
+        let sk = gen_sk();
+        let pkh: PublicKeyHash = PublicKeyHash::from(&sk.ref_to());
+        let (keypair_to_store, raw_keypair) = StoredKeypair::new(sk, password);
         let address = Address::Implicit(ImplicitAddress(pkh.clone()));
         let alias: Alias = alias.unwrap_or_else(|| pkh.clone().into()).into();
         if self
@@ -390,8 +378,7 @@ impl Store {
     pub fn gen_validator_keys(
         protocol_keypair: Option<common::SecretKey>,
     ) -> ValidatorKeys {
-        let protocol_keypair =
-            protocol_keypair.unwrap_or_else(Self::generate_keypair);
+        let protocol_keypair = protocol_keypair.unwrap_or_else(gen_sk);
         let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
             &mut StdRng::from_entropy(),
         );
@@ -635,6 +622,60 @@ impl Store {
         Some(alias)
     }
 
+    /// Extend this store from pre-genesis validator wallet.
+    pub fn extend_from_pre_genesis_validator(
+        &mut self,
+        validator_address: Address,
+        validator_alias: Alias,
+        other: pre_genesis::ValidatorWallet,
+    ) {
+        let account_key_alias = alias::validator_key(&validator_alias);
+        let rewards_key_alias = alias::validator_rewards_key(&validator_alias);
+        let consensus_key_alias =
+            alias::validator_consensus_key(&validator_alias);
+        let tendermint_node_key_alias =
+            alias::validator_tendermint_node_key(&validator_alias);
+
+        let keys = [
+            (account_key_alias.clone(), other.store.account_key),
+            (rewards_key_alias.clone(), other.store.rewards_key),
+            (consensus_key_alias.clone(), other.store.consensus_key),
+            (
+                tendermint_node_key_alias.clone(),
+                other.store.tendermint_node_key,
+            ),
+        ];
+        self.keys.extend(keys.into_iter());
+
+        let account_pk = other.account_key.ref_to();
+        let rewards_pk = other.rewards_key.ref_to();
+        let consensus_pk = other.consensus_key.ref_to();
+        let tendermint_node_pk = other.tendermint_node_key.ref_to();
+        let addresses = [
+            (account_key_alias.clone(), (&account_pk).into()),
+            (rewards_key_alias.clone(), (&rewards_pk).into()),
+            (consensus_key_alias.clone(), (&consensus_pk).into()),
+            (
+                tendermint_node_key_alias.clone(),
+                (&tendermint_node_pk).into(),
+            ),
+        ];
+        self.addresses.extend(addresses.into_iter());
+
+        let pkhs = [
+            ((&account_pk).into(), account_key_alias),
+            ((&rewards_pk).into(), rewards_key_alias),
+            ((&consensus_pk).into(), consensus_key_alias),
+            ((&tendermint_node_pk).into(), tendermint_node_key_alias),
+        ];
+        self.pkhs.extend(pkhs.into_iter());
+
+        self.validator_data = Some(ValidatorData {
+            address: validator_address,
+            keys: other.store.validator_keys,
+        });
+    }
+
     fn decode(data: Vec<u8>) -> Result<Self, toml::de::Error> {
         toml::from_slice(&data)
     }
@@ -703,6 +744,15 @@ const FILE_NAME: &str = "wallet.toml";
 /// Get the path to the wallet store.
 pub fn wallet_file(store_dir: impl AsRef<Path>) -> PathBuf {
     store_dir.as_ref().join(FILE_NAME)
+}
+
+/// Generate a new secret key.
+pub fn gen_sk() -> common::SecretKey {
+    use rand::rngs::OsRng;
+    let mut csprng = OsRng {};
+    ed25519::SigScheme::generate(&mut csprng)
+        .try_to_sk()
+        .unwrap()
 }
 
 #[cfg(all(test, feature = "dev"))]

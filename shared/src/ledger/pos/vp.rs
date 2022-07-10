@@ -26,6 +26,7 @@ use super::{
     validator_total_deltas_key, validator_voting_power_key, BondId, Bonds,
     Unbonds, ValidatorConsensusKeys, ValidatorSets, ValidatorTotalDeltas,
 };
+use crate::ledger::governance::vp::is_proposal_accepted;
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::pos::{
     is_validator_address_raw_hash_key, is_validator_consensus_key_key,
@@ -34,7 +35,7 @@ use crate::ledger::pos::{
 use crate::ledger::storage::types::decode;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
-use crate::types::storage::Key;
+use crate::types::storage::{Key, KeySeg};
 use crate::types::{key, token};
 use crate::vm::WasmCacheAccess;
 
@@ -57,6 +58,18 @@ where
 {
     /// Context to interact with the host structures.
     pub ctx: Ctx<'a, DB, H, CA>,
+}
+
+impl<'a, DB, H, CA> PosVP<'a, DB, H, CA>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    /// Instantiate a `PosVP`.
+    pub fn new(ctx: Ctx<'a, DB, H, CA>) -> Self {
+        Self { ctx }
+    }
 }
 
 // TODO this is temporarily to run PoS native VP in a new thread to avoid
@@ -95,7 +108,7 @@ where
 
     fn validate_tx(
         &self,
-        _tx_data: &[u8],
+        tx_data: &[u8],
         keys_changed: &BTreeSet<Key>,
         verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
@@ -103,12 +116,16 @@ where
         use validation::DataUpdate::{self, *};
         use validation::ValidatorUpdate::*;
 
+        let addr = Address::Internal(Self::ADDR);
         let mut changes: Vec<DataUpdate<_, _, _, _>> = vec![];
         let current_epoch = self.ctx.get_block_epoch()?;
         for key in keys_changed {
             if is_params_key(key) {
-                // TODO parameters changes are not yet implemented
-                return Ok(false);
+                let proposal_id = u64::try_from_slice(tx_data).ok();
+                match proposal_id {
+                    Some(id) => return Ok(is_proposal_accepted(&self.ctx, id)),
+                    _ => return Ok(false),
+                }
             } else if let Some(owner) = key.is_validity_predicate() {
                 let has_pre = self.ctx.has_key_pre(key)?;
                 let has_post = self.ctx.has_key_post(key)?;
@@ -216,7 +233,7 @@ where
             } else if let Some(owner) =
                 token::is_balance_key(&staking_token_address(), key)
             {
-                if owner != &Address::Internal(Self::ADDR) {
+                if owner != &addr {
                     continue;
                 }
                 let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
@@ -274,9 +291,13 @@ where
                     TotalVotingPowers::try_from_slice(&bytes[..]).ok()
                 });
                 changes.push(TotalVotingPower(Data { pre, post }));
-            } else {
+            } else if key.segments.get(0) == Some(&addr.to_db_key()) {
+                // Unknown changes to this address space are disallowed
                 tracing::info!("PoS unrecognized key change {} rejected", key);
                 return Ok(false);
+            } else {
+                // Unknown changes anywhere else are permitted
+                return Ok(true);
             }
         }
 

@@ -26,7 +26,8 @@ pub enum Error {
     ServerError(String, String),
 }
 
-/// A hash map where keys are file names and values their expected sha256 hash
+/// A hash map where keys are simple file names and values their full file name
+/// including SHA256 hash
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Checksums(pub HashMap<String, String>);

@@ -5,6 +5,8 @@
 pub mod decrypted;
 /// tools for encrypted data
 pub mod encrypted;
+/// txs to manage governance
+pub mod governance;
 /// txs to manage nfts
 pub mod nft;
 pub mod pos;
@@ -13,7 +15,7 @@ pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::fmt;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
@@ -66,9 +68,9 @@ impl TxResult {
 #[derive(Clone, Debug, Default, BorshSerialize, BorshDeserialize)]
 pub struct VpsResult {
     /// The addresses whose VPs accepted the transaction
-    pub accepted_vps: HashSet<Address>,
+    pub accepted_vps: BTreeSet<Address>,
     /// The addresses whose VPs rejected the transaction
-    pub rejected_vps: HashSet<Address>,
+    pub rejected_vps: BTreeSet<Address>,
     /// The total gas used by all the VPs
     pub gas_used: VpsGas,
     /// Errors occurred in any of the VPs, if any

@@ -1,6 +1,40 @@
 # CHANGELOG
 
-## Unreleased
+## v0.6.1
+
+Anoma 0.6.1 is a patch release updating the Rust toolchain and various
+libraries.
+
+### BUG FIXES
+
+- Fixed PoS `votes_per_token` parameter update validation
+  ([#1181](https://github.com/anoma/anoma/issues/1181))
+
+### IMPROVEMENTS
+
+- Ledger: Updated the version of Tendermint used for ABCI++ ([#1088](https://github.com/anoma/anoma/pull/1088))
+    - Add full support for ProcessProposal and FinalizeBlock
+    - Updated the shims
+    - Updated `tendermint-rs`, `ibc-rs`, and `tower-abci` deps
+    - Updated the proto definitions
+    - Added Tendermint's new method of a BFT timestamping
+    - Updated the format of Tendermint's new config
+    - Fixed booting up the tendermint node in the ledger with correct settings
+    - Refactored storage to account for the fact that tendermint no longer passes in block headers
+- Client: Configured Tendermints new event log and JSON RPC API for events querying ([#1088](https://github.com/anoma/anoma/pull/1088))
+    - Added necessary config parameters to our tendermint node's configuration
+    - Wrote a jsonrpc client for querying tendermint's event logs
+    - Refactored how txs are submitted in the client when the `ABCI-plus-plus` feature is
+      set to use jsonrpc calls instead of websockets.
+
+### MISCELLANEOUS
+
+- Updated RocksDB dependency version to v0.18.0
+  ([#1135](https://github.com/anoma/anoma/issues/1135))
+
+## v0.6.0
+
+Anoma 0.6.0 is a scheduled minor release.
 
 ### BUG FIXES
 
@@ -8,16 +42,99 @@
   ([#968](https://github.com/anoma/anoma/issues/968))
 - Ledger: Set the counterparty channel ID when the ack
   ([#980](https://github.com/anoma/anoma/issues/980))
+- Ledger: Encode a commitment with Protobuf
+  ([#988](https://github.com/anoma/anoma/issues/988))
+- Client: Fix Tendermint node ID derivation from ed25519 keys in "utils init-
+  network" command ([#992](https://github.com/anoma/anoma/issues/992))
+- Ledger: Reuse IBC port ([#1011](https://github.com/anoma/anoma/issues/1011))
+- Ledger: Fix to write the initial value of IBC sequence
+  ([#1014](https://github.com/anoma/anoma/issues/1014))
+- Fixes installation of Tendermint on M1 Macs
+  ([#1018](https://github.com/anoma/anoma/issues/1018))
+- Ledger: Fix IBC VP for packet timeout
+  ([#1029](https://github.com/anoma/anoma/issues/1029))
+- Ledger: Fix vp read_pre to read from write_log for the previous txs updates
+  ([#1032](https://github.com/anoma/anoma/issues/1032))
+- Ledger: Fix IBC token VP ([#1040](https://github.com/anoma/anoma/issues/1040))
+- Fix loading of validator VP during chain initialization
+  ([#1054](https://github.com/anoma/anoma/pull/1054))
+- Fix possible overflow when formatting token amount to a string.
+  ([#1087](https://github.com/anoma/anoma/pull/1087))
+
+### DOCS
+
+- Add docs for internal testnet for MASP
+  ([#1013](https://github.com/anoma/anoma/pull/1013))
+- Applied various fixes to MASP internal testnet guide
+  ([#1017](https://github.com/anoma/anoma/pull/1017))
+- Added docs page for testnet launch procedure.
+  ([#1028](https://github.com/anoma/anoma/pull/1028))
+- Add links to doc pages sources on Github.
+  ([#1030](https://github.com/anoma/anoma/pull/1030))
+- User guide and testnets documentation has been
+  separated and moved to <https://github.com/anoma/docs>
+  ([#1080](https://github.com/anoma/anoma/issues/1080))
+- Updated whitepaper and vision paper links
+  ([#1116](https://github.com/anoma/anoma/issues/1116))
+- Install mdbook-admonish plugin
+  ([#1132](https://github.com/anoma/anoma/pull/1132))
+- Include Rust nightly version from root file
+  ([#1133](https://github.com/anoma/anoma/pull/1133))
 
 ### FEATURES
 
+- Client: Add raw bytes query command "query-bytes" from the storage.
+  ([#836](https://github.com/anoma/anoma/issues/836))
+- Added on-chain and off-chain governance validity predicate with client support
+  for submitting proposal transaction, proposal queries and for creating off-
+  chain proposals. ([#954](https://github.com/anoma/anoma/pull/954))
 - Ledger: Change the storage hasher to SHA256
   ([#968](https://github.com/anoma/anoma/issues/968))
+- Governance: Added proposal vote transaction and validity
+  predicate support. Also improved the proposal query command.
+  ([#975](https://github.com/anoma/anoma/pull/975))
+- Ledger: Query with the specified height
+  ([#987](https://github.com/anoma/anoma/issues/987))
+- Add stub EthBridge internal address
+  ([#1066](https://github.com/anoma/anoma/pull/1066))
 
 ### IMPROVEMENTS
 
+- Ledger: The validity predicate checks rule has been simplified
+  so that every validity predicate triggered by a transaction
+  receives all the storage keys touched by the transaction.
+  ([#955](https://github.com/anoma/anoma/issues/955))
 - Ledger: write/get block header to get an old consensus state
   ([#974](https://github.com/anoma/anoma/issues/974))
+- Ledger: Use non-validator full node Tendermint mode by default.
+  ([#978](https://github.com/anoma/anoma/pull/978))
+- Client: Updated the utils commands `init-genesis-validator` and `join-
+  network` to be able to automatically configure a genesis validator node.
+  ([#997](https://github.com/anoma/anoma/pull/997))
+- Show an error when calling `anomac utils join-network` if trying to download a
+  file and it is missing ([#1044](https://github.com/anoma/anoma/pull/1044))
+- Wallet: various store and API changes and additions for genesis setup.
+  ([#1063](https://github.com/anoma/anoma/pull/1063))
+
+### MISCELLANEOUS
+
+- Fixed Nix build and updated Nix dependencies.
+  ([#994](https://github.com/anoma/anoma/pull/994))
+- Update `make install` command to respect the Cargo.lock file
+  ([#1118](https://github.com/anoma/anoma/issues/1118))
+
+### TESTING
+
+- Replaced E2E tests command runner library with
+  [expectrl](https://crates.io/crates/expectrl)
+  ([#686](https://github.com/anoma/anoma/issues/686))
+- Added state-machine property-based tests for PoS validity predicate.
+  ([#927](https://github.com/anoma/anoma/pull/927))
+- WASM host environment testing helpers are now pinned to a stable
+  memory location to avoid issues in state machine test runner.
+  ([#947](https://github.com/anoma/anoma/pull/947))
+- More logging in end-to-end tests
+  ([#1071](https://github.com/anoma/anoma/pull/1071))
 
 ## v0.5.0
 

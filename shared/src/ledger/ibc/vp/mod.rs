@@ -288,6 +288,17 @@ impl From<sequence::Error> for Error {
     }
 }
 
+/// A dummy header used for testing
+#[cfg(any(feature = "test", feature = "testing"))]
+pub fn get_dummy_header() -> crate::types::storage::Header {
+    use crate::tendermint::time::Time as TmTime;
+    crate::types::storage::Header {
+        hash: crate::types::hash::Hash([0; 32]),
+        time: TmTime::now().try_into().unwrap(),
+        next_validators_hash: crate::types::hash::Hash([0; 32]),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use core::time::Duration;
@@ -334,14 +345,10 @@ mod tests {
     use crate::ibc_proto::cosmos::base::v1beta1::Coin;
     use prost::Message;
     use sha2::Digest;
-    use crate::tendermint::account::Id as TmAccountId;
-    use crate::tendermint::block::header::{Header as TmHeader, Version as TmVersion};
-    use crate::tendermint::block::Height as TmHeight;
-    use crate::tendermint::chain::Id as TmChainId;
-    use crate::tendermint::hash::{AppHash, Hash as TmHash};
-    use crate::tendermint::time::Time as TmTime;
     use crate::tendermint_proto::Protobuf;
+    use crate::tendermint::time::Time as TmTime;
 
+    use super::get_dummy_header;
     use super::super::handler::{
         commitment_prefix, init_connection, make_create_client_event,
         make_open_ack_channel_event, make_open_ack_connection_event,
@@ -430,29 +437,6 @@ mod tests {
         write_log.commit_tx();
 
         (storage, write_log)
-    }
-
-    fn get_dummy_header() -> TmHeader {
-        TmHeader {
-            version: TmVersion { block: 10, app: 0 },
-            chain_id: TmChainId::try_from("test_chain".to_owned())
-                .expect("Creating an TmChainId shouldn't fail"),
-            height: TmHeight::try_from(10_u64)
-                .expect("Creating a height shouldn't fail"),
-            time: TmTime::now(),
-            last_block_id: None,
-            last_commit_hash: None,
-            data_hash: None,
-            validators_hash: TmHash::None,
-            next_validators_hash: TmHash::None,
-            consensus_hash: TmHash::None,
-            app_hash: AppHash::try_from(vec![0])
-                .expect("Creating an AppHash shouldn't fail"),
-            last_results_hash: None,
-            evidence_hash: None,
-            proposer_address: TmAccountId::try_from(vec![0u8; 20])
-                .expect("Creating an AccountId shouldn't fail"),
-        }
     }
 
     fn get_connection_id() -> ConnectionId {
@@ -1511,7 +1495,6 @@ mod tests {
         write_log
             .write(&key, commitment_bytes)
             .expect("write failed");
-        write_log.commit_tx();
 
         let tx_index = TxIndex::default();
         let tx_code = vec![];
@@ -1599,7 +1582,6 @@ mod tests {
         let key = ack_key(&get_port_id(), &get_channel_id(), sequence);
         let ack = PacketAck::default().encode_to_vec();
         write_log.write(&key, ack).expect("write failed");
-        write_log.commit_tx();
 
         let tx_index = TxIndex::default();
         let tx_code = vec![];
@@ -1692,7 +1674,6 @@ mod tests {
         increment_seq(&mut write_log, &seq_key, sequence);
         // delete the commitment
         write_log.delete(&commitment_key).expect("delete failed");
-        write_log.commit_tx();
 
         let tx_index = TxIndex::default();
         let tx_code = vec![];

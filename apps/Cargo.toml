@@ -6,7 +6,7 @@ license = "GPL-3.0"
 name = "anoma_apps"
 readme = "../README.md"
 resolver = "2"
-version = "0.5.0"
+version = "0.6.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -79,6 +79,7 @@ byteorder = "1.4.2"
 clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color", "cargo"]}
 color-eyre = "0.5.10"
 config = "0.11.0"
+curl = "0.4.43"
 derivative = "2.2.0"
 directories = "4.0.1"
 ed25519-consensus = "1.2.0"
@@ -109,11 +110,11 @@ rayon = "=1.5.1"
 regex = "1.4.5"
 reqwest = "0.11.4"
 rlimit = "0.5.4"
-rocksdb = "0.16.0"
+rocksdb = {version = "0.18.0", features = ['zstd'], default-features = false}
 rpassword = "5.0.1"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_bytes = "0.11.5"
-serde_json = "1.0.62"
+serde_json = {version = "1.0.62", features = ["raw_value"]}
 serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"

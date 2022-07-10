@@ -22,7 +22,7 @@ use crate::vm::wasm::run::untrusted_wasm_store;
 use crate::vm::wasm::{self, memory};
 use crate::vm::{WasmCacheAccess, WasmCacheRoAccess};
 
-/// The size of the [`Hash`]
+/// The size of the [`struct@Hash`]
 const HASH_BYTES: usize = 32;
 
 /// Cache handle. Thread-safe.

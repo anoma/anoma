@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-ARG RUST_VERSION=1.58.1
+ARG RUST_VERSION=1.61.0
 WORKDIR /var/build
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \

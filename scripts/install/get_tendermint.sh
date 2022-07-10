@@ -34,7 +34,7 @@ fi
 read -r SYSTEM MACHINE <<< "$(uname -s -m)"
 
 ARCH="amd64"
-if [[ $MACHINE = "aarch64" ]]; then
+if [[ $MACHINE = "aarch64" ]] || [[ $MACHINE = "arm64" ]]; then
   ARCH="arm64"
 fi
 
