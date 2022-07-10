@@ -60,7 +60,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-
       - name: Install cargo tool
-        run: cargo install ${{ matrix.make.command }}
+        run: cargo install cargo-${{ matrix.make.command }}
       - name: ${{ matrix.make.name }}
         run: make ${{ matrix.make.command }}
       - name: Clean cache folder
