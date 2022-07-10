@@ -59,8 +59,8 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-cargo-
       - name: Rustup check
         run: rustup show
-      - name: "${{ matrix.make.name }}"
-        run: make {{ matrix.make.command }}
+      - name: ${{ matrix.make.name }}
+        run: make ${{ matrix.make.command }}
       - name: Clean cache folder
         run: | 
             cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache
