@@ -524,3 +524,8 @@ async fn run_abci(
 //async fn run_tendermint(config: &config::Ledger) -> JoinHandle<()> {
 //    todo!()
 //}
+
+// NOTE: thread join handle for shell
+//async fn create_abci_broadcaster_shell(...) -> (abci, broadcaster, shell) {
+//    todo!()
+//}
