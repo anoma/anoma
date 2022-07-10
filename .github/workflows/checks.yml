@@ -20,136 +20,106 @@ jobs:
         toolchain: [ nightly-2022-05-20 ]
         make:
           - name: Clippy ABCI
-            task: make check && make clippy
+            task: clippy
           - name: Clippy ABCI++
-            task: make clippy-check && clippy-abci-plus-plus
+            task: clippy-check && clippy-abci-plus-plus
         include:
           - os: ubuntu-latest
-            sccache-path: /home/runner/.cache/sccache
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_CACHE_SIZE: 20G
-      SCCACHE_DIR: ${{ matrix.sccache-path }}
-      # SCCACHE_RECACHE: 1
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Install sccache (ubuntu-latest)
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          LINK: https://github.com/mozilla/sccache/releases/download
-          SCCACHE_VERSION: 0.2.13
-        run: |
-          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
-          mkdir -p $HOME/.local/bin
-          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
-          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
-          echo "$HOME/.local/bin" >> $GITHUB_PATH          
-      - name: Install sccache (macos-latest)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew update
-          brew install sccache          
+      
       - name: Setup rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
-          profile: minimal
+          profile: default
           override: true
-      - name: Install rustup components
-        run: rustup component add rustfmt clippy miri --toolchain ${{ matrix.toolchain }}
       - name: Cache cargo registry
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         continue-on-error: false
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git            
+            ~/.cargo/bin
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ./target
+            ./wasm/tx_template/target
+            ./wasm/vp_template/target
+            ./wasm_for_tests/wasm_source/target
           key: ${{ runner.os }}-${{ github.job }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-      - name: Save sccache
-        uses: actions/cache@v2
-        continue-on-error: false
-        with:
-          path: ${{ matrix.sccache-path }}
-          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-sccache-
-      - name: Start sccache server
-        run: sccache --start-server
+          restore-keys: ${{ runner.os }}-${{ github.job }}-cargo-
       - name: Check
         run: make check
-      - name: ${{ matrix.make.name }}
-        run: make ${{ matrix.make.task }}
-      - name: Print sccache stats
-        run: sccache --show-stats
-      - name: Stop sccache server
-        run: sccache --stop-server || true
+      - name: Clean cache folder
+        run: | 
+            cargo install (--git git://github.com/matthiaskrgr/cargo-cache OR cargo-cache) --no-default-features --features ci-autoclean cargo-cache
+            cargo-cache
 
-  fmt:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-        toolchain: [ nightly-2022-05-20 ]
-        include:
-          - os:  ubuntu-latest
-            sccache-path: /home/runner/.cache/sccache
-    env:
-      CARGO_INCREMENTAL: 0
-      RUSTC_WRAPPER: sccache
-      SCCACHE_CACHE_SIZE: 20G
-      SCCACHE_DIR: ${{ matrix.sccache-path }}
+  # fmt:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+  #       toolchain: [ nightly-2022-05-20 ]
+  #   env:
+  #     CARGO_INCREMENTAL: 0
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Install sccache (ubuntu-latest)
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          LINK: https://github.com/mozilla/sccache/releases/download
-          SCCACHE_VERSION: 0.2.13
-        run: |
-          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
-          mkdir -p $HOME/.local/bin
-          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
-          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
-          echo "$HOME/.local/bin" >> $GITHUB_PATH          
-      - name: Install sccache (macos-latest)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew update
-          brew install sccache          
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          profile: minimal
-          override: true
-      - name: Install rustup components
-        run: rustup component add rustfmt clippy miri --toolchain ${{ matrix.toolchain }}
-      - name: Cache cargo registry
-        uses: actions/cache@v2
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git            
-          key: ${{ runner.os }}-${{ github.job }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-      - name: Save sccache
-        uses: actions/cache@v2
-        continue-on-error: false
-        with:
-          path: ${{ matrix.sccache-path }}
-          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-sccache-
-      - name: Start sccache server
-        run: sccache --start-server
-      - name: Format
-        run: make check && make fmt-check
-      - name: Print sccache stats
-        run: sccache --show-stats
-      - name: Stop sccache server
-        run: sccache --stop-server || true
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v3
+  #     - name: Install sccache (ubuntu-latest)
+  #       if: matrix.os == 'ubuntu-latest'
+  #       env:
+  #         LINK: https://github.com/mozilla/sccache/releases/download
+  #         SCCACHE_VERSION: 0.2.13
+  #       run: |
+  #         SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
+  #         mkdir -p $HOME/.local/bin
+  #         curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+  #         mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+  #         echo "$HOME/.local/bin" >> $GITHUB_PATH          
+  #     - name: Install sccache (macos-latest)
+  #       if: matrix.os == 'macos-latest'
+  #       run: |
+  #         brew update
+  #         brew install sccache          
+  #     - name: Setup rust toolchain
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: ${{ matrix.toolchain }}
+  #         profile: minimal
+  #         override: true
+  #     - name: Install rustup components
+  #       run: rustup component add rustfmt clippy miri --toolchain ${{ matrix.toolchain }}
+  #     - name: Cache cargo registry
+  #       uses: actions/cache@v2
+  #       continue-on-error: false
+  #       with:
+  #         path: |
+  #           ~/.cargo/registry
+  #           ~/.cargo/git            
+  #         key: ${{ runner.os }}-${{ github.job }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: ${{ runner.os }}-cargo-
+  #     - name: Save sccache
+  #       uses: actions/cache@v2
+  #       continue-on-error: false
+  #       with:
+  #         path: ${{ matrix.sccache-path }}
+  #         key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: ${{ runner.os }}-sccache-
+  #     - name: Start sccache server
+  #       run: sccache --start-server
+  #     - name: Format
+  #       run: make check && make fmt-check
+  #     - name: Print sccache stats
+  #       run: sccache --show-stats
+  #     - name: Stop sccache server
+  #       run: sccache --stop-server || true
