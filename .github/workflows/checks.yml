@@ -14,7 +14,7 @@ jobs:
   clippy:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ ubuntu-latest ]
         toolchain: [ nightly-2022-05-20 ]
@@ -23,8 +23,6 @@ jobs:
             task: clippy
           - name: Clippy ABCI++
             task: clippy-check && clippy-abci-plus-plus
-        include:
-          - os: ubuntu-latest
     env:
       CARGO_INCREMENTAL: 0
 
@@ -36,6 +34,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
+          target: wasm32-unknown-unknown
           profile: default
           override: true
       - name: Cache cargo registry
