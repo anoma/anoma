@@ -68,7 +68,7 @@ impl AbortableSpawner {
         let status = wait_for_abort(self.abort_recv).await;
 
         for job in self.cleanup_jobs {
-            todo!()
+            job();
         }
 
         status
