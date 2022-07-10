@@ -7,7 +7,7 @@ on:
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -64,5 +64,8 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-
       - name: ${{ matrix.make.name }}
         run: make ${{ matrix.make.command }}
+      - name: Publish docs
+        if: ${{ github.ref == 'refs/heads/master' }}
+        run: echo "Publishing... "
       - name: Clean cache folder
         run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
