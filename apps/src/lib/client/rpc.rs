@@ -356,8 +356,9 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                     let readable =
                         tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
                     print!(
-                        " {} {}",
-                        token::Amount::from(*val as u64),
+                        " {}{} {}",
+                        if *val < 0 { "-" } else if *val > 0 { "+" } else { "" },
+                        token::Amount::from(val.abs() as u64),
                         readable
                     );
                 }
@@ -373,8 +374,9 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                     let readable =
                         tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
                     print!(
-                        " {} {}",
-                        token::Amount::from(*val as u64),
+                        " {}{} {}",
+                        if *val < 0 { "-" } else if *val > 0 { "+" } else { "" },
+                        token::Amount::from(val.abs() as u64),
                         readable
                     );
                 }

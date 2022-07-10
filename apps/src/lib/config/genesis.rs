@@ -775,7 +775,7 @@ pub fn genesis() -> Genesis {
     let parameters = Parameters {
         epoch_duration: EpochDuration {
             min_num_of_blocks: 10,
-            min_duration: anoma::types::time::Duration::seconds(60).into(),
+            min_duration: anoma::types::time::Duration::seconds(600).into(),
         },
         max_expected_time_per_block: anoma::types::time::DurationSecs(30),
         vp_whitelist: vec![],
