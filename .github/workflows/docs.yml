@@ -1,4 +1,4 @@
-name: Build and run tests
+name: Build docs
 
 on:
   push:
@@ -19,17 +19,9 @@ jobs:
         os: [ ubuntu-latest ]
         nightly_version: [ nightly-2022-05-20 ]
         make:
-          - name: Clippy
-            command: clippy
-            cache_subkey: clippy
-            cache_version: v1
-          - name: Clippy ABCI++
-            command: clippy-abci-plus-plus
-            cache_subkey: clippy-abci
-            cache_version: v1
-          - name: Format
-            command: check && make fmt-check
-            cache_subkey: fmt
+          - name: Build docs
+            command: build-doc
+            cache_subkey: docs
             cache_version: v1
             
     env:
