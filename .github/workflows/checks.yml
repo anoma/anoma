@@ -48,7 +48,7 @@ jobs:
       - name: Setup rust nightly
         uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
         with:
-          toolchain: ${{ nightly_version }}
+          toolchain: ${{ matrix.nightly_version }}
           target: wasm32-unknown-unknown
           profile: default
       - name: Cache cargo
