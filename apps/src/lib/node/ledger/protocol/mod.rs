@@ -14,7 +14,7 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::treasury::TreasuryVp;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
-use anoma::types::storage::{Key, TxIndex};
+use anoma::types::storage::TxIndex;
 use anoma::types::storage;
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};

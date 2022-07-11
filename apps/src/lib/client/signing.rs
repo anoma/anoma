@@ -1,8 +1,6 @@
 //! Helpers for making digital signatures using cryptographic keys from the
 //! wallet.
 
-use std::rc::Rc;
-
 use anoma::proto::Tx;
 use anoma::types::address::{Address, ImplicitAddress};
 use anoma::types::key::*;

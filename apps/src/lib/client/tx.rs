@@ -23,7 +23,7 @@ use anoma::types::token::{
     Transfer, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
 };
 use anoma::types::transaction::{
-    hash_tx, pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
+    pos, InitAccount, InitValidator, UpdateVp,
 };
 use anoma::types::transaction::governance::{
     InitProposalData, VoteProposalData,
@@ -36,7 +36,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use ff::PrimeField;
 use group::cofactor::CofactorGroup;
 use itertools::Either::*;
-use jsonpath_lib as jsonpath;
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::consensus::{BranchId, TestNetwork};
 use masp_primitives::convert::AllowedConversion;
@@ -54,7 +53,6 @@ use masp_primitives::transaction::Transaction;
 use masp_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 use masp_proofs::prover::LocalTxProver;
 use rand_core::{CryptoRng, OsRng, RngCore};
-use serde::Serialize;
 use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
@@ -73,10 +71,10 @@ use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
 
-use super::{rpc, signing};
+use super::rpc;
 use crate::client::signing::tx_signer;
 use crate::client::signing::TxSigningKey;
-use crate::cli::context::{WalletAddress, WalletKeypair};
+use crate::cli::context::WalletAddress;
 use crate::cli::{args, safe_exit, Context};
 use crate::client::rpc::{query_conversion, query_epoch, query_storage_value};
 use crate::client::signing::{find_keypair, sign_tx};
