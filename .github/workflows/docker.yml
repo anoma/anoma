@@ -46,7 +46,7 @@ jobs:
           context: ${{ matrix.make.path }}/
           file: ${{ matrix.make.path }}/Dockerfile
           push: true
-          tags: ${{ github.event.inputs.tags  }}
+          tags: ${{ github.event.inputs.tag  }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ github.event.inputs.tags  }}
+          cache-from: type=registry,ref=${{ github.event.inputs.tag  }}
           cache-to: type=inline
