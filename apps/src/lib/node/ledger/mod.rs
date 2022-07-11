@@ -282,7 +282,9 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
 
     tracing::info!("Anoma ledger node has shut down.");
 
-    if let Err(err) = shell_handler.join() {
+    let res = task::block_in_place(move || shell_handler.join());
+
+    if let Err(err) = res {
         std::panic::resume_unwind(err)
     }
 }
