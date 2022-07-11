@@ -1,3 +1,4 @@
+use std::pin::Pin;
 use std::future::Future;
 
 use tokio::task::JoinHandle;
@@ -11,7 +12,7 @@ pub type AbortingTask = &'static str;
 pub struct AbortableSpawner {
     abort_send: UnboundedSender<AbortingTask>,
     abort_recv: UnboundedReceiver<AbortingTask>,
-    cleanup_jobs: Vec<Box<dyn FnOnce()>>,
+    cleanup_jobs: Vec<Pin<Box<dyn Future<Output = ()>>>>,
 }
 
 /// Contains the state of an on-going [`AbortableSpawner`] task spawn.
@@ -68,7 +69,7 @@ impl AbortableSpawner {
         let status = wait_for_abort(self.abort_recv).await;
 
         for job in self.cleanup_jobs {
-            job();
+            job.await;
         }
 
         status
@@ -109,10 +110,10 @@ impl<'a, A> WithCleanup<'a, A> {
         A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
         R: Send + 'static,
-        C: FnOnce() + 'static,
+        C: Future<Output = ()> + Send + 'static,
     {
         if cond {
-            self.spawner.cleanup_jobs.push(Box::new(cleanup));
+            self.spawner.cleanup_jobs.push(Box::pin(cleanup));
         }
         self.with_no_cleanup()
     }
@@ -124,7 +125,7 @@ impl<'a, A> WithCleanup<'a, A> {
         A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
         R: Send + 'static,
-        C: FnOnce() + 'static,
+        C: Future<Output = ()> + Send + 'static,
     {
         self.with_conditional_cleanup(true, cleanup)
     }
