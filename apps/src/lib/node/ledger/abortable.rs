@@ -119,7 +119,7 @@ impl<'a, A> WithCleanup<'a, A> {
     /// A cleanup routine shall be executed, which aborts a `JoinHandle` from
     /// the asynchronous runtime.
     #[inline]
-    pub fn with_join_handle_abort_cleanup(self) -> Arc<JoinHandle<R>>
+    pub fn with_join_handle_abort_cleanup<F, R>(self) -> Arc<JoinHandle<R>>
     where
         A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
