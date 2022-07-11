@@ -1,0 +1,75 @@
+name: Build docs
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        nightly_version: [nightly-2022-05-20]
+        make:
+          - name: Build docs
+            command: build-doc
+            cache_subkey: docs
+            cache_version: v1
+
+    env:
+      CARGO_INCREMENTAL: 0
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup rust toolchain
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+        with:
+          target: wasm32-unknown-unknown
+          profile: default
+          override: true
+      - name: Setup rust nightly
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+        with:
+          toolchain: ${{ matrix.nightly_version }}
+          target: wasm32-unknown-unknown
+          profile: default
+      - name: Show rust toolchain info
+        run: rustup show
+      - name: Cache cargo
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ./target
+            ./wasm/tx_template/target
+            ./wasm/vp_template/target
+            ./wasm_for_tests/wasm_source/target
+          key: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-
+      - name: Install cargo tool
+        run: |
+            cargo install mdbook
+            cargo install mdbook-mermaid
+            cargo install mdbook-linkcheck
+      - name: ${{ matrix.make.name }}
+        run: make ${{ matrix.make.command }}
+      - name: Publish docs
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        run: echo "Publishing... "
+      - name: Clean cache folder
+        run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
