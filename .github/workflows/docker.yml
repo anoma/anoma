@@ -7,6 +7,7 @@ on:
         description: 'The docker image tag'     
         required: true 
 
+# ${{ github.repository_owner }}
 env:
   REPOSITORY_OWNER: "fraccaman/anoma"
 
