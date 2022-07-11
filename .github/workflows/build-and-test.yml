@@ -62,8 +62,6 @@ jobs:
   
   anoma:
     runs-on: ${{ matrix.os }}
-    container:
-      image: ghcr.io/fraccaman/anoma:wasm-0.6.1
     strategy:
       fail-fast: false
       matrix:
