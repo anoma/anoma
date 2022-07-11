@@ -6,7 +6,7 @@ FROM rust:1.61.0
 WORKDIR /usr/local/rust/wasm
 
 # The version should be matching the version set above
-RUN rustup toolchain install 1.61.0 --component rustc cargo rust-std rust-docs rls rust-analysis rustfmt
+RUN rustup toolchain install 1.61.0 --profile default
 RUN rustup target add wasm32-unknown-unknown
 
 # Download binaryen and verify checksum
