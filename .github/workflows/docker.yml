@@ -8,7 +8,7 @@ on:
         required: true 
 
 jobs:
-  docs:
+  docker:
     runs-on: ${{ matrix.os }}
     permissions:
       packages: write
@@ -25,8 +25,6 @@ jobs:
             path: ./docker/anoma-build
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -45,7 +43,7 @@ jobs:
       - name: ${{ matrix.make.name }}
         uses: docker/build-push-action@v2
         with:
-          context: ${{ matrix.make.path }}/
+          context: .
           file: ${{ matrix.make.path }}/Dockerfile
           push: true
           tags: ${{ github.event.inputs.tag  }}
