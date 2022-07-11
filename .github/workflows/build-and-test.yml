@@ -26,22 +26,23 @@ jobs:
         uses: actions/checkout@v3
       - name: Show rust toolchain info
         run: rustup show
-      - name: Cache cargo
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-            ./target
-            ./wasm/tx_template/target
-            ./wasm/vp_template/target
-            ./wasm_for_tests/wasm_source/target
-          key: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-${{ hashFiles('**/wasm/wasm_source/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-
+      # - name: Cache cargo
+      #   uses: actions/cache@v3
+      #   if: always()
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin
+      #       ~/.cargo/registry/index
+      #       ~/.cargo/registry/cache
+      #       ~/.cargo/git
+      #       ~/.cargo/.crates.toml
+      #       ~/.cargo/.crates2.json
+      #       ./target
+      #       ./wasm/tx_template/target
+      #       ./wasm/vp_template/target
+      #       ./wasm_for_tests/wasm_source/target
+      #     key: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-${{ hashFiles('**/wasm/wasm_source/Cargo.lock') }}
+      #     restore-keys: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-
       - name: Build WASM
         run: cp wasm/checksums.json wasm/original-checksums.json && make build-wasm-scripts
       - name: Upload wasm artifacts
@@ -55,7 +56,6 @@ jobs:
       - name: Test Wasm
         run: make test-wasm
       - name: Check wasm up-to-date
-        continue-on-error: true
         run: cmp -- wasm/checksums.json wasm/original-checksums.json
       - name: Clean cache folder
         run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
@@ -104,6 +104,13 @@ jobs:
         run: make build
       - name: Build test
         run: make build-test
+      - name: Wait for wasm artifacts
+        uses: lewagon/wait-on-check-action@v1.0.0
+        with:
+          ref: ${{ github.ref }}
+          check-name: Upload wasm artifacts
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 120
       - name: Download wasm artifacts
         uses: actions/download-artifact@v3
         with:
@@ -111,3 +118,5 @@ jobs:
           path: ./wasm
       - name: Run unit test
         run: make test-unit
+      - name: Clean cache folder
+        run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
