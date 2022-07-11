@@ -462,14 +462,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let conn_id = channel.connection_hops().get(0).ok_or_else(|| {
-            Error::Channel(format!(
-                "No connection for the channel: Port/Channel {}",
-                port_channel_id,
-            ))
-        })?;
-        let counterparty = channel.counterparty();
-        let event = make_open_ack_channel_event(msg, conn_id, counterparty)
+        let event = make_open_ack_channel_event(msg, &channel)?
             .try_into()
             .unwrap();
         self.emit_ibc_event(event);
@@ -496,14 +489,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let conn_id = channel.connection_hops().get(0).ok_or_else(|| {
-            Error::Channel(format!(
-                "No connection for the channel: Port/Channel {}",
-                port_channel_id,
-            ))
-        })?;
-        let counterparty = channel.counterparty();
-        let event = make_open_confirm_channel_event(msg, conn_id, counterparty)
+        let event = make_open_confirm_channel_event(msg, &channel)?
             .try_into()
             .unwrap();
         self.emit_ibc_event(event);
@@ -530,14 +516,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let conn_id = channel.connection_hops().get(0).ok_or_else(|| {
-            Error::Channel(format!(
-                "No connection for the channel: Port/Channel {}",
-                port_channel_id,
-            ))
-        })?;
-        let counterparty = channel.counterparty();
-        let event = make_close_init_channel_event(msg, conn_id, counterparty)
+        let event = make_close_init_channel_event(msg, &channel)?
             .try_into()
             .unwrap();
         self.emit_ibc_event(event);
@@ -567,17 +546,9 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let conn_id = channel.connection_hops().get(0).ok_or_else(|| {
-            Error::Channel(format!(
-                "No connection for the channel: Port/Channel {}",
-                port_channel_id,
-            ))
-        })?;
-        let counterparty = channel.counterparty();
-        let event =
-            make_close_confirm_channel_event(msg, conn_id, counterparty)
-                .try_into()
-                .unwrap();
+        let event = make_close_confirm_channel_event(msg, &channel)?
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -1323,9 +1294,10 @@ pub fn make_open_try_channel_event(
 /// Makes OpenAckChannel event
 pub fn make_open_ack_channel_event(
     msg: &MsgChannelOpenAck,
-    conn_id: &ConnectionId,
-    counterparty: &ChanCounterparty,
-) -> IbcEvent {
+    channel: &ChannelEnd,
+) -> Result<IbcEvent> {
+    let conn_id = get_connection_id_from_channel(channel)?;
+    let counterparty = channel.counterparty();
     let attributes = ChanOpenAck {
         height: Height::default(),
         port_id: msg.port_id.clone(),
@@ -1334,15 +1306,16 @@ pub fn make_open_ack_channel_event(
         connection_id: conn_id.clone(),
         counterparty_port_id: counterparty.port_id().clone(),
     };
-    attributes.into()
+    Ok(attributes.into())
 }
 
 /// Makes OpenConfirmChannel event
 pub fn make_open_confirm_channel_event(
     msg: &MsgChannelOpenConfirm,
-    conn_id: &ConnectionId,
-    counterparty: &ChanCounterparty,
-) -> IbcEvent {
+    channel: &ChannelEnd,
+) -> Result<IbcEvent> {
+    let conn_id = get_connection_id_from_channel(channel)?;
+    let counterparty = channel.counterparty();
     let attributes = ChanOpenConfirm {
         height: Height::default(),
         port_id: msg.port_id.clone(),
@@ -1351,15 +1324,16 @@ pub fn make_open_confirm_channel_event(
         counterparty_port_id: counterparty.port_id().clone(),
         counterparty_channel_id: counterparty.channel_id().cloned(),
     };
-    attributes.into()
+    Ok(attributes.into())
 }
 
 /// Makes CloseInitChannel event
 pub fn make_close_init_channel_event(
     msg: &MsgChannelCloseInit,
-    conn_id: &ConnectionId,
-    counterparty: &ChanCounterparty,
-) -> IbcEvent {
+    channel: &ChannelEnd,
+) -> Result<IbcEvent> {
+    let conn_id = get_connection_id_from_channel(channel)?;
+    let counterparty = channel.counterparty();
     let attributes = ChanCloseInit {
         height: Height::default(),
         port_id: msg.port_id.clone(),
@@ -1368,15 +1342,16 @@ pub fn make_close_init_channel_event(
         counterparty_port_id: counterparty.port_id().clone(),
         counterparty_channel_id: counterparty.channel_id().cloned(),
     };
-    attributes.into()
+    Ok(attributes.into())
 }
 
 /// Makes CloseConfirmChannel event
 pub fn make_close_confirm_channel_event(
     msg: &MsgChannelCloseConfirm,
-    conn_id: &ConnectionId,
-    counterparty: &ChanCounterparty,
-) -> IbcEvent {
+    channel: &ChannelEnd,
+) -> Result<IbcEvent> {
+    let conn_id = get_connection_id_from_channel(channel)?;
+    let counterparty = channel.counterparty();
     let attributes = ChanCloseConfirm {
         height: Height::default(),
         port_id: msg.port_id.clone(),
@@ -1385,7 +1360,15 @@ pub fn make_close_confirm_channel_event(
         counterparty_port_id: counterparty.port_id.clone(),
         counterparty_channel_id: counterparty.channel_id().cloned(),
     };
-    attributes.into()
+    Ok(attributes.into())
+}
+
+fn get_connection_id_from_channel(
+    channel: &ChannelEnd,
+) -> Result<&ConnectionId> {
+    channel.connection_hops().get(0).ok_or_else(|| {
+        Error::Channel("No connection for the channel".to_owned())
+    })
 }
 
 /// Makes SendPacket event

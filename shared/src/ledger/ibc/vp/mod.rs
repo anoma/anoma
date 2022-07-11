@@ -1154,13 +1154,9 @@ mod tests {
         // update the channel to Open
         let channel = get_channel(ChanState::Open, Order::Ordered);
         let bytes = channel.encode_vec().expect("encoding failed");
-        let conn_id = channel
-            .connection_hops()
-            .get(0)
-            .expect("connection should exist");
-        let counterparty = channel.counterparty();
         write_log.write(&channel_key, bytes).expect("write failed");
-        let event = make_open_ack_channel_event(&msg, conn_id, counterparty);
+        let event =
+            make_open_ack_channel_event(&msg, &channel).expect("no connection");
         write_log.set_ibc_event(event.try_into().unwrap());
 
         let tx_code = vec![];
@@ -1234,13 +1230,8 @@ mod tests {
         let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
 
-        let conn_id = channel
-            .connection_hops()
-            .get(0)
-            .expect("connection should exist");
-        let counterparty = channel.counterparty();
-        let event =
-            make_open_confirm_channel_event(&msg, conn_id, counterparty);
+        let event = make_open_confirm_channel_event(&msg, &channel)
+            .expect("no connection");
         write_log.set_ibc_event(event.try_into().unwrap());
 
         let tx_code = vec![];

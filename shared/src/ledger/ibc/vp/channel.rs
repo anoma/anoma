@@ -9,6 +9,7 @@ use super::super::handler::{
     make_close_confirm_channel_event, make_close_init_channel_event,
     make_open_ack_channel_event, make_open_confirm_channel_event,
     make_open_init_channel_event, make_open_try_channel_event,
+    make_timeout_event,
 };
 use super::super::storage::{
     ack_key, channel_counter_key, channel_key, client_update_height_key,
@@ -241,122 +242,135 @@ where
         tx_data: &[u8],
     ) -> Result<()> {
         let prev_channel = self.channel_end_pre(port_channel_id)?;
-        let conn_id = channel.connection_hops().get(0).ok_or_else(|| {
-            Error::InvalidChannel(format!(
-                "No connection for the channel: Port/Channel {}",
-                port_channel_id,
-            ))
-        })?;
-        let counterparty = channel.counterparty();
-        match channel.state() {
-            State::Open => match prev_channel.state() {
-                State::Init => {
-                    let ibc_msg = IbcMessage::decode(tx_data)?;
-                    let msg = ibc_msg.msg_channel_open_ack()?;
-                    self.verify_channel_ack_proof(
-                        port_channel_id,
-                        channel,
-                        &msg,
-                    )?;
-                    let event = make_open_ack_channel_event(
-                        &msg,
-                        conn_id,
-                        counterparty,
-                    );
-                    self.check_emitted_event(event)
-                        .map_err(|e| Error::IbcEvent(e.to_string()))
-                }
-                State::TryOpen => {
-                    let ibc_msg = IbcMessage::decode(tx_data)?;
-                    let msg = ibc_msg.msg_channel_open_confirm()?;
-                    self.verify_channel_confirm_proof(
-                        port_channel_id,
-                        channel,
-                        &msg,
-                    )?;
-                    let event = make_open_confirm_channel_event(
-                        &msg,
-                        conn_id,
-                        counterparty,
-                    );
-                    self.check_emitted_event(event)
-                        .map_err(|e| Error::IbcEvent(e.to_string()))
-                }
-                _ => Err(Error::InvalidStateChange(format!(
-                    "The state change of the channel is invalid: Port/Channel \
-                     {}",
-                    port_channel_id,
-                ))),
-            },
-            State::Closed => {
-                if !prev_channel.state_matches(&State::Open) {
+
+        let ibc_msg = IbcMessage::decode(tx_data)?;
+        let event = match ibc_msg.0 {
+            Ics26Envelope::Ics4ChannelMsg(ChannelMsg::ChannelOpenAck(msg)) => {
+                if !channel.state().is_open()
+                    || !prev_channel.state_matches(&State::Init)
+                {
                     return Err(Error::InvalidStateChange(format!(
-                        "The state change of the channel is invalid: \
-                         Port/Channel {}",
+                        "The state change of the channel is invalid for \
+                         ChannelOpenAck: Port/Channel {}",
                         port_channel_id,
                     )));
                 }
-                let ibc_msg = IbcMessage::decode(tx_data)?;
-                match ibc_msg.0 {
-                    // The timeout event will be checked in the commitment
-                    // validation
-                    Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => {
-                        let commitment_key = (
-                            msg.packet.source_port,
-                            msg.packet.source_channel,
-                            msg.packet.sequence,
-                        );
-                        self.validate_commitment_absence(commitment_key)
-                    }
-                    Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(
-                        msg,
-                    )) => {
-                        let commitment_key = (
-                            msg.packet.source_port,
-                            msg.packet.source_channel,
-                            msg.packet.sequence,
-                        );
-                        self.validate_commitment_absence(commitment_key)
-                    }
-                    Ics26Envelope::Ics4ChannelMsg(
-                        ChannelMsg::ChannelCloseInit(msg),
-                    ) => {
-                        let event = make_close_init_channel_event(
-                            &msg,
-                            conn_id,
-                            counterparty,
-                        );
-                        self.check_emitted_event(event)
-                            .map_err(|e| Error::IbcEvent(e.to_string()))
-                    }
-                    Ics26Envelope::Ics4ChannelMsg(
-                        ChannelMsg::ChannelCloseConfirm(msg),
-                    ) => {
-                        self.verify_channel_close_proof(
-                            port_channel_id,
-                            channel,
-                            &msg,
-                        )?;
-                        let event = make_close_confirm_channel_event(
-                            &msg,
-                            conn_id,
-                            counterparty,
-                        );
-                        self.check_emitted_event(event)
-                            .map_err(|e| Error::IbcEvent(e.to_string()))
-                    }
-                    _ => Err(Error::InvalidStateChange(format!(
-                        "The state change of the channel is invalid: \
-                         Port/Channel {}",
+                self.verify_channel_ack_proof(port_channel_id, channel, &msg)?;
+                Some(make_open_ack_channel_event(&msg, channel).map_err(
+                    |_| {
+                        Error::InvalidChannel(format!(
+                            "No connection for the channel: Port/Channel {}",
+                            port_channel_id
+                        ))
+                    },
+                )?)
+            }
+            Ics26Envelope::Ics4ChannelMsg(ChannelMsg::ChannelOpenConfirm(
+                msg,
+            )) => {
+                if !channel.state().is_open()
+                    || !prev_channel.state_matches(&State::TryOpen)
+                {
+                    return Err(Error::InvalidStateChange(format!(
+                        "The state change of the channel is invalid for \
+                         ChannelOpenConfirm: Port/Channel {}",
                         port_channel_id,
-                    ))),
+                    )));
+                }
+                self.verify_channel_confirm_proof(
+                    port_channel_id,
+                    channel,
+                    &msg,
+                )?;
+                Some(make_open_confirm_channel_event(&msg, channel).map_err(
+                    |_| {
+                        Error::InvalidChannel(format!(
+                            "No connection for the channel: Port/Channel {}",
+                            port_channel_id
+                        ))
+                    },
+                )?)
+            }
+            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => {
+                if !channel.state_matches(&State::Closed)
+                    || !prev_channel.state().is_open()
+                {
+                    return Err(Error::InvalidStateChange(format!(
+                        "The state change of the channel is invalid for \
+                         Timeout: Port/Channel {}",
+                        port_channel_id,
+                    )));
+                }
+                let commitment_key = (
+                    msg.packet.source_port.clone(),
+                    msg.packet.source_channel,
+                    msg.packet.sequence,
+                );
+                self.validate_commitment_absence(commitment_key)?;
+                Some(make_timeout_event(msg.packet))
+            }
+            Ics26Envelope::Ics4PacketMsg(PacketMsg::ToClosePacket(msg)) => {
+                let commitment_key = (
+                    msg.packet.source_port,
+                    msg.packet.source_channel,
+                    msg.packet.sequence,
+                );
+                self.validate_commitment_absence(commitment_key)?;
+                None
+            }
+            Ics26Envelope::Ics4ChannelMsg(ChannelMsg::ChannelCloseInit(
+                msg,
+            )) => Some(make_close_init_channel_event(&msg, channel).map_err(
+                |_| {
+                    Error::InvalidChannel(format!(
+                        "No connection for the channel: Port/Channel {}",
+                        port_channel_id
+                    ))
+                },
+            )?),
+            Ics26Envelope::Ics4ChannelMsg(ChannelMsg::ChannelCloseConfirm(
+                msg,
+            )) => {
+                self.verify_channel_close_proof(
+                    port_channel_id,
+                    channel,
+                    &msg,
+                )?;
+                Some(make_close_confirm_channel_event(&msg, channel).map_err(
+                    |_| {
+                        Error::InvalidChannel(format!(
+                            "No connection for the channel: Port/Channel {}",
+                            port_channel_id
+                        ))
+                    },
+                )?)
+            }
+            _ => {
+                return Err(Error::InvalidStateChange(format!(
+                    "The state change of the channel happened with unexpected \
+                     IBC message: Port/Channel {}",
+                    port_channel_id,
+                )));
+            }
+        };
+
+        match event {
+            Some(event) => self
+                .check_emitted_event(event)
+                .map_err(|e| Error::IbcEvent(e.to_string()))?,
+            None => {
+                if self.ctx.write_log.get_ibc_event().is_some() {
+                    return Err(Error::InvalidStateChange(format!(
+                        "The state change of the channel happened with an \
+                         unexpected IBC event: Port/Channel {}, event {:?}",
+                        port_channel_id,
+                        self.ctx.write_log.get_ibc_event(),
+                    )));
                 }
             }
-            _ => Err(Error::InvalidStateChange(format!(
-                "The state change of the channel is invalid: Port/Channel {}",
-                port_channel_id,
-            ))),
         }
+
+        Ok(())
     }
 
     fn validate_commitment_absence(
