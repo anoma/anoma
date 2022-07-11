@@ -253,7 +253,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         }
     };
 
-    let res = tokio::try_join!(tendermint_node, abci, broadcaster,);
+    let res = tokio::try_join!(tendermint_node, abci, broadcaster);
 
     match res {
         Ok((tendermint_res, abci_res, _)) => {
@@ -361,7 +361,7 @@ async fn run_aux_setup(
     // Find the RocksDB block cache size
     let db_block_cache_size_bytes = match config.shell.block_cache_bytes {
         Some(block_cache_bytes) => {
-            tracing::info!("Block cache set from the configuration.",);
+            tracing::info!("Block cache set from the configuration.");
             block_cache_bytes
         }
         None => {
