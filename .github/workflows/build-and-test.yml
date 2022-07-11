@@ -26,23 +26,23 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Setup rust toolchain
-        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
-        with:
-          target: wasm32-unknown-unknown
-          profile: default
-          override: true
-      - name: Setup rust nightly
-        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
-        with:
-          toolchain: ${{ matrix.nightly_version }}
-          target: wasm32-unknown-unknown
-          profile: default
+      # - name: Setup rust toolchain
+      #   uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+      #   with:
+      #     target: wasm32-unknown-unknown
+      #     profile: default
+      #     override: true
+      # - name: Setup rust nightly
+      #   uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+      #   with:
+      #     toolchain: ${{ matrix.nightly_version }}
+      #     target: wasm32-unknown-unknown
+      #     profile: default
       - name: Show rust toolchain info
         run: rustup show
       - name: Cache cargo
         uses: actions/cache@v3
-        continue-on-error: false
+        continue-on-error: true
         with:
           path: |
             ~/.cargo/bin
@@ -55,8 +55,8 @@ jobs:
             ./wasm/tx_template/target
             ./wasm/vp_template/target
             ./wasm_for_tests/wasm_source/target
-          key: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_subkey }}-${{ matrix.make.cache_version }}-cargo-
+          key: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-${{ hashFiles('**/wasm/wasm_source/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-
       - name: Build WASM
         run: cp wasm/checksums.json wasm/original-checksums.json && make build-wasm-scripts
       - name: Upload artifacts
@@ -72,4 +72,5 @@ jobs:
       - name: Check wasm up-to-date
         run: cmp -- wasm/checksums.json wasm/original-checksums.json
       - name: Clean cache folder
+        continue-on-error: true
         run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
