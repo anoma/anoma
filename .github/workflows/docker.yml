@@ -35,7 +35,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/fraccaman/anoma
+          images: ghcr.io/Fraccaman/anoma
       - name: Login to GHCR
         uses: docker/login-action@v2
         with:
@@ -48,7 +48,7 @@ jobs:
           context: .
           file: ${{ matrix.make.path }}/Dockerfile
           push: true
-          tags: ${{ github.event.inputs.tag  }}
+          tags: ghcr.io/${{ github.repository_owner  }}/${{ matrix.make.image }}:${{ github.event.inputs.tag  }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ matrix.make.image }}-${{ github.event.inputs.tag  }}
           cache-to: type=inline
