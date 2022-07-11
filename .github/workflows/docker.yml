@@ -7,6 +7,9 @@ on:
         description: 'The docker image tag'     
         required: true 
 
+env:
+  REPOSITORY_OWNER: "fraccaman/anoma"
+
 jobs:
   docker:
     runs-on: ${{ matrix.os }}
@@ -48,7 +51,7 @@ jobs:
           context: .
           file: ${{ matrix.make.path }}/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner  }}/${{ matrix.make.image }}:${{ github.event.inputs.tag  }}
+          tags: ghcr.io/${{ env.REPOSITORY_OWNER  }}:${{ matrix.make.image }}-${{ github.event.inputs.tag  }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ matrix.make.image }}-${{ github.event.inputs.tag  }}
           cache-to: type=inline
