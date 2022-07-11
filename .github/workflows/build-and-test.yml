@@ -13,6 +13,8 @@ concurrency:
 jobs:
   wasm:
     runs-on: ${{ matrix.os }}
+    container:
+      image: ghcr.io/fraccaman/anoma:wasm-0.6.1
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +60,7 @@ jobs:
       - name: Build WASM
         run: cp wasm/checksums.json wasm/original-checksums.json && make build-wasm-scripts
       - name: Upload artifacts
-      - uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}
           path: |
