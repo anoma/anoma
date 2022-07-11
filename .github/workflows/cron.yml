@@ -1,8 +1,9 @@
+name: Run period checks
+
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
-  pull_request:
 
 jobs:
   cron:
@@ -44,7 +45,7 @@ jobs:
         run: rustup show
       - name: Cache cargo
         uses: actions/cache@v3
-        continue-on-error: false
+        continue-on-error: true
         with:
           path: |
             ~/.cargo/bin

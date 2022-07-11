@@ -69,7 +69,7 @@ jobs:
       - name: ${{ matrix.make.name }}
         run: make ${{ matrix.make.command }}
       - name: Publish docs
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         run: echo "Publishing... "
       - name: Clean cache folder
         run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
