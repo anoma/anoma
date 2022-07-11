@@ -44,7 +44,7 @@ jobs:
           restore-keys: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-
       - name: Build WASM
         run: cp wasm/checksums.json wasm/original-checksums.json && make build-wasm-scripts
-      - name: Upload artifacts
+      - name: Upload wasm artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ github.sha }}
@@ -106,5 +106,10 @@ jobs:
         run: make build
       - name: Build test
         run: make build-test
+      - name: Download wasm artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.sha }}
+          path: ./wasm
       - name: Run unit test
         run: make test-unit
