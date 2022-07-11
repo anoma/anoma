@@ -18,7 +18,6 @@ use std::thread;
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::types::storage::Key;
 use byte_unit::Byte;
-use tokio::task;
 use futures::future::TryFutureExt;
 use once_cell::unsync::Lazy;
 use sysinfo::{RefreshKind, System, SystemExt};
@@ -26,6 +25,7 @@ use sysinfo::{RefreshKind, System, SystemExt};
 use tendermint_proto::abci::CheckTxType;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::CheckTxType;
+use tokio::task;
 use tower::ServiceBuilder;
 #[cfg(not(feature = "ABCI"))]
 use tower_abci::{response, split, Server};
@@ -212,13 +212,15 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let setup_data = run_aux_setup(&config, &wasm_dir).await;
 
-    // Create an `AbortableSpawner` for signalling shut down from the shell or from Tendermint
+    // Create an `AbortableSpawner` for signalling shut down from the shell or
+    // from Tendermint
     let mut spawner = AbortableSpawner::new();
 
     // Start Tendermint node
     let tendermint_node = start_tendermint(&mut spawner, &config);
 
-    // Start ABCI server and broadcaster (the latter only if we are a validator node)
+    // Start ABCI server and broadcaster (the latter only if we are a validator
+    // node)
     let (abci, broadcaster, shell_handler) = start_abci_broadcaster_shell(
         &mut spawner,
         wasm_dir,
@@ -227,10 +229,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     );
 
     // Wait for interrupt signal or abort message
-    let aborted = spawner
-        .wait_for_abort()
-        .await
-        .child_terminated();
+    let aborted = spawner.wait_for_abort().await.child_terminated();
 
     // Regain ownership of the ABCI `JoinHandle`
     //
@@ -251,14 +250,10 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
             // other live instance of the `Arc` was consumed after the
             // cleanup job for the ABCI server ran
             unreachable!()
-        },
+        }
     };
 
-    let res = tokio::try_join!(
-        tendermint_node,
-        abci,
-        broadcaster,
-    );
+    let res = tokio::try_join!(tendermint_node, abci, broadcaster,);
 
     match res {
         Ok((tendermint_res, abci_res, _)) => {
@@ -298,7 +293,10 @@ struct RunAuxSetup {
 }
 
 /// Return some variables used to start child processes of the ledger.
-async fn run_aux_setup(config: &config::Ledger, wasm_dir: &PathBuf) -> RunAuxSetup {
+async fn run_aux_setup(
+    config: &config::Ledger,
+    wasm_dir: &PathBuf,
+) -> RunAuxSetup {
     // Prefetch needed wasm artifacts
     wasm_loader::pre_fetch_wasm(wasm_dir).await;
 
@@ -392,7 +390,11 @@ fn start_abci_broadcaster_shell(
     wasm_dir: PathBuf,
     setup_data: RunAuxSetup,
     config: config::Ledger,
-) -> (Arc<task::JoinHandle<shell::Result<()>>>, task::JoinHandle<()>, thread::JoinHandle<()>) {
+) -> (
+    Arc<task::JoinHandle<shell::Result<()>>>,
+    task::JoinHandle<()>,
+    thread::JoinHandle<()>,
+) {
     let rpc_address = config.tendermint.rpc_address.to_string();
     let RunAuxSetup {
         vp_wasm_compilation_cache,
@@ -429,14 +431,13 @@ fn start_abci_broadcaster_shell(
             })
     } else {
         // dummy async task, which will resolve instantly
-        tokio::spawn(async {
-            std::future::ready(()).await
-        })
+        tokio::spawn(async { std::future::ready(()).await })
     };
 
     // Setup DB cache, it must outlive the DB instance that's in the shell
     let db_cache =
-        rocksdb::Cache::new_lru_cache(db_block_cache_size_bytes as usize).unwrap();
+        rocksdb::Cache::new_lru_cache(db_block_cache_size_bytes as usize)
+            .unwrap();
 
     // Construct our ABCI application.
     let ledger_address = config.shell.ledger_address;
@@ -460,8 +461,7 @@ fn start_abci_broadcaster_shell(
         .with_join_handle_abort_cleanup();
 
     // Run the shell in the main thread
-    let thread_builder =
-        thread::Builder::new().name("ledger-shell".into());
+    let thread_builder = thread::Builder::new().name("ledger-shell".into());
     let shell_handler = thread_builder
         .spawn(move || {
             tracing::info!("Anoma ledger node started.");
@@ -548,12 +548,13 @@ fn start_tendermint(
             res
         })
         .with_cleanup(async move {
-            // Shutdown tendermint_node via a message to ensure that the child process
-            // is properly cleaned-up.
+            // Shutdown tendermint_node via a message to ensure that the child
+            // process is properly cleaned-up.
             let (tm_abort_resp_send, tm_abort_resp_recv) =
                 tokio::sync::oneshot::channel::<()>();
-            // Ask to shutdown tendermint node cleanly. Ignore error, which can happen
-            // if the tendermint_node task has already finished.
+            // Ask to shutdown tendermint node cleanly. Ignore error, which can
+            // happen if the tendermint_node task has already
+            // finished.
             if let Ok(()) = tm_abort_send.send(tm_abort_resp_send) {
                 match tm_abort_resp_recv.await {
                     Ok(()) => {}

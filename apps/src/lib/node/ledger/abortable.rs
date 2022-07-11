@@ -1,15 +1,16 @@
+use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::future::Future;
 
+use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
-use tokio::sync::mpsc::{self, UnboundedSender, UnboundedReceiver};
 
 /// Serves to identify an aborting async task, which is spawned
 /// with an [`AbortableSpawner`].
 pub type AbortingTask = &'static str;
 
-/// An [`AbortableSpawner`] will spawn abortable tasks into the asynchronous runtime.
+/// An [`AbortableSpawner`] will spawn abortable tasks into the asynchronous
+/// runtime.
 pub struct AbortableSpawner {
     abort_send: UnboundedSender<AbortingTask>,
     abort_recv: UnboundedReceiver<AbortingTask>,
@@ -34,8 +35,8 @@ impl AbortableSpawner {
         }
     }
 
-    /// Spawns a new task into the asynchronous runtime, with an [`Aborter`] that shall
-    /// be dropped when it is no longer running.
+    /// Spawns a new task into the asynchronous runtime, with an [`Aborter`]
+    /// that shall be dropped when it is no longer running.
     ///
     /// For instance:
     ///
@@ -49,9 +50,13 @@ impl AbortableSpawner {
     ///     .with_no_cleanup();
     /// ```
     ///
-    /// The return type of this method is [`WithCleanup`], such that a cleanup routine, after the
-    /// abort is received, can be configured to execute.
-    pub fn spawn_abortable<'a, A>(&'a mut self, who: AbortingTask, abortable: A) -> WithCleanup<'a, A> {
+    /// The return type of this method is [`WithCleanup`], such that a cleanup
+    /// routine, after the abort is received, can be configured to execute.
+    pub fn spawn_abortable<A>(
+        &mut self,
+        who: AbortingTask,
+        abortable: A,
+    ) -> WithCleanup<'_, A> {
         WithCleanup {
             who,
             abortable,
@@ -76,8 +81,13 @@ impl AbortableSpawner {
         status
     }
 
-    /// This method is responsible for actually spawning the async task into the runtime.
-    fn spawn_abortable_task<A, F, R>(&self, who: AbortingTask, abortable: A) -> JoinHandle<R>
+    /// This method is responsible for actually spawning the async task into the
+    /// runtime.
+    fn spawn_abortable_task<A, F, R>(
+        &self,
+        who: AbortingTask,
+        abortable: A,
+    ) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
@@ -125,8 +135,8 @@ impl<'a, A> WithCleanup<'a, A> {
         F: Future<Output = R> + Send + 'static,
         R: Send + 'static,
     {
-        let handle = self.spawner
-            .spawn_abortable_task(self.who, self.abortable);
+        let handle =
+            self.spawner.spawn_abortable_task(self.who, self.abortable);
 
         let handle = Arc::new(handle);
         let cleanup_handle = Arc::clone(&handle);
@@ -257,7 +267,8 @@ async fn wait_for_abort(
 pub enum AborterStatus {
     /// The ledger process received a shutdown signal.
     UserShutdownLedger,
-    /// One of the ledger's child processes terminated, signaling the [`AbortableSpawner`].
+    /// One of the ledger's child processes terminated, signaling the
+    /// [`AbortableSpawner`].
     ChildProcessTerminated,
 }
 
