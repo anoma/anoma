@@ -13,13 +13,12 @@ concurrency:
 jobs:
   wasm:
     runs-on: ${{ matrix.os }}
-    # container:
-    #   image: ghcr.io/fraccaman/anoma:wasm-0.6.1
+    container:
+      image: ghcr.io/fraccaman/anoma:wasm-0.6.1
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        nightly_version: [nightly-2022-05-20]
         wasm_cache_version: ["v1"]
         anoma_cache_version: ["v1"]
     
