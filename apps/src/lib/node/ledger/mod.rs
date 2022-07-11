@@ -12,10 +12,12 @@ use std::convert::TryInto;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::thread;
 
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::types::storage::Key;
 use byte_unit::Byte;
+use tokio::task;
 use futures::future::TryFutureExt;
 use once_cell::unsync::Lazy;
 use sysinfo::{RefreshKind, System, SystemExt};
@@ -203,7 +205,7 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 }
 
 /// Runs three concurrent tasks: A tendermint node, a shell which contains an
-/// ABCI, server for talking to the tendermint node, and a broadcaster so that
+/// ABCI server for talking to the tendermint node, and a broadcaster so that
 /// the ledger may submit txs to the chain. All must be alive for correct
 /// functioning.
 async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
@@ -213,75 +215,14 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         db_block_cache_size_bytes,
     } = run_aux_setup(&config, &wasm_dir).await;
 
-    let rpc_address = config.tendermint.rpc_address.to_string();
-
     // Create an `AbortableSpawner` for signalling shut down from the shell or from Tendermint
     let mut spawner = AbortableSpawner::new();
 
     // Start Tendermint node
     let tendermint_node = start_tendermint(&mut spawner, &config);
 
-    // Channels for validators to send protocol txs to be broadcast to the
-    // broadcaster service
-    let (broadcaster_sender, broadcaster_receiver) =
-        tokio::sync::mpsc::unbounded_channel();
-
-    let broadcaster = if matches!(
-        config.tendermint.tendermint_mode,
-        TendermintMode::Validator
-    ) {
-        // Channel for signalling shut down to broadcaster
-        let (bc_abort_send, bc_abort_recv) =
-            tokio::sync::oneshot::channel::<()>();
-        Some((
-            spawner.spawn_abortable("Broadcaster", move |aborter| async move {
-                // Construct a service for broadcasting protocol txs from the
-                // ledger
-                let mut broadcaster =
-                    Broadcaster::new(&rpc_address, broadcaster_receiver);
-                broadcaster.run(bc_abort_recv).await;
-                tracing::info!("Broadcaster is no longer running.");
-
-                drop(aborter);
-            }).with_no_cleanup(),
-            bc_abort_send,
-        ))
-    } else {
-        None
-    };
-
-    // Setup DB cache, it must outlive the DB instance that's in the shell
-    let db_cache =
-        rocksdb::Cache::new_lru_cache(db_block_cache_size_bytes as usize).unwrap();
-
-    // Construct our ABCI application.
-    let ledger_address = config.shell.ledger_address;
-    let (shell, abci_service) = AbcippShim::new(
-        config,
-        wasm_dir,
-        broadcaster_sender,
-        &db_cache,
-        vp_wasm_compilation_cache,
-        tx_wasm_compilation_cache,
-    );
-
-    // Start the ABCI server
-    let abci = spawner.spawn_abortable("ABCI", move |aborter| async move {
-        let res = run_abci(abci_service, ledger_address).await;
-
-        drop(aborter);
-        res
-    }).with_no_cleanup();
-
-    // Run the shell in the main thread
-    let thread_builder =
-        std::thread::Builder::new().name("ledger-shell".into());
-    let shell_handler = thread_builder
-        .spawn(move || {
-            tracing::info!("Anoma ledger node started.");
-            shell.run()
-        })
-        .expect("Must be able to start a thread for the shell");
+    // Start ABCI server and broadcaster (the latter only if we are a validator node)
+    let (abci, broadcaster, shell_handler) = start_abci_broadcaster_shell(&mut spawner, config);
 
     // Wait for interrupt signal or abort message
     let aborted = spawner
@@ -289,26 +230,33 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .await
         .child_terminated();
 
-    // NOTE: cleanup started
-
-    // Abort the ABCI service task
-    abci.abort();
-
-    let res = match broadcaster {
-        Some((broadcaster, bc_abort_send)) => {
-            // request the broadcaster shutdown
-            let _ = bc_abort_send.send(());
-            tokio::try_join!(tendermint_node, abci, broadcaster)
-        }
+    // Regain ownership of the ABCI `JoinHandle`
+    //
+    // TODO(tiago): this is only here because of a temporary hack.
+    // the method we are using to cancel the ABCI server task is calling
+    // `.abort()` on the `JoinHandle` of the returned tokio task. the handle
+    // therefore needs to be stored in the `AbortableSpawner`, which requires
+    // it to be an `Arc`, such that we may retain shared ownership of the
+    // `JoinHandle`, after we abort the ABCI server.
+    //
+    // tl;dr: make it such that we can cancel the ABCI server without calling
+    // `.abort()` on the Tokio `JoinHandle`
+    //
+    let abci = match Arc::try_unwrap(abci) {
+        Some(handle) => handle,
         None => {
-            // if the broadcaster service is not active, we fill in its return
-            // value with ()
-            tokio::try_join!(tendermint_node, abci)
-                .map(|results| (results.0, results.1, ()))
-        }
+            // NOTE: this operation is infallible, since the only
+            // other live instance of the `Arc` was consumed after the
+            // cleanup job for the ABCI server ran
+            unreachable!()
+        },
     };
 
-    // NOTE: cleanup ended
+    let res = tokio::try_join!(
+        tendermint_node,
+        abci,
+        broadcaster,
+    );
 
     match res {
         Ok((tendermint_res, abci_res, _)) => {
@@ -435,6 +383,88 @@ async fn run_aux_setup(config: &config::Ledger, wasm_dir: &PathBuf) -> RunAuxSet
     }
 }
 
+fn start_abci_broadcaster_shell(
+    spawner: &mut AbortableSpawner,
+    config: config::Ledger,
+) -> (Arc<task::JoinHandle<shell::Result<()>>>, task::JoinHandle<()>, thread::JoinHandle<()>) {
+    let rpc_address = config.tendermint.rpc_address.to_string();
+
+    // Channels for validators to send protocol txs to be broadcast to the
+    // broadcaster service
+    let (broadcaster_sender, broadcaster_receiver) =
+        tokio::sync::mpsc::unbounded_channel();
+
+    let broadcaster_is_validator = if matches!(
+        config.tendermint.tendermint_mode,
+        TendermintMode::Validator,
+    );
+
+    // Start broadcaster
+    let broadcaster = broadcaster_is_validator
+        .then(move ||
+            let (bc_abort_send, bc_abort_recv) =
+                tokio::sync::oneshot::channel::<()>();
+
+            spawner
+                .spawn_abortable("Broadcaster", move |aborter| async move {
+                    // Construct a service for broadcasting protocol txs from the
+                    // ledger
+                    let mut broadcaster =
+                        Broadcaster::new(&rpc_address, broadcaster_receiver);
+                    broadcaster.run(bc_abort_recv).await;
+                    tracing::info!("Broadcaster is no longer running.");
+
+                    drop(aborter);
+                })
+                .with_cleanup(async move {
+                    let _ = bc_abort_send.send(());
+                })
+
+        )
+        .unwrap_or_else(|| {
+            tokio::spawn(async {
+                std::future::ready(()).await
+            })
+        });
+
+    // Setup DB cache, it must outlive the DB instance that's in the shell
+    let db_cache =
+        rocksdb::Cache::new_lru_cache(db_block_cache_size_bytes as usize).unwrap();
+
+    // Construct our ABCI application.
+    let ledger_address = config.shell.ledger_address;
+    let (shell, abci_service) = AbcippShim::new(
+        config,
+        wasm_dir,
+        broadcaster_sender,
+        &db_cache,
+        vp_wasm_compilation_cache,
+        tx_wasm_compilation_cache,
+    );
+
+    // Start the ABCI server
+    let abci = spawner
+        .spawn_abortable("ABCI", move |aborter| async move {
+            let res = run_abci(abci_service, ledger_address).await;
+
+            drop(aborter);
+            res
+        })
+        .with_join_handle_abort_cleanup();
+
+    // Run the shell in the main thread
+    let thread_builder =
+        thread::Builder::new().name("ledger-shell".into());
+    let shell_handler = thread_builder
+        .spawn(move || {
+            tracing::info!("Anoma ledger node started.");
+            shell.run()
+        })
+        .expect("Must be able to start a thread for the shell");
+
+    (abci, broadcaster, shell_handler)
+}
+
 /// Runs the an asynchronous ABCI server with four sub-components for consensus,
 /// mempool, snapshot, and info.
 async fn run_abci(
@@ -475,7 +505,7 @@ async fn run_abci(
 fn start_tendermint(
     spawner: &mut AbortableSpawner,
     config: &config::Ledger,
-) -> tokio::task::JoinHandle<shell::Result<()>> {
+) -> task::JoinHandle<shell::Result<()>> {
     let tendermint_dir = config.tendermint_dir();
     let chain_id = config.chain_id.clone();
     let ledger_address = config.shell.ledger_address.to_string();
@@ -530,8 +560,3 @@ fn start_tendermint(
             }
         })
 }
-
-// NOTE: thread join handle for shell
-//async fn create_abci_broadcaster_shell(...) -> (abci, broadcaster, shell) {
-//    todo!()
-//}
