@@ -10,16 +10,18 @@ on:
 jobs:
   docs:
     runs-on: ${{ matrix.os }}
+    permissions:
+      packages: write
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         make:
-          - name: Build wasm docker image
-            command: build-wasm-image-docker
+          - name: Build & Push WASM docker image
+            image: wasm
             path: ./docker/anoma-wasm
-          - name: Build anoma docker image
-            command: build-release-image-docker
+          - name: Build and Push Anoma docker image
+            image: anoma
             path: ./docker/anoma-build
 
     steps:
@@ -40,7 +42,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push
+      - name: ${{ matrix.make.name }}
         uses: docker/build-push-action@v2
         with:
           context: ${{ matrix.make.path }}/
@@ -48,5 +50,5 @@ jobs:
           push: true
           tags: ${{ github.event.inputs.tag  }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ github.event.inputs.tag  }}
+          cache-from: type=registry,ref=${{ matrix.make.image }}-${{ github.event.inputs.tag  }}
           cache-to: type=inline
