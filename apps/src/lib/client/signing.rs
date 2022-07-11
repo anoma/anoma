@@ -11,10 +11,9 @@ use borsh::BorshSerialize;
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
-use crate::cli::context::WalletKeypair;
 
 use super::rpc;
-use crate::cli::context::WalletAddress;
+use crate::cli::context::{WalletAddress, WalletKeypair};
 use crate::cli::{self, args, Context};
 use crate::client::tendermint_rpc_types::TxBroadcastData;
 use crate::wallet::Wallet;

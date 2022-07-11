@@ -494,7 +494,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(address, &target, &token, amount, &None, &None);
+            tx_host_env::token::transfer(
+                address, &target, &token, amount, &None, &None,
+            );
         });
 
         let mut vp_env = vp_host_env::take();

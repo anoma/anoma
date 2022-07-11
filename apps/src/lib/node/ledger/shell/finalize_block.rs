@@ -1,6 +1,5 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
-use anoma::types::storage::{BlockResults, TxIndex};
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::{
     compute_tally, get_proposal_votes, ProposalEvent,
@@ -10,7 +9,7 @@ use anoma::ledger::storage::types::encode;
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
-use anoma::types::storage::{BlockHash, Epoch, Header};
+use anoma::types::storage::{BlockHash, BlockResults, Epoch, Header, TxIndex};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::Misbehavior as Evidence;
 #[cfg(not(feature = "ABCI"))]
@@ -120,7 +119,7 @@ where
                                     tx_type,
                                     0, /*  this is used to compute the fee
                                         * based on the code size. We dont
-                                     * need it here. */
+                                        * need it here. */
                                     TxIndex(0),
                                     &mut BlockGasMeter::default(),
                                     &mut self.write_log,

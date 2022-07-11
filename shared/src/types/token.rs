@@ -171,7 +171,7 @@ impl Mul<(u64, u64)> for Amount {
         (ant, self)
     }
 }
-        
+
 impl Mul<Amount> for u64 {
     type Output = Amount;
 

@@ -44,7 +44,7 @@ use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
-    BlockHash, BlockHeight, Epoch, Epochs, Header, Key, KeySeg, BlockResults,
+    BlockHash, BlockHeight, BlockResults, Epoch, Epochs, Header, Key, KeySeg,
     BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;

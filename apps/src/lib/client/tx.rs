@@ -10,8 +10,7 @@ use std::path::PathBuf;
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
-use anoma::types::address::{btc, masp, masp_tx_key, Address};
-use anoma::types::address::{xan as m1t};
+use anoma::types::address::{btc, masp, masp_tx_key, xan as m1t, Address};
 use anoma::types::governance::{
     OfflineProposal, OfflineVote, Proposal, ProposalVote,
 };
@@ -22,13 +21,11 @@ use anoma::types::storage::{BlockHeight, Epoch, Key, KeySeg, TxIndex};
 use anoma::types::token::{
     Transfer, HEAD_TX_KEY, PIN_KEY_PREFIX, TX_KEY_PREFIX,
 };
-use anoma::types::transaction::{
-    pos, InitAccount, InitValidator, UpdateVp,
-};
 use anoma::types::transaction::governance::{
     InitProposalData, VoteProposalData,
 };
 use anoma::types::transaction::nft::{CreateNft, MintNft};
+use anoma::types::transaction::{pos, InitAccount, InitValidator, UpdateVp};
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
@@ -72,12 +69,10 @@ use tendermint_rpc_abci::query::{EventType, Query};
 use tendermint_rpc_abci::{Client, HttpClient};
 
 use super::rpc;
-use crate::client::signing::tx_signer;
-use crate::client::signing::TxSigningKey;
 use crate::cli::context::WalletAddress;
 use crate::cli::{args, safe_exit, Context};
 use crate::client::rpc::{query_conversion, query_epoch, query_storage_value};
-use crate::client::signing::{find_keypair, sign_tx};
+use crate::client::signing::{find_keypair, sign_tx, tx_signer, TxSigningKey};
 #[cfg(not(feature = "ABCI"))]
 use crate::client::tendermint_rpc_types::Error;
 use crate::client::tendermint_rpc_types::{TxBroadcastData, TxResponse};
@@ -705,10 +700,9 @@ impl ShieldedContext {
             .push(&HEAD_TX_KEY.to_owned())
             .expect("Cannot obtain a storage key");
         // Query for the index of the last accepted transaction
-        let head_txidx =
-            query_storage_value::<u64>(&client, &head_tx_key)
-                .await
-                .unwrap_or(0);
+        let head_txidx = query_storage_value::<u64>(&client, &head_tx_key)
+            .await
+            .unwrap_or(0);
         let mut shielded_txs = BTreeMap::new();
         // Fetch all the transactions we do not have yet
         for i in last_txidx..head_txidx {
@@ -1158,8 +1152,7 @@ impl ShieldedContext {
         // Obtain the pointed to transaction
         let (tx_epoch, _tx_height, _tx_index, tx) =
             query_storage_value::<(Epoch, BlockHeight, TxIndex, Transfer)>(
-                &client,
-                &tx_key,
+                &client, &tx_key,
             )
             .await
             .expect("Ill-formed epoch, transaction pair");
@@ -1673,7 +1666,8 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         let tx_code = ctx.read_wasm(TX_INIT_PROPOSAL);
         let tx = Tx::new(tx_code, Some(data));
 
-        process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(signer)).await;
+        process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(signer))
+            .await;
     }
 }
 
@@ -1788,7 +1782,13 @@ pub async fn submit_vote_proposal(mut ctx: Context, args: args::VoteProposal) {
                 let tx_code = ctx.read_wasm(TX_VOTE_PROPOSAL);
                 let tx = Tx::new(tx_code, Some(data));
 
-                process_tx(ctx, &args.tx, tx, TxSigningKey::WalletAddress(signer.clone())).await;
+                process_tx(
+                    ctx,
+                    &args.tx,
+                    tx,
+                    TxSigningKey::WalletAddress(signer.clone()),
+                )
+                .await;
             }
             None => {
                 eprintln!("Proposal start epoch is not in the storage.")

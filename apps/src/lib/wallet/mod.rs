@@ -178,9 +178,9 @@ impl Wallet {
         });
         match protocol_keypair {
             Some(Err(err)) => Err(err),
-            other => Ok(Store::gen_validator_keys(
-                other.map(|res| res.unwrap()),
-            )),
+            other => {
+                Ok(Store::gen_validator_keys(other.map(|res| res.unwrap())))
+            }
         }
     }
 
@@ -489,6 +489,7 @@ impl Wallet {
             .insert_payment_addr(alias.into(), payment_addr)
             .map(Into::into)
     }
+
     /// Extend this wallet from pre-genesis validator wallet.
     pub fn extend_from_pre_genesis_validator(
         &mut self,

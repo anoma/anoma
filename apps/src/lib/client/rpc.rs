@@ -1,12 +1,13 @@
 //! Client RPC queries
 
 use std::borrow::Cow;
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
 use std::fs::File;
 use std::io::{self, Write};
-use std::str::FromStr;
 use std::iter::Iterator;
+use std::str::FromStr;
 
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::Votes;
@@ -17,28 +18,27 @@ use anoma::ledger::pos::types::{
 use anoma::ledger::pos::{
     self, is_validator_slashes_key, BondId, Bonds, PosParams, Slash, Unbonds,
 };
+use anoma::ledger::treasury::storage as treasury_storage;
 use anoma::proto::{SignedTxData, Tx};
 use anoma::types::address::{masp, tokens, Address};
+use anoma::types::governance::{
+    OfflineProposal, OfflineVote, ProposalVote, TallyResult,
+};
 use anoma::types::key::*;
 use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
 use anoma::types::storage::{
     BlockHeight, BlockResults, Epoch, PrefixValue, TxIndex,
 };
-use anoma::types::token::Transfer;
+use anoma::types::token::{balance_key, Transfer};
 use anoma::types::transaction::{
     process_tx, AffineCurve, DecryptedTx, EllipticCurve, PairingEngine, TxType,
     WrapperTx,
 };
 use anoma::types::{address, storage, token};
-use borsh::{BorshDeserialize, BorshSerialize};
-use anoma::ledger::treasury::storage as treasury_storage;
-use anoma::types::governance::{
-    OfflineProposal, OfflineVote, ProposalVote, TallyResult,
-};
-use anoma::types::token::balance_key;
 use async_std::fs;
 use async_std::path::PathBuf;
 use async_std::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Itertools;
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::merkle_tree::MerklePath;
@@ -72,10 +72,10 @@ use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
+use crate::client::tendermint_rpc_types::TxResponse;
 use crate::client::tx::{
     Conversions, PinnedBalanceError, TransactionDelta, TransferDelta,
 };
-use crate::client::tendermint_rpc_types::TxResponse;
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -355,10 +355,15 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                     let addr_enc = addr.encode();
                     let readable =
                         tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
+                    let sign = match val.cmp(&0) {
+                        Ordering::Greater => "+",
+                        Ordering::Less => "-",
+                        Ordering::Equal => "",
+                    };
                     print!(
                         " {}{} {}",
-                        if *val < 0 { "-" } else if *val > 0 { "+" } else { "" },
-                        token::Amount::from(val.abs() as u64),
+                        sign,
+                        token::Amount::from(val.unsigned_abs()),
                         readable
                     );
                 }
@@ -373,10 +378,15 @@ pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
                     let addr_enc = addr.encode();
                     let readable =
                         tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
+                    let sign = match val.cmp(&0) {
+                        Ordering::Greater => "+",
+                        Ordering::Less => "-",
+                        Ordering::Equal => "",
+                    };
                     print!(
                         " {}{} {}",
-                        if *val < 0 { "-" } else if *val > 0 { "+" } else { "" },
-                        token::Amount::from(val.abs() as u64),
+                        sign,
+                        token::Amount::from(val.unsigned_abs()),
                         readable
                     );
                 }
@@ -1224,9 +1234,10 @@ pub async fn query_protocol_parameters(
 
     println!("Treasury parameters");
     let key = treasury_storage::get_max_transferable_fund_key();
-    let max_transferable_amount = query_storage_value::<token::Amount>(&client, &key)
-        .await
-        .expect("Parameter should be definied.");
+    let max_transferable_amount =
+        query_storage_value::<token::Amount>(&client, &key)
+            .await
+            .expect("Parameter should be definied.");
     println!(
         "{:4}Max. transferable amount: {}",
         "", max_transferable_amount

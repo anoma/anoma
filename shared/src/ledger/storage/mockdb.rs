@@ -16,7 +16,7 @@ use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
-    BlockHeight, Header, Key, KeySeg, KEY_SEGMENT_SEPARATOR, BlockResults,
+    BlockHeight, BlockResults, Header, Key, KeySeg, KEY_SEGMENT_SEPARATOR,
 };
 use crate::types::time::DateTimeUtc;
 

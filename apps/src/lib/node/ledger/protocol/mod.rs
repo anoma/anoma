@@ -14,8 +14,8 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::treasury::TreasuryVp;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
-use anoma::types::storage::TxIndex;
 use anoma::types::storage;
+use anoma::types::storage::TxIndex;
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
@@ -210,6 +210,7 @@ where
 }
 
 /// Execute verifiers' validity predicates
+#[allow(clippy::too_many_arguments)]
 fn execute_vps<D, H, CA>(
     verifiers: BTreeSet<Address>,
     keys_changed: BTreeSet<storage::Key>,

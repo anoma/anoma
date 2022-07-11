@@ -37,7 +37,8 @@ use anoma::ledger::storage::{
     MerkleTreeStoresRead, Result, StoreType, DB,
 };
 use anoma::types::storage::{
-    BlockHeight, Header, Key, KeySeg, TxQueue, KEY_SEGMENT_SEPARATOR, BlockResults,
+    BlockHeight, BlockResults, Header, Key, KeySeg, TxQueue,
+    KEY_SEGMENT_SEPARATOR,
 };
 use anoma::types::time::DateTimeUtc;
 use borsh::{BorshDeserialize, BorshSerialize};
