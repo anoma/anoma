@@ -38,7 +38,7 @@ impl AbortableSpawner {
     ///
     /// For instance:
     ///
-    /// ```no_run
+    /// ```ignore
     /// let mut spawner = AbortableSpawner::new();
     /// spawner
     ///     .spawn_abortable("ExampleTask", |aborter| async {
