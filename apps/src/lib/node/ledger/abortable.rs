@@ -105,14 +105,14 @@ impl<'a, A> WithCleanup<'a, A> {
     /// A cleanup routine `cleanup` may be executed for the associated task,
     /// if `cond` evaluates to `true`.
     #[inline]
-    pub fn with_conditional_cleanup<F, R, C>(self, cond: bool, cleanup: C) -> JoinHandle<R>
+    pub fn with_conditional_cleanup<F, R, C>(self, cleanup: Option<C>) -> JoinHandle<R>
     where
         A: FnOnce(Aborter) -> F,
         F: Future<Output = R> + Send + 'static,
         R: Send + 'static,
         C: Future<Output = ()> + Send + 'static,
     {
-        if cond {
+        if let Some(cleanup) = cleanup {
             self.spawner.cleanup_jobs.push(Box::pin(cleanup));
         }
         self.with_no_cleanup()
@@ -127,7 +127,7 @@ impl<'a, A> WithCleanup<'a, A> {
         R: Send + 'static,
         C: Future<Output = ()> + Send + 'static,
     {
-        self.with_conditional_cleanup(true, cleanup)
+        self.with_conditional_cleanup(Some(cleanup))
     }
 }
 
