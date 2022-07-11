@@ -213,49 +213,18 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         db_block_cache_size_bytes,
     } = run_aux_setup(&config, &wasm_dir).await;
 
-    let tendermint_dir = config.tendermint_dir();
-    let ledger_address = config.shell.ledger_address.to_string();
     let rpc_address = config.tendermint.rpc_address.to_string();
-    let chain_id = config.chain_id.clone();
-    let genesis_time = config
-        .genesis_time
-        .clone()
-        .try_into()
-        .expect("expected RFC3339 genesis_time");
-    let tendermint_config = config.tendermint.clone();
 
     // Create an `AbortableSpawner` for signalling shut down from the shell or from Tendermint
     let mut spawner = AbortableSpawner::new();
+
+    // Start Tendermint node
+    let tendermint_node = start_tendermint(&mut spawner, &config);
 
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
     let (broadcaster_sender, broadcaster_receiver) =
         tokio::sync::mpsc::unbounded_channel();
-
-    // Channel for signalling shut down to Tendermint process
-    let (tm_abort_send, tm_abort_recv) =
-        tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
-
-    // Start Tendermint node
-    let tendermint_node = spawner.spawn_abortable("Tendermint", move |aborter| async move {
-        let res = tendermint_node::run(
-            tendermint_dir,
-            chain_id,
-            genesis_time,
-            ledger_address,
-            tendermint_config,
-            tm_abort_recv,
-        )
-        .map_err(Error::Tendermint)
-        .await;
-        tracing::info!("Tendermint node is no longer running.");
-
-        drop(aborter);
-        if res.is_err() {
-            tracing::error!("{:?}", &res);
-        }
-        res
-    }).with_no_cleanup();
 
     let broadcaster = if matches!(
         config.tendermint.tendermint_mode,
@@ -324,24 +293,6 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
 
     // Abort the ABCI service task
     abci.abort();
-
-    // Shutdown tendermint_node via a message to ensure that the child process
-    // is properly cleaned-up.
-    let (tm_abort_resp_send, tm_abort_resp_recv) =
-        tokio::sync::oneshot::channel::<()>();
-    // Ask to shutdown tendermint node cleanly. Ignore error, which can happen
-    // if the tendermint_node task has already finished.
-    if let Ok(()) = tm_abort_send.send(tm_abort_resp_send) {
-        match tm_abort_resp_recv.await {
-            Ok(()) => {}
-            Err(err) => {
-                tracing::error!(
-                    "Failed to receive a response from tendermint: {}",
-                    err
-                );
-            }
-        }
-    }
 
     let res = match broadcaster {
         Some((broadcaster, bc_abort_send)) => {
@@ -521,9 +472,64 @@ async fn run_abci(
         .map_err(|err| Error::TowerServer(err.to_string()))
 }
 
-//async fn run_tendermint(config: &config::Ledger) -> JoinHandle<()> {
-//    todo!()
-//}
+fn start_tendermint(
+    spawner: &mut AbortableSpawner,
+    config: &config::Ledger,
+) -> tokio::task::JoinHandle<shell::Result<()>> {
+    let tendermint_dir = config.tendermint_dir();
+    let chain_id = config.chain_id.clone();
+    let ledger_address = config.shell.ledger_address.to_string();
+    let tendermint_config = config.tendermint.clone();
+    let genesis_time = config
+        .genesis_time
+        .clone()
+        .try_into()
+        .expect("expected RFC3339 genesis_time");
+
+    // Channel for signalling shut down to Tendermint process
+    let (tm_abort_send, tm_abort_recv) =
+        tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
+
+    spawner
+        .spawn_abortable("Tendermint", move |aborter| async move {
+            let res = tendermint_node::run(
+                tendermint_dir,
+                chain_id,
+                genesis_time,
+                ledger_address,
+                tendermint_config,
+                tm_abort_recv,
+            )
+            .map_err(Error::Tendermint)
+            .await;
+            tracing::info!("Tendermint node is no longer running.");
+
+            drop(aborter);
+            if res.is_err() {
+                tracing::error!("{:?}", &res);
+            }
+            res
+        })
+        .with_cleanup(async move {
+            // Shutdown tendermint_node via a message to ensure that the child process
+            // is properly cleaned-up.
+            let (tm_abort_resp_send, tm_abort_resp_recv) =
+                tokio::sync::oneshot::channel::<()>();
+            // Ask to shutdown tendermint node cleanly. Ignore error, which can happen
+            // if the tendermint_node task has already finished.
+            if let Ok(()) = tm_abort_send.send(tm_abort_resp_send) {
+                match tm_abort_resp_recv.await {
+                    Ok(()) => {}
+                    Err(err) => {
+                        tracing::error!(
+                            "Failed to receive a response from tendermint: {}",
+                            err
+                        );
+                    }
+                }
+            }
+        })
+}
 
 // NOTE: thread join handle for shell
 //async fn create_abci_broadcaster_shell(...) -> (abci, broadcaster, shell) {
