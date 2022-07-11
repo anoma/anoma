@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+#[cfg(feature = "ABCI")]
 use anoma::proto::Tx;
 #[cfg(feature = "ABCI")]
 use anoma::types::hash::Hash;
@@ -27,6 +28,7 @@ use super::abcipp_shim_types::shim::request::{FinalizeBlock, ProcessedTx};
 use super::abcipp_shim_types::shim::response::TxResult;
 use super::abcipp_shim_types::shim::{Error, Request, Response};
 use crate::config;
+#[cfg(feature = "ABCI")]
 use crate::node::ledger::shell::Error::TxDecoding;
 
 /// The shim wraps the shell, which implements ABCI++.
