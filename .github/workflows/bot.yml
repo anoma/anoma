@@ -1,0 +1,32 @@
+on:
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  update-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: khan/pull-request-comment-trigger@v1.1.0
+        id: update_wasm
+        with:
+          trigger: '@deploy'
+          reaction: eyes
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Download WASM artifacts
+        if: steps.update_wasm.outputs.triggered == 'true'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build-and-test.yml
+          workflow_conclusion: success
+          name: ${{ github.sha }}
+          path: ./wasm
+      - name: "Update WASM artifacts"
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: "heliax_bot_bip_bop"
+          author_email: gianmarco@heliax.dev

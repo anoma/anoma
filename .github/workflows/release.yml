@@ -1,0 +1,101 @@
+name: Build and Test
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        anoma_cache_version: ["v1"]
+        make: 
+          - name: Build package
+            command: package
+
+    env:
+      RUST_BACKTRACE: full
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 20G
+      SCCACHE_DIR: /home/runner/.cache/sccache
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Install sccache (ubuntu-latest)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          LINK: https://github.com/mozilla/sccache/releases/download
+          SCCACHE_VERSION: 0.2.13
+        run: |
+          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
+          mkdir -p $HOME/.local/bin
+          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH          
+      - name: Install sccache (macos-latest)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install sccache
+      - name: Setup rust toolchain
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+        with:
+          profile: minimal
+          override: true
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git          
+          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-release-
+      - name: Save sccache
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: /home/runner/.cache/sccache
+          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-release-
+      - name: Start sccache server
+        run: sccache --start-server
+      - name: ${{ matrix.make.name }}
+        run: make {{ matrix.make.command }}
+      - name: Upload wasm artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-${{ matrix.os }}-${{ github.sha }}
+          path: ./*.tar.gz
+      - name: Print sccache stats
+        run: sccache --show-stats
+      - name: Stop sccache server
+        run: sccache --stop-server || true
+
+  release:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Update WASM
+        run: "Updating wasm..."
+      - id: get_version
+        uses: battila7/get-version-action@v2
+      - name: Download release artifacts
+        uses: actions/download-artifact@v3
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: ./**/*.tar.gz
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Anoma ${{ steps.get_version.outputs.version-without-v }}
