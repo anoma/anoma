@@ -48,44 +48,127 @@ pub mod encrypted_tx {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(from = "SerializedCiphertext")]
     #[serde(into = "SerializedCiphertext")]
-    pub struct EncryptedTx(pub Ciphertext<EllipticCurve>);
+    pub struct EncryptedTx{
+        /// encryption of a hash of the code field of the Tx
+        pub encrypted_code_hash :Ciphertext<EllipticCurve>,
+        /// encryption of the code field of the Tx
+        pub encrypted_code :Ciphertext<EllipticCurve>,
+        /// encryption of the data field of the Tx
+        pub encrypted_data :Ciphertext<EllipticCurve>,
+        /// encryption of the timestamp field of the Tx
+        pub encrypted_ts :Ciphertext<EllipticCurve>
+        // todo: is the ledger encrypting the data? if not we need to add
+        //  an extra hash field here to prevent malleability
+    }
 
     impl EncryptedTx {
         /// Encrypt a message to give a new ciphertext
-        pub fn encrypt(msg: &[u8], pubkey: EncryptionKey) -> Self {
+        pub fn encrypt(code_hash: &[u8],code: &[u8],data: &[u8], ts: &[u8], pubkey: EncryptionKey) -> Self {
             let mut rng = rand::thread_rng();
-            Self(encrypt(msg, pubkey.0, &mut rng))
+            let encrypted_code_hash = encrypt(code_hash, pubkey.0.clone(), &mut rng);
+            let encrypted_code = encrypt(code, pubkey.0.clone(), &mut rng);
+            let encrypted_data = encrypt(data, pubkey.0.clone(), &mut rng);
+            let encrypted_ts = encrypt(ts, pubkey.0.clone(), &mut rng);
+            Self{
+                encrypted_code_hash,
+                encrypted_code,
+                encrypted_data,
+                encrypted_ts
+            }
         }
 
         /// Decrypt a message and return it as raw bytes
         pub fn decrypt(
             &self,
             privkey: <EllipticCurve as PairingEngine>::G2Affine,
-        ) -> Vec<u8> {
-            tpke::decrypt(&self.0, privkey)
+        ) -> Vec<u8>{
+            let code_hash = tpke::decrypt(&self.encrypted_code_hash, privkey.clone());
+            let code = tpke::decrypt(&self.encrypted_code, privkey.clone());
+            let data = tpke::decrypt(&self.encrypted_data, privkey.clone());
+            let ts = tpke::decrypt(&self.encrypted_ts,privkey.clone());
+            [code_hash,code,data, ts].concat()
         }
     }
 
     impl borsh::ser::BorshSerialize for EncryptedTx {
         fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
             let Ciphertext {
-                nonce,
-                ciphertext,
-                auth_tag,
-            } = &self.0;
+                nonce: nonce_code_hash,
+                ciphertext: ciphertext_code_hash,
+                auth_tag: auth_tag_code_hash,
+            } = &self.encrypted_code_hash;
+
+            let Ciphertext {
+                nonce: nonce_code,
+                ciphertext: ciphertext_code,
+                auth_tag: auth_tag_code,
+            } = &self.encrypted_code;
+
+            let Ciphertext {
+                nonce: nonce_data,
+                ciphertext: ciphertext_data,
+                auth_tag: auth_tag_data,
+            } = &self.encrypted_data;
+
+            let Ciphertext {
+                nonce: nonce_ts,
+                ciphertext: ciphertext_ts,
+                auth_tag: auth_tag_ts,
+            } = &self.encrypted_ts;
+
             // Serialize the nonce into bytes
-            let mut nonce_buffer = Vec::<u8>::new();
-            nonce
-                .serialize(&mut nonce_buffer)
+            // for nonce_code_hash
+            let mut nonce_code_hash_buffer = Vec::<u8>::new();
+            nonce_code_hash
+                .serialize(&mut nonce_code_hash_buffer)
                 .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            // for nonce_code
+            let mut nonce_code_buffer = Vec::<u8>::new();
+            nonce_code
+                .serialize(&mut nonce_code_buffer)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            // for nonce_data
+            let mut nonce_data_buffer = Vec::<u8>::new();
+            nonce_data
+                .serialize(&mut nonce_data_buffer)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            // for nonce_ts
+            let mut nonce_ts_buffer = Vec::<u8>::new();
+            nonce_ts
+                .serialize(&mut nonce_ts_buffer)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+
             // serialize the auth_tag to bytes
-            let mut tag_buffer = Vec::<u8>::new();
-            auth_tag
-                .serialize(&mut tag_buffer)
+            // for auth_tag_code_hash
+            let mut tag_code_hash_buffer = Vec::<u8>::new();
+            auth_tag_code_hash
+                .serialize(&mut tag_code_hash_buffer)
                 .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            // for auth_tag_code
+            let mut tag_code_buffer = Vec::<u8>::new();
+            auth_tag_code
+                .serialize(&mut tag_code_buffer)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            // for auth_tag_data
+            let mut tag_data_buffer = Vec::<u8>::new();
+            auth_tag_data
+                .serialize(&mut tag_data_buffer)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            // for auth_tag_ts
+            let mut tag_ts_buffer = Vec::<u8>::new();
+            auth_tag_ts
+                .serialize(&mut tag_ts_buffer)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+
+
             // serialize the three byte arrays
             BorshSerialize::serialize(
-                &(nonce_buffer, ciphertext, tag_buffer),
+                &(
+                    nonce_code_hash_buffer,ciphertext_code_hash,tag_code_hash_buffer,
+                    nonce_code_buffer, ciphertext_code, tag_code_buffer,
+                    nonce_data_buffer,ciphertext_data,tag_data_buffer,
+                    nonce_ts_buffer,ciphertext_ts,tag_ts_buffer
+                ),
                 writer,
             )
         }
@@ -93,16 +176,50 @@ pub mod encrypted_tx {
 
     impl borsh::BorshDeserialize for EncryptedTx {
         fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-            type VecTuple = (Vec<u8>, Vec<u8>, Vec<u8>);
-            let (nonce, ciphertext, auth_tag): VecTuple =
+            type VecTuple = (Vec<u8>, Vec<u8>, Vec<u8>,
+                             Vec<u8>, Vec<u8>, Vec<u8>,
+                             Vec<u8>, Vec<u8>, Vec<u8>,
+                             Vec<u8>, Vec<u8>, Vec<u8>);
+            let (
+                nonce_code_hash, ciphertext_code_hash, auth_tag_code_hash,
+                nonce_code, ciphertext_code, auth_tag_code,
+                nonce_data, ciphertext_data, auth_tag_data,
+                nonce_ts, ciphertext_ts, auth_tag_ts
+            ): VecTuple =
                 BorshDeserialize::deserialize(buf)?;
-            Ok(EncryptedTx(Ciphertext {
-                nonce: CanonicalDeserialize::deserialize(&*nonce)
-                    .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
-                ciphertext,
-                auth_tag: CanonicalDeserialize::deserialize(&*auth_tag)
-                    .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
-            }))
+            Ok(
+                EncryptedTx{
+                    encrypted_code_hash : Ciphertext {
+                        nonce: CanonicalDeserialize::deserialize(&*nonce_code_hash)
+                            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+                        ciphertext:ciphertext_code_hash,
+                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_code_hash)
+                            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+                    },
+                    encrypted_code : Ciphertext {
+                        nonce: CanonicalDeserialize::deserialize(&*nonce_code)
+                            .map_err(|err|
+                                Error::new(ErrorKind::InvalidData, err))?,
+                        ciphertext:ciphertext_code,
+                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_code)
+                            .map_err(|err|
+                                Error::new(ErrorKind::InvalidData, err))?,
+                    },
+                    encrypted_data : Ciphertext {
+                        nonce: CanonicalDeserialize::deserialize(&*nonce_data)
+                            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+                        ciphertext:ciphertext_data,
+                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_data)
+                            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+                    },
+                    encrypted_ts : Ciphertext {
+                        nonce: CanonicalDeserialize::deserialize(&*nonce_ts)
+                            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+                        ciphertext:ciphertext_ts,
+                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_ts)
+                            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+                    }
+                })
         }
     }
 
@@ -156,6 +273,7 @@ pub mod encrypted_tx {
     #[cfg(test)]
     mod test_encrypted_tx {
         use ark_ec::AffineCurve;
+        use crate::types::transaction::hash_tx;
 
         use super::*;
 
@@ -165,14 +283,23 @@ pub mod encrypted_tx {
             // The trivial public - private keypair
             let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
+            // generate data to encrypt
+            let code = "Super secret stuff".as_bytes();
+            let code_hash = &hash_tx(code).0;
+            let data = "secret data".as_bytes();
+            let ts = "01/10/1995".as_bytes();
             // generate encrypted payload
             let encrypted =
-                EncryptedTx::encrypt("Super secret stuff".as_bytes(), pubkey);
+                EncryptedTx::encrypt(code_hash,code,data,ts,pubkey);
             // check that encryption doesn't do trivial things
-            assert_ne!(encrypted.0.ciphertext, "Super secret stuff".as_bytes());
+            assert_ne!(encrypted.encrypted_code.ciphertext, "Super secret stuff".as_bytes());
             // decrypt the payload and check we got original data back
             let decrypted = encrypted.decrypt(privkey);
-            assert_eq!(decrypted, "Super secret stuff".as_bytes());
+            assert_eq!(&decrypted[0..code_hash.len()], code_hash);
+            assert_eq!(&decrypted[code_hash.len()..code_hash.len()+code.len()], code);
+            assert_eq!(&decrypted[code_hash.len()+code.len()..
+                code_hash.len()+code.len()+data.len()],
+                       data);
         }
 
         /// Test that serializing and deserializing again via Borsh produces
@@ -183,8 +310,12 @@ pub mod encrypted_tx {
             let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
             // generate encrypted payload
+            let code = "Super secret stuff".as_bytes();
+            let code_hash = &hash_tx(code).0;
+            let data = "secret data on my birthday".as_bytes();
+            let ts = "01/10/1995".as_bytes();
             let encrypted =
-                EncryptedTx::encrypt("Super secret stuff".as_bytes(), pubkey);
+                EncryptedTx::encrypt(code_hash,code,data,ts,pubkey);
             // serialize via Borsh
             let borsh = encrypted.try_to_vec().expect("Test failed");
             // deserialize again
@@ -193,7 +324,11 @@ pub mod encrypted_tx {
                     .expect("Test failed");
             // check that decryption works as expected
             let decrypted = new_encrypted.decrypt(privkey);
-            assert_eq!(decrypted, "Super secret stuff".as_bytes());
+            assert_eq!(&decrypted[0..code_hash.len()], code_hash);
+            assert_eq!(&decrypted[code_hash.len()..code_hash.len()+code.len()], code);
+            assert_eq!(&decrypted[code_hash.len()+code.len()..
+                code_hash.len()+code.len()+data.len()],
+                       data);
         }
 
         /// Test that serializing and deserializing again via Serde produces
@@ -203,17 +338,26 @@ pub mod encrypted_tx {
             // The trivial public - private keypair
             let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
+            // generate data to encrypt
+            let code = "Super secret stuff".as_bytes();
+            let code_hash = &hash_tx(code).0;
+            let data = "secret data on my birthday".as_bytes();
+            let ts = "01/10/1995".as_bytes();
             // generate encrypted payload
             let encrypted =
-                EncryptedTx::encrypt("Super secret stuff".as_bytes(), pubkey);
+                EncryptedTx::encrypt(code_hash,code,data,ts,pubkey);
+
             // serialize via Serde
             let js = serde_json::to_string(&encrypted).expect("Test failed");
             // deserialize it again
             let new_encrypted: EncryptedTx =
                 serde_json::from_str(&js).expect("Test failed");
             let decrypted = new_encrypted.decrypt(privkey);
-            // check that decryption works as expected
-            assert_eq!(decrypted, "Super secret stuff".as_bytes());
+            assert_eq!(&decrypted[0..code_hash.len()], code_hash);
+            assert_eq!(&decrypted[code_hash.len()..code_hash.len()+code.len()], code);
+            assert_eq!(&decrypted[code_hash.len()+code.len()..
+                code_hash.len()+code.len()+data.len()],
+                       data);
         }
     }
 }

@@ -182,9 +182,82 @@ impl Tx {
         hash_tx(&self.code).0
     }
 
+    pub fn tx_to_encrypt(&self) -> (Vec<u8>,Vec<u8>,Vec<u8>,Vec<u8>) {
+        let tx_bytes = self.to_bytes().clone();
+
+        let mut code_byte_size : usize = 0;
+        if self.code.len() != 0 {
+            code_byte_size = self.code.len() as usize;
+            code_byte_size+=2;
+        }
+        let code_bytes = (&tx_bytes[0..code_byte_size]).to_vec();
+
+        // get the bytes of data field from bytes of tx
+        let mut data_byte_size : usize = 0;
+        if self.data.is_some(){
+            data_byte_size = self.data.clone().expect("Getting transaction data shouldn't fail").len() as usize;
+            data_byte_size += 2;
+        }
+        let timestamp_shift :usize =2;
+        // get the bytes of timestamp field from bytes of tx
+        let mut timestamp_byte_size = tx_bytes[code_byte_size + data_byte_size + 1] as usize;
+        let tx_len = tx_bytes.len();
+        while timestamp_byte_size + data_byte_size + code_byte_size + timestamp_shift != tx_len
+        {
+            data_byte_size+=1;
+            timestamp_byte_size=tx_bytes[code_byte_size + data_byte_size + 1] as usize;
+        }
+        timestamp_byte_size+=2;
+        let data_bytes  = (&tx_bytes[code_byte_size..
+            code_byte_size + data_byte_size]).to_vec();
+        let timestamp_bytes =
+            (&tx_bytes[code_byte_size + data_byte_size ..
+                code_byte_size + data_byte_size + timestamp_byte_size
+                ]).to_vec();
+        let code_hash = (&hash_tx(&code_bytes).0).to_vec();
+
+        (code_hash, code_bytes, data_bytes, timestamp_bytes)
+    }
+
+    pub fn tx_to_sign(&self) -> [u8; 32] {
+        let tx_bytes = self.to_bytes();
+        let mut code_byte_size : usize = 0;
+        if self.code.len() != 0 {
+            code_byte_size = self.code.len() as usize;
+            code_byte_size+=2;
+        }
+        let code_bytes :Vec<u8> = (&tx_bytes[0..code_byte_size]).to_vec();
+
+        // get the bytes of data field from bytes of tx
+        let mut data_byte_size : usize = 0;
+        if self.data.is_some(){
+            data_byte_size = self.data.clone().expect("Getting transaction data shouldn't fail").len() as usize;
+            data_byte_size += 2;
+        }
+        let timestamp_shift :usize =2;
+        // get the bytes of timestamp field from bytes of tx
+        let mut timestamp_byte_size = tx_bytes[code_byte_size + data_byte_size + 1] as usize;
+        let tx_len = tx_bytes.len();
+        while timestamp_byte_size + data_byte_size + code_byte_size + timestamp_shift != tx_len
+        {
+            data_byte_size+=1;
+            timestamp_byte_size=tx_bytes[code_byte_size + data_byte_size + 1] as usize;
+        }
+        timestamp_byte_size+=2;
+        let data_bytes :&[u8] = &tx_bytes[code_byte_size..
+            code_byte_size + data_byte_size];
+        let timestamp_bytes :&[u8] =
+            &tx_bytes[code_byte_size + data_byte_size ..
+                code_byte_size + data_byte_size + timestamp_byte_size
+                ];
+
+        let code_hash :&[u8] = &hash_tx(&code_bytes).0;
+        hash_tx(&([code_hash,data_bytes,timestamp_bytes].concat())).0
+    }
+
     /// Sign a transaction using [`SignedTxData`].
     pub fn sign(self, keypair: &common::SecretKey) -> Self {
-        let to_sign = self.hash();
+        let to_sign = self.tx_to_sign();
         let sig = common::SigScheme::sign(keypair, &to_sign);
         let signed = SignedTxData {
             data: self.data,
@@ -216,7 +289,7 @@ impl Tx {
             data,
             timestamp: self.timestamp,
         };
-        let signed_data = tx.hash();
+        let signed_data = tx.tx_to_sign();
         common::SigScheme::verify_signature_raw(pk, &signed_data, sig)
     }
 }
@@ -429,6 +502,17 @@ mod tests {
             Err(Error::NoTimestampError) => {}
             _ => panic!("unexpected result"),
         }
+    }
+
+    #[test]
+    fn test_serialize_tx() {
+        let code = "wasm code".as_bytes().to_owned();
+        let data = "arbitrary data".as_bytes().to_owned();
+        let tx = Tx::new(code.clone(), Some(data.clone()));
+
+        let encoded_tx = tx.try_to_vec().unwrap();
+        let decoded_tx = Tx::try_from_slice(&encoded_tx).unwrap();
+        assert_eq!(tx, decoded_tx);
     }
 
     #[test]

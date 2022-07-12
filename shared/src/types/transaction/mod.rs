@@ -300,7 +300,7 @@ pub mod tx_types {
                 data: Some(data.clone()),
                 timestamp: tx.timestamp,
             }
-            .hash();
+            .tx_to_sign();
             match TxType::try_from(Tx {
                 code: vec![],
                 data: Some(data),

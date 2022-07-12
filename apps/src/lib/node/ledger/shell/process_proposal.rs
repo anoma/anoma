@@ -751,8 +751,19 @@ mod test_process_proposal {
         let keypair = crate::wallet::defaults::daewon_keypair();
         let pubkey = EncryptionKey::default();
         // not valid tx bytes
-        let tx = "garbage data".as_bytes().to_owned();
-        let inner_tx = EncryptedTx::encrypt(&tx, pubkey);
+        let tx_code = "garbage code".as_bytes().to_owned();
+        let tx_data = "garbage data".as_bytes().to_owned().clone();
+        let tx_timestamp = "garbage timestamp".as_bytes().to_owned().clone();
+        let tx = [tx_code.clone(),tx_data.clone(),tx_timestamp.clone()].concat();
+        let tx :&[u8] = &tx;
+        let inner_tx =
+            EncryptedTx::encrypt(
+                &tx_code,
+                &tx_code,
+                &tx_data,
+                &tx_timestamp,
+                pubkey,
+            );
         let wrapper = WrapperTx {
             fee: Fee {
                 amount: 0.into(),

@@ -191,7 +191,13 @@ pub mod wrapper_tx {
             tx: Tx,
             encryption_key: EncryptionKey,
         ) -> WrapperTx {
-            let inner_tx = EncryptedTx::encrypt(&tx.to_bytes(), encryption_key);
+            let (hash_bytes,code_bytes,data_bytes,timestamp_bytes) = tx.tx_to_encrypt();
+            let inner_tx = EncryptedTx::encrypt(
+                &hash_bytes,
+                &code_bytes,
+                &data_bytes,
+                &timestamp_bytes,
+                encryption_key);
             Self {
                 fee,
                 pk: keypair.ref_to(),
@@ -210,7 +216,16 @@ pub mod wrapper_tx {
 
         /// A validity check on the ciphertext.
         pub fn validate_ciphertext(&self) -> bool {
-            self.inner_tx.0.check(&<EllipticCurve as PairingEngine>::G1Prepared::from(
+            self.inner_tx.encrypted_code.check(&<EllipticCurve as PairingEngine>::G1Prepared::from(
+                -<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator(),
+            )) &&
+            self.inner_tx.encrypted_code_hash.check(&<EllipticCurve as PairingEngine>::G1Prepared::from(
+                 -<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator(),
+            )) &&
+            self.inner_tx.encrypted_data.check(&<EllipticCurve as PairingEngine>::G1Prepared::from(
+                 -<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator(),
+            )) &&
+            self.inner_tx.encrypted_ts.check(&<EllipticCurve as PairingEngine>::G1Prepared::from(
                 -<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator(),
             ))
         }
@@ -224,14 +239,16 @@ pub mod wrapper_tx {
             &self,
             privkey: <EllipticCurve as PairingEngine>::G2Affine,
         ) -> Result<Tx, WrapperTxErr> {
+            const HASH_SIZE : usize = 32;
             // decrypt the inner tx
             let decrypted = self.inner_tx.decrypt(privkey);
+            let decrypted_tx = &decrypted[HASH_SIZE..];
             // check that the hash equals commitment
-            if hash_tx(&decrypted) != self.tx_hash {
+            if hash_tx(&decrypted_tx) != self.tx_hash {
                 Err(WrapperTxErr::DecryptedHash)
             } else {
                 // convert back to Tx type
-                Tx::try_from(decrypted.as_ref())
+                Tx::try_from(decrypted_tx.as_ref())
                     .map_err(|_| WrapperTxErr::InvalidTx)
             }
         }
@@ -447,11 +464,14 @@ pub mod wrapper_tx {
             let malicious =
                 Tx::new("Give me all the money".as_bytes().to_owned(), None);
 
-            // We replace the inner tx with a malicious one
+            let (hash_bytes,code_bytes,data_bytes,timestamp_bytes) = malicious.tx_to_encrypt();
+
             wrapper.inner_tx = EncryptedTx::encrypt(
-                &malicious.to_bytes(),
-                EncryptionKey(pubkey),
-            );
+                &hash_bytes,
+                &code_bytes,
+                &data_bytes,
+                &timestamp_bytes,
+                EncryptionKey(pubkey));
 
             // We change the commitment appropriately
             wrapper.tx_hash = hash_tx(&malicious.to_bytes());

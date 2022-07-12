@@ -752,10 +752,17 @@ mod test_finalize_block {
         let keypair = crate::wallet::defaults::daewon_keypair();
         let pubkey = EncryptionKey::default();
         // not valid tx bytes
-        let tx = "garbage data".as_bytes().to_owned();
+        let tx_code = "garbage code".as_bytes().to_owned();
+        let tx_code_hash = &hash_tx(tx_code).0;
+        let tx_data = "garbage data".as_bytes().to_owned();
+        let ts = "01/10/1995".as_bytes();
         let inner_tx =
             anoma::types::transaction::encrypted::EncryptedTx::encrypt(
-                &tx, pubkey,
+                tx_code_hash,
+                tx_code,
+                tx_data,
+                ts,
+                pubkey,
             );
         let wrapper = WrapperTx {
             fee: Fee {
@@ -809,10 +816,18 @@ mod test_finalize_block {
         let keypair = crate::wallet::defaults::daewon_keypair();
         let pubkey = EncryptionKey::default();
         // not valid tx bytes
-        let tx = "garbage data".as_bytes().to_owned();
+        let tx_code = "garbage code".as_bytes().to_owned();
+        let tx_data = "garbage data".as_bytes().to_owned();
+        let tx = Tx::new(tx_code,Some(tx_data));
+        let (hash_to_encrypt,code_to_encrypt,
+            data_to_encrypt, ts_to_encrypt) = tx.tx_to_encrypt();
         let inner_tx =
             anoma::types::transaction::encrypted::EncryptedTx::encrypt(
-                &tx, pubkey,
+                &hash_to_encrypt,
+                &code_to_encrypt,
+                &data_to_encrypt,
+                &ts_to_encrypt,
+                pubkey,
             );
         let wrapper = WrapperTx {
             fee: Fee {
@@ -823,7 +838,7 @@ mod test_finalize_block {
             epoch: Epoch(0),
             gas_limit: 0.into(),
             inner_tx,
-            tx_hash: hash_tx(&tx),
+            tx_hash: hash_tx(&tx.to_bytes()),
         };
         let processed_tx = ProcessedTx {
             tx: Tx::from(TxType::Decrypted(DecryptedTx::Undecryptable(
