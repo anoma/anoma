@@ -44,7 +44,7 @@ use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
-    BlockHash, BlockHeight, Epoch, Epochs, Header, Key, KeySeg,
+    BlockHash, BlockHeight, BlockResults, Epoch, Epochs, Header, Key, KeySeg,
     BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
@@ -104,6 +104,8 @@ pub struct BlockStorage<H: StorageHasher> {
     pub height: BlockHeight,
     /// Epoch of the block
     pub epoch: Epoch,
+    /// Results of applying transactions
+    pub results: BlockResults,
     /// Predecessor block epochs
     pub pred_epochs: Epochs,
 }
@@ -147,6 +149,8 @@ pub struct BlockStateRead {
     pub next_epoch_min_start_time: DateTimeUtc,
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
+    /// Results of applying transactions
+    pub results: BlockResults,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: TxQueue,
@@ -172,6 +176,8 @@ pub struct BlockStateWrite<'a> {
     pub next_epoch_min_start_time: DateTimeUtc,
     /// Established address generator
     pub address_gen: &'a EstablishedAddressGen,
+    /// Results of applying transactions
+    pub results: &'a BlockResults,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: &'a TxQueue,
@@ -272,6 +278,9 @@ pub trait DBIter<'iter> {
 
     /// Read account subspace key value pairs with the given prefix from the DB
     fn iter_prefix(&'iter self, prefix: &Key) -> Self::PrefixIter;
+
+    /// Read results subspace key value pairs from the DB
+    fn iter_results(&'iter self) -> Self::PrefixIter;
 }
 
 /// Atomic batch write.
@@ -304,6 +313,7 @@ where
             height: BlockHeight::default(),
             epoch: Epoch::default(),
             pred_epochs: Epochs::default(),
+            results: BlockResults::default(),
         };
         Storage::<D, H> {
             db: D::open(db_path, cache),
@@ -334,6 +344,7 @@ where
             pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
+            results,
             address_gen,
             #[cfg(feature = "ferveo-tpke")]
             tx_queue,
@@ -343,6 +354,7 @@ where
             self.block.hash = hash;
             self.block.height = height;
             self.block.epoch = epoch;
+            self.block.results = results;
             self.block.pred_epochs = pred_epochs;
             self.last_height = height;
             self.last_epoch = epoch;
@@ -395,6 +407,7 @@ where
             hash: &self.block.hash,
             height: self.block.height,
             epoch: self.block.epoch,
+            results: &self.block.results,
             pred_epochs: &self.block.pred_epochs,
             next_epoch_min_start_height: self.next_epoch_min_start_height,
             next_epoch_min_start_time: self.next_epoch_min_start_time,
@@ -462,6 +475,11 @@ where
         prefix: &Key,
     ) -> (<D as DBIter<'_>>::PrefixIter, u64) {
         (self.db.iter_prefix(prefix), prefix.len() as _)
+    }
+
+    /// Returns a prefix iterator and the gas cost
+    pub fn iter_results(&self) -> (<D as DBIter<'_>>::PrefixIter, u64) {
+        (self.db.iter_results(), 0)
     }
 
     /// Write a value to the specified subspace and returns the gas cost and the
@@ -923,6 +941,7 @@ pub mod testing {
                 height: BlockHeight::default(),
                 epoch: Epoch::default(),
                 pred_epochs: Epochs::default(),
+                results: BlockResults::default(),
             };
             Self {
                 db: MockDB::default(),
