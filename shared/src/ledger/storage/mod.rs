@@ -7,7 +7,19 @@ pub mod types;
 pub mod write_log;
 
 use core::fmt::Debug;
+use std::collections::HashMap;
 
+use borsh::{BorshDeserialize, BorshSerialize};
+use masp_primitives::asset_type::AssetType;
+use masp_primitives::convert::AllowedConversion;
+use masp_primitives::ff::PrimeField;
+use masp_primitives::merkle_tree::FrozenCommitmentTree;
+use masp_primitives::sapling::Node;
+use masp_primitives::transaction::components::Amount;
+use rayon::iter::{
+    IndexedParallelIterator, IntoParallelIterator, ParallelIterator,
+};
+use rayon::prelude::ParallelSlice;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::merkle::proof::Proof;
 #[cfg(feature = "ABCI")]
@@ -25,7 +37,9 @@ pub use crate::ledger::storage::merkle_tree::{
     MerkleTree, MerkleTreeStoresRead, MerkleTreeStoresWrite, Sha256Hasher,
     StorageHasher, StoreType,
 };
-use crate::types::address::{Address, EstablishedAddressGen, InternalAddress};
+use crate::types::address::{
+    Address, EstablishedAddressGen, InternalAddress, *,
+};
 use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
@@ -34,9 +48,18 @@ use crate::types::storage::{
     BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
+use crate::types::token;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
+/// A representation of the conversion state
+#[derive(Debug, Default, BorshSerialize, BorshDeserialize)]
+pub struct ConversionState {
+    /// The tree currently containing all the conversions
+    pub tree: FrozenCommitmentTree<Node>,
+    /// Map assets to their latest conversion and position in Merkle tree
+    pub assets: HashMap<AssetType, (Address, Epoch, AllowedConversion, usize)>,
+}
 
 /// The storage data
 #[derive(Debug)]
@@ -63,6 +86,8 @@ where
     pub next_epoch_min_start_time: DateTimeUtc,
     /// The current established address generator
     pub address_gen: EstablishedAddressGen,
+    /// The currently saved conversion state
+    pub conversion_state: ConversionState,
     /// Wrapper txs to be decrypted in the next block proposal
     #[cfg(feature = "ferveo-tpke")]
     pub tx_queue: TxQueue,
@@ -292,6 +317,7 @@ where
             address_gen: EstablishedAddressGen::new(
                 "Privacy is a function of liberty.",
             ),
+            conversion_state: ConversionState::default(),
             #[cfg(feature = "ferveo-tpke")]
             tx_queue: TxQueue::default(),
         }
@@ -323,6 +349,23 @@ where
             self.next_epoch_min_start_height = next_epoch_min_start_height;
             self.next_epoch_min_start_time = next_epoch_min_start_time;
             self.address_gen = address_gen;
+            if self.last_epoch.0 > 1 {
+                // The derived conversions will be placed in MASP address space
+                let masp_addr = masp();
+                let key_prefix: Key = masp_addr.to_db_key().into();
+                // Load up the conversions currently being given as query
+                // results
+                let state_key = key_prefix
+                    .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
+                    .map_err(Error::KeyError)?;
+                self.conversion_state = types::decode(
+                    self.read(&state_key)
+                        .expect("unable to read conversion state")
+                        .0
+                        .expect("unable to find conversion state"),
+                )
+                .expect("unable to decode conversion state")
+            }
             #[cfg(feature = "ferveo-tpke")]
             {
                 self.tx_queue = tx_queue;
@@ -615,9 +658,174 @@ where
                 .pred_epochs
                 .new_epoch(height, evidence_max_age_num_blocks);
             tracing::info!("Began a new epoch {}", self.block.epoch);
+            self.update_allowed_conversions()?;
         }
         self.update_epoch_in_merkle_tree()?;
         Ok(new_epoch)
+    }
+
+    /// Get the current conversions
+    pub fn get_conversion_state(&self) -> &ConversionState {
+        &self.conversion_state
+    }
+
+    // Construct MASP asset type with given timestamp for given token
+    fn encode_asset_type(addr: Address, epoch: Epoch) -> AssetType {
+        let new_asset_bytes = (addr, epoch.0)
+            .try_to_vec()
+            .expect("unable to serialize address and epoch");
+        AssetType::new(new_asset_bytes.as_ref())
+            .expect("unable to derive asset identifier")
+    }
+
+    /// Update the MASP's allowed conversions
+    fn update_allowed_conversions(&mut self) -> Result<()> {
+        // The derived conversions will be placed in MASP address space
+        let masp_addr = masp();
+        let key_prefix: Key = masp_addr.to_db_key().into();
+
+        let masp_rewards = masp_rewards();
+        // The total transparent value of the rewards being distributed
+        let mut total_reward = token::Amount::from(0);
+
+        // Construct MASP asset type for rewards. Always timestamp reward tokens
+        // with the zeroth epoch to minimize the number of convert notes clients
+        // have to use. This trick works under the assumption that reward tokens
+        // from different epochs are exactly equivalent.
+        let reward_asset_bytes = (xan(), 0u64)
+            .try_to_vec()
+            .expect("unable to serialize address and epoch");
+        let reward_asset = AssetType::new(reward_asset_bytes.as_ref())
+            .expect("unable to derive asset identifier");
+        // Conversions from the previous to current asset for each address
+        let mut current_convs = HashMap::<Address, AllowedConversion>::new();
+        // Reward all tokens according to above reward rates
+        for (addr, reward) in &masp_rewards {
+            // Dispence a transparent reward in parallel to the shielded rewards
+            let token_key = self.read(&token::balance_key(addr, &masp_addr));
+            if let Ok((Some(addr_balance), _)) = token_key {
+                // The reward for each reward.1 units of the current asset is
+                // reward.0 units of the reward token
+                let addr_bal: token::Amount =
+                    types::decode(addr_balance).expect("invalid balance");
+                // Since floor(a) + floor(b) <= floor(a+b), there will always be
+                // enough rewards to reimburse users
+                total_reward += (addr_bal * *reward).0;
+            }
+            // Provide an allowed conversion from previous timestamp. The
+            // negative sign allows each instance of the old asset to be
+            // cancelled out/replaced with the new asset
+            let old_asset =
+                Self::encode_asset_type(addr.clone(), self.last_epoch.prev());
+            let new_asset =
+                Self::encode_asset_type(addr.clone(), self.last_epoch);
+            current_convs.insert(
+                addr.clone(),
+                (Amount::from_pair(old_asset, -(reward.1 as i64)).unwrap()
+                    + Amount::from_pair(new_asset, reward.1).unwrap()
+                    + Amount::from_pair(reward_asset, reward.0).unwrap())
+                .into(),
+            );
+            // Add a conversion from the previous asset type
+            self.conversion_state.assets.insert(
+                old_asset,
+                (
+                    addr.clone(),
+                    self.last_epoch.prev(),
+                    Amount::zero().into(),
+                    0,
+                ),
+            );
+        }
+
+        // Try to distribute Merkle leaf updating as evenly as possible across
+        // multiple cores
+        let num_threads = rayon::current_num_threads();
+        // Put assets into vector to enable computation batching
+        let assets: Vec<_> = self
+            .conversion_state
+            .assets
+            .values_mut()
+            .enumerate()
+            .collect();
+        // ceil(assets.len() / num_threads)
+        let notes_per_thread_max = (assets.len() - 1) / num_threads + 1;
+        // floor(assets.len() / num_threads)
+        let notes_per_thread_min = assets.len() / num_threads;
+        // Now on each core, add the latest conversion to each conversion
+        let conv_notes: Vec<Node> = assets
+            .into_par_iter()
+            .with_min_len(notes_per_thread_min)
+            .with_max_len(notes_per_thread_max)
+            .map(|(idx, (addr, _epoch, conv, pos))| {
+                // Use transitivity to update conversion
+                *conv += current_convs[addr].clone();
+                // Update conversion position to leaf we are about to create
+                *pos = idx;
+                // The merkle tree need only provide the conversion commitment,
+                // the remaining information is provided through the storage API
+                Node::new(conv.cmu().to_repr())
+            })
+            .collect();
+
+        // Update the MASP's transparent reward token balance to ensure that it
+        // is sufficiently backed to redeem rewards
+        let reward_key = token::balance_key(&xan(), &masp_addr);
+        if let Ok((Some(addr_bal), _)) = self.read(&reward_key) {
+            // If there is already a balance, then add to it
+            let addr_bal: token::Amount =
+                types::decode(addr_bal).expect("invalid balance");
+            let new_bal = types::encode(&(addr_bal + total_reward));
+            self.write(&reward_key, new_bal)
+                .expect("unable to update MASP transparent balance");
+        } else {
+            // Otherwise the rewards form the entirity of the reward token
+            // balance
+            self.write(&reward_key, types::encode(&total_reward))
+                .expect("unable to update MASP transparent balance");
+        }
+        // Try to distribute Merkle tree construction as evenly as possible
+        // across multiple cores
+        // Merkle trees must have exactly 2^n leaves to be mergeable
+        let mut notes_per_thread_rounded = 1;
+        while notes_per_thread_max > notes_per_thread_rounded * 4 {
+            notes_per_thread_rounded *= 2;
+        }
+        // Make the sub-Merkle trees in parallel
+        let tree_parts: Vec<_> = conv_notes
+            .par_chunks(notes_per_thread_rounded)
+            .map(FrozenCommitmentTree::new)
+            .collect();
+        // Convert conversion vector into tree so that Merkle paths can be
+        // obtained
+        self.conversion_state.tree = FrozenCommitmentTree::merge(&tree_parts);
+
+        // Add purely decoding entries to the assets map. These will be
+        // overwritten before the creation of the next commitment tree
+        for addr in masp_rewards.keys() {
+            // Add the decoding entry for the new asset type. An uncommited
+            // node position is used since this is not a conversion.
+            let new_asset =
+                Self::encode_asset_type(addr.clone(), self.last_epoch);
+            self.conversion_state.assets.insert(
+                new_asset,
+                (
+                    addr.clone(),
+                    self.last_epoch,
+                    Amount::zero().into(),
+                    self.conversion_state.tree.size(),
+                ),
+            );
+        }
+
+        // Save the current conversion state in order to avoid computing
+        // conversion commitments from scratch in the next epoch
+        let state_key = key_prefix
+            .push(&(token::CONVERSION_KEY_PREFIX.to_owned()))
+            .map_err(Error::KeyError)?;
+        self.write(&state_key, types::encode(&self.conversion_state))
+            .expect("unable to save current conversion state");
+        Ok(())
     }
 
     /// Update the merkle tree with epoch data
@@ -645,6 +853,7 @@ where
         self.block
             .tree
             .update(&key, types::encode(&self.block.epoch))?;
+
         Ok(())
     }
 
@@ -727,6 +936,7 @@ pub mod testing {
                 address_gen: EstablishedAddressGen::new(
                     "Test address generator seed",
                 ),
+                conversion_state: ConversionState::default(),
                 #[cfg(feature = "ferveo-tpke")]
                 tx_queue: TxQueue::default(),
             }

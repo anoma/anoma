@@ -520,6 +520,12 @@ impl Epoch {
     pub fn next(&self) -> Self {
         Self(self.0 + 1)
     }
+
+    /// Change to the previous epoch. This will underflow if the given epoch is
+    /// `0`.
+    pub fn prev(&self) -> Self {
+        Self(self.0 - 1)
+    }
 }
 
 impl Add<u64> for Epoch {

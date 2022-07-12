@@ -150,6 +150,27 @@ impl Add for Amount {
     }
 }
 
+impl Mul<u64> for Amount {
+    type Output = Amount;
+
+    fn mul(mut self, rhs: u64) -> Self::Output {
+        self.micro *= rhs;
+        self
+    }
+}
+
+/// A combination of Euclidean division and fractions:
+/// x*(a,b) = (a*(x//b), x%b)
+impl Mul<(u64, u64)> for Amount {
+    type Output = (Amount, Amount);
+
+    fn mul(mut self, rhs: (u64, u64)) -> Self::Output {
+        let ant = Amount::from((self.micro / rhs.1) * rhs.0);
+        self.micro %= rhs.1;
+        (ant, self)
+    }
+}
+
 impl Mul<Amount> for u64 {
     type Output = Amount;
 
@@ -235,6 +256,8 @@ impl From<Amount> for Change {
 
 /// Key segment for a balance key
 pub const BALANCE_STORAGE_KEY: &str = "balance";
+/// Key segment prefix for MASP conversions
+pub const CONVERSION_KEY_PREFIX: &str = "conv";
 
 /// Obtain a storage key for user's balance.
 pub fn balance_key(token_addr: &Address, owner: &Address) -> Key {

@@ -30,6 +30,9 @@ use async_std::path::PathBuf;
 use async_std::prelude::*;
 use borsh::BorshDeserialize;
 use itertools::Itertools;
+use masp_primitives::asset_type::AssetType;
+use masp_primitives::merkle_tree::MerklePath;
+use masp_primitives::sapling::Node;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
@@ -1292,6 +1295,37 @@ fn process_unbonds_query(
         }
     }
     (total, withdrawable)
+}
+
+/// Query a conversion.
+pub async fn query_conversion(
+    client: HttpClient,
+    asset_type: AssetType,
+) -> Option<(Address, Epoch, Amount, MerklePath<Node>)> {
+    let path = Path::Conversion(asset_type);
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, false)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => match BorshDeserialize::try_from_slice(&response.value[..])
+        {
+            Ok(value) => return Some(value),
+            Err(err) => eprintln!("Error decoding the conversion: {}", err),
+        },
+        Code::Err(err) => {
+            if err == 1 {
+                return None;
+            } else {
+                eprintln!(
+                    "Error in the query {} (error code {})",
+                    response.info, err
+                )
+            }
+        }
+    }
+    cli::safe_exit(1)
 }
 
 /// Query a storage value and decode it with [`BorshDeserialize`].
