@@ -67,7 +67,7 @@ jobs:
         run: sccache --start-server
       - name: ${{ matrix.make.name }}
         run: make {{ matrix.make.command }}
-      - name: Upload wasm artifacts
+      - name: Upload binaries package
         uses: actions/upload-artifact@v3
         with:
           name: release-${{ matrix.os }}-${{ github.sha }}
@@ -86,8 +86,6 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - name: Update WASM
-        run: "Updating wasm..."
       - id: get_version
         uses: battila7/get-version-action@v2
       - name: Download release artifacts

@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         wasm_cache_version: ["v1"]
-    
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -40,6 +40,14 @@ jobs:
         run: make test-wasm
       - name: Check wasm up-to-date
         run: cmp -- wasm/checksums.json wasm/original-checksums.json
+      - name: Update WASM
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        run: aws s3 sync wasm s3://$BUCKET_NAME --acl public-read --exclude "*" --include "*.wasm" --exclude "*/*" --region $AWS_REGION
+        env:
+          BUCKET_NAME: heliax-anoma-wasm-v1 
+          AWS_REGION: eu-west-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   
   anoma:
     runs-on: ${{ matrix.os }}
