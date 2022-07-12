@@ -5,6 +5,8 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 #[cfg(feature = "ABCI")]
+use anoma::proto::Tx;
+#[cfg(feature = "ABCI")]
 use anoma::types::hash::Hash;
 #[cfg(feature = "ABCI")]
 use anoma::types::storage::BlockHash;
@@ -26,6 +28,8 @@ use super::abcipp_shim_types::shim::request::{FinalizeBlock, ProcessedTx};
 use super::abcipp_shim_types::shim::response::TxResult;
 use super::abcipp_shim_types::shim::{Error, Request, Response};
 use crate::config;
+#[cfg(feature = "ABCI")]
+use crate::node::ledger::shell::Error::TxDecoding;
 
 /// The shim wraps the shell, which implements ABCI++.
 /// The shim makes a crude translation between the ABCI interface currently used
@@ -144,8 +148,15 @@ impl AbcippShim {
                         .map_err(Error::from)
                         .and_then(|res| match res {
                             Response::DeliverTx(resp) => {
+                                // The transaction's data is used in the
+                                // response to add transfer event via
+                                // `impl From<Tx> for ResponseDeliverTx`
+                                // conversion.
+                                let tx = Tx::try_from(resp.tx.as_ref());
                                 self.processed_txs.push(resp);
-                                Ok(Resp::DeliverTx(Default::default()))
+                                Ok(Resp::DeliverTx(
+                                    tx.map_err(TxDecoding)?.into(),
+                                ))
                             }
                             _ => unreachable!(),
                         })

@@ -26,7 +26,9 @@ use anoma::types::governance::{
 };
 use anoma::types::key::*;
 use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
-use anoma::types::storage::{Epoch, PrefixValue};
+use anoma::types::storage::{
+    BlockHeight, BlockResults, Epoch, PrefixValue, TxIndex,
+};
 use anoma::types::token::{balance_key, Transfer};
 use anoma::types::transaction::{
     process_tx, AffineCurve, DecryptedTx, EllipticCurve, PairingEngine, TxType,
@@ -102,6 +104,296 @@ pub async fn query_epoch(args: args::Query) -> Epoch {
         ),
     }
     cli::safe_exit(1)
+}
+
+/// Extract the payload from the given Tx object
+fn extract_payload(
+    tx: Tx,
+    wrapper: &mut Option<WrapperTx>,
+    transfer: &mut Option<Transfer>,
+) {
+    match process_tx(tx) {
+        Ok(TxType::Wrapper(wrapper_tx)) => {
+            let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
+            extract_payload(
+                Tx::from(match wrapper_tx.decrypt(privkey) {
+                    Ok(tx) => DecryptedTx::Decrypted(tx),
+                    _ => DecryptedTx::Undecryptable(wrapper_tx.clone()),
+                }),
+                wrapper,
+                transfer,
+            );
+            *wrapper = Some(wrapper_tx);
+        }
+        Ok(TxType::Decrypted(DecryptedTx::Decrypted(tx))) => {
+            let empty_vec = vec![];
+            let tx_data = tx.data.as_ref().unwrap_or(&empty_vec);
+            let _ = SignedTxData::try_from_slice(tx_data).map(|signed| {
+                Transfer::try_from_slice(&signed.data.unwrap()[..])
+                    .map(|tfer| *transfer = Some(tfer))
+            });
+        }
+        _ => {}
+    }
+}
+
+/// Query the results of the last committed block
+pub async fn query_results(args: args::Query) -> Vec<BlockResults> {
+    let client = HttpClient::new(args.ledger_address).unwrap();
+    let path = Path::Results;
+    let data = vec![];
+    let response = client
+        .abci_query(Some(path.into()), data, None, false)
+        .await
+        .unwrap();
+    match response.code {
+        Code::Ok => {
+            match Vec::<BlockResults>::try_from_slice(&response.value[..]) {
+                Ok(results) => {
+                    return results;
+                }
+
+                Err(err) => {
+                    eprintln!("Error decoding the results value: {}", err)
+                }
+            }
+        }
+        Code::Err(err) => eprintln!(
+            "Error in the query {} (error code {})",
+            response.info, err
+        ),
+    }
+    cli::safe_exit(1)
+}
+
+/// Obtain the known effects of all accepted shielded and transparent
+/// transactions. If an owner is specified, then restrict the set to only
+/// transactions crediting/debiting the given owner. If token is specified, then
+/// restrict set to only transactions involving the given token.
+pub async fn query_tx_deltas(
+    ctx: &mut Context,
+    ledger_address: TendermintAddress,
+    query_owner: &Option<BalanceOwner>,
+    query_token: &Option<Address>,
+) -> BTreeMap<(BlockHeight, TxIndex), (Epoch, TransferDelta, TransactionDelta)>
+{
+    const TXS_PER_PAGE: u8 = 100;
+    // Connect to the Tendermint server holding the transactions
+    let client = HttpClient::new(ledger_address.clone()).unwrap();
+    // Build up the context that will be queried for transactions
+    let _ = ctx.shielded.load();
+    let vks = ctx.wallet.get_viewing_keys();
+    let fvks: Vec<_> = vks
+        .values()
+        .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+        .collect();
+    ctx.shielded.fetch(&ledger_address, &[], &fvks).await;
+    // Save the update state so that future fetches can be short-circuited
+    let _ = ctx.shielded.save();
+    // Required for filtering out rejected transactions from Tendermint
+    // responses
+    let block_results = query_results(args::Query { ledger_address }).await;
+    let mut transfers = ctx.shielded.get_tx_deltas().clone();
+    // Construct the set of addresses relevant to user's query
+    let relevant_addrs = match &query_owner {
+        Some(BalanceOwner::Address(owner)) => vec![owner.clone()],
+        // MASP objects are dealt with outside of tx_search
+        Some(BalanceOwner::FullViewingKey(_viewing_key)) => vec![],
+        Some(BalanceOwner::PaymentAddress(_owner)) => vec![],
+        // Unspecified owner means all known addresses are considered relevant
+        None => ctx.wallet.get_addresses().into_values().collect(),
+    };
+    // Find all transactions to or from the relevant address set
+    for addr in relevant_addrs {
+        for prop in ["transfer.source", "transfer.target"] {
+            // Query transactions involving the current address
+            let mut tx_query = Query::eq(prop, addr.encode());
+            // Elaborate the query if requested by the user
+            if let Some(token) = &query_token {
+                tx_query = tx_query.and_eq("transfer.token", token.encode());
+            }
+            for page in 1.. {
+                let txs = &client
+                    .tx_search(
+                        tx_query.clone(),
+                        true,
+                        page,
+                        TXS_PER_PAGE,
+                        Order::Ascending,
+                    )
+                    .await
+                    .expect("Unable to query for transactions")
+                    .txs;
+                for response_tx in txs {
+                    let height = BlockHeight(response_tx.height.value());
+                    let idx = TxIndex(response_tx.index);
+                    // Only process yet unprocessed transactions which have been
+                    // accepted by node VPs
+                    let should_process = !transfers
+                        .contains_key(&(height, idx))
+                        && block_results[u64::from(height) as usize]
+                            .is_accepted(idx.0 as usize);
+                    if !should_process {
+                        continue;
+                    }
+                    let tx = Tx::try_from(response_tx.tx.as_ref())
+                        .expect("Ill-formed Tx");
+                    let mut wrapper = None;
+                    let mut transfer = None;
+                    extract_payload(tx, &mut wrapper, &mut transfer);
+                    // Epoch data is not needed for transparent transactions
+                    let epoch = wrapper.map(|x| x.epoch).unwrap_or_default();
+                    if let Some(transfer) = transfer {
+                        // Skip MASP addresses as they are already handled by
+                        // ShieldedContext
+                        if transfer.source == masp()
+                            || transfer.target == masp()
+                        {
+                            continue;
+                        }
+                        // Describe how a Transfer simply subtracts from one
+                        // account and adds the same to another
+                        let mut delta = TransferDelta::default();
+                        let tfer_delta = Amount::from_nonnegative(
+                            transfer.token.clone(),
+                            u64::from(transfer.amount),
+                        )
+                        .expect("invalid value for amount");
+                        delta.insert(
+                            transfer.source,
+                            Amount::zero() - &tfer_delta,
+                        );
+                        delta.insert(transfer.target, tfer_delta);
+                        // No shielded accounts are affected by this Transfer
+                        transfers.insert(
+                            (height, idx),
+                            (epoch, delta, TransactionDelta::new()),
+                        );
+                    }
+                }
+                // An incomplete page signifies no more transactions
+                if (txs.len() as u8) < TXS_PER_PAGE {
+                    break;
+                }
+            }
+        }
+    }
+    transfers
+}
+
+/// Query the specified accepted transfers from the ledger
+pub async fn query_transfers(mut ctx: Context, args: args::QueryTransfers) {
+    let query_token = args.token.as_ref().map(|x| ctx.get(x));
+    let query_owner = args.owner.as_ref().map(|x| ctx.get_cached(x));
+    // Obtain the effects of all shielded and transparent transactions
+    let transfers = query_tx_deltas(
+        &mut ctx,
+        args.query.ledger_address.clone(),
+        &query_owner,
+        &query_token,
+    )
+    .await;
+    // To facilitate lookups of human-readable token names
+    let tokens = tokens();
+    let vks = ctx.wallet.get_viewing_keys();
+    // To enable ExtendedFullViewingKeys to be displayed instead of ViewingKeys
+    let fvk_map: HashMap<_, _> = vks
+        .values()
+        .map(|fvk| (ExtendedFullViewingKey::from(*fvk).fvk.vk, fvk))
+        .collect();
+    // Connect to the Tendermint server holding the transactions
+    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
+    // Now display historical shielded and transparent transactions
+    for ((height, idx), (epoch, tfer_delta, tx_delta)) in transfers {
+        // Check if this transfer pertains to the supplied owner
+        let mut relevant = match &query_owner {
+            Some(BalanceOwner::FullViewingKey(fvk)) => tx_delta
+                .contains_key(&ExtendedFullViewingKey::from(*fvk).fvk.vk),
+            Some(BalanceOwner::Address(owner)) => {
+                tfer_delta.contains_key(owner)
+            }
+            Some(BalanceOwner::PaymentAddress(_owner)) => false,
+            None => true,
+        };
+        // Realize and decode the shielded changes to enable relevance check
+        let mut shielded_accounts = HashMap::new();
+        for (acc, amt) in tx_delta {
+            // Realize the rewards that would have been attained upon the
+            // transaction's reception
+            let amt = ctx
+                .shielded
+                .compute_exchanged_amount(
+                    client.clone(),
+                    amt,
+                    epoch,
+                    Conversions::new(),
+                )
+                .await
+                .0;
+            let dec =
+                ctx.shielded.decode_amount(client.clone(), amt, epoch).await;
+            shielded_accounts.insert(acc, dec);
+        }
+        // Check if this transfer pertains to the supplied token
+        relevant &= match &query_token {
+            Some(token) => {
+                tfer_delta.values().any(|x| x[token] != 0)
+                    || shielded_accounts.values().any(|x| x[token] != 0)
+            }
+            None => true,
+        };
+        // Filter out those entries that do not satisfy user query
+        if !relevant {
+            continue;
+        }
+        println!("Height: {}, Index: {}, Transparent Transfer:", height, idx);
+        // Display the transparent changes first
+        for (account, amt) in tfer_delta {
+            if account != masp() {
+                print!("  {}:", account);
+                for (addr, val) in amt.components() {
+                    let addr_enc = addr.encode();
+                    let readable =
+                        tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
+                    let sign = match val.cmp(&0) {
+                        Ordering::Greater => "+",
+                        Ordering::Less => "-",
+                        Ordering::Equal => "",
+                    };
+                    print!(
+                        " {}{} {}",
+                        sign,
+                        token::Amount::from(val.unsigned_abs()),
+                        readable
+                    );
+                }
+                println!();
+            }
+        }
+        // Then display the shielded changes afterwards
+        for (account, amt) in shielded_accounts {
+            if fvk_map.contains_key(&account) {
+                print!("  {}:", fvk_map[&account]);
+                for (addr, val) in amt.components() {
+                    let addr_enc = addr.encode();
+                    let readable =
+                        tokens.get(addr).cloned().unwrap_or(addr_enc.as_str());
+                    let sign = match val.cmp(&0) {
+                        Ordering::Greater => "+",
+                        Ordering::Less => "-",
+                        Ordering::Equal => "",
+                    };
+                    print!(
+                        " {}{} {}",
+                        sign,
+                        token::Amount::from(val.unsigned_abs()),
+                        readable
+                    );
+                }
+                println!();
+            }
+        }
+    }
 }
 
 /// Query the raw bytes of given storage key
