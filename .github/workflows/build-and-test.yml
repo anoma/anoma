@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  wasm:
+  build-wasm:
     runs-on: ${{ matrix.os }}
     container:
       image: ghcr.io/fraccaman/anoma:wasm-0.6.1
@@ -26,23 +26,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Show rust toolchain info
         run: rustup show
-      # - name: Cache cargo
-      #   uses: actions/cache@v3
-      #   if: always()
-      #   with:
-      #     path: |
-      #       ~/.cargo/bin
-      #       ~/.cargo/registry/index
-      #       ~/.cargo/registry/cache
-      #       ~/.cargo/git
-      #       ~/.cargo/.crates.toml
-      #       ~/.cargo/.crates2.json
-      #       ./target
-      #       ./wasm/tx_template/target
-      #       ./wasm/vp_template/target
-      #       ./wasm_for_tests/wasm_source/target
-      #     key: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-${{ hashFiles('**/wasm/wasm_source/Cargo.lock') }}
-      #     restore-keys: ${{ runner.os }}-wasm-${{ matrix.wasm_cache_version }}-cargo-
       - name: Build WASM
         run: cp wasm/checksums.json wasm/original-checksums.json && make build-wasm-scripts
       - name: Upload wasm artifacts
@@ -57,8 +40,6 @@ jobs:
         run: make test-wasm
       - name: Check wasm up-to-date
         run: cmp -- wasm/checksums.json wasm/original-checksums.json
-      - name: Clean cache folder
-        run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
   
   anoma:
     runs-on: ${{ matrix.os }}
@@ -69,9 +50,31 @@ jobs:
         nightly_version: [nightly-2022-05-20]
         anoma_cache_version: ["v1"]
 
+    env:
+      RUST_BACKTRACE: full
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 20G
+      SCCACHE_DIR: /home/runner/.cache/sccache
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      - name: Install sccache (ubuntu-latest)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          LINK: https://github.com/mozilla/sccache/releases/download
+          SCCACHE_VERSION: 0.2.13
+        run: |
+          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
+          mkdir -p $HOME/.local/bin
+          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH          
+      - name: Install sccache (macos-latest)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install sccache
       - name: Setup rust toolchain
         uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
         with:
@@ -84,33 +87,33 @@ jobs:
           toolchain: ${{ matrix.nightly_version }}
           target: wasm32-unknown-unknown
           profile: default
-      - name: Cache cargo
-        uses: actions/cache@v3
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: false
         with:
           path: |
-            ~/.cargo/bin
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-            ./target
-            ./wasm/tx_template/target
-            ./wasm/vp_template/target
-            ./wasm_for_tests/wasm_source/target
-          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ~/.cargo/registry
+            ~/.cargo/git          
+          key: ${{ runner.os }}-${{ matrix.anoma_cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-cargo-
+      - name: Save sccache
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: /home/runner/.cache/sccache
+          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-
       - name: Build
         run: make build
       - name: Build test
         run: make build-test
-      - name: Wait for wasm artifacts
-        uses: lewagon/wait-on-check-action@v1.0.0
-        with:
-          ref: ${{ github.ref }}
-          check-name: Upload wasm artifacts
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 120
+      # - name: Wait for wasm artifacts
+      #   uses: lewagon/wait-on-check-action@v1.0.0
+      #   with:
+      #     ref: ${{ github.ref }}
+      #     check-name: Upload wasm artifacts
+      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+      #     wait-interval: 120
       - name: Download wasm artifacts
         uses: actions/download-artifact@v3
         with:
@@ -118,5 +121,3 @@ jobs:
           path: ./wasm
       - name: Run unit test
         run: make test-unit
-      - name: Clean cache folder
-        run: cargo install cargo-cache --no-default-features --features ci-autoclean cargo-cache && cargo-cache
