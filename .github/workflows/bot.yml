@@ -1,6 +1,6 @@
+name: Bot tasks
+
 on:
-  pull_request:
-    types: [opened]
   issue_comment:
     types: [created]
 
@@ -16,6 +16,7 @@ jobs:
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
       - name: Checkout repo
+        if: steps.update-wasm.outputs.triggered == 'true'
         uses: actions/checkout@v3
       - name: Download WASM artifacts
         if: steps.update-wasm.outputs.triggered == 'true'
