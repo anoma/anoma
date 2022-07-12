@@ -15,6 +15,7 @@ use anoma::ledger::treasury::TreasuryVp;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage;
+use anoma::types::storage::TxIndex;
 use anoma::types::transaction::{DecryptedTx, TxResult, TxType, VpsResult};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::{self, wasm, WasmCacheAccess};
@@ -66,9 +67,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// If the given tx is a successfully decrypted payload apply the necessary
 /// vps. Otherwise, we include the tx on chain with the gas charge added
 /// but no further validations.
+#[allow(clippy::too_many_arguments)]
 pub fn apply_tx<D, H, CA>(
     tx: TxType,
     tx_length: usize,
+    tx_index: TxIndex,
     block_gas_meter: &mut BlockGasMeter,
     write_log: &mut WriteLog,
     storage: &Storage<D, H>,
@@ -89,6 +92,7 @@ where
         TxType::Decrypted(DecryptedTx::Decrypted(tx)) => {
             let verifiers = execute_tx(
                 &tx,
+                &tx_index,
                 storage,
                 block_gas_meter,
                 write_log,
@@ -98,6 +102,7 @@ where
 
             let vps_result = check_vps(
                 &tx,
+                &tx_index,
                 storage,
                 block_gas_meter,
                 write_log,
@@ -135,6 +140,7 @@ where
 /// Execute a transaction code. Returns verifiers requested by the transaction.
 fn execute_tx<D, H, CA>(
     tx: &Tx,
+    tx_index: &TxIndex,
     storage: &Storage<D, H>,
     gas_meter: &mut BlockGasMeter,
     write_log: &mut WriteLog,
@@ -155,6 +161,7 @@ where
         storage,
         write_log,
         gas_meter,
+        tx_index,
         &tx.code,
         tx_data,
         vp_wasm_cache,
@@ -166,6 +173,7 @@ where
 /// Check the acceptance of a transaction by validity predicates
 fn check_vps<D, H, CA>(
     tx: &Tx,
+    tx_index: &TxIndex,
     storage: &Storage<D, H>,
     gas_meter: &mut BlockGasMeter,
     write_log: &WriteLog,
@@ -186,6 +194,7 @@ where
         verifiers,
         keys_changed,
         tx,
+        tx_index,
         storage,
         write_log,
         initial_gas,
@@ -201,10 +210,12 @@ where
 }
 
 /// Execute verifiers' validity predicates
+#[allow(clippy::too_many_arguments)]
 fn execute_vps<D, H, CA>(
     verifiers: BTreeSet<Address>,
     keys_changed: BTreeSet<storage::Key>,
     tx: &Tx,
+    tx_index: &TxIndex,
     storage: &Storage<D, H>,
     write_log: &WriteLog,
     initial_gas: u64,
@@ -237,6 +248,7 @@ where
                     wasm::run::vp(
                         vp,
                         tx,
+                        tx_index,
                         addr,
                         storage,
                         write_log,
@@ -252,6 +264,7 @@ where
                         storage,
                         write_log,
                         tx,
+                        tx_index,
                         gas_meter,
                         vp_wasm_cache.clone(),
                     );

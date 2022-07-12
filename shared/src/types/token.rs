@@ -6,6 +6,7 @@ use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
+use masp_primitives::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -256,8 +257,14 @@ impl From<Amount> for Change {
 
 /// Key segment for a balance key
 pub const BALANCE_STORAGE_KEY: &str = "balance";
+/// Key segment for head shielded transaction pointer key
+pub const HEAD_TX_KEY: &str = "head-tx";
+/// Key segment prefix for shielded transaction key
+pub const TX_KEY_PREFIX: &str = "tx-";
 /// Key segment prefix for MASP conversions
 pub const CONVERSION_KEY_PREFIX: &str = "conv";
+/// Key segment prefix for pinned shielded transactions
+pub const PIN_KEY_PREFIX: &str = "pin-";
 
 /// Obtain a storage key for user's balance.
 pub fn balance_key(token_addr: &Address, owner: &Address) -> Key {
@@ -322,6 +329,21 @@ pub fn is_non_owner_balance_key(key: &Key) -> Option<&Address> {
     }
 }
 
+/// Check if the given storage key is a masp key
+pub fn is_masp_key(key: &Key) -> bool {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(key)]
+            if *addr == masp()
+                && (key == HEAD_TX_KEY
+                    || key.starts_with(TX_KEY_PREFIX)
+                    || key.starts_with(PIN_KEY_PREFIX)) =>
+        {
+            true
+        }
+        _ => false,
+    }
+}
+
 /// A simple bilateral token transfer
 #[derive(
     Debug,
@@ -345,6 +367,10 @@ pub struct Transfer {
     pub token: Address,
     /// The amount of tokens
     pub amount: Amount,
+    /// The unused storage location at which to place TxId
+    pub key: Option<String>,
+    /// Shielded transaction part
+    pub shielded: Option<Transaction>,
 }
 
 #[allow(missing_docs)]
@@ -380,6 +406,8 @@ impl TryFrom<FungibleTokenPacketData> for Transfer {
             target,
             token,
             amount,
+            key: None,
+            shielded: None,
         })
     }
 }

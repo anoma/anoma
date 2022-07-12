@@ -1,11 +1,13 @@
 //! Client RPC queries
 
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
 use std::fs::File;
 use std::io::{self, Write};
 use std::iter::Iterator;
+use std::str::FromStr;
 
 use anoma::ledger::governance::storage as gov_storage;
 use anoma::ledger::governance::utils::Votes;
@@ -17,22 +19,31 @@ use anoma::ledger::pos::{
     self, is_validator_slashes_key, BondId, Bonds, PosParams, Slash, Unbonds,
 };
 use anoma::ledger::treasury::storage as treasury_storage;
-use anoma::types::address::Address;
+use anoma::proto::{SignedTxData, Tx};
+use anoma::types::address::{masp, tokens, Address};
 use anoma::types::governance::{
     OfflineProposal, OfflineVote, ProposalVote, TallyResult,
 };
 use anoma::types::key::*;
+use anoma::types::masp::{BalanceOwner, ExtendedViewingKey, PaymentAddress};
 use anoma::types::storage::{Epoch, PrefixValue};
-use anoma::types::token::{balance_key, Amount};
+use anoma::types::token::{balance_key, Transfer};
+use anoma::types::transaction::{
+    process_tx, AffineCurve, DecryptedTx, EllipticCurve, PairingEngine, TxType,
+    WrapperTx,
+};
 use anoma::types::{address, storage, token};
-use async_std::fs::{self};
+use async_std::fs;
 use async_std::path::PathBuf;
 use async_std::prelude::*;
-use borsh::BorshDeserialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Itertools;
 use masp_primitives::asset_type::AssetType;
 use masp_primitives::merkle_tree::MerklePath;
+use masp_primitives::primitives::ViewingKey;
 use masp_primitives::sapling::Node;
+use masp_primitives::transaction::components::Amount;
+use masp_primitives::zip32::ExtendedFullViewingKey;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
@@ -60,6 +71,9 @@ use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
 use crate::client::tendermint_rpc_types::TxResponse;
+use crate::client::tx::{
+    Conversions, PinnedBalanceError, TransactionDelta, TransferDelta,
+};
 use crate::node::ledger::rpc::Path;
 
 /// Query the epoch of the last committed block
@@ -114,13 +128,44 @@ pub async fn query_raw_bytes(_ctx: Context, args: args::QueryRawBytes) {
 }
 
 /// Query token balance(s)
-pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
+pub async fn query_balance(mut ctx: Context, args: args::QueryBalance) {
+    // Query the balances of shielded or transparent account types depending on
+    // the CLI arguments
+    match args.owner.as_ref().map(|x| ctx.get_cached(x)) {
+        Some(BalanceOwner::FullViewingKey(_viewing_key)) => {
+            query_shielded_balance(&mut ctx, args).await
+        }
+        Some(BalanceOwner::Address(_owner)) => {
+            query_transparent_balance(&mut ctx, args).await
+        }
+        Some(BalanceOwner::PaymentAddress(_owner)) => {
+            query_pinned_balance(&mut ctx, args).await
+        }
+        None => {
+            // Print pinned balance
+            query_pinned_balance(&mut ctx, args.clone()).await;
+            // Print shielded balance
+            query_shielded_balance(&mut ctx, args.clone()).await;
+            // Then print transparent balance
+            query_transparent_balance(&mut ctx, args).await;
+        }
+    };
+}
+
+/// Query token balance(s)
+pub async fn query_transparent_balance(
+    ctx: &mut Context,
+    args: args::QueryBalance,
+) {
     let client = HttpClient::new(args.query.ledger_address).unwrap();
     let tokens = address::tokens();
     match (args.token, args.owner) {
         (Some(token), Some(owner)) => {
             let token = ctx.get(&token);
-            let owner = ctx.get(&owner);
+            let owner = ctx
+                .get_cached(&owner)
+                .address()
+                .expect("a transparent address");
             let key = token::balance_key(&token, &owner);
             let currency_code = tokens
                 .get(&token)
@@ -136,7 +181,10 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
             }
         }
         (None, Some(owner)) => {
-            let owner = ctx.get(&owner);
+            let owner = ctx
+                .get_cached(&owner)
+                .address()
+                .expect("a transparent address");
             let mut found_any = false;
             for (token, currency_code) in tokens {
                 let key = token::balance_key(&token, &owner);
@@ -198,6 +246,144 @@ pub async fn query_balance(ctx: Context, args: args::QueryBalance) {
                     None => {
                         println!("No balances for token {}", token.encode())
                     }
+                }
+            }
+        }
+    }
+}
+
+/// Query the token pinned balance(s)
+pub async fn query_pinned_balance(ctx: &mut Context, args: args::QueryBalance) {
+    // Map addresses to token names
+    let tokens = address::tokens();
+    let owners = if let Some(pa) = args
+        .owner
+        .and_then(|x| ctx.get_cached(&x).payment_address())
+    {
+        vec![pa]
+    } else {
+        ctx.wallet
+            .get_payment_addrs()
+            .into_values()
+            .filter(PaymentAddress::is_pinned)
+            .collect()
+    };
+    // Get the viewing keys with which to try note decryptions
+    let viewing_keys: Vec<ViewingKey> = ctx
+        .wallet
+        .get_viewing_keys()
+        .values()
+        .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+        .collect();
+    // Build up the context that will be queried for asset decodings
+    let _ = ctx.shielded.load();
+    // Establish connection with which to do exchange rate queries
+    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
+    // Print the token balances by payment address
+    for owner in owners {
+        let mut balance = Err(PinnedBalanceError::InvalidViewingKey);
+        // Find the viewing key that can recognize payments the current payment
+        // address
+        for vk in &viewing_keys {
+            balance = ctx
+                .shielded
+                .compute_exchanged_pinned_balance(
+                    &args.query.ledger_address,
+                    owner,
+                    vk,
+                )
+                .await;
+            if balance != Err(PinnedBalanceError::InvalidViewingKey) {
+                break;
+            }
+        }
+        // If a suitable viewing key was not found, then demand it from the user
+        if balance == Err(PinnedBalanceError::InvalidViewingKey) {
+            print!("Enter the viewing key for {}: ", owner);
+            io::stdout().flush().unwrap();
+            let mut vk_str = String::new();
+            io::stdin().read_line(&mut vk_str).unwrap();
+            let fvk = match ExtendedViewingKey::from_str(vk_str.trim()) {
+                Ok(fvk) => fvk,
+                _ => {
+                    eprintln!("Invalid viewing key entered");
+                    continue;
+                }
+            };
+            let vk = ExtendedFullViewingKey::from(fvk).fvk.vk;
+            // Use the given viewing key to decrypt pinned transaction data
+            balance = ctx
+                .shielded
+                .compute_exchanged_pinned_balance(
+                    &args.query.ledger_address,
+                    owner,
+                    &vk,
+                )
+                .await
+        }
+        // Now print out the received quantities according to CLI arguments
+        match (balance, args.token.as_ref()) {
+            (Err(PinnedBalanceError::InvalidViewingKey), _) => println!(
+                "Supplied viewing key cannot decode transactions to given \
+                 payment address."
+            ),
+            (Err(PinnedBalanceError::NoTransactionPinned), _) => {
+                println!("Payment address {} has not yet been consumed.", owner)
+            }
+            (Ok((balance, epoch)), Some(token)) => {
+                let token = ctx.get(token);
+                // Extract and print only the specified token from the total
+                let (_asset_type, balance) =
+                    value_by_address(&balance, token.clone(), epoch);
+                let currency_code = tokens
+                    .get(&token)
+                    .map(|c| Cow::Borrowed(*c))
+                    .unwrap_or_else(|| Cow::Owned(token.to_string()));
+                if balance == 0 {
+                    println!(
+                        "Payment address {} was consumed during epoch {}. \
+                         Received no shielded {}",
+                        owner, epoch, currency_code
+                    );
+                } else {
+                    let asset_value = token::Amount::from(balance as u64);
+                    println!(
+                        "Payment address {} was consumed during epoch {}. \
+                         Received {} {}",
+                        owner, epoch, asset_value, currency_code
+                    );
+                }
+            }
+            (Ok((balance, epoch)), None) => {
+                let mut found_any = false;
+                // Print balances by human-readable token names
+                let balance = ctx
+                    .shielded
+                    .decode_amount(client.clone(), balance, epoch)
+                    .await;
+                for (addr, value) in balance.components() {
+                    let asset_value = token::Amount::from(*value as u64);
+                    if !found_any {
+                        println!(
+                            "Payment address {} was consumed during epoch {}. \
+                             Received:",
+                            owner, epoch
+                        );
+                        found_any = true;
+                    }
+                    let addr_enc = addr.encode();
+                    println!(
+                        "  {}: {}",
+                        tokens.get(addr).cloned().unwrap_or(addr_enc.as_str()),
+                        asset_value,
+                    );
+                }
+                if !found_any {
+                    println!(
+                        "Payment address {} was consumed during epoch {}. \
+                         Received no shielded assets.",
+                        owner, epoch
+                    );
                 }
             }
         }
@@ -303,12 +489,247 @@ pub async fn query_proposal(_ctx: Context, args: args::QueryProposal) {
     }
 }
 
+/// Get the component of the given amount corresponding to the given token
+pub fn value_by_address(
+    amt: &Amount,
+    token: Address,
+    epoch: Epoch,
+) -> (AssetType, i64) {
+    // Compute the unique asset identifier from the token address
+    let asset_type = AssetType::new(
+        (token, epoch.0)
+            .try_to_vec()
+            .expect("token addresses should serialize")
+            .as_ref(),
+    )
+    .unwrap();
+    (asset_type, amt[&asset_type])
+}
+
+/// Query token shielded balance(s)
+pub async fn query_shielded_balance(
+    ctx: &mut Context,
+    args: args::QueryBalance,
+) {
+    // Used to control whether balances for all keys or a specific key are
+    // printed
+    let owner = args
+        .owner
+        .and_then(|x| ctx.get_cached(&x).full_viewing_key());
+    // Viewing keys are used to query shielded balances. If a spending key is
+    // provided, then convert to a viewing key first.
+    let viewing_keys = match owner {
+        Some(viewing_key) => vec![viewing_key],
+        None => ctx.wallet.get_viewing_keys().values().copied().collect(),
+    };
+    // Build up the context that will be queried for balances
+    let _ = ctx.shielded.load();
+    let fvks: Vec<_> = viewing_keys
+        .iter()
+        .map(|fvk| ExtendedFullViewingKey::from(*fvk).fvk.vk)
+        .collect();
+    ctx.shielded
+        .fetch(&args.query.ledger_address, &[], &fvks)
+        .await;
+    // Save the update state so that future fetches can be short-circuited
+    let _ = ctx.shielded.save();
+    // The epoch is required to identify timestamped tokens
+    let epoch = query_epoch(args.query.clone()).await;
+    // Establish connection with which to do exchange rate queries
+    let client = HttpClient::new(args.query.ledger_address.clone()).unwrap();
+    // Map addresses to token names
+    let tokens = address::tokens();
+    match (args.token, owner.is_some()) {
+        // Here the user wants to know the balance for a specific token
+        (Some(token), true) => {
+            // Query the multi-asset balance at the given spending key
+            let viewing_key =
+                ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
+            let balance = ctx
+                .shielded
+                .compute_exchanged_balance(client.clone(), &viewing_key, epoch)
+                .await
+                .expect("context should contain viewing key");
+            // Compute the unique asset identifier from the token address
+            let token = ctx.get(&token);
+            let asset_type = AssetType::new(
+                (token.clone(), epoch.0)
+                    .try_to_vec()
+                    .expect("token addresses should serialize")
+                    .as_ref(),
+            )
+            .unwrap();
+            let currency_code = tokens
+                .get(&token)
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
+            if balance[&asset_type] == 0 {
+                println!(
+                    "No shielded {} balance found for given key",
+                    currency_code
+                );
+            } else {
+                let asset_value =
+                    token::Amount::from(balance[&asset_type] as u64);
+                println!("{}: {}", currency_code, asset_value);
+            }
+        }
+        // Here the user wants to know the balance of all tokens across users
+        (None, false) => {
+            // Maps asset types to balances divided by viewing key
+            let mut balances = HashMap::new();
+            for fvk in viewing_keys {
+                // Query the multi-asset balance at the given spending key
+                let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
+                let balance = ctx
+                    .shielded
+                    .compute_exchanged_balance(
+                        client.clone(),
+                        &viewing_key,
+                        epoch,
+                    )
+                    .await
+                    .expect("context should contain viewing key");
+                for (asset_type, value) in balance.components() {
+                    if !balances.contains_key(asset_type) {
+                        balances.insert(*asset_type, Vec::new());
+                    }
+                    balances.get_mut(asset_type).unwrap().push((fvk, *value));
+                }
+            }
+
+            // These are the asset types for which we have human-readable names
+            let mut read_tokens = HashSet::new();
+            // Print non-zero balances whose asset types can be decoded
+            for (asset_type, balances) in balances {
+                // Decode the asset type
+                let decoded = ctx
+                    .shielded
+                    .decode_asset_type(client.clone(), asset_type)
+                    .await;
+                match decoded {
+                    Some((addr, asset_epoch)) if asset_epoch == epoch => {
+                        // Only assets with the current timestamp count
+                        let addr_enc = addr.encode();
+                        println!(
+                            "Shielded Token {}:",
+                            tokens
+                                .get(&addr)
+                                .cloned()
+                                .unwrap_or(addr_enc.as_str())
+                        );
+                        read_tokens.insert(addr);
+                    }
+                    _ => continue,
+                }
+
+                let mut found_any = false;
+                for (fvk, value) in balances {
+                    let value = token::Amount::from(value as u64);
+                    println!("  {}, owned by {}", value, fvk);
+                    found_any = true;
+                }
+                if !found_any {
+                    println!(
+                        "No shielded {} balance found for any wallet key",
+                        asset_type
+                    );
+                }
+            }
+            // Print zero balances for remaining assets
+            for (token, currency_code) in tokens {
+                if !read_tokens.contains(&token) {
+                    println!("Shielded Token {}:", currency_code);
+                    println!(
+                        "No shielded {} balance found for any wallet key",
+                        currency_code
+                    );
+                }
+            }
+        }
+        // Here the user wants to know the balance for a specific token across
+        // users
+        (Some(token), false) => {
+            // Compute the unique asset identifier from the token address
+            let token = ctx.get(&token);
+            let asset_type = AssetType::new(
+                (token.clone(), epoch.0)
+                    .try_to_vec()
+                    .expect("token addresses should serialize")
+                    .as_ref(),
+            )
+            .unwrap();
+            let currency_code = tokens
+                .get(&token)
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
+            println!("Shielded Token {}:", currency_code);
+            let mut found_any = false;
+            for fvk in viewing_keys {
+                // Query the multi-asset balance at the given spending key
+                let viewing_key = ExtendedFullViewingKey::from(fvk).fvk.vk;
+                let balance = ctx
+                    .shielded
+                    .compute_exchanged_balance(
+                        client.clone(),
+                        &viewing_key,
+                        epoch,
+                    )
+                    .await
+                    .expect("context should contain viewing key");
+                if balance[&asset_type] != 0 {
+                    let asset_value =
+                        token::Amount::from(balance[&asset_type] as u64);
+                    println!("  {}, owned by {}", asset_value, fvk);
+                    found_any = true;
+                }
+            }
+            if !found_any {
+                println!(
+                    "No shielded {} balance found for any wallet key",
+                    currency_code
+                );
+            }
+        }
+        // Here the user wants to know all possible token balances for a key
+        (None, true) => {
+            // Query the multi-asset balance at the given spending key
+            let viewing_key =
+                ExtendedFullViewingKey::from(viewing_keys[0]).fvk.vk;
+            let balance = ctx
+                .shielded
+                .compute_exchanged_balance(client.clone(), &viewing_key, epoch)
+                .await
+                .expect("context should contain viewing key");
+            let mut found_any = false;
+            // Print balances by human-readable token names
+            let balance = ctx
+                .shielded
+                .decode_amount(client.clone(), balance, epoch)
+                .await;
+            for (addr, value) in balance.components() {
+                let asset_value = token::Amount::from(*value as u64);
+                let addr_enc = addr.encode();
+                println!(
+                    "{}: {}",
+                    tokens.get(addr).cloned().unwrap_or(addr_enc.as_str()),
+                    asset_value
+                );
+                found_any = true;
+            }
+            if !found_any {
+                println!("No shielded balance found for given key");
+            }
+        }
+    }
+}
+
 /// Query token amount of owner.
 pub async fn get_token_balance(
     client: &HttpClient,
     token: &Address,
     owner: &Address,
-) -> Option<Amount> {
+) -> Option<token::Amount> {
     let balance_key = balance_key(token, owner);
     query_storage_value(client, &balance_key).await
 }
@@ -467,7 +888,7 @@ pub async fn query_protocol_parameters(
     );
 
     let key = gov_storage::get_min_proposal_fund_key();
-    let min_proposal_fund = query_storage_value::<Amount>(&client, &key)
+    let min_proposal_fund = query_storage_value::<token::Amount>(&client, &key)
         .await
         .expect("Parameter should be definied.");
     println!("{:4}Min. proposal funds: {}", "", min_proposal_fund);
@@ -521,9 +942,10 @@ pub async fn query_protocol_parameters(
 
     println!("Treasury parameters");
     let key = treasury_storage::get_max_transferable_fund_key();
-    let max_transferable_amount = query_storage_value::<Amount>(&client, &key)
-        .await
-        .expect("Parameter should be definied.");
+    let max_transferable_amount =
+        query_storage_value::<token::Amount>(&client, &key)
+            .await
+            .expect("Parameter should be definied.");
     println!(
         "{:4}Max. transferable amount: {}",
         "", max_transferable_amount
@@ -1609,9 +2031,9 @@ pub async fn get_proposal_votes(
         query_storage_prefix::<ProposalVote>(client.clone(), vote_prefix_key)
             .await;
 
-    let mut yay_validators: HashMap<Address, Amount> = HashMap::new();
-    let mut yay_delegators: HashMap<Address, Amount> = HashMap::new();
-    let mut nay_delegators: HashMap<Address, Amount> = HashMap::new();
+    let mut yay_validators: HashMap<Address, token::Amount> = HashMap::new();
+    let mut yay_delegators: HashMap<Address, token::Amount> = HashMap::new();
+    let mut nay_delegators: HashMap<Address, token::Amount> = HashMap::new();
 
     if let Some(vote_iter) = vote_iter {
         for (key, vote) in vote_iter {
@@ -1663,9 +2085,9 @@ pub async fn get_proposal_offline_votes(
 
     let proposal_hash = proposal.compute_hash();
 
-    let mut yay_validators: HashMap<Address, Amount> = HashMap::new();
-    let mut yay_delegators: HashMap<Address, Amount> = HashMap::new();
-    let mut nay_delegators: HashMap<Address, Amount> = HashMap::new();
+    let mut yay_validators: HashMap<Address, token::Amount> = HashMap::new();
+    let mut yay_delegators: HashMap<Address, token::Amount> = HashMap::new();
+    let mut nay_delegators: HashMap<Address, token::Amount> = HashMap::new();
 
     for path in files {
         let file = File::open(&path).expect("Proposal file must exist.");
@@ -1752,7 +2174,7 @@ pub async fn compute_tally(
         nay_delegators,
     } = votes;
 
-    let mut total_yay_stacked_tokens = Amount::from(0);
+    let mut total_yay_stacked_tokens = token::Amount::from(0);
     for (_, amount) in yay_validators.clone().into_iter() {
         total_yay_stacked_tokens += amount;
     }
@@ -1840,7 +2262,7 @@ pub async fn get_total_staked_tokes(
     epoch: Epoch,
     validators: &[Address],
 ) -> token::Amount {
-    let mut total = Amount::from(0);
+    let mut total = token::Amount::from(0);
 
     for validator in validators {
         total += get_validator_stake(client, epoch, validator).await;

@@ -21,9 +21,11 @@ fn apply_tx(tx_data: Vec<u8>) {
         target,
         token,
         amount,
+        key,
+        shielded,
     } in tx_data.matches.transfers
     {
-        token::transfer(&source, &target, &token, amount);
+        token::transfer(&source, &target, &token, amount, &key, &shielded);
     }
 
     tx_data

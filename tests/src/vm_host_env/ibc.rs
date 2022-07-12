@@ -65,7 +65,7 @@ use anoma::tendermint_proto::Protobuf;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
 use anoma::types::ibc::IbcEvent;
-use anoma::types::storage::{BlockHash, BlockHeight, Key};
+use anoma::types::storage::{BlockHash, BlockHeight, Key, TxIndex};
 use anoma::types::time::Rfc3339String;
 use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
@@ -193,6 +193,7 @@ pub fn init_ibc_vp_from_tx<'a>(
         &tx_env.storage,
         &tx_env.write_log,
         tx,
+        &TxIndex(0),
         VpGasMeter::new(0),
         vp_wasm_cache,
     );
@@ -224,6 +225,7 @@ pub fn init_token_vp_from_tx<'a>(
         &tx_env.storage,
         &tx_env.write_log,
         tx,
+        &TxIndex(0),
         VpGasMeter::new(0),
         vp_wasm_cache,
     );

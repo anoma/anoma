@@ -362,6 +362,8 @@ fn create_transfer(
         target: to_node.exchange.data.addr.clone(),
         token: to_node.exchange.data.token_buy.clone(),
         amount,
+        key: None,
+        shielded: None,
     }
 }
 

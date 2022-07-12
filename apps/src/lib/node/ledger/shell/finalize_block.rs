@@ -120,6 +120,7 @@ where
                                     0, /*  this is used to compute the fee
                                         * based on the code size. We dont
                                         * need it here. */
+                                    TxIndex(0),
                                     &mut BlockGasMeter::default(),
                                     &mut self.write_log,
                                     &self.storage,
@@ -226,7 +227,7 @@ where
             }
         }
 
-        for processed_tx in &req.txs {
+        for (tx_index, processed_tx) in req.txs.iter().enumerate() {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
             } else {
@@ -339,6 +340,11 @@ where
             match protocol::apply_tx(
                 tx_type,
                 tx_length,
+                TxIndex(
+                    tx_index
+                        .try_into()
+                        .expect("transaction index out of bounds"),
+                ),
                 &mut self.gas_meter,
                 &mut self.write_log,
                 &self.storage,

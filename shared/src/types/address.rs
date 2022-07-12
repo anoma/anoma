@@ -520,6 +520,17 @@ pub fn masp() -> Address {
     Address::decode("atest1v4ehgw36xaryysfsx5unvve4g5my2vjz89p52sjxxgenzd348yuyyv3hg3pnjs35g5unvde4ca36y5").expect("The token address decoding shouldn't fail")
 }
 
+/// Sentinel secret key to indicate a MASP source
+pub fn masp_tx_key() -> crate::types::key::common::SecretKey {
+    use crate::types::key::common;
+    let bytes = [
+        0, 27, 238, 157, 32, 131, 242, 184, 142, 146, 189, 24, 249, 68, 165,
+        205, 71, 213, 158, 25, 253, 52, 217, 87, 52, 171, 225, 110, 131, 238,
+        58, 94, 56,
+    ];
+    common::SecretKey::try_from_slice(bytes.as_ref()).unwrap()
+}
+
 /// Temporary helper for testing, a hash map of tokens addresses with their
 /// informal currency codes.
 pub fn tokens() -> HashMap<Address, &'static str> {
