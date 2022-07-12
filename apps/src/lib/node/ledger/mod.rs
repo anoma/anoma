@@ -12,7 +12,6 @@ use std::convert::TryInto;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::Arc;
 use std::thread;
 
 use anoma::ledger::governance::storage as gov_storage;
@@ -231,28 +230,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     // Wait for interrupt signal or abort message
     let aborted = spawner.wait_for_abort().await.child_terminated();
 
-    // Regain ownership of the ABCI `JoinHandle`
-    //
-    // TODO(tiago): this is only here because of a temporary hack.
-    // the method we are using to cancel the ABCI server task is calling
-    // `.abort()` on the `JoinHandle` of the returned tokio task. the handle
-    // therefore needs to be stored in the `AbortableSpawner`, which requires
-    // it to be an `Arc`, such that we may retain shared ownership of the
-    // `JoinHandle`, after we abort the ABCI server.
-    //
-    // tl;dr: make it such that we can cancel the ABCI server without calling
-    // `.abort()` on the Tokio `JoinHandle`
-    //
-    let abci = match Arc::try_unwrap(abci) {
-        Ok(handle) => handle,
-        _ => {
-            // NOTE: this operation is infallible, since the only
-            // other live instance of the `Arc` was consumed after the
-            // cleanup job for the ABCI server ran
-            unreachable!()
-        }
-    };
-
+    // Wait for all managed tasks to finish.
     let res = tokio::try_join!(tendermint_node, abci, broadcaster);
 
     match res {
@@ -397,7 +375,7 @@ fn start_abci_broadcaster_shell(
     setup_data: RunAuxSetup,
     config: config::Ledger,
 ) -> (
-    Arc<task::JoinHandle<shell::Result<()>>>,
+    task::JoinHandle<shell::Result<()>>,
     task::JoinHandle<()>,
     thread::JoinHandle<()>,
 ) {
@@ -456,17 +434,22 @@ fn start_abci_broadcaster_shell(
         tx_wasm_compilation_cache,
     );
 
+    // Channel for signalling shut down to ABCI server
+    let (abci_abort_send, abci_abort_recv) = tokio::sync::oneshot::channel();
+
     // Start the ABCI server
     let abci = spawner
         .spawn_abortable("ABCI", move |aborter| async move {
-            let res = run_abci(abci_service, ledger_address).await;
+            let res = run_abci(abci_service, ledger_address, abci_abort_recv).await;
 
             drop(aborter);
             res
         })
-        .with_join_handle_abort_cleanup();
+        .with_cleanup(async move {
+            let _ = abci_abort_send.send(());
+        });
 
-    // Run the shell in the main thread
+    // Start the shell in a new OS thread
     let thread_builder = thread::Builder::new().name("ledger-shell".into());
     let shell_handler = thread_builder
         .spawn(move || {
@@ -483,6 +466,7 @@ fn start_abci_broadcaster_shell(
 async fn run_abci(
     abci_service: AbciService,
     ledger_address: SocketAddr,
+    abort_recv: tokio::sync::oneshot::Receiver<()>,
 ) -> shell::Result<()> {
     // Split it into components.
     let (consensus, mempool, snapshot, info) = split::service(abci_service, 5);
@@ -508,11 +492,24 @@ async fn run_abci(
         .finish()
         .unwrap();
 
-    // Run the server with the ABCI service
-    server
-        .listen(ledger_address)
-        .await
-        .map_err(|err| Error::TowerServer(err.to_string()))
+    tokio::select! {
+        // Run the server with the ABCI service
+        status = server.listen(ledger_address) => {
+            status.map_err(|err| Error::TowerServer(err.to_string()))
+        },
+        resp_sender = abort_recv => {
+            match resp_sender {
+                Ok(()) => {
+                    tracing::info!("Shutting down ABCI server...");
+                },
+                Err(err) => {
+                    tracing::error!("The ABCI server abort sender has unexpectedly dropped: {}", err);
+                    tracing::info!("Shutting down ABCI server...");
+                }
+            }
+            Ok(())
+        }
+    }
 }
 
 /// Launches a new task managing a Tendermint process into the asynchronous

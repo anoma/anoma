@@ -1,6 +1,5 @@
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
 
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use tokio::task::JoinHandle;
@@ -124,28 +123,6 @@ impl<'a, A> WithCleanup<'a, A> {
     {
         self.spawner.cleanup_jobs.push(Box::pin(cleanup));
         self.with_no_cleanup()
-    }
-
-    /// A cleanup routine shall be executed, which aborts a `JoinHandle` from
-    /// the asynchronous runtime.
-    #[inline]
-    pub fn with_join_handle_abort_cleanup<F, R>(self) -> Arc<JoinHandle<R>>
-    where
-        A: FnOnce(Aborter) -> F,
-        F: Future<Output = R> + Send + 'static,
-        R: Send + 'static,
-    {
-        let handle =
-            self.spawner.spawn_abortable_task(self.who, self.abortable);
-
-        let handle = Arc::new(handle);
-        let cleanup_handle = Arc::clone(&handle);
-
-        self.spawner.cleanup_jobs.push(Box::pin(async move {
-            cleanup_handle.abort();
-        }));
-
-        handle
     }
 }
 
