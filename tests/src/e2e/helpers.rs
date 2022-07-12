@@ -1,6 +1,7 @@
 //! E2E test helpers
 
 use std::str::FromStr;
+use std::time::{Duration, Instant};
 
 use anoma::types::address::Address;
 use anoma::types::key::*;
@@ -10,7 +11,7 @@ use color_eyre::eyre::Result;
 use eyre::eyre;
 
 use super::setup::Test;
-use crate::e2e::setup::{Bin, Who};
+use crate::e2e::setup::{sleep, Bin, Who};
 use crate::run;
 
 /// Find the address of an account by its alias from the wallet
@@ -133,4 +134,26 @@ pub fn get_epoch(test: &Test, ledger_address: &str) -> Result<Epoch> {
         ))
     })?;
     Ok(Epoch(epoch))
+}
+
+/// Sleep until the next epoch starts
+pub fn epoch_sleep(
+    test: &Test,
+    ledger_address: &str,
+    timeout_secs: u64,
+) -> Result<Epoch> {
+    let old_epoch = get_epoch(test, ledger_address)?;
+    let start = Instant::now();
+    let loop_timeout = Duration::new(timeout_secs, 0);
+    loop {
+        if Instant::now().duration_since(start) > loop_timeout {
+            panic!("Timed out waiting for the next epoch");
+        }
+        let epoch = get_epoch(test, ledger_address)?;
+        if epoch > old_epoch {
+            break Ok(epoch);
+        } else {
+            sleep(1);
+        }
+    }
 }
