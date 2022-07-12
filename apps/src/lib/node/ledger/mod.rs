@@ -440,7 +440,8 @@ fn start_abci_broadcaster_shell(
     // Start the ABCI server
     let abci = spawner
         .spawn_abortable("ABCI", move |aborter| async move {
-            let res = run_abci(abci_service, ledger_address, abci_abort_recv).await;
+            let res =
+                run_abci(abci_service, ledger_address, abci_abort_recv).await;
 
             drop(aborter);
             res
