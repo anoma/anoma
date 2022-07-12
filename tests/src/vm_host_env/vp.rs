@@ -326,6 +326,7 @@ mod native_vp_host_env {
     native_host_fn!(vp_iter_post_next(iter_id: u64) -> i64);
     native_host_fn!(vp_get_chain_id(result_ptr: u64));
     native_host_fn!(vp_get_block_height() -> u64);
+    native_host_fn!(vp_get_tx_index() -> u32);
     native_host_fn!(vp_get_block_hash(result_ptr: u64));
     native_host_fn!(vp_get_tx_code_hash(result_ptr: u64));
     native_host_fn!(vp_get_block_epoch() -> u64);
