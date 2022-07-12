@@ -456,6 +456,8 @@ fn masp_txs_and_queries() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
 
+    let _bg_ledger = ledger.background();
+
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     let txs_args = vec![
@@ -713,6 +715,8 @@ fn masp_pinned_txs() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
 
+    let _bg_ledger = ledger.background();
+
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     // Wait till epoch boundary
@@ -873,6 +877,8 @@ fn masp_incentives() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+
+    let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
