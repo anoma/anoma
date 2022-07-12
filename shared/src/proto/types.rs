@@ -217,7 +217,7 @@ impl From<Tx> for ResponseDeliverTx {
                         return Default::default();
                     };
                 if let Ok(transfer) =
-                    Transfer::try_from_slice(&signed.data.unwrap()[..])
+                    Transfer::try_from_slice(signed.data.as_ref().unwrap_or(&empty_vec))
                 {
                     let events = vec![Event {
                         r#type: "transfer".to_string(),
