@@ -1,0 +1,129 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  wasm:
+    runs-on: ${{ matrix.os }}
+    container:
+      image: ghcr.io/fraccaman/anoma:wasm-0.6.1
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        wasm_cache_version: ["v1"]
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Show rust toolchain info
+        run: rustup show
+      - name: Build WASM
+        run: cp wasm/checksums.json wasm/original-checksums.json && make build-wasm-scripts
+      - name: Upload wasm artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.sha }}
+          path: |
+            wasm/tx_*.wasm
+            wasm/vp_*.wasm
+            wasm/checksums.json
+      - name: Test Wasm
+        run: make test-wasm
+      - name: Check wasm up-to-date
+        run: cmp -- wasm/checksums.json wasm/original-checksums.json
+  
+  anoma:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        nightly_version: [nightly-2022-05-20]
+        anoma_cache_version: ["v1"]
+        make: 
+          - name: ABCI
+            suffix: ''
+            cache_key: anoma
+            cache_version: "v1"
+          - name: ABCI++
+            suffix: -abci-plus-plus
+            cache_key: anoma-abci-plus-plus
+            cache_version: "v1"
+
+    env:
+      RUST_BACKTRACE: full
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 20G
+      SCCACHE_DIR: /home/runner/.cache/sccache
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Install sccache (ubuntu-latest)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          LINK: https://github.com/mozilla/sccache/releases/download
+          SCCACHE_VERSION: 0.2.13
+        run: |
+          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
+          mkdir -p $HOME/.local/bin
+          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH          
+      - name: Install sccache (macos-latest)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install sccache
+      - name: Setup rust toolchain
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+        with:
+          profile: default
+          override: true
+      - name: Setup rust nightly
+        uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
+        with:
+          toolchain: ${{ matrix.nightly_version }}
+          profile: default
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git          
+          key: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-cargo-
+      - name: Save sccache
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: /home/runner/.cache/sccache
+          key: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-sccache-
+      - name: Start sccache server
+        run: sccache --start-server
+      - name: Build
+        run: make build${{ matrix.make.suffix }}
+      - name: Build test
+        run: make build-test${{ matrix.make.suffix }}
+      - name: Download wasm artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.sha }}
+          path: ./wasm
+      - name: Run unit test
+        run: make test-unit${{ matrix.make.suffix }}
+      - name: Print sccache stats
+        run: sccache --show-stats
+      - name: Stop sccache server
+        run: sccache --stop-server || true
