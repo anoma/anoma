@@ -12,7 +12,6 @@ use anoma::types::governance::{
 use anoma::types::key::*;
 use anoma::types::nft::{self, Nft, NftToken};
 use anoma::types::storage::Epoch;
-use anoma::types::token::Amount;
 use anoma::types::transaction::governance::{
     InitProposalData, VoteProposalData,
 };
@@ -21,8 +20,28 @@ use anoma::types::transaction::{pos, InitAccount, InitValidator, UpdateVp};
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Either::*;
+use masp_primitives::asset_type::AssetType;
+use masp_primitives::consensus::{BranchId, TestNetwork};
+use masp_primitives::convert::AllowedConversion;
+use masp_primitives::ff::PrimeField;
+use masp_primitives::group::cofactor::CofactorGroup;
+use masp_primitives::keys::FullViewingKey;
+use masp_primitives::legacy::TransparentAddress;
+use masp_primitives::merkle_tree::{
+    CommitmentTree, IncrementalWitness, MerklePath,
+};
+use masp_primitives::note_encryption::*;
+use masp_primitives::primitives::{Diversifier, Note, ViewingKey};
+use masp_primitives::sapling::Node;
+use masp_primitives::transaction::builder::{self, *};
+use masp_primitives::transaction::components::{Amount, OutPoint, TxOut};
+use masp_primitives::transaction::Transaction;
+use masp_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
+use masp_proofs::prover::LocalTxProver;
+use rand_core::{CryptoRng, OsRng, RngCore};
+use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
@@ -371,6 +390,26 @@ pub async fn submit_init_validator(
     }
 }
 
+/// Generate a valid diversifier, i.e. one that has a diversified base. Return
+/// also this diversified base.
+pub fn find_valid_diversifier<R: RngCore + CryptoRng>(
+    rng: &mut R,
+) -> (Diversifier, masp_primitives::jubjub::SubgroupPoint) {
+    let mut diversifier;
+    let g_d;
+    // Keep generating random diversifiers until one has a diversified base
+    loop {
+        let mut d = [0; 11];
+        rng.fill_bytes(&mut d);
+        diversifier = Diversifier(d);
+        if let Some(val) = diversifier.g_d() {
+            g_d = val;
+            break;
+        }
+    }
+    (diversifier, g_d)
+}
+
 pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let source = ctx.get(&args.source);
     // Check that the source address exists on chain
@@ -555,7 +594,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
         };
 
         let min_proposal_funds_key = gov_storage::get_min_proposal_fund_key();
-        let min_proposal_funds: Amount =
+        let min_proposal_funds: token::Amount =
             rpc::query_storage_value(&client, &min_proposal_funds_key)
                 .await
                 .unwrap();
@@ -570,7 +609,7 @@ pub async fn submit_init_proposal(mut ctx: Context, args: args::InitProposal) {
             safe_exit(1);
         }
         let min_proposal_funds_key = gov_storage::get_min_proposal_fund_key();
-        let min_proposal_funds: Amount =
+        let min_proposal_funds: token::Amount =
             rpc::query_storage_value(&client, &min_proposal_funds_key)
                 .await
                 .unwrap();

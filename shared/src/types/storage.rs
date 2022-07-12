@@ -22,7 +22,7 @@ pub enum Error {
     #[error("TEMPORARY error: {error}")]
     Temporary { error: String },
     #[error("Error parsing address: {0}")]
-    ParseAddress(address::Error),
+    ParseAddress(address::DecodeError),
     #[error("Error parsing address from a storage key")]
     ParseAddressFromKey,
     #[error("Reserved prefix or string is specified: {0}")]

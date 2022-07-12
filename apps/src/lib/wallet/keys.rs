@@ -1,10 +1,9 @@
 //! Cryptographic keys for digital signatures support for the wallet.
 
 use std::fmt::Display;
-use std::rc::Rc;
+use std::marker::PhantomData;
 use std::str::FromStr;
 
-use anoma::types::key::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use orion::{aead, kdf};
 use serde::{Deserialize, Serialize};
@@ -17,17 +16,21 @@ const UNENCRYPTED_KEY_PREFIX: &str = "unencrypted:";
 
 /// A keypair stored in a wallet
 #[derive(Debug)]
-pub enum StoredKeypair {
+pub enum StoredKeypair<T: BorshSerialize + BorshDeserialize + Display + FromStr>
+where
+    <T as FromStr>::Err: Display,
+{
     /// An encrypted keypair
-    Encrypted(EncryptedKeypair),
+    Encrypted(EncryptedKeypair<T>),
     /// An raw (unencrypted) keypair
-    Raw(
-        // Wrapped in `Rc` to avoid reference lifetimes when we borrow the key
-        Rc<common::SecretKey>,
-    ),
+    Raw(T),
 }
 
-impl Serialize for StoredKeypair {
+impl<T: BorshSerialize + BorshDeserialize + Display + FromStr> Serialize
+    for StoredKeypair<T>
+where
+    <T as FromStr>::Err: Display,
+{
     fn serialize<S>(
         &self,
         serializer: S,
@@ -51,7 +54,11 @@ impl Serialize for StoredKeypair {
     }
 }
 
-impl<'de> Deserialize<'de> for StoredKeypair {
+impl<'de, T: BorshSerialize + BorshDeserialize + Display + FromStr>
+    Deserialize<'de> for StoredKeypair<T>
+where
+    <T as FromStr>::Err: Display,
+{
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -68,7 +75,7 @@ impl<'de> Deserialize<'de> for StoredKeypair {
                 .map_err(D::Error::custom)?;
         if let Some(raw) = keypair_string.strip_prefix(UNENCRYPTED_KEY_PREFIX) {
             FromStr::from_str(raw)
-                .map(|keypair| Self::Raw(Rc::new(keypair)))
+                .map(|keypair| Self::Raw(keypair))
                 .map_err(|err| {
                     DeserializeStoredKeypairError::InvalidStoredKeypairString(
                         err.to_string(),
@@ -104,19 +111,22 @@ pub enum DeserializeStoredKeypairError {
 
 /// An encrypted keypair stored in a wallet
 #[derive(Debug)]
-pub struct EncryptedKeypair(Vec<u8>);
+pub struct EncryptedKeypair<T: BorshSerialize + BorshDeserialize>(
+    Vec<u8>,
+    PhantomData<T>,
+);
 
-impl Display for EncryptedKeypair {
+impl<T: BorshSerialize + BorshDeserialize> Display for EncryptedKeypair<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", hex::encode(&self.0))
     }
 }
 
-impl FromStr for EncryptedKeypair {
+impl<T: BorshSerialize + BorshDeserialize> FromStr for EncryptedKeypair<T> {
     type Err = hex::FromHexError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::decode(s).map(Self)
+        hex::decode(s).map(|x| Self(x, PhantomData))
     }
 }
 
@@ -133,26 +143,21 @@ pub enum DecryptionError {
     NotDecrypting,
 }
 
-impl StoredKeypair {
+impl<T: BorshSerialize + BorshDeserialize + Display + FromStr + Clone>
+    StoredKeypair<T>
+where
+    <T as FromStr>::Err: Display,
+{
     /// Construct a keypair for storage. If no password is provided, the keypair
     /// will be stored raw without encryption. Returns the key for storing and a
     /// reference-counting point to the raw key.
-    pub fn new(
-        keypair: common::SecretKey,
-        password: Option<String>,
-    ) -> (Self, Rc<common::SecretKey>) {
+    pub fn new(keypair: T, password: Option<String>) -> (Self, T) {
         match password {
-            Some(password) => {
-                let keypair = Rc::new(keypair);
-                (
-                    Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
-                    keypair,
-                )
-            }
-            None => {
-                let keypair = Rc::new(keypair);
-                (Self::Raw(keypair.clone()), keypair)
-            }
+            Some(password) => (
+                Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
+                keypair,
+            ),
+            None => (Self::Raw(keypair.clone()), keypair),
         }
     }
 
@@ -163,7 +168,7 @@ impl StoredKeypair {
         &self,
         decrypt: bool,
         password: Option<String>,
-    ) -> Result<Rc<common::SecretKey>, DecryptionError> {
+    ) -> Result<T, DecryptionError> {
         match self {
             StoredKeypair::Encrypted(encrypted_keypair) => {
                 if decrypt {
@@ -171,7 +176,7 @@ impl StoredKeypair {
                         read_password("Enter decryption password: ")
                     });
                     let key = encrypted_keypair.decrypt(password)?;
-                    Ok(Rc::new(key))
+                    Ok(key)
                 } else {
                     Err(DecryptionError::NotDecrypting)
                 }
@@ -188,9 +193,9 @@ impl StoredKeypair {
     }
 }
 
-impl EncryptedKeypair {
+impl<T: BorshSerialize + BorshDeserialize> EncryptedKeypair<T> {
     /// Encrypt a keypair and store it with its salt.
-    pub fn new(keypair: &common::SecretKey, password: String) -> Self {
+    pub fn new(keypair: &T, password: String) -> Self {
         let salt = encryption_salt();
         let encryption_key = encryption_key(&salt, password);
 
@@ -203,14 +208,11 @@ impl EncryptedKeypair {
 
         let encrypted_data = [salt.as_ref(), &encrypted_keypair].concat();
 
-        Self(encrypted_data)
+        Self(encrypted_data, PhantomData)
     }
 
     /// Decrypt an encrypted keypair
-    pub fn decrypt(
-        &self,
-        password: String,
-    ) -> Result<common::SecretKey, DecryptionError> {
+    pub fn decrypt(&self, password: String) -> Result<T, DecryptionError> {
         let salt_len = encryption_salt().len();
         let (raw_salt, cipher) = self.0.split_at(salt_len);
 
@@ -222,7 +224,7 @@ impl EncryptedKeypair {
         let decrypted_data = aead::open(&encryption_key, cipher)
             .map_err(|_| DecryptionError::DecryptionError)?;
 
-        common::SecretKey::try_from_slice(&decrypted_data)
+        T::try_from_slice(&decrypted_data)
             .map_err(|_| DecryptionError::DeserializingError)
     }
 }

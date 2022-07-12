@@ -54,7 +54,7 @@ pub async fn gossip_intent(
         }
     };
     let signed_ft: Signed<FungibleTokenIntent> = Signed::new(
-        &*source_keypair,
+        &source_keypair,
         FungibleTokenIntent {
             exchange: signed_exchanges,
         },
@@ -115,5 +115,5 @@ async fn sign_exchange(
 ) -> Signed<Exchange> {
     let source_keypair =
         signing::find_keypair(wallet, &exchange.addr, ledger_address).await;
-    Signed::new(&*source_keypair, exchange.clone())
+    Signed::new(&source_keypair, exchange.clone())
 }

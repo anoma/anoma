@@ -9,7 +9,9 @@ use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::types::address::{Address, Error as AddressError, InternalAddress};
+use crate::types::address::{
+    masp, Address, DecodeError as AddressError, InternalAddress,
+};
 use crate::types::ibc::data::FungibleTokenPacketData;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 

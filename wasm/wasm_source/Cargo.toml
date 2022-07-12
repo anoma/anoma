@@ -25,6 +25,7 @@ tx_unbond = ["anoma_tx_prelude"]
 tx_update_vp = ["anoma_tx_prelude"]
 tx_vote_proposal = ["anoma_tx_prelude"]
 tx_withdraw = ["anoma_tx_prelude"]
+vp_masp = ["anoma_vp_prelude", "masp_proofs", "masp_primitives"]
 vp_nft = ["anoma_vp_prelude"]
 vp_testnet_faucet = ["anoma_vp_prelude", "once_cell"]
 vp_token = ["anoma_vp_prelude"]
@@ -38,9 +39,11 @@ once_cell = {version = "1.8.0", optional = true}
 rust_decimal = {version = "1.14.3", optional = true}
 wee_alloc = "0.4.5"
 getrandom = { version = "0.2", features = ["custom"] }
+masp_proofs = { git = "https://github.com/anoma/masp", rev = "bee40fc465f6afbd10558d12fe96eb1742eee45c", optional = true }
+masp_primitives = { git = "https://github.com/anoma/masp", rev = "bee40fc465f6afbd10558d12fe96eb1742eee45c", optional = true }
 
 [dev-dependencies]
-anoma = {path = "../../shared"}
+anoma = {path = "../../shared", default-features = false, features = ["ABCI"]}
 anoma_tests = {path = "../../tests"}
 anoma_tx_prelude = {path = "../../tx_prelude"}
 anoma_vp_prelude = {path = "../../vp_prelude"}
@@ -50,11 +53,11 @@ tracing = "0.1.30"
 tracing-subscriber = {version = "0.3.7", default-features = false, features = ["env-filter", "fmt"]}
 
 [patch.crates-io]
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
-tendermint-light-client-verifier = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
-tendermint-testgen = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-light-client-verifier = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
+tendermint-testgen = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "murisi/jsfix"}
 # TODO temp patch for <https://github.com/near/borsh-rs/issues/82>, <https://github.com/near/borsh-rs/issues/84> and more tba.
 borsh = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
 borsh-derive = {git = "https://github.com/heliaxdev/borsh-rs.git", rev = "cd5223e5103c4f139e0c54cf8259b7ec5ec4073a"}
