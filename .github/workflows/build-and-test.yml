@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-wasm:
+  wasm:
     runs-on: ${{ matrix.os }}
     container:
       image: ghcr.io/fraccaman/anoma:wasm-0.6.1
@@ -51,7 +51,7 @@ jobs:
         anoma_cache_version: ["v1"]
         make: 
           - name: ABCI
-            suffix: ""
+            suffix: ''
           - name: ABCI++
             suffix: -abci-plus-plus
 
@@ -97,7 +97,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git          
-          key: ${{ runner.os }}-${{ matrix.anoma_cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-cargo-
       - name: Save sccache
         uses: actions/cache@v2
@@ -112,13 +112,6 @@ jobs:
         run: make build${{ matrix.make.suffix }}
       - name: Build test
         run: make build-test${{ matrix.make.suffix }}
-      # - name: Wait for wasm artifacts
-      #   uses: lewagon/wait-on-check-action@v1.0.0
-      #   with:
-      #     ref: ${{ github.ref }}
-      #     check-name: Upload wasm artifacts
-      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
-      #     wait-interval: 120
       - name: Download wasm artifacts
         uses: actions/download-artifact@v3
         with:
