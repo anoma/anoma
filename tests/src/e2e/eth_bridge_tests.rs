@@ -38,10 +38,10 @@ fn everything() {
         .exp_string("Anoma ledger node started")
         .unwrap();
     if !cfg!(feature = "ABCI") {
-        anoman_ledger.exp_string("started node")
+        anoman_ledger.exp_string("started node").unwrap();
     } else {
-        anoman_ledger.exp_string("Started node")
-    }.unwrap();
+        anoman_ledger.exp_string("Started node").unwrap();
+    }
     anoman_ledger.exp_string("Committed block hash").unwrap();
     let _bg_ledger = anoman_ledger.background();
 
