@@ -385,6 +385,12 @@ async fn run_aux_setup(
     }
 }
 
+/// Launches two tasks into the asynchronous runtime:
+///
+///   1. An ABCI server.
+///   2. A service for broadcasting transactions via an HTTP client.
+///
+/// Lastly, this function executes an ABCI shell on a new OS thread.
 fn start_abci_broadcaster_shell(
     spawner: &mut AbortableSpawner,
     wasm_dir: PathBuf,
@@ -509,6 +515,8 @@ async fn run_abci(
         .map_err(|err| Error::TowerServer(err.to_string()))
 }
 
+/// Launches a new task managing a Tendermint process into the asynchronous
+/// runtime, and returns its `JoinHandle`.
 fn start_tendermint(
     spawner: &mut AbortableSpawner,
     config: &config::Ledger,
