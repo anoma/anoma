@@ -103,6 +103,8 @@ jobs:
           path: /home/runner/.cache/sccache
           key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-
+      - name: Start sccache server
+        run: sccache --start-server
       - name: Build
         run: make build
       - name: Build test
@@ -121,3 +123,7 @@ jobs:
           path: ./wasm
       - name: Run unit test
         run: make test-unit
+      - name: Print sccache stats
+        run: sccache --show-stats
+      - name: Stop sccache server
+        run: sccache --stop-server || true
