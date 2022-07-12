@@ -37,7 +37,8 @@ use anoma::ledger::storage::{
     MerkleTreeStoresRead, Result, StoreType, DB,
 };
 use anoma::types::storage::{
-    BlockHeight, Header, Key, KeySeg, TxQueue, KEY_SEGMENT_SEPARATOR,
+    BlockHeight, BlockResults, Header, Key, KeySeg, TxQueue,
+    KEY_SEGMENT_SEPARATOR,
 };
 use anoma::types::time::DateTimeUtc;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -273,6 +274,17 @@ impl DB for RocksDB {
             None => return Ok(None),
         };
 
+        // Block results
+        let results_path = format!("results/{}", height.raw());
+        let results: BlockResults = match self
+            .0
+            .get(results_path)
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => return Ok(None),
+        };
+
         // Epoch start height and time
         let next_epoch_min_start_height: BlockHeight = match self
             .0
@@ -397,6 +409,7 @@ impl DB for RocksDB {
                     height,
                     epoch,
                     pred_epochs,
+                    results,
                     next_epoch_min_start_height,
                     next_epoch_min_start_time,
                     address_gen,
@@ -419,6 +432,7 @@ impl DB for RocksDB {
             height,
             epoch,
             pred_epochs,
+            results,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
             address_gen,
@@ -513,6 +527,11 @@ impl DB for RocksDB {
                 .push(&"epoch".to_owned())
                 .map_err(Error::KeyError)?;
             batch.put(key.to_string(), types::encode(&epoch));
+        }
+        // Block results
+        {
+            let results_path = format!("results/{}", height.raw());
+            batch.put(results_path, types::encode(&results));
         }
         // Predecessor block epochs
         {
@@ -824,6 +843,26 @@ impl<'iter> DBIter<'iter> for RocksDB {
         );
         PersistentPrefixIterator(PrefixIterator::new(iter, db_prefix))
     }
+
+    fn iter_results(&'iter self) -> PersistentPrefixIterator<'iter> {
+        let db_prefix = "results/".to_owned();
+        let prefix = "results".to_owned();
+
+        let mut read_opts = ReadOptions::default();
+        // don't use the prefix bloom filter
+        read_opts.set_total_order_seek(true);
+        let mut upper_prefix = prefix.clone().into_bytes();
+        if let Some(last) = upper_prefix.pop() {
+            upper_prefix.push(last + 1);
+        }
+        read_opts.set_iterate_upper_bound(upper_prefix);
+
+        let iter = self.0.iterator_opt(
+            IteratorMode::From(prefix.as_bytes(), Direction::Forward),
+            read_opts,
+        );
+        PersistentPrefixIterator(PrefixIterator::new(iter, db_prefix))
+    }
 }
 
 #[derive(Debug)]
@@ -968,12 +1007,14 @@ mod test {
         let next_epoch_min_start_time = DateTimeUtc::now();
         let address_gen = EstablishedAddressGen::new("whatever");
         let tx_queue = TxQueue::default();
+        let results = BlockResults::default();
         let block = BlockStateWrite {
             merkle_tree_stores,
             header: None,
             hash: &hash,
             height,
             epoch,
+            results: &results,
             pred_epochs: &pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,

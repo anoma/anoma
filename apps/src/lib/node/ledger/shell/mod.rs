@@ -671,7 +671,7 @@ mod test_utils {
     use anoma::types::chain::ChainId;
     use anoma::types::hash::Hash;
     use anoma::types::key::*;
-    use anoma::types::storage::{BlockHash, Epoch, Header};
+    use anoma::types::storage::{BlockHash, BlockResults, Epoch, Header};
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
@@ -937,6 +937,7 @@ mod test_utils {
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
                 address_gen: &address_gen,
+                results: &BlockResults::default(),
                 tx_queue: &shell.storage.tx_queue,
             })
             .expect("Test failed");

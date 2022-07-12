@@ -9,7 +9,7 @@ use anoma::ledger::storage::types::encode;
 use anoma::ledger::treasury::ADDRESS as treasury_address;
 use anoma::types::address::{xan as m1t, Address};
 use anoma::types::governance::TallyResult;
-use anoma::types::storage::{BlockHash, Epoch, Header};
+use anoma::types::storage::{BlockHash, BlockResults, Epoch, Header, TxIndex};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::Misbehavior as Evidence;
 #[cfg(not(feature = "ABCI"))]
@@ -227,6 +227,8 @@ where
             }
         }
 
+        // Tracks the accepted transactions
+        self.storage.block.results = BlockResults::with_len(req.txs.len());
         for (tx_index, processed_tx) in req.txs.iter().enumerate() {
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
@@ -364,6 +366,7 @@ where
                         self.write_log.commit_tx();
                         if !tx_event.contains_key("code") {
                             tx_event["code"] = ErrorCodes::Ok.into();
+                            self.storage.block.results.accept(tx_index);
                         }
                         if let Some(ibc_event) = &result.ibc_event {
                             // Add the IBC event besides the tx_event
