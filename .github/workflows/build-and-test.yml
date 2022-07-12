@@ -52,8 +52,12 @@ jobs:
         make: 
           - name: ABCI
             suffix: ''
+            cache_key: anoma
+            cache_version: "v1"
           - name: ABCI++
             suffix: -abci-plus-plus
+            cache_key: anoma-abci-plus-plus
+            cache_version: "v1"
 
     env:
       RUST_BACKTRACE: full
@@ -97,15 +101,15 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git          
-          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-cargo-
+          key: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-cargo-
       - name: Save sccache
         uses: actions/cache@v2
         continue-on-error: false
         with:
           path: /home/runner/.cache/sccache
-          key: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-anoma-${{ matrix.anoma_cache_version }}-sccache-
+          key: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.make.cache_key }}-${{ matrix.make.cache_version }}-sccache-
       - name: Start sccache server
         run: sccache --start-server
       - name: Build
