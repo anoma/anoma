@@ -49,6 +49,11 @@ jobs:
         os: [ubuntu-latest]
         nightly_version: [nightly-2022-05-20]
         anoma_cache_version: ["v1"]
+        make: 
+          - name: ABCI
+            suffix: ""
+          - name: ABCI++
+            suffix: -abci-plus-plus
 
     env:
       RUST_BACKTRACE: full
@@ -78,14 +83,12 @@ jobs:
       - name: Setup rust toolchain
         uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
         with:
-          target: wasm32-unknown-unknown
           profile: default
           override: true
       - name: Setup rust nightly
         uses: oxidecomputer/actions-rs_toolchain@ad3f86084a8a5acf2c09cb691421b31cf8af7a36
         with:
           toolchain: ${{ matrix.nightly_version }}
-          target: wasm32-unknown-unknown
           profile: default
       - name: Cache cargo registry
         uses: actions/cache@v2
@@ -106,9 +109,9 @@ jobs:
       - name: Start sccache server
         run: sccache --start-server
       - name: Build
-        run: make build
+        run: make build${{ matrix.make.suffix }}
       - name: Build test
-        run: make build-test
+        run: make build-test${{ matrix.make.suffix }}
       # - name: Wait for wasm artifacts
       #   uses: lewagon/wait-on-check-action@v1.0.0
       #   with:
@@ -122,7 +125,7 @@ jobs:
           name: ${{ github.sha }}
           path: ./wasm
       - name: Run unit test
-        run: make test-unit
+        run: make test-unit${{ matrix.make.suffix }}
       - name: Print sccache stats
         run: sccache --show-stats
       - name: Stop sccache server
