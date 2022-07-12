@@ -44,6 +44,44 @@ pub const VP_KEY_PREFIX: char = '?';
 /// The reserved storage key for validity predicates
 pub const RESERVED_VP_KEY: &str = "?";
 
+/// Transaction index within block.
+#[derive(
+    Default,
+    Clone,
+    Copy,
+    BorshSerialize,
+    BorshDeserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Debug,
+    Serialize,
+    Deserialize,
+)]
+pub struct TxIndex(pub u32);
+
+impl Display for TxIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Add<u32> for TxIndex {
+    type Output = TxIndex;
+
+    fn add(self, rhs: u32) -> Self::Output {
+        Self(self.0 + rhs)
+    }
+}
+
+impl From<TxIndex> for u32 {
+    fn from(index: TxIndex) -> Self {
+        index.0
+    }
+}
+
 /// Height of a block, i.e. the level.
 #[derive(
     Default,

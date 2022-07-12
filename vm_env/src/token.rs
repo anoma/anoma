@@ -1,8 +1,9 @@
 use std::collections::BTreeSet;
 
-use anoma::types::address::{Address, InternalAddress};
-use anoma::types::storage::Key;
+use anoma::types::address::{masp, Address, InternalAddress};
+use anoma::types::storage::{Key, KeySeg};
 use anoma::types::token;
+use masp_primitives::transaction::Transaction;
 
 /// Vp imports and functions.
 pub mod vp {
@@ -51,7 +52,7 @@ pub mod vp {
                     change += this_change;
                     // make sure that the spender approved the transaction
                     if this_change < 0 {
-                        return verifiers.contains(owner);
+                        return verifiers.contains(owner) || *owner == masp();
                     }
                     true
                 }
@@ -74,6 +75,8 @@ pub mod tx {
         dest: &Address,
         token: &Address,
         amount: Amount,
+        key: &Option<String>,
+        shielded: &Option<Transaction>,
     ) {
         let src_key = token::balance_key(token, src);
         let dest_key = token::balance_key(token, dest);
@@ -85,29 +88,75 @@ pub mod tx {
                 unreachable!()
             }
         });
-        src_bal.spend(&amount);
         let mut dest_bal: Amount =
             tx::read(&dest_key.to_string()).unwrap_or_default();
-        dest_bal.receive(&amount);
-        match src {
-            Address::Internal(InternalAddress::IbcMint) => {
-                tx::write_temp(&src_key.to_string(), src_bal)
+        // Only make changes to transparent balances if asset is not being
+        // transferred to self
+        if src != dest {
+            src_bal.spend(&amount);
+            dest_bal.receive(&amount);
+            match src {
+                Address::Internal(InternalAddress::IbcMint) => {
+                    tx::write_temp(&src_key.to_string(), src_bal)
+                }
+                Address::Internal(InternalAddress::IbcBurn) => {
+                    tx::log_string("invalid transfer from the burn address");
+                    unreachable!()
+                }
+                _ => tx::write(&src_key.to_string(), src_bal),
             }
-            Address::Internal(InternalAddress::IbcBurn) => {
-                tx::log_string("invalid transfer from the burn address");
-                unreachable!()
+            match dest {
+                Address::Internal(InternalAddress::IbcMint) => {
+                    tx::log_string("invalid transfer to the mint address");
+                    unreachable!()
+                }
+                Address::Internal(InternalAddress::IbcBurn) => {
+                    tx::write_temp(&dest_key.to_string(), dest_bal)
+                }
+                _ => tx::write(&dest_key.to_string(), dest_bal),
             }
-            _ => tx::write(&src_key.to_string(), src_bal),
         }
-        match dest {
-            Address::Internal(InternalAddress::IbcMint) => {
-                tx::log_string("invalid transfer to the mint address");
-                unreachable!()
+        // If this transaction has a shielded component, then handle it
+        // separately
+        if let Some(shielded) = shielded {
+            let masp_addr = masp();
+            tx::insert_verifier(&masp_addr);
+            let head_tx_key = Key::from(masp_addr.to_db_key())
+                .push(&HEAD_TX_KEY.to_owned())
+                .expect("Cannot obtain a storage key");
+            let current_tx_idx: u64 =
+                tx::read(&head_tx_key.to_string()).unwrap_or(0);
+            let current_tx_key = Key::from(masp_addr.to_db_key())
+                .push(&(TX_KEY_PREFIX.to_owned() + &current_tx_idx.to_string()))
+                .expect("Cannot obtain a storage key");
+            // Save the Transfer object and its location within the blockchain
+            // so that clients do not have to separately look these
+            // up
+            let transfer = Transfer {
+                source: src.clone(),
+                target: dest.clone(),
+                token: token.clone(),
+                amount,
+                key: key.clone(),
+                shielded: Some(shielded.clone()),
+            };
+            tx::write(
+                &current_tx_key.to_string(),
+                (
+                    tx::get_block_epoch(),
+                    tx::get_block_height(),
+                    tx::get_tx_index(),
+                    transfer,
+                ),
+            );
+            tx::write(&head_tx_key.to_string(), current_tx_idx + 1);
+            // If storage key has been supplied, then pin this transaction to it
+            if let Some(key) = key {
+                let pin_key = Key::from(masp_addr.to_db_key())
+                    .push(&(PIN_KEY_PREFIX.to_owned() + key))
+                    .expect("Cannot obtain a storage key");
+                tx::write(&pin_key.to_string(), current_tx_idx);
             }
-            Address::Internal(InternalAddress::IbcBurn) => {
-                tx::write_temp(&dest_key.to_string(), dest_bal)
-            }
-            _ => tx::write(&dest_key.to_string(), dest_bal),
         }
     }
 }
