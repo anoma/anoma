@@ -56,7 +56,6 @@ fn run_gossip() -> Result<()> {
         .rsplit_once('\"')
         .unwrap()
         .1;
-    let _bg_node_0 = node_0.background();
 
     // Start the second gossip node (a peer node)
     let mut node_1 =
@@ -75,7 +74,6 @@ fn run_gossip() -> Result<()> {
         "Connect to a new peer: PeerId(\"{}\")",
         node_0_peer_id
     ))?;
-    let _bg_node_1 = node_1.background();
 
     // Start the third gossip node (another peer node)
     let mut node_2 =
@@ -125,7 +123,6 @@ fn match_intents() -> Result<()> {
     ledger.exp_string("No state could be found")?;
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
-    let bg_ledger = ledger.background();
 
     let intent_a_path_input = test.base_dir.path().join("intent.A.data");
     let intent_b_path_input = test.base_dir.path().join("intent.B.data");
@@ -202,7 +199,6 @@ fn match_intents() -> Result<()> {
 
     // Wait gossip to start
     gossiper.exp_string(&format!("RPC started at {}", rpc_address))?;
-    let _bg_gossiper = gossiper.background();
 
     // Start matchmaker
     let mut matchmaker = run_as!(
@@ -225,7 +221,6 @@ fn match_intents() -> Result<()> {
 
     // Wait for the matchmaker to start
     matchmaker.exp_string("Connected to the server")?;
-    let bg_matchmaker = matchmaker.background();
 
     let rpc_address = format!("http://{}", rpc_address);
     //  Send intent A
@@ -256,9 +251,7 @@ fn match_intents() -> Result<()> {
     )?;
     drop(session_send_intent_a);
 
-    let mut matchmaker = bg_matchmaker.foreground();
     matchmaker.exp_string("trying to match new intent")?;
-    let bg_matchmaker = matchmaker.background();
 
     // Send intent B
     let albert_lower = ALBERT_KEY.to_lowercase();
@@ -288,9 +281,7 @@ fn match_intents() -> Result<()> {
     )?;
     drop(session_send_intent_b);
 
-    let mut matchmaker = bg_matchmaker.foreground();
     matchmaker.exp_string("trying to match new intent")?;
-    let bg_matchmaker = matchmaker.background();
 
     // Send intent C
     let christel_lower = CHRISTEL_KEY.to_lowercase();
@@ -321,7 +312,6 @@ fn match_intents() -> Result<()> {
     drop(session_send_intent_c);
 
     // check that the transfers transactions are correct
-    let mut matchmaker = bg_matchmaker.foreground();
     matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 70",
         bertha, albert
@@ -336,7 +326,6 @@ fn match_intents() -> Result<()> {
     ))?;
 
     // check that the all VPs accept the transaction
-    let mut ledger = bg_ledger.foreground();
     ledger.exp_string("all VPs accepted transaction")?;
 
     Ok(())
