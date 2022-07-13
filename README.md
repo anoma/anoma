@@ -5,15 +5,9 @@
 
 ## Overview
 
-[Anoma](https://anoma.network/) is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties. To learn more about Anoma's vision, take a look at the [Anoma Vision Paper](https://anoma.net/vision-paper.pdf) or [Anoma's Whitepaper](https://anoma.net/whitepaper.pdf).
+[Anoma](https://anoma.net/) is an intent-centric, privacy-preserving protocol for decentralized counterparty discovery, solving, and multi-chain atomic settlement. To learn more about Anoma's vision, take a look at the [Anoma Vision Paper](https://anoma.net/vision-paper.pdf).
 
 This is an implementation of the Anoma protocol in Rust.
-
-## 📓 Docs
-
-- [user docs](https://docs.anoma.net/): built from [anoma/docs mdBook](https://github.com/anoma/docs)
-- [dev docs](https://dev.anoma.net/master/): built from [docs mdBook](./docs/) in this repo
-- [rustdoc](https://dev.anoma.net/master/rustdoc/anoma/): built from the source
 
 ## Warning
 
