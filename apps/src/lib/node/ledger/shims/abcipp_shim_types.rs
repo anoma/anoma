@@ -260,7 +260,8 @@ pub mod shim {
                 FinalizeBlock {
                     hash: BlockHash::default(),
                     header: Header {
-                        hash: Hash::default(),
+                        hash: Hash::try_from(header.app_hash.as_slice())
+                            .unwrap_or_default(),
                         time: DateTimeUtc::try_from(header.time.unwrap())
                             .unwrap(),
                         next_validators_hash: Hash::try_from(

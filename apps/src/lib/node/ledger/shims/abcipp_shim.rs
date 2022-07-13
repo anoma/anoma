@@ -158,7 +158,6 @@ impl AbcippShim {
                         self.begin_block_request.take().unwrap().into();
                     let hash = self.get_hash();
                     end_block_request.hash = BlockHash::from(hash.clone());
-                    end_block_request.header.hash = hash;
                     end_block_request.txs = txs;
                     self.service
                         .call(Request::FinalizeBlock(end_block_request))
