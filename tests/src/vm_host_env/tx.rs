@@ -101,7 +101,7 @@ impl TestTxEnv {
     }
 
     /// Fake accounts existence by initializating their VP storage.
-    /// This is needed for accounts that are being modified by a tx test to be
+    /// This is needed for accounts that are being modified by a tx test to
     /// pass account existence check in `tx_write` function.
     pub fn spawn_accounts(
         &mut self,

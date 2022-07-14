@@ -281,13 +281,13 @@ pub enum ValidatorState {
     // TODO consider adding `Jailed`
 }
 
-/// A bond is validator's self-bond or a delegation from a regular account to a
+/// A bond is either a validator's self-bond or a delegation from a regular account to a
 /// validator.
 #[derive(
     Debug, Clone, Default, BorshDeserialize, BorshSerialize, BorshSchema,
 )]
 pub struct Bond<Token: Default> {
-    /// Bonded positive deltas. A key is a the epoch set for the bond. This is
+    /// Bonded positive deltas. A key is the epoch set for the bond. This is
     /// used in unbonding, where it's needed for slash epoch range check.
     ///
     /// TODO: For Bonds, there's unnecessary redundancy with this hash map.

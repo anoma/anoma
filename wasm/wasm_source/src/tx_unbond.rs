@@ -48,10 +48,10 @@ mod tests {
     proptest! {
         /// In this test we setup the ledger and PoS system with an arbitrary
         /// initial state with 1 genesis validator, a delegation bond if the
-        /// unbond is for a delegation, arbitrary PoS parameters and
-        /// a we generate an arbitrary unbond that we'd like to apply.
+        /// unbond is for a delegation, arbitrary PoS parameters, and
+        /// we generate an arbitrary unbond that we'd like to apply.
         ///
-        /// After we apply the unbond, we're checking that all the storage values
+        /// After we apply the unbond, we check that all the storage values
         /// in PoS system have been updated as expected and then we also check
         /// that this transaction is accepted by the PoS validity predicate.
         #[test]

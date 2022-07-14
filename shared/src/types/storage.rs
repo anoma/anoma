@@ -274,7 +274,7 @@ impl Key {
         self.len() == 0
     }
 
-    /// Returns a key of the validity predicate of the given address
+    /// Returns a key of the validity predicate of the given address.
     /// Only this function can push "?" segment for validity predicate
     pub fn validity_predicate(addr: &Address) -> Self {
         let mut segments = Self::from(addr.to_db_key()).segments;
