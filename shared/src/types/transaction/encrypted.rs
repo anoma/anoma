@@ -174,49 +174,56 @@ pub mod encrypted_tx {
         }
     }
 
+    #[derive(Debug, BorshSerialize, BorshDeserialize)]
+    pub struct EncryptedTxFields {
+        pub nonce_code_hash : Vec<u8>,
+        pub ciphertext_code_hash : Vec<u8>,
+        pub auth_tag_code_hash : Vec<u8>,
+        pub nonce_code : Vec<u8>,
+        pub ciphertext_code : Vec<u8>,
+        pub auth_tag_code : Vec<u8>,
+        pub nonce_data : Vec<u8>,
+        pub ciphertext_data : Vec<u8>,
+        pub auth_tag_data : Vec<u8>,
+        pub nonce_ts : Vec<u8>,
+        pub ciphertext_ts : Vec<u8>,
+        pub auth_tag_ts : Vec<u8>,
+    }
+
     impl borsh::BorshDeserialize for EncryptedTx {
         fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-            type VecTuple = (Vec<u8>, Vec<u8>, Vec<u8>,
-                             Vec<u8>, Vec<u8>, Vec<u8>,
-                             Vec<u8>, Vec<u8>, Vec<u8>,
-                             Vec<u8>, Vec<u8>, Vec<u8>);
-            let (
-                nonce_code_hash, ciphertext_code_hash, auth_tag_code_hash,
-                nonce_code, ciphertext_code, auth_tag_code,
-                nonce_data, ciphertext_data, auth_tag_data,
-                nonce_ts, ciphertext_ts, auth_tag_ts
-            ): VecTuple =
+            let encrypted_tx : EncryptedTxFields =
                 BorshDeserialize::deserialize(buf)?;
             Ok(
                 EncryptedTx{
                     encrypted_code_hash : Ciphertext {
-                        nonce: CanonicalDeserialize::deserialize(&*nonce_code_hash)
+                        nonce: CanonicalDeserialize::deserialize(&*encrypted_tx.nonce_code_hash)
                             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
-                        ciphertext:ciphertext_code_hash,
-                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_code_hash)
+                        ciphertext: encrypted_tx.ciphertext_code_hash,
+                        auth_tag: CanonicalDeserialize::deserialize(&*encrypted_tx.auth_tag_code_hash)
                             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
                     },
                     encrypted_code : Ciphertext {
-                        nonce: CanonicalDeserialize::deserialize(&*nonce_code)
+                        nonce: CanonicalDeserialize::deserialize(&*encrypted_tx.nonce_code)
                             .map_err(|err|
                                 Error::new(ErrorKind::InvalidData, err))?,
-                        ciphertext:ciphertext_code,
-                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_code)
+                        ciphertext:encrypted_tx.ciphertext_code,
+                        auth_tag: CanonicalDeserialize::deserialize(&*encrypted_tx.auth_tag_code)
                             .map_err(|err|
                                 Error::new(ErrorKind::InvalidData, err))?,
                     },
                     encrypted_data : Ciphertext {
-                        nonce: CanonicalDeserialize::deserialize(&*nonce_data)
+                        nonce: CanonicalDeserialize::deserialize(&*encrypted_tx.nonce_data)
                             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
-                        ciphertext:ciphertext_data,
-                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_data)
+                        ciphertext: encrypted_tx.ciphertext_data,
+                        auth_tag: CanonicalDeserialize::deserialize(&*encrypted_tx.auth_tag_data)
                             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
                     },
                     encrypted_ts : Ciphertext {
-                        nonce: CanonicalDeserialize::deserialize(&*nonce_ts)
+                        nonce: CanonicalDeserialize::deserialize(&*encrypted_tx.nonce_ts)
                             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
-                        ciphertext:ciphertext_ts,
-                        auth_tag: CanonicalDeserialize::deserialize(&*auth_tag_ts)
+                        ciphertext: encrypted_tx.ciphertext_ts,
+                        auth_tag: CanonicalDeserialize::deserialize(&*encrypted_tx.auth_tag_ts)
                             .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
                     }
                 })
