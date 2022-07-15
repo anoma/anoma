@@ -562,28 +562,6 @@ where
         );
     }
 
-    /// Update the delta values in reverse order (starting from the future-most
-    /// epoch) while the update function returns `true`.
-    pub fn rev_update_while(
-        &mut self,
-        mut update_value: impl FnMut(&mut Data, Epoch) -> bool,
-        current_epoch: impl Into<Epoch>,
-        params: &PosParams,
-    ) {
-        let epoch = current_epoch.into();
-        self.update_data(epoch, params);
-
-        let offset = Offset::value(params) as usize;
-        for ix in (0..offset + 1).rev() {
-            if let Some(Some(current)) = self.data.get_mut(ix) {
-                let keep_going = update_value(current, epoch + ix);
-                if !keep_going {
-                    break;
-                }
-            }
-        }
-    }
-
     /// Apply the given `f` function on each delta value in reverse order
     /// (starting from the future-most epoch) while the given function returns
     /// `true`.
@@ -630,7 +608,7 @@ mod tests {
             sequential 1..20 => EpochedAbstractStateMachine<OffsetPipelineLen>);
 
         #[test]
-        fn epoched_state_machine_with_unbounding_offset(
+        fn epoched_state_machine_with_unbonding_offset(
             sequential 1..20 => EpochedAbstractStateMachine<OffsetUnbondingLen>);
 
         #[test]
@@ -638,7 +616,7 @@ mod tests {
             sequential 1..20 => EpochedDeltaAbstractStateMachine<OffsetPipelineLen>);
 
         #[test]
-        fn epoched_delta_state_machine_with_unbounding_offset(
+        fn epoched_delta_state_machine_with_unbonding_offset(
             sequential 1..20 => EpochedDeltaAbstractStateMachine<OffsetUnbondingLen>);
     }
 
