@@ -118,7 +118,7 @@ serde_json = {version = "1.0.62", features = ["raw_value"]}
 serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"
-sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", features = ["borsh"]}
+sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/ics23_0.7", features = ["borsh"]}
 # sysinfo with disabled multithread feature
 sysinfo = {version = "=0.21.1", default-features = false}
 tar = "0.4.37"
@@ -140,7 +140,7 @@ tower = "0.4"
 # with a patch for https://github.com/penumbra-zone/tower-abci/issues/7.
 tower-abci = {git = "https://github.com/heliaxdev/tower-abci", rev = "f6463388fc319b6e210503b43b3aecf6faf6b200", optional = true}
 tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/rebase_v0.23.5_tracing", optional = true}
-tracing = "0.1.30"
+tracing = "0.1.34"
 tracing-log = "0.1.2"
 tracing-subscriber = {version = "0.3.7", features = ["env-filter"]}
 websocket = "0.26.2"

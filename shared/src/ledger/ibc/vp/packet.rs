@@ -3,7 +3,7 @@
 use thiserror::Error;
 
 use super::super::handler::{
-    make_send_packet_event, make_timeout_event, packet_from_message,
+    self, make_send_packet_event, make_timeout_event, packet_from_message,
 };
 use super::super::storage::{
     port_channel_sequence_id, Error as IbcStorageError,
@@ -13,6 +13,7 @@ use crate::ibc::core::ics02_client::height::Height;
 use crate::ibc::core::ics04_channel::channel::{
     ChannelEnd, Counterparty, Order, State,
 };
+use crate::ibc::core::ics04_channel::commitment::PacketCommitment;
 use crate::ibc::core::ics04_channel::context::ChannelReader;
 use crate::ibc::core::ics04_channel::error::Error as Ics04Error;
 use crate::ibc::core::ics04_channel::handler::verify::{
@@ -20,7 +21,9 @@ use crate::ibc::core::ics04_channel::handler::verify::{
     verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
     verify_packet_recv_proofs,
 };
-use crate::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use crate::ibc::core::ics04_channel::msgs::acknowledgement::{
+    Acknowledgement, MsgAcknowledgement,
+};
 use crate::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
 use crate::ibc::core::ics04_channel::msgs::PacketMsg;
 use crate::ibc::core::ics04_channel::packet::{Packet, Sequence};
@@ -92,10 +95,7 @@ where
                 let msg = ibc_msg.msg_transfer()?;
                 // make a packet
                 let channel = self
-                    .channel_end(&(
-                        commitment_key.0.clone(),
-                        commitment_key.1.clone(),
-                    ))
+                    .channel_end(&(commitment_key.0.clone(), commitment_key.1))
                     .map_err(|e| Error::InvalidChannel(e.to_string()))?;
                 let packet = packet_from_message(
                     &msg,
@@ -125,10 +125,7 @@ where
             StateChange::Deleted => {
                 // check the channel state
                 let channel = self
-                    .channel_end(&(
-                        commitment_key.0.clone(),
-                        commitment_key.1.clone(),
-                    ))
+                    .channel_end(&(commitment_key.0.clone(), commitment_key.1))
                     .map_err(|_| {
                         Error::InvalidChannel(format!(
                             "The channel doesn't exist: Port {}, Channel {}",
@@ -206,7 +203,7 @@ where
                 // The receipt should have been stored
                 self.get_packet_receipt(&(
                     ack_key.0.clone(),
-                    ack_key.1.clone(),
+                    ack_key.1,
                     ack_key.2,
                 ))
                 .map_err(|_| {
@@ -273,7 +270,7 @@ where
             })?;
         let port_channel_id = PortChannelId {
             port_id: port_channel_seq_id.0.clone(),
-            channel_id: port_channel_seq_id.1.clone(),
+            channel_id: port_channel_seq_id.1,
         };
         self.verify_recv_proof(
             &port_channel_id,
@@ -303,7 +300,7 @@ where
 
         let port_channel_id = PortChannelId {
             port_id: port_channel_seq_id.0.clone(),
-            channel_id: port_channel_seq_id.1.clone(),
+            channel_id: port_channel_seq_id.1,
         };
         self.verify_ack_proof(
             &port_channel_id,
@@ -333,7 +330,7 @@ where
                 }
                 PortChannelId {
                     port_id: packet.source_port.clone(),
-                    channel_id: packet.source_channel.clone(),
+                    channel_id: packet.source_channel,
                 }
             }
             Phase::Recv => {
@@ -347,7 +344,7 @@ where
                 }
                 PortChannelId {
                     port_id: packet.destination_port.clone(),
-                    channel_id: packet.destination_channel.clone(),
+                    channel_id: packet.destination_channel,
                 }
             }
         };
@@ -364,7 +361,7 @@ where
         let channel = self
             .channel_end(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidChannel(format!(
@@ -392,11 +389,11 @@ where
         let counterparty = match phase {
             Phase::Send | Phase::Ack => Counterparty::new(
                 packet.destination_port.clone(),
-                Some(packet.destination_channel.clone()),
+                Some(packet.destination_channel),
             ),
             Phase::Recv => Counterparty::new(
                 packet.source_port.clone(),
-                Some(packet.source_channel.clone()),
+                Some(packet.source_channel),
             ),
         };
         if !channel.counterparty_matches(&counterparty) {
@@ -438,13 +435,9 @@ where
     fn validate_packet_commitment(
         &self,
         packet: &Packet,
-        commitment: String,
+        commitment: PacketCommitment,
     ) -> Result<()> {
-        let input = format!(
-            "{:?},{:?},{:?}",
-            packet.timeout_timestamp, packet.timeout_height, packet.data,
-        );
-        if commitment == self.hash(input) {
+        if commitment == handler::commitment(packet) {
             Ok(())
         } else {
             Err(Error::InvalidPacket(
@@ -463,7 +456,7 @@ where
         let channel = self
             .channel_end(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidChannel(format!(
@@ -484,13 +477,13 @@ where
         port_channel_id: &PortChannelId,
         height: Height,
         packet: &Packet,
-        ack: Vec<u8>,
+        ack: Acknowledgement,
         proofs: &Proofs,
     ) -> Result<()> {
         let channel = self
             .channel_end(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidChannel(format!(
@@ -552,12 +545,12 @@ where
         // the counterparty should be equal to that of the channel
         let port_channel_id = PortChannelId {
             port_id: packet.source_port.clone(),
-            channel_id: packet.source_channel.clone(),
+            channel_id: packet.source_channel,
         };
         let channel = self
             .channel_end(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidChannel(format!(
@@ -567,7 +560,7 @@ where
             })?;
         let counterparty = Counterparty::new(
             packet.destination_port.clone(),
-            Some(packet.destination_channel.clone()),
+            Some(packet.destination_channel),
         );
         if !channel.counterparty_matches(&counterparty) {
             return Err(Error::InvalidPacket(format!(
@@ -589,7 +582,7 @@ where
                 // check that the counterpart channel has been closed
                 let expected_my_side = Counterparty::new(
                     packet.source_port.clone(),
-                    Some(packet.source_channel.clone()),
+                    Some(packet.source_channel),
                 );
                 let counterparty = connection.counterparty();
                 let conn_id =

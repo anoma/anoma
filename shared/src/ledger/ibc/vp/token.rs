@@ -102,6 +102,9 @@ where
             Ics26Envelope::Ics4PacketMsg(PacketMsg::RecvPacket(msg)) => {
                 self.validate_receiving_token(&msg.packet)
             }
+            Ics26Envelope::Ics4PacketMsg(PacketMsg::AckPacket(msg)) => {
+                self.validate_refunding_token(&msg.packet)
+            }
             Ics26Envelope::Ics4PacketMsg(PacketMsg::ToPacket(msg)) => {
                 self.validate_refunding_token(&msg.packet)
             }
@@ -121,18 +124,17 @@ where
 {
     fn validate_sending_token(&self, msg: &MsgTransfer) -> Result<bool> {
         let data = FungibleTokenPacketData::from(msg.clone());
-        let token_str =
-            data.denomination.split('/').last().ok_or(Error::NoToken)?;
+        let token_str = data.denom.split('/').last().ok_or(Error::NoToken)?;
         let token = Address::decode(token_str).map_err(Error::Address)?;
         let amount = Amount::from_str(&data.amount).map_err(Error::Amount)?;
 
-        // check the denomination field
+        // check the denom field
         let prefix = format!(
             "{}/{}/",
             msg.source_port.clone(),
             msg.source_channel.clone()
         );
-        let change = if data.denomination.starts_with(&prefix) {
+        let change = if data.denom.starts_with(&prefix) {
             // sink zone
             let target = Address::Internal(InternalAddress::IbcBurn);
             let target_key = token::balance_key(&token, &target);
@@ -171,8 +173,7 @@ where
         let data: FungibleTokenPacketData =
             serde_json::from_slice(&packet.data)
                 .map_err(Error::DecodingPacketData)?;
-        let token_str =
-            data.denomination.split('/').last().ok_or(Error::NoToken)?;
+        let token_str = data.denom.split('/').last().ok_or(Error::NoToken)?;
         let token = Address::decode(token_str).map_err(Error::Address)?;
         let amount = Amount::from_str(&data.amount).map_err(Error::Amount)?;
 
@@ -181,7 +182,7 @@ where
             packet.source_port.clone(),
             packet.source_channel.clone()
         );
-        let change = if data.denomination.starts_with(&prefix) {
+        let change = if data.denom.starts_with(&prefix) {
             // this chain is the source
             let source =
                 Address::Internal(InternalAddress::ibc_escrow_address(
@@ -220,18 +221,17 @@ where
         let data: FungibleTokenPacketData =
             serde_json::from_slice(&packet.data)
                 .map_err(Error::DecodingPacketData)?;
-        let token_str =
-            data.denomination.split('/').last().ok_or(Error::NoToken)?;
+        let token_str = data.denom.split('/').last().ok_or(Error::NoToken)?;
         let token = Address::decode(token_str).map_err(Error::Address)?;
         let amount = Amount::from_str(&data.amount).map_err(Error::Amount)?;
 
-        // check the denomination field
+        // check the denom field
         let prefix = format!(
             "{}/{}/",
             packet.source_port.clone(),
             packet.source_channel.clone()
         );
-        let change = if data.denomination.starts_with(&prefix) {
+        let change = if data.denom.starts_with(&prefix) {
             // sink zone: mint the token for the refund
             let source = Address::Internal(InternalAddress::IbcMint);
             let source_key = token::balance_key(&token, &source);

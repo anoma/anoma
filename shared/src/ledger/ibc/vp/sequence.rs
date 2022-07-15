@@ -53,7 +53,7 @@ where
         let channel = self
             .channel_end(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|e| Error::InvalidChannel(e.to_string()))?;
         let next_seq_pre = self
@@ -64,7 +64,7 @@ where
         let next_seq = self
             .get_next_sequence_send(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidSequence(
@@ -116,7 +116,7 @@ where
         let next_seq = self
             .get_next_sequence_recv(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidSequence(
@@ -174,7 +174,7 @@ where
         let next_seq = self
             .get_next_sequence_ack(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidSequence(
@@ -218,7 +218,7 @@ where
         let channel = self
             .channel_end(&(
                 port_channel_id.port_id.clone(),
-                port_channel_id.channel_id.clone(),
+                port_channel_id.channel_id,
             ))
             .map_err(|_| {
                 Error::InvalidChannel(format!(

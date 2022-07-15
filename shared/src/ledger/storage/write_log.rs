@@ -334,6 +334,7 @@ impl WriteLog {
             HashMap::with_capacity(100),
         );
         self.block_write_log.extend(tx_write_log);
+        self.take_ibc_event();
     }
 
     /// Drop the current transaction's write log when it's declined by any of

@@ -9,10 +9,13 @@ use super::super::storage::{
 };
 use super::{Ibc, StateChange};
 use crate::ibc::core::ics04_channel::context::ChannelReader;
-use crate::ibc::core::ics05_port::capabilities::{Capability, CapabilityName};
+use crate::ibc::core::ics05_port::capabilities::{
+    Capability, CapabilityName, PortCapability,
+};
 use crate::ibc::core::ics05_port::context::{CapabilityReader, PortReader};
 use crate::ibc::core::ics05_port::error::Error as Ics05Error;
 use crate::ibc::core::ics24_host::identifier::PortId;
+use crate::ibc::core::ics26_routing::context::ModuleId;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::storage::Key;
 use crate::vm::WasmCacheAccess;
@@ -34,6 +37,8 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 /// ConnectionReader result
 type Ics05Result<T> = core::result::Result<T, Ics05Error>;
+
+const MODULE_ID: &str = "ledger";
 
 impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
@@ -84,14 +89,13 @@ where
                     let cap = capability(key)?;
                     let port_id = self.get_port_by_capability(&cap)?;
                     match self.lookup_module_by_port(&port_id) {
-                        Ok((_, c)) if c == cap => Ok(()),
+                        Ok((_, c)) if c == cap.into() => Ok(()),
                         Ok(_) => Err(Error::InvalidPort(format!(
                             "The port is invalid: ID {}",
                             port_id
                         ))),
                         Err(_) => Err(Error::NoCapability(format!(
-                            "The capability is not mapped: Index {}, Port {}",
-                            cap.index(),
+                            "The capability is not mapped: Port {}",
                             port_id
                         ))),
                     }
@@ -154,12 +158,10 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    type ModuleId = ();
-
     fn lookup_module_by_port(
         &self,
         port_id: &PortId,
-    ) -> Ics05Result<(Self::ModuleId, Capability)> {
+    ) -> Ics05Result<(ModuleId, PortCapability)> {
         let key = port_key(port_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
@@ -167,7 +169,9 @@ where
                     .try_into()
                     .map_err(|_| Ics05Error::implementation_specific())?;
                 let index = u64::from_be_bytes(index);
-                Ok(((), Capability::from(index)))
+                let module_id = ModuleId::new(MODULE_ID.into())
+                    .expect("Creating the module ID shouldn't fail");
+                Ok((module_id, Capability::from(index).into()))
             }
             Ok(None) => Err(Ics05Error::unknown_port(port_id.clone())),
             Err(_) => Err(Ics05Error::implementation_specific()),
@@ -184,7 +188,7 @@ where
     fn get_capability(&self, name: &CapabilityName) -> Ics05Result<Capability> {
         let port_id = get_port_id(name)?;
         let (_, capability) = self.lookup_module_by_port(&port_id)?;
-        Ok(capability)
+        Ok(capability.into())
     }
 
     fn authenticate_capability(
