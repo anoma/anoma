@@ -1,4 +1,6 @@
+use std::env;
 use std::path::{Path, PathBuf};
+use std::process::Stdio;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
@@ -29,6 +31,9 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
 
 use crate::config;
+
+/// Env. var to output Tendermint log to stdout
+pub const ENV_VAR_TM_STDOUT: &str = "ANOMA_TM_STDOUT";
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -141,33 +146,39 @@ pub async fn run(
 
     update_tendermint_config(&home_dir, config).await?;
 
-    let mut tendermint_node = if !cfg!(feature = "ABCI") {
-        Command::new(&tendermint_path)
-            .args(&[
-                "start",
-                "--mode",
-                &mode,
-                "--proxy-app",
-                &ledger_address,
-                "--home",
-                &home_dir_string,
-            ])
-            .kill_on_drop(true)
-            .spawn()
-            .map_err(Error::StartUp)?
+    let mut tendermint_node = Command::new(&tendermint_path);
+    if !cfg!(feature = "ABCI") {
+        tendermint_node.args(&[
+            "start",
+            "--mode",
+            &mode,
+            "--proxy-app",
+            &ledger_address,
+            "--home",
+            &home_dir_string,
+        ])
     } else {
-        Command::new(&tendermint_path)
-            .args(&[
-                "start",
-                "--proxy_app",
-                &ledger_address,
-                "--home",
-                &home_dir_string,
-            ])
-            .kill_on_drop(true)
-            .spawn()
-            .map_err(Error::StartUp)?
+        tendermint_node.args(&[
+            "start",
+            "--proxy_app",
+            &ledger_address,
+            "--home",
+            &home_dir_string,
+        ])
     };
+
+    let log_stdout = match env::var(ENV_VAR_TM_STDOUT) {
+        Ok(val) => val.to_ascii_lowercase().trim() == "true",
+        _ => false,
+    };
+    if !log_stdout {
+        tendermint_node.stdout(Stdio::null());
+    }
+
+    let mut tendermint_node = tendermint_node
+        .kill_on_drop(true)
+        .spawn()
+        .map_err(Error::StartUp)?;
     tracing::info!("Tendermint node started");
 
     tokio::select! {

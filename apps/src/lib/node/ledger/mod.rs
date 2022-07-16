@@ -371,6 +371,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     };
 
     // Construct our ABCI application.
+    let tendermint_mode = config.tendermint.tendermint_mode.clone();
     let ledger_address = config.shell.ledger_address;
     let (shell, abci_service) = AbcippShim::new(
         config,
@@ -402,6 +403,14 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let shell_handler = thread_builder
         .spawn(move || {
             tracing::info!("Anoma ledger node started.");
+            match tendermint_mode {
+                TendermintMode::Validator => {
+                    tracing::info!("This node is a validator");
+                }
+                TendermintMode::Full | TendermintMode::Seed => {
+                    tracing::info!("This node is not a validator");
+                }
+            }
             shell.run()
         })
         .expect("Must be able to start a thread for the shell");
