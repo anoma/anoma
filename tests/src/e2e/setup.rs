@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::Once;
-use std::{env, fs, mem, thread, time};
+use std::{env, fs, thread, time};
 
 use anoma::types::chain::ChainId;
 use anoma_apps::client::utils;
@@ -17,6 +17,7 @@ use escargot::CargoBuild;
 use expectrl::session::Session;
 use expectrl::{Eof, WaitStatus};
 use eyre::eyre;
+use itertools::Either;
 use tempfile::{tempdir, TempDir};
 
 /// For `color_eyre::install`, which fails if called more than once in the same
@@ -105,8 +106,9 @@ pub fn network(
             eprintln!("Failed setting up colorful error reports {}", err);
         }
     });
+
     let working_dir = working_dir();
-    let base_dir = tempdir().unwrap();
+    let test_dir = TestDir::new();
 
     // Open the source genesis file
     let mut genesis = genesis_config::open_genesis_config(
@@ -131,7 +133,7 @@ pub fn network(
 
     // Run `init-network` to generate the finalized genesis config, keys and
     // addresses and update WASM checksums
-    let genesis_file = base_dir.path().join("e2e-test-genesis-src.toml");
+    let genesis_file = test_dir.path().join("e2e-test-genesis-src.toml");
     genesis_config::write_genesis_config(&genesis, &genesis_file);
     let genesis_path = genesis_file.to_string_lossy();
     let checksums_path = working_dir
@@ -161,7 +163,7 @@ pub fn network(
         args,
         Some(5),
         &working_dir,
-        &base_dir,
+        &test_dir,
         "validator",
         format!("{}:{}", std::file!(), std::line!()),
     )?;
@@ -177,7 +179,7 @@ pub fn network(
 
     // Move the "others" accounts wallet in the main base dir, so that we can
     // use them with `Who::NonValidator`
-    let chain_dir = base_dir.path().join(net.chain_id.as_str());
+    let chain_dir = test_dir.path().join(net.chain_id.as_str());
     std::fs::rename(
         wallet::wallet_file(
             chain_dir
@@ -197,7 +199,7 @@ pub fn network(
 
     Ok(Test {
         working_dir,
-        base_dir,
+        test_dir,
         net,
         genesis,
     })
@@ -213,33 +215,64 @@ pub enum Bin {
 
 #[derive(Debug)]
 pub struct Test {
+    /// The dir where the tests run from, usually the repo root dir
     pub working_dir: PathBuf,
-    pub base_dir: TempDir,
+    /// Temporary test directory is used as the default base-dir for running
+    /// Anoma cmds
+    pub test_dir: TestDir,
     pub net: Network,
     pub genesis: GenesisConfig,
 }
 
-impl Drop for Test {
-    fn drop(&mut self) {
+#[derive(Debug)]
+pub struct TestDir(Either<TempDir, PathBuf>);
+
+impl AsRef<Path> for TestDir {
+    fn as_ref(&self) -> &Path {
+        match &self.0 {
+            Either::Left(temp_dir) => temp_dir.path(),
+            Either::Right(path) => path.as_ref(),
+        }
+    }
+}
+
+impl TestDir {
+    /// Setup a `TestDir` in a temporary directory. The directory will be
+    /// automatically deleted after the test run, unless `ENV_VAR_KEEP_TEMP`
+    /// is set to `true`.
+    pub fn new() -> Self {
         let keep_temp = match env::var(ENV_VAR_KEEP_TEMP) {
             Ok(val) => val.to_ascii_lowercase() != "false",
             _ => false,
         };
+
         if keep_temp {
-            if cfg!(any(unix, target_os = "redox", target_os = "wasi")) {
-                let path = mem::replace(&mut self.base_dir, tempdir().unwrap());
-                println!(
-                    "{}: \"{}\"",
-                    "Keeping temporary directory at".underline().yellow(),
-                    path.path().to_string_lossy()
-                );
-                mem::forget(path);
-            } else {
-                eprintln!(
-                    "Setting {} is not supported on this platform",
-                    ENV_VAR_KEEP_TEMP
-                );
-            }
+            let path = tempdir().unwrap().into_path();
+            println!(
+                "{}: \"{}\"",
+                "Keeping test directory at".underline().yellow(),
+                path.to_string_lossy()
+            );
+            Self(Either::Right(path))
+        } else {
+            Self(Either::Left(tempdir().unwrap()))
+        }
+    }
+
+    /// Get the [`Path`] to the test directory.
+    pub fn path(&self) -> &Path {
+        self.as_ref()
+    }
+}
+
+impl Drop for Test {
+    fn drop(&mut self) {
+        if let Either::Right(path) = &self.test_dir.0 {
+            println!(
+                "{}: \"{}\"",
+                "Keeping test directory at".underline().yellow(),
+                path.to_string_lossy()
+            );
         }
     }
 }
@@ -369,9 +402,9 @@ impl Test {
 
     pub fn get_base_dir(&self, who: &Who) -> PathBuf {
         match who {
-            Who::NonValidator => self.base_dir.path().to_owned(),
+            Who::NonValidator => self.test_dir.path().to_owned(),
             Who::Validator(index) => self
-                .base_dir
+                .test_dir
                 .path()
                 .join(self.net.chain_id.as_str())
                 .join(utils::NET_ACCOUNTS_DIR)

@@ -1572,7 +1572,7 @@ fn invalid_transactions() -> Result<()> {
 
     // 2. Submit a an invalid transaction (trying to mint tokens should fail
     // in the token's VP)
-    let tx_data_path = test.base_dir.path().join("tx.data");
+    let tx_data_path = test.test_dir.path().join("tx.data");
     let transfer = token::Transfer {
         source: find_address(&test, DAEWON)?,
         target: find_address(&test, ALBERT)?,
@@ -2197,7 +2197,7 @@ fn proposal_submission() -> Result<()> {
 
     // 2. Submit valid proposal
     let valid_proposal_json_path =
-        test.base_dir.path().join("valid_proposal.json");
+        test.test_dir.path().join("valid_proposal.json");
     let proposal_code = wasm_abs_path(TX_PROPOSAL_CODE);
 
     let albert = find_address(&test, ALBERT)?;
@@ -2287,7 +2287,7 @@ fn proposal_submission() -> Result<()> {
     // 6. Submit an invalid proposal
     // proposal is invalid due to voting_end_epoch - voting_start_epoch < 3
     let invalid_proposal_json_path =
-        test.base_dir.path().join("invalid_proposal.json");
+        test.test_dir.path().join("invalid_proposal.json");
     let albert = find_address(&test, ALBERT)?;
     let invalid_proposal_json = json!(
         {
@@ -2544,7 +2544,7 @@ fn proposal_offline() -> Result<()> {
 
     // 2. Create an offline proposal
     let valid_proposal_json_path =
-        test.base_dir.path().join("valid_proposal.json");
+        test.test_dir.path().join("valid_proposal.json");
     let albert = find_address(&test, ALBERT)?;
     let valid_proposal_json = json!(
         {
@@ -2681,7 +2681,6 @@ fn test_genesis_validators() -> Result<()> {
         self, ValidatorPreGenesisConfig,
     };
     use anoma_apps::config::Config;
-    use tempfile::tempdir;
 
     // This test is not using the `setup::network`, because we're setting up
     // custom genesis validators
@@ -2692,7 +2691,7 @@ fn test_genesis_validators() -> Result<()> {
     });
 
     let working_dir = setup::working_dir();
-    let base_dir = tempdir().unwrap();
+    let test_dir = setup::TestDir::new();
     let checksums_path = working_dir
         .join("wasm/checksums.json")
         .to_string_lossy()
@@ -2732,14 +2731,14 @@ fn test_genesis_validators() -> Result<()> {
         ],
         Some(5),
         &working_dir,
-        &base_dir,
+        &test_dir,
         "validator",
         format!("{}:{}", std::file!(), std::line!()),
     )?;
     init_genesis_validator_0.assert_success();
     let validator_0_pre_genesis_dir =
         anoma_apps::client::utils::validator_pre_genesis_dir(
-            base_dir.path(),
+            test_dir.path(),
             validator_0_alias,
         );
     let config = std::fs::read_to_string(
@@ -2768,14 +2767,14 @@ fn test_genesis_validators() -> Result<()> {
         ],
         Some(5),
         &working_dir,
-        &base_dir,
+        &test_dir,
         "validator",
         format!("{}:{}", std::file!(), std::line!()),
     )?;
     init_genesis_validator_1.assert_success();
     let validator_1_pre_genesis_dir =
         anoma_apps::client::utils::validator_pre_genesis_dir(
-            base_dir.path(),
+            test_dir.path(),
             validator_1_alias,
         );
     let config = std::fs::read_to_string(
@@ -2821,11 +2820,11 @@ fn test_genesis_validators() -> Result<()> {
             update_validator_config(1, validator_1_config),
         ),
     ]);
-    let genesis_file = base_dir.path().join("e2e-test-genesis-src.toml");
+    let genesis_file = test_dir.path().join("e2e-test-genesis-src.toml");
     genesis_config::write_genesis_config(&genesis, &genesis_file);
     let genesis_path = genesis_file.to_string_lossy();
 
-    let archive_dir = base_dir.path().to_string_lossy().to_string();
+    let archive_dir = test_dir.path().to_string_lossy().to_string();
     let args = vec![
         "utils",
         "init-network",
@@ -2846,7 +2845,7 @@ fn test_genesis_validators() -> Result<()> {
         args,
         Some(5),
         &working_dir,
-        &base_dir,
+        &test_dir,
         "validator",
         format!("{}:{}", std::file!(), std::line!()),
     )?;
@@ -2863,7 +2862,7 @@ fn test_genesis_validators() -> Result<()> {
     };
     let test = setup::Test {
         working_dir: working_dir.clone(),
-        base_dir,
+        test_dir,
         net,
         genesis,
     };
@@ -2960,7 +2959,7 @@ fn test_genesis_validators() -> Result<()> {
         .unwrap();
 
     // Copy WASMs to each node's chain dir
-    let chain_dir = test.base_dir.path().join(chain_id.as_str());
+    let chain_dir = test.test_dir.path().join(chain_id.as_str());
     setup::copy_wasm_to_chain_dir(
         &working_dir,
         &chain_dir,
