@@ -447,12 +447,6 @@ fn masp_txs_and_queries() -> Result<()> {
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
-    if !cfg!(feature = "ABCI") {
-        ledger.exp_string("started node")?;
-    } else {
-        ledger.exp_string("Started node")?;
-    }
-
     let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
@@ -708,12 +702,6 @@ fn masp_pinned_txs() -> Result<()> {
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
-    if !cfg!(feature = "ABCI") {
-        ledger.exp_string("started node")?;
-    } else {
-        ledger.exp_string("Started node")?;
-    }
-
     let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
@@ -873,12 +861,6 @@ fn masp_incentives() -> Result<()> {
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
-    if !cfg!(feature = "ABCI") {
-        ledger.exp_string("started node")?;
-    } else {
-        ledger.exp_string("Started node")?;
-    }
-
     let _bg_ledger = ledger.background();
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
