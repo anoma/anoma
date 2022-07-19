@@ -40,7 +40,7 @@ paths:
                             - "epoch"
                             - "dry_run_tx"
                           description: >
-                            * `epoch` - Epoch at the given block height
+                            * `epoch` - Get the epoch of the last block (the height argument is not yet supported <https://github.com/anoma/namada/issues/172>)
                             * `dry_run_tx` - Dry run a transaction
                         - type: string
                           description: Read a storage value with exact storage key
