@@ -44,13 +44,13 @@ paths:
                             * `dry_run_tx` - Dry run a transaction
                         - type: string
                           description: Read a storage value with exact storage key
-                          pattern: r"^value\/([\x00-\x7F]|\/)+$"
+                          pattern: r"^value\/.+$"
                         - type: string
                           description: Read a range of storage values with a matching key prefix
-                          pattern: r"^prefix\/([\x00-\x7F]|\/)+$"
+                          pattern: r"^prefix\/.+$"
                         - type: string
                           description: Check if the given storage key exists
-                          pattern: r"^has_key\/([\x00-\x7F]|\/)+$"
+                          pattern: r"^has_key\/.+$"
                     data:
                       description: Optional data to go along with the query (base64-encoded if necessary)
                       type: string
