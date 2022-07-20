@@ -7,6 +7,7 @@ use super::storage as gov_storage;
 use crate::ledger::native_vp::{self, Ctx};
 use crate::ledger::pos::{self as pos_storage, BondId, Bonds};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
+use crate::ledger::vp_env::VpEnv;
 use crate::types::address::{xan as m1t, Address, InternalAddress};
 use crate::types::storage::{Epoch, Key};
 use crate::types::token;
@@ -350,7 +351,7 @@ where
     let max_content_length =
         read(ctx, &max_content_length_parameter_key, ReadType::PRE).ok();
     let has_pre_content = ctx.has_key_pre(&content_key).ok();
-    let post_content = ctx.read_post(&content_key).unwrap();
+    let post_content = ctx.read_bytes_post(&content_key).unwrap();
     match (has_pre_content, post_content, max_content_length) {
         (
             Some(has_pre_content),
@@ -377,7 +378,7 @@ where
     let max_content_length =
         read(ctx, &max_content_length_parameter_key, ReadType::PRE).ok();
     let has_pre_content = ctx.has_key_pre(&content_key).ok();
-    let post_content = ctx.read_post(&content_key).unwrap();
+    let post_content = ctx.read_bytes_post(&content_key).unwrap();
     match (has_pre_content, post_content, max_content_length) {
         (
             Some(has_pre_content),
@@ -504,8 +505,8 @@ where
     T: Clone + BorshDeserialize,
 {
     let storage_result = match read_type {
-        ReadType::PRE => context.read_pre(key),
-        ReadType::POST => context.read_post(key),
+        ReadType::PRE => context.read_bytes_pre(key),
+        ReadType::POST => context.read_bytes_post(key),
     };
 
     match storage_result {

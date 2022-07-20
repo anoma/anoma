@@ -11,7 +11,7 @@ use thiserror::Error;
 
 use self::storage as treasury_storage;
 use super::governance::vp::is_proposal_accepted;
-use crate::ledger::native_vp::{self, Ctx, NativeVp};
+use crate::ledger::native_vp::{self, Ctx, NativeVp, VpEnv};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{xan as nam, Address, InternalAddress};
 use crate::types::storage::Key;
@@ -80,63 +80,30 @@ where
                     let is_max_funds_transfer_key =
                         treasury_storage::get_max_transferable_fund_key();
                     let balance_key = token::balance_key(&nam(), &ADDRESS);
-                    let max_transfer_amount =
-                        self.ctx.read_pre(&is_max_funds_transfer_key);
-                    let pre_balance = self.ctx.read_pre(&balance_key);
-                    let post_balance = self.ctx.read_post(&balance_key);
+                    let max_transfer_amount: std::result::Result<
+                        Option<token::Amount>,
+                        _,
+                    > = self.ctx.read_pre(&is_max_funds_transfer_key);
+                    let pre_balance: std::result::Result<
+                        Option<token::Amount>,
+                        _,
+                    > = self.ctx.read_pre(&balance_key);
+                    let post_balance: std::result::Result<
+                        Option<token::Amount>,
+                        _,
+                    > = self.ctx.read_post(&balance_key);
                     if addr.ne(&ADDRESS) {
                         return true;
                     }
                     match (max_transfer_amount, pre_balance, post_balance) {
                         (
-                            Ok(max_transfer_amount),
-                            Ok(pre_balance),
-                            Ok(post_balance),
+                            Ok(Some(max_transfer_amount)),
+                            Ok(Some(pre_balance)),
+                            Ok(Some(post_balance)),
                         ) => {
-                            match (
-                                max_transfer_amount,
-                                pre_balance,
-                                post_balance,
-                            ) {
-                                (
-                                    Some(max_transfer_amount),
-                                    Some(pre_balance),
-                                    Some(post_balance),
-                                ) => {
-                                    let max_transfer_amount =
-                                        token::Amount::try_from_slice(
-                                            &max_transfer_amount[..],
-                                        )
-                                        .ok();
-                                    let pre_balance =
-                                        token::Amount::try_from_slice(
-                                            &pre_balance[..],
-                                        )
-                                        .ok();
-                                    let post_balance =
-                                        token::Amount::try_from_slice(
-                                            &post_balance[..],
-                                        )
-                                        .ok();
-                                    match (
-                                        max_transfer_amount,
-                                        pre_balance,
-                                        post_balance,
-                                    ) {
-                                        (
-                                            Some(max_transfer_amount),
-                                            Some(pre_balance),
-                                            Some(post_balance),
-                                        ) => {
-                                            post_balance > pre_balance
-                                                || (pre_balance - post_balance
-                                                    <= max_transfer_amount)
-                                        }
-                                        _ => false,
-                                    }
-                                }
-                                _ => false,
-                            }
+                            post_balance > pre_balance
+                                || (pre_balance - post_balance
+                                    <= max_transfer_amount)
                         }
                         _ => false,
                     }

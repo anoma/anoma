@@ -27,6 +27,7 @@ use crate::ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOp
 use crate::ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
 use crate::ibc::core::ics23_commitment::commitment::CommitmentPrefix;
 use crate::ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
+use crate::ledger::native_vp::VpEnv;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::tendermint_proto::Protobuf;
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
@@ -324,7 +325,7 @@ where
         conn_id: &ConnectionId,
     ) -> Result<ConnectionEnd> {
         let key = connection_key(conn_id);
-        match self.ctx.read_pre(&key) {
+        match self.ctx.read_bytes_pre(&key) {
             Ok(Some(value)) => ConnectionEnd::decode_vec(&value).map_err(|e| {
                 Error::InvalidConnection(format!(
                     "Decoding the connection failed: {}",
@@ -356,7 +357,7 @@ where
         conn_id: &ConnectionId,
     ) -> Ics03Result<ConnectionEnd> {
         let key = connection_key(conn_id);
-        match self.ctx.read_post(&key) {
+        match self.ctx.read_bytes_post(&key) {
             Ok(Some(value)) => ConnectionEnd::decode_vec(&value)
                 .map_err(|_| Ics03Error::implementation_specific()),
             Ok(None) => Err(Ics03Error::connection_not_found(conn_id.clone())),

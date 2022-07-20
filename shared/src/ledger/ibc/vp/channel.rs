@@ -45,7 +45,7 @@ use crate::ibc::core::ics24_host::identifier::{
 use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
 use crate::ibc::proofs::Proofs;
 use crate::ibc::timestamp::Timestamp;
-use crate::ledger::native_vp::Error as NativeVpError;
+use crate::ledger::native_vp::{Error as NativeVpError, VpEnv};
 use crate::ledger::parameters;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::tendermint::Time;
@@ -490,7 +490,7 @@ where
     }
 
     fn get_sequence_pre(&self, key: &Key) -> Result<Sequence> {
-        match self.ctx.read_pre(key)? {
+        match self.ctx.read_bytes_pre(key)? {
             Some(value) => {
                 // As ibc-go, u64 like a counter is encoded with big-endian
                 let index: [u8; 8] = value.try_into().map_err(|_| {
@@ -508,7 +508,7 @@ where
     }
 
     fn get_sequence(&self, key: &Key) -> Result<Sequence> {
-        match self.ctx.read_post(key)? {
+        match self.ctx.read_bytes_post(key)? {
             Some(value) => {
                 // As ibc-go, u64 like a counter is encoded with big-endian
                 let index: [u8; 8] = value.try_into().map_err(|_| {
@@ -547,7 +547,7 @@ where
         port_channel_id: &PortChannelId,
     ) -> Result<ChannelEnd> {
         let key = channel_key(port_channel_id);
-        match self.ctx.read_pre(&key) {
+        match self.ctx.read_bytes_pre(&key) {
             Ok(Some(value)) => ChannelEnd::decode_vec(&value).map_err(|e| {
                 Error::InvalidChannel(format!(
                     "Decoding the channel failed: Port/Channel {}, {}",
@@ -594,7 +594,7 @@ where
         key: &(PortId, ChannelId, Sequence),
     ) -> Result<String> {
         let key = commitment_key(&key.0, &key.1, key.2);
-        match self.ctx.read_pre(&key)? {
+        match self.ctx.read_bytes_pre(&key)? {
             Some(value) => String::decode(&value[..]).map_err(|e| {
                 Error::InvalidPacketInfo(format!(
                     "Decoding the prior commitment failed: {}",
@@ -613,7 +613,7 @@ where
         client_id: &ClientId,
     ) -> Result<Timestamp> {
         let key = client_update_timestamp_key(client_id);
-        match self.ctx.read_pre(&key)? {
+        match self.ctx.read_bytes_pre(&key)? {
             Some(value) => {
                 let time = Time::decode_vec(&value).map_err(|_| {
                     Error::InvalidTimestamp(format!(
@@ -635,7 +635,7 @@ where
         client_id: &ClientId,
     ) -> Result<Height> {
         let key = client_update_height_key(client_id);
-        match self.ctx.read_pre(&key)? {
+        match self.ctx.read_bytes_pre(&key)? {
             Some(value) => Height::decode_vec(&value).map_err(|_| {
                 Error::InvalidHeight(format!(
                     "Height conversion failed: ID {}",
@@ -671,7 +671,7 @@ where
             channel_id: port_channel_id.1.clone(),
         };
         let key = channel_key(&port_channel_id);
-        match self.ctx.read_post(&key) {
+        match self.ctx.read_bytes_post(&key) {
             Ok(Some(value)) => ChannelEnd::decode_vec(&value)
                 .map_err(|_| Ics04Error::implementation_specific()),
             Ok(None) => Err(Ics04Error::channel_not_found(
@@ -818,7 +818,7 @@ where
         key: &(PortId, ChannelId, Sequence),
     ) -> Ics04Result<String> {
         let commitment_key = commitment_key(&key.0, &key.1, key.2);
-        match self.ctx.read_post(&commitment_key) {
+        match self.ctx.read_bytes_post(&commitment_key) {
             Ok(Some(value)) => String::decode(&value[..])
                 .map_err(|_| Ics04Error::implementation_specific()),
             Ok(None) => Err(Ics04Error::packet_commitment_not_found(key.2)),
@@ -832,7 +832,7 @@ where
     ) -> Ics04Result<Receipt> {
         let receipt_key = receipt_key(&key.0, &key.1, key.2);
         let expect = PacketReceipt::default().as_bytes().to_vec();
-        match self.ctx.read_post(&receipt_key) {
+        match self.ctx.read_bytes_post(&receipt_key) {
             Ok(Some(v)) if v == expect => Ok(Receipt::Ok),
             _ => Err(Ics04Error::packet_receipt_not_found(key.2)),
         }
@@ -844,7 +844,7 @@ where
         key: &(PortId, ChannelId, Sequence),
     ) -> Ics04Result<String> {
         let ack_key = ack_key(&key.0, &key.1, key.2);
-        match self.ctx.read_post(&ack_key) {
+        match self.ctx.read_bytes_post(&ack_key) {
             Ok(Some(_)) => Ok(PacketAck::default().to_string()),
             Ok(None) => Err(Ics04Error::packet_commitment_not_found(key.2)),
             Err(_) => Err(Ics04Error::implementation_specific()),
@@ -881,7 +881,7 @@ where
         height: Height,
     ) -> Ics04Result<Timestamp> {
         let key = client_update_timestamp_key(client_id);
-        match self.ctx.read_post(&key) {
+        match self.ctx.read_bytes_post(&key) {
             Ok(Some(value)) => {
                 let time = Time::decode_vec(&value)
                     .map_err(|_| Ics04Error::implementation_specific())?;
@@ -901,7 +901,7 @@ where
         height: Height,
     ) -> Ics04Result<Height> {
         let key = client_update_height_key(client_id);
-        match self.ctx.read_post(&key) {
+        match self.ctx.read_bytes_post(&key) {
             Ok(Some(value)) => Height::decode_vec(&value)
                 .map_err(|_| Ics04Error::implementation_specific()),
             Ok(None) => Err(Ics04Error::processed_height_not_found(

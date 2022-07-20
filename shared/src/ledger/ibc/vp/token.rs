@@ -10,7 +10,7 @@ use crate::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::Msg
 use crate::ibc::core::ics04_channel::msgs::PacketMsg;
 use crate::ibc::core::ics04_channel::packet::Packet;
 use crate::ibc::core::ics26_routing::msgs::Ics26Envelope;
-use crate::ledger::native_vp::{self, Ctx, NativeVp};
+use crate::ledger::native_vp::{self, Ctx, NativeVp, VpEnv};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::proto::SignedTxData;
 use crate::types::address::{Address, Error as AddressError, InternalAddress};
@@ -136,9 +136,10 @@ where
             // sink zone
             let target = Address::Internal(InternalAddress::IbcBurn);
             let target_key = token::balance_key(&token, &target);
-            let post =
-                try_decode_token_amount(self.ctx.read_temp(&target_key)?)?
-                    .unwrap_or_default();
+            let post = try_decode_token_amount(
+                self.ctx.read_bytes_temp(&target_key)?,
+            )?
+            .unwrap_or_default();
             // the previous balance of the burn address should be zero
             post.change()
         } else {
@@ -149,11 +150,13 @@ where
                     msg.source_channel.to_string(),
                 ));
             let target_key = token::balance_key(&token, &target);
-            let pre = try_decode_token_amount(self.ctx.read_pre(&target_key)?)?
-                .unwrap_or_default();
-            let post =
-                try_decode_token_amount(self.ctx.read_post(&target_key)?)?
+            let pre =
+                try_decode_token_amount(self.ctx.read_bytes_pre(&target_key)?)?
                     .unwrap_or_default();
+            let post = try_decode_token_amount(
+                self.ctx.read_bytes_post(&target_key)?,
+            )?
+            .unwrap_or_default();
             post.change() - pre.change()
         };
 
@@ -189,19 +192,22 @@ where
                     packet.destination_channel.to_string(),
                 ));
             let source_key = token::balance_key(&token, &source);
-            let pre = try_decode_token_amount(self.ctx.read_pre(&source_key)?)?
-                .unwrap_or_default();
-            let post =
-                try_decode_token_amount(self.ctx.read_post(&source_key)?)?
+            let pre =
+                try_decode_token_amount(self.ctx.read_bytes_pre(&source_key)?)?
                     .unwrap_or_default();
+            let post = try_decode_token_amount(
+                self.ctx.read_bytes_post(&source_key)?,
+            )?
+            .unwrap_or_default();
             pre.change() - post.change()
         } else {
             // the sender is the source
             let source = Address::Internal(InternalAddress::IbcMint);
             let source_key = token::balance_key(&token, &source);
-            let post =
-                try_decode_token_amount(self.ctx.read_temp(&source_key)?)?
-                    .unwrap_or_default();
+            let post = try_decode_token_amount(
+                self.ctx.read_bytes_temp(&source_key)?,
+            )?
+            .unwrap_or_default();
             // the previous balance of the mint address should be the maximum
             Amount::max().change() - post.change()
         };
@@ -235,9 +241,10 @@ where
             // sink zone: mint the token for the refund
             let source = Address::Internal(InternalAddress::IbcMint);
             let source_key = token::balance_key(&token, &source);
-            let post =
-                try_decode_token_amount(self.ctx.read_temp(&source_key)?)?
-                    .unwrap_or_default();
+            let post = try_decode_token_amount(
+                self.ctx.read_bytes_temp(&source_key)?,
+            )?
+            .unwrap_or_default();
             // the previous balance of the mint address should be the maximum
             Amount::max().change() - post.change()
         } else {
@@ -248,11 +255,13 @@ where
                     packet.source_channel.to_string(),
                 ));
             let source_key = token::balance_key(&token, &source);
-            let pre = try_decode_token_amount(self.ctx.read_pre(&source_key)?)?
-                .unwrap_or_default();
-            let post =
-                try_decode_token_amount(self.ctx.read_post(&source_key)?)?
+            let pre =
+                try_decode_token_amount(self.ctx.read_bytes_pre(&source_key)?)?
                     .unwrap_or_default();
+            let post = try_decode_token_amount(
+                self.ctx.read_bytes_post(&source_key)?,
+            )?
+            .unwrap_or_default();
             pre.change() - post.change()
         };
 

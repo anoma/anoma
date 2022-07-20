@@ -17,7 +17,7 @@ pub use token::{Error as IbcTokenError, IbcToken};
 use super::storage::{client_id, ibc_prefix, is_client_counter_key, IbcPrefix};
 use crate::ibc::core::ics02_client::context::ClientReader;
 use crate::ibc::events::IbcEvent;
-use crate::ledger::native_vp::{self, Ctx, NativeVp};
+use crate::ledger::native_vp::{self, Ctx, NativeVp, VpEnv};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::proto::SignedTxData;
 use crate::types::address::{Address, InternalAddress};
@@ -184,7 +184,7 @@ where
     }
 
     fn read_counter_pre(&self, key: &Key) -> Result<u64> {
-        match self.ctx.read_pre(key) {
+        match self.ctx.read_bytes_pre(key) {
             Ok(Some(value)) => {
                 // As ibc-go, u64 like a counter is encoded with big-endian
                 let counter: [u8; 8] = value.try_into().map_err(|_| {
@@ -205,7 +205,7 @@ where
     }
 
     fn read_counter(&self, key: &Key) -> Result<u64> {
-        match self.ctx.read_post(key) {
+        match self.ctx.read_bytes_post(key) {
             Ok(Some(value)) => {
                 // As ibc-go, u64 like a counter is encoded with big-endian
                 let counter: [u8; 8] = value.try_into().map_err(|_| {
@@ -374,6 +374,8 @@ mod tests {
     use crate::types::ibc::data::{PacketAck, PacketReceipt};
     use crate::vm::wasm;
     use crate::types::storage::{BlockHash, BlockHeight};
+
+    const ADDRESS: Address = Address::Internal(InternalAddress::Ibc);
 
     fn get_client_id() -> ClientId {
         ClientId::from_str("test_client").expect("Creating a client ID failed")
@@ -568,13 +570,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
-
         let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
         keys_changed.insert(client_state_key);
 
         let verifiers = BTreeSet::new();
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
 
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
@@ -598,13 +608,22 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         let client_state_key = client_state_key(&get_client_id());
         keys_changed.insert(client_state_key);
 
         let verifiers = BTreeSet::new();
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
 
         let ibc = Ibc { ctx };
         // this should fail because no state is stored
@@ -668,13 +687,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(client_state_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
@@ -717,13 +744,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
@@ -763,13 +798,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         // this should fail because no client exists
         let result = ibc
@@ -835,13 +878,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         // this should return true because state has been stored
         assert!(
@@ -913,13 +964,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -978,13 +1037,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(conn_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1029,13 +1096,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1099,13 +1174,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1177,13 +1260,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1250,13 +1341,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(channel_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1281,13 +1380,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(port_key(&get_port_id()));
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1313,13 +1420,22 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         let cap_key = capability_key(index);
         keys_changed.insert(cap_key);
 
         let verifiers = BTreeSet::new();
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1390,13 +1506,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1469,13 +1593,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1553,13 +1685,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(seq_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1633,13 +1773,21 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
 
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(commitment_key);
 
         let verifiers = BTreeSet::new();
-
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
         let ibc = Ibc { ctx };
         assert!(
             ibc.validate_tx(
@@ -1717,12 +1865,20 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
-
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(receipt_key);
 
         let verifiers = BTreeSet::new();
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
 
         let ibc = Ibc { ctx };
         assert!(
@@ -1757,12 +1913,20 @@ mod tests {
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
             wasm::compilation_cache::common::testing::cache();
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_wasm_cache);
-
         let mut keys_changed = BTreeSet::new();
         keys_changed.insert(ack_key);
 
         let verifiers = BTreeSet::new();
+        let ctx = Ctx::new(
+            &ADDRESS,
+            &storage,
+            &write_log,
+            &tx,
+            gas_meter,
+            &keys_changed,
+            &verifiers,
+            vp_wasm_cache,
+        );
 
         let ibc = Ibc { ctx };
         assert!(
