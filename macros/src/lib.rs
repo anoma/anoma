@@ -15,7 +15,10 @@ use syn::{parse_macro_input, DeriveInput, ItemFn};
 /// This macro expects a function with signature:
 ///
 /// ```compiler_fail
-/// fn apply_tx(tx_data: Vec<u8>)
+/// fn apply_tx(
+///     ctx: &mut Ctx,
+///     tx_data: Vec<u8>
+/// ) -> TxResult
 /// ```
 #[proc_macro_attribute]
 pub fn transaction(_attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -38,7 +41,19 @@ pub fn transaction(_attr: TokenStream, input: TokenStream) -> TokenStream {
                 )
             };
             let tx_data = slice.to_vec();
-            #ident(tx_data);
+
+            // The context on WASM side is only provided by the VM once its
+            // being executed (in here it's implicit). But because we want to
+            // have interface consistent with the VP interface, in which the
+            // context is explicit, in here we're just using an empty `Ctx`
+            // to "fake" it.
+            let mut ctx = unsafe { anoma_tx_prelude::Ctx::new() };
+
+            if let Err(err) = #ident(&mut ctx, tx_data) {
+                anoma_tx_prelude::debug_log!("Transaction error: {}", err);
+                // crash the transaction to abort
+                panic!();
+            }
         }
     };
     TokenStream::from(gen)
@@ -50,11 +65,12 @@ pub fn transaction(_attr: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// ```compiler_fail
 /// fn validate_tx(
+///     ctx: &Ctx,
 ///     tx_data: Vec<u8>,
 ///     addr: Address,
 ///     keys_changed: BTreeSet<storage::Key>,
 ///     verifiers: BTreeSet<Address>
-/// ) -> bool
+/// ) -> VpResult
 /// ```
 #[proc_macro_attribute]
 pub fn validity_predicate(
@@ -74,7 +90,6 @@ pub fn validity_predicate(
         #[no_mangle]
         extern "C" fn _validate_tx(
             // VP's account's address
-            // TODO Should the address be on demand (a call to host function?)
             addr_ptr: u64,
             addr_len: u64,
             tx_data_ptr: u64,
@@ -113,11 +128,22 @@ pub fn validity_predicate(
             };
             let verifiers: BTreeSet<Address> = BTreeSet::try_from_slice(slice).unwrap();
 
+            // The context on WASM side is only provided by the VM once its
+            // being executed (in here it's implicit). But because we want to
+            // have interface identical with the native VPs, in which the
+            // context is explicit, in here we're just using an empty `Ctx`
+            // to "fake" it.
+            let ctx = unsafe { anoma_vp_prelude::Ctx::new() };
+
             // run validation with the concrete type(s)
-            if #ident(tx_data, addr, keys_changed, verifiers) {
-                1
-            } else {
-                0
+            match #ident(&ctx, tx_data, addr, keys_changed, verifiers)
+            {
+                Ok(true) => 1,
+                Ok(false) => 0,
+                Err(err) => {
+                    anoma_vp_prelude::debug_log!("Validity predicate error: {}", err);
+                    0
+                },
             }
         }
     };
