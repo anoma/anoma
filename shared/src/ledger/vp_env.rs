@@ -3,6 +3,7 @@
 
 use std::num::TryFromIntError;
 
+use borsh::BorshDeserialize;
 use thiserror::Error;
 
 use super::gas::MIN_STORAGE_GAS;
@@ -12,7 +13,133 @@ use crate::ledger::storage::write_log::WriteLog;
 use crate::ledger::storage::{self, write_log, Storage, StorageHasher};
 use crate::proto::Tx;
 use crate::types::hash::Hash;
+use crate::types::key::common;
 use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
+
+/// Validity predicate's environment is available for native VPs and WASM VPs
+pub trait VpEnv {
+    /// Storage read prefix iterator
+    type PrefixIter;
+
+    /// Host functions possible error.
+    ///
+    /// In a native VP this may be out-of-gas error, however, because WASM VP is
+    /// sandboxed and gas accounting is injected by and handled in the host,
+    /// in WASM VP this error is [`std::convert::Infallible`].
+    type Error;
+
+    /// Storage read prior state Borsh encoded value (before tx execution). It
+    /// will try to read from the storage and decode it if found.
+    fn read_pre<T: BorshDeserialize>(
+        &self,
+        key: &Key,
+    ) -> Result<Option<T>, Self::Error>;
+
+    /// Storage read prior state raw bytes (before tx execution). It
+    /// will try to read from the storage.
+    fn read_bytes_pre(&self, key: &Key)
+    -> Result<Option<Vec<u8>>, Self::Error>;
+
+    /// Storage read posterior state Borsh encoded value (after tx execution).
+    /// It will try to read from the write log first and if no entry found
+    /// then from the storage and then decode it if found.
+    fn read_post<T: BorshDeserialize>(
+        &self,
+        key: &Key,
+    ) -> Result<Option<T>, Self::Error>;
+
+    /// Storage read posterior state raw bytes (after tx execution). It will try
+    /// to read from the write log first and if no entry found then from the
+    /// storage.
+    fn read_bytes_post(
+        &self,
+        key: &Key,
+    ) -> Result<Option<Vec<u8>>, Self::Error>;
+
+    /// Storage read temporary state Borsh encoded value (after tx execution).
+    /// It will try to read from only the write log and then decode it if
+    /// found.
+    fn read_temp<T: BorshDeserialize>(
+        &self,
+        key: &Key,
+    ) -> Result<Option<T>, Self::Error>;
+
+    /// Storage read temporary state raw bytes (after tx execution). It will try
+    /// to read from only the write log.
+    fn read_bytes_temp(
+        &self,
+        key: &Key,
+    ) -> Result<Option<Vec<u8>>, Self::Error>;
+
+    /// Storage `has_key` in prior state (before tx execution). It will try to
+    /// read from the storage.
+    fn has_key_pre(&self, key: &Key) -> Result<bool, Self::Error>;
+
+    /// Storage `has_key` in posterior state (after tx execution). It will try
+    /// to check the write log first and if no entry found then the storage.
+    fn has_key_post(&self, key: &Key) -> Result<bool, Self::Error>;
+
+    /// Getting the chain ID.
+    fn get_chain_id(&self) -> Result<String, Self::Error>;
+
+    /// Getting the block height. The height is that of the block to which the
+    /// current transaction is being applied.
+    fn get_block_height(&self) -> Result<BlockHeight, Self::Error>;
+
+    /// Getting the block hash. The height is that of the block to which the
+    /// current transaction is being applied.
+    fn get_block_hash(&self) -> Result<BlockHash, Self::Error>;
+
+    /// Getting the block epoch. The epoch is that of the block to which the
+    /// current transaction is being applied.
+    fn get_block_epoch(&self) -> Result<Epoch, Self::Error>;
+
+    /// Storage prefix iterator. It will try to get an iterator from the
+    /// storage.
+    fn iter_prefix(
+        &self,
+        prefix: &Key,
+    ) -> Result<Self::PrefixIter, Self::Error>;
+
+    /// Storage prefix iterator for prior state (before tx execution). It will
+    /// try to read from the storage.
+    fn iter_pre_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> Result<Option<(String, Vec<u8>)>, Self::Error>;
+
+    /// Storage prefix iterator next for posterior state (after tx execution).
+    /// It will try to read from the write log first and if no entry found
+    /// then from the storage.
+    fn iter_post_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> Result<Option<(String, Vec<u8>)>, Self::Error>;
+
+    /// Evaluate a validity predicate with given data. The address, changed
+    /// storage keys and verifiers will have the same values as the input to
+    /// caller's validity predicate.
+    ///
+    /// If the execution fails for whatever reason, this will return `false`.
+    /// Otherwise returns the result of evaluation.
+    fn eval(
+        &self,
+        vp_code: Vec<u8>,
+        input_data: Vec<u8>,
+    ) -> Result<bool, Self::Error>;
+
+    /// Verify a transaction signature. The signature is expected to have been
+    /// produced on the encoded transaction [`crate::proto::Tx`]
+    /// using [`crate::proto::Tx::sign`].
+    fn verify_tx_signature(
+        &self,
+        pk: &common::PublicKey,
+        sig: &common::Signature,
+    ) -> Result<bool, Self::Error>;
+
+    /// Get a tx hash
+    fn get_tx_code_hash(&self) -> Result<Hash, Self::Error>;
+}
 
 /// These runtime errors will abort VP execution immediately
 #[allow(missing_docs)]
@@ -37,10 +164,10 @@ pub enum RuntimeError {
 }
 
 /// VP environment function result
-pub type Result<T> = std::result::Result<T, RuntimeError>;
+pub type EnvResult<T> = std::result::Result<T, RuntimeError>;
 
 /// Add a gas cost incured in a validity predicate
-pub fn add_gas(gas_meter: &mut VpGasMeter, used_gas: u64) -> Result<()> {
+pub fn add_gas(gas_meter: &mut VpGasMeter, used_gas: u64) -> EnvResult<()> {
     let result = gas_meter.add(used_gas).map_err(RuntimeError::OutOfGas);
     if let Err(err) = &result {
         tracing::info!("Stopping VP execution because of gas error: {}", err);
@@ -55,7 +182,7 @@ pub fn read_pre<DB, H>(
     storage: &Storage<DB, H>,
     write_log: &WriteLog,
     key: &Key,
-) -> Result<Option<Vec<u8>>>
+) -> EnvResult<Option<Vec<u8>>>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -96,7 +223,7 @@ pub fn read_post<DB, H>(
     storage: &Storage<DB, H>,
     write_log: &WriteLog,
     key: &Key,
-) -> Result<Option<Vec<u8>>>
+) -> EnvResult<Option<Vec<u8>>>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -137,7 +264,7 @@ pub fn read_temp(
     gas_meter: &mut VpGasMeter,
     write_log: &WriteLog,
     key: &Key,
-) -> Result<Option<Vec<u8>>> {
+) -> EnvResult<Option<Vec<u8>>> {
     // Try to read from the write log first
     let (log_val, gas) = write_log.read(key);
     add_gas(gas_meter, gas)?;
@@ -156,7 +283,7 @@ pub fn has_key_pre<DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &Storage<DB, H>,
     key: &Key,
-) -> Result<bool>
+) -> EnvResult<bool>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -174,7 +301,7 @@ pub fn has_key_post<DB, H>(
     storage: &Storage<DB, H>,
     write_log: &WriteLog,
     key: &Key,
-) -> Result<bool>
+) -> EnvResult<bool>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -204,7 +331,7 @@ where
 pub fn get_chain_id<DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &Storage<DB, H>,
-) -> Result<String>
+) -> EnvResult<String>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -219,7 +346,7 @@ where
 pub fn get_block_height<DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &Storage<DB, H>,
-) -> Result<BlockHeight>
+) -> EnvResult<BlockHeight>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -234,7 +361,7 @@ where
 pub fn get_block_hash<DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &Storage<DB, H>,
-) -> Result<BlockHash>
+) -> EnvResult<BlockHash>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -246,7 +373,10 @@ where
 
 /// Getting the block hash. The height is that of the block to which the
 /// current transaction is being applied.
-pub fn get_tx_code_hash(gas_meter: &mut VpGasMeter, tx: &Tx) -> Result<Hash> {
+pub fn get_tx_code_hash(
+    gas_meter: &mut VpGasMeter,
+    tx: &Tx,
+) -> EnvResult<Hash> {
     let hash = Hash(tx.code_hash());
     add_gas(gas_meter, MIN_STORAGE_GAS)?;
     Ok(hash)
@@ -257,7 +387,7 @@ pub fn get_tx_code_hash(gas_meter: &mut VpGasMeter, tx: &Tx) -> Result<Hash> {
 pub fn get_block_epoch<DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &Storage<DB, H>,
-) -> Result<Epoch>
+) -> EnvResult<Epoch>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -272,7 +402,7 @@ pub fn iter_prefix<'a, DB, H>(
     gas_meter: &mut VpGasMeter,
     storage: &'a Storage<DB, H>,
     prefix: &Key,
-) -> Result<<DB as storage::DBIter<'a>>::PrefixIter>
+) -> EnvResult<<DB as storage::DBIter<'a>>::PrefixIter>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -287,7 +417,7 @@ where
 pub fn iter_pre_next<DB>(
     gas_meter: &mut VpGasMeter,
     iter: &mut <DB as storage::DBIter<'_>>::PrefixIter,
-) -> Result<Option<(String, Vec<u8>)>>
+) -> EnvResult<Option<(String, Vec<u8>)>>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
 {
@@ -305,7 +435,7 @@ pub fn iter_post_next<DB>(
     gas_meter: &mut VpGasMeter,
     write_log: &WriteLog,
     iter: &mut <DB as storage::DBIter<'_>>::PrefixIter,
-) -> Result<Option<(String, Vec<u8>)>>
+) -> EnvResult<Option<(String, Vec<u8>)>>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
 {

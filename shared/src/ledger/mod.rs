@@ -9,4 +9,5 @@ pub mod parameters;
 pub mod pos;
 pub mod storage;
 pub mod treasury;
+pub mod tx_env;
 pub mod vp_env;
