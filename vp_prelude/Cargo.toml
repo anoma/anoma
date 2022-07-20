@@ -10,13 +10,19 @@ version = "0.6.1"
 default = ["ABCI"]
 
 ABCI = [
+  "anoma/ABCI",
   "anoma_vm_env/ABCI",
 ]
 
 ABCI-plus-plus = [
+  "anoma/ABCI-plus-plus",
   "anoma_vm_env/ABCI-plus-plus",
 ]
 
 [dependencies]
+anoma = {path = "../shared", default-features = false}
 anoma_vm_env = {path = "../vm_env", default-features = false}
+anoma_macros = {path = "../macros"}
+borsh = "0.9.0"
 sha2 = "0.10.1"
+thiserror = "1.0.30"

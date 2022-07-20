@@ -255,7 +255,8 @@ version = "0.6.1"
 dependencies = [
  "anoma",
  "anoma_apps",
- "anoma_vm_env",
+ "anoma_tx_prelude",
+ "anoma_vp_prelude",
  "assert_cmd",
  "borsh",
  "chrono",
@@ -290,8 +291,12 @@ dependencies = [
 name = "anoma_tx_prelude"
 version = "0.6.1"
 dependencies = [
+ "anoma",
+ "anoma_macros",
  "anoma_vm_env",
+ "borsh",
  "sha2 0.10.2",
+ "thiserror",
 ]
 
 [[package]]
@@ -299,17 +304,19 @@ name = "anoma_vm_env"
 version = "0.6.1"
 dependencies = [
  "anoma",
- "anoma_macros",
  "borsh",
- "hex",
 ]
 
 [[package]]
 name = "anoma_vp_prelude"
 version = "0.6.1"
 dependencies = [
+ "anoma",
+ "anoma_macros",
  "anoma_vm_env",
+ "borsh",
  "sha2 0.10.2",
+ "thiserror",
 ]
 
 [[package]]
