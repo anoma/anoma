@@ -249,10 +249,13 @@ where
                 }
                 Address::Internal(internal_addr) => {
                     let ctx = native_vp::Ctx::new(
+                        addr,
                         storage,
                         write_log,
                         tx,
                         gas_meter,
+                        &keys_changed,
+                        &verifiers,
                         vp_wasm_cache.clone(),
                     );
                     let tx_data = match tx.data.as_ref() {
