@@ -6,7 +6,7 @@
 use anoma_tx_prelude::*;
 
 #[transaction]
-fn apply_tx(tx_data: Vec<u8>) {
+fn apply_tx(ctx: &mut Ctx, tx_data: Vec<u8>) -> TxResult {
     let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-    Ibc.dispatch(&signed.data.unwrap()).unwrap()
+    ctx.dispatch_ibc_action(&signed.data.unwrap())
 }

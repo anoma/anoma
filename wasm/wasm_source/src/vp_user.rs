@@ -57,11 +57,12 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
 
 #[validity_predicate]
 fn validate_tx(
+    ctx: &Ctx,
     tx_data: Vec<u8>,
     addr: Address,
     keys_changed: BTreeSet<storage::Key>,
     verifiers: BTreeSet<Address>,
-) -> bool {
+) -> VpResult {
     debug_log!(
         "vp_user called with user addr: {}, key_changed: {:?}, verifiers: {:?}",
         addr,
@@ -74,22 +75,32 @@ fn validate_tx(
 
     let valid_sig = Lazy::new(|| match &*signed_tx_data {
         Ok(signed_tx_data) => {
-            let pk = key::get(&addr);
+            let pk = key::get(ctx, &addr);
             match pk {
-                Some(pk) => verify_tx_signature(&pk, &signed_tx_data.sig),
-                None => false,
+                Ok(Some(pk)) => {
+                    matches!(
+                        ctx.verify_tx_signature(&pk, &signed_tx_data.sig),
+                        Ok(true)
+                    )
+                }
+                _ => false,
             }
         }
         _ => false,
     });
 
     let valid_intent = Lazy::new(|| match &*signed_tx_data {
-        Ok(signed_tx_data) => check_intent_transfers(&addr, signed_tx_data),
+        Ok(signed_tx_data) => {
+            matches!(
+                check_intent_transfers(ctx, &addr, signed_tx_data),
+                Ok(true)
+            )
+        }
         _ => false,
     });
 
-    if !is_tx_whitelisted() {
-        return false;
+    if !is_tx_whitelisted(ctx)? {
+        return reject();
     }
 
     for key in keys_changed.iter() {
@@ -97,10 +108,10 @@ fn validate_tx(
         let is_valid = match key_type {
             KeyType::Token(owner) => {
                 if owner == &addr {
-                    let key = key.to_string();
-                    let pre: token::Amount = read_pre(&key).unwrap_or_default();
+                    let pre: token::Amount =
+                        ctx.read_pre(key)?.unwrap_or_default();
                     let post: token::Amount =
-                        read_post(&key).unwrap_or_default();
+                        ctx.read_post(key)?.unwrap_or_default();
                     let change = post.change() - pre.change();
                     // debit has to signed, credit doesn't
                     let valid = change >= 0 || *valid_sig || *valid_intent;
@@ -150,11 +161,10 @@ fn validate_tx(
             }
             KeyType::InvalidIntentSet(owner) => {
                 if owner == &addr {
-                    let key = key.to_string();
                     let pre: HashSet<key::common::Signature> =
-                        read_pre(&key).unwrap_or_default();
+                        ctx.read_pre(key)?.unwrap_or_default();
                     let post: HashSet<key::common::Signature> =
-                        read_post(&key).unwrap_or_default();
+                        ctx.read_post(key)?.unwrap_or_default();
                     // A new invalid intent must have been added
                     pre.len() + 1 == post.len()
                 } else {
@@ -184,18 +194,17 @@ fn validate_tx(
                 }
             }
             KeyType::Vp(owner) => {
-                let key = key.to_string();
-                let has_post: bool = has_key_post(&key);
+                let has_post: bool = ctx.has_key_post(key)?;
                 if owner == &addr {
                     if has_post {
-                        let vp: Vec<u8> = read_bytes_post(&key).unwrap();
-                        return *valid_sig && is_vp_whitelisted(&vp);
+                        let vp: Vec<u8> = ctx.read_bytes_post(key)?.unwrap();
+                        *valid_sig && is_vp_whitelisted(ctx, &vp)?
                     } else {
-                        return false;
+                        false
                     }
                 } else {
-                    let vp: Vec<u8> = read_bytes_post(&key).unwrap();
-                    return is_vp_whitelisted(&vp);
+                    let vp: Vec<u8> = ctx.read_bytes_post(key)?.unwrap();
+                    is_vp_whitelisted(ctx, &vp)?
                 }
             }
             KeyType::Unknown => {
@@ -211,24 +220,25 @@ fn validate_tx(
         };
         if !is_valid {
             debug_log!("key {} modification failed vp", key);
-            return false;
+            return reject();
         }
     }
 
-    true
+    accept()
 }
 
 fn check_intent_transfers(
+    ctx: &Ctx,
     addr: &Address,
     signed_tx_data: &SignedTxData,
-) -> bool {
+) -> EnvResult<bool> {
     if let Some((raw_intent_transfers, exchange, intent)) =
         try_decode_intent(addr, signed_tx_data)
     {
         log_string("check intent");
-        return check_intent(addr, exchange, intent, raw_intent_transfers);
+        return check_intent(ctx, addr, exchange, intent, raw_intent_transfers);
     }
-    false
+    reject()
 }
 
 fn try_decode_intent(
@@ -259,25 +269,26 @@ fn try_decode_intent(
 }
 
 fn check_intent(
+    ctx: &Ctx,
     addr: &Address,
     exchange: anoma_vp_prelude::Signed<Exchange>,
     intent: anoma_vp_prelude::Signed<FungibleTokenIntent>,
     raw_intent_transfers: Vec<u8>,
-) -> bool {
+) -> EnvResult<bool> {
     // verify signature
-    let pk = key::get(addr);
+    let pk = key::get(ctx, addr)?;
     if let Some(pk) = pk {
         if intent.verify(&pk).is_err() {
             log_string("invalid sig");
-            return false;
+            return reject();
         }
     } else {
-        return false;
+        return reject();
     }
 
     // verify the intent have not been already used
-    if !intent::vp_exchange(&exchange) {
-        return false;
+    if !intent::vp_exchange(ctx, &exchange)? {
+        return reject();
     }
 
     // verify the intent is fulfilled
@@ -294,10 +305,10 @@ fn check_intent(
     debug_log!("vp is: {}", vp.is_some());
 
     if let Some(code) = vp {
-        let eval_result = eval(code.to_vec(), raw_intent_transfers);
+        let eval_result = ctx.eval(code.to_vec(), raw_intent_transfers)?;
         debug_log!("eval result: {}", eval_result);
         if !eval_result {
-            return false;
+            return reject();
         }
     }
 
@@ -310,18 +321,19 @@ fn check_intent(
         rate_min.0
     );
 
-    let token_sell_key = token::balance_key(token_sell, addr).to_string();
+    let token_sell_key = token::balance_key(token_sell, addr);
     let mut sell_difference: token::Amount =
-        read_pre(&token_sell_key).unwrap_or_default();
+        ctx.read_pre(&token_sell_key)?.unwrap_or_default();
     let sell_post: token::Amount =
-        read_post(token_sell_key).unwrap_or_default();
+        ctx.read_post(&token_sell_key)?.unwrap_or_default();
 
     sell_difference.spend(&sell_post);
 
-    let token_buy_key = token::balance_key(token_buy, addr).to_string();
-    let buy_pre: token::Amount = read_pre(&token_buy_key).unwrap_or_default();
+    let token_buy_key = token::balance_key(token_buy, addr);
+    let buy_pre: token::Amount =
+        ctx.read_pre(&token_buy_key)?.unwrap_or_default();
     let mut buy_difference: token::Amount =
-        read_post(token_buy_key).unwrap_or_default();
+        ctx.read_post(&token_buy_key)?.unwrap_or_default();
 
     buy_difference.spend(&buy_pre);
 
@@ -354,9 +366,9 @@ fn check_intent(
             min_buy.change(),
             buy_diff / sell_diff
         );
-        false
+        reject()
     } else {
-        true
+        accept()
     }
 }
 
@@ -365,9 +377,10 @@ mod tests {
     use address::testing::arb_non_internal_address;
     // Use this as `#[test]` annotation to enable logging
     use anoma_tests::log::test;
-    use anoma_tests::tx::{tx_host_env, TestTxEnv};
+    use anoma_tests::tx::{self, tx_host_env, TestTxEnv};
     use anoma_tests::vp::vp_host_env::storage::Key;
     use anoma_tests::vp::*;
+    use anoma_tx_prelude::TxEnv;
     use anoma_vp_prelude::key::RefTo;
     use proptest::prelude::*;
     use storage::testing::arb_account_storage_key_no_vp;
@@ -388,7 +401,9 @@ mod tests {
         // The VP env must be initialized before calling `validate_tx`
         vp_host_env::init();
 
-        assert!(validate_tx(tx_data, addr, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, addr, keys_changed, verifiers).unwrap()
+        );
     }
 
     /// Test that a credit transfer is accepted.
@@ -412,7 +427,14 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(&source, address, &token, amount);
+            tx_host_env::token::transfer(
+                tx::ctx(),
+                &source,
+                address,
+                &token,
+                amount,
+            )
+            .unwrap();
         });
 
         let vp_env = vp_host_env::take();
@@ -421,7 +443,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a debit transfer without a valid signature is rejected.
@@ -445,7 +470,14 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(address, &target, &token, amount);
+            tx_host_env::token::transfer(
+                tx::ctx(),
+                address,
+                &target,
+                &token,
+                amount,
+            )
+            .unwrap();
         });
 
         let vp_env = vp_host_env::take();
@@ -454,7 +486,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            !validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a debit transfer with a valid signature is accepted.
@@ -482,7 +517,14 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(address, &target, &token, amount);
+            tx_host_env::token::transfer(
+                tx::ctx(),
+                address,
+                &target,
+                &token,
+                amount,
+            )
+            .unwrap();
         });
 
         let mut vp_env = vp_host_env::take();
@@ -494,7 +536,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a transfer on with accounts other than self is accepted.
@@ -518,9 +563,16 @@ mod tests {
 
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
-            tx_host_env::insert_verifier(address);
+            tx::ctx().insert_verifier(address).unwrap();
             // Apply transfer in a transaction
-            tx_host_env::token::transfer(&source, &target, &token, amount);
+            tx_host_env::token::transfer(
+                tx::ctx(),
+                &source,
+                &target,
+                &token,
+                amount,
+            )
+            .unwrap();
         });
 
         let vp_env = vp_host_env::take();
@@ -529,7 +581,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     prop_compose! {
@@ -569,9 +624,9 @@ mod tests {
             vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |_address| {
                 // Write or delete some data in the transaction
                 if let Some(value) = &storage_value {
-                    tx_host_env::write(storage_key.to_string(), value);
+                    tx::ctx().write(&storage_key, value).unwrap();
                 } else {
-                    tx_host_env::delete(storage_key.to_string());
+                    tx::ctx().delete(&storage_key).unwrap();
                 }
             });
 
@@ -581,7 +636,7 @@ mod tests {
                 vp_env.all_touched_storage_keys();
             let verifiers: BTreeSet<Address> = BTreeSet::default();
             vp_host_env::set(vp_env);
-            assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+            assert!(!validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers).unwrap());
         }
     }
 
@@ -611,9 +666,9 @@ mod tests {
             vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |_address| {
                 // Write or delete some data in the transaction
                 if let Some(value) = &storage_value {
-                    tx_host_env::write(storage_key.to_string(), value);
+                    tx::ctx().write(&storage_key, value).unwrap();
                 } else {
-                    tx_host_env::delete(storage_key.to_string());
+                    tx::ctx().delete(&storage_key).unwrap();
                 }
             });
 
@@ -626,7 +681,7 @@ mod tests {
             vp_env.all_touched_storage_keys();
             let verifiers: BTreeSet<Address> = BTreeSet::default();
             vp_host_env::set(vp_env);
-            assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+            assert!(validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers).unwrap());
         }
     }
 
@@ -647,7 +702,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
-            tx_host_env::update_validity_predicate(address, &vp_code);
+            tx::ctx()
+                .update_validity_predicate(address, &vp_code)
+                .unwrap();
         });
 
         let vp_env = vp_host_env::take();
@@ -656,7 +713,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            !validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a validity predicate update with a valid signature is
@@ -681,7 +741,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
-            tx_host_env::update_validity_predicate(address, &vp_code);
+            tx::ctx()
+                .update_validity_predicate(address, &vp_code)
+                .unwrap();
         });
 
         let mut vp_env = vp_host_env::take();
@@ -693,7 +755,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a validity predicate update is rejected if not whitelisted
@@ -717,7 +782,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
-            tx_host_env::update_validity_predicate(address, &vp_code);
+            tx::ctx()
+                .update_validity_predicate(address, &vp_code)
+                .unwrap();
         });
 
         let mut vp_env = vp_host_env::take();
@@ -729,7 +796,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            !validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a validity predicate update is accepted if whitelisted
@@ -755,7 +825,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
-            tx_host_env::update_validity_predicate(address, &vp_code);
+            tx::ctx()
+                .update_validity_predicate(address, &vp_code)
+                .unwrap();
         });
 
         let mut vp_env = vp_host_env::take();
@@ -767,7 +839,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     /// Test that a tx is rejected if not whitelisted
@@ -797,7 +872,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
-            tx_host_env::update_validity_predicate(address, &vp_code);
+            tx::ctx()
+                .update_validity_predicate(address, &vp_code)
+                .unwrap();
         });
 
         let mut vp_env = vp_host_env::take();
@@ -809,7 +886,10 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(!validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            !validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 
     #[test]
@@ -834,7 +914,9 @@ mod tests {
         // Initialize VP environment from a transaction
         vp_host_env::init_from_tx(vp_owner.clone(), tx_env, |address| {
             // Update VP in a transaction
-            tx_host_env::update_validity_predicate(address, &vp_code);
+            tx::ctx()
+                .update_validity_predicate(address, &vp_code)
+                .unwrap();
         });
 
         let mut vp_env = vp_host_env::take();
@@ -846,6 +928,9 @@ mod tests {
             vp_env.all_touched_storage_keys();
         let verifiers: BTreeSet<Address> = BTreeSet::default();
         vp_host_env::set(vp_env);
-        assert!(validate_tx(tx_data, vp_owner, keys_changed, verifiers));
+        assert!(
+            validate_tx(&CTX, tx_data, vp_owner, keys_changed, verifiers)
+                .unwrap()
+        );
     }
 }

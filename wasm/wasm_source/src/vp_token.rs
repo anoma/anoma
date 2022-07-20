@@ -5,11 +5,12 @@ use anoma_vp_prelude::*;
 
 #[validity_predicate]
 fn validate_tx(
+    ctx: &Ctx,
     _tx_data: Vec<u8>,
     addr: Address,
     keys_changed: BTreeSet<storage::Key>,
     verifiers: BTreeSet<Address>,
-) -> bool {
+) -> VpResult {
     debug_log!(
         "validate_tx called with token addr: {}, key_changed: {:?}, \
          verifiers: {:?}",
@@ -18,20 +19,18 @@ fn validate_tx(
         verifiers
     );
 
-    if !is_tx_whitelisted() {
-        return false;
+    if !is_tx_whitelisted(ctx)? {
+        return reject();
     }
 
-    let vp_check =
-        keys_changed
-            .iter()
-            .all(|key| match key.is_validity_predicate() {
-                Some(_) => {
-                    let vp: Vec<u8> = read_bytes_post(key.to_string()).unwrap();
-                    is_vp_whitelisted(&vp)
-                }
-                None => true,
-            });
+    for key in keys_changed.iter() {
+        if key.is_validity_predicate().is_some() {
+            let vp: Vec<u8> = ctx.read_bytes_post(key)?.unwrap();
+            if !is_vp_whitelisted(ctx, &vp)? {
+                return reject();
+            }
+        }
+    }
 
-    vp_check && token::vp(&addr, &keys_changed, &verifiers)
+    token::vp(ctx, &addr, &keys_changed, &verifiers)
 }

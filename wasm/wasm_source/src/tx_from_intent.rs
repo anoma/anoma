@@ -5,7 +5,7 @@
 use anoma_tx_prelude::*;
 
 #[transaction]
-fn apply_tx(tx_data: Vec<u8>) {
+fn apply_tx(ctx: &mut Ctx, tx_data: Vec<u8>) -> TxResult {
     let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
 
     let tx_data =
@@ -14,7 +14,7 @@ fn apply_tx(tx_data: Vec<u8>) {
     let tx_data = tx_data.unwrap();
 
     // make sure that the matchmaker has to validate this tx
-    insert_verifier(&tx_data.source);
+    ctx.insert_verifier(&tx_data.source)?;
 
     for token::Transfer {
         source,
@@ -23,13 +23,11 @@ fn apply_tx(tx_data: Vec<u8>) {
         amount,
     } in tx_data.matches.transfers
     {
-        token::transfer(&source, &target, &token, amount);
+        token::transfer(ctx, &source, &target, &token, amount)?;
     }
 
-    tx_data
-        .matches
-        .exchanges
-        .values()
-        .into_iter()
-        .for_each(intent::invalidate_exchange);
+    for intent in tx_data.matches.exchanges.values() {
+        intent::invalidate_exchange(ctx, intent)?;
+    }
+    Ok(())
 }

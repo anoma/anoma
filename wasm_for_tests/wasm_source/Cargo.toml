@@ -26,7 +26,6 @@ tx_proposal_code = []
 
 [dependencies]
 anoma_tx_prelude = {path = "../../tx_prelude"}
-anoma_vm_env = {path = "../../vm_env"}
 anoma_vp_prelude = {path = "../../vp_prelude"}
 borsh = "0.9.1"
 wee_alloc = "0.4.5"
