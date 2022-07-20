@@ -1,5 +1,5 @@
 use core::time::Duration;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use anoma::ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
@@ -60,24 +60,22 @@ use anoma::ledger::ibc::vp::{
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::Sha256Hasher;
+use anoma::ledger::tx_env::TxEnv;
 use anoma::proto::Tx;
 use anoma::tendermint_proto::Protobuf;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
-use anoma::types::ibc::IbcEvent;
-use anoma::types::storage::{BlockHash, BlockHeight, Key};
-use anoma::types::time::Rfc3339String;
+use anoma::types::storage::{self, BlockHash, BlockHeight};
 use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
-use tempfile::TempDir;
 
-use crate::tx::*;
+use crate::tx::{self, *};
 
 const VP_ALWAYS_TRUE_WASM: &str = "../wasm_for_tests/vp_always_true.wasm";
+const ADDRESS: Address = Address::Internal(InternalAddress::Ibc);
 
 pub struct TestIbcVp<'a> {
     pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
-    pub keys_changed: BTreeSet<Key>,
 }
 
 impl<'a> TestIbcVp<'a> {
@@ -85,14 +83,16 @@ impl<'a> TestIbcVp<'a> {
         &self,
         tx_data: &[u8],
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::Error> {
-        self.ibc
-            .validate_tx(tx_data, &self.keys_changed, &BTreeSet::new())
+        self.ibc.validate_tx(
+            tx_data,
+            self.ibc.ctx.keys_changed,
+            self.ibc.ctx.verifiers,
+        )
     }
 }
 
 pub struct TestIbcTokenVp<'a> {
     pub token: IbcToken<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
-    pub keys_changed: BTreeSet<Key>,
 }
 
 impl<'a> TestIbcTokenVp<'a> {
@@ -100,82 +100,85 @@ impl<'a> TestIbcTokenVp<'a> {
         &self,
         tx_data: &[u8],
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::IbcTokenError> {
-        self.token
-            .validate_tx(tx_data, &self.keys_changed, &BTreeSet::new())
+        self.token.validate_tx(
+            tx_data,
+            self.token.ctx.keys_changed,
+            self.token.ctx.verifiers,
+        )
     }
 }
 
-pub struct TestIbcActions;
+// pub struct TestIbcActions;
 
-impl IbcActions for TestIbcActions {
-    /// Read IBC-related data
-    fn read_ibc_data(&self, key: &Key) -> Option<Vec<u8>> {
-        tx_host_env::read_bytes(key.to_string())
-    }
+// impl IbcActions for TestIbcActions {
+//     /// Read IBC-related data
+//     fn read_ibc_data(&self, key: &Key) -> Option<Vec<u8>> {
+//         tx_host_env::CTX.read_bytes(key.to_string())
+//     }
 
-    /// Write IBC-related data
-    fn write_ibc_data(&self, key: &Key, data: impl AsRef<[u8]>) {
-        tx_host_env::write_bytes(key.to_string(), data)
-    }
+//     /// Write IBC-related data
+//     fn write_ibc_data(&self, key: &Key, data: impl AsRef<[u8]>) {
+//         tx_host_env::write_bytes(key.to_string(), data)
+//     }
 
-    /// Delete IBC-related data
-    fn delete_ibc_data(&self, key: &Key) {
-        tx_host_env::delete(key.to_string())
-    }
+//     /// Delete IBC-related data
+//     fn delete_ibc_data(&self, key: &Key) {
+//         tx_host_env::delete(key.to_string())
+//     }
 
-    /// Emit an IBC event
-    fn emit_ibc_event(&self, event: IbcEvent) {
-        tx_host_env::emit_ibc_event(&event)
-    }
+//     /// Emit an IBC event
+//     fn emit_ibc_event(&self, event: IbcEvent) {
+//         tx_host_env::emit_ibc_event(&event)
+//     }
 
-    fn transfer_token(
-        &self,
-        src: &Address,
-        dest: &Address,
-        token: &Address,
-        amount: Amount,
-    ) {
-        let src_key = token::balance_key(token, src);
-        let dest_key = token::balance_key(token, dest);
-        let src_bal: Option<Amount> = tx_host_env::read(&src_key.to_string());
-        let mut src_bal = src_bal.unwrap_or_else(|| match src {
-            Address::Internal(InternalAddress::IbcMint) => Amount::max(),
-            _ => unreachable!(),
-        });
-        src_bal.spend(&amount);
-        let mut dest_bal: Amount =
-            tx_host_env::read(&dest_key.to_string()).unwrap_or_default();
-        dest_bal.receive(&amount);
-        match src {
-            Address::Internal(InternalAddress::IbcMint) => {
-                tx_host_env::write_temp(&src_key.to_string(), src_bal)
-            }
-            Address::Internal(InternalAddress::IbcBurn) => unreachable!(),
-            _ => tx_host_env::write(&src_key.to_string(), src_bal),
-        }
-        match dest {
-            Address::Internal(InternalAddress::IbcMint) => unreachable!(),
-            Address::Internal(InternalAddress::IbcBurn) => {
-                tx_host_env::write_temp(&dest_key.to_string(), dest_bal)
-            }
-            _ => tx_host_env::write(&dest_key.to_string(), dest_bal),
-        }
-    }
+//     fn transfer_token(
+//         &self,
+//         src: &Address,
+//         dest: &Address,
+//         token: &Address,
+//         amount: Amount,
+//     ) {
+//         let src_key = token::balance_key(token, src);
+//         let dest_key = token::balance_key(token, dest);
+//         let src_bal: Option<Amount> =
+// tx_host_env::read(&src_key.to_string());         let mut src_bal =
+// src_bal.unwrap_or_else(|| match src {
+// Address::Internal(InternalAddress::IbcMint) => Amount::max(),             _
+// => unreachable!(),         });
+//         src_bal.spend(&amount);
+//         let mut dest_bal: Amount =
+//             tx_host_env::read(&dest_key.to_string()).unwrap_or_default();
+//         dest_bal.receive(&amount);
+//         match src {
+//             Address::Internal(InternalAddress::IbcMint) => {
+//                 tx_host_env::write_temp(&src_key.to_string(), src_bal)
+//             }
+//             Address::Internal(InternalAddress::IbcBurn) => unreachable!(),
+//             _ => tx_host_env::write(&src_key.to_string(), src_bal),
+//         }
+//         match dest {
+//             Address::Internal(InternalAddress::IbcMint) => unreachable!(),
+//             Address::Internal(InternalAddress::IbcBurn) => {
+//                 tx_host_env::write_temp(&dest_key.to_string(), dest_bal)
+//             }
+//             _ => tx_host_env::write(&dest_key.to_string(), dest_bal),
+//         }
+//     }
 
-    fn get_height(&self) -> BlockHeight {
-        tx_host_env::get_block_height()
-    }
+//     fn get_height(&self) -> BlockHeight {
+//         tx_host_env::get_block_height()
+//     }
 
-    fn get_header_time(&self) -> Rfc3339String {
-        tx_host_env::get_block_time()
-    }
-}
+//     fn get_header_time(&self) -> Rfc3339String {
+//         tx_host_env::get_block_time()
+//     }
+// }
 
-/// Initialize IBC VP by running a transaction.
-pub fn init_ibc_vp_from_tx<'a>(
+/// Validate an IBC transaction with IBC VP.
+pub fn validate_ibc_vp_from_tx<'a>(
     tx_env: &'a TestTxEnv,
     tx: &'a Tx,
-) -> (TestIbcVp<'a>, TempDir) {
+) -> std::result::Result<bool, anoma::ledger::ibc::vp::Error> {
     let (verifiers, keys_changed) = tx_env
         .write_log
         .verifiers_and_changed_keys(&tx_env.verifiers);
@@ -186,27 +189,30 @@ pub fn init_ibc_vp_from_tx<'a>(
             addr, verifiers
         );
     }
-    let (vp_wasm_cache, vp_cache_dir) =
+    let (vp_wasm_cache, _vp_cache_dir) =
         wasm::compilation_cache::common::testing::cache();
 
     let ctx = Ctx::new(
+        &ADDRESS,
         &tx_env.storage,
         &tx_env.write_log,
         tx,
         VpGasMeter::new(0),
+        &keys_changed,
+        &verifiers,
         vp_wasm_cache,
     );
     let ibc = Ibc { ctx };
 
-    (TestIbcVp { ibc, keys_changed }, vp_cache_dir)
+    TestIbcVp { ibc }.validate(tx.data.as_ref().unwrap())
 }
 
-/// Initialize the native token VP for the given address
-pub fn init_token_vp_from_tx<'a>(
+/// Validate the native token VP for the given address
+pub fn validate_token_vp_from_tx<'a>(
     tx_env: &'a TestTxEnv,
     tx: &'a Tx,
     addr: &Address,
-) -> (TestIbcTokenVp<'a>, TempDir) {
+) -> std::result::Result<bool, anoma::ledger::ibc::vp::IbcTokenError> {
     let (verifiers, keys_changed) = tx_env
         .write_log
         .verifiers_and_changed_keys(&tx_env.verifiers);
@@ -217,26 +223,57 @@ pub fn init_token_vp_from_tx<'a>(
             addr, verifiers
         );
     }
-    let (vp_wasm_cache, vp_cache_dir) =
+    let (vp_wasm_cache, _vp_cache_dir) =
         wasm::compilation_cache::common::testing::cache();
 
     let ctx = Ctx::new(
+        &ADDRESS,
         &tx_env.storage,
         &tx_env.write_log,
         tx,
         VpGasMeter::new(0),
+        &keys_changed,
+        &verifiers,
         vp_wasm_cache,
     );
     let token = IbcToken { ctx };
 
-    (
-        TestIbcTokenVp {
-            token,
-            keys_changed,
-        },
-        vp_cache_dir,
-    )
+    TestIbcTokenVp { token }.validate(tx.data.as_ref().unwrap())
 }
+
+// /// Initialize the native token VP for the given address
+// pub fn init_token_vp_from_tx<'a>(
+//     tx_env: &'a TestTxEnv,
+//     tx: &'a Tx,
+//     addr: &Address,
+// ) -> (TestIbcTokenVp<'a>, TempDir) {
+//     let (verifiers, keys_changed) = tx_env
+//         .write_log
+//         .verifiers_and_changed_keys(&tx_env.verifiers);
+//     if !verifiers.contains(addr) {
+//         panic!(
+//             "The given token address {} isn't part of the tx verifiers set: \
+//              {:#?}",
+//             addr, verifiers
+//         );
+//     }
+//     let (vp_wasm_cache, vp_cache_dir) =
+//         wasm::compilation_cache::common::testing::cache();
+
+//     let ctx = Ctx::new(
+//         &ADDRESS,
+//         &tx_env.storage,
+//         &tx_env.write_log,
+//         tx,
+//         VpGasMeter::new(0),
+//         &keys_changed,
+//         &verifiers,
+//         vp_wasm_cache,
+//     );
+//     let token = IbcToken { ctx };
+
+//     (TestIbcTokenVp { token }, vp_cache_dir)
+// }
 
 /// Initialize the test storage. Requires initialized [`tx_host_env::ENV`].
 pub fn init_storage() -> (Address, Address) {
@@ -251,17 +288,18 @@ pub fn init_storage() -> (Address, Address) {
 
     // initialize a token
     let code = std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
-    let token = tx_host_env::init_account(code.clone());
+    let token = tx::ctx().init_account(code.clone()).unwrap();
 
     // initialize an account
-    let account = tx_host_env::init_account(code);
+    let account = tx::ctx().init_account(code).unwrap();
     let key = token::balance_key(&token, &account);
     let init_bal = Amount::from(1_000_000_000u64);
-    tx_host_env::write(key.to_string(), init_bal);
+    tx::ctx().write(&key, init_bal).unwrap();
     (token, account)
 }
 
-pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {
+pub fn prepare_client()
+-> (ClientId, AnyClientState, HashMap<storage::Key, Vec<u8>>) {
     let mut writes = HashMap::new();
 
     let msg = msg_create_client();
@@ -292,7 +330,7 @@ pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {
 
 pub fn prepare_opened_connection(
     client_id: &ClientId,
-) -> (ConnectionId, HashMap<Key, Vec<u8>>) {
+) -> (ConnectionId, HashMap<storage::Key, Vec<u8>>) {
     let mut writes = HashMap::new();
 
     let conn_id = connection_id(0);
@@ -313,7 +351,7 @@ pub fn prepare_opened_connection(
 pub fn prepare_opened_channel(
     conn_id: &ConnectionId,
     is_ordered: bool,
-) -> (PortId, ChannelId, HashMap<Key, Vec<u8>>) {
+) -> (PortId, ChannelId, HashMap<storage::Key, Vec<u8>>) {
     let mut writes = HashMap::new();
 
     // port

@@ -10,17 +10,27 @@ use anoma::types::storage::{self, Key};
 use anoma::vm::prefix_iter::PrefixIterators;
 use anoma::vm::wasm::{self, VpCache};
 use anoma::vm::{self, WasmCacheRwAccess};
+use anoma_vp_prelude::Ctx;
 use tempfile::TempDir;
 
 use crate::tx::{tx_host_env, TestTxEnv};
+
+/// VP execution context provides access to host env functions
+pub static CTX: Ctx = unsafe { Ctx::new() };
+
+/// VP execution context provides access to host env functions
+pub fn ctx() -> &'static Ctx {
+    &CTX
+}
 
 /// This module combines the native host function implementations from
 /// `native_vp_host_env` with the functions exposed to the vp wasm
 /// that will call to the native functions, instead of interfacing via a
 /// wasm runtime. It can be used for host environment integration tests.
 pub mod vp_host_env {
-    pub use anoma_vm_env::vp_prelude::*;
+    pub use anoma_vp_prelude::*;
 
+    pub use super::ctx;
     pub use super::native_vp_host_env::*;
 }
 
@@ -160,7 +170,7 @@ mod native_vp_host_env {
     /// Initialize the VP host environment in [`ENV`] by running a transaction.
     /// The transaction is expected to modify the storage sub-space of the given
     /// address `addr` or to add it to the set of verifiers using
-    /// [`tx_host_env::insert_verifier`].
+    /// `ctx.insert_verifier`.
     pub fn init_from_tx(
         addr: Address,
         mut tx_env: TestTxEnv,

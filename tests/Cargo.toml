@@ -14,18 +14,21 @@ wasm-runtime = ["anoma/wasm-runtime"]
 ABCI = [
   "anoma/ABCI",
   "anoma/ibc-mocks-abci",
-  "anoma_vm_env/ABCI",
+  "anoma_vp_prelude/ABCI",
+  "anoma_tx_prelude/ABCI",
 ]
 
 ABCI-plus-plus = [
   "anoma/ABCI-plus-plus",
   "anoma/ibc-mocks",
-  "anoma_vm_env/ABCI-plus-plus",
+  "anoma_vp_prelude/ABCI-plus-plus",
+  "anoma_tx_prelude/ABCI-plus-plus",
 ]
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing"]}
-anoma_vm_env = {path = "../vm_env", default-features = false}
+anoma_vp_prelude = {path = "../vp_prelude", default-features = false}
+anoma_tx_prelude = {path = "../tx_prelude", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
 prost = "0.9.0"
