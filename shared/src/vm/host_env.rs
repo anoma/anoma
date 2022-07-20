@@ -68,7 +68,7 @@ pub enum TxRuntimeError {
 type TxResult<T> = std::result::Result<T, TxRuntimeError>;
 
 /// A transaction's host environment
-pub struct TxEnv<'a, MEM, DB, H, CA>
+pub struct TxVmEnv<'a, MEM, DB, H, CA>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -112,7 +112,7 @@ where
     pub cache_access: std::marker::PhantomData<CA>,
 }
 
-impl<'a, MEM, DB, H, CA> TxEnv<'a, MEM, DB, H, CA>
+impl<'a, MEM, DB, H, CA> TxVmEnv<'a, MEM, DB, H, CA>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -167,7 +167,7 @@ where
     }
 }
 
-impl<MEM, DB, H, CA> Clone for TxEnv<'_, MEM, DB, H, CA>
+impl<MEM, DB, H, CA> Clone for TxVmEnv<'_, MEM, DB, H, CA>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -207,7 +207,7 @@ where
 }
 
 /// A validity predicate's host environment
-pub struct VpEnv<'a, MEM, DB, H, EVAL, CA>
+pub struct VpVmEnv<'a, MEM, DB, H, EVAL, CA>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -282,7 +282,7 @@ pub trait VpEvaluator {
     ) -> HostEnvResult;
 }
 
-impl<'a, MEM, DB, H, EVAL, CA> VpEnv<'a, MEM, DB, H, EVAL, CA>
+impl<'a, MEM, DB, H, EVAL, CA> VpVmEnv<'a, MEM, DB, H, EVAL, CA>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -331,7 +331,7 @@ where
     }
 }
 
-impl<MEM, DB, H, EVAL, CA> Clone for VpEnv<'_, MEM, DB, H, EVAL, CA>
+impl<MEM, DB, H, EVAL, CA> Clone for VpVmEnv<'_, MEM, DB, H, EVAL, CA>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -435,7 +435,7 @@ where
 
 /// Called from tx wasm to request to use the given gas amount
 pub fn tx_charge_gas<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     used_gas: i32,
 ) -> TxResult<()>
 where
@@ -454,7 +454,7 @@ where
 
 /// Add a gas cost incured in a transaction
 pub fn tx_add_gas<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     used_gas: u64,
 ) -> TxResult<()>
 where
@@ -477,9 +477,9 @@ where
 
 /// Called from VP wasm to request to use the given gas amount
 pub fn vp_charge_gas<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     used_gas: i32,
-) -> vp_env::Result<()>
+) -> vp_env::EnvResult<()>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -499,7 +499,7 @@ where
 /// Storage `has_key` function exposed to the wasm VM Tx environment. It will
 /// try to check the write log first and if no entry found then the storage.
 pub fn tx_has_key<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     key_ptr: u64,
     key_len: u64,
 ) -> TxResult<i64>
@@ -555,7 +555,7 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn tx_read<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     key_ptr: u64,
     key_len: u64,
 ) -> TxResult<i64>
@@ -645,7 +645,7 @@ where
 /// any) back to the guest, the second step reads the value from cache into a
 /// pre-allocated buffer with the obtained size.
 pub fn tx_result_buffer<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     result_ptr: u64,
 ) -> TxResult<()>
 where
@@ -667,7 +667,7 @@ where
 /// It will try to get an iterator from the storage and return the corresponding
 /// ID of the iterator.
 pub fn tx_iter_prefix<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     prefix_ptr: u64,
     prefix_len: u64,
 ) -> TxResult<u64>
@@ -702,7 +702,7 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn tx_iter_next<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     iter_id: u64,
 ) -> TxResult<i64>
 where
@@ -781,7 +781,7 @@ where
 /// Storage write function exposed to the wasm VM Tx environment. The given
 /// key/value will be written to the write log.
 pub fn tx_write<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     key_ptr: u64,
     key_len: u64,
     val_ptr: u64,
@@ -822,7 +822,7 @@ where
 /// given key/value will be written only to the write log. It will be never
 /// written to the storage.
 pub fn tx_write_temp<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     key_ptr: u64,
     key_len: u64,
     val_ptr: u64,
@@ -860,7 +860,7 @@ where
 }
 
 fn check_address_existence<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     key: &Key,
 ) -> TxResult<()>
 where
@@ -904,7 +904,7 @@ where
 /// Storage delete function exposed to the wasm VM Tx environment. The given
 /// key/value will be written as deleted to the write log.
 pub fn tx_delete<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     key_ptr: u64,
     key_len: u64,
 ) -> TxResult<()>
@@ -938,7 +938,7 @@ where
 /// Emitting an IBC event function exposed to the wasm VM Tx environment.
 /// The given IBC event will be set to the write log.
 pub fn tx_emit_ibc_event<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     event_ptr: u64,
     event_len: u64,
 ) -> TxResult<()>
@@ -966,10 +966,10 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn vp_read_pre<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     key_ptr: u64,
     key_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1017,10 +1017,10 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn vp_read_post<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     key_ptr: u64,
     key_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1063,10 +1063,10 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn vp_read_temp<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     key_ptr: u64,
     key_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1111,9 +1111,9 @@ where
 /// any) back to the guest, the second step reads the value from cache into a
 /// pre-allocated buffer with the obtained size.
 pub fn vp_result_buffer<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     result_ptr: u64,
-) -> vp_env::Result<()>
+) -> vp_env::EnvResult<()>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1134,10 +1134,10 @@ where
 /// Storage `has_key` in prior state (before tx execution) function exposed to
 /// the wasm VM VP environment. It will try to read from the storage.
 pub fn vp_has_key_pre<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     key_ptr: u64,
     key_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1165,10 +1165,10 @@ where
 /// to the wasm VM VP environment. It will try to check the write log first and
 /// if no entry found then the storage.
 pub fn vp_has_key_post<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     key_ptr: u64,
     key_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1197,10 +1197,10 @@ where
 /// It will try to get an iterator from the storage and return the corresponding
 /// ID of the iterator.
 pub fn vp_iter_prefix<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     prefix_ptr: u64,
     prefix_len: u64,
-) -> vp_env::Result<u64>
+) -> vp_env::EnvResult<u64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1231,9 +1231,9 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn vp_iter_pre_next<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     iter_id: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1271,9 +1271,9 @@ where
 /// Returns `-1` when the key is not present, or the length of the data when
 /// the key is present (the length may be `0`).
 pub fn vp_iter_post_next<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     iter_id: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1308,7 +1308,7 @@ where
 
 /// Verifier insertion function exposed to the wasm VM Tx environment.
 pub fn tx_insert_verifier<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     addr_ptr: u64,
     addr_len: u64,
 ) -> TxResult<()>
@@ -1335,7 +1335,7 @@ where
 
 /// Update a validity predicate function exposed to the wasm VM Tx environment
 pub fn tx_update_validity_predicate<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     addr_ptr: u64,
     addr_len: u64,
     code_ptr: u64,
@@ -1376,7 +1376,7 @@ where
 
 /// Initialize a new account established address.
 pub fn tx_init_account<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     code_ptr: u64,
     code_len: u64,
     result_ptr: u64,
@@ -1419,7 +1419,7 @@ where
 
 /// Getting the chain ID function exposed to the wasm VM Tx environment.
 pub fn tx_get_chain_id<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     result_ptr: u64,
 ) -> TxResult<()>
 where
@@ -1442,7 +1442,7 @@ where
 /// environment. The height is that of the block to which the current
 /// transaction is being applied.
 pub fn tx_get_block_height<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
 ) -> TxResult<u64>
 where
     MEM: VmMemory,
@@ -1459,7 +1459,7 @@ where
 /// Getting the block hash function exposed to the wasm VM Tx environment. The
 /// hash is that of the block to which the current transaction is being applied.
 pub fn tx_get_block_hash<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     result_ptr: u64,
 ) -> TxResult<()>
 where
@@ -1482,7 +1482,7 @@ where
 /// environment. The epoch is that of the block to which the current
 /// transaction is being applied.
 pub fn tx_get_block_epoch<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
 ) -> TxResult<u64>
 where
     MEM: VmMemory,
@@ -1498,9 +1498,9 @@ where
 
 /// Getting the chain ID function exposed to the wasm VM VP environment.
 pub fn vp_get_chain_id<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     result_ptr: u64,
-) -> vp_env::Result<()>
+) -> vp_env::EnvResult<()>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1522,8 +1522,8 @@ where
 /// environment. The height is that of the block to which the current
 /// transaction is being applied.
 pub fn vp_get_block_height<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
-) -> vp_env::Result<u64>
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
+) -> vp_env::EnvResult<u64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1541,7 +1541,7 @@ where
 /// environment. The time is that of the block header to which the current
 /// transaction is being applied.
 pub fn tx_get_block_time<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
 ) -> TxResult<i64>
 where
     MEM: VmMemory,
@@ -1576,9 +1576,9 @@ where
 /// Getting the block hash function exposed to the wasm VM VP environment. The
 /// hash is that of the block to which the current transaction is being applied.
 pub fn vp_get_block_hash<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     result_ptr: u64,
-) -> vp_env::Result<()>
+) -> vp_env::EnvResult<()>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1598,9 +1598,9 @@ where
 
 /// Getting the transaction hash function exposed to the wasm VM VP environment.
 pub fn vp_get_tx_code_hash<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     result_ptr: u64,
-) -> vp_env::Result<()>
+) -> vp_env::EnvResult<()>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1622,8 +1622,8 @@ where
 /// environment. The epoch is that of the block to which the current
 /// transaction is being applied.
 pub fn vp_get_block_epoch<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
-) -> vp_env::Result<u64>
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
+) -> vp_env::EnvResult<u64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1639,12 +1639,12 @@ where
 
 /// Verify a transaction signature.
 pub fn vp_verify_tx_signature<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     pk_ptr: u64,
     pk_len: u64,
     sig_ptr: u64,
     sig_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1678,7 +1678,7 @@ where
 /// printed at the [`tracing::Level::INFO`]. This function is for development
 /// only.
 pub fn tx_log_string<MEM, DB, H, CA>(
-    env: &TxEnv<MEM, DB, H, CA>,
+    env: &TxVmEnv<MEM, DB, H, CA>,
     str_ptr: u64,
     str_len: u64,
 ) -> TxResult<()>
@@ -1698,12 +1698,12 @@ where
 
 /// Evaluate a validity predicate with the given input data.
 pub fn vp_eval<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<'static, MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<'static, MEM, DB, H, EVAL, CA>,
     vp_code_ptr: u64,
     vp_code_len: u64,
     input_data_ptr: u64,
     input_data_len: u64,
-) -> vp_env::Result<i64>
+) -> vp_env::EnvResult<i64>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1734,10 +1734,10 @@ where
 /// printed at the [`tracing::Level::INFO`]. This function is for development
 /// only.
 pub fn vp_log_string<MEM, DB, H, EVAL, CA>(
-    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    env: &VpVmEnv<MEM, DB, H, EVAL, CA>,
     str_ptr: u64,
     str_len: u64,
-) -> vp_env::Result<()>
+) -> vp_env::EnvResult<()>
 where
     MEM: VmMemory,
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1773,13 +1773,13 @@ pub mod testing {
         result_buffer: &mut Option<Vec<u8>>,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
         #[cfg(feature = "wasm-runtime")] tx_wasm_cache: &mut TxCache<CA>,
-    ) -> TxEnv<'static, NativeMemory, DB, H, CA>
+    ) -> TxVmEnv<'static, NativeMemory, DB, H, CA>
     where
         DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher,
         CA: WasmCacheAccess,
     {
-        TxEnv::new(
+        TxVmEnv::new(
             NativeMemory::default(),
             storage,
             write_log,
@@ -1808,14 +1808,14 @@ pub mod testing {
         keys_changed: &BTreeSet<Key>,
         eval_runner: &EVAL,
         #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache<CA>,
-    ) -> VpEnv<'static, NativeMemory, DB, H, EVAL, CA>
+    ) -> VpVmEnv<'static, NativeMemory, DB, H, EVAL, CA>
     where
         DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher,
         EVAL: VpEvaluator,
         CA: WasmCacheAccess,
     {
-        VpEnv::new(
+        VpVmEnv::new(
             NativeMemory::default(),
             address,
             storage,

@@ -9,11 +9,11 @@ use wasmer::{
 };
 
 use crate::ledger::storage::{self, StorageHasher};
-use crate::vm::host_env::{TxEnv, VpEnv, VpEvaluator};
+use crate::vm::host_env::{TxVmEnv, VpEvaluator, VpVmEnv};
 use crate::vm::wasm::memory::WasmMemory;
 use crate::vm::{host_env, WasmCacheAccess};
 
-impl<DB, H, CA> WasmerEnv for TxEnv<'_, WasmMemory, DB, H, CA>
+impl<DB, H, CA> WasmerEnv for TxVmEnv<'_, WasmMemory, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -27,7 +27,7 @@ where
     }
 }
 
-impl<DB, H, EVAL, CA> WasmerEnv for VpEnv<'_, WasmMemory, DB, H, EVAL, CA>
+impl<DB, H, EVAL, CA> WasmerEnv for VpVmEnv<'_, WasmMemory, DB, H, EVAL, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -48,7 +48,7 @@ where
 pub fn tx_imports<DB, H, CA>(
     wasm_store: &Store,
     initial_memory: Memory,
-    env: TxEnv<'static, WasmMemory, DB, H, CA>,
+    env: TxVmEnv<'static, WasmMemory, DB, H, CA>,
 ) -> ImportObject
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -87,7 +87,7 @@ where
 pub fn vp_imports<DB, H, EVAL, CA>(
     wasm_store: &Store,
     initial_memory: Memory,
-    env: VpEnv<'static, WasmMemory, DB, H, EVAL, CA>,
+    env: VpVmEnv<'static, WasmMemory, DB, H, EVAL, CA>,
 ) -> ImportObject
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,

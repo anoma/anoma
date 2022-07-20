@@ -17,7 +17,7 @@ use crate::proto::Tx;
 use crate::types::address::Address;
 use crate::types::internal::HostEnvResult;
 use crate::types::storage::Key;
-use crate::vm::host_env::{TxEnv, VpCtx, VpEnv, VpEvaluator};
+use crate::vm::host_env::{TxVmEnv, VpCtx, VpEvaluator, VpVmEnv};
 use crate::vm::prefix_iter::PrefixIterators;
 use crate::vm::types::VpInput;
 use crate::vm::wasm::host_env::{tx_imports, vp_imports};
@@ -94,7 +94,7 @@ where
     let mut verifiers = BTreeSet::new();
     let mut result_buffer: Option<Vec<u8>> = None;
 
-    let env = TxEnv::new(
+    let env = TxVmEnv::new(
         WasmMemory::default(),
         storage,
         write_log,
@@ -189,7 +189,7 @@ where
         cache_access: PhantomData,
     };
 
-    let env = VpEnv::new(
+    let env = VpVmEnv::new(
         WasmMemory::default(),
         address,
         storage,
@@ -344,7 +344,7 @@ where
         let keys_changed = unsafe { ctx.keys_changed.get() };
         let verifiers = unsafe { ctx.verifiers.get() };
         let vp_wasm_cache = unsafe { ctx.vp_wasm_cache.get() };
-        let env = VpEnv {
+        let env = VpVmEnv {
             memory: WasmMemory::default(),
             ctx,
         };
