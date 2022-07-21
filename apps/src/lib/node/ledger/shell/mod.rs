@@ -465,19 +465,7 @@ where
                     }
                 };
                 let validator_raw_hash = match evidence.validator {
-                    Some(validator) => {
-                        match String::from_utf8(validator.address) {
-                            Ok(raw_hash) => raw_hash,
-                            Err(err) => {
-                                tracing::error!(
-                                    "Evidence failed to decode validator \
-                                     address from utf-8 with {}",
-                                    err
-                                );
-                                continue;
-                            }
-                        }
-                    }
+                    Some(validator) => tm_raw_hash_to_string(validator.address),
                     None => {
                         tracing::error!(
                             "Evidence without a validator {:#?}",

@@ -343,6 +343,11 @@ pub fn tm_consensus_key_raw_hash(pk: &common::PublicKey) -> String {
     }
 }
 
+/// Convert Tendermint validator's raw hash bytes to Anoma raw hash string
+pub fn tm_raw_hash_to_string(raw_hash: impl AsRef<[u8]>) -> String {
+    hex::encode_upper(raw_hash)
+}
+
 /// Helpers for testing with keys.
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
