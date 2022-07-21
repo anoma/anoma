@@ -400,7 +400,7 @@ pub enum DbKeySeg {
 
 impl KeySeg for DbKeySeg {
     fn parse(mut string: String) -> Result<Self> {
-        // a separator should not included
+        // a separator should not be included
         if string.contains(KEY_SEGMENT_SEPARATOR) {
             return Err(Error::InvalidKeySeg(string));
         }
