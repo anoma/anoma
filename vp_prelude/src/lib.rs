@@ -33,14 +33,26 @@ pub fn is_vp_whitelisted(vp_bytes: &[u8]) -> bool {
     whitelist.is_empty() || whitelist.contains(&vp_hash.to_string())
 }
 
-/// Log a string in a debug build. The message will be printed at the
-/// `tracing::Level::Info`. Any `debug_log!` statements are only enabled in
-/// non optimized builds by default. An optimized build will not execute
-/// `debug_log!` statements unless `-C debug-assertions` is passed to the
-/// compiler.
+/// Format and log a string in a debug build.
+///
+/// In WASM target debug build, the message will be printed at the
+/// `tracing::Level::Info` when executed in the VM. An optimized build will
+/// omit any `debug_log!` statements unless `-C debug-assertions` is passed to
+/// the compiler.
+///
+/// In non-WASM target, the message is simply printed out to stdout.
 #[macro_export]
 macro_rules! debug_log {
     ($($arg:tt)*) => {{
-        (if cfg!(debug_assertions) { log_string(format!($($arg)*)) })
-    }}
+        (
+            if cfg!(target_arch = "wasm32") {
+                if cfg!(debug_assertions)
+                {
+                    log_string(format!($($arg)*));
+                }
+            } else {
+                println!($($arg)*);
+            }
+        )
+    }};
 }
