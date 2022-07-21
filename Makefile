@@ -210,9 +210,18 @@ build-wasm-image-docker:
 build-wasm-scripts-docker: build-wasm-image-docker
 	docker run --rm -v ${PWD}:/usr/local/rust/wasm anoma-wasm make build-wasm-scripts
 
+debug-wasm-scripts-docker: build-wasm-image-docker
+	docker run --rm -v ${PWD}:/usr/local/rust/wasm anoma-wasm make debug-wasm-scripts
+
 # Build the validity predicate, transactions, matchmaker and matchmaker filter wasm
 build-wasm-scripts:
 	make -C $(wasms)
+	make opt-wasm
+	make checksum-wasm
+
+# Debug build the validity predicate, transactions, matchmaker and matchmaker filter wasm
+debug-wasm-scripts:
+	make -C $(wasms) debug
 	make opt-wasm
 	make checksum-wasm
 
@@ -242,4 +251,4 @@ test-miri:
 	MIRIFLAGS="-Zmiri-disable-isolation" $(cargo) +$(nightly) miri test
 
 
-.PHONY : build check build-release clippy install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker build-wasm-scripts clean-wasm-scripts dev-deps test-miri
+.PHONY : build check build-release clippy install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker debug-wasm-scripts-docker build-wasm-scripts debug-wasm-scripts clean-wasm-scripts dev-deps test-miri

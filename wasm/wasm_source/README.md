@@ -13,7 +13,8 @@ make all
 
 # Each source that is included here can also be build and checked individually, e.g. for "tx_transfer" source:
 
-make tx_transfer         # build
+make tx_transfer         # optimized build (strips `debug_log!` statements)
+make debug_tx_transfer   # debug build
 make check_tx_transfer   # cargo check
 make test_tx_transfer    # cargo test
 make watch_tx_transfer   # cargo watch
