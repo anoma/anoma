@@ -454,8 +454,12 @@ where
         self.write(&params_key(), encode(params)).unwrap();
     }
 
-    fn write_validator_address_raw_hash(&mut self, address: &Self::Address) {
-        let raw_hash = address.raw_hash().unwrap();
+    fn write_validator_address_raw_hash(
+        &mut self,
+        address: &Self::Address,
+        consensus_key: &Self::PublicKey,
+    ) {
+        let raw_hash = key::tm_consensus_key_raw_hash(consensus_key);
         self.write(&validator_address_raw_hash_key(raw_hash), encode(address))
             .unwrap();
     }

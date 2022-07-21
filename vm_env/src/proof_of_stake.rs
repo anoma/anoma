@@ -174,8 +174,12 @@ impl anoma_proof_of_stake::PosActions for PoS {
         tx::write(params_key().to_string(), params)
     }
 
-    fn write_validator_address_raw_hash(&mut self, address: &Self::Address) {
-        let raw_hash = address.raw_hash().unwrap().to_owned();
+    fn write_validator_address_raw_hash(
+        &mut self,
+        address: &Self::Address,
+        consensus_key: &Self::PublicKey,
+    ) {
+        let raw_hash = key::tm_consensus_key_raw_hash(consensus_key);
         tx::write(
             validator_address_raw_hash_key(raw_hash).to_string(),
             address,

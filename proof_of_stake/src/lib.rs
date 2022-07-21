@@ -153,8 +153,12 @@ pub trait PosReadOnly {
 pub trait PosActions: PosReadOnly {
     /// Write PoS parameters.
     fn write_pos_params(&mut self, params: &PosParams);
-    /// Write PoS validator's raw hash its address.
-    fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
+    /// Write PoS validator's raw hash of its consensus key.
+    fn write_validator_address_raw_hash(
+        &mut self,
+        address: &Self::Address,
+        consensus_key: &Self::PublicKey,
+    );
     /// Write PoS validator's staking reward address, into which staking rewards
     /// will be credited.
     fn write_validator_staking_reward_address(
@@ -243,6 +247,7 @@ pub trait PosActions: PosReadOnly {
                 ),
             );
         }
+        let consensus_key_clone = consensus_key.clone();
         let BecomeValidatorData {
             consensus_key,
             state,
@@ -262,7 +267,7 @@ pub trait PosActions: PosReadOnly {
         self.write_validator_consensus_key(address, consensus_key);
         self.write_validator_state(address, state);
         self.write_validator_set(validator_set);
-        self.write_validator_address_raw_hash(address);
+        self.write_validator_address_raw_hash(address, &consensus_key_clone);
         self.write_validator_total_deltas(address, total_deltas);
         self.write_validator_voting_power(address, voting_power);
         Ok(())
@@ -539,7 +544,7 @@ pub trait PosBase {
 
     /// Read PoS parameters.
     fn read_pos_params(&self) -> PosParams;
-    /// Read PoS raw hash of validator's address.
+    /// Read PoS raw hash of validator's consensus key.
     fn read_validator_address_raw_hash(
         &self,
         raw_hash: impl AsRef<str>,
@@ -574,8 +579,12 @@ pub trait PosBase {
 
     /// Write PoS parameters.
     fn write_pos_params(&mut self, params: &PosParams);
-    /// Write PoS validator's raw hash its address.
-    fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
+    /// Write PoS validator's raw hash of its consensus key.
+    fn write_validator_address_raw_hash(
+        &mut self,
+        address: &Self::Address,
+        consensus_key: &Self::PublicKey,
+    );
     /// Write PoS validator's staking reward address, into which staking rewards
     /// will be credited.
     fn write_validator_staking_reward_address(
@@ -685,7 +694,12 @@ pub trait PosBase {
                 voting_power,
                 bond: (bond_id, bond),
             } = res?;
-            self.write_validator_address_raw_hash(address);
+            self.write_validator_address_raw_hash(
+                address,
+                consensus_key
+                    .get(current_epoch)
+                    .expect("Consensus key must be set"),
+            );
             self.write_validator_staking_reward_address(
                 address,
                 &staking_reward_address,
