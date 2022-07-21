@@ -655,6 +655,8 @@ pub mod testing {
         },
         ValidatorAddressRawHash {
             address: Address,
+            #[derivative(Debug = "ignore")]
+            consensus_key: PublicKey,
         },
     }
 
@@ -816,12 +818,14 @@ pub mod testing {
             match self {
                 ValidPosAction::InitValidator(addr) => {
                     let offset = DynEpochOffset::PipelineLen;
+                    let consensus_key = key::testing::keypair_1().ref_to();
                     vec![
                         PosStorageChange::SpawnAccount {
                             address: addr.clone(),
                         },
                         PosStorageChange::ValidatorAddressRawHash {
                             address: addr.clone(),
+                            consensus_key: consensus_key.clone(),
                         },
                         PosStorageChange::ValidatorSet {
                             validator: addr.clone(),
@@ -830,7 +834,7 @@ pub mod testing {
                         },
                         PosStorageChange::ValidatorConsensusKey {
                             validator: addr.clone(),
-                            pk: key::testing::keypair_1().ref_to(),
+                            pk: consensus_key,
                         },
                         PosStorageChange::ValidatorStakingRewardsAddress {
                             validator: addr.clone(),
@@ -1285,8 +1289,11 @@ pub mod testing {
                 }
                 PoS.write_total_voting_power(total_voting_powers)
             }
-            PosStorageChange::ValidatorAddressRawHash { address } => {
-                PoS.write_validator_address_raw_hash(&address);
+            PosStorageChange::ValidatorAddressRawHash {
+                address,
+                consensus_key,
+            } => {
+                PoS.write_validator_address_raw_hash(&address, &consensus_key);
             }
             PosStorageChange::ValidatorSet {
                 validator,
