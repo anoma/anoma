@@ -332,6 +332,17 @@ impl<PK: PublicKey> From<&PK> for PublicKeyHash {
     }
 }
 
+/// Convert validator's consensus key into address raw hash that is compatible
+/// with Tendermint
+pub fn tm_consensus_key_raw_hash(pk: &common::PublicKey) -> String {
+    match pk {
+        common::PublicKey::Ed25519(pk) => {
+            let pkh = PublicKeyHash::from(pk);
+            pkh.0
+        },
+    }
+}
+
 /// Helpers for testing with keys.
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {

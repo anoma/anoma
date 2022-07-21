@@ -294,7 +294,6 @@ pub async fn join_network(
         // Write consensus key to tendermint home
         tendermint_node::write_validator_key(
             &tm_home_dir,
-            &address,
             &*pre_genesis_wallet.consensus_key,
         );
 
@@ -522,11 +521,7 @@ pub fn init_network(
                 wallet.gen_key(Some(alias), unsafe_dont_encrypt);
 
             // Write consensus key for Tendermint
-            tendermint_node::write_validator_key(
-                &tm_home_dir,
-                &address,
-                &keypair,
-            );
+            tendermint_node::write_validator_key(&tm_home_dir, &keypair);
 
             keypair.ref_to()
         });
