@@ -38,7 +38,6 @@ fn everything() {
         .exp_string("Anoma ledger node started")
         .unwrap();
     anoman_ledger.exp_string("Committed block hash").unwrap();
-    let _bg_ledger = anoman_ledger.background();
 
     let tx_data_path = test.test_dir.path().join("queue_storage_key.txt");
     std::fs::write(&tx_data_path, &storage_key("queue")[..]).unwrap();
