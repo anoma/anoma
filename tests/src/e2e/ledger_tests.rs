@@ -1906,3 +1906,148 @@ fn test_genesis_validators() -> Result<()> {
 
     Ok(())
 }
+
+/// In this test we intentionally make a validator node double sign blocks
+/// to test that slashing evidence is received and processed by the ledger
+/// correctly:
+/// 1. Run 2 genesis validator ledger nodes
+/// 2. Copy the first genesis validator base-dir
+/// 3. Increment its ports and generate new node ID to avoid conflict
+/// 4. Run it to get it to double vote and sign blocks
+/// 5. Submit a valid token transfer tx to validator 0
+/// 6. Wait for double signing evidence
+/// TODO: run this test for ABCI-plus-plus once https://github.com/tendermint/tendermint/issues/8840 is fixed
+#[cfg(not(feature = "ABCI-plus-plus"))]
+#[test]
+fn double_signing_gets_slashed() -> Result<()> {
+    use std::net::SocketAddr;
+    use std::str::FromStr;
+
+    use anoma::types::key::{ed25519, SigScheme};
+    use anoma_apps::client;
+    use anoma_apps::config::Config;
+
+    // Setup 2 genesis validator nodes
+    let test =
+        setup::network(|genesis| setup::add_validators(1, genesis), None)?;
+
+    // 1. Run 2 genesis validator ledger nodes
+    let args = ["ledger"];
+    let mut validator_0 =
+        run_as!(test, Who::Validator(0), Bin::Node, args, Some(40))?;
+    validator_0.exp_string("Anoma ledger node started")?;
+    validator_0.exp_string("This node is a validator")?;
+    let _bg_validator_0 = validator_0.background();
+    let mut validator_1 =
+        run_as!(test, Who::Validator(1), Bin::Node, args, Some(40))?;
+    validator_1.exp_string("Anoma ledger node started")?;
+    validator_1.exp_string("This node is a validator")?;
+    let bg_validator_1 = validator_1.background();
+
+    // 2. Copy the first genesis validator base-dir
+    let validator_0_base_dir = test.get_base_dir(&Who::Validator(0));
+    let validator_0_base_dir_copy =
+        test.base_dir.path().join("validator-0-copy");
+    fs_extra::dir::copy(
+        &validator_0_base_dir,
+        &validator_0_base_dir_copy,
+        &fs_extra::dir::CopyOptions {
+            copy_inside: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+
+    // 3. Increment its ports and generate new node ID to avoid conflict
+
+    // Same as in `genesis/e2e-tests-single-node.toml` for `validator-0`
+    let net_address_0 = SocketAddr::from_str("127.0.0.1:27656").unwrap();
+    let net_address_port_0 = net_address_0.port();
+
+    let update_config = |ix: u8, mut config: Config| {
+        let first_port = net_address_port_0
+            + 6 * (ix as u16 + 1)
+            + if cfg!(feature = "ABCI") {
+                0
+            } else {
+                setup::ABCI_PLUS_PLUS_PORT_OFFSET
+            };
+        config.ledger.tendermint.p2p_address.set_port(first_port);
+        config
+            .ledger
+            .tendermint
+            .rpc_address
+            .set_port(first_port + 1);
+        config.ledger.shell.ledger_address.set_port(first_port + 2);
+        config
+    };
+
+    let validator_0_copy_config = update_config(
+        2,
+        Config::load(&validator_0_base_dir_copy, &test.net.chain_id, None),
+    );
+    validator_0_copy_config
+        .write(&validator_0_base_dir_copy, &test.net.chain_id, true)
+        .unwrap();
+
+    // Generate a new node key
+    use rand::prelude::ThreadRng;
+    use rand::thread_rng;
+
+    let mut rng: ThreadRng = thread_rng();
+    let node_sk = ed25519::SigScheme::generate(&mut rng);
+    let tm_home_dir = validator_0_base_dir_copy
+        .join(test.net.chain_id.as_str())
+        .join("tendermint");
+    let _node_pk =
+        client::utils::write_tendermint_node_key(&tm_home_dir, node_sk);
+
+    // 4. Run it to get it to double vote and sign block
+    let loc = format!("{}:{}", std::file!(), std::line!());
+    // This node will only connect to `validator_1`, so that nodes
+    // `validator_0` and `validator_0_copy` should start double signing
+    let mut validator_0_copy = setup::run_cmd(
+        Bin::Node,
+        args,
+        Some(40),
+        &test.working_dir,
+        validator_0_base_dir_copy,
+        "validator",
+        loc,
+    )?;
+    validator_0_copy.exp_string("Anoma ledger node started")?;
+    validator_0_copy.exp_string("This node is a validator")?;
+    let _bg_validator_0_copy = validator_0_copy.background();
+
+    // 5. Submit a valid token transfer tx to validator 0
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+    let tx_args = [
+        "transfer",
+        "--source",
+        BERTHA,
+        "--target",
+        ALBERT,
+        "--token",
+        XAN,
+        "--amount",
+        "10.1",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+        "--ledger-address",
+        &validator_one_rpc,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    client.exp_string("Transaction is valid.")?;
+    client.assert_success();
+
+    // 6. Wait for double signing evidence
+    let mut validator_1 = bg_validator_1.foreground();
+    validator_1.exp_string("Processing evidence")?;
+    validator_1.exp_string("Slashing")?;
+
+    Ok(())
+}

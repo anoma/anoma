@@ -1135,7 +1135,8 @@ fn network_configs_url_prefix(chain_id: &ChainId) -> String {
     })
 }
 
-fn write_tendermint_node_key(
+/// Write the node key into tendermint config dir.
+pub fn write_tendermint_node_key(
     tm_home_dir: &Path,
     node_sk: ed25519::SecretKey,
 ) -> ed25519::PublicKey {
