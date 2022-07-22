@@ -85,3 +85,117 @@ impl From<anoma_proof_of_stake::types::Epoch> for Epoch {
         Epoch(epoch)
     }
 }
+
+#[macro_export]
+macro_rules! impl_pos_read_only_for {
+    ( $( $any:tt )*)
+     => {
+        $( $any )*
+        {
+            type Address = Address;
+            type Error = native_vp::Error;
+            type PublicKey = key::common::PublicKey;
+            type TokenAmount = token::Amount;
+            type TokenChange = token::Change;
+
+            const POS_ADDRESS: Self::Address = super::ADDRESS;
+
+            fn staking_token_address() -> Self::Address {
+                super::staking_token_address()
+            }
+
+            fn read_pos_params(&self) -> std::result::Result<PosParams, Self::Error> {
+                let value = StorageRead::read_bytes(self, &params_key())?.unwrap();
+                Ok(decode(value).unwrap())
+            }
+
+            fn read_validator_staking_reward_address(
+                &self,
+                key: &Self::Address,
+            ) -> std::result::Result<Option<Self::Address>, Self::Error> {
+                let value = StorageRead::read_bytes(
+                    self,
+                    &validator_staking_reward_address_key(key),
+                )?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_validator_consensus_key(
+                &self,
+                key: &Self::Address,
+            ) -> std::result::Result<Option<ValidatorConsensusKeys>, Self::Error> {
+                let value =
+                    StorageRead::read_bytes(self, &validator_consensus_key_key(key))?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_validator_state(
+                &self,
+                key: &Self::Address,
+            ) -> std::result::Result<Option<ValidatorStates>, Self::Error> {
+                let value = StorageRead::read_bytes(self, &validator_state_key(key))?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_validator_total_deltas(
+                &self,
+                key: &Self::Address,
+            ) -> std::result::Result<Option<ValidatorTotalDeltas>, Self::Error> {
+                let value =
+                    StorageRead::read_bytes(self, &validator_total_deltas_key(key))?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_validator_voting_power(
+                &self,
+                key: &Self::Address,
+            ) -> std::result::Result<Option<ValidatorVotingPowers>, Self::Error> {
+                let value =
+                    StorageRead::read_bytes(self, &validator_voting_power_key(key))?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_validator_slashes(
+                &self,
+                key: &Self::Address,
+            ) -> std::result::Result<Vec<types::Slash>, Self::Error> {
+                let value = StorageRead::read_bytes(self, &validator_slashes_key(key))?;
+                Ok(value
+                    .map(|value| decode(value).unwrap())
+                    .unwrap_or_default())
+            }
+
+            fn read_bond(
+                &self,
+                key: &BondId,
+            ) -> std::result::Result<Option<Bonds>, Self::Error> {
+                let value = StorageRead::read_bytes(self, &bond_key(key))?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_unbond(
+                &self,
+                key: &BondId,
+            ) -> std::result::Result<Option<Unbonds>, Self::Error> {
+                let value = StorageRead::read_bytes(self, &unbond_key(key))?;
+                Ok(value.map(|value| decode(value).unwrap()))
+            }
+
+            fn read_validator_set(
+                &self,
+            ) -> std::result::Result<ValidatorSets, Self::Error> {
+                let value =
+                    StorageRead::read_bytes(self, &validator_set_key())?.unwrap();
+                Ok(decode(value).unwrap())
+            }
+
+            fn read_total_voting_power(
+                &self,
+            ) -> std::result::Result<TotalVotingPowers, Self::Error> {
+                let value =
+                    StorageRead::read_bytes(self, &total_voting_power_key())?.unwrap();
+                Ok(decode(value).unwrap())
+            }
+        }
+    }
+}

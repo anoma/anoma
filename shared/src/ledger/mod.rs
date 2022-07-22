@@ -7,6 +7,7 @@ pub mod ibc;
 pub mod native_vp;
 pub mod parameters;
 pub mod pos;
+pub mod read;
 pub mod storage;
 pub mod treasury;
 pub mod tx_env;

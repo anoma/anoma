@@ -3,6 +3,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
+use super::read::StorageRead;
 pub use super::vp_env::VpEnv;
 use crate::ledger::gas::VpGasMeter;
 use crate::ledger::storage::write_log::WriteLog;
@@ -72,6 +73,16 @@ where
     pub cache_access: std::marker::PhantomData<CA>,
 }
 
+#[derive(Debug)]
+pub struct CtxPreRead<'a, DB, H, CA>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
+    ctx: &'a Ctx<'a, DB, H, CA>
+}
+
 impl<'a, DB, H, CA> Ctx<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -110,6 +121,123 @@ where
     /// Add a gas cost incured in a validity predicate
     pub fn add_gas(&self, used_gas: u64) -> Result<(), vp_env::RuntimeError> {
         vp_env::add_gas(&mut *self.gas_meter.borrow_mut(), used_gas)
+    }
+
+    // TODO: The following doesn't compile because of conflicting lifetimes on `pre()` calls
+    pub fn pre(&'a self) -> CtxPreRead<'a, DB, H, CA> {
+        CtxPreRead { ctx: self }
+    }
+}
+
+impl<'a, DB, H, CA> StorageRead for Ctx<'a, DB, H, CA>
+where
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    type Error = Error;
+    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
+
+    fn read<T: borsh::BorshDeserialize>(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<Option<T>, Self::Error> {
+        todo!()
+    }
+
+    fn read_bytes(&self, key: &crate::types::storage::Key)
+    -> Result<Option<Vec<u8>>, Self::Error> {
+        todo!()
+    }
+
+    fn has_key(&self, key: &crate::types::storage::Key) -> Result<bool, Self::Error> {
+        todo!()
+    }
+
+    fn get_chain_id(&self) -> Result<String, Self::Error> {
+        todo!()
+    }
+
+    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
+        todo!()
+    }
+
+    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
+        todo!()
+    }
+
+    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
+        todo!()
+    }
+
+    fn iter_prefix(
+        &self,
+        prefix: &crate::types::storage::Key,
+    ) -> Result<Self::PrefixIter, Self::Error> {
+        todo!()
+    }
+
+    fn iter_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
+        todo!()
+    }
+}
+
+impl<'a, DB, H, CA> StorageRead for CtxPreRead<'a, DB, H, CA>
+where
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    type Error = Error;
+    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
+
+    fn read<T: borsh::BorshDeserialize>(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<Option<T>, Self::Error> {
+        todo!()
+    }
+
+    fn read_bytes(&self, key: &crate::types::storage::Key)
+    -> Result<Option<Vec<u8>>, Self::Error> {
+        todo!()
+    }
+
+    fn has_key(&self, key: &crate::types::storage::Key) -> Result<bool, Self::Error> {
+        todo!()
+    }
+
+    fn get_chain_id(&self) -> Result<String, Self::Error> {
+        todo!()
+    }
+
+    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
+        todo!()
+    }
+
+    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
+        todo!()
+    }
+
+    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
+        todo!()
+    }
+
+    fn iter_prefix(
+        &self,
+        prefix: &crate::types::storage::Key,
+    ) -> Result<Self::PrefixIter, Self::Error> {
+        todo!()
+    }
+
+    fn iter_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
+        todo!()
     }
 }
 
