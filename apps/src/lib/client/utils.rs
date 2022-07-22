@@ -862,6 +862,7 @@ pub fn init_network(
                 consensus_timeout_commit;
             config.ledger.tendermint.p2p_allow_duplicate_ip =
                 allow_duplicate_ip;
+            config.ledger.tendermint.p2p_addr_book_strict = !localhost;
             // Clear the net address from the config and use it to set ports
             let net_address = validator_config.net_address.take().unwrap();
             let first_port = SocketAddr::from_str(&net_address).unwrap().port();
