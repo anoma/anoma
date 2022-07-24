@@ -120,6 +120,98 @@ where
     }
 }
 
+/// A Tx with its code replaced by a hash. This structure will almost certainly
+/// be smaller than Txs, yet in the usual cases it contains enough information
+/// to confirm that the Tx is as intended and make a non-malleable signature.
+#[derive(
+    Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Hash,
+)]
+pub struct SigningTx {
+    pub code_hash: [u8; 32],
+    pub data: Option<Vec<u8>>,
+    pub timestamp: DateTimeUtc,
+}
+
+impl SigningTx {
+    pub fn hash(&self) -> [u8; 32] {
+        let timestamp = Some(self.timestamp.into());
+        let mut bytes = vec![];
+        types::Tx {
+            code: self.code_hash.to_vec(),
+            data: self.data.clone(),
+            timestamp,
+        }
+        .encode(&mut bytes)
+        .expect("encoding a transaction failed");
+        hash_tx(&bytes).0
+    }
+
+    /// Sign a transaction using [`SignedTxData`].
+    pub fn sign(self, keypair: &common::SecretKey) -> Self {
+        let to_sign = self.hash();
+        let sig = common::SigScheme::sign(keypair, &to_sign);
+        let signed = SignedTxData {
+            data: self.data,
+            sig,
+        }
+        .try_to_vec()
+        .expect("Encoding transaction data shouldn't fail");
+        SigningTx {
+            code_hash: self.code_hash,
+            data: Some(signed),
+            timestamp: self.timestamp,
+        }
+    }
+
+    /// Verify that the transaction has been signed by the secret key
+    /// counterpart of the given public key.
+    pub fn verify_sig(
+        &self,
+        pk: &common::PublicKey,
+        sig: &common::Signature,
+    ) -> std::result::Result<(), VerifySigError> {
+        // Try to get the transaction data from decoded `SignedTxData`
+        let tx_data = self.data.clone().ok_or(VerifySigError::MissingData)?;
+        let signed_tx_data = SignedTxData::try_from_slice(&tx_data[..])
+            .expect("Decoding transaction data shouldn't fail");
+        let data = signed_tx_data.data;
+        let tx = SigningTx {
+            code_hash: self.code_hash,
+            data,
+            timestamp: self.timestamp,
+        };
+        let signed_data = tx.hash();
+        common::SigScheme::verify_signature_raw(pk, &signed_data, sig)
+    }
+
+    /// Expand this reduced Tx using the supplied code only if the the code
+    /// hashes to the stored code hash
+    pub fn expand(self, code: Vec<u8>) -> Option<Tx> {
+        if hash_tx(&code).0 == self.code_hash {
+            Some(Tx {
+                code,
+                data: self.data,
+                timestamp: self.timestamp,
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl From<Tx> for SigningTx {
+    fn from(tx: Tx) -> SigningTx {
+        SigningTx {
+            code_hash: hash_tx(&tx.code).0,
+            data: tx.data,
+            timestamp: tx.timestamp,
+        }
+    }
+}
+
+/// A SigningTx but with the full code embedded. This structure will almost
+/// certainly be bigger than SigningTxs and contains enough information to
+/// execute the transaction.
 #[derive(
     Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Hash,
 )]
@@ -175,28 +267,20 @@ impl Tx {
     }
 
     pub fn hash(&self) -> [u8; 32] {
-        hash_tx(&self.to_bytes()).0
+        SigningTx::from(self.clone()).hash()
     }
 
     pub fn code_hash(&self) -> [u8; 32] {
-        hash_tx(&self.code).0
+        SigningTx::from(self.clone()).code_hash
     }
 
     /// Sign a transaction using [`SignedTxData`].
     pub fn sign(self, keypair: &common::SecretKey) -> Self {
-        let to_sign = self.hash();
-        let sig = common::SigScheme::sign(keypair, &to_sign);
-        let signed = SignedTxData {
-            data: self.data,
-            sig,
-        }
-        .try_to_vec()
-        .expect("Encoding transaction data shouldn't fail");
-        Tx {
-            code: self.code,
-            data: Some(signed),
-            timestamp: self.timestamp,
-        }
+        let code = self.code.clone();
+        SigningTx::from(self)
+            .sign(keypair)
+            .expand(code)
+            .expect("code hashes to unexpected value")
     }
 
     /// Verify that the transaction has been signed by the secret key
@@ -206,18 +290,7 @@ impl Tx {
         pk: &common::PublicKey,
         sig: &common::Signature,
     ) -> std::result::Result<(), VerifySigError> {
-        // Try to get the transaction data from decoded `SignedTxData`
-        let tx_data = self.data.clone().ok_or(VerifySigError::MissingData)?;
-        let signed_tx_data = SignedTxData::try_from_slice(&tx_data[..])
-            .expect("Decoding transaction data shouldn't fail");
-        let data = signed_tx_data.data;
-        let tx = Tx {
-            code: self.code.clone(),
-            data,
-            timestamp: self.timestamp,
-        };
-        let signed_data = tx.hash();
-        common::SigScheme::verify_signature_raw(pk, &signed_data, sig)
+        SigningTx::from(self.clone()).verify_sig(pk, sig)
     }
 }
 
