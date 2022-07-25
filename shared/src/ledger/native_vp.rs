@@ -150,75 +150,14 @@ where
     }
 }
 
-impl<'f, 'a, DB, H, CA> StorageRead for CtxPostStorageRead<'f, 'a, DB, H, CA>
-where
-    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: 'static + StorageHasher,
-    CA: 'static + WasmCacheAccess,
-{
-    type Error = Error;
-    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
-
-    fn read<T: borsh::BorshDeserialize>(
-        &self,
-        key: &crate::types::storage::Key,
-    ) -> Result<Option<T>, Self::Error> {
-        self.ctx.read_post(key)
-    }
-
-    fn read_bytes(
-        &self,
-        key: &crate::types::storage::Key,
-    ) -> Result<Option<Vec<u8>>, Self::Error> {
-        self.ctx.read_bytes_post(key)
-    }
-
-    fn has_key(
-        &self,
-        key: &crate::types::storage::Key,
-    ) -> Result<bool, Self::Error> {
-        self.ctx.has_key_post(key)
-    }
-
-    fn get_chain_id(&self) -> Result<String, Self::Error> {
-        self.ctx.get_chain_id()
-    }
-
-    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
-        self.ctx.get_block_height()
-    }
-
-    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
-        self.ctx.get_block_hash()
-    }
-
-    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
-        self.ctx.get_block_epoch()
-    }
-
-    fn iter_prefix(
-        &self,
-        prefix: &crate::types::storage::Key,
-    ) -> Result<Self::PrefixIter, Self::Error> {
-        self.ctx.iter_prefix(prefix)
-    }
-
-    fn iter_next(
-        &self,
-        iter: &mut Self::PrefixIter,
-    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        self.ctx.iter_post_next(iter)
-    }
-}
-
 impl<'f, 'a, DB, H, CA> StorageRead for CtxPreStorageRead<'f, 'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    type Error = Error;
     type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
+    type Error = Error;
 
     fn read<T: borsh::BorshDeserialize>(
         &self,
@@ -241,6 +180,20 @@ where
         self.ctx.has_key_pre(key)
     }
 
+    fn iter_prefix(
+        &self,
+        prefix: &crate::types::storage::Key,
+    ) -> Result<Self::PrefixIter, Self::Error> {
+        self.ctx.iter_prefix(prefix)
+    }
+
+    fn iter_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
+        self.ctx.iter_pre_next(iter)
+    }
+
     fn get_chain_id(&self) -> Result<String, Self::Error> {
         self.ctx.get_chain_id()
     }
@@ -256,6 +209,37 @@ where
     fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
         self.ctx.get_block_epoch()
     }
+}
+
+impl<'f, 'a, DB, H, CA> StorageRead for CtxPostStorageRead<'f, 'a, DB, H, CA>
+where
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
+{
+    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
+    type Error = Error;
+
+    fn read<T: borsh::BorshDeserialize>(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<Option<T>, Self::Error> {
+        self.ctx.read_post(key)
+    }
+
+    fn read_bytes(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<Option<Vec<u8>>, Self::Error> {
+        self.ctx.read_bytes_post(key)
+    }
+
+    fn has_key(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<bool, Self::Error> {
+        self.ctx.has_key_post(key)
+    }
 
     fn iter_prefix(
         &self,
@@ -268,7 +252,23 @@ where
         &self,
         iter: &mut Self::PrefixIter,
     ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        self.ctx.iter_pre_next(iter)
+        self.ctx.iter_post_next(iter)
+    }
+
+    fn get_chain_id(&self) -> Result<String, Self::Error> {
+        self.ctx.get_chain_id()
+    }
+
+    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
+        self.ctx.get_block_height()
+    }
+
+    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
+        self.ctx.get_block_hash()
+    }
+
+    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
+        self.ctx.get_block_epoch()
     }
 }
 

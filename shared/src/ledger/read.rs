@@ -30,6 +30,20 @@ pub trait StorageRead {
     /// Storage `has_key` in prior state. It will try to read from the storage.
     fn has_key(&self, key: &storage::Key) -> Result<bool, Self::Error>;
 
+    /// Storage prefix iterator. It will try to get an iterator from the
+    /// storage.
+    fn iter_prefix(
+        &self,
+        prefix: &storage::Key,
+    ) -> Result<Self::PrefixIter, Self::Error>;
+
+    /// Storage prefix iterator for prior state. It will
+    /// try to read from the storage.
+    fn iter_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> Result<Option<(String, Vec<u8>)>, Self::Error>;
+
     /// Getting the chain ID.
     fn get_chain_id(&self) -> Result<String, Self::Error>;
 
@@ -44,18 +58,4 @@ pub trait StorageRead {
     /// Getting the block epoch. The epoch is that of the block to which the
     /// current transaction is being applied.
     fn get_block_epoch(&self) -> Result<Epoch, Self::Error>;
-
-    /// Storage prefix iterator. It will try to get an iterator from the
-    /// storage.
-    fn iter_prefix(
-        &self,
-        prefix: &storage::Key,
-    ) -> Result<Self::PrefixIter, Self::Error>;
-
-    /// Storage prefix iterator for prior state. It will
-    /// try to read from the storage.
-    fn iter_next(
-        &self,
-        iter: &mut Self::PrefixIter,
-    ) -> Result<Option<(String, Vec<u8>)>, Self::Error>;
 }
