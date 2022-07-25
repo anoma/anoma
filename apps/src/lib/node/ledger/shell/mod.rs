@@ -433,6 +433,13 @@ where
                         continue;
                     }
                 };
+                if evidence_epoch + pos_params.unbonding_len <= current_epoch {
+                    tracing::info!(
+                        "Skipping outdated evidence from epoch \
+                         {evidence_epoch}"
+                    );
+                    continue;
+                }
                 let slash_type = match EvidenceType::from_i32(evidence.r#type) {
                     Some(r#type) => match r#type {
                         EvidenceType::DuplicateVote => {
