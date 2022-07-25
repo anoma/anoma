@@ -20,6 +20,7 @@ use std::convert::TryFrom;
 use std::marker::PhantomData;
 
 pub use anoma::ledger::governance::storage as gov_storage;
+pub use anoma::ledger::read::StorageRead;
 pub use anoma::ledger::vp_env::VpEnv;
 pub use anoma::ledger::{parameters, pos as proof_of_stake};
 pub use anoma::proto::{Signed, SignedTxData};
@@ -36,7 +37,6 @@ use anoma_vm_env::{read_from_buffer, read_key_val_bytes_from_buffer};
 pub use borsh::{BorshDeserialize, BorshSerialize};
 pub use error::*;
 pub use sha2::{Digest, Sha256, Sha384, Sha512};
-use anoma::ledger::read::StorageRead;
 
 pub fn sha256(bytes: &[u8]) -> Hash {
     let digest = Sha256::digest(bytes);
@@ -121,16 +121,14 @@ impl Ctx {
 /// Read access to the prior storage (state before tx execution) via
 /// [`trait@StorageRead`].
 #[derive(Debug)]
-pub struct CtxPreStorageRead<'a>
-{
+pub struct CtxPreStorageRead<'a> {
     ctx: &'a Ctx,
 }
 
 /// Read access to the posterior storage (state after tx execution) via
 /// [`trait@StorageRead`].
 #[derive(Debug)]
-pub struct CtxPostStorageRead<'a>
-{
+pub struct CtxPostStorageRead<'a> {
     ctx: &'a Ctx,
 }
 
@@ -340,8 +338,8 @@ impl VpEnv for Ctx {
 }
 
 impl StorageRead for CtxPreStorageRead<'_> {
-    type PrefixIter = KeyValIterator<(String, Vec<u8>)>;
     type Error = Error;
+    type PrefixIter = KeyValIterator<(String, Vec<u8>)>;
 
     fn read<T: BorshDeserialize>(
         &self,
@@ -393,8 +391,8 @@ impl StorageRead for CtxPreStorageRead<'_> {
 }
 
 impl StorageRead for CtxPostStorageRead<'_> {
-    type PrefixIter = KeyValIterator<(String, Vec<u8>)>;
     type Error = Error;
+    type PrefixIter = KeyValIterator<(String, Vec<u8>)>;
 
     fn read<T: BorshDeserialize>(
         &self,

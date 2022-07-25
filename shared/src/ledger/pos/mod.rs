@@ -106,20 +106,20 @@ mod macros {
      => {
         $( $any )*
         {
-            type Address = crate::types::address::Address;
-            type Error = crate::ledger::native_vp::Error;
-            type PublicKey = crate::types::key::common::PublicKey;
-            type TokenAmount = crate::types::token::Amount;
-            type TokenChange = crate::types::token::Change;
+            type Address = $crate::types::address::Address;
+            type Error = $crate::ledger::native_vp::Error;
+            type PublicKey = $crate::types::key::common::PublicKey;
+            type TokenAmount = $crate::types::token::Amount;
+            type TokenChange = $crate::types::token::Change;
 
-            const POS_ADDRESS: Self::Address = crate::ledger::pos::ADDRESS;
+            const POS_ADDRESS: Self::Address = $crate::ledger::pos::ADDRESS;
 
             fn staking_token_address() -> Self::Address {
-                crate::ledger::pos::staking_token_address()
+                $crate::ledger::pos::staking_token_address()
             }
 
             fn read_pos_params(&self) -> std::result::Result<PosParams, Self::Error> {
-                let value = crate::ledger::read::StorageRead::read_bytes(self, &params_key())?.unwrap();
+                let value = $crate::ledger::read::StorageRead::read_bytes(self, &params_key())?.unwrap();
                 Ok(decode(value).unwrap())
             }
 
@@ -127,7 +127,7 @@ mod macros {
                 &self,
                 key: &Self::Address,
             ) -> std::result::Result<Option<Self::Address>, Self::Error> {
-                let value = crate::ledger::read::StorageRead::read_bytes(
+                let value = $crate::ledger::read::StorageRead::read_bytes(
                     self,
                     &validator_staking_reward_address_key(key),
                 )?;
@@ -139,7 +139,7 @@ mod macros {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorConsensusKeys>, Self::Error> {
                 let value =
-                    crate::ledger::read::StorageRead::read_bytes(self, &validator_consensus_key_key(key))?;
+                    $crate::ledger::read::StorageRead::read_bytes(self, &validator_consensus_key_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -147,7 +147,7 @@ mod macros {
                 &self,
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorStates>, Self::Error> {
-                let value = crate::ledger::read::StorageRead::read_bytes(self, &validator_state_key(key))?;
+                let value = $crate::ledger::read::StorageRead::read_bytes(self, &validator_state_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -156,7 +156,7 @@ mod macros {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorTotalDeltas>, Self::Error> {
                 let value =
-                    crate::ledger::read::StorageRead::read_bytes(self, &validator_total_deltas_key(key))?;
+                    $crate::ledger::read::StorageRead::read_bytes(self, &validator_total_deltas_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -165,7 +165,7 @@ mod macros {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorVotingPowers>, Self::Error> {
                 let value =
-                    crate::ledger::read::StorageRead::read_bytes(self, &validator_voting_power_key(key))?;
+                    $crate::ledger::read::StorageRead::read_bytes(self, &validator_voting_power_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -173,7 +173,7 @@ mod macros {
                 &self,
                 key: &Self::Address,
             ) -> std::result::Result<Vec<types::Slash>, Self::Error> {
-                let value = crate::ledger::read::StorageRead::read_bytes(self, &validator_slashes_key(key))?;
+                let value = $crate::ledger::read::StorageRead::read_bytes(self, &validator_slashes_key(key))?;
                 Ok(value
                     .map(|value| decode(value).unwrap())
                     .unwrap_or_default())
@@ -183,7 +183,7 @@ mod macros {
                 &self,
                 key: &BondId,
             ) -> std::result::Result<Option<Bonds>, Self::Error> {
-                let value = crate::ledger::read::StorageRead::read_bytes(self, &bond_key(key))?;
+                let value = $crate::ledger::read::StorageRead::read_bytes(self, &bond_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -191,7 +191,7 @@ mod macros {
                 &self,
                 key: &BondId,
             ) -> std::result::Result<Option<Unbonds>, Self::Error> {
-                let value = crate::ledger::read::StorageRead::read_bytes(self, &unbond_key(key))?;
+                let value = $crate::ledger::read::StorageRead::read_bytes(self, &unbond_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -199,7 +199,7 @@ mod macros {
                 &self,
             ) -> std::result::Result<ValidatorSets, Self::Error> {
                 let value =
-                    crate::ledger::read::StorageRead::read_bytes(self, &validator_set_key())?.unwrap();
+                    $crate::ledger::read::StorageRead::read_bytes(self, &validator_set_key())?.unwrap();
                 Ok(decode(value).unwrap())
             }
 
@@ -207,7 +207,7 @@ mod macros {
                 &self,
             ) -> std::result::Result<TotalVotingPowers, Self::Error> {
                 let value =
-                    crate::ledger::read::StorageRead::read_bytes(self, &total_voting_power_key())?.unwrap();
+                    $crate::ledger::read::StorageRead::read_bytes(self, &total_voting_power_key())?.unwrap();
                 Ok(decode(value).unwrap())
             }
         }

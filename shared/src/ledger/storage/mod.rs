@@ -16,6 +16,7 @@ use thiserror::Error;
 
 use super::parameters;
 use super::parameters::Parameters;
+use super::read::StorageRead;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::EpochDuration;
 use crate::ledger::storage::merkle_tree::{
@@ -684,6 +685,73 @@ where
         self.block.tree.delete(key)?;
         self.db
             .batch_delete_subspace_val(batch, self.block.height, key)
+    }
+}
+
+// The `'iter` lifetime is needed for the associated type `PrefixIter`.
+// Note that the `D: DBIter<'iter>` bound uses another higher-rank lifetime 
+// (see https://doc.rust-lang.org/nomicon/hrtb.html).
+impl<'iter, D, H> StorageRead for &'iter Storage<D, H>
+where
+    D: DB + for<'iter_> DBIter<'iter_>,
+    H: StorageHasher,
+{
+    type Error = Error;
+    type PrefixIter = <D as DBIter<'iter>>::PrefixIter;
+
+    fn read<T: borsh::BorshDeserialize>(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> std::result::Result<Option<T>, Self::Error> {
+        self.read_bytes(key).map(|maybe_value| {
+            maybe_value.and_then(|t| T::try_from_slice(&t[..]).ok())
+        })
+    }
+
+    fn read_bytes(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> std::result::Result<Option<Vec<u8>>, Self::Error> {
+        self.db.read_subspace_val(key)
+    }
+
+    fn has_key(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> std::result::Result<bool, Self::Error> {
+        self.block.tree.has_key(key).map_err(Into::into)
+    }
+
+    fn iter_prefix(
+        &self,
+        prefix: &crate::types::storage::Key,
+    ) -> std::result::Result<Self::PrefixIter, Self::Error> {
+        Ok(self.db.iter_prefix(prefix))
+    }
+
+    fn iter_next(
+        &self,
+        iter: &mut Self::PrefixIter,
+    ) -> std::result::Result<Option<(String, Vec<u8>)>, Self::Error> {
+        Ok(iter.next().map(|(key, val, _gas)| (key, val)))
+    }
+
+    fn get_chain_id(&self) -> std::result::Result<String, Self::Error> {
+        Ok(self.chain_id.to_string())
+    }
+
+    fn get_block_height(
+        &self,
+    ) -> std::result::Result<BlockHeight, Self::Error> {
+        Ok(self.block.height)
+    }
+
+    fn get_block_hash(&self) -> std::result::Result<BlockHash, Self::Error> {
+        Ok(self.block.hash.clone())
+    }
+
+    fn get_block_epoch(&self) -> std::result::Result<Epoch, Self::Error> {
+        Ok(self.block.epoch)
     }
 }
 

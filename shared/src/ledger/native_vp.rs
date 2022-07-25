@@ -156,8 +156,8 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
     type Error = Error;
+    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
 
     fn read<T: borsh::BorshDeserialize>(
         &self,
@@ -217,8 +217,8 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
     type Error = Error;
+    type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
 
     fn read<T: borsh::BorshDeserialize>(
         &self,
