@@ -266,15 +266,6 @@ where
         );
         ibc::init_genesis_storage(&mut self.storage);
 
-        let evidence_params = self.get_evidence_params(
-            &genesis.parameters.epoch_duration,
-            &genesis.pos_params,
-        );
-        response.consensus_params = Some(ConsensusParams {
-            evidence: Some(evidence_params),
-            ..response.consensus_params.unwrap_or_default()
-        });
-
         // Set the initial validator set
         for validator in genesis.validators {
             let mut abci_validator = abci::ValidatorUpdate::default();

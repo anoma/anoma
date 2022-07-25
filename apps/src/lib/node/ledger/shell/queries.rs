@@ -1,8 +1,5 @@
 //! Shell methods for querying state
-use std::cmp::max;
 
-use anoma::ledger::parameters::EpochDuration;
-use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
 use anoma::types::key;
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
@@ -12,16 +9,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo_common::TendermintValidator;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::{ProofOp, ProofOps};
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::google::protobuf;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::types::EvidenceParams;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::crypto::{ProofOp, ProofOps};
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::google::protobuf;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::types::EvidenceParams;
 
 use super::*;
 use crate::node::ledger::response;
@@ -269,28 +258,6 @@ where
                 info: format!("Storage error: {}", err),
                 ..Default::default()
             },
-        }
-    }
-
-    pub fn get_evidence_params(
-        &self,
-        epoch_duration: &EpochDuration,
-        pos_params: &PosParams,
-    ) -> EvidenceParams {
-        // Minimum number of epochs before tokens are unbonded and can be
-        // withdrawn
-        let len_before_unbonded = max(pos_params.unbonding_len as i64 - 1, 0);
-        let max_age_num_blocks: i64 =
-            epoch_duration.min_num_of_blocks as i64 * len_before_unbonded;
-        let min_duration_secs = epoch_duration.min_duration.0 as i64;
-        let max_age_duration = Some(protobuf::Duration {
-            seconds: min_duration_secs * len_before_unbonded,
-            nanos: 0,
-        });
-        EvidenceParams {
-            max_age_num_blocks,
-            max_age_duration,
-            ..EvidenceParams::default()
         }
     }
 
