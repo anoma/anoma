@@ -73,14 +73,28 @@ where
     pub cache_access: std::marker::PhantomData<CA>,
 }
 
+/// Read access to the prior storage (state before tx execution) via
+/// [`trait@StorageRead`].
 #[derive(Debug)]
-pub struct CtxPreRead<'a, DB, H, CA>
+pub struct CtxPreStorageRead<'f, 'a: 'f, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
     CA: WasmCacheAccess,
 {
-    ctx: &'a Ctx<'a, DB, H, CA>
+    ctx: &'f Ctx<'a, DB, H, CA>,
+}
+
+/// Read access to the posterior storage (state after tx execution) via
+/// [`trait@StorageRead`].
+#[derive(Debug)]
+pub struct CtxPostStorageRead<'f, 'a: 'f, DB, H, CA>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    CA: WasmCacheAccess,
+{
+    ctx: &'f Ctx<'a, DB, H, CA>,
 }
 
 impl<'a, DB, H, CA> Ctx<'a, DB, H, CA>
@@ -123,13 +137,20 @@ where
         vp_env::add_gas(&mut *self.gas_meter.borrow_mut(), used_gas)
     }
 
-    // TODO: The following doesn't compile because of conflicting lifetimes on `pre()` calls
-    pub fn pre(&'a self) -> CtxPreRead<'a, DB, H, CA> {
-        CtxPreRead { ctx: self }
+    /// Read access to the prior storage (state before tx execution)
+    /// via [`trait@StorageRead`].
+    pub fn pre<'b>(&'b self) -> CtxPreStorageRead<'b, 'a, DB, H, CA> {
+        CtxPreStorageRead { ctx: self }
+    }
+
+    /// Read access to the posterior storage (state after tx execution)
+    /// via [`trait@StorageRead`].
+    pub fn post<'b>(&'b self) -> CtxPostStorageRead<'b, 'a, DB, H, CA> {
+        CtxPostStorageRead { ctx: self }
     }
 }
 
-impl<'a, DB, H, CA> StorageRead for Ctx<'a, DB, H, CA>
+impl<'f, 'a, DB, H, CA> StorageRead for CtxPostStorageRead<'f, 'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
@@ -142,50 +163,55 @@ where
         &self,
         key: &crate::types::storage::Key,
     ) -> Result<Option<T>, Self::Error> {
-        todo!()
+        self.ctx.read_post(key)
     }
 
-    fn read_bytes(&self, key: &crate::types::storage::Key)
-    -> Result<Option<Vec<u8>>, Self::Error> {
-        todo!()
+    fn read_bytes(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<Option<Vec<u8>>, Self::Error> {
+        self.ctx.read_bytes_post(key)
     }
 
-    fn has_key(&self, key: &crate::types::storage::Key) -> Result<bool, Self::Error> {
-        todo!()
+    fn has_key(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<bool, Self::Error> {
+        self.ctx.has_key_post(key)
     }
 
     fn get_chain_id(&self) -> Result<String, Self::Error> {
-        todo!()
+        self.ctx.get_chain_id()
     }
 
     fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
-        todo!()
+        self.ctx.get_block_height()
     }
 
     fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
-        todo!()
+        self.ctx.get_block_hash()
     }
 
     fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
-        todo!()
+        self.ctx.get_block_epoch()
     }
 
     fn iter_prefix(
         &self,
         prefix: &crate::types::storage::Key,
     ) -> Result<Self::PrefixIter, Self::Error> {
-        todo!()
+        self.ctx.iter_prefix(prefix)
     }
 
     fn iter_next(
         &self,
         iter: &mut Self::PrefixIter,
     ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        todo!()
+        self.ctx.iter_post_next(iter)
     }
 }
 
-impl<'a, DB, H, CA> StorageRead for CtxPreRead<'a, DB, H, CA>
+impl<'f, 'a, DB, H, CA> StorageRead for CtxPreStorageRead<'f, 'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
@@ -198,46 +224,51 @@ where
         &self,
         key: &crate::types::storage::Key,
     ) -> Result<Option<T>, Self::Error> {
-        todo!()
+        self.ctx.read_pre(key)
     }
 
-    fn read_bytes(&self, key: &crate::types::storage::Key)
-    -> Result<Option<Vec<u8>>, Self::Error> {
-        todo!()
+    fn read_bytes(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<Option<Vec<u8>>, Self::Error> {
+        self.ctx.read_bytes_pre(key)
     }
 
-    fn has_key(&self, key: &crate::types::storage::Key) -> Result<bool, Self::Error> {
-        todo!()
+    fn has_key(
+        &self,
+        key: &crate::types::storage::Key,
+    ) -> Result<bool, Self::Error> {
+        self.ctx.has_key_pre(key)
     }
 
     fn get_chain_id(&self) -> Result<String, Self::Error> {
-        todo!()
+        self.ctx.get_chain_id()
     }
 
     fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
-        todo!()
+        self.ctx.get_block_height()
     }
 
     fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
-        todo!()
+        self.ctx.get_block_hash()
     }
 
     fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
-        todo!()
+        self.ctx.get_block_epoch()
     }
 
     fn iter_prefix(
         &self,
         prefix: &crate::types::storage::Key,
     ) -> Result<Self::PrefixIter, Self::Error> {
-        todo!()
+        self.ctx.iter_prefix(prefix)
     }
 
     fn iter_next(
         &self,
         iter: &mut Self::PrefixIter,
     ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        todo!()
+        self.ctx.iter_pre_next(iter)
     }
 }
 

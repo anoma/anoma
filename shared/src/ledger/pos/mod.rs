@@ -86,26 +86,40 @@ impl From<anoma_proof_of_stake::types::Epoch> for Epoch {
     }
 }
 
-#[macro_export]
-macro_rules! impl_pos_read_only_for {
+#[macro_use]
+mod macros {
+    /// Implement `PosReadOnly` for a type that implements
+    /// [`trait@crate::ledger::read::StorageRead`].
+    ///
+    /// Excuse the horrible syntax - we haven't found a better way to use this
+    /// for `CtxPreStorageRead`/`CtxPostStorageRead`, which have generics
+    /// and explicit lifetimes.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// impl_pos_read_only! { impl PosReadOnly for X }
+    /// ```
+    #[macro_export]
+    macro_rules! impl_pos_read_only {
     ( $( $any:tt )*)
      => {
         $( $any )*
         {
-            type Address = Address;
-            type Error = native_vp::Error;
-            type PublicKey = key::common::PublicKey;
-            type TokenAmount = token::Amount;
-            type TokenChange = token::Change;
+            type Address = crate::types::address::Address;
+            type Error = crate::ledger::native_vp::Error;
+            type PublicKey = crate::types::key::common::PublicKey;
+            type TokenAmount = crate::types::token::Amount;
+            type TokenChange = crate::types::token::Change;
 
-            const POS_ADDRESS: Self::Address = super::ADDRESS;
+            const POS_ADDRESS: Self::Address = crate::ledger::pos::ADDRESS;
 
             fn staking_token_address() -> Self::Address {
-                super::staking_token_address()
+                crate::ledger::pos::staking_token_address()
             }
 
             fn read_pos_params(&self) -> std::result::Result<PosParams, Self::Error> {
-                let value = StorageRead::read_bytes(self, &params_key())?.unwrap();
+                let value = crate::ledger::read::StorageRead::read_bytes(self, &params_key())?.unwrap();
                 Ok(decode(value).unwrap())
             }
 
@@ -113,7 +127,7 @@ macro_rules! impl_pos_read_only_for {
                 &self,
                 key: &Self::Address,
             ) -> std::result::Result<Option<Self::Address>, Self::Error> {
-                let value = StorageRead::read_bytes(
+                let value = crate::ledger::read::StorageRead::read_bytes(
                     self,
                     &validator_staking_reward_address_key(key),
                 )?;
@@ -125,7 +139,7 @@ macro_rules! impl_pos_read_only_for {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorConsensusKeys>, Self::Error> {
                 let value =
-                    StorageRead::read_bytes(self, &validator_consensus_key_key(key))?;
+                    crate::ledger::read::StorageRead::read_bytes(self, &validator_consensus_key_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -133,7 +147,7 @@ macro_rules! impl_pos_read_only_for {
                 &self,
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorStates>, Self::Error> {
-                let value = StorageRead::read_bytes(self, &validator_state_key(key))?;
+                let value = crate::ledger::read::StorageRead::read_bytes(self, &validator_state_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -142,7 +156,7 @@ macro_rules! impl_pos_read_only_for {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorTotalDeltas>, Self::Error> {
                 let value =
-                    StorageRead::read_bytes(self, &validator_total_deltas_key(key))?;
+                    crate::ledger::read::StorageRead::read_bytes(self, &validator_total_deltas_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -151,7 +165,7 @@ macro_rules! impl_pos_read_only_for {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorVotingPowers>, Self::Error> {
                 let value =
-                    StorageRead::read_bytes(self, &validator_voting_power_key(key))?;
+                    crate::ledger::read::StorageRead::read_bytes(self, &validator_voting_power_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -159,7 +173,7 @@ macro_rules! impl_pos_read_only_for {
                 &self,
                 key: &Self::Address,
             ) -> std::result::Result<Vec<types::Slash>, Self::Error> {
-                let value = StorageRead::read_bytes(self, &validator_slashes_key(key))?;
+                let value = crate::ledger::read::StorageRead::read_bytes(self, &validator_slashes_key(key))?;
                 Ok(value
                     .map(|value| decode(value).unwrap())
                     .unwrap_or_default())
@@ -169,7 +183,7 @@ macro_rules! impl_pos_read_only_for {
                 &self,
                 key: &BondId,
             ) -> std::result::Result<Option<Bonds>, Self::Error> {
-                let value = StorageRead::read_bytes(self, &bond_key(key))?;
+                let value = crate::ledger::read::StorageRead::read_bytes(self, &bond_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -177,7 +191,7 @@ macro_rules! impl_pos_read_only_for {
                 &self,
                 key: &BondId,
             ) -> std::result::Result<Option<Unbonds>, Self::Error> {
-                let value = StorageRead::read_bytes(self, &unbond_key(key))?;
+                let value = crate::ledger::read::StorageRead::read_bytes(self, &unbond_key(key))?;
                 Ok(value.map(|value| decode(value).unwrap()))
             }
 
@@ -185,7 +199,7 @@ macro_rules! impl_pos_read_only_for {
                 &self,
             ) -> std::result::Result<ValidatorSets, Self::Error> {
                 let value =
-                    StorageRead::read_bytes(self, &validator_set_key())?.unwrap();
+                    crate::ledger::read::StorageRead::read_bytes(self, &validator_set_key())?.unwrap();
                 Ok(decode(value).unwrap())
             }
 
@@ -193,9 +207,10 @@ macro_rules! impl_pos_read_only_for {
                 &self,
             ) -> std::result::Result<TotalVotingPowers, Self::Error> {
                 let value =
-                    StorageRead::read_bytes(self, &total_voting_power_key())?.unwrap();
+                    crate::ledger::read::StorageRead::read_bytes(self, &total_voting_power_key())?.unwrap();
                 Ok(decode(value).unwrap())
             }
         }
     }
+}
 }
