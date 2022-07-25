@@ -29,7 +29,7 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{
     DBIter, Sha256Hasher, Storage, StorageHasher, DB,
 };
-use anoma::ledger::{ibc, parameters, pos};
+use anoma::ledger::{ibc, pos};
 use anoma::proto::{self, Tx};
 use anoma::types::chain::ChainId;
 use anoma::types::key::*;
@@ -54,10 +54,6 @@ use tendermint_proto::abci::{
 };
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::public_key;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_proto::types::ConsensusParams;
-#[cfg(feature = "ABCI")]
-use tendermint_proto_abci::abci::ConsensusParams;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::{Evidence, EvidenceType, ValidatorUpdate};
 #[cfg(feature = "ABCI")]
@@ -437,6 +433,13 @@ where
                         continue;
                     }
                 };
+                if evidence_epoch + pos_params.unbonding_len <= current_epoch {
+                    tracing::info!(
+                        "Skipping outdated evidence from epoch \
+                         {evidence_epoch}"
+                    );
+                    continue;
+                }
                 let slash_type = match EvidenceType::from_i32(evidence.r#type) {
                     Some(r#type) => match r#type {
                         EvidenceType::DuplicateVote => {
