@@ -21,11 +21,7 @@ pub trait VpEnv {
     /// Storage read prefix iterator
     type PrefixIter;
 
-    /// Host functions possible error.
-    ///
-    /// In a native VP this may be out-of-gas error, however, because WASM VP is
-    /// sandboxed and gas accounting is injected by and handled in the host,
-    /// in WASM VP this error is [`std::convert::Infallible`].
+    /// Host functions possible errors, extensible with custom user errors.
     type Error;
 
     /// Storage read prior state Borsh encoded value (before tx execution). It
