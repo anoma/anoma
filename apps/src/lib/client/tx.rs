@@ -2289,14 +2289,11 @@ pub async fn submit_tx(
     // get the event for the wrapper tx
     let response =
         fetch_event(&url, wrapper_query, wrapper_hash.as_str()).await?;
-    println!(
-        "Transaction accepted with result: {}",
-        serde_json::to_string_pretty(&response).unwrap()
-    );
 
     // The transaction is now on chain. We wait for it to be decrypted
     // and applied
     if response.code == 0.to_string() {
+        println!("Transaction accepted");
         // get the event for the inner tx
         let response = fetch_event(
             &url,
