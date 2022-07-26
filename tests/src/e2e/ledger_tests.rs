@@ -767,7 +767,9 @@ fn masp_pinned_txs() -> Result<()> {
         Some(300)
     )?;
     client.exp_string("Transaction is valid")?;
+    println!("waiting for client success");
     client.assert_success();
+    println!("stuck here, but only in ABCI++");
 
     // Assert PPA(C) has the 20 BTC transaction pinned to it
     let mut client = run!(
