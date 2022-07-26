@@ -498,14 +498,20 @@ impl AnomaCmd {
     }
 
     /// Assert that the process exited with success
-    pub fn assert_success(&self) {
+    pub fn assert_success(&mut self) {
+        // Make sure that there is no unread output first
+        let _ = self.exp_eof().unwrap();
+
         let status = self.session.wait().unwrap();
         assert_eq!(WaitStatus::Exited(self.session.pid(), 0), status);
     }
 
     /// Assert that the process exited with failure
     #[allow(dead_code)]
-    pub fn assert_failure(&self) {
+    pub fn assert_failure(&mut self) {
+        // Make sure that there is no unread output first
+        let _ = self.exp_eof().unwrap();
+
         let status = self.session.wait().unwrap();
         assert_ne!(WaitStatus::Exited(self.session.pid(), 0), status);
     }
