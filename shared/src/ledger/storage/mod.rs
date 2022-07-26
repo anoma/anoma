@@ -746,12 +746,7 @@ where
             // Add a conversion from the previous asset type
             self.conversion_state.assets.insert(
                 old_asset,
-                (
-                    addr.clone(),
-                    self.last_epoch,
-                    Amount::zero().into(),
-                    0,
-                ),
+                (addr.clone(), self.last_epoch, Amount::zero().into(), 0),
             );
         }
 
