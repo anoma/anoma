@@ -417,6 +417,7 @@ where
         };
         self.db.write_block(state)?;
         self.last_height = self.block.height;
+        self.last_epoch = self.block.epoch;
         self.header = None;
         Ok(())
     }
@@ -661,8 +662,6 @@ where
         if new_epoch {
             // Begin a new epoch
             self.block.epoch = self.block.epoch.next();
-            self.last_epoch = self.last_epoch.next();
-            debug_assert_eq!(self.block.epoch, self.last_epoch);
             let EpochDuration {
                 min_num_of_blocks,
                 min_duration,
@@ -734,9 +733,9 @@ where
             // negative sign allows each instance of the old asset to be
             // cancelled out/replaced with the new asset
             let old_asset =
-                Self::encode_asset_type(addr.clone(), self.last_epoch.prev());
-            let new_asset =
                 Self::encode_asset_type(addr.clone(), self.last_epoch);
+            let new_asset =
+                Self::encode_asset_type(addr.clone(), self.block.epoch);
             current_convs.insert(
                 addr.clone(),
                 (Amount::from_pair(old_asset, -(reward.1 as i64)).unwrap()
@@ -749,7 +748,7 @@ where
                 old_asset,
                 (
                     addr.clone(),
-                    self.last_epoch.prev(),
+                    self.last_epoch,
                     Amount::zero().into(),
                     0,
                 ),
@@ -824,12 +823,12 @@ where
             // Add the decoding entry for the new asset type. An uncommited
             // node position is used since this is not a conversion.
             let new_asset =
-                Self::encode_asset_type(addr.clone(), self.last_epoch);
+                Self::encode_asset_type(addr.clone(), self.block.epoch);
             self.conversion_state.assets.insert(
                 new_asset,
                 (
                     addr.clone(),
-                    self.last_epoch,
+                    self.block.epoch,
                     Amount::zero().into(),
                     self.conversion_state.tree.size(),
                 ),
