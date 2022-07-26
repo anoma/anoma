@@ -3,6 +3,10 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
 [![Drone CI build status](https://ci.heliax.dev/api/badges/anoma/anoma/status.svg)](https://ci.heliax.dev/anoma/anoma)
 
+## Namada
+
+This repo contains an early prototype of Anoma. A lot of current development is happening on [Namada](https://github.com/anoma/namada). Please go there to check out the latest status.
+
 ## Overview
 
 [Anoma](https://anoma.net/) is an intent-centric, privacy-preserving protocol for decentralized counterparty discovery, solving, and multi-chain atomic settlement. To learn more about Anoma's vision, take a look at the [Anoma Vision Paper](https://anoma.net/vision-paper.pdf).
