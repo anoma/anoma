@@ -361,6 +361,7 @@ where
         };
         self.db.write_block(state)?;
         self.last_height = self.block.height;
+        self.last_epoch = self.block.epoch;
         self.header = None;
         Ok(())
     }
@@ -600,8 +601,6 @@ where
         if new_epoch {
             // Begin a new epoch
             self.block.epoch = self.block.epoch.next();
-            self.last_epoch = self.last_epoch.next();
-            debug_assert_eq!(self.block.epoch, self.last_epoch);
             let EpochDuration {
                 min_num_of_blocks,
                 min_duration,
