@@ -279,6 +279,7 @@ dependencies = [
  "pretty_assertions",
  "proptest",
  "prost 0.9.0",
+ "rand 0.8.5",
  "serde_json",
  "sha2 0.9.9",
  "tempfile",
