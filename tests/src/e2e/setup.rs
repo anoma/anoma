@@ -96,6 +96,7 @@ pub fn single_node_net() -> Result<Test> {
     network(|genesis| genesis, None)
 }
 
+/// Setup two networks with a single genesis validator node.
 pub fn two_single_node_nets() -> Result<(Test, Test)> {
     Ok((
         network(|genesis| genesis, None)?,

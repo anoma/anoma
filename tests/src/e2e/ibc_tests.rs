@@ -123,6 +123,15 @@ fn run_ledger_ibc() -> Result<()> {
     let mut ledger_b =
         run_as!(test_b, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
     ledger_b.exp_string("Anoma ledger node started")?;
+    if !cfg!(feature = "ABCI") {
+        ledger_a.exp_string("started node")?;
+        ledger_b.exp_string("started node")?;
+    } else {
+        ledger_a.exp_string("Started node")?;
+        ledger_b.exp_string("Started node")?;
+    }
+    let _bg_ledger_a = ledger_a.background();
+    let _bg_ledger_b = ledger_b.background();
 
     sleep(5);
 
@@ -166,16 +175,26 @@ fn run_ledger_ibc() -> Result<()> {
 
     // Check the balance on Chain B
     let rpc_b = get_actor_rpc(&test_b, &Who::Validator(0));
+    let sub_prefix = ibc_token_prefix(
+        &port_channel_id_a.port_id,
+        &port_channel_id_a.channel_id,
+        &find_address(&test_b, XAN).unwrap(),
+    )
+    .sub_key()
+    .unwrap()
+    .to_string();
     let query_args = vec![
         "balance",
         "--owner",
         BERTHA,
         "--token",
         XAN,
+        "--sub-prefix",
+        &sub_prefix,
         "--ledger-address",
         &rpc_b,
     ];
-    let expected = r"XAN: 2000000";
+    let expected = r"XAN with ibc/.*: 1000000";
     let mut client = run!(test_b, Bin::Client, query_args, Some(40))?;
     client.exp_regex(expected)?;
     client.assert_success();
@@ -768,6 +787,7 @@ fn submit_ibc_tx(
         ],
         Some(40)
     )?;
+    client.exp_string("Transaction applied")?;
     let (unread, matched) = client.exp_regex("\"height\": .*,")?;
     let height_str = matched
         .trim()
