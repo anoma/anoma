@@ -153,7 +153,7 @@ pub fn epoch_sleep(
         if epoch > old_epoch {
             break Ok(epoch);
         } else {
-            sleep(1);
+            sleep(10);
         }
     }
 }

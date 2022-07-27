@@ -847,7 +847,7 @@ fn masp_incentives() -> Result<()> {
     let test = setup::network(
         |genesis| {
             let parameters = ParametersConfig {
-                min_duration: 120,
+                min_duration: 240,
                 ..genesis.parameters
             };
             GenesisConfig {
