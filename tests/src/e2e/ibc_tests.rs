@@ -66,6 +66,7 @@ use anoma::tendermint::block::Header as TmHeader;
 use anoma::tendermint::merkle::proof::Proof as TmProof;
 use anoma::tendermint::trust_threshold::TrustThresholdFraction;
 use anoma::tendermint_proto::Protobuf;
+use anoma::types::address::{Address, InternalAddress};
 use anoma::types::key::PublicKey;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma_apps::client::rpc::query_storage_value_bytes;
@@ -157,32 +158,33 @@ fn run_ledger_ibc() -> Result<()> {
         &port_channel_id_a,
     )?;
 
-    // Check the balance on Chain A
+    // Check the balances on Chain A
+    let key_prefix = ibc_token_prefix(
+        &port_channel_id_a.port_id,
+        &port_channel_id_a.channel_id,
+        &find_address(&test_b, XAN).unwrap(),
+    );
+    let sub_prefix = key_prefix.sub_key().unwrap().to_string();
+
     let rpc_a = get_actor_rpc(&test_a, &Who::Validator(0));
-    let query_args = vec![
-        "balance",
-        "--owner",
-        ALBERT,
-        "--token",
-        XAN,
-        "--ledger-address",
-        &rpc_a,
-    ];
-    let expected = r"XAN: 0";
+    let query_args =
+        vec!["balance", "--token", XAN, "--ledger-address", &rpc_a];
     let mut client = run!(test_a, Bin::Client, query_args, Some(40))?;
-    client.exp_regex(expected)?;
+    // Check the source balance
+    let sender = find_address(&test_a, ALBERT)?;
+    let expected = format!(":  900000, owned by {}", sender);
+    client.exp_string(&expected)?;
+    // Check the escrowed balance
+    let expected = format!(
+        " with {}:  100000, owned by {}",
+        sub_prefix,
+        Address::Internal(InternalAddress::IbcEscrow)
+    );
+    client.exp_string(&expected)?;
     client.assert_success();
 
     // Check the balance on Chain B
     let rpc_b = get_actor_rpc(&test_b, &Who::Validator(0));
-    let sub_prefix = ibc_token_prefix(
-        &port_channel_id_a.port_id,
-        &port_channel_id_a.channel_id,
-        &find_address(&test_b, XAN).unwrap(),
-    )
-    .sub_key()
-    .unwrap()
-    .to_string();
     let query_args = vec![
         "balance",
         "--owner",
@@ -194,9 +196,9 @@ fn run_ledger_ibc() -> Result<()> {
         "--ledger-address",
         &rpc_b,
     ];
-    let expected = r"XAN with ibc/.*: 1000000";
+    let expected = format!("XAN with {}: 100000", sub_prefix);
     let mut client = run!(test_b, Bin::Client, query_args, Some(40))?;
-    client.exp_regex(expected)?;
+    client.exp_string(&expected)?;
     client.assert_success();
 
     Ok(())
@@ -662,7 +664,7 @@ fn transfer_token(
 
     let token = Some(Coin {
         denom: xan.to_string(),
-        amount: "1000000".to_string(),
+        amount: "100000".to_string(),
     });
     let msg = MsgTransfer {
         source_port: source_port_channel_id.port_id.clone(),
