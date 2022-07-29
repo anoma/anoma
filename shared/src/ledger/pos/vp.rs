@@ -110,7 +110,7 @@ where
         &self,
         tx_data: &[u8],
         keys_changed: &BTreeSet<Key>,
-        verifiers: &BTreeSet<Address>,
+        _verifiers: &BTreeSet<Address>,
     ) -> Result<bool> {
         use validation::Data;
         use validation::DataUpdate::{self, *};
@@ -125,16 +125,6 @@ where
                 match proposal_id {
                     Some(id) => return Ok(is_proposal_accepted(&self.ctx, id)),
                     _ => return Ok(false),
-                }
-            } else if let Some(owner) = key.is_validity_predicate() {
-                let has_pre = self.ctx.has_key_pre(key)?;
-                let has_post = self.ctx.has_key_post(key)?;
-                if has_pre && has_post {
-                    // VP updates must be verified by the owner
-                    return Ok(!verifiers.contains(owner));
-                } else if has_pre || !has_post {
-                    // VP cannot be deleted
-                    return Ok(false);
                 }
             } else if is_validator_set_key(key) {
                 let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
