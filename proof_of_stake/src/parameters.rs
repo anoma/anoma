@@ -78,7 +78,7 @@ const MAX_TOTAL_VOTING_POWER: i64 = i64::MAX / 8;
 const TOKEN_MAX_AMOUNT: u64 = u64::MAX / 1_000_000;
 
 impl PosParams {
-    /// Validate PoS parameters values. Returns empty list the values are valid.
+    /// Validate PoS parameters values. Returns an empty list if the values are valid.
     #[must_use]
     pub fn validate(&self) -> Vec<ValidationError> {
         let mut errors = vec![];

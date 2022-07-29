@@ -50,7 +50,7 @@
 //! - Unbond: Requires a bond in the state (the `#{owner}` and `#{validator}`
 //!   segments in the keys below must be the owner and a validator of an
 //!   existing bond). The bond's total amount must be greater or equal to the
-//!   amount that' being unbonded. Some of the storage changes are optional,
+//!   amount that is being unbonded. Some of the storage changes are optional,
 //!   which depends on whether the unbonding decreases voting power of the
 //!   validator.
 //!     - `#{PoS}/bond/#{owner}/#{validator}`
@@ -616,11 +616,12 @@ pub mod testing {
     #[derivative(Debug)]
 
     pub enum PosStorageChange {
-        /// Ensure that the account exists when initialing a valid new
+        /// Ensure that the account exists when initializing a valid new
         /// validator or delegation from a new owner
         SpawnAccount {
             address: Address,
         },
+        /// NEEDS DESCRIPTION: {Add tokens included in a new bond at pipeline length}?
         Bond {
             owner: Address,
             validator: Address,

@@ -49,10 +49,10 @@ mod tests {
 
     proptest! {
         /// In this test we setup the ledger and PoS system with an arbitrary
-        /// initial state with 1 genesis validator, arbitrary PoS parameters and
-        /// a we generate an arbitrary bond that we'd like to apply.
+        /// initial state with 1 genesis validator and arbitrary PoS parameters. We then
+        /// generate an arbitrary bond that we'd like to apply.
         ///
-        /// After we apply the bond, we're checking that all the storage values
+        /// After we apply the bond, we check that all the storage values
         /// in PoS system have been updated as expected and then we also check
         /// that this transaction is accepted by the PoS validity predicate.
         #[test]
@@ -339,7 +339,7 @@ mod tests {
             (initial_stake in token::testing::arb_amount())
             // Use the initial stake to limit the bond amount
             (bond in arb_bond(u64::MAX - u64::from(initial_stake)),
-            // Use the generated initial stake too too
+            // Use the generated initial stake too
             initial_stake in Just(initial_stake),
         ) -> (token::Amount, transaction::pos::Bond) {
             (initial_stake, bond)

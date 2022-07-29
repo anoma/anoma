@@ -1690,7 +1690,7 @@ pub async fn get_proposal_offline_votes(
                     );
                     let bond = epoched_bonds
                         .get(epoch)
-                        .expect("Delegation bond should be definied.");
+                        .expect("Delegation bond should be defined.");
                     let mut to_deduct = bond.neg_deltas;
                     for (start_epoch, &(mut delta)) in
                         bond.pos_deltas.iter().sorted()
