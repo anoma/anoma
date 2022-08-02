@@ -19,7 +19,7 @@ use std::marker::PhantomData;
 
 pub use anoma::ledger::governance::storage as gov_storage;
 pub use anoma::ledger::parameters::storage as parameters_storage;
-use anoma::ledger::read::StorageRead;
+pub use anoma::ledger::read::StorageRead;
 pub use anoma::ledger::storage::types::encode;
 pub use anoma::ledger::treasury::storage as treasury_storage;
 pub use anoma::ledger::tx_env::TxEnv;
@@ -104,7 +104,7 @@ pub type TxResult = EnvResult<()>;
 #[derive(Debug)]
 pub struct KeyValIterator<T>(pub u64, pub PhantomData<T>);
 
-impl TxEnv for Ctx {
+impl StorageRead for Ctx {
     type Error = Error;
     type PrefixIter = KeyValIterator<(String, Vec<u8>)>;
 
@@ -170,16 +170,6 @@ impl TxEnv for Ctx {
         Ok(Epoch(unsafe { anoma_tx_get_block_epoch() }))
     }
 
-    fn get_block_time(&self) -> Result<time::Rfc3339String, Error> {
-        let read_result = unsafe { anoma_tx_get_block_time() };
-        let time_value = read_from_buffer(read_result, anoma_tx_result_buffer)
-            .expect("The block time should exist");
-        Ok(Rfc3339String(
-            String::try_from_slice(&time_value[..])
-                .expect("The conversion shouldn't fail"),
-        ))
-    }
-
     fn iter_prefix(
         &self,
         prefix: &anoma::types::storage::Key,
@@ -199,6 +189,18 @@ impl TxEnv for Ctx {
         Ok(read_key_val_bytes_from_buffer(
             read_result,
             anoma_tx_result_buffer,
+        ))
+    }
+}
+
+impl TxEnv for Ctx {
+    fn get_block_time(&self) -> Result<time::Rfc3339String, Error> {
+        let read_result = unsafe { anoma_tx_get_block_time() };
+        let time_value = read_from_buffer(read_result, anoma_tx_result_buffer)
+            .expect("The block time should exist");
+        Ok(Rfc3339String(
+            String::try_from_slice(&time_value[..])
+                .expect("The conversion shouldn't fail"),
         ))
     }
 
@@ -316,58 +318,5 @@ impl TxEnv for Ctx {
             anoma_tx_emit_ibc_event(event.as_ptr() as _, event.len() as _)
         };
         Ok(())
-    }
-}
-
-impl StorageRead for Ctx {
-    type Error = Error;
-    type PrefixIter = KeyValIterator<(String, Vec<u8>)>;
-
-    fn read<T: BorshDeserialize>(
-        &self,
-        key: &storage::Key,
-    ) -> Result<Option<T>, Self::Error> {
-        TxEnv::read(self, key)
-    }
-
-    fn read_bytes(
-        &self,
-        key: &storage::Key,
-    ) -> Result<Option<Vec<u8>>, Self::Error> {
-        TxEnv::read_bytes(self, key)
-    }
-
-    fn has_key(&self, key: &storage::Key) -> Result<bool, Self::Error> {
-        TxEnv::has_key(self, key)
-    }
-
-    fn iter_prefix(
-        &self,
-        prefix: &storage::Key,
-    ) -> Result<Self::PrefixIter, Self::Error> {
-        TxEnv::iter_prefix(self, prefix)
-    }
-
-    fn iter_next(
-        &self,
-        iter: &mut Self::PrefixIter,
-    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        TxEnv::iter_next(self, iter)
-    }
-
-    fn get_chain_id(&self) -> Result<String, Self::Error> {
-        TxEnv::get_chain_id(self)
-    }
-
-    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
-        TxEnv::get_block_height(self)
-    }
-
-    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
-        TxEnv::get_block_hash(self)
-    }
-
-    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
-        TxEnv::get_block_epoch(self)
     }
 }

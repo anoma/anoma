@@ -20,14 +20,13 @@ pub trait StorageRead {
         key: &storage::Key,
     ) -> Result<Option<T>, Self::Error>;
 
-    /// Storage read prior state raw bytes. It will try to read from the
-    /// storage.
+    /// Storage read raw bytes. It will try to read from the storage.
     fn read_bytes(
         &self,
         key: &storage::Key,
     ) -> Result<Option<Vec<u8>>, Self::Error>;
 
-    /// Storage `has_key` in prior state. It will try to read from the storage.
+    /// Storage `has_key` in. It will try to read from the storage.
     fn has_key(&self, key: &storage::Key) -> Result<bool, Self::Error>;
 
     /// Storage prefix iterator. It will try to get an iterator from the
@@ -37,8 +36,7 @@ pub trait StorageRead {
         prefix: &storage::Key,
     ) -> Result<Self::PrefixIter, Self::Error>;
 
-    /// Storage prefix iterator for prior state. It will
-    /// try to read from the storage.
+    /// Storage prefix iterator for. It will try to read from the storage.
     fn iter_next(
         &self,
         iter: &mut Self::PrefixIter,
