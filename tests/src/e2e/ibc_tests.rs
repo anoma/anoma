@@ -141,7 +141,7 @@ fn run_ledger_ibc() -> Result<()> {
     let (conn_id_a, conn_id_b) =
         connection_handshake(&test_a, &test_b, &client_id_a, &client_id_b)?;
 
-    let (port_channel_id_a, _) = channel_handshake(
+    let (port_channel_id_a, port_channel_id_b) = channel_handshake(
         &test_a,
         &test_b,
         &client_id_a,
@@ -150,6 +150,7 @@ fn run_ledger_ibc() -> Result<()> {
         &conn_id_b,
     )?;
 
+    // transfer from the normal account
     transfer_token(
         &test_a,
         &test_b,
@@ -157,49 +158,24 @@ fn run_ledger_ibc() -> Result<()> {
         &client_id_b,
         &port_channel_id_a,
     )?;
+    check_balances(&port_channel_id_a, &port_channel_id_b, &test_a, &test_b)?;
 
-    // Check the balances on Chain A
-    let key_prefix = ibc_token_prefix(
-        &port_channel_id_a.port_id,
-        &port_channel_id_a.channel_id,
-        &find_address(&test_b, XAN).unwrap(),
-    );
-    let sub_prefix = key_prefix.sub_key().unwrap().to_string();
+    // transfer back from the normal account
+    transfer_back(
+        &test_a,
+        &test_b,
+        &client_id_a,
+        &client_id_b,
+        &port_channel_id_b,
+    )?;
+    check_balances_after_back(
+        &port_channel_id_a,
+        &port_channel_id_b,
+        &test_a,
+        &test_b,
+    )?;
 
-    let rpc_a = get_actor_rpc(&test_a, &Who::Validator(0));
-    let query_args =
-        vec!["balance", "--token", XAN, "--ledger-address", &rpc_a];
-    let mut client = run!(test_a, Bin::Client, query_args, Some(40))?;
-    // Check the source balance
-    let sender = find_address(&test_a, ALBERT)?;
-    let expected = format!(":  900000, owned by {}", sender);
-    client.exp_string(&expected)?;
-    // Check the escrowed balance
-    let expected = format!(
-        " with {}:  100000, owned by {}",
-        sub_prefix,
-        Address::Internal(InternalAddress::IbcEscrow)
-    );
-    client.exp_string(&expected)?;
-    client.assert_success();
-
-    // Check the balance on Chain B
-    let rpc_b = get_actor_rpc(&test_b, &Who::Validator(0));
-    let query_args = vec![
-        "balance",
-        "--owner",
-        BERTHA,
-        "--token",
-        XAN,
-        "--sub-prefix",
-        &sub_prefix,
-        "--ledger-address",
-        &rpc_b,
-    ];
-    let expected = format!("XAN with {}: 100000", sub_prefix);
-    let mut client = run!(test_b, Bin::Client, query_args, Some(40))?;
-    client.exp_string(&expected)?;
-    client.assert_success();
+    // TODO: packet timeout and refund
 
     Ok(())
 }
@@ -717,6 +693,77 @@ fn transfer_token(
     Ok(())
 }
 
+/// Give the token back after transfer_token
+fn transfer_back(
+    test_a: &Test,
+    test_b: &Test,
+    client_id_a: &ClientId,
+    client_id_b: &ClientId,
+    port_channel_id_b: &PortChannelId,
+) -> Result<()> {
+    let xan = find_address(test_b, XAN)?;
+    let sender = find_address(test_b, BERTHA)?;
+    let receiver = find_address(test_a, ALBERT)?;
+
+    // Chain A was the source for the sent token
+    let token = Some(Coin {
+        denom: format!(
+            "{}/{}/{}",
+            port_channel_id_b.port_id, port_channel_id_b.channel_id, xan
+        ),
+        amount: "50000".to_string(),
+    });
+    let msg = MsgTransfer {
+        source_port: port_channel_id_b.port_id.clone(),
+        source_channel: port_channel_id_b.channel_id,
+        token,
+        sender: Signer::new(sender.to_string()),
+        receiver: Signer::new(receiver.to_string()),
+        timeout_height: Height::new(100, 100),
+        timeout_timestamp: (Timestamp::now() + Duration::new(30, 0)).unwrap(),
+    };
+    // Send a token from Chain B
+    let height = submit_ibc_tx(test_b, msg)?;
+    let packet = match get_event(test_b, height)? {
+        Some(IbcEvent::SendPacket(event)) => event.packet,
+        _ => return Err(eyre!("Transaction failed")),
+    };
+
+    let height_b = query_height(test_b)?;
+    let proofs = get_commitment_proof(test_b, &packet, height_b)?;
+    let msg = MsgRecvPacket {
+        packet,
+        proofs,
+        signer: Signer::new("test_a"),
+    };
+    // Update the client state of Chain B on Chain A
+    update_client_with_height(test_b, test_a, client_id_a, height_b)?;
+    // Receive the token on Chain A
+    let height = submit_ibc_tx(test_a, msg)?;
+    let (acknowledgement, packet) = match get_event(test_a, height)? {
+        Some(IbcEvent::WriteAcknowledgement(event)) => {
+            (event.ack, event.packet)
+        }
+        _ => return Err(eyre!("Transaction failed")),
+    };
+
+    // get the proof on Chain A
+    let height_a = query_height(test_a)?;
+    let proofs = get_ack_proof(test_a, &packet, height_a)?;
+    let msg = MsgAcknowledgement {
+        packet,
+        acknowledgement: acknowledgement.into(),
+        proofs,
+        signer: Signer::new("test_b"),
+    };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // Acknowledge on Chain B
+    submit_ibc_tx(test_b, msg)?;
+
+    Ok(())
+}
+
 fn get_commitment_proof(
     test: &Test,
     packet: &Packet,
@@ -924,4 +971,122 @@ fn convert_proof(tm_proof: TmProof) -> Result<CommitmentProofBytes> {
     CommitmentProofBytes::try_from(merkle_proof).map_err(|e| {
         eyre!("Proof conversion to CommitmentProofBytes failed: {}", e)
     })
+}
+
+/// Check balances after IBC transfer
+fn check_balances(
+    src_port_channel_id: &PortChannelId,
+    dest_port_channel_id: &PortChannelId,
+    test_a: &Test,
+    test_b: &Test,
+) -> Result<()> {
+    let sender = find_address(test_a, ALBERT)?;
+    let token = find_address(test_a, XAN)?;
+
+    // Check the balances on Chain A
+    let rpc_a = get_actor_rpc(test_a, &Who::Validator(0));
+    let query_args =
+        vec!["balance", "--token", XAN, "--ledger-address", &rpc_a];
+    let mut client = run!(test_a, Bin::Client, query_args, Some(40))?;
+    // Check the source balance
+    let expected = format!(":  900000, owned by {}", sender);
+    client.exp_string(&expected)?;
+    // Check the escrowed balance
+    let key_prefix = ibc_account_prefix(
+        &src_port_channel_id.port_id,
+        &src_port_channel_id.channel_id,
+        &token,
+    );
+    let sub_prefix = key_prefix.sub_key().unwrap().to_string();
+    let expected = format!(
+        " with {}:  100000, owned by {}",
+        sub_prefix,
+        Address::Internal(InternalAddress::IbcEscrow)
+    );
+    client.exp_string(&expected)?;
+    client.assert_success();
+
+    // Check the balance on Chain B
+    let denom = format!(
+        "{}/{}/{}",
+        &dest_port_channel_id.port_id, &dest_port_channel_id.channel_id, &token,
+    );
+    let key_prefix = ibc_token_prefix(&denom)?;
+    let sub_prefix = key_prefix.sub_key().unwrap().to_string();
+    let rpc_b = get_actor_rpc(test_b, &Who::Validator(0));
+    let query_args = vec![
+        "balance",
+        "--owner",
+        BERTHA,
+        "--token",
+        XAN,
+        "--sub-prefix",
+        &sub_prefix,
+        "--ledger-address",
+        &rpc_b,
+    ];
+    let expected = format!("XAN with {}: 100000", sub_prefix);
+    let mut client = run!(test_b, Bin::Client, query_args, Some(40))?;
+    client.exp_string(&expected)?;
+    client.assert_success();
+    Ok(())
+}
+
+/// Check balances after IBC transfer back
+fn check_balances_after_back(
+    src_port_channel_id: &PortChannelId,
+    dest_port_channel_id: &PortChannelId,
+    test_a: &Test,
+    test_b: &Test,
+) -> Result<()> {
+    let sender = find_address(test_a, ALBERT)?;
+    let token = find_address(test_b, XAN)?;
+
+    // Check the balances on Chain A
+    let rpc_a = get_actor_rpc(test_a, &Who::Validator(0));
+    let query_args =
+        vec!["balance", "--token", XAN, "--ledger-address", &rpc_a];
+    let mut client = run!(test_a, Bin::Client, query_args, Some(40))?;
+    // Check the source balance
+    let expected = format!(":  950000, owned by {}", sender);
+    client.exp_string(&expected)?;
+    // Check the escrowed balance
+    let key_prefix = ibc_account_prefix(
+        &src_port_channel_id.port_id,
+        &src_port_channel_id.channel_id,
+        &token,
+    );
+    let sub_prefix = key_prefix.sub_key().unwrap().to_string();
+    let expected = format!(
+        " with {}:  50000, owned by {}",
+        sub_prefix,
+        Address::Internal(InternalAddress::IbcEscrow)
+    );
+    client.exp_string(&expected)?;
+    client.assert_success();
+
+    // Check the balance on Chain B
+    let denom = format!(
+        "{}/{}/{}",
+        &dest_port_channel_id.port_id, &dest_port_channel_id.channel_id, &token,
+    );
+    let key_prefix = ibc_token_prefix(&denom)?;
+    let sub_prefix = key_prefix.sub_key().unwrap().to_string();
+    let rpc_b = get_actor_rpc(test_b, &Who::Validator(0));
+    let query_args = vec![
+        "balance",
+        "--owner",
+        BERTHA,
+        "--token",
+        XAN,
+        "--sub-prefix",
+        &sub_prefix,
+        "--ledger-address",
+        &rpc_b,
+    ];
+    let expected = format!("XAN with {}: 50000", sub_prefix);
+    let mut client = run!(test_b, Bin::Client, query_args, Some(40))?;
+    client.exp_string(&expected)?;
+    client.assert_success();
+    Ok(())
 }
