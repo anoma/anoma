@@ -7,6 +7,7 @@ use borsh::BorshDeserialize;
 use thiserror::Error;
 
 use super::gas::MIN_STORAGE_GAS;
+use super::storage_api;
 use crate::ledger::gas;
 use crate::ledger::gas::VpGasMeter;
 use crate::ledger::storage::write_log::WriteLog;
@@ -161,6 +162,8 @@ pub enum RuntimeError {
     ReadTemporaryValueError,
     #[error("Trying to read a permament value with read_temp")]
     ReadPermanentValueError,
+    #[error("Storage error: {0}")]
+    StorageApi(storage_api::Error),
 }
 
 /// VP environment function result
@@ -463,4 +466,10 @@ where
         }
     }
     Ok(None)
+}
+
+impl From<storage_api::Error> for RuntimeError {
+    fn from(err: storage_api::Error) -> Self {
+        Self::StorageApi(err)
+    }
 }

@@ -5,6 +5,7 @@
 //! avoiding `error[E0117]: only traits defined in the current crate can be
 //! implemented for arbitrary types`
 
+use anoma::ledger::storage_api;
 use thiserror::Error;
 
 #[allow(missing_docs)]
@@ -99,5 +100,13 @@ pub struct CustomError(Box<dyn std::error::Error + Send + Sync>);
 impl std::fmt::Display for CustomError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+impl From<storage_api::Error> for Error {
+    fn from(err: storage_api::Error) -> Self {
+        // storage_api::Error::Custom(CustomError {Box<Error>})
+        // Error:Custom(storage_api::Error::Custom(CustomError {Box<Error>}))
+        Self::new(err)
     }
 }

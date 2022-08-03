@@ -14,5 +14,6 @@ pub fn invalidate_exchange(
     let mut invalid_intent: HashSet<common::Signature> =
         ctx.read(&key)?.unwrap_or_default();
     invalid_intent.insert(intent.sig.clone());
-    ctx.write(&key, &invalid_intent)
+    ctx.write(&key, &invalid_intent)?;
+    Ok(())
 }

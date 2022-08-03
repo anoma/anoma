@@ -14,9 +14,9 @@ use tendermint::merkle::proof::Proof;
 use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
 
-use super::parameters;
 use super::parameters::Parameters;
-use super::read::StorageRead;
+use super::storage_api::{ResultExt, StorageRead};
+use super::{parameters, storage_api};
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::EpochDuration;
 use crate::ledger::storage::merkle_tree::{
@@ -689,68 +689,74 @@ where
 }
 
 // The `'iter` lifetime is needed for the associated type `PrefixIter`.
-// Note that the `D: DBIter<'iter>` bound uses another higher-rank lifetime 
+// Note that the `D: DBIter<'iter>` bound uses another higher-rank lifetime
 // (see https://doc.rust-lang.org/nomicon/hrtb.html).
 impl<'iter, D, H> StorageRead for &'iter Storage<D, H>
 where
     D: DB + for<'iter_> DBIter<'iter_>,
     H: StorageHasher,
 {
-    type Error = Error;
     type PrefixIter = <D as DBIter<'iter>>::PrefixIter;
 
     fn read<T: borsh::BorshDeserialize>(
         &self,
         key: &crate::types::storage::Key,
-    ) -> std::result::Result<Option<T>, Self::Error> {
-        self.read_bytes(key).map(|maybe_value| {
-            maybe_value.and_then(|t| T::try_from_slice(&t[..]).ok())
-        })
+    ) -> std::result::Result<Option<T>, storage_api::Error> {
+        self.read_bytes(key)
+            .map(|maybe_value| {
+                maybe_value.and_then(|t| T::try_from_slice(&t[..]).ok())
+            })
+            .into_storage_result()
     }
 
     fn read_bytes(
         &self,
         key: &crate::types::storage::Key,
-    ) -> std::result::Result<Option<Vec<u8>>, Self::Error> {
-        self.db.read_subspace_val(key)
+    ) -> std::result::Result<Option<Vec<u8>>, storage_api::Error> {
+        self.db.read_subspace_val(key).into_storage_result()
     }
 
     fn has_key(
         &self,
         key: &crate::types::storage::Key,
-    ) -> std::result::Result<bool, Self::Error> {
-        self.block.tree.has_key(key).map_err(Into::into)
+    ) -> std::result::Result<bool, storage_api::Error> {
+        self.block.tree.has_key(key).into_storage_result()
     }
 
     fn iter_prefix(
         &self,
         prefix: &crate::types::storage::Key,
-    ) -> std::result::Result<Self::PrefixIter, Self::Error> {
+    ) -> std::result::Result<Self::PrefixIter, storage_api::Error> {
         Ok(self.db.iter_prefix(prefix))
     }
 
     fn iter_next(
         &self,
         iter: &mut Self::PrefixIter,
-    ) -> std::result::Result<Option<(String, Vec<u8>)>, Self::Error> {
+    ) -> std::result::Result<Option<(String, Vec<u8>)>, storage_api::Error>
+    {
         Ok(iter.next().map(|(key, val, _gas)| (key, val)))
     }
 
-    fn get_chain_id(&self) -> std::result::Result<String, Self::Error> {
+    fn get_chain_id(&self) -> std::result::Result<String, storage_api::Error> {
         Ok(self.chain_id.to_string())
     }
 
     fn get_block_height(
         &self,
-    ) -> std::result::Result<BlockHeight, Self::Error> {
+    ) -> std::result::Result<BlockHeight, storage_api::Error> {
         Ok(self.block.height)
     }
 
-    fn get_block_hash(&self) -> std::result::Result<BlockHash, Self::Error> {
+    fn get_block_hash(
+        &self,
+    ) -> std::result::Result<BlockHash, storage_api::Error> {
         Ok(self.block.hash.clone())
     }
 
-    fn get_block_epoch(&self) -> std::result::Result<Epoch, Self::Error> {
+    fn get_block_epoch(
+        &self,
+    ) -> std::result::Result<Epoch, storage_api::Error> {
         Ok(self.block.epoch)
     }
 }

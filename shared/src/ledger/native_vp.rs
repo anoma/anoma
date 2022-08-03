@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 
-use super::read::StorageRead;
+use super::storage_api::{self, ResultExt, StorageRead};
 pub use super::vp_env::VpEnv;
 use crate::ledger::gas::VpGasMeter;
 use crate::ledger::storage::write_log::WriteLog;
@@ -76,13 +76,13 @@ where
 /// Read access to the prior storage (state before tx execution) via
 /// [`trait@StorageRead`].
 #[derive(Debug)]
-pub struct CtxPreStorageRead<'f, 'a: 'f, DB, H, CA>
+pub struct CtxPreStorageRead<'b, 'a: 'b, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
     CA: WasmCacheAccess,
 {
-    ctx: &'f Ctx<'a, DB, H, CA>,
+    ctx: &'b Ctx<'a, DB, H, CA>,
 }
 
 /// Read access to the posterior storage (state after tx execution) via
@@ -156,58 +156,57 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    type Error = Error;
     type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
 
     fn read<T: borsh::BorshDeserialize>(
         &self,
         key: &crate::types::storage::Key,
-    ) -> Result<Option<T>, Self::Error> {
-        self.ctx.read_pre(key)
+    ) -> Result<Option<T>, storage_api::Error> {
+        self.ctx.read_pre(key).into_storage_result()
     }
 
     fn read_bytes(
         &self,
         key: &crate::types::storage::Key,
-    ) -> Result<Option<Vec<u8>>, Self::Error> {
-        self.ctx.read_bytes_pre(key)
+    ) -> Result<Option<Vec<u8>>, storage_api::Error> {
+        self.ctx.read_bytes_pre(key).into_storage_result()
     }
 
     fn has_key(
         &self,
         key: &crate::types::storage::Key,
-    ) -> Result<bool, Self::Error> {
-        self.ctx.has_key_pre(key)
+    ) -> Result<bool, storage_api::Error> {
+        self.ctx.has_key_pre(key).into_storage_result()
     }
 
     fn iter_prefix(
         &self,
         prefix: &crate::types::storage::Key,
-    ) -> Result<Self::PrefixIter, Self::Error> {
-        self.ctx.iter_prefix(prefix)
+    ) -> Result<Self::PrefixIter, storage_api::Error> {
+        self.ctx.iter_prefix(prefix).into_storage_result()
     }
 
     fn iter_next(
         &self,
         iter: &mut Self::PrefixIter,
-    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        self.ctx.iter_pre_next(iter)
+    ) -> Result<Option<(String, Vec<u8>)>, storage_api::Error> {
+        self.ctx.iter_pre_next(iter).into_storage_result()
     }
 
-    fn get_chain_id(&self) -> Result<String, Self::Error> {
-        self.ctx.get_chain_id()
+    fn get_chain_id(&self) -> Result<String, storage_api::Error> {
+        self.ctx.get_chain_id().into_storage_result()
     }
 
-    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
-        self.ctx.get_block_height()
+    fn get_block_height(&self) -> Result<BlockHeight, storage_api::Error> {
+        self.ctx.get_block_height().into_storage_result()
     }
 
-    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
-        self.ctx.get_block_hash()
+    fn get_block_hash(&self) -> Result<BlockHash, storage_api::Error> {
+        self.ctx.get_block_hash().into_storage_result()
     }
 
-    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
-        self.ctx.get_block_epoch()
+    fn get_block_epoch(&self) -> Result<Epoch, storage_api::Error> {
+        self.ctx.get_block_epoch().into_storage_result()
     }
 }
 
@@ -217,58 +216,57 @@ where
     H: 'static + StorageHasher,
     CA: 'static + WasmCacheAccess,
 {
-    type Error = Error;
     type PrefixIter = <DB as storage::DBIter<'a>>::PrefixIter;
 
     fn read<T: borsh::BorshDeserialize>(
         &self,
         key: &crate::types::storage::Key,
-    ) -> Result<Option<T>, Self::Error> {
-        self.ctx.read_post(key)
+    ) -> Result<Option<T>, storage_api::Error> {
+        self.ctx.read_post(key).into_storage_result()
     }
 
     fn read_bytes(
         &self,
         key: &crate::types::storage::Key,
-    ) -> Result<Option<Vec<u8>>, Self::Error> {
-        self.ctx.read_bytes_post(key)
+    ) -> Result<Option<Vec<u8>>, storage_api::Error> {
+        self.ctx.read_bytes_post(key).into_storage_result()
     }
 
     fn has_key(
         &self,
         key: &crate::types::storage::Key,
-    ) -> Result<bool, Self::Error> {
-        self.ctx.has_key_post(key)
+    ) -> Result<bool, storage_api::Error> {
+        self.ctx.has_key_post(key).into_storage_result()
     }
 
     fn iter_prefix(
         &self,
         prefix: &crate::types::storage::Key,
-    ) -> Result<Self::PrefixIter, Self::Error> {
-        self.ctx.iter_prefix(prefix)
+    ) -> Result<Self::PrefixIter, storage_api::Error> {
+        self.ctx.iter_prefix(prefix).into_storage_result()
     }
 
     fn iter_next(
         &self,
         iter: &mut Self::PrefixIter,
-    ) -> Result<Option<(String, Vec<u8>)>, Self::Error> {
-        self.ctx.iter_post_next(iter)
+    ) -> Result<Option<(String, Vec<u8>)>, storage_api::Error> {
+        self.ctx.iter_post_next(iter).into_storage_result()
     }
 
-    fn get_chain_id(&self) -> Result<String, Self::Error> {
-        self.ctx.get_chain_id()
+    fn get_chain_id(&self) -> Result<String, storage_api::Error> {
+        self.ctx.get_chain_id().into_storage_result()
     }
 
-    fn get_block_height(&self) -> Result<BlockHeight, Self::Error> {
-        self.ctx.get_block_height()
+    fn get_block_height(&self) -> Result<BlockHeight, storage_api::Error> {
+        self.ctx.get_block_height().into_storage_result()
     }
 
-    fn get_block_hash(&self) -> Result<BlockHash, Self::Error> {
-        self.ctx.get_block_hash()
+    fn get_block_hash(&self) -> Result<BlockHash, storage_api::Error> {
+        self.ctx.get_block_hash().into_storage_result()
     }
 
-    fn get_block_epoch(&self) -> Result<Epoch, Self::Error> {
-        self.ctx.get_block_epoch()
+    fn get_block_epoch(&self) -> Result<Epoch, storage_api::Error> {
+        self.ctx.get_block_epoch().into_storage_result()
     }
 }
 

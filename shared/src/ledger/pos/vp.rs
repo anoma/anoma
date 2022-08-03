@@ -35,9 +35,9 @@ use crate::ledger::pos::{
     is_validator_address_raw_hash_key, is_validator_consensus_key_key,
     is_validator_state_key,
 };
-use crate::ledger::read::StorageRead;
 use crate::ledger::storage::types::decode;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
+use crate::ledger::storage_api::{self, StorageRead};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::{Key, KeySeg};
 use crate::types::token;
@@ -48,6 +48,8 @@ use crate::vm::WasmCacheAccess;
 pub enum Error {
     #[error("Native VP error: {0}")]
     NativeVpError(native_vp::Error),
+    #[error("Storage error: {0}")]
+    StorageApi(storage_api::Error),
 }
 
 /// PoS functions result
@@ -341,5 +343,11 @@ impl_pos_read_only! {
 impl From<native_vp::Error> for Error {
     fn from(err: native_vp::Error) -> Self {
         Self::NativeVpError(err)
+    }
+}
+
+impl From<storage_api::Error> for Error {
+    fn from(err: storage_api::Error) -> Self {
+        Self::StorageApi(err)
     }
 }

@@ -137,6 +137,7 @@ impl anoma_proof_of_stake::PosReadOnly for Ctx {
         key: &Self::Address,
     ) -> Result<Option<Self::Address>, Self::Error> {
         self.read(&validator_staking_reward_address_key(key))
+            .into_env_result()
     }
 
     fn read_validator_consensus_key(
@@ -144,13 +145,14 @@ impl anoma_proof_of_stake::PosReadOnly for Ctx {
         key: &Self::Address,
     ) -> Result<Option<ValidatorConsensusKeys>, Self::Error> {
         self.read(&validator_consensus_key_key(key))
+            .into_env_result()
     }
 
     fn read_validator_state(
         &self,
         key: &Self::Address,
     ) -> Result<Option<ValidatorStates>, Self::Error> {
-        self.read(&validator_state_key(key))
+        self.read(&validator_state_key(key)).into_env_result()
     }
 
     fn read_validator_total_deltas(
@@ -158,6 +160,7 @@ impl anoma_proof_of_stake::PosReadOnly for Ctx {
         key: &Self::Address,
     ) -> Result<Option<ValidatorTotalDeltas>, Self::Error> {
         self.read(&validator_total_deltas_key(key))
+            .into_env_result()
     }
 
     fn read_validator_voting_power(
@@ -165,6 +168,7 @@ impl anoma_proof_of_stake::PosReadOnly for Ctx {
         key: &Self::Address,
     ) -> Result<Option<ValidatorVotingPowers>, Self::Error> {
         self.read(&validator_voting_power_key(key))
+            .into_env_result()
     }
 
     fn read_validator_slashes(
@@ -176,14 +180,14 @@ impl anoma_proof_of_stake::PosReadOnly for Ctx {
     }
 
     fn read_bond(&self, key: &BondId) -> Result<Option<Bonds>, Self::Error> {
-        self.read(&bond_key(key))
+        self.read(&bond_key(key)).into_env_result()
     }
 
     fn read_unbond(
         &self,
         key: &BondId,
     ) -> Result<Option<Unbonds>, Self::Error> {
-        self.read(&unbond_key(key))
+        self.read(&unbond_key(key)).into_env_result()
     }
 
     fn read_validator_set(&self) -> Result<ValidatorSets, Self::Error> {
@@ -235,7 +239,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         &mut self,
         params: &PosParams,
     ) -> Result<(), Self::Error> {
-        self.write(&params_key(), params)
+        self.write(&params_key(), params).into_env_result()
     }
 
     fn write_validator_address_raw_hash(
@@ -244,6 +248,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
     ) -> Result<(), Self::Error> {
         let raw_hash = address.raw_hash().unwrap().to_owned();
         self.write(&validator_address_raw_hash_key(raw_hash), address)
+            .into_env_result()
     }
 
     fn write_validator_staking_reward_address(
@@ -252,6 +257,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         value: Self::Address,
     ) -> Result<(), Self::Error> {
         self.write(&validator_staking_reward_address_key(key), &value)
+            .into_env_result()
     }
 
     fn write_validator_consensus_key(
@@ -260,6 +266,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         value: ValidatorConsensusKeys,
     ) -> Result<(), Self::Error> {
         self.write(&validator_consensus_key_key(key), &value)
+            .into_env_result()
     }
 
     fn write_validator_state(
@@ -268,6 +275,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         value: ValidatorStates,
     ) -> Result<(), Self::Error> {
         self.write(&validator_state_key(key), &value)
+            .into_env_result()
     }
 
     fn write_validator_total_deltas(
@@ -276,6 +284,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         value: ValidatorTotalDeltas,
     ) -> Result<(), Self::Error> {
         self.write(&validator_total_deltas_key(key), &value)
+            .into_env_result()
     }
 
     fn write_validator_voting_power(
@@ -284,6 +293,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         value: ValidatorVotingPowers,
     ) -> Result<(), Self::Error> {
         self.write(&validator_voting_power_key(key), &value)
+            .into_env_result()
     }
 
     fn write_bond(
@@ -291,7 +301,7 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         key: &BondId,
         value: Bonds,
     ) -> Result<(), Self::Error> {
-        self.write(&bond_key(key), &value)
+        self.write(&bond_key(key), &value).into_env_result()
     }
 
     fn write_unbond(
@@ -299,14 +309,14 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         key: &BondId,
         value: Unbonds,
     ) -> Result<(), Self::Error> {
-        self.write(&unbond_key(key), &value)
+        self.write(&unbond_key(key), &value).into_env_result()
     }
 
     fn write_validator_set(
         &mut self,
         value: ValidatorSets,
     ) -> Result<(), Self::Error> {
-        self.write(&validator_set_key(), &value)
+        self.write(&validator_set_key(), &value).into_env_result()
     }
 
     fn write_total_voting_power(
@@ -314,14 +324,15 @@ impl anoma_proof_of_stake::PosActions for Ctx {
         value: TotalVotingPowers,
     ) -> Result<(), Self::Error> {
         self.write(&total_voting_power_key(), &value)
+            .into_env_result()
     }
 
     fn delete_bond(&mut self, key: &BondId) -> Result<(), Self::Error> {
-        self.delete(&bond_key(key))
+        self.delete(&bond_key(key)).into_env_result()
     }
 
     fn delete_unbond(&mut self, key: &BondId) -> Result<(), Self::Error> {
-        self.delete(&unbond_key(key))
+        self.delete(&unbond_key(key)).into_env_result()
     }
 
     fn transfer(

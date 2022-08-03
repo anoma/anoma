@@ -1,7 +1,7 @@
 //! IBC lower-level functions for transactions.
 
 pub use anoma::ledger::ibc::handler::{Error, IbcActions, Result};
-use anoma::ledger::read::StorageRead;
+use anoma::ledger::storage_api::StorageRead;
 use anoma::ledger::tx_env::TxEnv;
 use anoma::types::address::Address;
 pub use anoma::types::ibc::IbcEvent;
