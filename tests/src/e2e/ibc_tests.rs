@@ -40,11 +40,15 @@ use anoma::ibc::core::ics04_channel::channel::{
     State as ChanState,
 };
 use anoma::ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+use anoma::ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+use anoma::ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
 use anoma::ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
 use anoma::ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
 use anoma::ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
 use anoma::ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
 use anoma::ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+use anoma::ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
+use anoma::ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 use anoma::ibc::core::ics04_channel::packet::Packet;
 use anoma::ibc::core::ics04_channel::Version as ChanVersion;
 use anoma::ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
@@ -160,7 +164,7 @@ fn run_ledger_ibc() -> Result<()> {
     )?;
     check_balances(&port_channel_id_a, &port_channel_id_b, &test_a, &test_b)?;
 
-    // transfer back from the normal account
+    // transfer back from the origin-specific account
     transfer_back(
         &test_a,
         &test_b,
@@ -175,7 +179,45 @@ fn run_ledger_ibc() -> Result<()> {
         &test_b,
     )?;
 
-    // TODO: packet timeout and refund
+    // transfer a token and it will time out
+    transfer_timeout(&test_a, &test_b, &client_id_a, &port_channel_id_a)?;
+    // the balance should not be changed
+    check_balances_after_back(
+        &port_channel_id_a,
+        &port_channel_id_b,
+        &test_a,
+        &test_b,
+    )?;
+
+    // Close the channel on Chain A
+    close_channel_init(&test_a, &port_channel_id_a)?;
+
+    // Try transfer from Chain B and it will refund with TimeoutOnClose
+    transfer_timeout_on_close(
+        &test_a,
+        &test_b,
+        &client_id_a,
+        &client_id_b,
+        &port_channel_id_a,
+        &port_channel_id_b,
+    )?;
+    // the balance should not be changed
+    check_balances_after_back(
+        &port_channel_id_a,
+        &port_channel_id_b,
+        &test_a,
+        &test_b,
+    )?;
+
+    // Close the channel on Chain B
+    close_channel_confirm(
+        &test_a,
+        &test_b,
+        &client_id_a,
+        &client_id_b,
+        &port_channel_id_a,
+        &port_channel_id_b,
+    )?;
 
     Ok(())
 }
@@ -189,7 +231,7 @@ fn create_client(test_a: &Test, test_b: &Test) -> Result<(ClientId, ClientId)> {
         consensus_state: make_consensus_state(test_b, height)?,
         signer: Signer::new("test_a"),
     };
-    let height_a = submit_ibc_tx(test_a, message)?;
+    let height_a = submit_ibc_tx(test_a, message, ALBERT)?;
 
     let height = query_height(test_a)?;
     let client_state = make_client_state(test_a, height);
@@ -199,7 +241,7 @@ fn create_client(test_a: &Test, test_b: &Test) -> Result<(ClientId, ClientId)> {
         consensus_state: make_consensus_state(test_a, height)?,
         signer: Signer::new("test_b"),
     };
-    let height_b = submit_ibc_tx(test_b, message)?;
+    let height_b = submit_ibc_tx(test_b, message, ALBERT)?;
 
     let client_id_a = match get_event(test_a, height_a)? {
         Some(IbcEvent::CreateClient(event)) => event.client_id().clone(),
@@ -303,7 +345,7 @@ fn update_client(
             client_id: client_id.clone(),
             signer: Signer::new("test"),
         };
-        submit_ibc_tx(target_test, message)?;
+        submit_ibc_tx(target_test, message, ALBERT)?;
     }
 
     let message = MsgUpdateAnyClient {
@@ -311,7 +353,7 @@ fn update_client(
         client_id: client_id.clone(),
         signer: Signer::new("test"),
     };
-    submit_ibc_tx(target_test, message)?;
+    submit_ibc_tx(target_test, message, ALBERT)?;
 
     Ok(())
 }
@@ -366,7 +408,7 @@ fn connection_handshake(
         signer: Signer::new("test_a"),
     };
     // OpenInitConnection on Chain A
-    let height = submit_ibc_tx(test_a, msg)?;
+    let height = submit_ibc_tx(test_a, msg, ALBERT)?;
     let conn_id_a = match get_event(test_a, height)? {
         Some(IbcEvent::OpenInitConnection(event)) => event
             .connection_id()
@@ -397,7 +439,7 @@ fn connection_handshake(
     // Update the client state of Chain A on Chain B
     update_client_with_height(test_a, test_b, client_id_b, height_a)?;
     // OpenTryConnection on Chain B
-    let height = submit_ibc_tx(test_b, msg)?;
+    let height = submit_ibc_tx(test_b, msg, ALBERT)?;
     let conn_id_b = match get_event(test_b, height)? {
         Some(IbcEvent::OpenTryConnection(event)) => event
             .connection_id()
@@ -421,7 +463,7 @@ fn connection_handshake(
     // Update the client state of Chain B on Chain A
     update_client_with_height(test_b, test_a, client_id_a, height_b)?;
     // OpenAckConnection on Chain A
-    submit_ibc_tx(test_a, msg)?;
+    submit_ibc_tx(test_a, msg, ALBERT)?;
 
     // get the proofs on Chain A
     let height_a = query_height(test_a)?;
@@ -435,7 +477,7 @@ fn connection_handshake(
     // Update the client state of Chain A on Chain B
     update_client_with_height(test_a, test_b, client_id_b, height_a)?;
     // OpenConfirmConnection on Chain B
-    submit_ibc_tx(test_b, msg)?;
+    submit_ibc_tx(test_b, msg, ALBERT)?;
 
     Ok((conn_id_a, conn_id_b))
 }
@@ -491,7 +533,7 @@ fn channel_handshake(
         channel,
         signer: Signer::new("test_a"),
     };
-    let height = submit_ibc_tx(test_a, msg)?;
+    let height = submit_ibc_tx(test_a, msg, ALBERT)?;
     let channel_id_a =
         match get_event(test_a, height)? {
             Some(IbcEvent::OpenInitChannel(event)) => event
@@ -526,7 +568,7 @@ fn channel_handshake(
     // Update the client state of Chain A on Chain B
     update_client_with_height(test_a, test_b, client_id_b, height_a)?;
     // OpenTryChannel on Chain B
-    let height = submit_ibc_tx(test_b, msg)?;
+    let height = submit_ibc_tx(test_b, msg, ALBERT)?;
     let channel_id_b = match get_event(test_b, height)? {
         Some(IbcEvent::OpenTryChannel(event)) => event
             .channel_id()
@@ -551,7 +593,7 @@ fn channel_handshake(
     // Update the client state of Chain B on Chain A
     update_client_with_height(test_b, test_a, client_id_a, height_b)?;
     // OpenAckChannel on Chain A
-    submit_ibc_tx(test_a, msg)?;
+    submit_ibc_tx(test_a, msg, ALBERT)?;
 
     // get the proofs on Chain A
     let height_a = query_height(test_a)?;
@@ -566,9 +608,50 @@ fn channel_handshake(
     // Update the client state of Chain A on Chain B
     update_client_with_height(test_a, test_b, client_id_b, height_a)?;
     // OpenConfirmChannel on Chain B
-    submit_ibc_tx(test_b, msg)?;
+    submit_ibc_tx(test_b, msg, ALBERT)?;
 
     Ok((port_channel_id_a, port_channel_id_b))
+}
+
+fn close_channel_init(
+    test: &Test,
+    port_channel_id: &PortChannelId,
+) -> Result<()> {
+    let msg = MsgChannelCloseInit {
+        port_id: port_channel_id.port_id.clone(),
+        channel_id: port_channel_id.channel_id,
+        signer: Signer::new("test"),
+    };
+    // CloseInitChannel on Chain A
+    submit_ibc_tx(test, msg, ALBERT)?;
+
+    Ok(())
+}
+
+fn close_channel_confirm(
+    test_a: &Test,
+    test_b: &Test,
+    client_id_a: &ClientId,
+    client_id_b: &ClientId,
+    port_channel_id_a: &PortChannelId,
+    port_channel_id_b: &PortChannelId,
+) -> Result<()> {
+    // get the proofs on Chain A
+    let height_a = query_height(test_a)?;
+    let proofs =
+        get_channel_proofs(test_a, client_id_a, port_channel_id_a, height_a)?;
+    let msg = MsgChannelCloseConfirm {
+        port_id: port_channel_id_b.port_id.clone(),
+        channel_id: port_channel_id_b.channel_id,
+        proofs,
+        signer: Signer::new("test_b"),
+    };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // CloseConfirmChannel on Chain B
+    submit_ibc_tx(test_b, msg, ALBERT)?;
+
+    Ok(())
 }
 
 fn get_channel_proofs(
@@ -652,7 +735,7 @@ fn transfer_token(
         timeout_timestamp: (Timestamp::now() + Duration::new(30, 0)).unwrap(),
     };
     // Send a token from Chain A
-    let height = submit_ibc_tx(test_a, msg)?;
+    let height = submit_ibc_tx(test_a, msg, ALBERT)?;
     let packet = match get_event(test_a, height)? {
         Some(IbcEvent::SendPacket(event)) => event.packet,
         _ => return Err(eyre!("Transaction failed")),
@@ -668,7 +751,7 @@ fn transfer_token(
     // Update the client state of Chain A on Chain B
     update_client_with_height(test_a, test_b, client_id_b, height_a)?;
     // Receive the token on Chain B
-    let height = submit_ibc_tx(test_b, msg)?;
+    let height = submit_ibc_tx(test_b, msg, ALBERT)?;
     let (acknowledgement, packet) = match get_event(test_b, height)? {
         Some(IbcEvent::WriteAcknowledgement(event)) => {
             (event.ack, event.packet)
@@ -688,7 +771,7 @@ fn transfer_token(
     // Update the client state of Chain B on Chain A
     update_client_with_height(test_b, test_a, client_id_a, height_b)?;
     // Acknowledge on Chain A
-    submit_ibc_tx(test_a, msg)?;
+    submit_ibc_tx(test_a, msg, ALBERT)?;
 
     Ok(())
 }
@@ -706,11 +789,13 @@ fn transfer_back(
     let receiver = find_address(test_a, ALBERT)?;
 
     // Chain A was the source for the sent token
+    let denom_raw = format!(
+        "{}/{}/{}",
+        port_channel_id_b.port_id, port_channel_id_b.channel_id, xan
+    );
+    let token_hash = ibc_token_hash(&denom_raw);
     let token = Some(Coin {
-        denom: format!(
-            "{}/{}/{}",
-            port_channel_id_b.port_id, port_channel_id_b.channel_id, xan
-        ),
+        denom: format!("{}/{}", MULTITOKEN_STORAGE_KEY, token_hash),
         amount: "50000".to_string(),
     });
     let msg = MsgTransfer {
@@ -723,7 +808,7 @@ fn transfer_back(
         timeout_timestamp: (Timestamp::now() + Duration::new(30, 0)).unwrap(),
     };
     // Send a token from Chain B
-    let height = submit_ibc_tx(test_b, msg)?;
+    let height = submit_ibc_tx(test_b, msg, BERTHA)?;
     let packet = match get_event(test_b, height)? {
         Some(IbcEvent::SendPacket(event)) => event.packet,
         _ => return Err(eyre!("Transaction failed")),
@@ -739,7 +824,7 @@ fn transfer_back(
     // Update the client state of Chain B on Chain A
     update_client_with_height(test_b, test_a, client_id_a, height_b)?;
     // Receive the token on Chain A
-    let height = submit_ibc_tx(test_a, msg)?;
+    let height = submit_ibc_tx(test_a, msg, ALBERT)?;
     let (acknowledgement, packet) = match get_event(test_a, height)? {
         Some(IbcEvent::WriteAcknowledgement(event)) => {
             (event.ack, event.packet)
@@ -759,7 +844,106 @@ fn transfer_back(
     // Update the client state of Chain A on Chain B
     update_client_with_height(test_a, test_b, client_id_b, height_a)?;
     // Acknowledge on Chain B
-    submit_ibc_tx(test_b, msg)?;
+    submit_ibc_tx(test_b, msg, ALBERT)?;
+
+    Ok(())
+}
+
+fn transfer_timeout(
+    test_a: &Test,
+    test_b: &Test,
+    client_id_a: &ClientId,
+    source_port_channel_id: &PortChannelId,
+) -> Result<()> {
+    let xan = find_address(test_a, XAN)?;
+    let sender = find_address(test_a, ALBERT)?;
+    let receiver = find_address(test_b, BERTHA)?;
+
+    let token = Some(Coin {
+        denom: xan.to_string(),
+        amount: "100000".to_string(),
+    });
+    let msg = MsgTransfer {
+        source_port: source_port_channel_id.port_id.clone(),
+        source_channel: source_port_channel_id.channel_id,
+        token,
+        sender: Signer::new(sender.to_string()),
+        receiver: Signer::new(receiver.to_string()),
+        timeout_height: Height::new(0, 1000),
+        timeout_timestamp: (Timestamp::now() + Duration::new(5, 0)).unwrap(),
+    };
+    // Send a token from Chain A
+    let height = submit_ibc_tx(test_a, msg, ALBERT)?;
+    let packet = match get_event(test_a, height)? {
+        Some(IbcEvent::SendPacket(event)) => event.packet,
+        _ => return Err(eyre!("Transaction failed")),
+    };
+
+    // wait for the timeout
+    sleep(5);
+
+    let height_b = query_height(test_b)?;
+    let proofs = get_receipt_absence_proof(test_b, &packet, height_b)?;
+    let msg = MsgTimeout {
+        next_sequence_recv: packet.sequence,
+        packet,
+        proofs,
+        signer: Signer::new("test_a"),
+    };
+    // Update the client state of Chain B on Chain A
+    update_client_with_height(test_b, test_a, client_id_a, height_b)?;
+    // Timeout on Chain A
+    submit_ibc_tx(test_a, msg, ALBERT)?;
+
+    Ok(())
+}
+
+fn transfer_timeout_on_close(
+    test_a: &Test,
+    test_b: &Test,
+    client_id_a: &ClientId,
+    client_id_b: &ClientId,
+    port_channel_id_a: &PortChannelId,
+    port_channel_id_b: &PortChannelId,
+) -> Result<()> {
+    let xan = find_address(test_b, XAN)?;
+    let sender = find_address(test_b, BERTHA)?;
+    let receiver = find_address(test_a, ALBERT)?;
+
+    let token = Some(Coin {
+        denom: xan.to_string(),
+        amount: "100000".to_string(),
+    });
+    let msg = MsgTransfer {
+        source_port: port_channel_id_b.port_id.clone(),
+        source_channel: port_channel_id_b.channel_id,
+        token,
+        sender: Signer::new(sender.to_string()),
+        receiver: Signer::new(receiver.to_string()),
+        timeout_height: Height::new(0, 1000),
+        timeout_timestamp: (Timestamp::now() + Duration::new(1000, 0)).unwrap(),
+    };
+    // Send a token from Chain B
+    let height = submit_ibc_tx(test_b, msg, BERTHA)?;
+    let packet = match get_event(test_b, height)? {
+        Some(IbcEvent::SendPacket(event)) => event.packet,
+        _ => return Err(eyre!("Transaction failed")),
+    };
+
+    // get the proof of the channel on Chain A
+    let height_a = query_height(test_a)?;
+    let proofs =
+        get_channel_proofs(test_a, client_id_a, port_channel_id_a, height_a)?;
+    let msg = MsgTimeoutOnClose {
+        next_sequence_recv: packet.sequence,
+        packet,
+        proofs,
+        signer: Signer::new("test_b"),
+    };
+    // Update the client state of Chain A on Chain B
+    update_client_with_height(test_a, test_b, client_id_b, height_a)?;
+    // TimeoutOnClose on Chain B
+    submit_ibc_tx(test_b, msg, ALBERT)?;
 
     Ok(())
 }
@@ -802,9 +986,29 @@ fn get_ack_proof(
         .map_err(|e| eyre!("Creating proofs failed: error {}", e))
 }
 
+fn get_receipt_absence_proof(
+    test: &Test,
+    packet: &Packet,
+    target_height: Height,
+) -> Result<Proofs> {
+    // we need proofs at the height of the previous block
+    let query_height = target_height.decrement().unwrap();
+    let key = receipt_key(
+        &packet.destination_port,
+        &packet.destination_channel,
+        packet.sequence,
+    );
+    let (_, tm_proof) = query_value_with_proof(test, &key, query_height)?;
+    let absence_proof = convert_proof(tm_proof)?;
+
+    Proofs::new(absence_proof, None, None, None, target_height)
+        .map_err(|e| eyre!("Creating proofs failed: error {}", e))
+}
+
 fn submit_ibc_tx(
     test: &Test,
     message: impl Msg + std::fmt::Debug,
+    signer: &str,
 ) -> Result<u32> {
     let data_path = test.base_dir.path().join("tx.data");
     let data = make_ibc_data(message.clone());
@@ -824,7 +1028,7 @@ fn submit_ibc_tx(
             "--data-path",
             &data_path,
             "--signer",
-            ALBERT,
+            signer,
             "--fee-amount",
             "0",
             "--gas-limit",
