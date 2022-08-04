@@ -222,7 +222,6 @@ impl VpEnv for Ctx {
     }
 
     fn get_chain_id(&self) -> Result<String, Self::Error> {
-        // TODO put all the same ones into helper fn
         // Both `CtxPreStorageRead` and `CtxPostStorageRead` have the same impl
         self.pre().get_chain_id().into_env_result()
     }
@@ -345,11 +344,7 @@ impl StorageRead for CtxPreStorageRead<'_> {
         prefix: &storage::Key,
     ) -> Result<Self::PrefixIter, storage_api::Error> {
         // Note that this is the same as `CtxPostStorageRead`
-        let prefix = prefix.to_string();
-        let iter_id = unsafe {
-            anoma_vp_iter_prefix(prefix.as_ptr() as _, prefix.len() as _)
-        };
-        Ok(KeyValIterator(iter_id, PhantomData))
+        iter_prefix(prefix)
     }
 
     fn iter_next(
@@ -364,14 +359,7 @@ impl StorageRead for CtxPreStorageRead<'_> {
     }
 
     fn get_chain_id(&self) -> Result<String, storage_api::Error> {
-        let result = Vec::with_capacity(CHAIN_ID_LENGTH);
-        unsafe {
-            anoma_vp_get_chain_id(result.as_ptr() as _);
-        }
-        let slice =
-            unsafe { slice::from_raw_parts(result.as_ptr(), CHAIN_ID_LENGTH) };
-        Ok(String::from_utf8(slice.to_vec())
-            .expect("Cannot convert the ID string"))
+        get_chain_id()
     }
 
     fn get_block_height(&self) -> Result<BlockHeight, storage_api::Error> {
@@ -433,11 +421,7 @@ impl StorageRead for CtxPostStorageRead<'_> {
         prefix: &storage::Key,
     ) -> Result<Self::PrefixIter, storage_api::Error> {
         // Note that this is the same as `CtxPreStorageRead`
-        let prefix = prefix.to_string();
-        let iter_id = unsafe {
-            anoma_vp_iter_prefix(prefix.as_ptr() as _, prefix.len() as _)
-        };
-        Ok(KeyValIterator(iter_id, PhantomData))
+        iter_prefix(prefix)
     }
 
     fn iter_next(
@@ -452,32 +436,59 @@ impl StorageRead for CtxPostStorageRead<'_> {
     }
 
     fn get_chain_id(&self) -> Result<String, storage_api::Error> {
-        let result = Vec::with_capacity(CHAIN_ID_LENGTH);
-        unsafe {
-            anoma_vp_get_chain_id(result.as_ptr() as _);
-        }
-        let slice =
-            unsafe { slice::from_raw_parts(result.as_ptr(), CHAIN_ID_LENGTH) };
-        Ok(String::from_utf8(slice.to_vec())
-            .expect("Cannot convert the ID string"))
+        get_chain_id()
     }
 
     fn get_block_height(&self) -> Result<BlockHeight, storage_api::Error> {
-        Ok(BlockHeight(unsafe { anoma_vp_get_block_height() }))
+        get_block_height()
     }
 
     fn get_block_hash(&self) -> Result<BlockHash, storage_api::Error> {
-        let result = Vec::with_capacity(BLOCK_HASH_LENGTH);
-        unsafe {
-            anoma_vp_get_block_hash(result.as_ptr() as _);
-        }
-        let slice = unsafe {
-            slice::from_raw_parts(result.as_ptr(), BLOCK_HASH_LENGTH)
-        };
-        Ok(BlockHash::try_from(slice).expect("Cannot convert the hash"))
+        get_block_hash()
     }
 
     fn get_block_epoch(&self) -> Result<Epoch, storage_api::Error> {
-        Ok(Epoch(unsafe { anoma_vp_get_block_epoch() }))
+        get_block_epoch()
     }
+}
+
+fn iter_prefix(
+    prefix: &storage::Key,
+) -> Result<KeyValIterator<(String, Vec<u8>)>, storage_api::Error> {
+    let prefix = prefix.to_string();
+    let iter_id = unsafe {
+        anoma_vp_iter_prefix(prefix.as_ptr() as _, prefix.len() as _)
+    };
+    Ok(KeyValIterator(iter_id, PhantomData))
+}
+
+fn get_chain_id() -> Result<String, storage_api::Error> {
+    let result = Vec::with_capacity(CHAIN_ID_LENGTH);
+    unsafe {
+        anoma_vp_get_chain_id(result.as_ptr() as _);
+    }
+    let slice =
+        unsafe { slice::from_raw_parts(result.as_ptr(), CHAIN_ID_LENGTH) };
+    Ok(
+        String::from_utf8(slice.to_vec())
+            .expect("Cannot convert the ID string"),
+    )
+}
+
+fn get_block_height() -> Result<BlockHeight, storage_api::Error> {
+    Ok(BlockHeight(unsafe { anoma_vp_get_block_height() }))
+}
+
+fn get_block_hash() -> Result<BlockHash, storage_api::Error> {
+    let result = Vec::with_capacity(BLOCK_HASH_LENGTH);
+    unsafe {
+        anoma_vp_get_block_hash(result.as_ptr() as _);
+    }
+    let slice =
+        unsafe { slice::from_raw_parts(result.as_ptr(), BLOCK_HASH_LENGTH) };
+    Ok(BlockHash::try_from(slice).expect("Cannot convert the hash"))
+}
+
+fn get_block_epoch() -> Result<Epoch, storage_api::Error> {
+    Ok(Epoch(unsafe { anoma_vp_get_block_epoch() }))
 }
