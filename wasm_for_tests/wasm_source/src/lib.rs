@@ -119,7 +119,8 @@ pub mod main {
             "attempting to write new value {} to key {}",
             ARBITRARY_VALUE, key
         ));
-        ctx.write(&key, ARBITRARY_VALUE)
+        ctx.write(&key, ARBITRARY_VALUE)?;
+        Ok(())
     }
 }
 
@@ -147,7 +148,8 @@ pub mod main {
         let mut target_bal: token::Amount =
             ctx.read(&target_key)?.unwrap_or_default();
         target_bal.receive(&amount);
-        ctx.write(&target_key, target_bal)
+        ctx.write(&target_key, target_bal)?;
+        Ok(())
     }
 }
 

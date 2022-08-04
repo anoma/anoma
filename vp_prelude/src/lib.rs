@@ -20,8 +20,7 @@ use std::convert::TryFrom;
 use std::marker::PhantomData;
 
 pub use anoma::ledger::governance::storage as gov_storage;
-pub use anoma::ledger::storage_api::StorageRead;
-use anoma::ledger::storage_api::{self, ResultExt};
+pub use anoma::ledger::storage_api::{self, StorageRead};
 pub use anoma::ledger::vp_env::VpEnv;
 pub use anoma::ledger::{parameters, pos as proof_of_stake};
 pub use anoma::proto::{Signed, SignedTxData};
@@ -121,13 +120,13 @@ impl Ctx {
     /// Read access to the prior storage (state before tx execution)
     /// via [`trait@StorageRead`].
     pub fn pre(&self) -> CtxPreStorageRead<'_> {
-        CtxPreStorageRead { ctx: self }
+        CtxPreStorageRead { _ctx: self }
     }
 
     /// Read access to the posterior storage (state after tx execution)
     /// via [`trait@StorageRead`].
     pub fn post(&self) -> CtxPostStorageRead<'_> {
-        CtxPostStorageRead { ctx: self }
+        CtxPostStorageRead { _ctx: self }
     }
 }
 
@@ -135,14 +134,14 @@ impl Ctx {
 /// [`trait@StorageRead`].
 #[derive(Debug)]
 pub struct CtxPreStorageRead<'a> {
-    ctx: &'a Ctx,
+    _ctx: &'a Ctx,
 }
 
 /// Read access to the posterior storage (state after tx execution) via
 /// [`trait@StorageRead`].
 #[derive(Debug)]
 pub struct CtxPostStorageRead<'a> {
-    ctx: &'a Ctx,
+    _ctx: &'a Ctx,
 }
 
 /// Validity predicate result
@@ -223,6 +222,7 @@ impl VpEnv for Ctx {
     }
 
     fn get_chain_id(&self) -> Result<String, Self::Error> {
+        // TODO put all the same ones into helper fn
         // Both `CtxPreStorageRead` and `CtxPostStorageRead` have the same impl
         self.pre().get_chain_id().into_env_result()
     }

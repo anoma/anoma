@@ -15,6 +15,7 @@ pub enum Error {
 /// Result of a storage API call.
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Result extension to easily wrap custom errors into [`Error`].
 // This is separate from `ResultExt`, because the implementation requires
 // different bounds for `T`.
 pub trait ResultExt<T> {
