@@ -1,6 +1,5 @@
 //! Proof of Stake system integration with functions for transactions
 
-use anoma::ledger::pos::types::Slash;
 pub use anoma::ledger::pos::*;
 use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
@@ -9,7 +8,7 @@ use anoma::ledger::pos::{
     validator_staking_reward_address_key, validator_state_key,
     validator_total_deltas_key, validator_voting_power_key,
 };
-use anoma::types::address::{self, Address, InternalAddress};
+use anoma::types::address::Address;
 use anoma::types::transaction::InitValidator;
 use anoma::types::{key, token};
 pub use anoma_proof_of_stake::{
@@ -114,93 +113,9 @@ impl Ctx {
     }
 }
 
-impl anoma_proof_of_stake::PosReadOnly for Ctx {
-    type Address = Address;
+anoma::impl_pos_read_only! {
     type Error = crate::Error;
-    type PublicKey = key::common::PublicKey;
-    type TokenAmount = token::Amount;
-    type TokenChange = token::Change;
-
-    const POS_ADDRESS: Self::Address = Address::Internal(InternalAddress::PoS);
-
-    fn staking_token_address() -> Self::Address {
-        address::xan()
-    }
-
-    fn read_pos_params(&self) -> Result<PosParams, Self::Error> {
-        let params = self.read(&params_key())?;
-        Ok(params.expect("PoS params should always be set"))
-    }
-
-    fn read_validator_staking_reward_address(
-        &self,
-        key: &Self::Address,
-    ) -> Result<Option<Self::Address>, Self::Error> {
-        self.read(&validator_staking_reward_address_key(key))
-            .into_env_result()
-    }
-
-    fn read_validator_consensus_key(
-        &self,
-        key: &Self::Address,
-    ) -> Result<Option<ValidatorConsensusKeys>, Self::Error> {
-        self.read(&validator_consensus_key_key(key))
-            .into_env_result()
-    }
-
-    fn read_validator_state(
-        &self,
-        key: &Self::Address,
-    ) -> Result<Option<ValidatorStates>, Self::Error> {
-        self.read(&validator_state_key(key)).into_env_result()
-    }
-
-    fn read_validator_total_deltas(
-        &self,
-        key: &Self::Address,
-    ) -> Result<Option<ValidatorTotalDeltas>, Self::Error> {
-        self.read(&validator_total_deltas_key(key))
-            .into_env_result()
-    }
-
-    fn read_validator_voting_power(
-        &self,
-        key: &Self::Address,
-    ) -> Result<Option<ValidatorVotingPowers>, Self::Error> {
-        self.read(&validator_voting_power_key(key))
-            .into_env_result()
-    }
-
-    fn read_validator_slashes(
-        &self,
-        key: &Self::Address,
-    ) -> Result<Vec<Slash>, Self::Error> {
-        let val = self.read(&validator_slashes_key(key))?;
-        Ok(val.unwrap_or_default())
-    }
-
-    fn read_bond(&self, key: &BondId) -> Result<Option<Bonds>, Self::Error> {
-        self.read(&bond_key(key)).into_env_result()
-    }
-
-    fn read_unbond(
-        &self,
-        key: &BondId,
-    ) -> Result<Option<Unbonds>, Self::Error> {
-        self.read(&unbond_key(key)).into_env_result()
-    }
-
-    fn read_validator_set(&self) -> Result<ValidatorSets, Self::Error> {
-        let val = self.read(&validator_set_key())?;
-        Ok(val.expect("Validator sets must always have a value"))
-    }
-
-    fn read_total_voting_power(
-        &self,
-    ) -> Result<TotalVotingPowers, Self::Error> {
-        let val = self.read(&total_voting_power_key())?;
-        Ok(val.expect("Total voting power must always have a value"))
-    }
+    impl anoma_proof_of_stake::PosReadOnly for Ctx
 }
 
 impl From<anoma_proof_of_stake::BecomeValidatorError<Address>> for Error {

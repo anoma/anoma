@@ -35,7 +35,6 @@ use crate::ledger::pos::{
     is_validator_address_raw_hash_key, is_validator_consensus_key_key,
     is_validator_state_key,
 };
-use crate::ledger::storage::types::decode;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::ledger::storage_api::{self, StorageRead};
 use crate::types::address::{Address, InternalAddress};
@@ -325,6 +324,7 @@ where
 }
 
 impl_pos_read_only! {
+    type Error = native_vp::Error;
     impl<'f, 'a, DB, H, CA> PosReadOnly for CtxPreStorageRead<'f, 'a, DB, H, CA>
         where
             DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter> +'static,
@@ -333,6 +333,7 @@ impl_pos_read_only! {
 }
 
 impl_pos_read_only! {
+    type Error = native_vp::Error;
     impl<'f, 'a, DB, H, CA> PosReadOnly for CtxPostStorageRead<'f, 'a, DB, H, CA>
         where
             DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter> +'static,

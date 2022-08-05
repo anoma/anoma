@@ -550,7 +550,7 @@ pub mod testing {
     use anoma_tx_prelude::proof_of_stake::{
         staking_token_address, BondId, Bonds, PosParams, Unbonds,
     };
-    use anoma_tx_prelude::Address;
+    use anoma_tx_prelude::{Address, StorageRead};
     use derivative::Derivative;
     use itertools::Either;
     use proptest::prelude::*;

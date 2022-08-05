@@ -33,7 +33,7 @@ mod tests {
     use anoma::types::time::DateTimeUtc;
     use anoma::types::token::{self, Amount};
     use anoma::types::{address, key};
-    use anoma_tx_prelude::{BorshDeserialize, BorshSerialize};
+    use anoma_tx_prelude::{BorshDeserialize, BorshSerialize, StorageRead};
     use anoma_vp_prelude::VpEnv;
     use itertools::Itertools;
     use prost::Message;

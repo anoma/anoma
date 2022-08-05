@@ -92,8 +92,8 @@ mod macros {
     /// [`trait@crate::ledger::storage_api::StorageRead`].
     ///
     /// Excuse the horrible syntax - we haven't found a better way to use this
-    /// for `CtxPreStorageRead`/`CtxPostStorageRead`, which have generics
-    /// and explicit lifetimes.
+    /// for native_vp `CtxPreStorageRead`/`CtxPostStorageRead`, which have
+    /// generics and explicit lifetimes.
     ///
     /// # Examples
     ///
@@ -102,12 +102,19 @@ mod macros {
     /// ```
     #[macro_export]
     macro_rules! impl_pos_read_only {
-    ( $( $any:tt )*)
-     => {
+    (
+        // Type error type has to be declared before the impl.
+        // This error type must `impl From<storage_api::Error> for $error`.
+        type $error:tt = $err_ty:ty ;
+        // Matches anything, so that we can use lifetimes and generic types.
+        // This expects `impl(<.*>)? PoSReadOnly for $ty(<.*>)?`.
+        $( $any:tt )* )
+    => {
         $( $any )*
         {
             type Address = $crate::types::address::Address;
-            type Error = $crate::ledger::native_vp::Error;
+            // type Error = $crate::ledger::native_vp::Error;
+            type $error = $err_ty;
             type PublicKey = $crate::types::key::common::PublicKey;
             type TokenAmount = $crate::types::token::Amount;
             type TokenChange = $crate::types::token::Change;
@@ -120,7 +127,7 @@ mod macros {
 
             fn read_pos_params(&self) -> std::result::Result<PosParams, Self::Error> {
                 let value = $crate::ledger::storage_api::StorageRead::read_bytes(self, &params_key())?.unwrap();
-                Ok(decode(value).unwrap())
+                Ok($crate::ledger::storage::types::decode(value).unwrap())
             }
 
             fn read_validator_staking_reward_address(
@@ -131,7 +138,7 @@ mod macros {
                     self,
                     &validator_staking_reward_address_key(key),
                 )?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_validator_consensus_key(
@@ -140,7 +147,7 @@ mod macros {
             ) -> std::result::Result<Option<ValidatorConsensusKeys>, Self::Error> {
                 let value =
                     $crate::ledger::storage_api::StorageRead::read_bytes(self, &validator_consensus_key_key(key))?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_validator_state(
@@ -148,7 +155,7 @@ mod macros {
                 key: &Self::Address,
             ) -> std::result::Result<Option<ValidatorStates>, Self::Error> {
                 let value = $crate::ledger::storage_api::StorageRead::read_bytes(self, &validator_state_key(key))?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_validator_total_deltas(
@@ -157,7 +164,7 @@ mod macros {
             ) -> std::result::Result<Option<ValidatorTotalDeltas>, Self::Error> {
                 let value =
                     $crate::ledger::storage_api::StorageRead::read_bytes(self, &validator_total_deltas_key(key))?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_validator_voting_power(
@@ -166,7 +173,7 @@ mod macros {
             ) -> std::result::Result<Option<ValidatorVotingPowers>, Self::Error> {
                 let value =
                     $crate::ledger::storage_api::StorageRead::read_bytes(self, &validator_voting_power_key(key))?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_validator_slashes(
@@ -175,7 +182,7 @@ mod macros {
             ) -> std::result::Result<Vec<types::Slash>, Self::Error> {
                 let value = $crate::ledger::storage_api::StorageRead::read_bytes(self, &validator_slashes_key(key))?;
                 Ok(value
-                    .map(|value| decode(value).unwrap())
+                    .map(|value| $crate::ledger::storage::types::decode(value).unwrap())
                     .unwrap_or_default())
             }
 
@@ -184,7 +191,7 @@ mod macros {
                 key: &BondId,
             ) -> std::result::Result<Option<Bonds>, Self::Error> {
                 let value = $crate::ledger::storage_api::StorageRead::read_bytes(self, &bond_key(key))?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_unbond(
@@ -192,7 +199,7 @@ mod macros {
                 key: &BondId,
             ) -> std::result::Result<Option<Unbonds>, Self::Error> {
                 let value = $crate::ledger::storage_api::StorageRead::read_bytes(self, &unbond_key(key))?;
-                Ok(value.map(|value| decode(value).unwrap()))
+                Ok(value.map(|value| $crate::ledger::storage::types::decode(value).unwrap()))
             }
 
             fn read_validator_set(
@@ -200,7 +207,7 @@ mod macros {
             ) -> std::result::Result<ValidatorSets, Self::Error> {
                 let value =
                     $crate::ledger::storage_api::StorageRead::read_bytes(self, &validator_set_key())?.unwrap();
-                Ok(decode(value).unwrap())
+                Ok($crate::ledger::storage::types::decode(value).unwrap())
             }
 
             fn read_total_voting_power(
@@ -208,7 +215,7 @@ mod macros {
             ) -> std::result::Result<TotalVotingPowers, Self::Error> {
                 let value =
                     $crate::ledger::storage_api::StorageRead::read_bytes(self, &total_voting_power_key())?.unwrap();
-                Ok(decode(value).unwrap())
+                Ok($crate::ledger::storage::types::decode(value).unwrap())
             }
         }
     }
