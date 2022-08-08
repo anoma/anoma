@@ -933,10 +933,19 @@ fn transfer_timeout_on_close(
         _ => return Err(eyre!("Transaction failed")),
     };
 
-    // get the proof of the channel on Chain A
+    // get the proof for the receipt and the channel on Chain A
     let height_a = query_height(test_a)?;
-    let proofs =
+    let proofs_receipt = get_receipt_absence_proof(test_a, &packet, height_a)?;
+    let proofs_closed =
         get_channel_proofs(test_a, client_id_a, port_channel_id_a, height_a)?;
+    let proofs = Proofs::new(
+        proofs_receipt.object_proof().clone(),
+        proofs_closed.client_proof().clone(),
+        proofs_closed.consensus_proof(),
+        Some(proofs_closed.object_proof().clone()),
+        proofs_receipt.height(),
+    )
+    .unwrap();
     let msg = MsgTimeoutOnClose {
         next_sequence_recv: packet.sequence,
         packet,
