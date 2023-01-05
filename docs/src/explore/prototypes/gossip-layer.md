@@ -26,16 +26,16 @@ tracking issue <https://github.com/anoma/anoma/issues/35>
 - usable node + client setup :
   - intent
   - incentive function
-  - mempool and white list
+  - mempool and whitelist
 - basic matchmaker
 
 ### components
 
-The intent gossip is build conjointly to the ledger and share the same binary.
+The intent gossip is built conjointly to the ledger and shares the same binary.
 
 #### Node
 
-The node is built into `anoman`, it runs all the necesarry part, rpc server,
+The node is built into `anoman`, it runs all the necessary part, rpc server,
 libp2p, intent gossip app.
 
 ##### Intent gossip application
@@ -47,13 +47,13 @@ The intent gossip application
 ###### Filter
 
 ##### Network behaviour
-The network behaviour is the part that react on network event. It creates a
+The network behaviour is the part that reacts on network event. It creates a
 channel (e.g. `tokio::mpsc::channel`) with the intent gossip to communicate all
-intent it receive.
+intent it receives.
 
 ##### Rpc server
-If the rpc command line option is set it creates a tonic server that receive
-command from a client and send theses through a channel
+If the rpc command line option is set it creates a tonic server that receives
+command from a client and sends these through a channel
 (e.g. `tokio::mpsc::channel`) to the the intent gossip.
 
 #### Client
