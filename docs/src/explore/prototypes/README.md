@@ -15,7 +15,7 @@ The code quality is of lesser importance in prototypes. To put the main focus on
 Once the goals of the prototype have been completed, we can assess if we'd like to advance the prototype to a development version. 
 
 In order to advance a prototype, in general we'll want to:
-- review & clean-up the code for lint, format and best practices
+- review & clean up the code for lint, format and best practices
 - enable common Rust lints
 - review any new dependencies
 - add docs for any public interface (internally public too)
