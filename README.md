@@ -1,11 +1,15 @@
-# Anoma
+> NOTE: This repository is currently being reworked. Instead, please visit the following locations, depending on your interest:
+> - The [Namada repository](https://github.com/anoma/namada) contains the Namada codebase.
+> - The [Anoma specs repository](https://github.com/anoma/specs) contains the specifications for Anoma.
+> - Active development of Anoma is happening on three repositories:
+>     - The [Anoma alpha repository](https://github.com/anoma/anoma-alpha) contains an alpha prototype.
+>     - The [Taiga repository](https://github.com/anoma/taiga) contains the Taiga component, which provides shielded state transitions.
+>     - The [Typhon repository](https://github.com/anoma/typhon) contains the Typhon component, which handles mempool, consensus, and execution.
+
+---
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE)
 [![Drone CI build status](https://ci.heliax.dev/api/badges/anoma/anoma/status.svg)](https://ci.heliax.dev/anoma/anoma)
-
-## Namada
-
-This repo contains an early prototype of Anoma. A lot of current development is happening on [Namada](https://github.com/anoma/namada). Please go there to check out the latest status.
 
 ## Overview
 
