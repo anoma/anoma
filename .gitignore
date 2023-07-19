@@ -24,3 +24,7 @@ anoma-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Emacs git ignore
+*.*~
+\#*\#
