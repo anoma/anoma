@@ -8,6 +8,9 @@ defmodule Anoma.Subscriber.Basic do
 
   - Be able to respond and do computations with these intents.
 
+  - Ping the starting process telling them I properly received an intent
+    + This only happens when given a PID to start with
+    + This makes me useful for testing
 
   I am intended to serve as an example subscriber used for testing,
   real subscribers should do what I do and much more
@@ -23,12 +26,18 @@ defmodule Anoma.Subscriber.Basic do
   alias __MODULE__
   use TypedStruct
   use GenServer
+  alias Anoma.Intent
 
   typedstruct do
-    field(:intents, list(), default: [])
+    field(:intents, list(Intent.t()), default: [])
+    field(:home, pid())
   end
 
-  def init(init_intents \\ []) do
+  def init(init: init_intents, home: pid) do
+    {:ok, %Basic{intents: init_intents, home: pid}}
+  end
+
+  def init(init: init_intents) do
     {:ok, %Basic{intents: init_intents}}
   end
 
@@ -42,7 +51,13 @@ defmodule Anoma.Subscriber.Basic do
   end
 
   def handle_cast({:new_intent, intent}, basic) do
-    {:noreply, %Basic{basic | intents: [intent | basic.intents]}}
+    new_basic = %Basic{basic | intents: [intent | basic.intents]}
+
+    if basic.home do
+      send(basic.home, :received_intent)
+    end
+
+    {:noreply, new_basic}
   end
 
   def handle_call(:dump_state, _pid, basic) do
