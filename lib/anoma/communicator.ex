@@ -7,9 +7,10 @@ defmodule Anoma.Communicator do
   alias __MODULE__
   use TypedStruct
   use GenServer
+  alias Anoma.Intent
 
   typedstruct do
-    field(:subscribers, list(), default: [])
+    field(:subscribers, list(pid()), default: [])
   end
 
   def init(init_subscribers) do
@@ -22,7 +23,7 @@ defmodule Anoma.Communicator do
 
   # partial transactions are intents
 
-  @spec new_intent(pid(), any()) :: :ok
+  @spec new_intent(pid(), Intent.t()) :: :ok
   def new_intent(communicator, intent) do
     GenServer.cast(communicator, {:new_intent, intent})
   end
@@ -50,14 +51,14 @@ defmodule Anoma.Communicator do
   ############################################################
 
   # make this more interesting later
-  @spec broadcast_intent(t(), any()) :: [any()]
+  @spec broadcast_intent(t(), Intent.t()) :: [any()]
   defp broadcast_intent(agent, intent) do
     broadcast(agent.subscribers, intent)
   end
 
   # Dirty send, maybe consider what the structure of a subscriber is
   # further determine if it should live here
-  @spec broadcast(list(), any()) :: [any()]
+  @spec broadcast(list(), Intent.t()) :: [any()]
   defp broadcast(sub_list, intent) do
     sub_list
     # this is bad we are assuming GenServer, lets make this generic by
