@@ -52,6 +52,6 @@ iex(1)> ExUnit.start
 iex(2)> c "test/partialtx_test.exs" # only once
 iex(3)> ExUnit.configure(exclude: [:test], include: [line: 12]) # test line
 iex(4)> ExUnit.run
-iex(5)> r MiscTest.Narwhal
+iex(5)> r AnomaTest.PartialTx
 iex(6)> ExUnit.run
 ```
