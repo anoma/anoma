@@ -14,6 +14,14 @@ defmodule Anoma.Serializer do
     :erlang.term_to_binary(object)
   end
 
+  @doc """
+  I `deserialize` the given object back into an erlang term.
+  """
+  @spec deserialize(binary()) :: :erlang.term()
+  def deserialize(object) do
+    :erlang.binary_to_term(object)
+  end
+
   @spec digest(:erlang.term()) :: binary()
   def digest(object) do
     :crypto.hash(:blake2b, serialize(object))
