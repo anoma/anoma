@@ -7,8 +7,8 @@ defmodule Anoma.Resource do
   use TypedStruct
 
   typedstruct do
-    # TODO Make this an S-Expression
-    field(:logic, any(), default: [])
+    # TODO Should we make this a sexp or a logic?
+    field(:logic, Anoma.Logic.t(), default: [])
     field(:quantity, integer(), enforce: true)
     field(:value, :binary, default: <<>>)
     # also known as dynamic data
