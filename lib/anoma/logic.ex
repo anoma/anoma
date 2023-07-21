@@ -97,16 +97,63 @@ defmodule Anoma.Logic do
   @spec is_compiled_op(term()) :: boolean()
   def is_compiled_op(%Lt{}), do: true
   def is_compiled_op(%Neg{}), do: true
-  def is_compiled_op(%Branch{}), do: true
   def is_compiled_op(%Mul{}), do: true
   def is_compiled_op(%Add{}), do: true
   def is_compiled_op(%Inc{}), do: true
+  def is_compiled_op(%Branch{}), do: true
   def is_compiled_op(t) when is_number(t), do: true
   def is_compiled_op(_), do: false
 
-  defimpl Anoma.Eval, for: [Lt, Neg, Branch, Mul, Add, Inc, Integer] do
-    def apply(_term, _tx) do
-      :err
+  # no branch
+  def interpreter_op(%Lt{}), do: &lt/2
+  def interpreter_op(%Neg{}), do: &-/1
+  def interpreter_op(%Mul{}), do: &*/2
+  def interpreter_op(%Add{}), do: &+/2
+  def interpreter_op(%Inc{}), do: &(1 + &1)
+
+  defp lt(arg1, arg2) do
+    if arg1 < arg2 do
+      0
+    else
+      1
+    end
+  end
+
+  defimpl Anoma.Eval, for: [Lt, Neg, Mul, Add, Inc] do
+    def apply(term, tx) do
+      arguments =
+        term
+        |> Map.from_struct()
+        |> Map.values()
+        |> Enum.map(fn term -> Anoma.Eval.apply(term, tx) end)
+
+      term
+      |> Anoma.Logic.interpreter_op()
+      |> Kernel.apply(arguments)
+    end
+
+    def compile(term) do
+      term
+    end
+  end
+
+  defimpl Anoma.Eval, for: Branch do
+    def apply(term, tx) do
+      if Anoma.Eval.apply(term.in1, tx) == 0 do
+        Anoma.Eval.apply(term.ip1, tx)
+      else
+        Anoma.Eval.apply(term.ip2, tx)
+      end
+    end
+
+    def compile(term) do
+      term
+    end
+  end
+
+  defimpl Anoma.Eval, for: Integer do
+    def apply(term, _tx) do
+      term
     end
 
     def compile(term) do
