@@ -12,8 +12,8 @@ defmodule Anoma.PartialTx do
   @type resources :: resource_set(Resource.t())
 
   typedstruct do
-    field(:inputs, resource_set(Resource.t()), default: [])
-    field(:outputs, resource_set(Resource.t()), default: [])
+    field(:inputs, resource_set(Resource.t()), default: %{})
+    field(:outputs, resource_set(Resource.t()), default: %{})
     field(:extra_data, :binary, default: <<>>)
   end
 
@@ -31,8 +31,10 @@ defmodule Anoma.PartialTx do
   def balanced(partial) do
     Map.merge(partial.inputs, partial.outputs, fn _k, i, o -> sub_quantities(i, o) end)
     |> Map.to_list()
-    |> Enum.all?(fn v -> v.quantity == 0 end)
+    |> Enum.all?(fn {_k, v} -> v.quantity == 0 end)
   end
+
+  def empty(), do: %PartialTx{}
 
   # Helpers
 
