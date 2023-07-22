@@ -34,9 +34,33 @@ defmodule Anoma.PartialTx do
     |> Enum.all?(fn {_k, v} -> v.quantity == 0 end)
   end
 
+  @doc """
+
+  I check if a partial transaction is valid
+
+  A transaction `is_valid` iff each logic inside the output and input
+  resource set all agree that the transaction is valid.
+
+  ### Parameters
+
+  - partial - the partial transaction
+
+  """
+  @spec is_valid(t()) :: boolean()
+  def is_valid(partial) do
+    valid? = fn resource ->
+      # we will use the interpreter for now
+      Anoma.Eval.apply(resource.logic, partial) == 0
+    end
+
+    Enum.all?(partial.inputs, valid?) && Enum.all?(partial.outputs, valid?)
+  end
+
   def empty(), do: %PartialTx{}
 
+  ######################################################################
   # Helpers
+  ######################################################################
 
   @doc """
   I update the resource set with the new resource
