@@ -2,7 +2,16 @@ defmodule Anoma.Communicator do
   @moduledoc """
   I Manage the Pub Sub behavior
 
-  If new intents come in, I send it to all my subscribers
+  If new intents come in, I send it to all my subscribers.
+
+  Further I have the job of communicating to the `Primary` node when I
+  get information for it to process.
+
+  The information that is communicated is:
+
+  1. intent solutions
+  2. new intents
+
   """
   alias __MODULE__
   use TypedStruct
@@ -11,11 +20,34 @@ defmodule Anoma.Communicator do
 
   typedstruct do
     field(:subscribers, list(pid()), default: [])
+    field(:primary, atom())
   end
 
-  def init(init_subscribers) do
-    {:ok, %Communicator{subscribers: init_subscribers}}
+  # TODO fixup init
+  def init(init: init_subscribers, name: name) do
+    {:ok, %Communicator{subscribers: init_subscribers, primary: name}}
   end
+
+  def init(init) do
+    {:ok, %Communicator{subscribers: init}}
+  end
+
+  def start_link(arg) do
+    # hack do better
+    name = arg[:name]
+
+    options =
+      if name do
+        [name: com_name(name)]
+      else
+        []
+      end
+
+    GenServer.start_link(__MODULE__, arg, options)
+  end
+
+  @spec com_name(atom()) :: atom()
+  def com_name(name), do: (Atom.to_string(name) <> "_com") |> String.to_atom()
 
   ############################################################
   #                      Public RPC API                      #
@@ -23,6 +55,14 @@ defmodule Anoma.Communicator do
 
   # partial transactions are intents
 
+  @doc """
+  Denotes to the system there is a new intent.
+
+  This does a few things:
+
+  1. broadcast the new intent to the primary
+  2. broadcasts the new intent to all subscribers
+  """
   @spec new_intent(pid(), Intent.t()) :: :ok
   def new_intent(communicator, intent) do
     GenServer.cast(communicator, {:new_intent, intent})
@@ -53,7 +93,8 @@ defmodule Anoma.Communicator do
   # make this more interesting later
   @spec broadcast_intent(t(), Intent.t()) :: [any()]
   defp broadcast_intent(agent, intent) do
-    broadcast(agent.subscribers, intent)
+    # safe even on a null primary thanks to GenServer
+    broadcast([agent.primary | agent.subscribers], intent)
   end
 
   # Dirty send, maybe consider what the structure of a subscriber is
