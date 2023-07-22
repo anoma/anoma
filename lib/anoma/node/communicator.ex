@@ -1,4 +1,4 @@
-defmodule Anoma.Communicator do
+defmodule Anoma.Node.Communicator do
   @moduledoc """
   I Manage the Pub Sub behavior
 

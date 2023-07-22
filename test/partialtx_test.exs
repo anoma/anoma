@@ -1,7 +1,7 @@
 defmodule AnomaTest.PartialTx do
   use ExUnit.Case, async: true
 
-  alias Anoma.Communicator
+  alias Anoma.Node.Communicator
 
   alias Anoma.Subscriber.Basic
 

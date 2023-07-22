@@ -1,20 +1,20 @@
 defmodule AnomaTest.Communicator do
   use ExUnit.Case, async: true
 
-  import Anoma.Communicator
+  import Anoma.Node.Communicator
 
-  alias Anoma.Communicator
+  alias Anoma.Node.Communicator
 
   alias Anoma.Subscriber.Basic
 
-  doctest(Anoma.Communicator)
+  doctest(Anoma.Node.Communicator)
 
   test "subscribers properly get intents messages" do
     {_, comms} = GenServer.start_link(Communicator, [])
 
     {_, sub} = GenServer.start_link(Basic, init: [], home: self())
 
-    Anoma.Communicator.subscribe(comms, sub)
+    Communicator.subscribe(comms, sub)
 
     resource_1 = %Anoma.Resource{quantity: 1}
 
