@@ -12,7 +12,7 @@ defmodule AnomaTest.Communicator do
   test "subscribers properly get intents messages" do
     {_, comms} = GenServer.start_link(Communicator, [])
 
-    {_, sub} = GenServer.start_link(Basic, init: [], home: self)
+    {_, sub} = GenServer.start_link(Basic, init: [], home: self())
 
     Anoma.Communicator.subscribe(comms, sub)
 
