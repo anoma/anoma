@@ -7,14 +7,13 @@ defmodule Anoma.PartialTx do
   use TypedStruct
   alias Anoma.Resource
 
-  @type resource_set(value) :: %{optional(binary()) => value}
+  @type resource_set(value) :: %{optional(binary()) => list(value)}
 
   @type resources :: resource_set(Resource.t())
 
   typedstruct do
     field(:inputs, resource_set(Resource.t()), default: %{})
     field(:outputs, resource_set(Resource.t()), default: %{})
-    field(:extra_data, :binary, default: <<>>)
   end
 
   @spec add_input(t(), Resource.t()) :: t()
@@ -28,10 +27,10 @@ defmodule Anoma.PartialTx do
   end
 
   @spec balanced(t()) :: boolean()
-  def balanced(partial) do
-    Map.merge(partial.inputs, partial.outputs, fn _k, i, o -> sub_quantities(i, o) end)
-    |> Map.to_list()
-    |> Enum.all?(fn {_k, v} -> v.quantity == 0 end)
+  def balanced(%PartialTx{inputs: inputs, outputs: outputs}) do
+    inputs
+    |> Map.merge(outputs, fn _k, i, o -> add_quantities(i) - add_quantities(o) end)
+    |> Enum.all?(fn {_k, v} -> v == 0 end)
   end
 
   @doc """
@@ -80,13 +79,13 @@ defmodule Anoma.PartialTx do
   defp update_resource_set(resource_set, new_resource) do
     denom = Resource.denomination(new_resource)
 
-    Map.update(resource_set, denom, new_resource, &add_quantities(&1, new_resource))
+    Map.update(resource_set, denom, [new_resource], &[new_resource | &1])
   end
 
   # the resources must be the same
-  @spec add_quantities(Resource.t(), Resource.t()) :: Resource.t()
-  defp add_quantities(resource_1, resource_2) do
-    %Resource{resource_1 | quantity: resource_1.quantity + resource_2.quantity}
+  @spec add_quantities(list(Resource.t())) :: integer()
+  defp add_quantities(resources) do
+    Enum.reduce(resources, 0, fn x, acc -> x.quantity + acc end)
   end
 
   @spec sub_quantities(Resource.t(), Resource.t()) :: Resource.t()

@@ -25,4 +25,24 @@ defmodule AnomaTest.PartialTx do
 
     assert PartialTx.balanced(tx)
   end
+
+  test "double resource add" do
+    resource_1 = %Anoma.Resource{quantity: 1}
+
+    tx = PartialTx.empty()
+
+    assert PartialTx.balanced(tx)
+
+    tx = tx |> PartialTx.add_input(resource_1) |> PartialTx.add_output(resource_1)
+
+    assert PartialTx.balanced(tx)
+
+    tx = tx |> PartialTx.add_input(resource_1)
+
+    assert PartialTx.balanced(tx) == false
+
+    tx = tx |> PartialTx.add_output(resource_1)
+
+    assert PartialTx.balanced(tx)
+  end
 end

@@ -15,6 +15,7 @@ defmodule Anoma.Resource do
     field(:suffix, :binary, default: <<>>)
     # also known as static data
     field(:prefix, :binary, default: <<>>)
+    field(:data, any(), default: <<>>)
   end
 
   @spec denomination(t()) :: binary()
