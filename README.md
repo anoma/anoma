@@ -20,6 +20,18 @@ and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/anoma>.
 
 
+## Contributing
+
+This codebase follows a git style simialr to
+[git](https://git-scm.com/) or
+[linux](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git).
+
+New code should be based on `base`, and no attempt to keep it up to
+sync with `main` should be had. When one's topic is ready just submit
+a PR on github and the maintiner will handle any merge conflicts.
+
+Happy hacking, and don't be afraid to submit patches.
+
 ## Quick Testing
 
 Using the command line or through vscode is quite slow, I recommend
