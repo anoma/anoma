@@ -1,0 +1,21 @@
+[package]
+name = "nif_taiga"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "nif_taiga"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.29.1"
+rand = "0.8.5"
+taiga_halo2 = { git = "https://github.com/anoma/taiga", rev = "8a490cc73da2915b849d559d4cd09b077c97bb7b", features = ["nif"] }
+pasta_curves = { git = "https://github.com/heliaxdev/pasta_curves", branch = "taiga", features = ["repr-erlang"]}
+
+[patch.crates-io]
+halo2_gadgets = { git = "https://github.com/heliaxdev/halo2", branch = "taiga"}
+halo2_proofs = { git = "https://github.com/heliaxdev/halo2", branch = "taiga"}
+pasta_curves = { git = "https://github.com/heliaxdev/pasta_curves", branch = "taiga"}
