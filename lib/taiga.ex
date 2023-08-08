@@ -1,0 +1,2 @@
+defmodule Taiga do
+end
