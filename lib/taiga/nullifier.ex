@@ -7,4 +7,7 @@ defmodule Taiga.Nullifier do
   def default() do
     {Base.default()}
   end
+
+  @spec inner(t()) :: Base.t()
+  def inner({base}), do: base
 end
