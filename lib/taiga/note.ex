@@ -20,6 +20,11 @@ defmodule Taiga.Note do
     %Note{}
   end
 
+  @spec commitment(t()) :: Taiga.Note.Commitment.t()
+  @spec nullifier(t()) :: Nullifier.t()
+
   defdelegate random_input(), to: Taiga.Native, as: :note_random_input
   defdelegate random_output(), to: Taiga.Native, as: :note_random_output
+  defdelegate commitment(note), to: Taiga.Native, as: :note_commitment
+  defdelegate nullifier(note), to: Taiga.Native, as: :note_nullifier
 end
