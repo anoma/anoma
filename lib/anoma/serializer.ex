@@ -9,6 +9,9 @@ defmodule Anoma.Serializer do
   please improve me!
   """
 
+  @type private_key() :: [:crypto.key_id()]
+  @type public_key() :: [:crypto.key_id()]
+
   @spec serialize(:erlang.term()) :: binary()
   def serialize(object) do
     :erlang.term_to_binary(object)
