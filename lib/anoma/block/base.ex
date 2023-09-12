@@ -10,9 +10,19 @@ defmodule Anoma.Block.Base do
   """
   use TypedStruct
 
+  alias Anoma.Block.Base
+
   typedstruct do
     field(:transactions, list(Anoma.PartialTx.t()), default: [])
   end
 
+  @spec default() :: t()
+  def default() do
+    %Base{}
+  end
 
+  @spec digest(t()) :: binary()
+  def digest(term) do
+    Anoma.Serializer.digest(term)
+  end
 end

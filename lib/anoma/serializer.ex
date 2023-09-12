@@ -29,4 +29,17 @@ defmodule Anoma.Serializer do
   def digest(object) do
     :crypto.hash(:blake2b, serialize(object))
   end
+
+  @doc """
+  I `deserialize` the given object back into an erlang term.
+  """
+  @spec sign(:erlang.term(), private_key()) :: binary()
+  def sign(object, key) do
+    :crypto.sign(:rsa, :ripemd160, object, key)
+  end
+
+  @spec verify(binary(), public_key(), binary()) :: boolean()
+  def verify(message, pub_key, signature) do
+    :crypto.verify(:rsa, :ripemd160, message, signature, pub_key)
+  end
 end
