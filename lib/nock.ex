@@ -9,26 +9,31 @@ defmodule Nock do
     try do
       case formula do
         # autocons; a cell of formulas becomes a cell of results
+        # *[a [b c] d]        [*[a b c] *[a d]]
         [formula_1 = [_ | _] | formula_2] ->
           {:ok, result_1} = nock(subject, formula_1)
           {:ok, result_2} = nock(subject, formula_2)
           {:ok, [result_1 | result_2]}
 
         # 0: read from subject
+        # *[a 0 b]            /[b a]
         [0 | axis] ->
           Noun.axis(axis, subject)
 
         # 1: constant
+        # *[a 1 b]            b
         [1 | constant] ->
           {:ok, constant}
 
         # 2: eval
+        # *[a 2 b c]          *[*[a b] *[a c]]
         [2 | [subject_formula | formula_formula]] ->
           {:ok, new_subject} = nock(subject, subject_formula)
           {:ok, new_formula} = nock(subject, formula_formula)
           nock(new_subject, new_formula)
 
         # 3: cell test
+        # *[a 3 b]            ?*[a b]
         [3 | sub_formula] ->
           {:ok, sub_result} = nock(subject, sub_formula)
           # yes, this is the best guard i can find
@@ -39,6 +44,7 @@ defmodule Nock do
           end
 
         # 4: increment
+        # *[a 4 b]            +*[a b]
         [4 | sub_formula] ->
           {:ok, sub_result} = nock(subject, sub_formula)
 
@@ -49,6 +55,7 @@ defmodule Nock do
           end
 
         # 5: noun equality
+        # *[a 5 b c]          =[*[a b] *[a c]]
         [5 | [formula_1 | formula_2]] ->
           {:ok, result_1} = nock(subject, formula_1)
           {:ok, result_2} = nock(subject, formula_2)
@@ -60,6 +67,7 @@ defmodule Nock do
           end
 
         # 6: if-then-else (spec macro)
+        # *[a 6 b c d]        *[a *[[c d] 0 *[[2 3] 0 *[a 4 4 b]]]]
         [6 | [cond | branches = [_true_branch | _false_branch]]] ->
           {:ok, cond_plus_two} = nock(subject, [4 | [4 | cond]])
           {:ok, crash_guard} = nock([2 | 3], [0 | cond_plus_two])
@@ -67,33 +75,39 @@ defmodule Nock do
           nock(subject, branch_formula)
 
         # 7: with subject (spec macro)
+        # *[a 7 b c]          *[*[a b] c]
         [7 | [subject_formula | sub_formula]] ->
           {:ok, new_subject} = nock(subject, subject_formula)
           nock(new_subject, sub_formula)
 
         # 8: push on subject (spec macro)
+        # *[a 8 b c]          *[[*[a b] a] c]
         [8 | [push_formula | sub_formula]] ->
           {:ok, pushed_noun} = nock(subject, push_formula)
           new_subject = [pushed_noun | subject]
           nock(new_subject, sub_formula)
 
         # 9: arm of core (spec macro)
+        # *[a 9 b c]          *[*[a c] 2 [0 1] 0 b]
         [9 | [axis | sub_formula]] ->
           {:ok, sub_result} = nock(subject, sub_formula)
           nock(sub_result, [2 | [[0 | 1] | [0 | axis]]])
 
         # 10: replace at axis
+        # *[a 10 [b c] d]     #[b *[a c] *[a d]]
         [10 | [[axis | replacement_formula] | sub_formula]] ->
           {:ok, replacement} = nock(subject, replacement_formula)
           {:ok, sub_result} = nock(subject, sub_formula)
           Noun.replace(axis, replacement, sub_result)
 
         # 11: hint
+        # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
         [11 | [[_hint_noun | hint_formula] | sub_formula]] ->
           # must be computed, but is discarded
           {:ok, _hint_result} = nock(subject, hint_formula)
           nock(subject, sub_formula)
 
+        # *[a 11 b c]         *[a c]
         [11 | [_hint_noun | sub_formula]] ->
           nock(subject, sub_formula)
 
