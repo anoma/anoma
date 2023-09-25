@@ -100,12 +100,13 @@ defmodule Nock do
           {:ok, sub_result} = nock(subject, sub_formula)
           Noun.replace(axis, replacement, sub_result)
 
-        # 11: hint
+        # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
         [11 | [[_hint_noun | hint_formula] | sub_formula]] ->
           # must be computed, but is discarded
-          {:ok, _hint_result} = nock(subject, hint_formula)
-          nock(subject, sub_formula)
+          {:ok, hint_result} = nock(subject, hint_formula)
+          {:ok, real_result} = nock(subject, sub_formula)
+          nock([hint_result | real_result], [0 | 3])
 
         # *[a 11 b c]         *[a c]
         [11 | [_hint_noun | sub_formula]] ->
