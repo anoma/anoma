@@ -89,12 +89,12 @@ defmodule Nock do
           Noun.replace(axis, replacement, sub_result)
 
         # 11: hint
-        [11 | [[_hint_name | hint_formula] | sub_formula]] ->
+        [11 | [[_hint_noun | hint_formula] | sub_formula]] ->
           # must be computed, but is discarded
           {:ok, _hint_result} = nock(subject, hint_formula)
           nock(subject, sub_formula)
 
-        [11 | [_hint_name | sub_formula]] ->
+        [11 | [_hint_noun | sub_formula]] ->
           nock(subject, sub_formula)
 
         # else, error
@@ -154,12 +154,12 @@ defmodule Nock do
     [10 | [[axis | replacement_formula] | sub_formula]]
   end
 
-  def nock_11(hint_name, hint_formula, sub_formula) do
-    [11 | [[hint_name | hint_formula] | sub_formula]]
+  def nock_11(hint_noun, hint_formula, sub_formula) do
+    [11 | [[hint_noun | hint_formula] | sub_formula]]
   end
 
-  def nock_11(hint_name, sub_formula) do
-    [11 | [hint_name | sub_formula]]
+  def nock_11(hint_noun, sub_formula) do
+    [11 | [hint_noun | sub_formula]]
   end
 
   def decrement_arm do
