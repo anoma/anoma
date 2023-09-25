@@ -78,4 +78,10 @@ defmodule Noun do
       _ in MatchError -> :error
     end
   end
+
+  def mug(noun) do
+    :erlang.term_to_binary(noun)
+    # seed: %mug
+    |> XXHash.xxh64(6_780_269)
+  end
 end
