@@ -9,6 +9,9 @@ defmodule Anoma.Serializer do
   please improve me!
   """
 
+  @type private_key() :: [:crypto.key_id()]
+  @type public_key() :: [:crypto.key_id()]
+
   @spec serialize(:erlang.term()) :: binary()
   def serialize(object) do
     :erlang.term_to_binary(object)
@@ -25,5 +28,18 @@ defmodule Anoma.Serializer do
   @spec digest(:erlang.term()) :: binary()
   def digest(object) do
     :crypto.hash(:blake2b, serialize(object))
+  end
+
+  @doc """
+  I `deserialize` the given object back into an erlang term.
+  """
+  @spec sign(:erlang.term(), private_key()) :: binary()
+  def sign(object, key) do
+    :crypto.sign(:rsa, :ripemd160, object, key)
+  end
+
+  @spec verify(binary(), public_key(), binary()) :: boolean()
+  def verify(message, pub_key, signature) do
+    :crypto.verify(:rsa, :ripemd160, message, signature, pub_key)
   end
 end
