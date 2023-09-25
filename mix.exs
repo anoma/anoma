@@ -22,6 +22,7 @@ defmodule Anoma.MixProject do
   defp deps do
     [
       {:typed_struct, "~> 0.3.0"},
+      {:xxhash, "~> 0.3"},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
