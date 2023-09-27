@@ -1,6 +1,6 @@
-defmodule Anoma.Node do
+defmodule Anoma.Node.Executor do
   @moduledoc """
-  I am an Anoma node.
+  I am an incomplete Anoma Executor node.
   """
 
   use Supervisor
@@ -11,8 +11,8 @@ defmodule Anoma.Node do
 
   def init(name) do
     children = [
-      {Anoma.Node.Communicator, init: [], name: name},
-      {Anoma.Node.Primary, init: [], name: name}
+      {Anoma.Node.Executor.Communicator, init: [], name: name},
+      {Anoma.Node.Executor.Primary, init: [], name: name}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

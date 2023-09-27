@@ -1,10 +1,10 @@
 defmodule AnomaTest.Node do
   use ExUnit.Case, async: true
 
-  alias Anoma.Node.{Communicator, Primary}
-  alias Anoma.Node
+  alias Anoma.Node.Executor.{Communicator, Primary}
+  alias Anoma.Node.Executor
 
-  doctest(Anoma.Node)
+  doctest(Anoma.Node.Executor)
 
   test "node works" do
     # Node.start_link(:anoma)
