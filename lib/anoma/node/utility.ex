@@ -77,7 +77,6 @@ defmodule Anoma.Node.Utility do
   @spec com_name(atom()) :: atom()
   def com_name(name), do: (Atom.to_string(name) <> "_com") |> String.to_atom()
 
-
   @doc """
   I broadcast a given term to all subscribers
 
@@ -91,7 +90,7 @@ defmodule Anoma.Node.Utility do
     # passing in a module to do a cast or call or something.
     subs
     |> Enum.map(fn sub -> GenServer.cast(sub, term) end)
+
     :ok
   end
-
 end
