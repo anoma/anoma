@@ -8,6 +8,7 @@ defmodule Anoma.Node.Intent.Pool do
   use GenServer
 
   alias Anoma.Intent
+  alias Anoma.Node.Utility
 
   typedstruct do
     field(:intents, MapSet.t(Intent.t()), default: MapSet.new())
@@ -18,16 +19,6 @@ defmodule Anoma.Node.Intent.Pool do
   end
 
   def start_link(arg) do
-    # please do this better, it's duplicated!!!
-    name = arg[:name]
-
-    options =
-      if name do
-        [name: name]
-      else
-        []
-      end
-
-    GenServer.start_link(__MODULE__, arg, options)
+    GenServer.start_link(__MODULE__, arg, Utility.name(arg))
   end
 end
