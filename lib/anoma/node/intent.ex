@@ -22,4 +22,6 @@ defmodule Anoma.Node.Intent do
 
     Supervisor.init(children, strategy: :one_for_one)
   end
+
+  def shutdown(supervisor), do: Supervisor.stop(supervisor, :normal)
 end
