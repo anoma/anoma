@@ -11,7 +11,7 @@ defmodule Anoma.Node do
 
   def init(name) do
     children = [
-      {Anoma.Node.Communicator, init: [], name: name},
+      {Anoma.Node.Communicator, name: name},
       {Anoma.Node.Primary, init: [], name: name}
     ]
 

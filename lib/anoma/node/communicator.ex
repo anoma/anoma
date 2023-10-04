@@ -16,21 +16,16 @@ defmodule Anoma.Node.Communicator do
   alias __MODULE__
   use TypedStruct
   use GenServer
-  alias Anoma.Intent
+  alias Anoma.PartialTx
   alias Anoma.Node.Utility
+  alias Anoma.Node.Primary
 
   typedstruct do
-    field(:subscribers, list(pid()), default: [])
     field(:primary, atom())
   end
 
-  # TODO fixup init
-  def init(init: init_subscribers, name: name) do
-    {:ok, %Communicator{subscribers: init_subscribers, primary: name}}
-  end
-
-  def init(init) do
-    {:ok, %Communicator{subscribers: init}}
+  def init(name: name) do
+    {:ok, %Communicator{primary: name}}
   end
 
   def start_link(arg) do
@@ -41,37 +36,19 @@ defmodule Anoma.Node.Communicator do
   #                      Public RPC API                      #
   ############################################################
 
-  # partial transactions are intents
-
-  @doc """
-  Denotes to the system there is a new intent.
-
-  This does a few things:
-
-  1. broadcast the new intent to the primary
-  2. broadcasts the new intent to all subscribers
-  """
-  @spec new_intent(pid(), Intent.t()) :: :ok
-  def new_intent(communicator, intent) do
-    GenServer.cast(communicator, {:new_intent, intent})
-  end
-
-  @spec subscribe(pid(), pid()) :: :ok
-  def subscribe(communicator, subscriber) do
-    GenServer.cast(communicator, {:subscribe, subscriber})
+  # Transactions
+  @spec new_transactions(pid(), Enumerable.t(PartialTx.t())) :: Primary.response()
+  def new_transactions(communicator, transactions) do
+    GenServer.call(communicator, {:transactions, transactions})
   end
 
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast({:new_intent, intent}, agent) do
-    broadcast_intent(agent, intent)
-    {:noreply, agent}
-  end
-
-  def handle_cast({:subscribe, pid}, agent) do
-    {:noreply, %Communicator{agent | subscribers: [pid | agent.subscribers]}}
+  def handle_call({:transactions, trans}, _from, agent) do
+    response = broadcast_transactions(agent, trans)
+    {:reply, response, agent}
   end
 
   ############################################################
@@ -79,9 +56,8 @@ defmodule Anoma.Node.Communicator do
   ############################################################
 
   # make this more interesting later
-  @spec broadcast_intent(t(), Intent.t()) :: :ok
-  defp broadcast_intent(agent, intent) do
-    # safe even on a null primary thanks to GenServer
-    Utility.broadcast([agent.primary | agent.subscribers], {:new_intent, intent})
+  @spec broadcast_transactions(t(), Enumerable.t(PartialTx.t())) :: Primary.response()
+  defp broadcast_transactions(agent, trans) do
+    Primary.new_transactions(agent.primary, trans)
   end
 end
