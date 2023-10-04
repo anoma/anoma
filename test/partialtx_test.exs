@@ -45,4 +45,21 @@ defmodule AnomaTest.PartialTx do
 
     assert PartialTx.balanced(tx)
   end
+
+  test "checking validity" do
+    r_true = %Anoma.Resource{quantity: 1, logic: 0}
+    r_false = %Anoma.Resource{quantity: 1, logic: 1}
+    empty = PartialTx.empty()
+
+    assert PartialTx.is_valid(empty)
+    assert PartialTx.is_valid(empty |> PartialTx.add_input(r_true))
+    assert PartialTx.is_valid(empty |> PartialTx.add_input(r_false)) == false
+
+    multi =
+      empty
+      |> PartialTx.add_input(r_true)
+      |> PartialTx.add_input(r_false)
+
+    assert PartialTx.is_valid(multi) == false
+  end
 end
