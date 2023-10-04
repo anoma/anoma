@@ -47,12 +47,22 @@ defmodule Anoma.PartialTx do
   """
   @spec is_valid(t()) :: boolean()
   def is_valid(partial) do
-    valid? = fn resource ->
-      # we will use the interpreter for now
-      Anoma.Eval.apply(resource.logic, partial) == 0
+    # Drop all nesting
+    to_list = fn map ->
+      map |> Map.values() |> List.flatten()
     end
 
-    Enum.all?(partial.inputs, valid?) && Enum.all?(partial.outputs, valid?)
+    inputs = to_list.(partial.inputs)
+    outputs = to_list.(partial.outputs)
+
+    valid? = fn io? ->
+      fn resource ->
+        # we will use the interpreter for now
+        Anoma.Eval.apply(resource.logic, {io?, inputs, outputs}) == 0
+      end
+    end
+
+    Enum.all?(inputs, valid?.(:in)) && Enum.all?(outputs, valid?.(:out))
   end
 
   def empty(), do: %PartialTx{}
