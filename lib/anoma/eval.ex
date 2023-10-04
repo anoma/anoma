@@ -18,13 +18,16 @@ defprotocol Anoma.Eval do
   This is due to the compilable instructions being a bit too limited.
   """
 
+  @type io() :: :in | :out
+  @type input() :: {io, list(Anoma.Resource.t()), list(Anoma.Resource.t())}
+
   # what is the output type?!?!?!?!?
   @doc """
 
   I `apply` the given logic onto a partial transaction.
 
   """
-  @spec apply(t(), Anoma.PartialTx.t()) :: any()
+  @spec apply(t(), input()) :: any()
   def apply(logic, tx)
 
   # let's compile!!!
