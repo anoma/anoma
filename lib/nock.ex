@@ -5,7 +5,79 @@ defmodule Nock do
 
   @dialyzer :no_improper_lists
 
+  # temporary stub functions for jet scaffolding
+  def get_jet(_battery_mug) do
+    # simulating Map fetch/2 not finding the key
+    :error
+  end
+
+  def put_jet(_battery_mug, _jet_info) do
+    nil
+  end
+
+  # top-level nock 4k interpreter.
+
+  # nock 9: check if the core's battery has a jet registration first
+  def nock(subject, [9, axis | core_formula]) do
+    {:ok, core} = nock(subject, core_formula)
+
+    maybe_battery_mug =
+      try do
+        {:ok, Noun.mug(hd(core))}
+      rescue
+        _ in ArgumentError -> :error
+      end
+
+    case maybe_battery_mug do
+      {:ok, battery_mug} ->
+        maybe_jet = get_jet(battery_mug)
+
+        case maybe_jet do
+          # there's no jet. just use naive nock
+          :error ->
+            nock(core, [2 | [[0 | 1] | [0 | axis]]])
+
+          # a jet exists. mug the parent too
+          {_label, parent_axis, parent_mug, jet_function} ->
+            maybe_parent = Noun.axis(parent_axis, core)
+
+            case maybe_parent do
+              {:ok, parent} ->
+                try do
+                  # elixir syntax for normal erlang =
+                  ^parent_mug = Noun.mug(parent)
+                  # it's all there. use the jet.
+                  # note: this is vastly simplified from a full jetting
+                  # implementation. in particular, we are only jetting
+                  # gates; we ignore which formula 9 used, assuming
+                  # that it's at axis 2.
+                  jet_function.(core)
+                rescue
+                  # parent mug didn't match. can't use the jet
+                  _ in MatchError -> nock(core, [2 | [[0 | 1] | [0 | axis]]])
+                end
+
+              # the parent didn't even exist, the jet is bogus
+              :error ->
+                nock(core, [2 | [[0 | 1] | [0 | axis]]])
+            end
+        end
+
+      :error ->
+        # an atom is not a valid formula, this can only crash.
+        # however, i don't want to introduce elisions of the spec yet
+        nock(core, [2 | [[0 | 1] | [0 | axis]]])
+    end
+  end
+
+  # generic case: use naive nock to reduce once.
   def nock(subject, formula) do
+    naive_nock(subject, formula)
+  end
+
+  # naive nock interpreter: reduce via the nock 4k spec rules.
+  # note: this must recurse into nock/2, not itself.
+  def naive_nock(subject, formula) do
     try do
       case formula do
         # autocons; a cell of formulas becomes a cell of results
