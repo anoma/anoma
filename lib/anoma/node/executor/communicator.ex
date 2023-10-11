@@ -17,6 +17,7 @@ defmodule Anoma.Node.Executor.Communicator do
   use TypedStruct
   use GenServer
   alias Anoma.Intent
+  alias Anoma.Node.Utility
 
   typedstruct do
     field(:subscribers, list(pid()), default: [])
@@ -33,21 +34,8 @@ defmodule Anoma.Node.Executor.Communicator do
   end
 
   def start_link(arg) do
-    # hack do better
-    name = arg[:name]
-
-    options =
-      if name do
-        [name: com_name(name)]
-      else
-        []
-      end
-
-    GenServer.start_link(__MODULE__, arg, options)
+    GenServer.start_link(__MODULE__, arg, Utility.name(arg, &Utility.com_name/1))
   end
-
-  @spec com_name(atom()) :: atom()
-  def com_name(name), do: (Atom.to_string(name) <> "_com") |> String.to_atom()
 
   ############################################################
   #                      Public RPC API                      #
@@ -91,19 +79,9 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   # make this more interesting later
-  @spec broadcast_intent(t(), Intent.t()) :: [any()]
+  @spec broadcast_intent(t(), Intent.t()) :: :ok
   defp broadcast_intent(agent, intent) do
     # safe even on a null primary thanks to GenServer
-    broadcast([agent.primary | agent.subscribers], intent)
-  end
-
-  # Dirty send, maybe consider what the structure of a subscriber is
-  # further determine if it should live here
-  @spec broadcast(list(), Intent.t()) :: [any()]
-  defp broadcast(sub_list, intent) do
-    sub_list
-    # this is bad we are assuming GenServer, lets make this generic by
-    # passing in a module to do a cast or call or something.
-    |> Enum.map(fn sub -> GenServer.cast(sub, {:new_intent, intent}) end)
+    Utility.broadcast([agent.primary | agent.subscribers], {:new_intent, intent})
   end
 end

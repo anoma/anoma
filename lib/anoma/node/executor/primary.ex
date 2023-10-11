@@ -12,6 +12,7 @@ defmodule Anoma.Node.Executor.Primary do
   use GenServer
 
   alias Anoma.Intent
+  alias Anoma.Node.Utility
 
   typedstruct do
     field(:intents, list(Intent.t()), default: [])
@@ -22,17 +23,7 @@ defmodule Anoma.Node.Executor.Primary do
   end
 
   def start_link(arg) do
-    # please do this better, it's duplicated in communicator!!!
-    name = arg[:name]
-
-    options =
-      if name do
-        [name: name]
-      else
-        []
-      end
-
-    GenServer.start_link(__MODULE__, arg, options)
+    GenServer.start_link(__MODULE__, arg, Utility.name(arg))
   end
 
   ############################################################
