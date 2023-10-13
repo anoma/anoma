@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out source
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4.1.0
     - name: Set up Elixir
       uses: erlef/setup-beam@v1.16.0
       with:
         elixir-version: '1.15.6'
         otp-version: '26.1.2'
     - name: Restore dependencies cache
-      uses: actions/cache@v3
+      uses: actions/cache@v3.3.2
       with:
         path: deps
         key: |
@@ -31,7 +31,7 @@ jobs:
       run: mix deps.get
     - name: Restore PLT cache
       id: plt_cache
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v3.3.2
       with:
         path: plts
         key: |
@@ -42,7 +42,7 @@ jobs:
       if: steps.plt_cache.outputs.cache-hit != 'true'
       run: mix dialyzer --plt
     - name: Save PLT cache
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@v3.3.2
       if: steps.plt_cache.outputs.cache-hit != 'true'
       with:
         path: plts
