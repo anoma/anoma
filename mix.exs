@@ -7,7 +7,11 @@ defmodule Anoma.MixProject do
       version: "0.1.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      dialyzer: [
+        plt_local_path: "plts/anoma.plt",
+        plt_core_path: "plts/core.plt"
+      ]
     ]
   end
 

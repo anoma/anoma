@@ -10,6 +10,9 @@
 # Where third-party dependencies like ExDoc output generated docs.
 /doc/
 
+# PLTs go here for CI cache purposes
+/plts/
+
 # Ignore .fetch files in case you like to edit your project deps locally.
 /.fetch
 
