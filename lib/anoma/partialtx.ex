@@ -57,6 +57,25 @@ defmodule Anoma.PartialTx do
 
   def empty(), do: %PartialTx{}
 
+  @doc """
+
+  I help create an "unique" partial transaction, by making a partial
+  transaction including an empty resource with the binary of the given term.
+
+  ### Parameters
+
+     - `term` - any term one wishes to put in the resource
+
+  ### Output
+
+    - the semi-unique term
+
+  """
+  def unique_empty(term) do
+    empty()
+    |> add_input(Resource.make_empty(term))
+  end
+
   ######################################################################
   # Helpers
   ######################################################################
