@@ -19,11 +19,13 @@ jobs:
       uses: actions/checkout@v4.1.0
       with:
         ref: ${{ github.event.pull_request.head.sha }}
-    - name: Try merge with next
+    - name: Check out next
       if: matrix.revision == 'next'
       uses: actions/checkout@v4.1.0
       with:
         ref: 'next'
+    - name: Try merge with next
+      if: matrix.revision == 'next'
       run: git merge ${{ github.event.pull_request.head.sha }}
     - name: Set up Elixir
       id: beam
