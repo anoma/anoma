@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Check out source
       uses: actions/checkout@v4.1.0
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Set up Elixir
       uses: erlef/setup-beam@v1.16.0
       with:
