@@ -12,13 +12,12 @@ jobs:
     strategy:
       matrix:
         check: [test, dialyzer, format]
-        revision: [${{ github.event.pull_request.head.sha }}]
     runs-on: ubuntu-latest
     steps:
     - name: Check out source
       uses: actions/checkout@v4.1.0
       with:
-        ref: ${{ matrix.revision }}
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Set up Elixir
       id: beam
       uses: erlef/setup-beam@v1.16.0
