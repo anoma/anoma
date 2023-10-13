@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 0
     - name: Try merge with next
       if: matrix.revision == 'next'
-      run: git checkout next && git -c user.name='ci' -c user.email='f@k.e' merge -m '' ${{ github.event.pull_request.head.sha }}
+      run: git checkout next && git -c user.name='ci' -c user.email='f@k.e' merge -m 'automerge' ${{ github.event.pull_request.head.sha }}
     - name: Set up Elixir
       id: beam
       uses: erlef/setup-beam@v1.16.0
