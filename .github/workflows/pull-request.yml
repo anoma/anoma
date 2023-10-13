@@ -55,3 +55,5 @@ jobs:
       run: mix test
     - name: Run dialyzer
       run: mix dialyzer --format github
+    - name: Format check
+      run: mix format --check-formatted
