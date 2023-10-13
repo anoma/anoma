@@ -50,9 +50,8 @@ jobs:
       if: matrix.check == dialyzer && steps.plt_cache.outputs.cache-hit != 'true'
       run: mix dialyzer --plt
     - name: Save PLT cache
-      if: matrix.check == dialyzer
+      if: matrix.check == dialyzer && steps.plt_cache.outputs.cache-hit != 'true'
       uses: actions/cache/save@v3.3.2
-      if: steps.plt_cache.outputs.cache-hit != 'true'
       with:
         path: plts
         key: |
