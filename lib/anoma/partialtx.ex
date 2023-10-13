@@ -26,7 +26,7 @@ defmodule Anoma.PartialTx do
     %PartialTx{partial | outputs: update_resource_set(partial.outputs, output)}
   end
 
-  @spec balanced(t()) :: t()
+  @spec balanced(t()) :: boolean()
   def balanced(%PartialTx{inputs: inputs, outputs: outputs}) do
     inputs
     |> Map.merge(outputs, fn _k, i, o -> add_quantities(i) - add_quantities(o) end)
