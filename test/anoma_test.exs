@@ -3,6 +3,6 @@ defmodule AnomaTest do
   doctest Anoma
 
   test "greets the world" do
-    assert Anoma.hello() == :world
+    assert Anoma.hello() == :worlf
   end
 end
