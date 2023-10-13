@@ -17,6 +17,7 @@ jobs:
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: Set up Elixir
+      id: beam
       uses: erlef/setup-beam@v1.16.0
       with:
         elixir-version: '1.15.6'
