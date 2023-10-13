@@ -8,14 +8,17 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Tests and dialyzer
+  all:
+    strategy:
+      matrix:
+        check: [test, dialyzer, format]
+        revision: [${{ github.event.pull_request.head.sha }}]
     runs-on: ubuntu-latest
     steps:
     - name: Check out source
       uses: actions/checkout@v4.1.0
       with:
-        ref: ${{ github.event.pull_request.head.sha }}
+        ref: ${{ matrix.revision }}
     - name: Set up Elixir
       id: beam
       uses: erlef/setup-beam@v1.16.0
@@ -23,6 +26,7 @@ jobs:
         elixir-version: '1.15.6'
         otp-version: '26.1.2'
     - name: Restore dependencies cache
+      if: matrix.check != format
       uses: actions/cache@v3.3.2
       with:
         path: deps
@@ -31,9 +35,11 @@ jobs:
         restore-keys: |
           mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
     - name: Install dependencies
+      if: matrix.check != format
       run: mix deps.get
     - name: Restore PLT cache
       id: plt_cache
+      if: matrix.check == dialyzer
       uses: actions/cache/restore@v3.3.2
       with:
         path: plts
@@ -42,9 +48,10 @@ jobs:
         restore-keys: |
           plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
     - name: Create PLTs
-      if: steps.plt_cache.outputs.cache-hit != 'true'
+      if: matrix.check == dialyzer && steps.plt_cache.outputs.cache-hit != 'true'
       run: mix dialyzer --plt
     - name: Save PLT cache
+      if: matrix.check == dialyzer
       uses: actions/cache/save@v3.3.2
       if: steps.plt_cache.outputs.cache-hit != 'true'
       with:
@@ -52,8 +59,11 @@ jobs:
         key: |
           plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
     - name: Run tests
+      if: matrix.check == test
       run: mix test
     - name: Run dialyzer
+      if: matrix.check == dialyzer
       run: mix dialyzer --format github
     - name: Format check
+      if: matrix.check == format
       run: mix format --check-formatted
