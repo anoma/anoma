@@ -10,6 +10,7 @@ permissions:
 jobs:
   all:
     strategy:
+      fail-fast: false
       matrix:
         check: ['test', 'dialyzer', 'format']
         revision: ['topic', 'next']
