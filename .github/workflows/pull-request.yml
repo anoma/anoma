@@ -1,0 +1,96 @@
+name: Pull request checks
+
+on:
+  pull_request:
+    branches: [ "base" ]
+
+permissions:
+  contents: read
+
+jobs:
+  all:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: ['topic', 'next']
+    name: Tests, dialyzer, format
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out topic
+      uses: actions/checkout@v4.1.0
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - name: Try merge with next
+      id: try_merge
+      continue-on-error: true
+      if: matrix.revision == 'next'
+      run: >
+        git checkout next &&
+        git -c user.name='Anoma CI' -c user.email='nobody@localhost'
+        merge -m 'Automerge with next'
+        ${{ github.event.pull_request.head.sha }}
+
+    - name: Set up Elixir
+      id: beam
+      if: steps.try_merge.outcome != 'failure'
+      uses: erlef/setup-beam@v1.16.0
+      with:
+        elixir-version: '1.15.6'
+        otp-version: '26.1.2'
+
+    - name: Restore dependencies cache
+      if: steps.try_merge.outcome != 'failure'
+      uses: actions/cache@v3.3.2
+      with:
+        path: deps
+        key: |
+          mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+    - name: Install dependencies
+      if: steps.try_merge.outcome != 'failure'
+      run: mix deps.get
+
+    - name: Restore PLT cache
+      id: plt_cache
+      if: steps.try_merge.outcome != 'failure'
+      uses: actions/cache/restore@v3.3.2
+      with:
+        path: plts
+        key: |
+          plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+    - name: Create PLTs
+      if: steps.plt_cache.outputs.cache-hit != 'true' &&
+          steps.try_merge.outcome != 'failure'
+      run: mix dialyzer --plt
+
+    - name: Save PLT cache
+      uses: actions/cache/save@v3.3.2
+      if: steps.plt_cache.outputs.cache-hit != 'true' &&
+          steps.try_merge.outcome != 'failure'
+      with:
+        path: plts
+        key: |
+          plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+
+    - name: Run tests
+      if: steps.try_merge.outcome != 'failure'
+      run: mix test
+
+    - name: Run dialyzer
+      if: steps.try_merge.outcome != 'failure'
+      run: mix dialyzer --format github
+
+    - name: Format check
+      if: steps.try_merge.outcome != 'failure'
+      run: mix format --check-formatted
+
+    - name: All files whitespace error check
+      if: steps.try_merge.outcome != 'failure'
+      run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
