@@ -8,19 +8,27 @@ defmodule Anoma.Resource do
 
   typedstruct do
     # TODO Should we make this a sexp or a logic?
-    field(:logic, Anoma.Logic.t(), default: [])
+    field(:logic, Anoma.Logic.t(), default: 0)
     field(:quantity, integer(), enforce: true)
-    field(:value, :binary, default: <<>>)
+    field(:value, binary(), default: <<>>)
     # also known as dynamic data
-    field(:suffix, :binary, default: <<>>)
+    field(:suffix, binary(), default: <<>>)
     # also known as static data
-    field(:prefix, :binary, default: <<>>)
+    field(:prefix, binary(), default: <<>>)
     field(:data, any(), default: <<>>)
   end
 
   @spec denomination(t()) :: binary()
   def denomination(denom) do
     Anoma.Serializer.serialize([denom.logic, denom.prefix])
+  end
+
+  @doc """
+  Create an empty resource with a given quantity
+  """
+  @spec new(integer()) :: t()
+  def new(num) do
+    %Resource{quantity: num}
   end
 end
 
