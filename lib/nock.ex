@@ -34,6 +34,7 @@ defmodule Nock do
 
   # top-level nock 4k interpreter.
 
+  # direct calls should be jetted
   def nock(subject, formula) do
     nock(subject, formula, :jetted)
   end
@@ -94,20 +95,26 @@ defmodule Nock do
   end
 
   # generic case: use naive nock to reduce once.
-  def nock(subject, formula, _) do
-    naive_nock(subject, formula)
+  def nock(subject, formula, jettedness) do
+    naive_nock(subject, formula, jettedness)
   end
 
   # naive nock interpreter: reduce via the nock 4k spec rules.
-  # note: this must recurse into nock/2, not itself.
+  # note: this must recurse into nock/2 (or nock/3), not itself.
+
+  # direct calls of naive_nock should be unjetted
   def naive_nock(subject, formula) do
+    naive_nock(subject, formula, :unjetted)
+  end
+
+  def naive_nock(subject, formula, jettedness) do
     try do
       case formula do
         # autocons; a cell of formulas becomes a cell of results
         # *[a [b c] d]        [*[a b c] *[a d]]
         [formula_1 = [_ | _] | formula_2] ->
-          {:ok, result_1} = nock(subject, formula_1)
-          {:ok, result_2} = nock(subject, formula_2)
+          {:ok, result_1} = nock(subject, formula_1, jettedness)
+          {:ok, result_2} = nock(subject, formula_2, jettedness)
           {:ok, [result_1 | result_2]}
 
         # 0: read from subject
@@ -123,14 +130,14 @@ defmodule Nock do
         # 2: eval
         # *[a 2 b c]          *[*[a b] *[a c]]
         [2, subject_formula | formula_formula] ->
-          {:ok, new_subject} = nock(subject, subject_formula)
-          {:ok, new_formula} = nock(subject, formula_formula)
-          nock(new_subject, new_formula)
+          {:ok, new_subject} = nock(subject, subject_formula, jettedness)
+          {:ok, new_formula} = nock(subject, formula_formula, jettedness)
+          nock(new_subject, new_formula, jettedness)
 
         # 3: cell test
         # *[a 3 b]            ?*[a b]
         [3 | sub_formula] ->
-          {:ok, sub_result} = nock(subject, sub_formula)
+          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
 
           if Noun.is_noun_cell(sub_result) do
             {:ok, 0}
@@ -141,7 +148,7 @@ defmodule Nock do
         # 4: increment
         # *[a 4 b]            +*[a b]
         [4 | sub_formula] ->
-          {:ok, sub_result} = nock(subject, sub_formula)
+          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
 
           if is_integer(sub_result) do
             {:ok, sub_result + 1}
@@ -152,8 +159,8 @@ defmodule Nock do
         # 5: noun equality
         # *[a 5 b c]          =[*[a b] *[a c]]
         [5, formula_1 | formula_2] ->
-          {:ok, result_1} = nock(subject, formula_1)
-          {:ok, result_2} = nock(subject, formula_2)
+          {:ok, result_1} = nock(subject, formula_1, jettedness)
+          {:ok, result_2} = nock(subject, formula_2, jettedness)
 
           if result_1 == result_2 do
             {:ok, 0}
@@ -164,48 +171,48 @@ defmodule Nock do
         # 6: if-then-else (spec macro)
         # *[a 6 b c d]        *[a *[[c d] 0 *[[2 3] 0 *[a 4 4 b]]]]
         [6, cond | branches = [_true_branch | _false_branch]] ->
-          {:ok, cond_plus_two} = nock(subject, [4 | [4 | cond]])
-          {:ok, crash_guard} = nock([2 | 3], [0 | cond_plus_two])
-          {:ok, branch_formula} = nock(branches, [0 | crash_guard])
-          nock(subject, branch_formula)
+          {:ok, cond_plus_two} = nock(subject, [4 | [4 | cond]], jettedness)
+          {:ok, crash_guard} = nock([2 | 3], [0 | cond_plus_two], jettedness)
+          {:ok, branch_formula} = nock(branches, [0 | crash_guard], jettedness)
+          nock(subject, branch_formula, jettedness)
 
         # 7: with subject (spec macro)
         # *[a 7 b c]          *[*[a b] c]
         [7, subject_formula | sub_formula] ->
-          {:ok, new_subject} = nock(subject, subject_formula)
-          nock(new_subject, sub_formula)
+          {:ok, new_subject} = nock(subject, subject_formula, jettedness)
+          nock(new_subject, sub_formula, jettedness)
 
         # 8: push on subject (spec macro)
         # *[a 8 b c]          *[[*[a b] a] c]
         [8, push_formula | sub_formula] ->
-          {:ok, pushed_noun} = nock(subject, push_formula)
+          {:ok, pushed_noun} = nock(subject, push_formula, jettedness)
           new_subject = [pushed_noun | subject]
-          nock(new_subject, sub_formula)
+          nock(new_subject, sub_formula, jettedness)
 
         # 9: arm of core (spec macro)
         # *[a 9 b c]          *[*[a c] 2 [0 1] 0 b]
         [9, axis | sub_formula] ->
-          {:ok, sub_result} = nock(subject, sub_formula)
-          nock(sub_result, [2 | [[0 | 1] | [0 | axis]]])
+          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
+          nock(sub_result, [2 | [[0 | 1] | [0 | axis]]], jettedness)
 
         # 10: replace at axis
         # *[a 10 [b c] d]     #[b *[a c] *[a d]]
         [10, [axis | replacement_formula] | sub_formula] ->
-          {:ok, replacement} = nock(subject, replacement_formula)
-          {:ok, sub_result} = nock(subject, sub_formula)
+          {:ok, replacement} = nock(subject, replacement_formula, jettedness)
+          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
           Noun.replace(axis, replacement, sub_result)
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
         [11, [_hint_noun | hint_formula] | sub_formula] ->
           # must be computed, but is discarded
-          {:ok, hint_result} = nock(subject, hint_formula)
-          {:ok, real_result} = nock(subject, sub_formula)
-          nock([hint_result | real_result], [0 | 3])
+          {:ok, hint_result} = nock(subject, hint_formula, jettedness)
+          {:ok, real_result} = nock(subject, sub_formula, jettedness)
+          nock([hint_result | real_result], [0 | 3], jettedness)
 
         # *[a 11 b c]         *[a c]
         [11, _hint_noun | sub_formula] ->
-          nock(subject, sub_formula)
+          nock(subject, sub_formula, jettedness)
 
         # else, error
         _ ->
