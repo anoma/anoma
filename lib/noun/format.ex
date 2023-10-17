@@ -9,6 +9,8 @@ defmodule Noun.Format do
   end
 
   def parse(string) do
+    # the hoon compiler emits integers with '.' thousands separators
+    # it's easier to pre-strip these than to parse them
     dotless = String.replace(string, ".", "")
     parse_inner(dotless)
   end
