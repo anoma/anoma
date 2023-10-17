@@ -36,7 +36,7 @@ defmodule Anoma.PartialTx do
 
   # Helpers
 
-  @doc """
+  _privatedoc = """
   I update the resource set with the new resource
 
 
