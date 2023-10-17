@@ -70,9 +70,6 @@ defmodule Noun.Format do
     result = parse_inner(string)
 
     case result do
-      # {:ok, atom} ->
-      #  {:ok, atom}
-
       {:continue, head_result, rest} ->
         trimmed_rest = String.trim_leading(rest)
 
@@ -92,10 +89,13 @@ defmodule Noun.Format do
 
               {:continue, tail_result, inner_rest} ->
                 {:continue, [head_result | tail_result], inner_rest}
+
+              _ ->
+                :error
             end
         end
 
-      :error ->
+      _ ->
         :error
     end
   end
