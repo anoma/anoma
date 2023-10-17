@@ -7,9 +7,7 @@ defmodule Noun do
 
   @dialyzer :no_improper_lists
 
-  # why are these not in the standard library
-  defguard is_even(term) when is_integer(term) and rem(term, 2) == 0
-  defguard is_odd(term) when is_integer(term) and rem(term, 2) == 1
+  import Integer, only: [is_even: 1, is_odd: 1]
 
   def testing_noun do
     [[4 | 5] | [[12 | 13] | 7]]
