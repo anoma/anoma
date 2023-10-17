@@ -62,6 +62,10 @@ defmodule Noun.Format do
     end
   end
 
+  def parse_cell(_) do
+    :error
+  end
+
   def parse_tail(string) do
     result = parse_inner(string)
 
