@@ -1,6 +1,8 @@
 defmodule Noun.Format do
   @moduledoc false
 
+  @dialyzer :no_improper_lists
+
   def parse_always(string) do
     {:ok, parsed} = parse(string)
     parsed

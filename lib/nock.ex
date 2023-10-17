@@ -3,6 +3,8 @@ defmodule Nock do
   Nock, a universal function on nouns.
   """
 
+  require Noun
+
   @dialyzer :no_improper_lists
 
   @layer_1_context_mug 17_654_928_022_549_292_273
@@ -129,8 +131,8 @@ defmodule Nock do
         # *[a 3 b]            ?*[a b]
         [3 | sub_formula] ->
           {:ok, sub_result} = nock(subject, sub_formula)
-          # yes, this is the best guard i can find
-          if is_list(sub_result) do
+
+          if Noun.is_noun_cell(sub_result) do
             {:ok, 0}
           else
             {:ok, 1}
