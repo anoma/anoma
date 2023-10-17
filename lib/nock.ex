@@ -32,8 +32,12 @@ defmodule Nock do
 
   # top-level nock 4k interpreter.
 
+  def nock(subject, formula) do
+    nock(subject, formula, :jetted)
+  end
+
   # nock 9: check if the core's battery has a jet registration first
-  def nock(subject, [9, axis | core_formula]) do
+  def nock(subject, [9, axis | core_formula], :jetted) do
     {:ok, core} = nock(subject, core_formula)
 
     maybe_battery_mug =
@@ -88,7 +92,7 @@ defmodule Nock do
   end
 
   # generic case: use naive nock to reduce once.
-  def nock(subject, formula) do
+  def nock(subject, formula, _) do
     naive_nock(subject, formula)
   end
 
