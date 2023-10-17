@@ -1,5 +1,7 @@
 defmodule Noun.Format do
-  @moduledoc false
+  @moduledoc """
+      Parsing and printing of nouns.
+  """
 
   @dialyzer :no_improper_lists
 
