@@ -104,6 +104,42 @@ defmodule Nock do
     end
   end
 
+  # skip a jet once (must be called with a 9 formula for this to work)
+  def nock(subject, formula, :unjetted_once) do
+    naive_nock(subject, formula, :jetted)
+  end
+
+  # nock with jet-instrumentation mode.
+  def nock(subject, formula, instrumentation)
+      when instrumentation == :instrument or
+             instrumentation == :instrument_once do
+    test_jettedness =
+      case instrumentation do
+        :instrument -> :unjetted
+        :instrument_once -> :unjetted_once
+      end
+
+    {jetted_usecs, jetted_result} =
+      :timer.tc(fn -> nock(subject, formula, :jetted) end)
+
+    {unjetted_usecs, unjetted_result} =
+      :timer.tc(fn -> nock(subject, formula, test_jettedness) end)
+
+    validity = jetted_result === unjetted_result
+
+    %{
+      jetted_usecs: jetted_usecs,
+      unjetted_usecs: unjetted_usecs,
+      result: unjetted_result,
+      valid:
+        if validity do
+          validity
+        else
+          {validity, jetted_result}
+        end
+    }
+  end
+
   # generic case: use naive nock to reduce once.
   def nock(subject, formula, jettedness) do
     naive_nock(subject, formula, jettedness)
