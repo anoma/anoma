@@ -5,6 +5,9 @@ defmodule Nock.Jets do
 
   import Noun
 
+  # when this is called, we've already jet-matched axis 7.
+  # so axis 6 exists. nevertheless, we have ok and error cases in case
+  # of implementation bugs.
   def sample([_, s | _]) do
     {:ok, s}
   end
