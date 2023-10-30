@@ -11,10 +11,12 @@ defmodule Anoma.Node.Executor do
 
   def init(name) do
     children = [
-      {Anoma.Node.Executor.Communicator, init: [], name: name},
+      {Anoma.Node.Executor.Communicator, name: name},
       {Anoma.Node.Executor.Primary, init: [], name: name}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
+
+  def shutdown(supervisor), do: Supervisor.stop(supervisor, :normal)
 end
