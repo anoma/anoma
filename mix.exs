@@ -18,13 +18,14 @@ defmodule Anoma.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :crypto]
+      extra_applications: [:logger, :crypto, :mnesia]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
       {:typed_struct, "~> 0.3.0"},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},

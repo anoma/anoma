@@ -75,4 +75,60 @@ defmodule Anoma.Block do
   defp signable(block, pub_key, round) do
     Serializer.serialize({Base.digest(block), round, pub_key})
   end
+
+  ######################################################################
+  ## Mnesia
+  ######################################################################
+
+  # this should stay in-sync with the type declaration
+
+  defp attributes, do: [:id, :block, :round, :pub_key, :signature]
+
+  @spec encode(t()) :: tuple()
+  def encode(block) do
+    {__MODULE__, block.id, block.block, block.round, block.pub_key, block.signature}
+  end
+
+  def decode({__MODULE__, id, block, round, pub_key, sig}) do
+    %Block{id: id, block: block, round: round, pub_key: pub_key, signature: sig}
+  end
+
+  @doc """
+
+  I create a `:mnesia` table for `Anoma.Block`. This table is backed
+  by rocksdb, and thus persists across IEX sessions.
+
+  I will only ever needed to be called once upon Configuration start,
+  `Anoma.Mnesia.init/0` will likely set me up as is.
+
+  """
+  def create_table() do
+    create_table(Anoma.Block, true)
+  end
+
+  @doc """
+
+  I am like `create_table/0`, however I am given a special
+  table_key. This overrides the default table key of `Anoma.Block`.
+
+  I am useful when trying to spawn many solvers/validators/etc, who
+  all want their own tables.
+
+  ### Parameters
+
+    - `table_key` - the name of the table
+    - `rocks?` - should we persist as a rocksdb table?
+
+  """
+  def create_table(table_key, rocks?) do
+    resp =
+      if rocks? do
+        :mnesia.create_table(table_key, attributes: attributes(), rocksdb_copies: [node()])
+      else
+        :mnesia.create_table(table_key, attributes: attributes())
+      end
+
+    :mnesia.add_table_index(table_key, :round)
+    resp
+  end
 end
