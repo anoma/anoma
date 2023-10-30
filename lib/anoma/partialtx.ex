@@ -47,15 +47,44 @@ defmodule Anoma.PartialTx do
   """
   @spec is_valid(t()) :: boolean()
   def is_valid(partial) do
-    valid? = fn resource ->
-      # we will use the interpreter for now
-      Anoma.Eval.apply(resource.logic, partial) == 0
+    # Drop all nesting
+    to_list = fn map ->
+      map |> Map.values() |> List.flatten()
     end
 
-    Enum.all?(partial.inputs, valid?) && Enum.all?(partial.outputs, valid?)
+    inputs = to_list.(partial.inputs)
+    outputs = to_list.(partial.outputs)
+
+    valid? = fn io? ->
+      fn resource ->
+        # we will use the interpreter for now
+        Anoma.Eval.apply(resource.logic, {io?, inputs, outputs}) == 0
+      end
+    end
+
+    Enum.all?(inputs, valid?.(:in)) && Enum.all?(outputs, valid?.(:out))
   end
 
   def empty(), do: %PartialTx{}
+
+  @doc """
+
+  I help create an "unique" partial transaction, by making a partial
+  transaction including an empty resource with the binary of the given term.
+
+  ### Parameters
+
+     - `term` - any term one wishes to put in the resource
+
+  ### Output
+
+    - the semi-unique term
+
+  """
+  def unique_empty(term) do
+    empty()
+    |> add_input(Resource.make_empty(term))
+  end
 
   ######################################################################
   # Helpers

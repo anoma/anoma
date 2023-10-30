@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Primary do
+defmodule Anoma.Node.Executor.Primary do
   @moduledoc """
-  I represent the main logic checking functonality of an `Anoma.Node`.
+  I represent the main logic checking functonality of an `Anoma.Node.Executor`.
 
   I can be communicated by, by my public API, often this is done by my
   `Anoma.Node.Communicator`, however everything can communicate with
@@ -11,28 +11,21 @@ defmodule Anoma.Node.Primary do
   use TypedStruct
   use GenServer
 
-  alias Anoma.Intent
+  alias Anoma.PartialTx
+  alias Anoma.Node.Utility
 
+  @type response :: boolean()
+
+  # TODO what gets stored in an executor?
   typedstruct do
-    field(:intents, list(Intent.t()), default: [])
   end
 
   def init(_init) do
-    {:ok, %Primary{intents: []}}
+    {:ok, %Primary{}}
   end
 
   def start_link(arg) do
-    # please do this better, it's duplicated in communicator!!!
-    name = arg[:name]
-
-    options =
-      if name do
-        [name: name]
-      else
-        []
-      end
-
-    GenServer.start_link(__MODULE__, arg, options)
+    GenServer.start_link(__MODULE__, arg, Utility.name(arg))
   end
 
   ############################################################
@@ -45,18 +38,18 @@ defmodule Anoma.Node.Primary do
     GenServer.call(primary, :dump_state)
   end
 
-  @spec new_intent(GenServer.server(), Intent.t()) :: :ok
-  def new_intent(primary, intent) do
-    GenServer.cast(primary, intent)
+  @spec new_transactions(GenServer.server(), Enumerable.t(PartialTx.t())) :: response()
+  def new_transactions(primary, transactions) do
+    GenServer.call(primary, {:transactions, transactions})
   end
 
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast({:new_intent, intent}, agent) do
-    updated_state = handle_new_intent(intent, agent)
-    {:noreply, updated_state}
+  def handle_call({:transactions, trans}, _from, primary) do
+    response = check_transaction(trans)
+    {:reply, response, primary}
   end
 
   def handle_call(:dump_state, _pid, basic) do
@@ -67,8 +60,9 @@ defmodule Anoma.Node.Primary do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec handle_new_intent(Intent.t(), t()) :: t()
-  defp handle_new_intent(intent, agent) do
-    %Primary{agent | intents: [intent | agent.intents]}
+  @spec check_transaction(Enumerable.t(PartialTx.t())) :: boolean()
+  defp check_transaction(transactions) do
+    transactions
+    |> Enum.all?(&PartialTx.is_valid/1)
   end
 end

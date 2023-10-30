@@ -1,35 +1,34 @@
 defmodule AnomaTest.Communicator do
   use ExUnit.Case, async: true
 
-  import Anoma.Node.Communicator
+  import Anoma.Node.Executor.Communicator
 
-  alias Anoma.Node.Communicator
+  alias Anoma.Node.Executor.Communicator
 
   alias Anoma.Subscriber.Basic
 
-  doctest(Anoma.Node.Communicator)
+  alias Anoma.PartialTx
+  alias Anoma.Node.Executor, as: Node
+  doctest(Anoma.Node.Executor.Communicator)
 
-  test "subscribers properly get intents messages" do
-    {_, comms} = GenServer.start_link(Communicator, [])
+  test "Proper Execution" do
+    {:ok, supervisor} = Node.start_link(:p_exec)
 
-    {_, sub} = GenServer.start_link(Basic, init: [], home: self())
+    empty_tx = PartialTx.empty()
 
-    Communicator.subscribe(comms, sub)
+    successful_tx =
+      empty_tx
+      |> PartialTx.add_input(%Anoma.Resource{quantity: 2, logic: 0})
 
-    resource_1 = %Anoma.Resource{quantity: 1}
+    failing_tx =
+      empty_tx
+      |> PartialTx.add_input(%Anoma.Resource{quantity: 2, logic: 1})
 
-    resource_2 = %Anoma.Resource{quantity: 2}
+    assert Communicator.new_transactions(:p_exec_com, [empty_tx])
+    assert Communicator.new_transactions(:p_exec_com, [empty_tx, successful_tx])
+    assert Communicator.new_transactions(:p_exec_com, [failing_tx]) == false
+    assert Communicator.new_transactions(:p_exec_com, [failing_tx, successful_tx]) == false
 
-    Communicator.new_intent(comms, resource_1)
-
-    assert_receive :received_intent, 200
-
-    assert Basic.dump_state(sub).intents |> length() == 1
-
-    Communicator.new_intent(comms, resource_2)
-
-    assert_receive :received_intent, 200
-
-    assert Basic.dump_state(sub).intents |> length() == 2
+    Node.shutdown(supervisor)
   end
 end
