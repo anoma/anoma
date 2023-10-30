@@ -1,6 +1,6 @@
-defmodule Anoma.Node.Primary do
+defmodule Anoma.Node.Executor.Primary do
   @moduledoc """
-  I represent the main logic checking functonality of an `Anoma.Node`.
+  I represent the main logic checking functonality of an `Anoma.Node.Executor`.
 
   I can be communicated by, by my public API, often this is done by my
   `Anoma.Node.Communicator`, however everything can communicate with
