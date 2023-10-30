@@ -30,6 +30,28 @@ defmodule Anoma.Resource do
   def new(num) do
     %Resource{quantity: num}
   end
+
+  @doc """
+
+  I help create a completely empty resource, with a given term as the
+  suffix.
+
+  This is mainly helpful in testing, as we can create unique empty
+  resources.
+
+  ## Parameters
+
+    - `suffix` - any term that will be turned into a binary for testing
+
+  ## Output
+
+    - The empty resource
+
+  """
+  @spec make_empty(term()) :: t()
+  def make_empty(suffix) do
+    %Resource{quantity: 0, suffix: :erlang.term_to_binary(suffix)}
+  end
 end
 
 defimpl Anoma.Intent, for: Anoma.Resource do
