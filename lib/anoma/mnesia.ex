@@ -34,6 +34,12 @@ defmodule Anoma.Mnesia do
     Anoma.Block.create_table()
   end
 
+  def attach() do
+    :mnesia.stop()
+    :mnesia.start()
+    :mnesia_rocksdb.register()
+  end
+
   # TODO Present the table nicely
   @doc """
 

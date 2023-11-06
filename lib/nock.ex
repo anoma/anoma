@@ -128,6 +128,22 @@ defmodule Nock do
     }
   end
 
+  # scry: magically read from storage.
+  def nock(subject, [12, type_formula | subformula], jettedness) do
+    try do
+      # type information ignored for now
+      {:ok, _type_result} = nock(subject, type_formula, jettedness)
+      # the sub result is a fully qualified key into storage.
+      {:ok, sub_result} = nock(subject, subformula, jettedness)
+      # this blocks until available
+      IO.inspect(sub_result, label: "scrying key")
+      {:ok, value} = Anoma.Node.Storage.blocking_read(sub_result)
+      {:ok, value}
+    rescue
+      _ in MatchError -> :error
+    end
+  end
+
   # generic case: use naive nock to reduce once.
   def nock(subject, formula, jettedness) do
     naive_nock(subject, formula, jettedness)
