@@ -12,7 +12,8 @@ defmodule Anoma.Node.Executor do
   def init(name) do
     children = [
       {Anoma.Node.Executor.Communicator, name: name},
-      {Anoma.Node.Executor.Primary, init: [], name: name}
+      {Anoma.Node.Executor.Primary, init: [], name: name},
+      {DynamicSupervisor, name: Anoma.Node.WorkerPool, strategy: :one_for_one}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

@@ -32,5 +32,9 @@ anoma-*.tar
 *.*~
 \#*\#
 
+# Mnesia
+Mnesia*/
+
+
 # VSCode git ignore
 .vscode/
