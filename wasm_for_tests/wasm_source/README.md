@@ -1,4 +1,4 @@
-# WASM source code in Rust
+# Rust-based WASM Implementations for Transaction and Validity Testing
 
 This crate contains WASM implementations of various transactions and validity predicates, used for testing.
 
