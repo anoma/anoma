@@ -82,7 +82,14 @@ defmodule Anoma.Logic do
   # These are the known ops, not the full set.
   # these are what will be compiled
 
-  @type compiled_op() :: Lt.t() | Branch.t() | Neg.t() | Mul.t() | Add.t() | Inc.t() | number()
+  @type compiled_op() ::
+          Lt.t()
+          | Branch.t()
+          | Neg.t()
+          | Mul.t()
+          | Add.t()
+          | Inc.t()
+          | number()
 
   @typedoc """
 

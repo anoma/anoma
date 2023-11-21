@@ -25,9 +25,18 @@ defmodule AnomaTest.Communicator do
       |> PartialTx.add_input(%Anoma.Resource{quantity: 2, logic: 1})
 
     assert Communicator.new_transactions(:p_exec_com, [empty_tx])
-    assert Communicator.new_transactions(:p_exec_com, [empty_tx, successful_tx])
+
+    assert Communicator.new_transactions(:p_exec_com, [
+             empty_tx,
+             successful_tx
+           ])
+
     assert Communicator.new_transactions(:p_exec_com, [failing_tx]) == false
-    assert Communicator.new_transactions(:p_exec_com, [failing_tx, successful_tx]) == false
+
+    assert Communicator.new_transactions(:p_exec_com, [
+             failing_tx,
+             successful_tx
+           ]) == false
 
     Node.shutdown(supervisor)
   end

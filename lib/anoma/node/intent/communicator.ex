@@ -21,7 +21,11 @@ defmodule Anoma.Node.Intent.Communicator do
   end
 
   def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, Utility.name(arg, &Utility.com_name/1))
+    GenServer.start_link(
+      __MODULE__,
+      arg,
+      Utility.name(arg, &Utility.com_name/1)
+    )
   end
 
   ############################################################
@@ -98,7 +102,10 @@ defmodule Anoma.Node.Intent.Communicator do
 
   @spec broadcast_intent(t(), Intent.t()) :: :ok
   defp broadcast_intent(com, intent) do
-    Utility.broadcast(MapSet.put(com.subscribers, com.pool), {:new_intent, intent})
+    Utility.broadcast(
+      MapSet.put(com.subscribers, com.pool),
+      {:new_intent, intent}
+    )
   end
 
   @spec broadcast_intents(t(), GenServer.server()) :: :ok
