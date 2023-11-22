@@ -150,7 +150,7 @@ defmodule Nock do
       {:ok, sub_result} = nock(subject, subformula, jettedness)
       # this blocks until available
       IO.inspect(sub_result, label: "scrying key")
-      {:ok, value} = Anoma.Node.Storage.blocking_read(sub_result)
+      {:ok, value} = Anoma.Node.Storage.blocking_read_id(sub_result)
       {:ok, value}
     rescue
       _ in MatchError -> :error
