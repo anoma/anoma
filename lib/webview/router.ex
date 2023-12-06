@@ -18,6 +18,7 @@ defmodule Webview.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/ptx", PtxLog
   end
 
   # Other scopes may use custom stacks.
