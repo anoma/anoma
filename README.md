@@ -67,3 +67,22 @@ iex(4)> ExUnit.run
 iex(5)> r AnomaTest.PartialTx
 iex(6)> ExUnit.run
 ```
+
+Tmp cheatsheet:
+
+Starting phoenix:
+
+```
+$ iex -S mix phx.server
+iex(1)> Supervisor.start_link([{Phoenix.PubSub, name: Webview.PubSub}],  [strategy: :one_for_one, name: Webview.Supervisor])
+iex(2)> Webview.Endpoint.start_link
+```
+
+Setup for running tx flow demo:
+```
+Anoma.Node.Ordering.start_link
+Anoma.Node.Storage.start_link
+Anoma.Node.Storage.reset
+import Anoma.Tx
+import Anoma.Node.Ordering
+```
