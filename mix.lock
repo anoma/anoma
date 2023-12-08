@@ -1,5 +1,6 @@
 %{
   "dialyxir": {:hex, :dialyxir, "1.4.1", "a22ed1e7bd3a3e3f197b68d806ef66acb61ee8f57b3ac85fc5d57354c5482a93", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "84b795d6d7796297cca5a3118444b80c7d94f7ce247d49886e7c291e1ae49801"},
+  "enacl": {:hex, :enacl, "1.2.1", "7776480b9b3d42a51d66dbbcbf17fa3d79285b3d2adcb4d5b5bd0b70f0ef1949", [:rebar3], [], "hexpm", "67bbbeddd2564dc899a3dcbc3765cd6ad71629134f1e500a50ec071f0f75e552"},
   "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
   "hut": {:hex, :hut, "1.3.0", "71f2f054e657c03f959cf1acc43f436ea87580696528ca2a55c8afb1b06c85e7", [:"erlang.mk", :rebar, :rebar3], [], "hexpm", "7e15d28555d8a1f2b5a3a931ec120af0753e4853a4c66053db354f35bf9ab563"},
   "mnesia_rocksdb": {:git, "https://github.com/mariari/mnesia_rocksdb", "b07f7438af140947efed633c0391f0db839d95fb", []},

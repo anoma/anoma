@@ -2,11 +2,11 @@
 !.
 =~  %909
 ~%  %k.909  ~  ~
-::  layer 0: version stub (+3)
+::  layer 0: version stub (+7)
 |%
 ++  anoma  +
 --
-::  layer 1: basic arithmetic (+1)
+::  layer 1: basic arithmetic (+3)
 ~%  %one  +  ~
 |%
 ++  dec  ::  +342
@@ -75,5 +75,39 @@
   ^-  @
   ?<  =(0 b)
   (sub a (mul b (div a b)))
+--
+::  layer 2: fancy arithmetic (+1)
+|%
+++  modulo  ::  name this 'mod' and rename 'mod' to 'rem'?
+  |_  modulus=@
+    ++  reduce
+      |=  a=@
+      ^-  @
+      (mod a modulus)
+    ++  congruent
+      |=  [a=@ b=@]
+      .=  (reduce a)  (reduce b)
+    ++  add
+      |=  [a=@ b=@]
+      ^-  @
+      (reduce (^add a b))
+    ++  sub
+      |=  [a=@ b=@]
+      ^-  @
+      (reduce (^sub (^add modulus a) (reduce b)))
+    ++  mul
+      |=  [a=@ b=@]
+      ^-  @
+      (reduce (^mul a b))
+    ++  neg
+      |=  a=@
+      ^-  @
+      (^sub modulus (reduce a))
+    ++  inv  ::  only works in prime fields
+      !!
+    ++  div  ::  only works in prime fields
+      |=  [a=@ b=@]
+      (mul a (inv b))
+  --
 --
 ==

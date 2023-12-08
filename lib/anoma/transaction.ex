@@ -1,41 +1,94 @@
 defmodule Anoma.Transaction do
   @moduledoc """
-  I represent an Anoma Transaction
-
-  I can be viewed as a wrapper over `Anoma.Intent` where I contain the
-  intents used in a transaction
-
+  I represent a resource machine transaction
   """
+
   alias __MODULE__
   use TypedStruct
 
-  typedstruct do
-    field(:intents, list(Anoma.Intent.t()), default: [])
-    field(:transaction, Anoma.PartialTx.t(), require: true)
+  import Anoma.Resource
+  alias Anoma.Delta
+
+  # doesn't have all the fields yet.
+  typedstruct enforce: true do
+    field(:roots, list(binary()), default: [])
+    field(:commitments, list(binary()), default: [])
+    field(:nullifiers, list(binary()), default: [])
+    field(:proofs, list(Anoma.ProofRecord.t()), default: [])
+    field(:delta, Anoma.Delta.t(), default: %{})
+    field(:extra, list(binary()), default: [])
+    field(:preference, term(), default: nil)
   end
 
-  @doc """
+  def verify(transaction) do
+    # the transparent proofs are just all the involved resources
+    resources =
+      for proof_record <- transaction.proofs do
+        proof_record.proof.resource
+      end
 
-  Creates a new transaction. the `intents_used` are optional, as one
-  can create a fully formed transaction without any intents!
+    # todo: check that this is an exact partition
+    {committed, nullified} =
+      partition_resources(resources, transaction.commitments, transaction.nullifiers)
 
-  ### Parameters
+    committed_delta_sum =
+      for %{resource: r} <- committed, reduce: %{} do
+        sum ->
+          IO.inspect(sum, label: "running committed delta sum")
+          Delta.add(sum, delta(r))
+      end
 
-    - `transaction` - the transaction
-    - `intents_used` - the intents used in forming the transaction
+    IO.inspect(committed_delta_sum, label: "committed delta sum")
 
-  ### Output
+    nullified_delta_sum =
+      for %{resource: r} <- nullified, reduce: %{} do
+        sum ->
+          IO.inspect(sum, label: "running nullified delta sum")
+          Delta.add(sum, delta(r))
+      end
 
-     - The Transaction itself
-  """
-  @spec new(Anoma.PartialTx.t(), list(Anoma.Intent.t())) :: t()
-  def new(transaction, intents_used \\ []) do
-    %Transaction{intents: intents_used, transaction: transaction}
+    IO.inspect(nullified_delta_sum, label: "nullified delta sum")
+
+    tx_delta_sum = Delta.sub(committed_delta_sum, nullified_delta_sum)
+    IO.inspect(tx_delta_sum, label: "summed deltas")
+
+    delta_valid = tx_delta_sum == transaction.delta
+    IO.inspect(delta_valid, label: "delta valid")
+
+    # now run the resource logics, passing the transactions
+    logic_valid =
+      for resource <- resources, reduce: true do
+        acc ->
+          result = run_resource_logic(transaction, resource)
+          IO.inspect(result, label: "ran resource logic")
+          acc && result
+      end
+
+    IO.inspect(logic_valid, label: "all logics valid")
+
+    delta_valid && logic_valid
   end
 
-  @spec intents(t()) :: list(Anoma.Intent.t())
-  def intents(t), do: t.intents
+  # todo: not efficient
+  def partition_resources(resources, commitments, nullifiers) do
+    {committed_set, nullified_set} =
+      for r <- resources,
+          c <- commitments,
+          n <- nullifiers,
+          reduce: {MapSet.new(), MapSet.new()} do
+        {committed, nullified} ->
+          cond do
+            c |> commits_to(r) ->
+              {MapSet.put(committed, %{commitment: c, resource: r}), nullified}
 
-  @spec transaction(t()) :: Anoma.PartialTx.t()
-  def transaction(t), do: t.transaction
+            n |> nullifies(r) ->
+              {committed, MapSet.put(nullified, %{nullifier: n, resource: r})}
+
+            true ->
+              {committed, nullified}
+          end
+      end
+
+    {MapSet.to_list(committed_set), MapSet.to_list(nullified_set)}
+  end
 end
