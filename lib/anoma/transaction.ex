@@ -31,6 +31,12 @@ defmodule Anoma.Transaction do
     {committed, nullified} =
       partition_resources(resources, transaction.commitments, transaction.nullifiers)
 
+    resource_set_valid =
+      length(committed) == length(transaction.commitments) &&
+        length(nullified) == length(transaction.nullifiers)
+
+    IO.inspect(resource_set_valid, label: "resource set valid")
+
     committed_delta_sum =
       for %{resource: r} <- committed, reduce: %{} do
         sum ->
@@ -59,14 +65,14 @@ defmodule Anoma.Transaction do
     logic_valid =
       for resource <- resources, reduce: true do
         acc ->
-          result = run_resource_logic(transaction, resource)
+          result = transparent_run_resource_logic(transaction, resource)
           IO.inspect(result, label: "ran resource logic")
           acc && result
       end
 
     IO.inspect(logic_valid, label: "all logics valid")
 
-    delta_valid && logic_valid
+    resource_set_valid && delta_valid && logic_valid
   end
 
   # todo: not efficient

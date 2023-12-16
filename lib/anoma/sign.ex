@@ -9,12 +9,12 @@ defmodule Anoma.Sign do
     :enacl.crypto_sign_ed25519_keypair()
   end
 
-  @spec sign(binary(), ed25519_secret()) :: binary()
+  @spec sign(binary(), ed25519_secret()) :: {:ok, binary()} | {:error, term()}
   def sign(message, secret) do
     :enacl.sign(message, secret)
   end
 
-  @spec verify(binary, ed25519_public()) :: binary()
+  @spec verify(binary, ed25519_public()) :: {:ok, binary()} | {:error, term()}
   def verify(signed_message, public) do
     :enacl.sign_open(signed_message, public)
   end

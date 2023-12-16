@@ -112,7 +112,7 @@ defmodule Anoma.Resource do
     Enum.any?(resources, fn r -> nullifier |> nullifies(r) end)
   end
 
-  def run_resource_logic(transaction, resource) do
+  def transparent_run_resource_logic(transaction, resource) do
     logic = resource.logic
     result = Nock.nock(logic, [9, 2, 0 | 1])
     IO.inspect(result, label: "nock result")
