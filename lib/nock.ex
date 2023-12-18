@@ -5,10 +5,35 @@ defmodule Nock do
 
   @dialyzer :no_improper_lists
 
+  @layer_1_context_mug 17_654_928_022_549_292_273
+
+  # hardcoded jet registry
+  @jet_registry %{
+    6_149_546_978_850_415_302 =>
+      {"dec", 7, @layer_1_context_mug, &Nock.Jets.dec/1},
+    13_456_140_584_432_748_094 =>
+      {"add", 7, @layer_1_context_mug, &Nock.Jets.add/1},
+    14_801_825_384_048_474_882 =>
+      {"sub", 7, @layer_1_context_mug, &Nock.Jets.sub/1},
+    16_448_669_966_680_839_947 =>
+      {"lth", 7, @layer_1_context_mug, &Nock.Jets.lth/1},
+    9_593_574_083_496_825_465 =>
+      {"lte", 7, @layer_1_context_mug, &Nock.Jets.lte/1},
+    1_289_252_054_839_247_911 =>
+      {"gth", 7, @layer_1_context_mug, &Nock.Jets.gth/1},
+    11_860_242_327_310_494_912 =>
+      {"gte", 7, @layer_1_context_mug, &Nock.Jets.gte/1},
+    1_648_022_014_956_696_243 =>
+      {"mul", 7, @layer_1_context_mug, &Nock.Jets.mul/1},
+    9_385_224_608_484_213_408 =>
+      {"div", 7, @layer_1_context_mug, &Nock.Jets.div/1},
+    9_865_107_020_110_751_778 =>
+      {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1}
+  }
+
   # temporary stub functions for jet scaffolding
   def get_jet(battery_mug) do
-    # simulating Map fetch/2 not finding the key
-    :error
+    Map.fetch(@jet_registry, battery_mug)
   end
 
   def put_jet(_battery_mug, _jet_info) do
@@ -30,6 +55,7 @@ defmodule Nock do
 
     case maybe_battery_mug do
       {:ok, battery_mug} ->
+        # IO.inspect(battery_mug, label: "mugged battery")
         maybe_jet = get_jet(battery_mug)
 
         case maybe_jet do
@@ -38,7 +64,7 @@ defmodule Nock do
             nock(core, [2 | [[0 | 1] | [0 | axis]]])
 
           # a jet exists. mug the parent too
-          {_label, parent_axis, parent_mug, jet_function} ->
+          {:ok, {_label, parent_axis, parent_mug, jet_function}} ->
             maybe_parent = Noun.axis(parent_axis, core)
 
             case maybe_parent do
@@ -282,7 +308,9 @@ defmodule Nock do
     [decrement_arm(), sample | context]
   end
 
-  # compiled output from hoon/anoma.hoon
+  # compiled and evaluated output from hoon/anoma.hoon.
+  # eventually, will be replaced with merely compiled output, with
+  # evaluation to take place during nock vm bootstrapping.
   stdlib_string = """
       [ [ [ 7
             [ 8
