@@ -53,9 +53,24 @@ Where after each tests it caches, so you will need to recompile the
 test you want to rerun. Overall this works fine.
 
 
+Further one can run specific tests or filtered categories this way as well:
 
-However if every test is slow, or you don't want to run every test in
-a module, then the following will be more useful
+```elixir
+
+% MIX_ENV=test iex -S mix
+
+iex(1)> # Running a single test
+iex(2)> Mix.Tasks.Test.run([])
+iex(3)> AnomaTest.Node."test node works"(nil)
+iex(4)> ExUnit.configure(exclude: [:test], include: [describe: "hello"]) # test all hello describe blocks
+iex(5)> r AnomaTest.PartialTx
+iex(6)> ExUnit.run # or Mix.Tasks.Test.run([])
+
+```
+
+
+However if running every test at startup is slow, then the following
+will be a better way to load the tests.
 
 ```elixir
 % iex -S mix
