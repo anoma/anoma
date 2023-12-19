@@ -48,7 +48,8 @@ defmodule Anoma.Block do
   """
   @spec create(
           Base.t(),
-          Serializer.public_key() | {Serializer.public_key(), Serializer.private_key()},
+          Serializer.public_key()
+          | {Serializer.public_key(), Serializer.private_key()},
           non_neg_integer()
         ) :: t()
 
@@ -71,7 +72,8 @@ defmodule Anoma.Block do
   end
 
   # create data which can easily be signed
-  @spec signable(Base.t(), Serializer.public_key(), non_neg_integer()) :: binary()
+  @spec signable(Base.t(), Serializer.public_key(), non_neg_integer()) ::
+          binary()
   defp signable(block, pub_key, round) do
     Serializer.serialize({Base.digest(block), round, pub_key})
   end
@@ -86,11 +88,18 @@ defmodule Anoma.Block do
 
   @spec encode(t()) :: tuple()
   def encode(block) do
-    {__MODULE__, block.id, block.block, block.round, block.pub_key, block.signature}
+    {__MODULE__, block.id, block.block, block.round, block.pub_key,
+     block.signature}
   end
 
   def decode({__MODULE__, id, block, round, pub_key, sig}) do
-    %Block{id: id, block: block, round: round, pub_key: pub_key, signature: sig}
+    %Block{
+      id: id,
+      block: block,
+      round: round,
+      pub_key: pub_key,
+      signature: sig
+    }
   end
 
   @doc """
@@ -123,7 +132,10 @@ defmodule Anoma.Block do
   def create_table(table_key, rocks?) do
     resp =
       if rocks? do
-        :mnesia.create_table(table_key, attributes: attributes(), rocksdb_copies: [node()])
+        :mnesia.create_table(table_key,
+          attributes: attributes(),
+          rocksdb_copies: [node()]
+        )
       else
         :mnesia.create_table(table_key, attributes: attributes())
       end
