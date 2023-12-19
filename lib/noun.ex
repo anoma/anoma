@@ -7,12 +7,17 @@ defmodule Noun do
 
   @dialyzer :no_improper_lists
 
-  # why are these not in the standard library
-  defguard is_even(term) when is_integer(term) and rem(term, 2) == 0
-  defguard is_odd(term) when is_integer(term) and rem(term, 2) == 1
+  require Integer
 
+  # erlang has something called 'atom' already, so we say is_noun_atom
+  defguard is_noun_atom(term) when is_integer(term) and term >= 0
+  defguard is_noun_cell(term) when is_list(term) and term != []
+  defguard is_even(term) when is_noun_atom(term) and Integer.is_even(term)
+  defguard is_odd(term) when is_noun_atom(term) and Integer.is_odd(term)
+
+  @testing_noun Noun.Format.parse_always("[[4 5] [12 13] 7]")
   def testing_noun do
-    [[4 | 5] | [[12 | 13] | 7]]
+    @testing_noun
   end
 
   def axis(axis, noun) do
