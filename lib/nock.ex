@@ -45,6 +45,7 @@ defmodule Nock do
   # top-level nock 4k interpreter.
 
   # direct calls should be jetted
+  @spec nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
   def nock(subject, formula) do
     nock(subject, formula, :jetted)
   end
@@ -141,6 +142,8 @@ defmodule Nock do
   end
 
   # generic case: use naive nock to reduce once.
+  @spec nock(Noun.t(), Noun.t(), :jetted | :unjetted_once | :unjetted) ::
+          {:ok, Noun.t()} | :error
   def nock(subject, formula, jettedness) do
     naive_nock(subject, formula, jettedness)
   end
@@ -149,10 +152,13 @@ defmodule Nock do
   # note: this must recurse into nock/2 (or nock/3), not itself.
 
   # direct calls of naive_nock should be unjetted
+  @spec naive_nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
   def naive_nock(subject, formula) do
     naive_nock(subject, formula, :unjetted)
   end
 
+  @spec naive_nock(Noun.t(), Noun.t(), :jetted | :unjetted_once | :unjetted) ::
+          {:ok, Noun.t()} | :error
   def naive_nock(subject, formula, jettedness) do
     try do
       case formula do
@@ -659,6 +665,7 @@ defmodule Nock do
   # evaluated at compile time.
   @stdlib_core_val Noun.Format.parse_always(stdlib_string)
 
+  @spec stdlib_core :: Noun.t()
   def stdlib_core do
     @stdlib_core_val
   end

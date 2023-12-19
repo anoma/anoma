@@ -5,11 +5,13 @@ defmodule Noun.Format do
 
   @dialyzer :no_improper_lists
 
+  @spec parse_always(String.t()) :: Noun.t()
   def parse_always(string) do
     {:ok, parsed} = parse(string)
     parsed
   end
 
+  @spec parse(String.t()) :: {:ok, Noun.t()} | :error
   def parse(string) do
     # the hoon compiler emits integers with '.' thousands separators
     # it's easier to pre-strip these than to parse them

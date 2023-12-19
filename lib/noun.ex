@@ -9,6 +9,8 @@ defmodule Noun do
 
   require Integer
 
+  @type t() :: non_neg_integer() | nonempty_improper_list(t(), t())
+
   # erlang has something called 'atom' already, so we say is_noun_atom
   defguard is_noun_atom(term) when is_integer(term) and term >= 0
   defguard is_noun_cell(term) when is_list(term) and term != []
@@ -20,6 +22,7 @@ defmodule Noun do
     @testing_noun
   end
 
+  @spec axis(non_neg_integer(), t()) :: {:ok, t()} | :error
   def axis(axis, noun) do
     try do
       case axis do
@@ -57,6 +60,7 @@ defmodule Noun do
     end
   end
 
+  @spec replace(non_neg_integer(), t(), t()) :: {:ok, t()} | :error
   def replace(axis, replacement, noun) do
     try do
       case axis do
@@ -84,9 +88,48 @@ defmodule Noun do
     end
   end
 
+  @spec mug(t()) :: non_neg_integer()
   def mug(noun) do
     :erlang.term_to_binary(noun)
     # seed: %mug
     |> XXHash.xxh64(6_780_269)
+  end
+
+  # maybe obviate these by treating [] as a zero?
+  @spec list_erlang_to_nock([]) :: 0
+  def list_erlang_to_nock([]) do
+    0
+  end
+
+  @spec list_erlang_to_nock(nonempty_list(t())) ::
+          nonempty_improper_list(t(), t())
+  def list_erlang_to_nock([h | t]) do
+    [h | list_erlang_to_nock(t)]
+  end
+
+  @spec list_nock_to_erlang(0) :: []
+  def list_nock_to_erlang(0) do
+    []
+  end
+
+  @spec list_nock_to_erlang(nonempty_improper_list(t(), t())) :: list(t())
+  def list_nock_to_erlang([h | t]) do
+    [h | list_nock_to_erlang(t)]
+  end
+
+  @spec atom_integer_to_binary(0) :: <<>>
+  # special case: zero is the empty binary
+  def atom_integer_to_binary(0) do
+    <<>>
+  end
+
+  @spec atom_integer_to_binary(pos_integer()) :: binary()
+  def atom_integer_to_binary(integer) do
+    :binary.encode_unsigned(integer, :little)
+  end
+
+  @spec atom_binary_to_integer(binary()) :: non_neg_integer()
+  def atom_binary_to_integer(binary) do
+    :binary.decode_unsigned(binary, :little)
   end
 end
