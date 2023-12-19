@@ -10,7 +10,8 @@ defmodule Anoma.MixProject do
       deps: deps(),
       dialyzer: [
         plt_local_path: "plts/anoma.plt",
-        plt_core_path: "plts/core.plt"
+        plt_core_path: "plts/core.plt",
+        flags: ["-Wno_improper_lists"]
       ]
     ]
   end
