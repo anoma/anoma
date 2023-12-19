@@ -17,11 +17,6 @@ defmodule Noun do
   defguard is_even(term) when is_noun_atom(term) and Integer.is_even(term)
   defguard is_odd(term) when is_noun_atom(term) and Integer.is_odd(term)
 
-  @testing_noun Noun.Format.parse_always("[[4 5] [12 13] 7]")
-  def testing_noun do
-    @testing_noun
-  end
-
   @spec axis(non_neg_integer(), t()) :: {:ok, t()} | :error
   def axis(axis, noun) do
     try do
