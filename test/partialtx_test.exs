@@ -17,11 +17,15 @@ defmodule AnomaTest.PartialTx do
 
     assert PartialTx.balanced(tx)
 
-    tx = tx |> PartialTx.add_input(resource_1) |> PartialTx.add_input(resource_2)
+    tx =
+      tx |> PartialTx.add_input(resource_1) |> PartialTx.add_input(resource_2)
 
     assert PartialTx.balanced(tx) == false
 
-    tx = tx |> PartialTx.add_output(resource_1) |> PartialTx.add_output(resource_2)
+    tx =
+      tx
+      |> PartialTx.add_output(resource_1)
+      |> PartialTx.add_output(resource_2)
 
     assert PartialTx.balanced(tx)
   end
@@ -33,7 +37,10 @@ defmodule AnomaTest.PartialTx do
 
     assert PartialTx.balanced(tx)
 
-    tx = tx |> PartialTx.add_input(resource_1) |> PartialTx.add_output(resource_1)
+    tx =
+      tx
+      |> PartialTx.add_input(resource_1)
+      |> PartialTx.add_output(resource_1)
 
     assert PartialTx.balanced(tx)
 

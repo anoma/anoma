@@ -23,13 +23,18 @@ defmodule Anoma.PartialTx do
 
   @spec add_output(t(), Resource.t()) :: t()
   def add_output(partial, output) do
-    %PartialTx{partial | outputs: update_resource_set(partial.outputs, output)}
+    %PartialTx{
+      partial
+      | outputs: update_resource_set(partial.outputs, output)
+    }
   end
 
   @spec balanced(t()) :: boolean()
   def balanced(%PartialTx{inputs: inputs, outputs: outputs}) do
     inputs
-    |> Map.merge(outputs, fn _k, i, o -> add_quantities(i) - add_quantities(o) end)
+    |> Map.merge(outputs, fn _k, i, o ->
+      add_quantities(i) - add_quantities(o)
+    end)
     |> Enum.all?(fn {_k, v} -> v == 0 end)
   end
 
@@ -119,7 +124,10 @@ defmodule Anoma.PartialTx do
 
   @spec sub_quantities(Resource.t(), Resource.t()) :: Resource.t()
   defp sub_quantities(resource_1, resource_2) do
-    %Resource{resource_1 | quantity: resource_1.quantity - resource_2.quantity}
+    %Resource{
+      resource_1
+      | quantity: resource_1.quantity - resource_2.quantity
+    }
   end
 end
 

@@ -29,7 +29,11 @@ defmodule Anoma.Node.Executor.Communicator do
   end
 
   def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, Utility.name(arg, &Utility.com_name/1))
+    GenServer.start_link(
+      __MODULE__,
+      arg,
+      Utility.name(arg, &Utility.com_name/1)
+    )
   end
 
   ############################################################
@@ -37,7 +41,8 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   # Transactions
-  @spec new_transactions(pid(), Enumerable.t(PartialTx.t())) :: Primary.response()
+  @spec new_transactions(pid(), Enumerable.t(PartialTx.t())) ::
+          Primary.response()
   def new_transactions(communicator, transactions) do
     GenServer.call(communicator, {:transactions, transactions})
   end
@@ -56,7 +61,8 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   # make this more interesting later
-  @spec broadcast_transactions(t(), Enumerable.t(PartialTx.t())) :: Primary.response()
+  @spec broadcast_transactions(t(), Enumerable.t(PartialTx.t())) ::
+          Primary.response()
   defp broadcast_transactions(agent, trans) do
     Primary.new_transactions(agent.primary, trans)
   end

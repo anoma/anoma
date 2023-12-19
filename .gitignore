@@ -31,3 +31,6 @@ anoma-*.tar
 # Emacs git ignore
 *.*~
 \#*\#
+
+# VSCode git ignore
+.vscode/

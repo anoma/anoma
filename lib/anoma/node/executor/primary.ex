@@ -38,7 +38,8 @@ defmodule Anoma.Node.Executor.Primary do
     GenServer.call(primary, :dump_state)
   end
 
-  @spec new_transactions(GenServer.server(), Enumerable.t(PartialTx.t())) :: response()
+  @spec new_transactions(GenServer.server(), Enumerable.t(PartialTx.t())) ::
+          response()
   def new_transactions(primary, transactions) do
     GenServer.call(primary, {:transactions, transactions})
   end

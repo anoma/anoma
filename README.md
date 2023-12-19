@@ -1,44 +1,48 @@
 # Anoma
 
-**TODO: Add description**
+This is an implementation of the Anoma protocol, whose specs can be found [here](https://specs.anoma.net/alpha).
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `anoma` to your list of dependencies in `mix.exs`:
+To install the dependencies as well as Anoma run:
 
-```elixir
-def deps do
-  [
-    {:anoma, "~> 0.1.0"}
-  ]
-end
+```bash
+mix deps.get
+mix compile
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/anoma>.
+To start an Anoma instance run one of these:
 
+```bash
+iex -S mix # starts an interactive shell
+mix run --no-halt # starts a non-interactive shell
+```
 
-## Contributing
+## Development
 
-This codebase follows a git style simialr to
-[git](https://git-scm.com/) or
-[linux](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git).
+To connect a shell to a running instance:
 
-New code should be based on `base`, and no attempt to keep it up to
-sync with `main` should be had. When one's topic is ready just submit
-a PR on github and the maintiner will handle any merge conflicts.
+```bash
+iex --sname foo --cookie anoma -S mix # starts a first node
+# open a new terminal
+iex --sname bar --cookie anoma -S mix # starts a second node
+```
 
-Happy hacking, and don't be afraid to submit patches.
+You can also connect from [livebook](https://livebook.dev) by using the above
+cookie `anoma` under the `runtime` config of livebook.
 
 ## Quick Testing
 
 Using the command line or through vscode is quite slow, I recommend
 not using it, instead here are some alternatives
 
-
 If one is fine running all tests, then the following works:
+
+```bash
+mix test
+```
+
+or
 
 ```elixir
 % MIX_ENV=test iex -S mix
@@ -52,10 +56,23 @@ iex(3)> Mix.Tasks.Test.run([]) # runs only the single module
 Where after each tests it caches, so you will need to recompile the
 test you want to rerun. Overall this works fine.
 
+Further one can run specific tests or filtered categories this way as well:
 
+```elixir
 
-However if every test is slow, or you don't want to run every test in
-a module, then the following will be more useful
+% MIX_ENV=test iex -S mix
+
+iex(1)> # Running a single test
+iex(2)> Mix.Tasks.Test.run([])
+iex(3)> AnomaTest.Node."test node works"(nil)
+iex(4)> ExUnit.configure(exclude: [:test], include: [describe: "hello"]) # test all hello describe blocks
+iex(5)> r AnomaTest.PartialTx
+iex(6)> ExUnit.run # or Mix.Tasks.Test.run([])
+
+```
+
+However if running every test at startup is slow, then the following
+will be a better way to load the tests.
 
 ```elixir
 % iex -S mix
@@ -67,3 +84,15 @@ iex(4)> ExUnit.run
 iex(5)> r AnomaTest.PartialTx
 iex(6)> ExUnit.run
 ```
+
+## Contributing
+
+This codebase follows a git style similar to
+[git](https://git-scm.com/) or
+[linux](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git).
+
+New code should be based on `base`, and no attempt to keep it up to
+sync with `main` should be had. When one's topic is ready just submit
+a PR on github and the maintiner will handle any merge conflicts.
+
+Happy hacking, and don't be afraid to submit patches.
