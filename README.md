@@ -85,6 +85,18 @@ iex(5)> r AnomaTest.PartialTx
 iex(6)> ExUnit.run
 ```
 
+## Launching Phoenix Server
+
+Using `mix phx.server` does not work, however, we can launch the server manually
+using
+
+```elixir
+% iex -S mix phx.server
+
+iex(1)> Supervisor.start_link([{Phoenix.PubSub, name: Webview.PubSub}],  [strategy: :one_for_one, name: Webview.Supervisor])
+iex(2)> AnomaWeb.Endpoint.start_link
+```
+
 ## Contributing
 
 This codebase follows a git style similar to
