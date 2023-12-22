@@ -114,7 +114,8 @@ defmodule Anoma.Resource do
 
   def transparent_run_resource_logic(transaction, resource) do
     logic = resource.logic
-    result = Nock.nock(logic, [9, 2, 0 | 1])
+    arg = Anoma.Transaction.to_noun(transaction)
+    result = Nock.nock(logic, [9, 2, 10, [6, 1 | arg], 0 | 1])
     IO.inspect(result, label: "nock result")
 
     case result do

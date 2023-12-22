@@ -20,6 +20,12 @@ defmodule Anoma.Transaction do
     field(:preference, term(), default: nil)
   end
 
+  # stub for testing. real function will convert the whole tx
+  # (when that's ready on the nock side)
+  def to_noun(transaction = %Transaction{}) do
+    Delta.to_noun(transaction.delta)
+  end
+
   def verify(transaction) do
     # the transparent proofs are just all the involved resources
     resources =

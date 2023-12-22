@@ -110,4 +110,33 @@
       (mul a (inv b))
   --
 --
+::  layer n: resources
+|%
++$  resource
+  $:
+    logic=*
+    label=@t
+    quantity=@
+    data=@
+    eph=?
+    nonce=@
+    npk=@
+    rseed=@
+  ==
++$  commitment  @
++$  nullifier  @
++$  proof  (list resource)
+::  true = positive; todo: use map
++$  delta  (list [denom=@ sign=? amount=@])
++$  transaction
+  $:
+    roots=(list @)
+    commitments=(list commitment)
+    nullifiers=(list nullifier)
+    proofs=(list proof)
+    delta=(list delta)
+    extra=@
+    preference=~
+  ==
+--
 ==
