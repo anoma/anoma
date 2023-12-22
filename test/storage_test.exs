@@ -97,4 +97,30 @@ defmodule AnomaTest.Storage do
                {:atomic, [{storage.order, testing_atom, 3}]}
     end
   end
+
+  describe "Snapshots" do
+    test "snapshots properly put", %{storage: storage} do
+      snapshot_storage = :snapshot_super_secret
+      assert {:atomic, :ok} = Storage.put_snapshot(storage, snapshot_storage)
+      assert {:ok, _} = Storage.get(storage, snapshot_storage)
+    end
+
+    test "snapshots properly get the latest", %{storage: storage} do
+      snapshot_storage = :super_hot
+      testing_atom = 111_222_333_444_555_666
+      Storage.write_at_order(storage, testing_atom, 10, 3)
+      assert {:atomic, :ok} = Storage.put_snapshot(storage, snapshot_storage)
+      assert {:ok, snapshot} = Storage.get(storage, snapshot_storage)
+      assert Storage.in_snapshot(snapshot, testing_atom) == 3
+
+      assert Storage.get_at_snapshot(snapshot, testing_atom) ==
+               {:ok, 10}
+    end
+
+    test "missing key gives us nil", %{storage: storage} do
+      nonsense_atom = :very_good_atom
+      assert {:atomic, snapshot} = Storage.snapshot_order(storage)
+      assert Storage.get_at_snapshot(snapshot, nonsense_atom)
+    end
+  end
 end
