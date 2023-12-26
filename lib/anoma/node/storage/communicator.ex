@@ -11,6 +11,7 @@ defmodule Anoma.Node.Storage.Communicator do
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Utility
+  alias Anoma.Storage
 
   typedstruct do
     field(:primary, atom(), require: true)
@@ -54,6 +55,9 @@ defmodule Anoma.Node.Storage.Communicator do
           :error | {:ok, any()}
   defdelegate new_order(ordering, ordered, instrumentation), to: Ordering
 
+  @spec get_storage(GenServer.server()) :: Storage.t()
+  defdelegate get_storage(ordering), to: Ordering
+
   @spec reset(GenServer.server()) :: :ok
   defdelegate reset(ordering), to: Ordering
   ############################################################
@@ -76,6 +80,10 @@ defmodule Anoma.Node.Storage.Communicator do
 
   def handle_call({:new_order, trans, instrumentation}, _from, com) do
     {:reply, Ordering.new_order(com.primary, trans, instrumentation), com}
+  end
+
+  def handle_call(:storage, _from, state) do
+    {:reply, Ordering.get_storage(state.primary()), state}
   end
 
   def handle_cast(:reset, state) do
