@@ -6,7 +6,9 @@ defmodule Nock do
   require Noun
 
   use TypedStruct
+  alias Anoma.Storage
   alias __MODULE__
+  alias Anoma.Node.Storage.Ordering
 
   @type jettedness() ::
           :jetted
@@ -24,6 +26,9 @@ defmodule Nock do
   """
   typedstruct do
     field(:jet, jettedness(), default: :jetted)
+    field(:ordering, GenServer.server() | nil, default: nil)
+    field(:snapshot_path, Noun.t() | nil, default: nil)
+    field(:instrumentation, boolean, default: false)
   end
 
   @dialyzer :no_improper_lists
@@ -130,6 +135,16 @@ defmodule Nock do
   # skip a jet once (must be called with a 9 formula for this to work)
   def nock(subject, formula, environment = %Nock{jet: :unjetted_once}) do
     naive_nock(subject, formula, %Nock{environment | jet: :jetted})
+  end
+
+  # scry: magically read from storage.
+  def nock(subject, [12, type_formula | subformula], environemnt) do
+    with {:ok, _type_result} <- nock(subject, type_formula, environemnt),
+         {:ok, sub_result} <- nock(subject, subformula, environemnt) do
+      read_with_id(sub_result, environemnt)
+    else
+      _ -> :error
+    end
   end
 
   # nock with jet-instrumentation mode.
@@ -691,5 +706,39 @@ defmodule Nock do
   @spec stdlib_core :: Noun.t()
   def stdlib_core do
     @stdlib_core_val
+  end
+
+  ############################################################
+  #                          Helpers                         #
+  ############################################################
+
+  @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
+  def read_with_id(id, env) do
+    ordering = env.ordering
+    inst = env.instrumentation
+
+    if ordering && env.snapshot_path && id do
+      with [id, key | 0] <- id,
+           snap_id = [id | env.snapshot_path],
+           {:ok, snap} <-
+             Ordering.caller_blocking_read_id(ordering, snap_id, inst),
+           instrument(inst, {:snapshot, snap}),
+           {:ok, value} <- Storage.get_at_snapshot(snap, key) do
+        instrument(inst, {:got_value, value})
+        {:ok, value}
+      else
+        _ -> :error
+      end
+    else
+      :error
+    end
+  end
+
+  defp instrument(instrument, {:snapshot, snap}) do
+    if instrument, do: IO.inspect(snap, label: "got snapshot")
+  end
+
+  defp instrument(instrument, {:got_value, value}) do
+    if instrument, do: IO.inspect(value, label: "got value")
   end
 end
