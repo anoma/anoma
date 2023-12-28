@@ -16,16 +16,20 @@ defmodule Anoma.Node.Executor.Communicator do
   alias __MODULE__
   use TypedStruct
   use GenServer
-  alias Anoma.PartialTx
+  alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Utility
-  alias Anoma.Node.Executor.Primary
 
   typedstruct do
-    field(:primary, atom())
+    field(:spawner, atom())
+    field(:ambiant_env, Nock.t())
   end
 
-  def init(name: name) do
-    {:ok, %Communicator{primary: name}}
+  def init(args) do
+    environment =
+      Map.merge(%Nock{}, args |> Enum.into(%{}))
+      |> Map.delete(:name)
+
+    {:ok, %Communicator{spawner: args[:name], ambiant_env: environment}}
   end
 
   def start_link(arg) do
@@ -41,19 +45,70 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   # Transactions
-  @spec new_transactions(pid(), Enumerable.t(PartialTx.t())) ::
-          Primary.response()
-  def new_transactions(communicator, transactions) do
-    GenServer.call(communicator, {:transactions, transactions})
+  @doc """
+  Spawns a new transaction, the returned task has the owner of the
+  person sending in the message
+  """
+  @spec new_transaction(GenServer.server(), Noun.t(), Noun.t()) :: Task.t()
+  def new_transaction(communicator, order, gate) do
+    state = state(communicator)
+    spawn_transactions(order, gate, state)
+  end
+
+  @spec new_transaction(GenServer.server(), Noun.t(), Noun.t(), Nock.t()) ::
+          Task.t()
+  def new_transaction(communicator, order, gate, env) do
+    state = state(communicator)
+    spawn_transactions(order, gate, %Communicator{state | ambiant_env: env})
+  end
+
+  @doc """
+
+  Acts like `new_transaction/3`, but the caller does not care about
+  the response. Instead the response is handled by the pool.
+
+  The user gets back a process so it may keep track of sending
+  messages to this task or terminating the task
+
+  """
+  @spec fire_new_transaction(GenServer.server(), Noun.t(), Noun.t()) :: pid()
+  def fire_new_transaction(communicator, order, gate) do
+    GenServer.call(communicator, {:transaction, order, gate})
+  end
+
+  @spec fire_new_transaction(GenServer.server(), Noun.t(), Noun.t(), Nock.t()) ::
+          pid()
+  def fire_new_transaction(communicator, order, gate, env) do
+    GenServer.call(communicator, {:transaction, order, gate, env})
+  end
+
+  defp state(communicator) do
+    GenServer.call(communicator, :state)
   end
 
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_call({:transactions, trans}, _from, agent) do
-    response = broadcast_transactions(agent, trans)
-    {:reply, response, agent}
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
+  end
+
+  def handle_call({:transaction, order, gate}, _from, state) do
+    task = spawn_transactions(order, gate, state)
+    {:reply, task.pid, state}
+  end
+
+  def handle_call({:transaction, order, gate, env}, _from, state) do
+    task =
+      spawn_transactions(order, gate, %Communicator{state | ambiant_env: env})
+
+    {:reply, task.pid, state}
+  end
+
+  # TODO communicate this information somehow
+  def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
+    {:noreply, state}
   end
 
   ############################################################
@@ -61,9 +116,12 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   # make this more interesting later
-  @spec broadcast_transactions(t(), Enumerable.t(PartialTx.t())) ::
-          Primary.response()
-  defp broadcast_transactions(agent, trans) do
-    Primary.new_transactions(agent.primary, trans)
+  @spec spawn_transactions(Noun.t(), Noun.t(), t()) :: Task.t()
+  defp spawn_transactions(order, gate, state) do
+    Task.Supervisor.async(state.spawner, Worker, :run, [
+      order,
+      gate,
+      state.ambiant_env
+    ])
   end
 end
