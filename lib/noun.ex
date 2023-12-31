@@ -9,7 +9,7 @@ defmodule Noun do
 
   require Integer
 
-  @type t() :: non_neg_integer() | nonempty_improper_list(t(), t())
+  @type t() :: non_neg_integer() | nonempty_improper_list(t(), t()) | binary()
 
   # erlang has something called 'atom' already, so we say is_noun_atom
   defguard is_noun_atom(term) when is_integer(term) and term >= 0
