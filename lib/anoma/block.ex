@@ -88,11 +88,15 @@ defmodule Anoma.Block do
 
   @spec encode(t()) :: tuple()
   def encode(block) do
-    {__MODULE__, block.id, block.block, block.round, block.pub_key,
-     block.signature}
+    encode(block, __MODULE__)
   end
 
-  def decode({__MODULE__, id, block, round, pub_key, sig}) do
+  @spec encode(t(), atom()) :: tuple()
+  def encode(block, atom) do
+    {atom, block.id, block.block, block.round, block.pub_key, block.signature}
+  end
+
+  def decode({_, id, block, round, pub_key, sig}) do
     %Block{
       id: id,
       block: block,
