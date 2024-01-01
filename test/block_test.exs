@@ -18,7 +18,7 @@ defmodule AnomaTest.Block do
   end
 
   test "no signature on startup" do
-    {pub, priv} = :crypto.generate_key(:rsa, {1024, 65537})
+    {pub, _priv} = :crypto.generate_key(:rsa, {1024, 65537})
     block = Block.create(Base.default(), pub, 0)
     assert block.signature == nil
   end

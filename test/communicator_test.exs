@@ -1,11 +1,7 @@
 defmodule AnomaTest.Communicator do
   use ExUnit.Case, async: true
 
-  import Anoma.Node.Executor.Communicator
-
   alias Anoma.Node.Executor.Communicator
-
-  alias Anoma.Subscriber.Basic
 
   alias Anoma.PartialTx
   alias Anoma.Node.Executor, as: Node

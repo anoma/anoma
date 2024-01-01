@@ -2,7 +2,6 @@ defmodule AnomaTest.Nock do
   use ExUnit.Case, async: true
 
   import Nock
-  import Noun
 
   doctest(Nock)
 

@@ -1,9 +1,6 @@
 defmodule AnomaTest.Node do
   use ExUnit.Case, async: true
 
-  alias Anoma.Node.Executor.{Communicator, Primary}
-  alias Anoma.Node.Executor
-
   doctest(Anoma.Node.Executor)
 
   test "node works" do

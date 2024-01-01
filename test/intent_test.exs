@@ -2,7 +2,7 @@ defmodule AnomaTest.Intent do
   use ExUnit.Case, async: true
 
   alias Anoma.Node.Intent
-  alias Anoma.Node.Intent.{Communicator, Pool}
+  alias Anoma.Node.Intent.Communicator
   alias Anoma.Resource
 
   doctest(Anoma.Node.Intent)
@@ -15,7 +15,7 @@ defmodule AnomaTest.Intent do
 
     Communicator.new_intent(:intents_add_com, resource)
     Communicator.subscribe(:intents_add_com, self())
-    assert_receive {:"$gen_cast", {:intents, resource_set}}
+    assert_receive {:"$gen_cast", {:intents, ^resource_set}}
 
     Communicator.new_intent(:intents_add_com, resource)
 
@@ -45,8 +45,8 @@ defmodule AnomaTest.Intent do
     Communicator.new_intent(:intents_signal_com, resource_1)
     Communicator.new_intent(:intents_signal_com, resource_1)
 
-    assert_receive {:"$gen_cast", {:new_intent, resource_1}}
-    assert_receive {:"$gen_cast", {:new_intent, resource_1}}
+    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
+    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
 
     Intent.shutdown(supervisor)
   end

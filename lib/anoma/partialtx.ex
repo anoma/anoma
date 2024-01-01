@@ -95,20 +95,18 @@ defmodule Anoma.PartialTx do
   # Helpers
   ######################################################################
 
-  @doc """
-  I update the resource set with the new resource
+  # I update the resource set with the new resource
 
+  # ### Parameters
 
-  ### Parameters
+  # - resource_set (resource_set()) - the resource set we are updating
 
-  - resource_set (resource_set()) - the resource set we are updating
+  # - new_resource (Resource.t()) - the resource we are adding
 
-  - new_resource (Resource.t()) - the resource we are adding
+  # ### Returns
 
-  ### Returns
+  # the updated resource set
 
-  the updated resource set
-  """
   @spec update_resource_set(resources, Resource.t()) :: resources
   defp update_resource_set(resource_set, new_resource) do
     denom = Resource.denomination(new_resource)
@@ -120,14 +118,6 @@ defmodule Anoma.PartialTx do
   @spec add_quantities(list(Resource.t())) :: integer()
   defp add_quantities(resources) do
     Enum.reduce(resources, 0, fn x, acc -> x.quantity + acc end)
-  end
-
-  @spec sub_quantities(Resource.t(), Resource.t()) :: Resource.t()
-  defp sub_quantities(resource_1, resource_2) do
-    %Resource{
-      resource_1
-      | quantity: resource_1.quantity - resource_2.quantity
-    }
   end
 end
 
