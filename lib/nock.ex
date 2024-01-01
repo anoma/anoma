@@ -5,6 +5,27 @@ defmodule Nock do
 
   require Noun
 
+  use TypedStruct
+  alias __MODULE__
+
+  @type jettedness() ::
+          :jetted
+          | :unjetted_once
+          | :unjetted
+          | :instrument
+          | :instrument_once
+
+  @typedoc """
+  I contain environmental information on how Nock shall be evaluated.
+
+  For example Ι contain information on jettedness to
+  determine if we should be using jets or not
+
+  """
+  typedstruct do
+    field(:jet, jettedness(), default: :jetted)
+  end
+
   @dialyzer :no_improper_lists
 
   @layer_1_context_mug 17_654_928_022_549_292_273
@@ -47,12 +68,12 @@ defmodule Nock do
   # direct calls should be jetted
   @spec nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
   def nock(subject, formula) do
-    nock(subject, formula, :jetted)
+    nock(subject, formula, %Nock{})
   end
 
   # nock 9: check if the core's battery has a jet registration first
-  def nock(subject, [9, axis | core_formula], :jetted) do
-    {:ok, core} = nock(subject, core_formula)
+  def nock(subject, [9, axis | core_formula], env = %Nock{jet: :jetted}) do
+    {:ok, core} = nock(subject, core_formula, env)
 
     maybe_battery_mug =
       try do
@@ -69,7 +90,7 @@ defmodule Nock do
         case maybe_jet do
           # there's no jet. just use naive nock
           :error ->
-            nock(core, [2 | [[0 | 1] | [0 | axis]]])
+            nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
 
           # a jet exists. mug the parent too
           {:ok, {_label, parent_axis, parent_mug, jet_function}} ->
@@ -89,42 +110,46 @@ defmodule Nock do
                   jet_function.(core)
                 rescue
                   # parent mug didn't match. can't use the jet
-                  _ in MatchError -> nock(core, [2 | [[0 | 1] | [0 | axis]]])
+                  _ in MatchError ->
+                    nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
                 end
 
               # the parent didn't even exist, the jet is bogus
               :error ->
-                nock(core, [2 | [[0 | 1] | [0 | axis]]])
+                nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
             end
         end
 
       :error ->
         # an atom is not a valid formula, this can only crash.
         # however, i don't want to introduce elisions of the spec yet
-        nock(core, [2 | [[0 | 1] | [0 | axis]]])
+        nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
     end
   end
 
   # skip a jet once (must be called with a 9 formula for this to work)
-  def nock(subject, formula, :unjetted_once) do
-    naive_nock(subject, formula, :jetted)
+  def nock(subject, formula, environment = %Nock{jet: :unjetted_once}) do
+    naive_nock(subject, formula, %Nock{environment | jet: :jetted})
   end
 
   # nock with jet-instrumentation mode.
-  def nock(subject, formula, instrumentation)
-      when instrumentation == :instrument or
-             instrumentation == :instrument_once do
+  def nock(subject, formula, environment)
+      when environment.jet == :instrument or
+             environment.jet == :instrument_once do
     test_jettedness =
-      case instrumentation do
+      case environment.jet do
         :instrument -> :unjetted
         :instrument_once -> :unjetted_once
       end
 
+    test_environment = %Nock{environment | jet: test_jettedness}
+    jet_environment = %Nock{environment | jet: :jetted}
+
     {jetted_usecs, jetted_result} =
-      :timer.tc(fn -> nock(subject, formula, :jetted) end)
+      :timer.tc(fn -> nock(subject, formula, jet_environment) end)
 
     {unjetted_usecs, unjetted_result} =
-      :timer.tc(fn -> nock(subject, formula, test_jettedness) end)
+      :timer.tc(fn -> nock(subject, formula, test_environment) end)
 
     validity = jetted_result === unjetted_result
 
@@ -142,10 +167,9 @@ defmodule Nock do
   end
 
   # generic case: use naive nock to reduce once.
-  @spec nock(Noun.t(), Noun.t(), :jetted | :unjetted_once | :unjetted) ::
-          {:ok, Noun.t()} | :error
-  def nock(subject, formula, jettedness) do
-    naive_nock(subject, formula, jettedness)
+  @spec nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
+  def nock(subject, formula, environment) do
+    naive_nock(subject, formula, environment)
   end
 
   # naive nock interpreter: reduce via the nock 4k spec rules.
@@ -154,19 +178,18 @@ defmodule Nock do
   # direct calls of naive_nock should be unjetted
   @spec naive_nock(Noun.t(), Noun.t()) :: {:ok, Noun.t()} | :error
   def naive_nock(subject, formula) do
-    naive_nock(subject, formula, :unjetted)
+    naive_nock(subject, formula, %Nock{jet: :unjetted})
   end
 
-  @spec naive_nock(Noun.t(), Noun.t(), :jetted | :unjetted_once | :unjetted) ::
-          {:ok, Noun.t()} | :error
-  def naive_nock(subject, formula, jettedness) do
+  @spec naive_nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
+  def naive_nock(subject, formula, environment) do
     try do
       case formula do
         # autocons; a cell of formulas becomes a cell of results
         # *[a [b c] d]        [*[a b c] *[a d]]
         [formula_1 = [_ | _] | formula_2] ->
-          {:ok, result_1} = nock(subject, formula_1, jettedness)
-          {:ok, result_2} = nock(subject, formula_2, jettedness)
+          {:ok, result_1} = nock(subject, formula_1, environment)
+          {:ok, result_2} = nock(subject, formula_2, environment)
           {:ok, [result_1 | result_2]}
 
         # 0: read from subject
@@ -182,14 +205,14 @@ defmodule Nock do
         # 2: eval
         # *[a 2 b c]          *[*[a b] *[a c]]
         [2, subject_formula | formula_formula] ->
-          {:ok, new_subject} = nock(subject, subject_formula, jettedness)
-          {:ok, new_formula} = nock(subject, formula_formula, jettedness)
-          nock(new_subject, new_formula, jettedness)
+          {:ok, new_subject} = nock(subject, subject_formula, environment)
+          {:ok, new_formula} = nock(subject, formula_formula, environment)
+          nock(new_subject, new_formula, environment)
 
         # 3: cell test
         # *[a 3 b]            ?*[a b]
         [3 | sub_formula] ->
-          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
+          {:ok, sub_result} = nock(subject, sub_formula, environment)
 
           if Noun.is_noun_cell(sub_result) do
             {:ok, 0}
@@ -200,7 +223,7 @@ defmodule Nock do
         # 4: increment
         # *[a 4 b]            +*[a b]
         [4 | sub_formula] ->
-          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
+          {:ok, sub_result} = nock(subject, sub_formula, environment)
 
           if is_integer(sub_result) do
             {:ok, sub_result + 1}
@@ -211,8 +234,8 @@ defmodule Nock do
         # 5: noun equality
         # *[a 5 b c]          =[*[a b] *[a c]]
         [5, formula_1 | formula_2] ->
-          {:ok, result_1} = nock(subject, formula_1, jettedness)
-          {:ok, result_2} = nock(subject, formula_2, jettedness)
+          {:ok, result_1} = nock(subject, formula_1, environment)
+          {:ok, result_2} = nock(subject, formula_2, environment)
 
           if result_1 == result_2 do
             {:ok, 0}
@@ -223,51 +246,51 @@ defmodule Nock do
         # 6: if-then-else (spec macro)
         # *[a 6 b c d]        *[a *[[c d] 0 *[[2 3] 0 *[a 4 4 b]]]]
         [6, cond | branches = [_true_branch | _false_branch]] ->
-          {:ok, cond_plus_two} = nock(subject, [4 | [4 | cond]], jettedness)
-          {:ok, crash_guard} = nock([2 | 3], [0 | cond_plus_two], jettedness)
+          {:ok, cond_plus_two} = nock(subject, [4 | [4 | cond]], environment)
+          {:ok, crash_guard} = nock([2 | 3], [0 | cond_plus_two], environment)
 
           {:ok, branch_formula} =
-            nock(branches, [0 | crash_guard], jettedness)
+            nock(branches, [0 | crash_guard], environment)
 
-          nock(subject, branch_formula, jettedness)
+          nock(subject, branch_formula, environment)
 
         # 7: with subject (spec macro)
         # *[a 7 b c]          *[*[a b] c]
         [7, subject_formula | sub_formula] ->
-          {:ok, new_subject} = nock(subject, subject_formula, jettedness)
-          nock(new_subject, sub_formula, jettedness)
+          {:ok, new_subject} = nock(subject, subject_formula, environment)
+          nock(new_subject, sub_formula, environment)
 
         # 8: push on subject (spec macro)
         # *[a 8 b c]          *[[*[a b] a] c]
         [8, push_formula | sub_formula] ->
-          {:ok, pushed_noun} = nock(subject, push_formula, jettedness)
+          {:ok, pushed_noun} = nock(subject, push_formula, environment)
           new_subject = [pushed_noun | subject]
-          nock(new_subject, sub_formula, jettedness)
+          nock(new_subject, sub_formula, environment)
 
         # 9: arm of core (spec macro)
         # *[a 9 b c]          *[*[a c] 2 [0 1] 0 b]
         [9, axis | sub_formula] ->
-          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
-          nock(sub_result, [2 | [[0 | 1] | [0 | axis]]], jettedness)
+          {:ok, sub_result} = nock(subject, sub_formula, environment)
+          nock(sub_result, [2 | [[0 | 1] | [0 | axis]]], environment)
 
         # 10: replace at axis
         # *[a 10 [b c] d]     #[b *[a c] *[a d]]
         [10, [axis | replacement_formula] | sub_formula] ->
-          {:ok, replacement} = nock(subject, replacement_formula, jettedness)
-          {:ok, sub_result} = nock(subject, sub_formula, jettedness)
+          {:ok, replacement} = nock(subject, replacement_formula, environment)
+          {:ok, sub_result} = nock(subject, sub_formula, environment)
           Noun.replace(axis, replacement, sub_result)
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
         [11, [_hint_noun | hint_formula] | sub_formula] ->
           # must be computed, but is discarded
-          {:ok, hint_result} = nock(subject, hint_formula, jettedness)
-          {:ok, real_result} = nock(subject, sub_formula, jettedness)
-          nock([hint_result | real_result], [0 | 3], jettedness)
+          {:ok, hint_result} = nock(subject, hint_formula, environment)
+          {:ok, real_result} = nock(subject, sub_formula, environment)
+          nock([hint_result | real_result], [0 | 3], environment)
 
         # *[a 11 b c]         *[a c]
         [11, _hint_noun | sub_formula] ->
-          nock(subject, sub_formula, jettedness)
+          nock(subject, sub_formula, environment)
 
         # else, error
         _ ->
