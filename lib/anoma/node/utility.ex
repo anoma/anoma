@@ -93,4 +93,9 @@ defmodule Anoma.Node.Utility do
 
     :ok
   end
+
+  @spec append_name(atom(), String.t()) :: atom()
+  def append_name(name, appended) do
+    (Atom.to_string(name) <> appended) |> String.to_atom()
+  end
 end
