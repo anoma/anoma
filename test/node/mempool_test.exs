@@ -13,91 +13,75 @@ defmodule AnomaTest.Node.Mempool do
       order: AnomaTest.Mempool.Order
     }
 
-    ordering = :mempool_storage_com
-    executor = :mempool_test_com
-    mempool = :mempool_com
-
+    name = :mempool
     snapshot_path = [:my_special_nock_snaphsot | 0]
-    env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
-    unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :mempool_storage, table: storage)
-    end
+    node = Anoma.Node.com_names(name)
 
-    unless Process.whereis(executor) do
-      Anoma.Node.Executor.start_link(
-        env
-        |> Map.to_list()
-        |> Keyword.put(:name, :mempool_test)
+    unless Process.whereis(:mempool_mempool_com) do
+      Anoma.Node.start_link(
+        name: name,
+        snapshot_path: snapshot_path,
+        storage: storage,
+        block_storage: :mempool_blocks
       )
     end
 
-    unless Process.whereis(mempool) do
-      Anoma.Node.Mempool.start_link(
-        name: :mempool,
-        block_storage: :mempool_blocks,
-        ordering: ordering,
-        executor: executor
-      )
-    end
-
-    # setup storage
-    Mcom.hard_reset(mempool)
-    [env: env, exec: executor, mem: mempool]
+    [node: node]
   end
 
-  test "successful process", %{env: env, exec: executor, mem: mempool} do
+  test "successful process", %{node: node} do
     key = 555
-    storage = Scom.get_storage(env.ordering)
+    storage = Scom.get_storage(node.ordering)
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
-    Ccom.subscribe(executor, self())
-    Mcom.hard_reset(mempool)
+    Ccom.subscribe(node.executor, self())
+    Mcom.hard_reset(node.mempool)
 
-    pid_zero = Mcom.tx(mempool, zero).pid
+    pid_zero = Mcom.tx(node.mempool, zero).pid
 
-    Mcom.execute(mempool)
-    pid_one = Mcom.tx(mempool, increment).pid
-    pid_two = Mcom.tx(mempool, increment).pid
+    Mcom.execute(node.mempool)
+    pid_one = Mcom.tx(node.mempool, increment).pid
+    pid_two = Mcom.tx(node.mempool, increment).pid
 
-    Mcom.execute(mempool)
+    Mcom.execute(node.mempool)
     assert_receive {:"$gen_cast", {:process_done, ^pid_zero}}
     assert_receive {:"$gen_cast", {:process_done, ^pid_one}}
     assert_receive {:"$gen_cast", {:process_done, ^pid_two}}
     assert {:ok, 2} = Storage.get(storage, key)
-    Ccom.reset(executor)
+    Ccom.reset(node.executor)
   end
 
-  test "Processes still snapshots", %{env: env, exec: executor, mem: mempool} do
+  test "Processes still snapshots", %{node: node} do
     key = 555
-    storage = Scom.get_storage(env.ordering)
+    storage = Scom.get_storage(node.ordering)
     increment = increment_counter_val(key)
 
-    Ccom.subscribe(executor, self())
-    Mcom.hard_reset(mempool)
+    Ccom.subscribe(node.executor, self())
+    Mcom.hard_reset(node.mempool)
 
-    pid_one = Mcom.tx(mempool, increment).pid
-    pid_two = Mcom.tx(mempool, increment).pid
+    pid_one = Mcom.tx(node.mempool, increment).pid
+    pid_two = Mcom.tx(node.mempool, increment).pid
 
-    Mcom.execute(mempool)
+    Mcom.execute(node.mempool)
     assert_receive {:"$gen_cast", {:process_done, ^pid_one}}
     assert_receive {:"$gen_cast", {:process_done, ^pid_two}}
     assert :absent = Storage.get(storage, key)
-    Ccom.reset(executor)
+    Ccom.reset(node.executor)
   end
 
-  test "Processes gets killed", %{env: env, exec: _executor, mem: mempool} do
+  test "Processes gets killed", %{node: node} do
     key = 333
-    storage = Scom.get_storage(env.ordering)
+    storage = Scom.get_storage(node.ordering)
 
-    Mcom.hard_reset(mempool)
+    Mcom.hard_reset(node.mempool)
 
-    pid_zero = Mcom.tx(mempool, zero_counter(key)).pid
+    pid_zero = Mcom.tx(node.mempool, zero_counter(key)).pid
 
-    Mcom.soft_reset(mempool)
+    Mcom.soft_reset(node.mempool)
 
-    Mcom.execute(mempool)
+    Mcom.execute(node.mempool)
 
     assert not Process.alive?(pid_zero)
     assert :absent = Storage.get(storage, key)
