@@ -48,4 +48,11 @@ defmodule TestHelper.Nock do
     sample = 0
     [arm, sample, stdlib_core()]
   end
+
+  # [%ctr 0]
+  def zero_counter(val) do
+    arm = [1, val | 0]
+    sample = 0
+    [arm, sample, stdlib_core()]
+  end
 end
