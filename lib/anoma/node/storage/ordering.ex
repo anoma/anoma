@@ -80,6 +80,11 @@ defmodule Anoma.Node.Storage.Ordering do
     GenServer.cast(ordering, :reset)
   end
 
+  @spec hard_reset(GenServer.server(), atom()) :: :ok
+  def hard_reset(ordering, initial_snapshot) do
+    GenServer.cast(ordering, {:hard_reset, initial_snapshot})
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -103,6 +108,13 @@ defmodule Anoma.Node.Storage.Ordering do
   end
 
   def handle_cast(:reset, state) do
+    {:noreply, %Ordering{table: state.table}}
+  end
+
+  def handle_cast({:hard_reset, initial_snapshot}, state) do
+    storage = state.table
+    Storage.ensure_new(storage)
+    Storage.put_snapshot(storage, initial_snapshot)
     {:noreply, %Ordering{table: state.table}}
   end
 
