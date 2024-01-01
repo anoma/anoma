@@ -60,6 +60,10 @@ defmodule Anoma.Node.Storage.Communicator do
 
   @spec reset(GenServer.server()) :: :ok
   defdelegate reset(ordering), to: Ordering
+
+  @spec hard_reset(GenServer.server(), atom()) :: :ok
+  defdelegate hard_reset(ordering, initial_snapshot), to: Ordering
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -88,6 +92,11 @@ defmodule Anoma.Node.Storage.Communicator do
 
   def handle_cast(:reset, state) do
     Ordering.reset(state.primary())
+    {:noreply, state}
+  end
+
+  def handle_cast({:hard_reset, initial}, state) do
+    Ordering.hard_reset(state.primary(), initial)
     {:noreply, state}
   end
 end

@@ -9,33 +9,23 @@ defmodule Anoma.Transaction do
   alias __MODULE__
   use TypedStruct
 
-  typedstruct do
-    field(:intents, list(Anoma.Intent.t()), default: [])
-    field(:transaction, Anoma.PartialTx.t(), require: true)
+  typedstruct enforce: true do
+    field(:id, Noun.t())
+    field(:pid, pid())
+    field(:transaction, Noun.t())
   end
 
-  @doc """
-
-  Creates a new transaction. the `intents_used` are optional, as one
-  can create a fully formed transaction without any intents!
-
-  ### Parameters
-
-    - `transaction` - the transaction
-    - `intents_used` - the intents used in forming the transaction
-
-  ### Output
-
-     - The Transaction itself
-  """
-  @spec new(Anoma.PartialTx.t(), list(Anoma.Intent.t())) :: t()
-  def new(transaction, intents_used \\ []) do
-    %Transaction{intents: intents_used, transaction: transaction}
+  @spec new(Noun.t(), pid(), Noun.t()) :: t()
+  def new(id, pid, transaction) do
+    %Transaction{id: id, pid: pid, transaction: transaction}
   end
 
-  @spec intents(t()) :: list(Anoma.Intent.t())
-  def intents(t), do: t.intents
+  @spec id(t()) :: pid()
+  def pid(t), do: t.pid
 
-  @spec transaction(t()) :: Anoma.PartialTx.t()
+  @spec id(t()) :: Noun.t()
+  def id(t), do: t.id
+
+  @spec transaction(t()) :: Noun.t()
   def transaction(t), do: t.transaction
 end

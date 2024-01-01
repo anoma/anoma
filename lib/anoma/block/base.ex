@@ -13,12 +13,17 @@ defmodule Anoma.Block.Base do
   alias Anoma.Block.Base
 
   typedstruct do
-    field(:transactions, list(Anoma.PartialTx.t()), default: [])
+    field(:transactions, list(any()), default: [])
   end
 
   @spec default() :: t()
   def default() do
     %Base{}
+  end
+
+  @spec new(any()) :: t()
+  def new(transactions) do
+    %Base{transactions: transactions}
   end
 
   @spec digest(t()) :: binary()
