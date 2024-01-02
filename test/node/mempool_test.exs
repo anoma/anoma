@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Mempool do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Anoma.Storage
   alias Anoma.Node.Storage.Communicator, as: Scom

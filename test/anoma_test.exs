@@ -1,5 +1,5 @@
 defmodule AnomaTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Anoma
 
   test "greets the world" do
