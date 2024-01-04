@@ -2,7 +2,6 @@ defmodule AnomaTest.Noun do
   use ExUnit.Case, async: true
 
   import Noun
-  alias Noun.Format
 
   doctest(Noun)
   doctest(Noun.Format)

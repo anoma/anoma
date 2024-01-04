@@ -3,7 +3,7 @@ defmodule AnomaTest.Logic do
 
   alias Anoma.Logic.{Lt, Branch, Mul, Add, Inc, Neg}
 
-  alias Anoma.{Eval, PartialTx}
+  alias Anoma.Eval
 
   doctest(Anoma.Logic)
 
