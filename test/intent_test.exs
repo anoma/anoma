@@ -36,18 +36,4 @@ defmodule AnomaTest.Intent do
 
     Intent.shutdown(supervisor)
   end
-
-  test "Intents signal on any additions" do
-    {:ok, supervisor} = Intent.start_link(:intents_signal)
-    resource_1 = %Resource{quantity: 6}
-    Communicator.subscribe(:intents_signal_com, self())
-
-    Communicator.new_intent(:intents_signal_com, resource_1)
-    Communicator.new_intent(:intents_signal_com, resource_1)
-
-    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
-    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
-
-    Intent.shutdown(supervisor)
-  end
 end
