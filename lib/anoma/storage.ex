@@ -35,7 +35,16 @@ defmodule Anoma.Storage do
 
   Please see my testing module `AnomaTest.Storage` to learn more on
   how to use me
+
+  ### Snapshots
+  One can snapshot the keys provided in the code by running the following
+
+    - `snapshot_order/1`
+    - `put_snapshot/2`
+    - `in_snapshot/2`
+    - `get_at_snapshot/2`
   """
+
   use TypedStruct
 
   @typedoc """
@@ -63,6 +72,8 @@ defmodule Anoma.Storage do
   """
   @type qualified_key() :: nonempty_improper_list(any(), non_neg_integer())
   @type qualified_value() :: any()
+
+  @type snapshot() :: {t(), list({order_key(), non_neg_integer()})}
 
   ############################################################
   #                       Creation API                       #
@@ -166,6 +177,44 @@ defmodule Anoma.Storage do
 
       _ ->
         :error
+    end
+  end
+
+  ############################################################
+  #                         Snapshots                        #
+  ############################################################
+
+  @spec snapshot_order(t()) :: result(snapshot())
+  def snapshot_order(storage) do
+    :mnesia.transaction(fn ->
+      snapshot = [{{:"$1", :"$2", :"$3"}, [], [{{:"$2", :"$3"}}]}]
+      {storage, :mnesia.select(storage.order, snapshot)}
+    end)
+  end
+
+  @spec put_snapshot(t(), order_key()) :: result(:ok)
+  def put_snapshot(storage, key) do
+    with {:atomic, snapshot} <- snapshot_order(storage) do
+      put(storage, key, snapshot)
+    end
+  end
+
+  @spec in_snapshot(snapshot(), order_key()) :: nil | non_neg_integer()
+  def in_snapshot({_, snapshot}, key) do
+    List.keyfind(snapshot, key, 0, {nil, nil})
+    |> elem(1)
+  end
+
+  @spec get_at_snapshot(snapshot(), order_key()) ::
+          :absent | {:ok, qualified_value()}
+  def get_at_snapshot(snapshot = {storage, _}, key) do
+    position = in_snapshot(snapshot, key)
+
+    with {:atomic, [{_, [^position, ^key | 0], value}]} <-
+           read_at_order(storage, key, position) do
+      {:ok, value}
+    else
+      _ -> :absent
     end
   end
 
