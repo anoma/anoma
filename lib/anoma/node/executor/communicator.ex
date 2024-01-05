@@ -4,14 +4,24 @@ defmodule Anoma.Node.Executor.Communicator do
 
   If new intents come in, I send it to all my subscribers.
 
-  Further I have the job of communicating to the `Primary` node when I
-  get information for it to process.
+  Further I have the job of spawning Executor tasks when new
+  transactions come in
 
-  The information that is communicated is:
+  Currently I only communicate:
 
-  1. intent solutions
-  2. new intents
+  - When tasks are completed
 
+  ### API
+
+  My public facing API is
+
+  - `new_transaction/3`
+  - `new_transaction/4`
+  - `fire_new_transaction/3`
+  - `fire_new_transaction/4`
+  - `snapshot/1`
+  - `state/1`
+  - `subscribe/2`
   """
   alias __MODULE__
   use TypedStruct
@@ -47,8 +57,30 @@ defmodule Anoma.Node.Executor.Communicator do
 
   # Transactions
   @doc """
-  Spawns a new transaction, the returned task has the owner of the
-  person sending in the message
+  Spawns a new transaction, the returned task's owner is the caller.
+
+  ### Inputs
+    - `communicator` - the genserver to send the message to
+    - `order` - the unique ID of the transaction
+    - `gate` - a Nock function that we will spawn a task for
+
+  ### Output
+    - a task that the caller owns
+
+  ### Example
+    we assume a running Worker, see `executor_test.exs` for a full
+    example
+
+      > id = System.unique_integer([:positive])
+      1931
+      > zero = [[1, 777 | 0], 0, Nock.stdlib_core()]
+      > task = Communicator.new_transaction(executor, id, zero)
+      %Task{
+        mfa: {Anoma.Node.Executor.Worker, :run, 3},
+        owner: #PID<0.264.0>,
+        pid: #PID<0.753.0>,
+        ref: #Reference<0.0.33795.904691850.4087414796.24378>
+      }
   """
   @spec new_transaction(GenServer.server(), Noun.t(), Noun.t()) :: Task.t()
   def new_transaction(communicator, order, gate) do
@@ -64,13 +96,11 @@ defmodule Anoma.Node.Executor.Communicator do
   end
 
   @doc """
-
   Acts like `new_transaction/3`, but the caller does not care about
   the response. Instead the response is handled by the pool.
 
   The user gets back a process so it may keep track of sending
   messages to this task or terminating the task
-
   """
   @spec fire_new_transaction(GenServer.server(), Noun.t(), Noun.t()) :: pid()
   def fire_new_transaction(communicator, order, gate) do
@@ -83,19 +113,38 @@ defmodule Anoma.Node.Executor.Communicator do
     GenServer.call(communicator, {:transaction, order, gate, env})
   end
 
+  @doc """
+  Returns the snapshot path, the Nock code is using
+
+  ### Example
+    iex> alias Anoma.Node.Executor
+    iex> alias Anoma.Node.Executor.Communicator
+    iex> Executor.start_link(snapshot_path: [:a | 0], ordering: nil, name: :snapshot_doc)
+    iex> Communicator.snapshot(:snapshot_doc_com)
+    :a
+  """
   def snapshot(communicator) do
     GenServer.call(communicator, :snapshot)
   end
 
+  @doc """
+  Returns the current state of the communicator
+  """
   def state(communicator) do
     GenServer.call(communicator, :state)
   end
 
+  @doc """
+  Subscribes to actions coming in to the communicator
+  """
   @spec subscribe(GenServer.server(), GenServer.server()) :: :ok
   def subscribe(communicator, subscriber) do
     GenServer.cast(communicator, {:subscribe, subscriber})
   end
 
+  @doc """
+  Resets the subscribers list
+  """
   @spec reset(GenServer.server()) :: :ok
   def reset(communicator) do
     GenServer.cast(communicator, :reset)
