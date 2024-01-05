@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Storage do
   use ExUnit.Case
 
-  alias Anoma.Order
+  alias Anoma.{Storage, Order}
   alias Anoma.Node.Storage.{Communicator, Ordering}
 
   doctest(Anoma.Node.Storage)
@@ -72,5 +72,96 @@ defmodule AnomaTest.Node.Storage do
     assert Communicator.true_order(ordering, <<3>>) == nil
     Communicator.new_order(ordering, [Order.new(1, <<3>>, self())])
     assert Communicator.true_order(ordering, <<3>>) == 1
+  end
+
+  describe "User Blocking API" do
+    test "properly get same snapshot", %{ordering: ordering} do
+      sstore = :babylon_2
+      testing_atom = System.unique_integer()
+      storage = Communicator.get_storage(ordering)
+
+      Communicator.reset(ordering)
+      Storage.ensure_new(storage)
+
+      Communicator.new_order(ordering, [Order.new(1, <<1>>, self())])
+      Storage.put(storage, testing_atom, 1)
+      Storage.put_snapshot(storage, sstore)
+      Storage.put(storage, testing_atom, 2)
+      Storage.put_snapshot(storage, sstore)
+
+      assert {:ok, snapshot_1} =
+               Ordering.caller_blocking_read_id(ordering, [<<1>>, sstore | 0])
+
+      assert {:ok, snapshot_2} =
+               Ordering.caller_blocking_read_id(ordering, [<<1>>, sstore | 0])
+
+      assert {:ok, test_1} = Storage.get_at_snapshot(snapshot_1, testing_atom)
+
+      assert {:ok, test_2} = Storage.get_at_snapshot(snapshot_2, testing_atom)
+
+      assert test_1 == test_2
+    end
+
+    test "properly waits until it's turn", %{ordering: ordering} do
+      sstore = :babylon_3
+      testing_atom = System.unique_integer()
+      storage = Communicator.get_storage(ordering)
+
+      Communicator.reset(ordering)
+      Storage.ensure_new(storage)
+
+      home = self()
+
+      waiting =
+        spawn(fn ->
+          assert {:ok, snapshot} =
+                   Ordering.caller_blocking_read_id(ordering, [
+                     <<1>>,
+                     sstore | 0
+                   ])
+
+          assert {:ok, val} = Storage.get_at_snapshot(snapshot, testing_atom)
+
+          send(home, {:received, val})
+        end)
+
+      Storage.put(storage, testing_atom, 1)
+      Storage.put_snapshot(storage, sstore)
+
+      assert Process.alive?(waiting)
+      Communicator.new_order(ordering, [Order.new(1, <<1>>, waiting)])
+      assert_receive {:received, 1}
+    end
+
+    test "properly get snapshot from id", %{ordering: ordering} do
+      sstore = :babylon_4
+      testing_atom = System.unique_integer()
+      storage = Communicator.get_storage(ordering)
+
+      Communicator.reset(ordering)
+      Storage.ensure_new(storage)
+
+      Communicator.new_order(ordering, [
+        Order.new(1, <<1>>, self()),
+        Order.new(2, <<2>>, self())
+      ])
+
+      Storage.put(storage, testing_atom, 1)
+      Storage.put_snapshot(storage, sstore)
+      Storage.put(storage, testing_atom, 2)
+      Storage.put_snapshot(storage, sstore)
+
+      assert {:ok, snapshot_1} =
+               Ordering.caller_blocking_read_id(ordering, [<<1>>, sstore | 0])
+
+      assert {:ok, snapshot_2} =
+               Ordering.caller_blocking_read_id(ordering, [<<2>>, sstore | 0])
+
+      assert {:ok, test_1} = Storage.get_at_snapshot(snapshot_1, testing_atom)
+
+      assert {:ok, test_2} = Storage.get_at_snapshot(snapshot_2, testing_atom)
+
+      assert test_1 + 1 == test_2
+    end
   end
 end

@@ -40,4 +40,12 @@ defmodule TestHelper.Nock do
     sample = 1
     [arm, sample | stdlib_core()]
   end
+
+  # TODO :: Add hoon code for this
+  @spec increment_counter_val(Noun.t()) :: Noun.t()
+  def increment_counter_val(val) do
+    arm = [[1 | val], 4, 12, [1 | 0], [0 | 6], 1, val | 0]
+    sample = 0
+    [arm, sample, stdlib_core()]
+  end
 end
