@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Executor do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
   alias Anoma.Node.Storage.Communicator
@@ -8,8 +8,8 @@ defmodule AnomaTest.Node.Executor do
 
   setup_all do
     storage = %Anoma.Storage{
-      qualified: AnomaTest.Worker.Qualified,
-      order: AnomaTest.Worker.Order
+      qualified: AnomaTest.Exectuor.Qualified,
+      order: AnomaTest.Executor.Order
     }
 
     ordering = :executor_storage_com

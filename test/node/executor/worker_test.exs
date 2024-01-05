@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Executor.Worker do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
   alias Anoma.Node.Storage.Communicator
