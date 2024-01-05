@@ -3,6 +3,8 @@
   "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
   "hut": {:hex, :hut, "1.3.0", "71f2f054e657c03f959cf1acc43f436ea87580696528ca2a55c8afb1b06c85e7", [:"erlang.mk", :rebar, :rebar3], [], "hexpm", "7e15d28555d8a1f2b5a3a931ec120af0753e4853a4c66053db354f35bf9ab563"},
   "mnesia_rocksdb": {:git, "https://github.com/mariari/mnesia_rocksdb", "b07f7438af140947efed633c0391f0db839d95fb", []},
+  "recon": {:hex, :recon, "2.5.4", "05dd52a119ee4059fa9daa1ab7ce81bc7a8161a2f12e9d42e9d551ffd2ba901c", [:mix, :rebar3], [], "hexpm", "e9ab01ac7fc8572e41eb59385efeb3fb0ff5bf02103816535bacaedf327d0263"},
+  "recon_ex": {:hex, :recon_ex, "0.9.1", "51558b6eb347753dcf9c884ba68d49dbbec607fc4296815b72a0c8995d5d3203", [:mix], [{:recon, "~> 2.3.1", [hex: :recon, repo: "hexpm", optional: false]}], "hexpm", "ca124759162c082adbb29078eadb9ab102425493c94387221d1e11acd0e050f7"},
   "rocksdb": {:git, "https://gitlab.com/vans/erlang-rocksdb.git", "18add8e992a374771e6f1e97b1f50db6bf31a16f", [ref: "18add8e992a374771e6f1e97b1f50db6bf31a16f"]},
   "sext": {:hex, :sext, "1.8.0", "90a95b889f5c781b70bbcf44278b763148e313c376b60d87ce664cb1c1dd29b5", [:rebar3], [], "hexpm", "bc6016cb8690baf677eacacfe6e7cadfec8dc7e286cbbed762f6cd55b0678e73"},
   "typed_struct": {:hex, :typed_struct, "0.3.0", "939789e3c1dca39d7170c87f729127469d1315dcf99fee8e152bb774b17e7ff7", [:mix], [], "hexpm", "c50bd5c3a61fe4e198a8504f939be3d3c85903b382bde4865579bc23111d1b6d"},
