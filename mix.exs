@@ -25,7 +25,8 @@ defmodule Anoma.MixProject do
         :mnesia,
         :observer,
         :wx,
-        :runtime_tools
+        :runtime_tools,
+        :debugger
       ]
     ]
   end
