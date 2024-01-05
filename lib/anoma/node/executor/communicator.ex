@@ -20,6 +20,7 @@ defmodule Anoma.Node.Executor.Communicator do
   alias Anoma.Node.Utility
 
   typedstruct do
+    field(:subscribers, MapSet.t(GenServer.server()), default: MapSet.new())
     field(:spawner, atom())
     field(:ambiant_env, Nock.t())
   end
@@ -82,8 +83,22 @@ defmodule Anoma.Node.Executor.Communicator do
     GenServer.call(communicator, {:transaction, order, gate, env})
   end
 
-  defp state(communicator) do
+  def snapshot(communicator) do
+    GenServer.call(communicator, :snapshot)
+  end
+
+  def state(communicator) do
     GenServer.call(communicator, :state)
+  end
+
+  @spec subscribe(GenServer.server(), GenServer.server()) :: :ok
+  def subscribe(communicator, subscriber) do
+    GenServer.cast(communicator, {:subscribe, subscriber})
+  end
+
+  @spec reset(GenServer.server()) :: :ok
+  def reset(communicator) do
+    GenServer.cast(communicator, :reset)
   end
 
   ############################################################
@@ -92,6 +107,10 @@ defmodule Anoma.Node.Executor.Communicator do
 
   def handle_call(:state, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call(:snapshot, _from, state) do
+    {:reply, hd(state.ambiant_env.snapshot_path), state}
   end
 
   def handle_call({:transaction, order, gate}, _from, state) do
@@ -106,8 +125,23 @@ defmodule Anoma.Node.Executor.Communicator do
     {:reply, task.pid, state}
   end
 
+  def handle_cast({:subscribe, new_sub}, agent) do
+    subscribers = MapSet.put(agent.subscribers, new_sub)
+    {:noreply, %Communicator{agent | subscribers: subscribers}}
+  end
+
+  def handle_cast(:reset, agent) do
+    {:noreply, %Communicator{agent | subscribers: MapSet.new()}}
+  end
+
   # TODO communicate this information somehow
-  def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
+  def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
+    Utility.broadcast(state.subscribers, {:process_done, pid})
+    {:noreply, state}
+  end
+
+  def handle_info(process, state) do
+    Utility.broadcast(state.subscribers, {:process_done, process})
     {:noreply, state}
   end
 
