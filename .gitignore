@@ -34,3 +34,6 @@ anoma-*.tar
 
 # VSCode git ignore
 .vscode/
+
+# Mnesia disk-backed databases
+Mnesia*/
