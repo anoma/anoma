@@ -1,0 +1,22 @@
+# Index
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.12.0"}
+])
+```
+
+## Index
+
+This notebook organizes a set of lessons to help you get started with Anoma!
+
+This book uses livebook, it is best viewed from within it! However most sections can be viewed fine in github or your text editor.
+
+1. [Contributing](./CONTRIBUTING.livemd)
+   1. [IEx](./contributing/iex.livemd)
+   2. [Observer](./contributing/observer.livemd)
+   3. [Understanding any module](./contributing/understanding.livemd)
+   4. [Testing](./contributing/testing.livemd)
+   5. [Git](./contributing/git.livemd)
+2. [Visualizing Anoma](./visualization.livemd)
+   1. [Actors](./visualization/actors.livemd)
