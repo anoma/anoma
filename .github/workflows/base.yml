@@ -1,0 +1,106 @@
+name: Construct caches and run checks on base
+
+on:
+  push:
+    branches: [ "base" ]
+
+permissions:
+  contents: read
+
+jobs:
+  construct-caches:
+    name: Construct caches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+
+      - name: Set up Elixir
+        id: beam
+        uses: erlef/setup-beam@v1.16.0
+        with:
+          elixir-version: '1.15.6'
+          otp-version: '26.1.2'
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3.3.2
+        with:
+          path: deps
+          key: |
+            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Fetch dependencies
+        run: mix deps.get
+
+      - name: Build dependencies
+        run: mix deps.compile
+
+      - name: Restore PLT cache
+        uses: actions/cache@v3.3.2
+        with:
+          path: plts
+          key: |
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Create PLTs
+        run: mix dialyzer --plt
+
+  run-checks:
+    name: Run checks
+    needs: construct-caches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+
+      - name: Set up Elixir
+        id: beam
+        uses: erlef/setup-beam@v1.16.0
+        with:
+          elixir-version: '1.15.6'
+          otp-version: '26.1.2'
+
+      - name: Restore dependencies cache
+        id: deps-cache
+        uses: actions/cache/restore@v3.3.2
+        with:
+          path: deps
+          key: |
+            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+
+      - name: Fail on dependencies cache miss
+        if: ${{ steps.deps-cache.outputs.cache-hit != 'true' }}
+        run: /bin/false
+
+      - name: Restore PLT cache
+        id: plt-cache
+        uses: actions/cache/restore@v3.3.2
+        with:
+          path: plts
+          key: |
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Fail on PLT cache miss
+        if: ${{ steps.plt-cache.outputs.cache-hit != 'true' }}
+        run: /bin/false
+
+      - name: Run tests
+        run: mix test
+
+      - name: Run dialyzer
+        if: ${{ !cancelled() }}
+        run: mix dialyzer --format github
+
+      - name: Format check
+        if: ${{ !cancelled() }}
+        run: mix format --check-formatted
+
+      - name: All files whitespace error check
+        if: ${{ !cancelled() }}
+        run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
