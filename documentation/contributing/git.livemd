@@ -1,3 +1,5 @@
+<!-- livebook:{"persist_outputs":true} -->
+
 # Git
 
 ## Index
@@ -149,23 +151,37 @@ is fine.
 
 Imagine main has the following history
 
-```
-52b44a6 *   main Merge branch feature-Y into next
-        |\
-4381bd3 | * Topic-Y
-        |/
-73bfd7d *  v0.3.0 base
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'base'}} }%%
+gitGraph TB:
+commit id: "73bfd7d" tag: "v0.3.0"
+branch Topic-Y
+commit id: "4381bd3"
+checkout base
+merge Topic-Y id: "52b44a6"
 ```
 
-and your code hapens to be base on 52b44a6
+and your code hapens to be base on 52b44a6, then the history will look something like:
 
-```
-7dabf44 *   my-cool-feature
-52b44a6 *   main Merge branch feature-Y into next
-        |\
-4381bd3 | * Topic-Y
-        |/
-73bfd7d *  v0.3.0 base
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'my-cool-feature'}} }%%
+gitGraph TB:
+commit id: "73bfd7d" tag: "v0.3.0"
+branch Topic-Y
+commit id: "4381bd3"
+checkout my-cool-feature
+merge Topic-Y id: "52b44a6: main merge feature-y"
+commit id: "7dabf44"
 ```
 
 Later before a release, we find out that *Topic-Y* has issues, and any
@@ -188,6 +204,44 @@ perfectly fine and did not rely on *Topic-Y*.
 
 Further, if we have two topics *my-feature-x* and *my-feature-y* based
 on `main`, then the history would look something like this
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'base'}} }%%
+gitGraph TB:
+commit id: "73bfd7d" tag: "v0.3.0"
+branch main
+branch ray/mnesia-attach
+commit id: "97bef7"
+checkout main
+merge ray/mnesia-attach id: "13b3e4a"
+
+
+checkout base
+branch proper-topic
+commit id: "8087564: add a new feature"
+
+checkout main
+branch topic-x
+commit id: "bc4b2a1: new cool feature"
+
+checkout main
+merge proper-topic id: "2dd991a"
+
+checkout main
+branch topic-y
+commit id: "546a8f9: add feature: conflicts X!"
+
+checkout main
+merge topic-x id: "90d91e7"
+merge topic-y id: "0438922"
+```
+
+In a textual form this looks like:
 
 ```
 0438922 *   main Merge branch 'topic-y'
@@ -236,48 +290,74 @@ to use yours also has to merge all the random topics on `main`.
 
 This is easy to see with the following example:
 
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'simple-config'}} }%%
+gitGraph TB:
+commit id: "73bfd7d: base" tag: "v0.3.0"
+branch major-changes
+commit id: "97bef7: structural changes"
+checkout simple-config
+merge major-changes id: "5b16844: merge into main"
+commit id: "f098de0: general config"
 ```
-f098de0 * simple-config-change I update the config to be more general for others
-7d9a059 *   anoma/main Merge branch 'major-changes'
-        |\
-5b16844 | * major-changes I commit serious structural changes to the codebase
-        |/
-73bfd7d * v0.3.0 anoma/base
 
-```
-
-Here we have a topic *major-changes* that makes all sorts of changes,
+Here we have a topic `major-changes` that makes all sorts of changes,
 and since we based our code off main, these are all included in
 simple-config-change.
 
 However imagine we wish to overhaul the configuration a bit
 
-```
-c4b563f * configuration-upgrade I create some basic configuration changes
-73bfd7d * v0.3.0 anoma/base
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'configuration-upgrade'}} }%%
+gitGraph TB:
+commit id: "73bfd7d: base" tag: "v0.3.0"
+commit id: "f098de0: Basic config changes"
 ```
 
-Now if we wish to merge in *simple-config-change* we have
+Now if we wish to merge in `simple-config-change` we have
 
-```
-f6230df *   configuration-upgrade Merge branch 'simple-config-change'
-        |\
-f098de0 | * simple-config-change I update the config to be more general for others
-7d9a059 | *   main Merge branch 'major-changes'
-        | |\
-5b16844 | | * major-changes I commit serious structural changes to the codebase
-        | |/
-c4b563f * / I create some basic configuration changes
-        |/
-73bfd7d * v0.3.0 anoma/base
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'configuration-upgrade'}} }%%
+gitGraph TB:
+commit id: "73bfd7d: base" tag: "v0.3.0"
+
+branch simple-config
+checkout configuration-upgrade
+branch major-changes
+commit id: "97bef7: structural changes"
+
+checkout configuration-upgrade
+commit id: "f098de0: Basic config changes"
+
+checkout simple-config
+merge major-changes id: "5b16844: merge into main"
+commit id: "f098de0: general config"
+
+checkout configuration-upgrade
+merge simple-config id: "f6230df"
 ```
 
 Besides having a spurious main merged into our topic now, we are
-forced to deal with *major-changes* causing various conflicts with
+forced to deal with `major-changes` causing various conflicts with
 your topic, making this merge untenable.
 
-Meaning that this code has to be recreated in *configuration-upgrade*
-instead of reusing *simple-config-change*, fixing the problem in 2
+Meaning that this code has to be recreated in `configuration-upgrade`
+instead of reusing `simple-config-change`, fixing the problem in 2
 places, and having a conflict when it comes time for a release.
 
 <!-- livebook:{"break_markdown":true} -->
