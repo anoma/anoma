@@ -47,6 +47,8 @@ defmodule Anoma.Storage do
 
   use TypedStruct
 
+  require Logger
+
   @typedoc """
   I represent the qualified and ordered data of storage
 
@@ -259,15 +261,15 @@ defmodule Anoma.Storage do
   ############################################################
   #                      Instrumentation                     #
   ############################################################
-  def instrument(instrument, {:get_order, order}) do
-    if instrument, do: IO.inspect(order, label: "getting at order")
+  def instrument(_instrument, {:get_order, order}) do
+    Logger.debug("Getting at order: #{inspect(order)}")
   end
 
-  def instrument(instrument, {:put_order, order}) do
-    if instrument, do: IO.inspect(order, label: "putting at order")
+  def instrument(_instrument, {:put_order, order}) do
+    Logger.debug("Putting at order: #{inspect(order)}")
   end
 
-  def instrument(instrument, {:read, key}) do
-    if instrument, do: IO.inspect(key, label: "regular blocking read key")
+  def instrument(_instrument, {:read, key}) do
+    Logger.info("Regular blocking read at key: #{inspect(key)}")
   end
 end

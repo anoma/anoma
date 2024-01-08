@@ -4,8 +4,10 @@ defmodule Nock do
   """
 
   require Noun
+  require Logger
 
   use TypedStruct
+
   alias Anoma.Storage
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
@@ -734,11 +736,11 @@ defmodule Nock do
     end
   end
 
-  defp instrument(instrument, {:snapshot, snap}) do
-    if instrument, do: IO.inspect(snap, label: "got snapshot")
+  defp instrument(_instrument, {:snapshot, snap}) do
+    Logger.info("got snapshot: #{inspect(snap)}")
   end
 
-  defp instrument(instrument, {:got_value, value}) do
-    if instrument, do: IO.inspect(value, label: "got value")
+  defp instrument(_instrument, {:got_value, value}) do
+    Logger.info("got value: #{inspect(value)}")
   end
 end

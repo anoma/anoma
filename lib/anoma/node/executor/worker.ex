@@ -6,6 +6,7 @@ defmodule Anoma.Node.Executor.Worker do
   alias Anoma.Node.Storage.{Communicator, Ordering}
 
   import Nock
+  require Logger
 
   @spec run(Noun.t(), Noun.t(), Nock.t()) :: :ok | :error
   def run(order, gate, env) do
@@ -56,32 +57,33 @@ defmodule Anoma.Node.Executor.Worker do
     Storage.put_snapshot(storage, snapshot)
   end
 
-  defp instrument(instrument, {:dispatch, d}) do
-    if instrument, do: IO.inspect(d, label: "worker dispatched with order id")
+  defp instrument(_instrument, {:dispatch, d}) do
+    Logger.info("worker dispatched with order id: #{inspect(d)}")
   end
 
-  defp instrument(instrument, :write_ready) do
-    if instrument, do: IO.inspect(self(), label: "got write ready")
+  defp instrument(_instrument, :write_ready) do
+    Logger.info("#{inspect(self())}: write ready")
   end
 
-  defp instrument(instrument, :ensure_read) do
-    if instrument,
-      do: IO.inspect(self(), label: "Making sure our snapshot is ready")
+  defp instrument(_instrument, :ensure_read) do
+    Logger.info("#{inspect(self())}: making sure the snapshot is ready")
   end
 
-  defp instrument(instrument, :waiting_write_ready) do
-    if instrument, do: IO.inspect(self(), label: "waiting for a write ready")
+  defp instrument(_instrument, :waiting_write_ready) do
+    Logger.info("#{inspect(self())}: waiting for a write ready")
   end
 
-  defp instrument(instrument, {:writing, ord}) do
-    if instrument, do: IO.inspect(ord, label: "worker writing at true order")
+  defp instrument(_instrument, {:writing, ord}) do
+    Logger.info("Worker writing at true order #{inspect(ord)}")
   end
 
-  defp instrument(instrument, :fail) do
-    if instrument, do: IO.puts("Worker Failed")
+  defp instrument(_instrument, :fail) do
+    Logger.warning("#{inspect(self())}：Worker failed")
   end
 
-  defp instrument(instrument, {:snapshot, {s, ss}}) do
-    if instrument, do: IO.inspect({s, ss}, label: "Taking snapshot")
+  defp instrument(_instrument, {:snapshot, {s, ss}}) do
+    Logger.debug(
+      "Taking snapshot key #{inspect(ss)} in storage #{inspect(s)}"
+    )
   end
 end

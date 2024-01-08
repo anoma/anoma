@@ -37,6 +37,8 @@ defmodule Anoma.Node.Storage.Ordering do
   alias Anoma.{Storage, Order}
   alias __MODULE__
 
+  require Logger
+
   @type ordered_transactions() ::
           list(Order.t())
 
@@ -225,23 +227,23 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
   #                      Instrumentation                     #
   ############################################################
-  def instrument(instrument, {:new_tx, num_txs}) do
-    if instrument, do: IO.inspect(num_txs, label: "new tx count")
+  def instrument(_instrument, {:new_tx, num_txs}) do
+    Logger.info("New tx count: #{inspect(num_txs)}")
   end
 
-  def instrument(instrument, {:ready, pid}) do
-    if instrument, do: IO.inspect(pid, label: "sending read ready to pid")
+  def instrument(_instrument, {:ready, pid}) do
+    Logger.info("sending read ready to #{inspect(pid)}")
   end
 
-  def instrument(instrument, {:waiting, id}) do
-    if instrument, do: IO.inspect(id, label: "waiting on read ready")
+  def instrument(_instrument, {:waiting, id}) do
+    Logger.info("#{inspect(id)}, Waiting on read ready")
   end
 
-  def instrument(instrument, {:read_ready, info}) do
-    if instrument, do: IO.inspect(info, label: "got read ready")
+  def instrument(_instrument, {:read_ready, info}) do
+    Logger.info("#{inspect(info)}, got read ready")
   end
 
-  def instrument(instrument, {:getting_key, full_key}) do
-    if instrument, do: IO.inspect(full_key, label: "getting at key")
+  def instrument(_instrument, {:getting_key, full_key}) do
+    Logger.info("getting at: #{inspect(full_key)}")
   end
 end
