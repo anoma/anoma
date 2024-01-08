@@ -37,8 +37,7 @@ defmodule AnomaTest.Node.Storage do
 
     Communicator.new_order(
       ordering,
-      [Order.new(1, <<3>>, self()), Order.new(1, <<3>>, self())],
-      false
+      [Order.new(1, <<3>>, self()), Order.new(1, <<3>>, self())]
     )
 
     ordering = Communicator.state(ordering)

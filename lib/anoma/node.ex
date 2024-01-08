@@ -11,7 +11,6 @@ defmodule Anoma.Node do
     - `block_storage` - a location to store the blocks produced
   ## Optional Arguments
 
-    - `instrumentation` - Whether the system should output debug information
     - `jet` : `Nock.jettedness()` - how jetted the system should be
     - `old_storage` : `boolean` - states if the storage should be freshly made
        - by default it is `false`

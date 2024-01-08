@@ -47,14 +47,6 @@ defmodule Anoma.Node.Storage.Communicator do
           :error | {:ok, any()}
   defdelegate new_order(ordering, ordered), to: Ordering
 
-  @spec new_order(
-          GenServer.server(),
-          Ordering.ordered_transactions(),
-          boolean()
-        ) ::
-          :error | {:ok, any()}
-  defdelegate new_order(ordering, ordered, instrumentation), to: Ordering
-
   @spec get_storage(GenServer.server()) :: Storage.t()
   defdelegate get_storage(ordering), to: Ordering
 
@@ -82,8 +74,8 @@ defmodule Anoma.Node.Storage.Communicator do
     {:reply, Ordering.true_order(com.primary, id), com}
   end
 
-  def handle_call({:new_order, trans, instrumentation}, _from, com) do
-    {:reply, Ordering.new_order(com.primary, trans, instrumentation), com}
+  def handle_call({:new_order, trans}, _from, com) do
+    {:reply, Ordering.new_order(com.primary, trans), com}
   end
 
   def handle_call(:storage, _from, state) do

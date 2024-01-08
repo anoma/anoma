@@ -84,14 +84,8 @@ defmodule Anoma.Node.Storage.Ordering do
 
   @spec new_order(GenServer.server(), ordered_transactions()) ::
           :error | {:ok, any()}
-  def new_order(ordering, ordered_transactions) do
-    new_order(ordering, ordered_transactions, false)
-  end
-
-  @spec new_order(GenServer.server(), ordered_transactions(), boolean()) ::
-          :error | {:ok, any()}
-  def new_order(ordering, ordered, instrumentation) do
-    GenServer.call(ordering, {:new_order, ordered, instrumentation})
+  def new_order(ordering, ordered) do
+    GenServer.call(ordering, {:new_order, ordered})
   end
 
   @spec get_storage(GenServer.server()) :: Storage.t()
@@ -125,8 +119,8 @@ defmodule Anoma.Node.Storage.Ordering do
     {:reply, Map.get(state.hash_to_order, id), state}
   end
 
-  def handle_call({:new_order, trans, instrumentation}, _from, state) do
-    {next_order, new_map} = handle_new_order(trans, state, instrumentation)
+  def handle_call({:new_order, trans}, _from, state) do
+    {next_order, new_map} = handle_new_order(trans, state)
 
     {:reply, :ok, %{state | next_order: next_order, hash_to_order: new_map}}
   end
@@ -149,11 +143,6 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
   #                    Caller Blocking API                   #
   ############################################################
-  @spec caller_blocking_read_id(GenServer.server(), Noun.t()) ::
-          :error | {:ok, any()}
-  def caller_blocking_read_id(coms, key) do
-    caller_blocking_read_id(coms, key, false)
-  end
 
   # translate from ids to true order
   @doc """
@@ -168,25 +157,23 @@ defmodule Anoma.Node.Storage.Ordering do
      the storage key. This is akin to the `Storage.qualified_key` in
      `Storage.blocking_read/2`
 
-    - `inst` - instrumentation
-
   ### Returns
   returns the given key at a specific value
   """
-  @spec caller_blocking_read_id(GenServer.server(), Noun.t(), boolean()) ::
+  @spec caller_blocking_read_id(GenServer.server(), Noun.t()) ::
           :error | {:ok, any()}
-  def caller_blocking_read_id(coms, [id | subkey], inst) do
+  def caller_blocking_read_id(coms, [id | subkey]) do
     maybe_true_order = Communicator.true_order(coms, id)
     storage = Communicator.get_storage(coms)
 
     read_order =
       case maybe_true_order do
         nil ->
-          instrument(inst, {:waiting, {self(), id}})
+          instrument({:waiting, {self(), id}})
 
           receive do
             {:read_ready, true_order} ->
-              instrument(inst, {:read_ready, {self(), id, true_order}})
+              instrument({:read_ready, {self(), id, true_order}})
 
               true_order
           end
@@ -196,22 +183,22 @@ defmodule Anoma.Node.Storage.Ordering do
       end
 
     full_key = [read_order | subkey]
-    instrument(inst, {:getting_key, full_key})
-    Storage.blocking_read(storage, full_key, inst)
+    instrument({:getting_key, full_key})
+    Storage.blocking_read(storage, full_key)
   end
 
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec handle_new_order(ordered_transactions(), t(), boolean()) ::
+  @spec handle_new_order(ordered_transactions(), t()) ::
           {non_neg_integer(), %{key() => non_neg_integer()}}
-  def handle_new_order(ordered_transactions, state, instrumentation) do
+  def handle_new_order(ordered_transactions, state) do
     num_txs = length(ordered_transactions)
-    instrument(instrumentation, {:new_tx, num_txs})
+    instrument({:new_tx, num_txs})
 
     for order <- ordered_transactions do
-      instrument(instrumentation, {:ready, Order.pid(order)})
+      instrument({:ready, Order.pid(order)})
       send(Order.pid(order), {:read_ready, Order.index(order)})
     end
 
@@ -227,23 +214,23 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
   #                      Instrumentation                     #
   ############################################################
-  def instrument(_instrument, {:new_tx, num_txs}) do
+  def instrument({:new_tx, num_txs}) do
     Logger.info("New tx count: #{inspect(num_txs)}")
   end
 
-  def instrument(_instrument, {:ready, pid}) do
+  def instrument({:ready, pid}) do
     Logger.info("sending read ready to #{inspect(pid)}")
   end
 
-  def instrument(_instrument, {:waiting, id}) do
+  def instrument({:waiting, id}) do
     Logger.info("#{inspect(id)}, Waiting on read ready")
   end
 
-  def instrument(_instrument, {:read_ready, info}) do
+  def instrument({:read_ready, info}) do
     Logger.info("#{inspect(info)}, got read ready")
   end
 
-  def instrument(_instrument, {:getting_key, full_key}) do
+  def instrument({:getting_key, full_key}) do
     Logger.info("getting at: #{inspect(full_key)}")
   end
 end
