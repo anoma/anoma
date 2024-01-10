@@ -45,6 +45,8 @@ defmodule Anoma.MixProject do
       {:recon, "~> 2.5.4"},
       {:rexbug, ">= 2.0.0-rc1"},
       {:kino, "~> 0.12.2"},
+      {:grpc, "~> 0.7"},
+      {:protobuf, "~> 0.12"},
       {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
