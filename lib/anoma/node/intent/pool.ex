@@ -7,10 +7,10 @@ defmodule Anoma.Node.Intent.Pool do
   use TypedStruct
   use GenServer
 
-  alias Anoma.Intent
+  alias Anoma.Resource.Transaction
   alias Anoma.Node.Utility
 
-  @type intents :: MapSet.t(Intent.t())
+  @type intents :: MapSet.t(Transaction.t())
   typedstruct do
     field(:intents, intents, default: MapSet.new())
   end
@@ -32,12 +32,12 @@ defmodule Anoma.Node.Intent.Pool do
     GenServer.call(pool, :intents)
   end
 
-  @spec new_intent(GenServer.server(), Intent.t()) :: Intent.t()
+  @spec new_intent(GenServer.server(), Transaction.t()) :: :ok | :already_in
   def new_intent(pool, intent) do
     GenServer.call(pool, {:new_intent, intent})
   end
 
-  @spec remove_intent(GenServer.server(), Intent.t()) :: Intent.t()
+  @spec remove_intent(GenServer.server(), Transaction.t()) :: :ok | :not_in
   def remove_intent(pool, intent) do
     GenServer.call(pool, {:remove_intent, intent})
   end
@@ -64,7 +64,8 @@ defmodule Anoma.Node.Intent.Pool do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec handle_remove_intent(t(), Intent.t()) :: {:ok, t()} | {:not_in, t()}
+  @spec handle_remove_intent(t(), Transaction.t()) ::
+          {:ok, t()} | {:not_in, t()}
   defp handle_remove_intent(pool, intent) do
     if MapSet.member?(pool.intents, intent) do
       {:ok, %Pool{pool | intents: MapSet.delete(pool.intents, intent)}}
@@ -73,7 +74,8 @@ defmodule Anoma.Node.Intent.Pool do
     end
   end
 
-  @spec handle_new_intent(t(), Intent.t()) :: {:ok, t()} | {:already_in, t()}
+  @spec handle_new_intent(t(), Transaction.t()) ::
+          {:ok, t()} | {:already_in, t()}
   defp handle_new_intent(pool, intent) do
     if MapSet.member?(pool.intents, intent) do
       {:already_in, pool}

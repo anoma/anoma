@@ -8,7 +8,7 @@ defmodule Anoma.Node.Intent.Communicator do
   alias Anoma.Communicator, as: ACom
   use TypedStruct
   alias __MODULE__
-  alias Anoma.Intent
+  alias Anoma.Resource.Transaction
   alias Anoma.Node.Utility
   alias Anoma.Node.Intent.Pool
 
@@ -41,7 +41,7 @@ defmodule Anoma.Node.Intent.Communicator do
   1. broadcast the new intent to the pool
   2. broadcasts the new intent to all subscribers
   """
-  @spec new_intent(GenServer.server(), Intent.t()) :: :ok
+  @spec new_intent(GenServer.server(), Transaction.t()) :: :ok
   def new_intent(communicator, intent) do
     GenServer.cast(communicator, {:new_intent, intent})
   end
@@ -57,12 +57,12 @@ defmodule Anoma.Node.Intent.Communicator do
   1. broadcast the new intent to the pool
   2. broadcasts the new intent to all subscribers
   """
-  @spec remove_intent(GenServer.server(), Intent.t()) :: :ok
+  @spec remove_intent(GenServer.server(), Transaction.t()) :: :ok
   def remove_intent(communicator, intent) do
     GenServer.cast(communicator, {:remove_intent, intent})
   end
 
-  @spec all_intents(GenServer.server()) :: MapSet.t(Intent.t())
+  @spec all_intents(GenServer.server()) :: MapSet.t(Transaction.t())
   def all_intents(communicator) do
     GenServer.call(communicator, :intents)
   end
@@ -100,7 +100,7 @@ defmodule Anoma.Node.Intent.Communicator do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec broadcast_intent(t(), Intent.t()) :: :ok
+  @spec broadcast_intent(t(), Transaction.t()) :: :ok
   defp broadcast_intent(com, intent) do
     Utility.broadcast(
       com.subscribers,
@@ -108,7 +108,7 @@ defmodule Anoma.Node.Intent.Communicator do
     )
   end
 
-  @spec broadcast_remove(t(), Intent.t()) :: :ok
+  @spec broadcast_remove(t(), Transaction.t()) :: :ok
   defp broadcast_remove(com, intent) do
     Utility.broadcast(
       com.subscribers,
