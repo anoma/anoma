@@ -51,7 +51,22 @@ defmodule Anoma.MixProject do
 
   defp docs do
     [
-      extras: extras()
+      extras: extras(),
+      groups_for_modules: group_for_modules()
+    ]
+  end
+
+  def group_for_modules() do
+    [
+      "Resource Machine": [~r/^Nock.?/, ~r/^Noun.?/],
+      "Anoma Actors": [Anoma.Node],
+      Mempool: ~r/^Anoma.Node.Mempool.?/,
+      Executor: ~r/^Anoma.Node.Executor.?/,
+      Intents: ~r/^Anoma.Node.Intent.?/,
+      Storage: [~r/^Anoma.Node.Storage.?/, Anoma.Storage, Anoma.Order],
+      Utilities: [Anoma.Node.Utility, Anoma.Mnesia],
+      "Test Helpers": ~r/^TestHelper.?/,
+      "Deprecated Logic": [~r/^Anoma.Logic/, Anoma.Eval]
     ]
   end
 
