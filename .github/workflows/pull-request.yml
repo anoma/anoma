@@ -54,9 +54,15 @@ jobs:
         restore-keys: |
           mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
 
+    - name: Install protobuff-compiler
+      if: steps.try_merge.outcome != 'failure'
+      run: sudo apt-get install -y protobuf-compiler
+
     - name: Install dependencies
       if: steps.try_merge.outcome != 'failure'
-      run: mix deps.get
+      run: >
+        mix deps.get &&
+        mix escript.install hex protobuf
 
     - name: Restore PLT cache
       id: plt_cache
@@ -68,6 +74,10 @@ jobs:
           plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
         restore-keys: |
           plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+    - name: Generate protobuf code
+      if: steps.try_merge.outcome != 'failure'
+      run: env PATH=$PATH:$HOME/.mix/escripts make
 
     - name: Create PLTs
       if: steps.plt_cache.outputs.cache-hit != 'true' &&
