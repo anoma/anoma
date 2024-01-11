@@ -17,9 +17,12 @@
 ::  a transparent nullifier is the resource, signed by the nullifier key
 +$  nullifier  [resource=resource signature=@]
 ::  a transparent proof is the resource (just the resource logic, really)
+::  what is a proof? a proof that the resource logic gives true on this tx.
+::  just providing the resource logic is also a proof. the verification
+::  is just executing the logic and comparing its result to true.
 +$  proof  resource
 ::  a delta is a signed denominated amount. denom depends on logic and label
-::  true = positive; todo: use map instead (when hashes are in)
+::  true = positive todo: use map instead (when hashes are in)
 +$  delta  (list [denom=@ sign=? amount=@])
 ++  zero-delta  `delta`~
 ::  a resource transaction. see the resource machine report
@@ -49,28 +52,8 @@
   |=  l=(list commitment)
   ^-  (list resource)
   l
-++  delta-add
-  |=  [a=delta b=delta]
-  ^-  delta
-  !!
-++  delta-sub
-  |=  [a=delta b=delta]
-  ^-  delta
-  !!
 --
 |%
-++  example-logic-balanced
-  ::  delta balance is checked at the validity level anyway,
-  ::  this logic should be entirely redundant.
-  ::  just making sure it's checkable in a logic
-  ^-  resource-logic
-  |=  tx=resource-transaction
-  ^-  ?
-  =/  created  (created-resources commitments.tx)
-  =/  spent  (spent-resources nullifiers.tx)
-  =/  created-sum  (foldr created delta-add)
-  =/  spent-sum  (foldr spent delta-add)
-  =(delta.tx (delta-sub created-sum spent-sum)
 ++  example-logic-one-for-one
   ::  only allow a balanced one for one transaction
   ^-  resource-logic
