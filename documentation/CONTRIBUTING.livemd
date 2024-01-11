@@ -1,0 +1,19 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Contributing
+
+## Index
+
+* [Index](./index.livemd)
+  * [Contributing](./CONTRIBUTING.livemd)
+    1. [IEx](./contributing/iex.livemd)
+    2. [Observer](./contributing/observer.livemd)
+    3. [Understanding any module](./contributing/understanding.livemd)
+    4. [Testing](./contributing/testing.livemd)
+    5. [Git](./contributing/git.livemd)
+
+<!-- livebook:{"break_markdown":true} -->
+
+Please view any concept in the index for any sections you may be interested in.
+
+Please feel free to contribute to these docs and improve them!

@@ -42,8 +42,8 @@ interactive shell.
 
 ## Contributing
 
-Please read the [CONTRIBUTING.md](./CONTRIBUTING.md) for in depth
-details about the codebase.
+Please read the [contributor's guide](./documentation/CONTRIBUTING.livemd) for in
+depth details about the codebase.
 
 ### Git
 
@@ -60,6 +60,7 @@ the PR is merged but it's still oepn, this just means that it's merged
 into `next` or `main` and will be inclueded in the next scheduled
 release.
 
-For more information on a smooth git experience check out the [git section in CONTRIBUTING.md](./CONTRIBUTING.md##git)
+For more information on a smooth git experience check out the [git
+section in contributor's guide](./documentation/contributing/git.livemd)
 
 Happy hacking, and don't be afraid to submit patches.

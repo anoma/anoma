@@ -43,6 +43,7 @@ defmodule Anoma.MixProject do
       {:xxhash, "~> 0.3"},
       {:recon, "~> 2.5.4"},
       {:rexbug, ">= 2.0.0-rc1"},
+      {:kino, "~> 0.12.2"},
       {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
@@ -52,7 +53,10 @@ defmodule Anoma.MixProject do
 
   defp docs do
     [
+      main: "readme",
       extras: extras(),
+      extra_section: "GUIDES",
+      groups_for_extras: group_for_extras(),
       groups_for_modules: group_for_modules()
     ]
   end
@@ -71,7 +75,27 @@ defmodule Anoma.MixProject do
     ]
   end
 
+  def group_for_extras() do
+    [
+      "Contributors Guide": ~r/documentation\/contributing\/.?/,
+      "Contributors Guide": "documentation/CONTRIBUTING.livemd",
+      "Visualizing Anoma": ~r/documentation\/visualization\/.?/,
+      "Visualizing Anoma": "documentation/visualization.livemd"
+    ]
+  end
+
   def extras() do
-    []
+    [
+      "README.md",
+      "documentation/index.livemd",
+      "documentation/CONTRIBUTING.livemd",
+      "documentation/contributing/iex.livemd",
+      "documentation/contributing/observer.livemd",
+      "documentation/contributing/understanding.livemd",
+      "documentation/contributing/testing.livemd",
+      "documentation/contributing/git.livemd",
+      "documentation/visualization.livemd",
+      "documentation/visualization/actors.livemd"
+    ]
   end
 end

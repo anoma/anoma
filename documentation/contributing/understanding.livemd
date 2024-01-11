@@ -1,0 +1,176 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Understanding any code in Anoma
+
+## Index
+
+* [Index](../index.livemd)
+  * [Contributing](../CONTRIBUTING.livemd)
+    * [Understanding any module](./understanding.livemd)
+
+## Figuring out what a module does
+
+Α good start is by calling `h` on the module from within one's IEX
+instance.
+
+```elixir
+require IEx.Helpers
+import IEx.Helpers
+# the above two lines are not requried for the REPL!
+h(Anoma.Node)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+                                   Anoma.Node
+
+I am the supervisor for Anoma Nodes
+
+## Required Arguments
+
+  • name - name to register the nodes
+  • snapshot_path : [atom() | 0]
+    • A snapshot location for the service (used in the worker)
+
+  • storage : Anoma.Storage.t() - The Storage tables to use
+  • block_storage - a location to store the blocks produced
+## Optional Arguments
+
+  • jet : Nock.jettedness() - how jetted the system should be
+  • old_storage : boolean - states if the storage should be freshly made
+    • by default it is false
+## Registered names
+
+
+
+From the given name argument we derive the following:
+
+  • name_mempool
+  • name_executor
+  • name_ordering
+  • name_mempool_com
+  • name_executor_com
+  • name_ordering_com
+
+### Created Tables
+
+  • storage.qualified
+  • storage.order
+  • block_storage
+
+```
+
+However, this typically doesn't show off how one uses said
+module. Thankfully, the codebase is setup in such a way that one can
+always interactively play with any given module.
+
+This is done by simply checking out the tests folder, and finding the
+module you wish to learn to learn about.
+
+For example, let us learn about the mempool. In the codebase currently
+this can be found here:
+
+* `test/node/mempool_test.exs`,
+
+note that even if this gets out of date, you should be able to do this with any file!
+
+The first thing one can do to run things interactively is by taking
+all the imports of the file and running it locally
+
+In this case I input the following from the file into IEX.
+
+I also make sure to include an extra `import ExUnit.Assertions` so
+that assertions can be copied and pasted to IEX
+
+```elixir
+# output redacted for length
+alias Anoma.Storage
+alias Anoma.Node.Storage.Communicator, as: Scom
+alias Anoma.Node.Executor.Communicator, as: Ccom
+alias Anoma.Node.Mempool.Communicator, as: Mcom
+import TestHelper.Nock
+
+import ExUnit.Assertions
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+ExUnit.Assertions
+```
+
+After the imports are done, then we copy the `setup_all` if this section
+exists
+
+```elixir
+# setup_all do
+storage = %Anoma.Storage{
+  qualified: AnomaTest.Mempool.Qualified,
+  order: AnomaTest.Mempool.Order
+}
+
+name = :mempool
+snapshot_path = [:my_special_nock_snaphsot | 0]
+
+node = Anoma.Node.com_names(name)
+
+unless Process.whereis(:mempool_mempool_com) do
+  Anoma.Node.start_link(
+    name: name,
+    snapshot_path: snapshot_path,
+    storage: storage,
+    block_storage: :mempool_blocks
+  )
+end
+
+node
+# end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%Anoma.Node{
+  executor: :mempool_executor_com,
+  ordering: :mempool_ordering_com,
+  mempool: :mempool_mempool_com
+}
+```
+
+From here we can run any tests in the file by copying those as well!
+
+What is even better is that we can copy parts of tests to setup an
+area to play with the code to figure out what is going well with our
+other tools.
+
+This is a great way for learning any API in the codebase as you can
+get hands on what each function and message does.
+
+```elixir
+# test "successful process", %{node: node} do
+key = 555
+storage = Scom.get_storage(node.ordering)
+increment = increment_counter_val(key)
+zero = zero_counter(key)
+
+Ccom.subscribe(node.executor, self())
+Mcom.hard_reset(node.mempool)
+
+pid_zero = Mcom.tx(node.mempool, zero).pid
+
+Mcom.execute(node.mempool)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok, 1}
+```
+
+Further since the data is live, we can use tools like `:observer` to
+view the processes, and see general state dumping commands.
+
+For databases I've found that `Anoma.Mnesia` is a good tool along with
+`:observer` for seeing what is currently in database table.

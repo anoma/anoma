@@ -1,0 +1,27 @@
+# IEx
+
+## Index
+
+* [Index](../index.livemd)
+  * [Contributing](../CONTRIBUTING.livemd)
+    * [IEx](./iex.livemd)
+
+## Running multiple IEX's in the same Image/Environments
+
+It is sometimes useful to have multiple terminals/IEX's in the same
+running system, or perhaps to connect to a running deploy Anoma
+Instance. We can connect to other IEX instances in this way:
+
+<!-- livebook:{"break_markdown":true} -->
+
+```bash
+MIX_ENV=test iex --sname b@localhost --cookie anoma -S mix
+# open a new terminal
+MIX_ENV=test iex --remsh b@localhost --sname c@localhost --cookie anoma -S mix
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+This also allows you to connect from [livebook](https://livebook.dev)
+by using the above cookie `anoma` under the `runtime` config of
+livebook.
