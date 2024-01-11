@@ -1,6 +1,7 @@
 defmodule Anoma.Node.Mempool.Primary do
   use GenServer
   use TypedStruct
+  require Logger
 
   alias Anoma.{Block, Transaction, Order, Serializer}
   alias Anoma.Block.Base
@@ -139,6 +140,8 @@ defmodule Anoma.Node.Mempool.Primary do
     Scom.new_order(state.ordering, ordered_transactions)
 
     # also send in the logic for write ready
+    instrument({:write, length(ordered_transactions)})
+
     for ord <- ordered_transactions do
       send(Order.pid(ord), {:write_ready, Order.index(ord)})
     end
@@ -180,7 +183,10 @@ defmodule Anoma.Node.Mempool.Primary do
 
   @spec kill_transactions(list(Transaction.t())) :: :ok
   def kill_transactions(transactions) do
+    instrument({:kill, length(transactions)})
+
     for transaction <- transactions do
+      instrument({:killing_pid, transaction})
       Process.exit(Transaction.pid(transaction), :kill)
     end
 
@@ -204,5 +210,17 @@ defmodule Anoma.Node.Mempool.Primary do
       Transaction.id(transaction),
       Transaction.pid(transaction)
     )
+  end
+
+  defp instrument({:kill, len}) do
+    Logger.info("Got Kill Signal killing #{inspect(len)} processes")
+  end
+
+  defp instrument({:killing_pid, pid}) do
+    Logger.debug("Killing: #{inspect(pid)}")
+  end
+
+  defp instrument({:write, len}) do
+    Logger.info("Sending :write_ready to #{inspect(len)} processes")
   end
 end
