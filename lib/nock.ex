@@ -4,8 +4,10 @@ defmodule Nock do
   """
 
   require Noun
+  require Logger
 
   use TypedStruct
+
   alias Anoma.Storage
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
@@ -28,7 +30,6 @@ defmodule Nock do
     field(:jet, jettedness(), default: :jetted)
     field(:ordering, GenServer.server() | nil, default: nil)
     field(:snapshot_path, Noun.t() | nil, default: nil)
-    field(:instrumentation, boolean, default: false)
   end
 
   @dialyzer :no_improper_lists
@@ -715,16 +716,14 @@ defmodule Nock do
   @spec read_with_id(Noun.t(), t()) :: {:ok, Noun.t()} | :error
   def read_with_id(id, env) do
     ordering = env.ordering
-    inst = env.instrumentation
 
     if ordering && env.snapshot_path && id do
       with [id, key | 0] <- id,
            snap_id = [id | env.snapshot_path],
-           {:ok, snap} <-
-             Ordering.caller_blocking_read_id(ordering, snap_id, inst),
-           instrument(inst, {:snapshot, snap}),
+           {:ok, snap} <- Ordering.caller_blocking_read_id(ordering, snap_id),
+           instrument({:snapshot, snap}),
            {:ok, value} <- Storage.get_at_snapshot(snap, key) do
-        instrument(inst, {:got_value, value})
+        instrument({:got_value, value})
         {:ok, value}
       else
         _ -> :error
@@ -734,11 +733,11 @@ defmodule Nock do
     end
   end
 
-  defp instrument(instrument, {:snapshot, snap}) do
-    if instrument, do: IO.inspect(snap, label: "got snapshot")
+  defp instrument({:snapshot, snap}) do
+    Logger.info("got snapshot: #{inspect(snap)}")
   end
 
-  defp instrument(instrument, {:got_value, value}) do
-    if instrument, do: IO.inspect(value, label: "got value")
+  defp instrument({:got_value, value}) do
+    Logger.info("got value: #{inspect(value)}")
   end
 end

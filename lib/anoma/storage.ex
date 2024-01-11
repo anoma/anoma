@@ -47,6 +47,8 @@ defmodule Anoma.Storage do
 
   use TypedStruct
 
+  require Logger
+
   @typedoc """
   I represent the qualified and ordered data of storage
 
@@ -115,15 +117,10 @@ defmodule Anoma.Storage do
 
   @spec get(t(), order_key()) :: :absent | {:ok, qualified_value()}
   def get(storage, key) do
-    get(storage, key, false)
-  end
-
-  @spec get(t(), order_key(), boolean()) :: :absent | {:ok, qualified_value()}
-  def get(storage, key, instrumentation) do
     with {:atomic, [{_, ^key, order}]} <- read_order(storage, key),
          {:atomic, [{_, [^order, ^key | 0], value}]} <-
            read_at_order(storage, key, order) do
-      instrument(instrumentation, {:get_order, order})
+      instrument({:get_order, order})
       {:ok, value}
     else
       _ -> :absent
@@ -132,28 +129,17 @@ defmodule Anoma.Storage do
 
   @spec put(t(), order_key(), qualified_value()) :: result(:ok)
   def put(storage, key, value) do
-    put(storage, key, value, false)
-  end
-
-  @spec put(t(), order_key(), qualified_value(), boolean()) :: result(:ok)
-  def put(storage, key, value, instrumentation) do
     with {:atomic, order} <- read_order(storage, key),
          new_order = calculate_order(order),
          {:atomic, :ok} <- write_at_order(storage, key, value, new_order) do
-      instrument(instrumentation, {:put_order, new_order})
+      instrument({:put_order, new_order})
       {:atomic, :ok}
     end
   end
 
   @spec blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
   def blocking_read(storage, key) do
-    blocking_read(storage, key, false)
-  end
-
-  @spec blocking_read(t(), qualified_key(), boolean()) ::
-          :error | {:ok, any()}
-  def blocking_read(storage, key, instrumentation) do
-    instrument(instrumentation, {:read, key})
+    instrument({:read, key})
 
     case key do
       [0 | _] ->
@@ -259,15 +245,15 @@ defmodule Anoma.Storage do
   ############################################################
   #                      Instrumentation                     #
   ############################################################
-  def instrument(instrument, {:get_order, order}) do
-    if instrument, do: IO.inspect(order, label: "getting at order")
+  def instrument({:get_order, order}) do
+    Logger.debug("Getting at order: #{inspect(order)}")
   end
 
-  def instrument(instrument, {:put_order, order}) do
-    if instrument, do: IO.inspect(order, label: "putting at order")
+  def instrument({:put_order, order}) do
+    Logger.debug("Putting at order: #{inspect(order)}")
   end
 
-  def instrument(instrument, {:read, key}) do
-    if instrument, do: IO.inspect(key, label: "regular blocking read key")
+  def instrument({:read, key}) do
+    Logger.info("Regular blocking read at key: #{inspect(key)}")
   end
 end
