@@ -19,6 +19,7 @@ defmodule Anoma.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Anoma, []},
       extra_applications: [
         :logger,
         :crypto,
