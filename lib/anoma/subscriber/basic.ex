@@ -2,7 +2,7 @@ defmodule Anoma.Subscriber.Basic do
   @moduledoc """
   I'm a mock subscriber module. I should be able to handle:
 
-  - {:new_intent, intent} messages
+  - `{:new_intent, intent}` messages
 
   And I should:
 

@@ -46,12 +46,14 @@ defmodule Anoma.Mnesia do
   I help dump all data in a given table
 
   ### Example
-     iex(15)> :mnesia.create_table(:test, [attributes: [:id, :name, :job]])
-     {:atomic, :ok}
-     iex(16)> :mnesia.dirty_write({:test, 1, "G'kar", "Ambassador"})
-     :ok
-     iex(17)> Anoma.Mnesia.dirty_dump(:test)
-     [[{:test, 1, "G'kar", "Ambassador"}]]
+
+       iex(15)> :mnesia.create_table(:test, [attributes: [:id, :name, :job]])
+       {:atomic, :ok}
+       iex(16)> :mnesia.dirty_write({:test, 1, "G'kar", "Ambassador"})
+       :ok
+       iex(17)> Anoma.Mnesia.dirty_dump(:test)
+       [[{:test, 1, "G'kar", "Ambassador"}]]
+
   """
   def dirty_dump(table) do
     catch_all = [{:"$1", [], [:"$$"]}]
