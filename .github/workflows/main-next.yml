@@ -15,6 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.0
 
+      - name: Install system dependencies
+        run: sudo apt-get install -y libsodium-dev
+
       - name: Set up Elixir
         id: beam
         uses: erlef/setup-beam@v1.16.0

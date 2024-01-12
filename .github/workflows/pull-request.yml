@@ -32,6 +32,10 @@ jobs:
         merge -m 'Automerge with next'
         ${{ github.event.pull_request.head.sha }}
 
+    - name: Install system dependencies
+      if: steps.try_merge.outcome != 'failure'
+      run: sudo apt-get install -y libsodium-dev
+
     - name: Set up Elixir
       id: beam
       if: steps.try_merge.outcome != 'failure'
