@@ -1,3 +1,6 @@
+/+  anoma
+!.
+=>  anoma
 |%
 ::  resource machine data structures
 ::  a resource. see resource machine report
@@ -34,12 +37,9 @@
     proofs=(list proof)
     delta=delta  ::  total tx delta
     extra=@
-    preference=preference-function
+    preference=~ ::  nyi
   ==
 ::  a resource logic is a function from a transaction to boolean
 +$  resource-logic
   $-(resource-transaction ?)
-::  currently unused
-+$  preference-function
-  $-(resource-transaction @)
 --

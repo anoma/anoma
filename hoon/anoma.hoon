@@ -97,13 +97,19 @@
   ==
 ++  list
   |$  [item]
-  $@(~ [i=item t=(list item)]
+  $@(~ [i=item t=(list item)])
 ++  nonempty-list
   |$  [item]
   [i=item t=(list item)]
 ++  tree
   |$  [node]
   $@(~ [n=node l=(tree node) r=(tree node)])
+::  utilities on some of these types
+++  length
+  |*  l=(list)
+  ?~  l
+    0
+  +($(l t.l))
 ::  HOFs on some of these types
 ++  curry
   |*  [a=$-(^ *) b=*]
