@@ -115,4 +115,52 @@ defmodule AnomaTest.Resource do
 
     assert Transaction.verify(good_tx)
   end
+
+  test "logic that rejects nonzero delta" do
+    keypair = Sign.new_keypair()
+
+    # this logic just tests that the tx delta equals the zero delta
+    resource = %{
+      new_with_npk(keypair.public)
+      | label: "space bucks",
+        quantity: 10,
+        logic: Noun.Format.parse_always("[[5 [1 0] [0 222]] 0 0]")
+    }
+
+    # valid tx delta (tx burns 10 space bucks).
+    tx_delta = %{kind(resource) => -10}
+
+    nf_r = nullifier(resource, keypair.secret)
+    pf_r = ProofRecord.prove(resource)
+
+    transaction = %Transaction{
+      nullifiers: [nf_r],
+      proofs: [pf_r],
+      delta: tx_delta
+    }
+
+    # todo: break out the verifier so we can assert specifically
+    # that there is a failure in a resource logic
+    refute Transaction.verify(transaction)
+
+    # the same resource should allow itself to be spent if balanced
+    balancing_resource = %{
+      new_with_npk(keypair.public)
+      | label: "space bucks",
+        quantity: 10,
+        logic: Noun.Format.parse_always("[[5 [1 0] [0 222]] 0 0]")
+    }
+
+    cm_br = commitment(balancing_resource)
+    pf_br = ProofRecord.prove(balancing_resource)
+
+    balanced_transaction = %Transaction{
+      nullifiers: [nf_r],
+      commitments: [cm_br],
+      proofs: [pf_r, pf_br],
+      delta: %{}
+    }
+
+    assert Transaction.verify(balanced_transaction)
+  end
 end
