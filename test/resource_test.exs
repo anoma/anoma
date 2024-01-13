@@ -163,4 +163,59 @@ defmodule AnomaTest.Resource do
 
     assert Transaction.verify(balanced_transaction)
   end
+
+  test "counter logic" do
+    counter_logic = [
+      Noun.Format.parse_always("""
+      [ 6
+        [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 58] 0 2]
+        [ 6
+          [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 118] 0 2]
+          [ 6
+            [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 478] 0 2]
+            [6 [5 [1 0] 0 222] [0 0] 6 [0 1.778] [1 0] 1 1]
+            1
+            1
+          ]
+          1
+          1
+        ]
+        1
+        1
+      ]
+      """),
+      0 | Nock.logics_core()
+    ]
+
+    keypair = Sign.new_keypair()
+
+    zeroed_counter = %{
+      new_with_npk(keypair.public)
+      | label: "counter",
+        quantity: 0,
+        logic: counter_logic
+    }
+
+    incremented_counter = %{
+      new_with_npk(keypair.public)
+      | label: "counter",
+        quantity: 1,
+        logic: counter_logic
+    }
+
+    nf_0 = nullifier(zeroed_counter, keypair.secret)
+    pf_0 = ProofRecord.prove(zeroed_counter)
+
+    cm_1 = commitment(incremented_counter)
+    pf_1 = ProofRecord.prove(incremented_counter)
+
+    tx = %Transaction{
+      commitments: [cm_1],
+      nullifiers: [nf_0],
+      proofs: [pf_0, pf_1],
+      delta: %{kind(zeroed_counter) => 1}
+    }
+
+    assert Transaction.verify(tx)
+  end
 end
