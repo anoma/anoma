@@ -9,13 +9,16 @@ defmodule Noun do
 
   require Integer
 
-  @type t() :: non_neg_integer() | nonempty_improper_list(t(), t())
+  @type noun_atom() :: non_neg_integer() | binary() | []
+  @type noun_cell() :: nonempty_improper_list(t(), t())
+  @type t() :: noun_atom() | noun_cell()
 
   # erlang has something called 'atom' already, so we say is_noun_atom
-  defguard is_noun_atom(term) when is_integer(term) and term >= 0
+  defguard is_noun_atom(term)
+           when (is_integer(term) and term >= 0) or is_binary(term) or
+                  term == []
+
   defguard is_noun_cell(term) when is_list(term) and term != []
-  defguard is_even(term) when is_noun_atom(term) and Integer.is_even(term)
-  defguard is_odd(term) when is_noun_atom(term) and Integer.is_odd(term)
 
   @spec axis(non_neg_integer(), t()) :: {:ok, t()} | :error
   def axis(axis, noun) do
@@ -39,11 +42,11 @@ defmodule Noun do
             _ -> :error
           end
 
-        x when is_even(x) ->
+        x when Integer.is_even(x) ->
           {:ok, subnoun} = axis(div(x, 2), noun)
           axis(2, subnoun)
 
-        x when is_odd(x) ->
+        x when Integer.is_odd(x) ->
           {:ok, subnoun} = axis(div(x, 2), noun)
           axis(3, subnoun)
 
@@ -65,12 +68,12 @@ defmodule Noun do
         1 ->
           {:ok, replacement}
 
-        x when is_even(x) ->
+        x when Integer.is_even(x) ->
           subaxis = div(axis, 2)
           {:ok, subnoun} = axis(axis + 1, noun)
           replace(subaxis, [replacement | subnoun], noun)
 
-        x when is_odd(x) ->
+        x when Integer.is_odd(x) ->
           subaxis = div(axis, 2)
           {:ok, subnoun} = axis(axis - 1, noun)
           replace(subaxis, [subnoun | replacement], noun)
@@ -80,6 +83,37 @@ defmodule Noun do
       end
     rescue
       _ in MatchError -> :error
+    end
+  end
+
+  @spec equal(t(), t()) :: boolean()
+  def equal(noun_1, noun_2)
+      when is_noun_atom(noun_1) and is_noun_atom(noun_2) do
+    normalized_noun_1 = normalize_noun_atom(noun_1)
+    normalized_noun_2 = normalize_noun_atom(noun_2)
+
+    normalized_noun_1 == normalized_noun_2
+  end
+
+  def equal(noun_1, noun_2)
+      when is_noun_cell(noun_1) and is_noun_cell(noun_2) do
+    [h1 | t1] = noun_1
+    [h2 | t2] = noun_2
+
+    equal(h1, h2) && equal(t1, t2)
+  end
+
+  def equal(_a, _b) do
+    false
+  end
+
+  # leave binaries, which are most likely to be large, as binaries.
+  @spec normalize_noun_atom(noun_atom()) :: binary()
+  def normalize_noun_atom(atom) when is_noun_atom(atom) do
+    cond do
+      atom == [] -> <<>>
+      is_integer(atom) -> atom_integer_to_binary(atom)
+      is_binary(atom) -> atom
     end
   end
 
@@ -119,12 +153,25 @@ defmodule Noun do
   end
 
   @spec atom_integer_to_binary(pos_integer()) :: binary()
-  def atom_integer_to_binary(integer) do
+  def atom_integer_to_binary(integer)
+      when is_integer(integer) and integer >= 0 do
     :binary.encode_unsigned(integer, :little)
   end
 
+  # be idempotent on binaries
+  @spec atom_integer_to_binary(binary()) :: binary()
+  def atom_integer_to_binary(binary) when is_binary(binary) do
+    binary
+  end
+
   @spec atom_binary_to_integer(binary()) :: non_neg_integer()
-  def atom_binary_to_integer(binary) do
+  def atom_binary_to_integer(binary) when is_binary(binary) do
     :binary.decode_unsigned(binary, :little)
+  end
+
+  # be idempotent on integers
+  def atom_binary_to_integer(integer)
+      when is_integer(integer) and integer >= 0 do
+    integer
   end
 end

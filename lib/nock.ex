@@ -78,7 +78,8 @@ defmodule Nock do
   end
 
   # nock 9: check if the core's battery has a jet registration first
-  def nock(subject, [9, axis | core_formula], env = %Nock{jet: :jetted}) do
+  def nock(subject, [nine, axis | core_formula], env = %Nock{jet: :jetted})
+      when nine in [9, <<9>>] do
     {:ok, core} = nock(subject, core_formula, env)
 
     maybe_battery_mug =
@@ -139,7 +140,8 @@ defmodule Nock do
   end
 
   # scry: magically read from storage.
-  def nock(subject, [12, type_formula | subformula], environemnt) do
+  def nock(subject, [twelve, type_formula | subformula], environemnt)
+      when twelve in [12, <<12>>] do
     with {:ok, _type_result} <- nock(subject, type_formula, environemnt),
          {:ok, sub_result} <- nock(subject, subformula, environemnt) do
       read_with_id(sub_result, environemnt)
@@ -210,24 +212,31 @@ defmodule Nock do
 
         # 0: read from subject
         # *[a 0 b]            /[b a]
-        [0 | axis] ->
+        [zero | axis] when zero in [0, <<>>, []] and is_integer(axis) ->
           Noun.axis(axis, subject)
+
+        [zero | axis] when zero in [0, <<>>, []] and is_binary(axis) ->
+          Noun.axis(Noun.atom_binary_to_integer(axis), subject)
+
+        # [0 0] is the canonical crash; so take a shortcut
+        [zero | axis] when zero in [0, <<>>, []] and axis == [] ->
+          :error
 
         # 1: constant
         # *[a 1 b]            b
-        [1 | constant] ->
+        [one | constant] when one in [1, <<1>>] ->
           {:ok, constant}
 
         # 2: eval
         # *[a 2 b c]          *[*[a b] *[a c]]
-        [2, subject_formula | formula_formula] ->
+        [two, subject_formula | formula_formula] when two in [2, <<2>>] ->
           {:ok, new_subject} = nock(subject, subject_formula, environment)
           {:ok, new_formula} = nock(subject, formula_formula, environment)
           nock(new_subject, new_formula, environment)
 
         # 3: cell test
         # *[a 3 b]            ?*[a b]
-        [3 | sub_formula] ->
+        [three | sub_formula] when three in [3, <<3>>] ->
           {:ok, sub_result} = nock(subject, sub_formula, environment)
 
           if Noun.is_noun_cell(sub_result) do
@@ -238,22 +247,30 @@ defmodule Nock do
 
         # 4: increment
         # *[a 4 b]            +*[a b]
-        [4 | sub_formula] ->
+        [four | sub_formula] when four in [4, <<4>>] ->
           {:ok, sub_result} = nock(subject, sub_formula, environment)
 
-          if is_integer(sub_result) do
-            {:ok, sub_result + 1}
-          else
-            :error
+          cond do
+            sub_result == [] ->
+              {:ok, 1}
+
+            is_integer(sub_result) ->
+              {:ok, sub_result + 1}
+
+            is_binary(sub_result) ->
+              {:ok, Noun.atom_binary_to_integer(sub_result) + 1}
+
+            true ->
+              :error
           end
 
         # 5: noun equality
         # *[a 5 b c]          =[*[a b] *[a c]]
-        [5, formula_1 | formula_2] ->
+        [five, formula_1 | formula_2] when five in [5, <<5>>] ->
           {:ok, result_1} = nock(subject, formula_1, environment)
           {:ok, result_2} = nock(subject, formula_2, environment)
 
-          if result_1 == result_2 do
+          if Noun.equal(result_1, result_2) do
             {:ok, 0}
           else
             {:ok, 1}
@@ -261,7 +278,8 @@ defmodule Nock do
 
         # 6: if-then-else (spec macro)
         # *[a 6 b c d]        *[a *[[c d] 0 *[[2 3] 0 *[a 4 4 b]]]]
-        [6, cond | branches = [_true_branch | _false_branch]] ->
+        [six, cond | branches = [_true_branch | _false_branch]]
+        when six in [6, <<6>>] ->
           {:ok, cond_plus_two} = nock(subject, [4 | [4 | cond]], environment)
           {:ok, crash_guard} = nock([2 | 3], [0 | cond_plus_two], environment)
 
@@ -272,40 +290,42 @@ defmodule Nock do
 
         # 7: with subject (spec macro)
         # *[a 7 b c]          *[*[a b] c]
-        [7, subject_formula | sub_formula] ->
+        [seven, subject_formula | sub_formula] when seven in [7, <<7>>] ->
           {:ok, new_subject} = nock(subject, subject_formula, environment)
           nock(new_subject, sub_formula, environment)
 
         # 8: push on subject (spec macro)
         # *[a 8 b c]          *[[*[a b] a] c]
-        [8, push_formula | sub_formula] ->
+        [eight, push_formula | sub_formula] when eight in [8, <<8>>] ->
           {:ok, pushed_noun} = nock(subject, push_formula, environment)
           new_subject = [pushed_noun | subject]
           nock(new_subject, sub_formula, environment)
 
         # 9: arm of core (spec macro)
         # *[a 9 b c]          *[*[a c] 2 [0 1] 0 b]
-        [9, axis | sub_formula] ->
+        [nine, axis | sub_formula] when nine in [9, <<9>>] ->
           {:ok, sub_result} = nock(subject, sub_formula, environment)
           nock(sub_result, [2 | [[0 | 1] | [0 | axis]]], environment)
 
         # 10: replace at axis
         # *[a 10 [b c] d]     #[b *[a c] *[a d]]
-        [10, [axis | replacement_formula] | sub_formula] ->
+        [ten, [axis | replacement_formula] | sub_formula]
+        when ten in [10, <<10>>] ->
           {:ok, replacement} = nock(subject, replacement_formula, environment)
           {:ok, sub_result} = nock(subject, sub_formula, environment)
           Noun.replace(axis, replacement, sub_result)
 
         # 11: hint (spec macro)
         # *[a 11 [b c] d]     *[[*[a c] *[a d]] 0 3]
-        [11, [_hint_noun | hint_formula] | sub_formula] ->
+        [eleven, [_hint_noun | hint_formula] | sub_formula]
+        when eleven in [11, <<11>>] ->
           # must be computed, but is discarded
           {:ok, hint_result} = nock(subject, hint_formula, environment)
           {:ok, real_result} = nock(subject, sub_formula, environment)
           nock([hint_result | real_result], [0 | 3], environment)
 
         # *[a 11 b c]         *[a c]
-        [11, _hint_noun | sub_formula] ->
+        [eleven, _hint_noun | sub_formula] when eleven in [11, <<11>>] ->
           nock(subject, sub_formula, environment)
 
         # else, error
