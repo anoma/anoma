@@ -6,8 +6,10 @@ defmodule Anoma.Node.Storage.Communicator do
 
   """
 
-  use GenServer
   use TypedStruct
+  use Anoma.Communicator, sub_field: :subscribers
+  alias Anoma.Communicator, as: ACom
+
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Utility
@@ -15,7 +17,7 @@ defmodule Anoma.Node.Storage.Communicator do
 
   typedstruct do
     field(:primary, atom(), require: true)
-    field(:subscribers, MapSet.t(GenServer.server()), default: MapSet.new())
+    field(:subscribers, ACom.t(), default: ACom.new())
   end
 
   def init(name: name) do
