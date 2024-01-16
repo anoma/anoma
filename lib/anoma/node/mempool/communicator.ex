@@ -34,12 +34,14 @@ defmodule Anoma.Node.Mempool.Communicator do
   @spec soft_reset(GenServer.server()) :: :ok
   @spec hard_reset(GenServer.server()) :: :ok
   @spec tx(GenServer.server(), Noun.t()) :: Anoma.Transaction.t()
+  @spec pending_txs(GenServer.server()) :: list(Anoma.Transaction.t())
 
   defdelegate state(server), to: Primary
   defdelegate execute(server), to: Primary
   defdelegate soft_reset(server), to: Primary
   defdelegate hard_reset(server), to: Primary
   defdelegate tx(server, tx_code), to: Primary
+  defdelegate pending_txs(server), to: Primary
 
   ############################################################
   #                    Genserver Behavior                    #
@@ -55,6 +57,10 @@ defmodule Anoma.Node.Mempool.Communicator do
 
   def handle_call(:execute, _from, state) do
     {:reply, Primary.execute(state.primary), state}
+  end
+
+  def handle_call(:pending_txs, _from, state) do
+    {:reply, Primary.pending_txs(state.primary), state}
   end
 
   def handle_cast(:soft_reset, state) do

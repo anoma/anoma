@@ -10,11 +10,12 @@ defmodule Anoma.Node.Mempool.Primary do
   alias Anoma.Node.Storage.Ordering
   alias __MODULE__
 
+  @type transactions :: list(Transaction.t())
   typedstruct do
     field(:ordering, GenServer.server(), require: true)
     field(:executor, GenServer.server(), require: true)
     field(:block_storage, atom(), default: Anoma.Block)
-    field(:transactions, list(Transaction.t()), default: [])
+    field(:transactions, transactions, default: [])
     field(:round, non_neg_integer(), default: 0)
 
     field(:key, {Serializer.public_key(), Serializer.private_key()},
@@ -65,6 +66,11 @@ defmodule Anoma.Node.Mempool.Primary do
     GenServer.call(server, :state)
   end
 
+  @spec pending_txs(GenServer.server()) :: transactions
+  def pending_txs(server) do
+    GenServer.call(server, :pending_txs)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -82,6 +88,10 @@ defmodule Anoma.Node.Mempool.Primary do
   def handle_call(:execute, _from, state) do
     {length_ran, new_state} = handle_execute(state)
     {:reply, {:ok, length_ran}, new_state}
+  end
+
+  def handle_call(:pending_txs, _from, state) do
+    {:reply, state.transactions, state}
   end
 
   def handle_cast(:soft_reset, state) do
