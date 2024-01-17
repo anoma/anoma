@@ -86,4 +86,15 @@ defmodule AnomaTest.Node.Mempool do
     assert not Process.alive?(pid_zero)
     assert :absent = Storage.get(storage, key)
   end
+
+  test "Transactions broadcast", %{node: node} do
+    Mcom.subscribe(node.mempool, self())
+
+    Mcom.hard_reset(node.mempool)
+
+    zero_tx = Mcom.tx(node.mempool, zero_counter(777))
+
+    assert_receive {:"$gen_cast", {:submitted, ^zero_tx}}
+    Mcom.soft_reset(node.mempool)
+  end
 end
