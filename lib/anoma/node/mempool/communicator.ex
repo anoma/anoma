@@ -50,7 +50,9 @@ defmodule Anoma.Node.Mempool.Communicator do
   end
 
   def handle_call({:tx, tx_code}, _from, state) do
-    {:reply, Primary.tx(state.primary, tx_code), state}
+    tx = Primary.tx(state.primary, tx_code)
+    Utility.broadcast(state.subscribers, {:submitted, tx})
+    {:reply, tx, state}
   end
 
   def handle_call(:execute, _from, state) do
