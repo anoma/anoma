@@ -1,0 +1,23 @@
+name: "Release pre built"
+description: "Builds ex_doc scripts"
+inputs:
+  otp:
+    description: "The major OTP version"
+  otp_version:
+    description: "The exact OTP version (major.minor[.patch])"
+runs:
+  using: "composite"
+  steps:
+    - uses: erlef/setup-beam@v1.16.0
+      with:
+        otp-version: ${{ inputs.otp_version }}
+        elixir-version: "1.16.0"
+    - name: Build ex_doc
+      shell: bash
+      run: |
+        mix deps.get
+        mix escript.build
+        mv anoma anoma_otp_${{ inputs.otp }}
+        shasum -a 1 anoma_otp_${{ inputs.otp }} > anoma-otp-${{ inputs.otp }}.sha1sum
+        shasum -a 256 anoma_otp_${{ inputs.otp }} > anoma-otp-${{ inputs.otp }}.sha256sum
+        echo "$PWD/bin" >> $GITHUB_PATH
