@@ -17,11 +17,7 @@ defmodule Anoma.MixProject do
       name: "Anoma",
       docs: docs(),
       # Nockma eval
-      escript: [
-        main_module: Nock.Cli,
-        name: "nockma",
-        app: nil
-      ]
+      escript: escript()
     ]
   end
 
@@ -103,6 +99,14 @@ defmodule Anoma.MixProject do
       "documentation/contributing/git.livemd",
       "documentation/visualization.livemd",
       "documentation/visualization/actors.livemd"
+    ]
+  end
+
+  def escript do
+    [
+      main_module: Anoma.Cli,
+      name: "anoma",
+      app: nil
     ]
   end
 end
