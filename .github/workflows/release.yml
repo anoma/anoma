@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write
+
+jobs:
+  create_release:
+    continue-on-error: true
+    runs-on: ubuntu-22.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Create release
+        run: |
+          echo "Creating release..."
+          gh release create \
+            --repo ${{ github.repository }} \
+            --title ${{ github.ref_name }} \
+            ${{ github.ref_name }}
+
+  release_pre_built:
+    needs: create_release
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - otp: 24
+            otp_version: "24.0"
+          - otp: 25
+            otp_version: "25.0.4"
+          - otp: 26
+            otp_version: "26.0.2"
+          # - otp: 27
+          #   otp_version: "27.0"
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      - uses: ./.github/workflows/release_pre_built
+        with:
+          otp_version: ${{ matrix.otp_version }}
+          otp: ${{ matrix.otp }}
+
+      - name: Upload Pre-built
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload --clobber "${{ github.ref_name }}" \
+            anoma_otp_${{ matrix.otp }} \
+            anoma-otp-${{ matrix.otp }}.sha{1,256}sum \
