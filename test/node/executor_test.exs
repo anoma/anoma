@@ -45,8 +45,8 @@ defmodule AnomaTest.Node.Executor do
     Storage.ensure_new(storage)
     Communicator.reset(env.ordering)
 
-    spawn_1 = CCom.new_transaction(executor, id_1, increment)
-    spawn_2 = CCom.new_transaction(executor, id_2, increment)
+    spawn_1 = CCom.new_transaction(executor, id_1, {:kv, increment})
+    spawn_2 = CCom.new_transaction(executor, id_2, {:kv, increment})
 
     # simulate sending in 2 different orders
     ord_1 = Communicator.next_order(env.ordering)
