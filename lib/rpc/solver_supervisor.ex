@@ -8,9 +8,10 @@ defmodule RPC.SolverSupervisor do
   def init({solver_com, _host, port, validator_host, validator_port}) do
     children = [
       {RPC.SolverCommunicator, {solver_com, validator_host, validator_port}},
-      {GRPC.Server.Supervisor, endpoint: RPC.SolverEndpoint, port: port, start_server: true},
+      {GRPC.Server.Supervisor,
+       endpoint: RPC.SolverEndpoint, port: port, start_server: true}
     ]
+
     Supervisor.init(children, strategy: :one_for_one)
   end
 end
-

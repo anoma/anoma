@@ -11,9 +11,10 @@ defmodule RPC.IntentSupervisor do
   def init({pool_com, _host, port}) do
     children = [
       {RPC.IntentCommunicator, pool_com},
-      {GRPC.Server.Supervisor, endpoint: RPC.IntentEndpoint, port: port, start_server: true},
+      {GRPC.Server.Supervisor,
+       endpoint: RPC.IntentEndpoint, port: port, start_server: true}
     ]
+
     Supervisor.init(children, strategy: :one_for_one)
   end
 end
-

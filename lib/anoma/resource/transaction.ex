@@ -75,7 +75,7 @@ defmodule Anoma.Resource.Transaction do
         nullifiers: tx1.nullifiers ++ tx2.nullifiers,
         proofs: tx1.proofs ++ tx2.proofs,
         delta: Delta.add(tx1.delta, tx2.delta),
-        extra: tx1.extra ++ tx2.extra,
+        extra: tx1.extra ++ tx2.extra
         # preference
       }
     end

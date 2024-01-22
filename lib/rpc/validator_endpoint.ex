@@ -4,5 +4,5 @@ defmodule RPC.ValidatorEndpoint do
   """
 
   use GRPC.Endpoint
-  run RPC.Validator
+  run(RPC.Validator)
 end

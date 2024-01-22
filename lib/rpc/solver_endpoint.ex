@@ -4,5 +4,5 @@ defmodule RPC.SolverEndpoint do
   """
 
   use GRPC.Endpoint
-  run RPC.Solver
+  run(RPC.Solver)
 end

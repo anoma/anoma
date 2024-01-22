@@ -4,5 +4,5 @@ defmodule RPC.IntentEndpoint do
   """
 
   use GRPC.Endpoint
-  run RPC.IntentPool
+  run(RPC.IntentPool)
 end

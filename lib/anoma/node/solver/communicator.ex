@@ -43,20 +43,33 @@ defmodule Anoma.Node.Solver.Communicator do
   end
 
   def handle_cast({:add_intent, intent}, com) do
-    Utility.broadcast(com.subscribers, {:solutions, Solver.add_intent(com.solver, intent)})
+    Utility.broadcast(
+      com.subscribers,
+      {:solutions, Solver.add_intent(com.solver, intent)}
+    )
+
     {:noreply, com}
   end
 
   def handle_cast({:del_intents, intents}, com) do
-    Utility.broadcast(com.subscribers, {:solutions, Solver.del_intents(com.solver, intents)})
+    Utility.broadcast(
+      com.subscribers,
+      {:solutions, Solver.del_intents(com.solver, intents)}
+    )
+
     {:noreply, com}
   end
 
   def handle_cast({:subscribe, new_sub, want_old}, com) do
     if want_old do
-      Utility.broadcast([new_sub], {:solutions, Solver.get_solved(com.solver)})
+      Utility.broadcast(
+        [new_sub],
+        {:solutions, Solver.get_solved(com.solver)}
+      )
     end
-    {:noreply, %Communicator{com | subscribers: MapSet.put(com.subscribers, new_sub)}}
+
+    {:noreply,
+     %Communicator{com | subscribers: MapSet.put(com.subscribers, new_sub)}}
   end
 
   def handle_call(:get_solved, _from, com) do

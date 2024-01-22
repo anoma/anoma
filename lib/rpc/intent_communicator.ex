@@ -20,7 +20,11 @@ defmodule RPC.IntentCommunicator do
   end
 
   def handle_cast({:add_intent, intent}, pool_com) do
-    Intent.Communicator.new_intent(pool_com, RPC.Convert.deserialise_transaction(intent))
+    Intent.Communicator.new_intent(
+      pool_com,
+      RPC.Convert.deserialise_transaction(intent)
+    )
+
     {:noreply, pool_com}
   end
 end
