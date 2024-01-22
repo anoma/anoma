@@ -2,16 +2,13 @@ defmodule Nock.Cli do
   import Nock
   require Noun.Format
 
-  @spec argument_parser() :: Optimus.t()
-  def argument_parser() do
-    Optimus.new!(
+  def argument_option() do
+    [
       name: "nockma",
-      description: """
+      about: """
       Run the nockma evaluator on a file. \
       The file should contain a single nockma cell: [subject formula]
       """,
-      allow_unknown_args: false,
-      parse_double_dash: true,
       args: [
         infile: [
           value_name: "INPUT_FILE",
@@ -31,13 +28,10 @@ defmodule Nock.Cli do
           default: nil
         ]
       ]
-    )
+    ]
   end
 
-  @spec main([binary()]) :: :ok
-  def main(argv) do
-    args = Optimus.parse!(argument_parser(), argv)
-    %{args: %{infile: infile}, options: %{outfile: outfile}} = args
+  def main(%{args: %{infile: infile}, options: %{outfile: outfile}}) do
     outfile = outfile || infile <> ".result"
     {:ok, contents} = File.read(infile)
     {:ok, [subject | formula]} = Noun.Format.parse(contents)
