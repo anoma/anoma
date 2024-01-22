@@ -1,14 +1,16 @@
 defmodule Anoma.Node.Mempool.Communicator do
   alias __MODULE__
 
+  use Anoma.Communicator, sub_field: :subscribers
+  alias Anoma.Communicator, as: ACom
+
   use TypedStruct
-  use GenServer
   alias Anoma.Node.Mempool.Primary
   alias Anoma.Node.Utility
 
-  # TODO add subscribers
   typedstruct do
     field(:primary, GenServer.server(), require: true)
+    field(:subscribers, ACom.t(), default: ACom.new())
   end
 
   def init(args) do

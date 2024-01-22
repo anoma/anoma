@@ -25,12 +25,14 @@ defmodule Anoma.Node.Executor.Communicator do
   """
   alias __MODULE__
   use TypedStruct
-  use GenServer
+  use Anoma.Communicator, sub_field: :subscribers
+  alias Anoma.Communicator, as: ACom
+
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Utility
 
   typedstruct do
-    field(:subscribers, MapSet.t(GenServer.server()), default: MapSet.new())
+    field(:subscribers, ACom.t(), default: ACom.new())
     field(:spawner, atom())
     field(:ambiant_env, Nock.t())
   end
@@ -135,14 +137,6 @@ defmodule Anoma.Node.Executor.Communicator do
   end
 
   @doc """
-  Subscribes to actions coming in to the communicator
-  """
-  @spec subscribe(GenServer.server(), GenServer.server()) :: :ok
-  def subscribe(communicator, subscriber) do
-    GenServer.cast(communicator, {:subscribe, subscriber})
-  end
-
-  @doc """
   Resets the subscribers list
   """
   @spec reset(GenServer.server()) :: :ok
@@ -172,11 +166,6 @@ defmodule Anoma.Node.Executor.Communicator do
       spawn_transactions(order, gate, %Communicator{state | ambiant_env: env})
 
     {:reply, task.pid, state}
-  end
-
-  def handle_cast({:subscribe, new_sub}, agent) do
-    subscribers = MapSet.put(agent.subscribers, new_sub)
-    {:noreply, %Communicator{agent | subscribers: subscribers}}
   end
 
   def handle_cast(:reset, agent) do
