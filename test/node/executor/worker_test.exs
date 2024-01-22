@@ -36,8 +36,8 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Communicator.reset(env.ordering)
 
-    spawn_1 = Task.async(Worker, :run, [id_1, increment, env])
-    spawn_2 = Task.async(Worker, :run, [id_2, increment, env])
+    spawn_1 = Task.async(Worker, :run, [id_1, {:kv, increment}, env])
+    spawn_2 = Task.async(Worker, :run, [id_2, {:kv, increment}, env])
 
     # simulate sending in 2 different orders
     ord_1 = Communicator.next_order(env.ordering)
@@ -72,7 +72,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Communicator.reset(env.ordering)
 
-    spawn = Task.async(Worker, :run, [id, increment, env])
+    spawn = Task.async(Worker, :run, [id, {:kv, increment}, env])
     Communicator.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
 
     # do not setup storage, just snapshot with our key
@@ -96,7 +96,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Communicator.reset(env.ordering)
 
-    spawn = Task.async(Worker, :run, [id, bogus, env])
+    spawn = Task.async(Worker, :run, [id, {:kv, bogus}, env])
     Communicator.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
 
     # we say that it can write, however we should still be alive, due
@@ -107,5 +107,54 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.put_snapshot(storage, hd(env.snapshot_path))
     # the storage is there we should be done now
     assert :error == Task.await(spawn)
+  end
+
+  test "worker evaluates resource transaction", %{env: env} do
+    import Anoma.Resource
+    alias Anoma.Resource.ProofRecord
+    alias Anoma.Resource.Transaction
+
+    id = System.unique_integer([:positive])
+
+    storage = Communicator.get_storage(env.ordering)
+
+    Storage.ensure_new(storage)
+    Communicator.reset(env.ordering)
+
+    keypair = Anoma.Sign.new_keypair()
+
+    in_resource = %{
+      new_with_npk(keypair.public)
+      | label: "space bucks",
+        quantity: 10
+    }
+
+    nf_in = nullifier(in_resource, keypair.secret)
+    pf_in = ProofRecord.prove(in_resource)
+
+    out_resource = %{
+      new_with_npk(keypair.public)
+      | label: "space bucks",
+        quantity: 10
+    }
+
+    cm_out = commitment(out_resource)
+    pf_out = ProofRecord.prove(out_resource)
+
+    rm_tx = %Transaction{
+      commitments: [cm_out],
+      nullifiers: [nf_in],
+      proofs: [pf_in, pf_out],
+      delta: %{}
+    }
+
+    rm_tx_noun = Transaction.to_noun(rm_tx)
+    rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
+
+    spawn = Task.async(Worker, :run, [id, {:rm, rm_executor_tx}, env])
+    Communicator.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
+
+    send(spawn.pid, {:write_ready, 0})
+    assert :ok == Task.await(spawn)
   end
 end

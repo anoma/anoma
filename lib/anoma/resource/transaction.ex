@@ -39,6 +39,29 @@ defmodule Anoma.Resource.Transaction do
     ]
   end
 
+  @spec from_noun(Noun.t()) :: t()
+  def from_noun([
+        roots,
+        commitments,
+        nullifiers,
+        proofs,
+        delta,
+        extra | _preference
+      ]) do
+    %Transaction{
+      roots: roots,
+      commitments: commitments,
+      nullifiers: nullifiers,
+      proofs:
+        for proof <- proofs do
+          ProofRecord.from_noun(proof)
+        end,
+      delta: Delta.from_noun(delta),
+      extra: extra,
+      preference: nil
+    }
+  end
+
   @spec verify(t()) :: boolean()
   def verify(transaction) do
     # the transparent proofs are just all the involved resources
