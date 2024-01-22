@@ -72,12 +72,18 @@ defmodule Anoma.Node.Intent.Communicator do
   ############################################################
 
   def handle_cast({:new_intent, intent}, agent) do
-    broadcast_intent(agent, intent)
+    if :ok == Pool.new_intent(agent.pool, intent) do
+      broadcast_intent(agent, intent)
+    end
+
     {:noreply, agent}
   end
 
   def handle_cast({:remove_intent, intent}, communicator) do
-    Pool.remove_intent(communicator.pool, intent)
+    if :ok == Pool.remove_intent(communicator.pool, intent) do
+      broadcast_remove(communicator, intent)
+    end
+
     {:noreply, communicator}
   end
 
@@ -97,8 +103,16 @@ defmodule Anoma.Node.Intent.Communicator do
   @spec broadcast_intent(t(), Intent.t()) :: :ok
   defp broadcast_intent(com, intent) do
     Utility.broadcast(
-      MapSet.put(com.subscribers, com.pool),
+      com.subscribers,
       {:new_intent, intent}
+    )
+  end
+
+  @spec broadcast_remove(t(), Intent.t()) :: :ok
+  defp broadcast_remove(com, intent) do
+    Utility.broadcast(
+      com.subscribers,
+      {:remove_intent, intent}
     )
   end
 

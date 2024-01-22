@@ -37,16 +37,31 @@ defmodule AnomaTest.Intent do
     Intent.shutdown(supervisor)
   end
 
-  test "Intents signal on any additions" do
-    {:ok, supervisor} = Intent.start_link(:intents_signal)
+  test "Already added intents do not broadcast" do
+    {:ok, supervisor} = Intent.start_link(:intents_signal_new)
     resource_1 = %Resource{quantity: 6}
-    Communicator.subscribe(:intents_signal_com, self())
+    Communicator.subscribe(:intents_signal_new_com, self())
 
-    Communicator.new_intent(:intents_signal_com, resource_1)
-    Communicator.new_intent(:intents_signal_com, resource_1)
+    Communicator.new_intent(:intents_signal_new_com, resource_1)
+    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
 
-    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
-    assert_receive {:"$gen_cast", {:new_intent, ^resource_1}}
+    Communicator.new_intent(:intents_signal_new_com, resource_1)
+    refute_receive {:"$gen_cast", {:new_intent, ^resource_1}}
+
+    Intent.shutdown(supervisor)
+  end
+
+  test "If no intent to remove then not broadcasted" do
+    {:ok, supervisor} = Intent.start_link(:intents_signal_rem)
+    resource_1 = %Resource{quantity: 6}
+    Communicator.subscribe(:intents_signal_rem_com, self())
+
+    Communicator.new_intent(:intents_signal_rem_com, resource_1)
+    Communicator.remove_intent(:intents_signal_rem_com, resource_1)
+    assert_receive {:"$gen_cast", {:remove_intent, ^resource_1}}
+
+    Communicator.remove_intent(:intents_signal_com, resource_1)
+    refute_receive {:"$gen_cast", {:remove_intent, ^resource_1}}
 
     Intent.shutdown(supervisor)
   end
