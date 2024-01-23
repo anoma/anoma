@@ -48,7 +48,7 @@ defmodule Anoma.Node.Mempool.Primary do
 
   @spec tx(GenServer.server(), Noun.t()) :: Transaction.t()
   def tx(server, tx_code) do
-    GenServer.call(server, {:tx, tx_code})
+    GenServer.call(server, {:tx, tx_code}, 10_000)
   end
 
   @spec soft_reset(GenServer.server()) :: :ok
