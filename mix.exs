@@ -86,7 +86,9 @@ defmodule Anoma.MixProject do
       "Contributors Guide": ~r/documentation\/contributing\/.?/,
       "Contributors Guide": "documentation/CONTRIBUTING.livemd",
       "Visualizing Anoma": ~r/documentation\/visualization\/.?/,
-      "Visualizing Anoma": "documentation/visualization.livemd"
+      "Visualizing Anoma": "documentation/visualization.livemd",
+      "Nock Environment": ~r/documentation\/hoon\/.?/,
+      "Nock Environment": "documentation/hoon.livemd"
     ]
   end
 
@@ -102,7 +104,10 @@ defmodule Anoma.MixProject do
       "documentation/contributing/testing.livemd",
       "documentation/contributing/git.livemd",
       "documentation/visualization.livemd",
-      "documentation/visualization/actors.livemd"
+      "documentation/visualization/actors.livemd",
+      "documentation/hoon.livemd",
+      "documentation/hoon/dumping.livemd",
+      "documentation/hoon/setting-up.livemd"
     ]
   end
 

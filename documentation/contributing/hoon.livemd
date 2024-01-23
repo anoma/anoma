@@ -1,0 +1,14 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Hoon
+
+## Index
+
+* [Index](../index.livemd)
+  * [Contributing](../CONTRIBUTING.livemd)
+    * [Hoon](./hoon.livemd)
+
+## Hoon
+
+Currently the quickest way to write resource logics is to have Hoon
+setup and working. Checkout the [Hoon section for more information](../hoon.livemd)
