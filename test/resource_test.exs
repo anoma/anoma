@@ -165,6 +165,9 @@ defmodule AnomaTest.Resource do
   end
 
   test "counter logic" do
+    {:ok, contents} = File.read("Resource.nockma")
+    nockFunction = Noun.Format.parse_always(contents)
+
     counter_logic = [
       Noun.Format.parse_always("""
       [ 6
@@ -193,14 +196,14 @@ defmodule AnomaTest.Resource do
       new_with_npk(keypair.public)
       | label: "counter",
         quantity: 0,
-        logic: counter_logic
+        logic: nockFunction
     }
 
     incremented_counter = %{
       new_with_npk(keypair.public)
       | label: "counter",
         quantity: 1,
-        logic: counter_logic
+        logic: nockFunction
     }
 
     nf_0 = nullifier(zeroed_counter, keypair.secret)
