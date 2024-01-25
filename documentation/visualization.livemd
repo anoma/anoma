@@ -4,7 +4,7 @@
 
 ## Index
 
-* [Index](./index.livemd)
+* [Index](./index_docs.livemd)
   * [Visualizing Anoma](./visualization.livemd)
     1. [Actors](./visualization/actors.livemd)
 

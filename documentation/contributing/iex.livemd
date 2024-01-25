@@ -2,7 +2,7 @@
 
 ## Index
 
-* [Index](../index.livemd)
+* [Index](../index_docs.livemd)
   * [Contributing](../CONTRIBUTING.livemd)
     * [IEx](./iex.livemd)
 
