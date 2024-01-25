@@ -4,7 +4,7 @@
 
 ## Index
 
-* [Index](../index.livemd)
+* [Index](../index_docs.livemd)
   * [Contributing](../CONTRIBUTING.livemd)
     * [Testing](./testing.livemd)
 

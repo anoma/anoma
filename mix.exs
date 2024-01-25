@@ -82,6 +82,7 @@ defmodule Anoma.MixProject do
 
   def group_for_extras() do
     [
+      "Guide Index": "documentation/index_docs.livemd",
       "Contributors Guide": ~r/documentation\/contributing\/.?/,
       "Contributors Guide": "documentation/CONTRIBUTING.livemd",
       "Visualizing Anoma": ~r/documentation\/visualization\/.?/,
@@ -93,6 +94,7 @@ defmodule Anoma.MixProject do
     [
       "README.md",
       "documentation/index.livemd",
+      "documentation/index_docs.livemd",
       "documentation/CONTRIBUTING.livemd",
       "documentation/contributing/iex.livemd",
       "documentation/contributing/observer.livemd",
