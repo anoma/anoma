@@ -25,7 +25,7 @@ defmodule Anoma do
     }
 
     name = :anoma
-    snapshot_path = [:my_special_nock_snaphsot | 0]
+    snapshot_path = [:my_special_nock_snapshot | 0]
 
     children = [
       {Anoma.Node,

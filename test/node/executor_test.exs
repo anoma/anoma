@@ -15,7 +15,7 @@ defmodule AnomaTest.Node.Executor do
     ordering = :executor_storage_com
     executor = :executor_test_com
 
-    snapshot_path = [:my_special_nock_snaphsot | 0]
+    snapshot_path = [:my_special_nock_snapshot | 0]
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
     unless Process.whereis(ordering) do

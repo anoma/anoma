@@ -14,7 +14,7 @@ defmodule AnomaTest.Node.Mempool do
     }
 
     name = :mempool
-    snapshot_path = [:my_special_nock_snaphsot | 0]
+    snapshot_path = [:my_special_nock_snapshot | 0]
 
     node = Anoma.Node.com_names(name)
 

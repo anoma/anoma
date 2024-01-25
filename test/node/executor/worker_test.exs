@@ -18,7 +18,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       Anoma.Node.Storage.start_link(name: :worker_storage, table: storage)
     end
 
-    snapshot_path = [:my_special_nock_snaphsot | 0]
+    snapshot_path = [:my_special_nock_snapshot | 0]
 
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
