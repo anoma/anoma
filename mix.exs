@@ -137,6 +137,25 @@ defmodule Anoma.MixProject do
     }
     });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+      try {
+        const preEl = codeEl.parentElement;
+        const spec = JSON.parse(codeEl.textContent);
+        const plotEl = document.createElement("div");
+        preEl.insertAdjacentElement("afterend", plotEl);
+        vegaEmbed(plotEl, spec);
+        preEl.remove();
+      } catch (error) {
+        console.log("Failed to render Vega-Lite plot: " + error)
+      }
+    }
+    });
+    </script>
     """
   end
 
