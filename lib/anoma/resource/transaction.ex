@@ -62,6 +62,25 @@ defmodule Anoma.Resource.Transaction do
     }
   end
 
+  @spec compose(t(), t()) :: t()
+  def compose(tx1, tx2) do
+    # I still don't know if proofs have to be unique...
+    if Enum.any?(tx1.commitments, fn x -> x in tx2.commitments end) ||
+         Enum.any?(tx1.nullifiers, fn x -> x in tx2.nullifiers end) do
+      nil
+    else
+      %Transaction{
+        roots: tx1.roots ++ tx2.roots,
+        commitments: tx1.commitments ++ tx2.commitments,
+        nullifiers: tx1.nullifiers ++ tx2.nullifiers,
+        proofs: tx1.proofs ++ tx2.proofs,
+        delta: Delta.add(tx1.delta, tx2.delta),
+        extra: tx1.extra ++ tx2.extra
+        # preference
+      }
+    end
+  end
+
   @spec verify(t()) :: boolean()
   def verify(transaction) do
     # the transparent proofs are just all the involved resources

@@ -56,7 +56,10 @@ jobs:
 
     - name: Install dependencies
       if: steps.try_merge.outcome != 'failure'
-      run: mix deps.get
+      run: >
+        mix deps.get
+        apt install protobuf-compiler
+        mix escript.install hex protobuf
 
     - name: Restore PLT cache
       id: plt_cache
@@ -82,6 +85,10 @@ jobs:
         path: plts
         key: |
           plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+
+    - name: Generate protobuf code
+      if: steps.try_merge.outcome != 'failure'
+      run: env PATH=$PATH:$HOME/.mix/escripts make
 
     - name: Run tests
       if: steps.try_merge.outcome != 'failure'

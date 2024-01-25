@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package AnomaInterface;
+
+service IntentPool {
+	rpc add_intent(Transaction) returns (Empty) {}
+}
+
+service Solver {
+	rpc add_intent(Transaction) returns (Empty) {}
+	rpc del_intent(Transaction) returns (Empty) {}
+}
+
+service Validator {
+	rpc propose_transaction(Transaction) returns (Empty) {}
+}
+
+message Empty {}
+
+message Nat {
+	repeated fixed32 digits = 1; // little endian
+	// assume most things are <2^32 so use small limb size
+	// would a floating-point format make more sense?
+	// or unevaluated sum of floats?
+	// or a fixed 128 bits?
+}
+message Int {
+	Nat magnitude = 1;
+	bool sign = 2;
+}
+
+message Delta {
+	bytes kind = 1; // can't make this fixed size
+	Int value = 2;
+}
+
+message MerkleAnchor {
+	bytes hash = 1; // the hash of a merkle anchor
+}
+
+message Resource {
+	bytes logic = 1; // resource logic.  should be actual contents of the logic or a hash?
+	bytes label = 2; // fungibility label
+	Nat quantity = 3;
+	bytes data = 4; // fungible data
+	bool eph = 5; // ephemerality flag
+	bytes nonce = 6; // 256 bits.  ensures uniqueness
+	bytes npk = 7; // nullifier public key.  256 bits ed25519
+	bytes rseed = 8; // 256 bits random key.  why can't this be the same as the nonce?
+}
+
+message ProofRecord {
+	Resource resource = 1; // in the transparent case, a proof is just a resource
+}
+
+message Transaction {
+	// https://research.anoma.net/t/resource-consumption-ownership-and-authorization/422/2
+	// perhaps we need to store a list of signed partial txes here?
+	repeated MerkleAnchor roots = 1; // the anchors used by commitment proofs in this transaction
+	repeated bytes commitments = 2; // commitments to be created (currently just erlang binary encoded)
+	repeated bytes nullifiers = 3; // (ditto)
+	repeated ProofRecord proofs = 4; // resource proofs
+	// extra
+	// preference
+}
