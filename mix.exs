@@ -107,7 +107,8 @@ defmodule Anoma.MixProject do
       "documentation/visualization/actors.livemd",
       "documentation/hoon.livemd",
       "documentation/hoon/dumping.livemd",
-      "documentation/hoon/setting-up.livemd"
+      "documentation/hoon/setting-up.livemd",
+      "documentation/hoon/calling.livemd"
     ]
   end
 

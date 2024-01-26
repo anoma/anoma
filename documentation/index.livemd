@@ -24,3 +24,4 @@ This book uses livebook, it is best viewed from within it! However most sections
 3. [Hoon](./hoon.livemd)
    1. [Setting up](./hoon/setting-up.livemd)
    2. [Dumping](./hoon/dumping.livemd)
+   3. [Calling](./hoon/calling.livemd)

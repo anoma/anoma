@@ -8,6 +8,7 @@
   * [Hoon](./hoon.livemd)
     1. [Setting up](./hoon/setting-up.livemd)
     2. [Dumping](./hoon/dumping.livemd)
+    3. [Calling Conventions](./hoon/calling.livemd)
 
 ## About This Guide
 
