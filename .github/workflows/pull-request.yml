@@ -58,6 +58,10 @@ jobs:
       if: steps.try_merge.outcome != 'failure'
       run: mix deps.get && mix escript.install --force hex protobuf
 
+    - name: Format check
+      if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}
+      run: mix format --check-formatted
+
     - name: Generate protobuf code
       if: steps.try_merge.outcome != 'failure'
       run: env PATH=$PATH:$HOME/.mix/escripts make
@@ -94,10 +98,6 @@ jobs:
     - name: Run dialyzer
       if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}
       run: mix dialyzer --format github
-
-    - name: Format check
-      if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}
-      run: mix format --check-formatted
 
     - name: All files whitespace error check
       if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}

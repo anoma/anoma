@@ -38,6 +38,11 @@ jobs:
         run: >
           mix deps.get && mix escript.install --force hex protobuf
 
+      # must come before the protobuf generation because it's ill-formatted
+      - name: Format check
+        if: ${{ !cancelled() }}
+        run: mix format --check-formatted
+
       - name: Generate protobuf code
         if: steps.try_merge.outcome != 'failure'
         run: env PATH=$PATH:$HOME/.mix/escripts make
@@ -57,10 +62,6 @@ jobs:
       - name: Run dialyzer
         if: ${{ !cancelled() }}
         run: mix dialyzer --format github
-
-      - name: Format check
-        if: ${{ !cancelled() }}
-        run: mix format --check-formatted
 
       - name: All files whitespace error check
         if: ${{ !cancelled() }}
