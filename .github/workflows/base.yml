@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4.1.0
 
       - name: Install system dependencies
-        run: sudo apt-get install -y libsodium-dev
+        run: sudo apt-get install -y libsodium-dev protobuf-compiler
 
       - name: Set up Elixir
         id: beam
@@ -35,10 +35,13 @@ jobs:
             mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
 
       - name: Fetch dependencies
-        run: mix deps.get
+        run: mix deps.get && mix escript.install --force hex protobuf
 
       - name: Build dependencies
         run: mix deps.compile
+
+      - name: Generate protobuf code
+        run: env PATH=$PATH:$HOME/.mix/escripts make
 
       - name: Restore PLT cache
         uses: actions/cache@v3.3.2

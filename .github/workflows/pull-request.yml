@@ -34,7 +34,7 @@ jobs:
 
     - name: Install system dependencies
       if: steps.try_merge.outcome != 'failure'
-      run: sudo apt-get install -y libsodium-dev
+      run: sudo apt-get install -y libsodium-dev protobuf-compiler
 
     - name: Set up Elixir
       id: beam
@@ -56,10 +56,11 @@ jobs:
 
     - name: Install dependencies
       if: steps.try_merge.outcome != 'failure'
-      run: >
-        mix deps.get
-        apt install protobuf-compiler
-        mix escript.install hex protobuf
+      run: mix deps.get && mix escript.install --force hex protobuf
+
+    - name: Generate protobuf code
+      if: steps.try_merge.outcome != 'failure'
+      run: env PATH=$PATH:$HOME/.mix/escripts make
 
     - name: Restore PLT cache
       id: plt_cache
@@ -85,10 +86,6 @@ jobs:
         path: plts
         key: |
           plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-
-    - name: Generate protobuf code
-      if: steps.try_merge.outcome != 'failure'
-      run: env PATH=$PATH:$HOME/.mix/escripts make
 
     - name: Run tests
       if: steps.try_merge.outcome != 'failure'
