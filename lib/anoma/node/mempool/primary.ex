@@ -46,7 +46,7 @@ defmodule Anoma.Node.Mempool.Primary do
     GenServer.call(server, :execute)
   end
 
-  @spec tx(GenServer.server(), Noun.t()) :: Transaction.t()
+  @spec tx(GenServer.server(), Transaction.execution()) :: Transaction.t()
   def tx(server, tx_code) do
     GenServer.call(server, {:tx, tx_code})
   end
@@ -111,7 +111,7 @@ defmodule Anoma.Node.Mempool.Primary do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec handle_tx(Noun.t(), t()) :: Transaction.t()
+  @spec handle_tx(Transaction.execution(), t()) :: Transaction.t()
   def handle_tx(tx_code, state) do
     random_tx_id = random_id()
     pid = Ecom.fire_new_transaction(state.executor, random_tx_id, tx_code)
@@ -208,7 +208,8 @@ defmodule Anoma.Node.Mempool.Primary do
     %Primary{state | transactions: [], round: 0}
   end
 
-  @spec persistent_transaction(Transaction.t()) :: {Noun.t(), Noun.t()}
+  @spec persistent_transaction(Transaction.t()) ::
+          {Noun.t(), Transaction.execution()}
   def persistent_transaction(trans) do
     {Transaction.id(trans), Transaction.transaction(trans)}
   end
