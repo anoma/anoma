@@ -72,6 +72,7 @@ defmodule Anoma.MixProject do
       "Anoma Actors": [Anoma.Node],
       Mempool: ~r/^Anoma.Node.Mempool.?/,
       Executor: ~r/^Anoma.Node.Executor.?/,
+      Identity: [~r/^Anoma.Identity.?/, ~r/^Anoma.Node.Identity.?/],
       Intents: ~r/^Anoma.Node.Intent.?/,
       Storage: [~r/^Anoma.Node.Storage.?/, Anoma.Storage, Anoma.Order],
       Utilities: [Anoma.Node.Utility, Anoma.Mnesia],
