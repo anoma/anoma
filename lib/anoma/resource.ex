@@ -13,7 +13,7 @@ defmodule Anoma.Resource do
 
   alias Anoma.Sign
 
-  typedstruct enforce: true do
+  typedstruct do
     # resource logic
     field(:logic, Noun.t(), default: [[1 | 0], 0 | 0])
     # fungibility label

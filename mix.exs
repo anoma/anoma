@@ -42,7 +42,7 @@ defmodule Anoma.MixProject do
     [
       {:enacl, "~> 1.2"},
       {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
-      {:typed_struct, "~> 0.3.0"},
+      {:typed_struct, git: "https://github.com/anoma/typed_struct"},
       {:xxhash, "~> 0.3"},
       {:recon, "~> 2.5.4"},
       {:rexbug, ">= 2.0.0-rc1"},

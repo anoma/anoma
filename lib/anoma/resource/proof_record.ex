@@ -7,7 +7,7 @@ defmodule Anoma.Resource.ProofRecord do
   alias Anoma.Resource
   alias Anoma.Resource.Proof
 
-  typedstruct enforce: true do
+  typedstruct do
     field(:proof, Proof.t(), default: nil)
   end
 

@@ -16,7 +16,7 @@ defmodule Anoma.Node.Storage.Communicator do
   alias Anoma.Storage
 
   typedstruct do
-    field(:primary, atom(), require: true)
+    field(:primary, atom())
     field(:subscribers, ACom.t(), default: ACom.new())
   end
 

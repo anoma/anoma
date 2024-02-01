@@ -13,7 +13,7 @@ defmodule Anoma.Resource.Transaction do
   alias Anoma.Resource.ProofRecord
 
   # doesn't have all the fields yet.
-  typedstruct enforce: true do
+  typedstruct do
     field(:roots, list(binary()), default: [])
     field(:commitments, list(binary()), default: [])
     field(:nullifiers, list(binary()), default: [])

@@ -12,8 +12,8 @@ defmodule Anoma.Node.Mempool.Primary do
 
   @type transactions :: list(Transaction.t())
   typedstruct do
-    field(:ordering, GenServer.server(), require: true)
-    field(:executor, GenServer.server(), require: true)
+    field(:ordering, GenServer.server(), enforce: false)
+    field(:executor, GenServer.server(), enforce: false)
     field(:block_storage, atom(), default: Anoma.Block)
     field(:transactions, transactions, default: [])
     field(:round, non_neg_integer(), default: 0)

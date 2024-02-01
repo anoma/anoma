@@ -26,11 +26,11 @@ defmodule Anoma.Block do
   @type public_key() :: [:crypto.key_id()]
 
   typedstruct do
-    field(:id, binary(), require: true)
-    field(:block, Base.t(), require: true)
+    field(:id, binary())
+    field(:block, Base.t())
     field(:round, non_neg_integer(), default: 0)
-    field(:pub_key, Serializer.public_key(), require: true)
-    field(:signature, binary())
+    field(:pub_key, Serializer.public_key())
+    field(:signature, binary(), enforce: false)
   end
 
   @doc """

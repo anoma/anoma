@@ -9,7 +9,7 @@ defmodule Anoma.Transaction do
   alias __MODULE__
   use TypedStruct
 
-  typedstruct enforce: true do
+  typedstruct do
     field(:id, Noun.t())
     field(:pid, pid())
     field(:transaction, Noun.t())

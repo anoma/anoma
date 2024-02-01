@@ -30,7 +30,7 @@ defmodule Anoma.Subscriber.Basic do
 
   typedstruct do
     field(:intents, list(Intent.t()), default: [])
-    field(:home, pid())
+    field(:home, pid(), enforce: false)
   end
 
   def init(init: init_intents, home: pid) do

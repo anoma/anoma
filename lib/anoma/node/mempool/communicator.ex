@@ -9,7 +9,7 @@ defmodule Anoma.Node.Mempool.Communicator do
   alias Anoma.Node.Utility
 
   typedstruct do
-    field(:primary, GenServer.server(), require: true)
+    field(:primary, GenServer.server())
     field(:subscribers, ACom.t(), default: ACom.new())
   end
 
