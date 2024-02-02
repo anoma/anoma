@@ -121,7 +121,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Communicator.reset(env.ordering)
 
-    keypair = Anoma.Sign.new_keypair()
+    keypair = Anoma.Crypto.Sign.new_keypair()
 
     in_resource = %{
       new_with_npk(keypair.public)
