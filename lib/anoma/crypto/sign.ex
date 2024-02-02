@@ -1,6 +1,9 @@
 defmodule Anoma.Crypto.Sign do
   @moduledoc false
 
+  @type public() :: ed25519_public()
+  @type secret() :: ed25519_secret()
+
   @type ed25519_public() :: <<_::256>>
   @type ed25519_secret() :: <<_::512>>
 
