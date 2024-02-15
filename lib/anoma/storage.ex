@@ -117,11 +117,8 @@ defmodule Anoma.Storage do
 
   @spec get(t(), order_key()) :: :absent | {:ok, qualified_value()}
   def get(storage, key) do
-    with {:atomic, [{_, ^key, order}]} <- read_order(storage, key),
-         {:atomic, [{_, [^order, ^key | 0], value}]} <-
-           read_at_order(storage, key, order) do
-      instrument({:get_order, order})
-      {:ok, value}
+    with {:atomic, [{_, ^key, order}]} <- read_order(storage, key) do
+      checked_read_at(storage, key, order)
     else
       _ -> :absent
     end
@@ -196,12 +193,7 @@ defmodule Anoma.Storage do
   def get_at_snapshot(snapshot = {storage, _}, key) do
     position = in_snapshot(snapshot, key)
 
-    with {:atomic, [{_, [^position, ^key | 0], value}]} <-
-           read_at_order(storage, key, position) do
-      {:ok, value}
-    else
-      _ -> :absent
-    end
+    checked_read_at(storage, key, position)
   end
 
   ############################################################
@@ -241,6 +233,19 @@ defmodule Anoma.Storage do
   @spec calculate_order([{any(), any(), number()}]) :: number()
   def calculate_order([{_, _, order}]), do: order + 1
   def calculate_order([]), do: 1
+
+  @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
+          :absent | {:ok, qualified_value()}
+  defp checked_read_at(storage, key, order) do
+    instrument({:get_order, order})
+
+    with {:atomic, [{_, [^order, ^key | 0], value}]} <-
+           read_at_order(storage, key, order) do
+      {:ok, value}
+    else
+      _ -> :absent
+    end
+  end
 
   ############################################################
   #                      Instrumentation                     #
