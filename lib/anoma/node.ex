@@ -35,7 +35,7 @@ defmodule Anoma.Node do
   alias Anoma.Node.Utility
   alias __MODULE__
 
-  typedstruct require: true do
+  typedstruct enforce: true do
     field(:mempool, GenServer.server())
     field(:ordering, GenServer.server())
     field(:executor, GenServer.server())

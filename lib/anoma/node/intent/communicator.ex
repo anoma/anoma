@@ -14,7 +14,7 @@ defmodule Anoma.Node.Intent.Communicator do
 
   typedstruct do
     field(:subscribers, ACom.t(), default: ACom.new())
-    field(:pool, atom(), require: true)
+    field(:pool, atom(), enforce: true)
   end
 
   def init(name: name, init: subscribers) do

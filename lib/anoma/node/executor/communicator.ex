@@ -23,6 +23,7 @@ defmodule Anoma.Node.Executor.Communicator do
   - `state/1`
   - `subscribe/2`
   """
+  alias Anoma.Transaction
   alias __MODULE__
   use TypedStruct
   use Anoma.Communicator, sub_field: :subscribers
@@ -104,7 +105,11 @@ defmodule Anoma.Node.Executor.Communicator do
   The user gets back a process so it may keep track of sending
   messages to this task or terminating the task
   """
-  @spec fire_new_transaction(GenServer.server(), Noun.t(), Noun.t()) :: pid()
+  @spec fire_new_transaction(
+          GenServer.server(),
+          Noun.t(),
+          Transaction.execution()
+        ) :: pid()
   def fire_new_transaction(communicator, order, gate) do
     GenServer.call(communicator, {:transaction, order, gate})
   end

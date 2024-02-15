@@ -9,13 +9,15 @@ defmodule Anoma.Transaction do
   alias __MODULE__
   use TypedStruct
 
+  @type execution() :: {:kv | :rm, Noun.t()}
+
   typedstruct enforce: true do
     field(:id, Noun.t())
     field(:pid, pid())
-    field(:transaction, Noun.t())
+    field(:transaction, execution())
   end
 
-  @spec new(Noun.t(), pid(), Noun.t()) :: t()
+  @spec new(Noun.t(), pid(), execution()) :: t()
   def new(id, pid, transaction) do
     %Transaction{id: id, pid: pid, transaction: transaction}
   end
@@ -26,6 +28,6 @@ defmodule Anoma.Transaction do
   @spec id(t()) :: Noun.t()
   def id(t), do: t.id
 
-  @spec transaction(t()) :: Noun.t()
+  @spec transaction(t()) :: execution()
   def transaction(t), do: t.transaction
 end

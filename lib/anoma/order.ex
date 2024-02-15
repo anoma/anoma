@@ -17,7 +17,7 @@ defmodule Anoma.Order do
     - `id` - the identification key path of the requested key
     - `pid` - the process identifier to message
   """
-  typedstruct require: true do
+  typedstruct enforce: true do
     field(:index, non_neg_integer())
     field(:id, any())
     field(:pid, pid())
