@@ -214,23 +214,23 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
   #                      Instrumentation                     #
   ############################################################
-  def instrument({:new_tx, num_txs}) do
+  defp instrument({:new_tx, num_txs}) do
     Logger.info("New tx count: #{inspect(num_txs)}")
   end
 
-  def instrument({:ready, pid}) do
+  defp instrument({:ready, pid}) do
     Logger.info("sending read ready to #{inspect(pid)}")
   end
 
-  def instrument({:waiting, id}) do
+  defp instrument({:waiting, id}) do
     Logger.info("#{inspect(id)}, Waiting on read ready")
   end
 
-  def instrument({:read_ready, info}) do
+  defp instrument({:read_ready, info}) do
     Logger.info("#{inspect(info)}, got read ready")
   end
 
-  def instrument({:getting_key, full_key}) do
+  defp instrument({:getting_key, full_key}) do
     Logger.info("getting at: #{inspect(full_key)}")
   end
 end

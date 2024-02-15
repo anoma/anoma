@@ -245,15 +245,15 @@ defmodule Anoma.Storage do
   ############################################################
   #                      Instrumentation                     #
   ############################################################
-  def instrument({:get_order, order}) do
+  defp instrument({:get_order, order}) do
     Logger.debug("Getting at order: #{inspect(order)}")
   end
 
-  def instrument({:put_order, order}) do
+  defp instrument({:put_order, order}) do
     Logger.debug("Putting at order: #{inspect(order)}")
   end
 
-  def instrument({:read, key}) do
+  defp instrument({:read, key}) do
     Logger.info("Regular blocking read at key: #{inspect(key)}")
   end
 end
