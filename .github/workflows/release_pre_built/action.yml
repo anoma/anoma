@@ -12,6 +12,8 @@ runs:
       with:
         otp-version: ${{ inputs.otp_version }}
         elixir-version: "1.16.0"
+    - name: Install system dependencies
+      run: sudo apt-get install -y libsodium-dev
     - name: Build ex_doc
       shell: bash
       run: |
