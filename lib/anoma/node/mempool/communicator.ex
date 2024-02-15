@@ -57,7 +57,8 @@ defmodule Anoma.Node.Mempool.Communicator do
   end
 
   def handle_call(:execute, _from, state) do
-    {:reply, Primary.execute(state.primary), state}
+    ex = Primary.execute(state.primary)
+    {:reply, ex, state, {:continue, {:broadcast_ex, ex}}}
   end
 
   def handle_call(:pending_txs, _from, state) do
@@ -76,6 +77,11 @@ defmodule Anoma.Node.Mempool.Communicator do
 
   def handle_continue({:broadcast_tx, tx}, state) do
     Utility.broadcast(state.subscribers, {:submitted, tx})
+    {:noreply, state}
+  end
+
+  def handle_continue({:broadcast_ex, ex}, state) do
+    Utility.broadcast(state.subscribers, {:executed, ex})
     {:noreply, state}
   end
 

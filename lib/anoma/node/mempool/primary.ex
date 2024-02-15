@@ -43,7 +43,7 @@ defmodule Anoma.Node.Mempool.Primary do
 
   @spec execute(GenServer.server()) :: non_neg_integer()
   def execute(server) do
-    GenServer.call(server, :execute)
+    GenServer.call(server, :execute, 10_000)
   end
 
   @spec tx(GenServer.server(), Noun.t()) :: Transaction.t()
