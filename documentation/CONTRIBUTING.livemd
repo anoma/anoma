@@ -4,7 +4,7 @@
 
 ## Index
 
-* [Index](./index.livemd)
+* [Index](./index_docs.livemd)
   * [Contributing](./CONTRIBUTING.livemd)
     1. [IEx](./contributing/iex.livemd)
     2. [Observer](./contributing/observer.livemd)

@@ -82,6 +82,7 @@ defmodule Anoma.MixProject do
 
   def group_for_extras() do
     [
+      "Guide Index": "documentation/index_docs.livemd",
       "Contributors Guide": ~r/documentation\/contributing\/.?/,
       "Contributors Guide": "documentation/CONTRIBUTING.livemd",
       "Visualizing Anoma": ~r/documentation\/visualization\/.?/,
@@ -93,6 +94,7 @@ defmodule Anoma.MixProject do
     [
       "README.md",
       "documentation/index.livemd",
+      "documentation/index_docs.livemd",
       "documentation/CONTRIBUTING.livemd",
       "documentation/contributing/iex.livemd",
       "documentation/contributing/observer.livemd",
@@ -134,6 +136,25 @@ defmodule Anoma.MixProject do
         preEl.insertAdjacentElement("afterend", graphEl);
         preEl.remove();
       });
+    }
+    });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+      try {
+        const preEl = codeEl.parentElement;
+        const spec = JSON.parse(codeEl.textContent);
+        const plotEl = document.createElement("div");
+        preEl.insertAdjacentElement("afterend", plotEl);
+        vegaEmbed(plotEl, spec);
+        preEl.remove();
+      } catch (error) {
+        console.log("Failed to render Vega-Lite plot: " + error)
+      }
     }
     });
     </script>
