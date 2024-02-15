@@ -1,0 +1,335 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Calling
+
+## Index
+
+* [Index](../index_docs.livemd)
+  * [Hoon](../hoon.livemd)
+    * [Calling](./calling.livemd)
+
+## Calling Conventions
+
+For this section, it is assumed that one is comfortable with the techniques outlined in the [dumping guide](./dumping.livemd), in particular familiarity with:
+
+1. [dottar(.*)](https://developers.urbit.org/reference/hoon/rune/dot#-dottar)
+2. [zaptis(!=)](https://developers.urbit.org/reference/hoon/rune/zap#-zaptis)
+
+is had, if one is uncomfortable with what is shown here, it would be a good idea to skim back over the [dumping guide](./dumping.livemd) for more information.
+
+With that disclaimer out of the way, let us talk about calling conventions.
+
+## Basic Nock Calls
+
+There are a few ways to call Nock functions, recall that the structure of a functions look like this:
+
+```nock
+[function sample environment-defined-in]
+```
+
+* _Function_ is some nock logic we wish to run
+* _Sample_ is the default argument of the function if non is given
+* _Environment-defined-in_ is the environment the function is defined in and relies upon.
+
+A good basic example can be seen below:
+
+```hoon
+[[0 6] 777 999]
+```
+
+This function has an arbitrary environment of `999` and a sample of `777`. The logic itself simply grabs the sample from the environment.
+
+A good visualization of the indexing can be seen below
+
+```mermaid
+stateDiagram-v2
+1 --> 2
+1 --> 3
+2 --> 4
+2 --> 5
+3 --> 6
+3 --> 7
+```
+
+where we have in our concrete example
+
+| Index | Nock              |
+| ----- | ----------------- |
+| 1     | `[[0 6] 777 999]` |
+| 2     | `[0 6]`           |
+| 3     | `[777 999]`       |
+| 4     | `0`               |
+| 5     | `6`               |
+| 6     | `777`             |
+| 7     | `999`             |
+
+<!-- livebook:{"break_markdown":true} -->
+
+Thus if we wish to call our code example, the most basic way is by invoking nock `9`. Continuing our example from above, let us see the most basic call of it.
+
+```hoon
+> .*  [[0 6] 777 999]  [9 2 0 1]
+777
+```
+
+To better understand what the `9` is doing let us ask us the nock structure of it
+
+```hoon
+> ;;  nock  [9 2 0 1]
+[%9 p=2 q=[%0 p=1]]
+```
+
+Here we can see the `9` takes 2 arguments, a `p=2` and a `q=[0 1]` argument.
+
+The `q=[0 1]` argument goes off first. The point of this is to determine what module/layer (called an [core](https://developers.urbit.org/reference/glossary/core) in hoon) the particular function (called a [gate](https://developers.urbit.org/reference/glossary/gate) in hoon) belongs to.
+
+From here the `p=2` is the location of the function/[gate](https://developers.urbit.org/reference/glossary/gate).
+
+In our example we know the function is indexed at 2, so thus we simply call the logic with the environment it's defined inside, meaning we simply get out the `6`th index which we have observed above is 777
+
+<!-- livebook:{"break_markdown":true} -->
+
+`[9 2 0 1]` isn't too interesting on it's own, all we have managed to do, is make fancy default values.
+
+However, since the logic we are running indexs into the sample, all we have to do is fine a formula that replaces the sample with the desired value
+
+```hoon
+> .*  [[0 6] 777 999]  [9 2 10 [6 1 888] 0 1]
+888
+> ;;  nock  [9 2 10 [6 1 888] 0 1]
+[%9 p=2 q=[%10 p=[p=6 q=[%1 p=888]] q=[%0 p=1]]]
+```
+
+Above we do exactly that, all it took was adding a simple `10 [6 1 888]`, however let us analyze what this does.
+
+`%10` is better known as replace at axis, the axis is the first value of `[6 1 888]` which in this case is position `6`. We then run the formula `[1 888]` which is simply saying return the constant `888`, then `10` finishes and replaced position `6` with the result, giving the logic located at `2` (I.E. `[0 6]`) the new sample to run against.
+
+Since the `%9`'s `q=...` has the replaced value, this ends up being the context for the `p=2` to run inside, and thus we have a computation that is effectively:
+
+```hoon
+> .*  [[0 6] 888 999] [9 2 0 1]
+888
+```
+
+We will in the next section see how Hoon functions are defined, as they give further detail in how we use instruction `9`.
+
+## Hoon Gates: What are they really?
+
+Something interesting is comparing the `9` described here to [dumping the indicies found in the dumping guide](./dumping.livemd#dumping-indexing-offsets).
+
+Namely we saw:
+
+```hoon
+> !=(dec:anoma)
+[7 [0 46] 9 342 0 15]
+```
+
+What is incongruous, is that we described `9` as calling a function, but in the dumping section, we make it seem like it's effectively only doing indexing to bring the name ready to be called.
+
+This all has to do with how hoon stores nock functions, they do something quite clever.
+
+Instead of just storing the function as code itself, it stores it similarly to this
+
+```hoon
+[[1 [[0 6] 777 999]] 666 909]
+```
+
+Where we store a nock function that evaluates to the code, the `1` instruction is simply that, when we evaluate this form we get
+
+```hoon
+> .*  [[1 [[0 6] 777 999]] 666 909]  [9 2 0 1]
+[[0 6] 777 999]
+```
+
+for which we can now call it
+
+```hoon
+> .*  .*  [[1 [[0 6] 777 999]] 666 909]  [9 2 0 1]  [9 2 0 1]
+777
+```
+
+In this case, it doesn't do much, but it makes sense if we look at a real example.
+
+```hoon
+> .*  add:anoma  [0 2]
+[ 6
+  [5 [1 0] 0 12]
+  [0 13]
+  9
+  2
+  10
+  [6 [8 [9 342 0 7] 9 2 10 [6 0 28] 0 2] 4 0 13]
+  0
+  1
+]
+```
+
+On this example I want to focus on the `dec` call `[8 [9 342 0 7] 9 2 10 ...]`. We know this is dec, as we already know it's offset inside layer 1 is `342`, but it's located at `7` as we've pushed `add` with its sample to the tree, making layer 1's index go to 7 (see the [section on how indicies change](./dumping.livemd#how-index-of-layers-change)) relative to `add`.
+
+What is very interesting, is that since the [gate](https://developers.urbit.org/reference/glossary/gate) evaluates to the nock function we wish, we can follow it up with the simple `[9 2 10 [6 ...] 0 ...]` pattern we found before.
+
+Meaning that we have decoupled indexing with calling. If Hoon did not do this, then we are in an awkward position that the `[9 342 0 7]` somehow has to get `0 7` index before running the application change `0 28`, complicating the formula. Making it a simple constant function allows the formulas to stay manageable.
+
+Some other minor notes. The call: `[9 2 10 [6 0 28] 0 2]` ends with `0 2` instead of `0 1` because we have bushed with `8`, more on this later.
+
+We will continue to expand this in the next section, but first let us learn how to evaluate code in the context of Anoma as the standard environment.
+
+## Evaluating Calls in The Anoma Context
+
+For actually writing code for Anoma, the dump of dec that we saw:
+
+```
+> !=(dec:anoma)
+[7 [0 46] 9 342 0 15]
+```
+
+would not actually run in the Anoma standard library. This is because it is assuming the current environment which has the Hoon standard library.
+
+```hoon
+> .*  anoma  [7 [0 46] 9 342 0 15]
+dojo: hoon expression failed
+```
+
+Rather than by hand editing the `7 [0 46]` out, we can instead tell Hoon that the context of the computation is in Anoma, and this is done through [tisgar(=>)](https://developers.urbit.org/reference/hoon/rune/tis#-tisgar).
+
+A good example can be seen here:
+
+```hoon
+> =>  anoma  !=(dec)
+[9 342 0 15]
+```
+
+Which gives us the correct computation to run dec on Anoma.
+
+```hoon
+> =>  anoma  .*  .  [9 342 0 15]
+[ [ 6
+    [5 [1 0] 0 6]
+...
+:: dec core emitted
+
+> =>  anoma  .*  .*  .  [9 342 0 15]  [9 2 10 [6 1 777] 0 1]
+776
+```
+
+## What a Hoon function call actually does
+
+So far this document has only outlined calling Hoon functions by hand, but what does the cannonical application form generate?
+
+```hoon
+> =>  anoma  (dec 3)
+2
+```
+
+Well we can ask [zaptis(!=)](https://developers.urbit.org/reference/hoon/rune/zap#-zaptis) what this expression means
+
+```hoon
+> =>  anoma  !=((dec 3))
+[8 [9 342 0 15] 9 2 10 [6 7 [0 3] 1 3] 0 2]
+> ;;  nock  =>  anoma  !=((dec 3))
+[ %8
+  p=[%9 p=342 q=[%0 p=15]]
+  q=[%9 p=2 q=[%10 p=[p=6 q=[%7 p=[%0 p=3] q=[%1 p=3]]] q=[%0 p=2]]]
+]
+```
+
+Let us break down this expression
+
+1. `[%8 p=[9 342 ...] q=[9 2 ...]]`
+   * `8` simply does a push on subject, with the `p` getting consed onto the environment. We've seen this `p` before, it is simply the formula for `dec`.
+   * Thus after the `p` we have `[dec anoma]` filling the environment
+   * This is now the context for the `q=`
+2. `[%9 p=2 q=[%10 ...]]`
+   * We've seen this `[9 2 10 [6 ...] ...]` call before, like before the function within the current layer is located at 2. However what is different is the specifics of the `q`
+3. `[%10 p=[p=6 q=[%7 p=[%0 p=3] q=[%1 p=3]]] q=[0 2]]`
+   * This 10 is a replace at axis 6 like we have seen before, but let us note the `q=[0 2]`.
+   * Most example's we've seen have been `[0 1]`, this example has a `[0 2]` as the first `%8` pushed the `dec` function onto the environment, meaning that the function we wish to replace `6` of is really at index 2!
+   * An important note is that this rule expands to a replace where the `q` and `p` are ran on the original environment.
+   * This means that `q=[%7 ...]` gets to run in the environment where the surrounding environment still exists
+4. `[%7 p=[%0 p=3] q=[%1 p=3]]`
+   * Here are where things get interesting, `%7` is simply composition, thus `p` is ran on the environment then `q` is.
+   * This is important because the `p=[%0 p=3]` simply restores the original environment
+     ```hoon
+     > .*  999  [8 [1 1] 0 1]
+     [1 999]
+     > .*  999  [8 [1 1] 0 3]
+     999
+     ```
+   * Meaning that computation `q` can be ran as if the `%8` never happened.
+   * The Hoon compiler is sometimes smart and will optimize out the `%7`
+5. `[%1 p=3]`
+   * We simply put 3 as the argument
+   * Dec now runs with 3 as we expect.
+
+Thus as we can see, the calling convention of Hoon is not very complicated, and is mostly sensible about trying to preserve the environments things are called in.
+
+## Paramarterized Modules: Or How Gates are just Cores
+
+A common occurence in our standard library is the use of paramartized modules. However something interesting to note is that on the [gate](https://developers.urbit.org/reference/glossary/gate) documentation, it mentions
+
+> A [gate](https://developers.urbit.org/reference/glossary/gate) is [core](https://developers.urbit.org/reference/glossary/core) with one arm named $ (buc). They are often called Hoon functions because they have many of the same properties of functions from other programming languages.
+
+Meaning that every time we have been calling `add` we've really been calling a module with a function named $ inside
+
+```hoon
+> =>  anoma  $:add
+0
+```
+
+Thus the calling conventions we've discussed above are exactly the same for modules!
+
+Let us look at the `lsh` function for confirmation
+
+```hoon
+> =>  anoma  !=(block)  ::  layer 4
+[9 10 0 1]
+> =>  anoma  !=(lsh:block)
+[7 [9 10 0 1] 9 90 0 1]
+> =>  anoma  !=((lsh:block 3 4))
+[8 [7 [9 10 0 1] 9 90 0 1] 9 2 10 [6 [7 [0 3] 1 3] 7 [0 3] 1 4] 0 2]
+```
+
+We can see here that block is located at index `10` inside of the anoma environment. Also note the `9` call, we are calling block to bring it to the front!
+
+next we check `lsh` which is located `90` within it, nothing out of the ordinary. We use `%7` to compose the indexing into the structure, which is reasonable.
+
+When we call `lsh` on `3` and `4` the result is exactly like we expect, we generate out the `%8` call that we disected above.
+
+So we can already call the `lsh` function as if no paramartized was had. This makes sense as we know that each [gate](https://developers.urbit.org/reference/glossary/gate) has a sample that it takes if no substitution is had.
+
+Now let us replace the default block value with `999` (note you don't want to run this, it'll be too slow)
+
+```hoon
+> =>  anoma  !=((~(lsh block 999) 3 4))
+[ 8
+  [8 [9 10 0 1] 9 90 10 [6 7 [0 3] 1 999] 0 2]
+  9
+  2
+  10
+  [6 [7 [0 3] 1 3] 7 [0 3] 1 4]
+  0
+  2
+]
+```
+
+The only difference that was had was in in  `[8 [9 10 0 1] 9 90 10 [6 7 [0 3] 1 999] 0 2]`. The rest of the formula stayed the same.
+
+However looking at this change, this should not be very shocking, as we have analyzed with the function above, we are simply pushing `block` to the front of the env with the `[8 [9 10 0 1] ...]`, leaing the environment being `[block anoma]`, then we simply wish to call `90` where `lsh` is located with the `6` index of the `block` environment being set to `999`.
+
+Note the `6` index is a gate's argument which we can see with this call:
+
+```hoon
+> =>  anoma  !=(block-size:block)
+[7 [9 10 0 1] 0 6]
+```
+
+Then we simply compute the rest of `lsh` with the default value being 999. Using a non large number we can see how this changes the results.
+
+```hoon
+> =>  anoma  (~(lsh block 1) 3 4)
+256
+> =>  anoma  (~(lsh block 0) 3 4)
+32
+> =>  anoma  (lsh:block 3 4)
+32
+```

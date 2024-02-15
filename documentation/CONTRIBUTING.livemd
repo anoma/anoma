@@ -11,6 +11,7 @@
     3. [Understanding any module](./contributing/understanding.livemd)
     4. [Testing](./contributing/testing.livemd)
     5. [Git](./contributing/git.livemd)
+    6. [Hoon](./contributing/hoon.livemd)
 
 <!-- livebook:{"break_markdown":true} -->
 
