@@ -26,8 +26,12 @@ defmodule Anoma.Storage do
      - `blocking_read/2`
      - `blocking_read/3`
 
+  For Querying keyspace the following functions are useful
+    - `get_keyspace/2`
+
   If one wants to query the tables by hand then there are manual
   functions, but beware, this is an unintended way of using the API
+     - `query_key_space/2`
      - `read_order/2`
      - `read_at_order/3`
      - `write_at_order/4`
@@ -163,6 +167,29 @@ defmodule Anoma.Storage do
     end
   end
 
+  @spec get_keyspace(Anoma.Storage.t(), list(any())) ::
+          :absent
+          | list({qualified_key(), qualified_value()})
+          | {:atomic, any()}
+  def get_keyspace(storage = %__MODULE__{}, key_space) do
+    with {:atomic, orders} <- read_keyspace_order(storage, key_space) do
+      absent_predicate = &(elem(&1, 0) == :absent)
+
+      latest_keys =
+        Enum.map(orders, fn [key, order] ->
+          checked_read_at_absent_details(storage, key, order)
+        end)
+
+      if Enum.any?(latest_keys, absent_predicate) do
+        {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
+        instrument({:error_missing, key, order})
+        :absent
+      else
+        latest_keys
+      end
+    end
+  end
+
   ############################################################
   #                         Snapshots                        #
   ############################################################
@@ -199,6 +226,14 @@ defmodule Anoma.Storage do
   ############################################################
   #                          Queries                         #
   ############################################################
+
+  @doc """
+  Reads the given keyspace to obtain the latest orders for the keys
+  """
+  @spec read_keyspace_order(t(), list()) :: result(list(list(any())))
+  def read_keyspace_order(storage = %__MODULE__{}, key_query) do
+    read_keyspace_at(storage.order, key_query)
+  end
 
   @spec read_order(t(), order_key()) ::
           result(list({atom(), Noun.t(), non_neg_integer()}))
@@ -247,6 +282,59 @@ defmodule Anoma.Storage do
     end
   end
 
+  @spec checked_read_at_absent_details(t(), Noun.t(), non_neg_integer()) ::
+          {:absent, Noun.t(), non_neg_integer()}
+          | {qualified_key(), qualified_value()}
+  defp checked_read_at_absent_details(storage, key, order) do
+    with {:ok, value} <- checked_read_at(storage, key, order) do
+      {key, value}
+    else
+      :absent -> {:absent, key, order}
+    end
+  end
+
+  def check_if_any_absent(latest_keys) do
+    absent_predicate = &(elem(&1, 0) == :absent)
+
+    if Enum.any?(latest_keys, absent_predicate) do
+      {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
+      instrument({:error_missing, key, order})
+      :absent
+    else
+      latest_keys
+    end
+  end
+
+  @spec read_keyspace_at(any(), list()) :: result(list(list(any())))
+  defp read_keyspace_at(table, key_query) do
+    keys = create_equality_query(key_query)
+
+    query_tx = fn ->
+      :mnesia.select(table, [{{:_, :"$2", :"$3"}, keys, [:"$$"]}])
+    end
+
+    instrument({:read_all, key_query})
+    :mnesia.transaction(query_tx)
+  end
+
+  @spec create_equality_query(list()) :: list()
+  defp create_equality_query(keys) do
+    keys
+    |> Enum.zip(1..length(keys)//1)
+    |> Enum.map(fn {key, num} -> create_equality_constraint(key, num) end)
+  end
+
+  @spec create_equality_constraint(any(), integer()) ::
+          {:==, {:hd, any()}, any()}
+  defp create_equality_constraint(key, num) do
+    {:==, nth_car(num), key}
+  end
+
+  @spec nth_car(integer()) :: {:hd, any()}
+  defp nth_car(num) do
+    {:hd, 2..num//1 |> Enum.reduce(:"$2", fn _, acc -> {:tl, acc} end)}
+  end
+
   ############################################################
   #                      Instrumentation                     #
   ############################################################
@@ -260,5 +348,13 @@ defmodule Anoma.Storage do
 
   defp instrument({:read, key}) do
     Logger.info("Regular blocking read at key: #{inspect(key)}")
+  end
+
+  defp instrument({:read_all, keys}) do
+    Logger.info("Reading key_space at: #{inspect(keys)}")
+  end
+
+  defp instrument({:error_missing, key, order}) do
+    Logger.error("Missing Key: #{inspect(key)} at order: #{inspect(order)}")
   end
 end
