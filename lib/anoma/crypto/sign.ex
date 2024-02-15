@@ -1,4 +1,4 @@
-defmodule Anoma.Sign do
+defmodule Anoma.Crypto.Sign do
   @moduledoc false
 
   @type ed25519_public() :: <<_::256>>

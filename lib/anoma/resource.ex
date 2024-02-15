@@ -11,7 +11,7 @@ defmodule Anoma.Resource do
   alias __MODULE__
   use TypedStruct
 
-  alias Anoma.Sign
+  alias Anoma.Crypto.Sign
 
   typedstruct enforce: true do
     # resource logic

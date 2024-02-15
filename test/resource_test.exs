@@ -5,7 +5,7 @@ defmodule AnomaTest.Resource do
   import Anoma.Resource
   alias Anoma.Resource.ProofRecord
   alias Anoma.Resource.Transaction
-  alias Anoma.Sign
+  alias Anoma.Crypto.Sign
 
   test "commitments and nullifiers" do
     keypair_a = Sign.new_keypair()
