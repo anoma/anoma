@@ -1,10 +1,12 @@
-:: Load anoma.hoon into your environemnt as anoma
-:: then write .*  name  [0 2] to get the arm
-=use-dec =>  anoma
+/+  resource-machine
+!.
+=>  resource-machine
+|%
+++  use-dec
 |=  a=@ud
 (dec a)
 
-=fib =>  anoma
+++  fib
 |=  n=@ud
 =+  [b=1 a=0]
 |-
@@ -14,3 +16,4 @@
   b  (add a b)
   n  (dec n)
 ==
+--
