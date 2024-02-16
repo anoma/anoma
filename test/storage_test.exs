@@ -98,6 +98,31 @@ defmodule AnomaTest.Storage do
     end
   end
 
+  describe "Namespaces" do
+    test "Properly get the put keys", %{storage: storage} do
+      key_space = ["foo", "bar"]
+      key_1 = key_space ++ ["baz"]
+      key_2 = key_space ++ ["faz"]
+      Storage.put(storage, key_1, 1)
+      Storage.put(storage, key_2, 1)
+      key_1_res = {["foo", "bar", "baz"], 1}
+      key_2_res = {["foo", "bar", "faz"], 1}
+
+      assert Enum.sort([key_1_res, key_2_res]) ==
+               Storage.get_keyspace(storage, ["foo"])
+
+      assert Enum.sort([key_1_res, key_2_res]) ==
+               Storage.get_keyspace(storage, ["foo", "bar"])
+
+      assert [key_1_res] ==
+               Storage.get_keyspace(storage, ["foo", "bar", "baz"])
+    end
+
+    test "no names no query", %{storage: storage} do
+      assert [] == Storage.get_keyspace(storage, ["aaaaaa", "bbbb"])
+    end
+  end
+
   describe "Snapshots" do
     test "snapshots properly put", %{storage: storage} do
       snapshot_storage = :snapshot_super_secret
