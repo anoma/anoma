@@ -33,7 +33,8 @@ defmodule Anoma do
        snapshot_path: snapshot_path,
        storage: storage,
        block_storage: :anoma_block},
-      {Anoma.Node.Intent, :anoma_intent}
+      {Anoma.Node.Intent, :anoma_intent},
+      {Anoma.Node.Pinger, Application.get_env(:anoma, :env)}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Anoma)
