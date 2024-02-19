@@ -17,4 +17,9 @@ defmodule AnomaTest.Identity.Commitment do
 
     assert Verification.verify_request(data, 555, pair.external)
   end
+
+  test "Verifying fails on unrelated data" do
+    pair = Id.new_keypair()
+    refute Verification.verify_combined(<<5>>, pair.external)
+  end
 end
