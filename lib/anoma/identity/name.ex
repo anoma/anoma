@@ -25,6 +25,30 @@ defmodule Anoma.Identity.Name do
     end
   end
 
+  @doc """
+  Adds the given key to the given namespace. The signer who owns the
+  namespace must have signed.
+  """
+  @spec add(t(), binary(), {list(binary()), binary()}) ::
+          :ok | :no_namespace | :failed_placement | :improper_data
+  def add(namespace = %__MODULE__{}, sig, d = {name, new_key})
+      when is_list(name) do
+    store = namespace.storage
+    storage_space = [name_space() | name]
+
+    with {:ok, pub} <- Storage.get(store, [name_space(), hd(name)]),
+         true <- Verification.verify_request(sig, d, pub),
+         :absent <- Storage.get(namespace.storage, storage_space),
+         {:atomic, :ok} <- Storage.put(store, storage_space, new_key) do
+      :ok
+    else
+      {:ok, _} -> :already_there
+      :absent -> :no_namespace
+      {:aborted, _} -> :failed_placement
+      false -> :improper_data
+    end
+  end
+
   ############################################################
   #                           Helpers                        #
   ############################################################

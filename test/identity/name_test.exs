@@ -53,4 +53,30 @@ defmodule AnomaTest.Identity.Name do
     assert Name.reserve_namespace(namespace, "A", pub, commited) ==
              :improper_data
   end
+
+  test "Adding to a namespace", %{ns: namespace, mem: mem, st: storage} do
+    Storage.ensure_new(storage)
+    {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
+    {:ok, commited} = Commitment.commit(com, "Alice")
+
+    assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok
+
+    {_, new_identity} = Manager.generate(mem, :ed25519, :commit)
+
+    keyspace = ["Alice", "Urbit"]
+
+    {:ok, attestation} =
+      Commitment.commit(com, {keyspace, new_identity})
+
+    assert Name.add(namespace, attestation, {keyspace, new_identity}) == :ok
+
+    assert Name.add(namespace, attestation, {keyspace, new_identity}) ==
+             :already_there
+
+    assert Name.add(namespace, attestation, {keyspace, ["Alice", "Anoma"]}) ==
+             :improper_data
+
+    assert Name.add(namespace, attestation, {["Londo", "Narn"], new_identity}) ==
+             :no_namespace
+  end
 end
