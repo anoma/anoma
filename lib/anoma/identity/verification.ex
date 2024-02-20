@@ -9,8 +9,10 @@ defmodule Anoma.Identity.Verification do
 
   alias Anoma.Crypto.Id
   alias Anoma.Crypto.Sign
+  alias Anoma.Storage
 
-  @spec verify_request(binary(), term(), Id.Extern.t(), boolean) :: boolean
+  @spec verify_request(binary(), term(), Id.Extern.t(), false | Storage.t()) ::
+          boolean
   def verify_request(commitment, msg, id = %Id.Extern{}, signsFor \\ false) do
     bin_message = binary(msg)
 
