@@ -49,6 +49,13 @@ defmodule Anoma.Identity.Name do
     end
   end
 
+  @spec all_identities(t(), binary()) :: MapSet.t(Id.Extern.t())
+  def all_identities(namespace = %__MODULE__{}, name) when is_binary(name) do
+    Storage.get_keyspace(namespace.storage, [name_space(), name])
+    |> Stream.map(fn {_, id} -> id end)
+    |> MapSet.new()
+  end
+
   ############################################################
   #                           Helpers                        #
   ############################################################

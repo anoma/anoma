@@ -78,5 +78,8 @@ defmodule AnomaTest.Identity.Name do
 
     assert Name.add(namespace, attestation, {["Londo", "Narn"], new_identity}) ==
              :no_namespace
+
+    assert Name.all_identities(namespace, "Alice") ==
+             MapSet.new([new_identity, pub])
   end
 end
