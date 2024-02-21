@@ -78,7 +78,9 @@ defmodule AnomaTest.Identity.SignsFor do
              :ok
 
     {:ok, signed} = Commitment.commit(cpid_oo, <<3>>)
+    {:ok, signed_blob} = Commitment.commit_combined(cpid_oo, <<3>>)
     # Verify data signed by someone who signs for us
     assert Verification.verify_request(signed, <<3>>, our_id, storage)
+    assert Verification.verify_combined(signed_blob, our_id, storage)
   end
 end

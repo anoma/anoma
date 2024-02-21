@@ -23,7 +23,7 @@ defmodule Anoma.Identity.Verification do
 
   # this should be the real verify function, new name until specs clarify
   @spec verify_combined(binary(), Id.Extern.t()) :: false | {:ok, any()}
-  @spec verify_combined(binary(), Id.Extern.t(), boolean) ::
+  @spec verify_combined(binary(), Id.Extern.t(), false | Storage.t()) ::
           {:ok, term()} | false
   def verify_combined(commitment, id = %Id.Extern{}, signsFor \\ false) do
     {v, result} = Sign.verify(commitment, id.sign)
@@ -53,9 +53,12 @@ defmodule Anoma.Identity.Verification do
   end
 
   # This one is used when we have combined lookup only
-  @spec signs_for_lookup(binary(), Id.Extern.t(), any()) :: boolean
-  defp signs_for_lookup(_blob, _id, _table) do
-    false
+  @spec signs_for_lookup(binary(), Id.Extern.t(), false | Storage.t()) ::
+          boolean
+  defp signs_for_lookup(blob, id, table) do
+    table &&
+      SignsFor.known(table, id)
+      |> Enum.any?(&verify_combined(blob, &1, table))
   end
 
   @spec binary(term()) :: binary()
