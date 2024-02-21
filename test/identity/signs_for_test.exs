@@ -4,7 +4,7 @@ defmodule AnomaTest.Identity.SignsFor do
   alias Anoma.Storage
   alias Anoma.Node.Identity.Commitment
   alias Anoma.Crypto.Id
-  alias Anoma.Identity.SignsFor
+  alias Anoma.Identity.{SignsFor, Verification}
   alias Anoma.Crypto.Id
 
   doctest(Anoma.Identity.SignsFor)
@@ -41,5 +41,44 @@ defmodule AnomaTest.Identity.SignsFor do
     assert SignsFor.known(storage, can_sign_for_me) == MapSet.new([])
     assert SignsFor.signs_for?(storage, our_id, can_sign_for_me)
     refute SignsFor.signs_for?(storage, our_id, can_not_sign_for_me)
+  end
+
+  test "transitive signature", %{st: storage} do
+    pair = Id.new_keypair()
+    our_id = pair.external
+    other_id = Id.new_keypair()
+    other_other_id = Id.new_keypair()
+    can_sign_for_me = other_id.external
+    can_also_sign_for_me = other_other_id.external
+
+    {:ok, cpid} = Commitment.start_link({pair.internal.sign, :ed25519})
+    {:ok, cpid_o} = Commitment.start_link({other_id.internal.sign, :ed25519})
+
+    {:ok, cpid_oo} =
+      Commitment.start_link({other_other_id.internal.sign, :ed25519})
+
+    {:ok, signed_key} = Commitment.commit(cpid, can_sign_for_me)
+
+    assert SignsFor.sign_for(storage, our_id, can_sign_for_me, signed_key) ==
+             :ok
+
+    {:ok, signed} = Commitment.commit(cpid_o, <<3>>)
+    # Verify data signed by someone who signs for us
+    assert Verification.verify_request(signed, <<3>>, our_id, storage)
+
+    # Add an indirection signs for request
+    {:ok, signed_key} = Commitment.commit(cpid_o, can_also_sign_for_me)
+
+    assert SignsFor.sign_for(
+             storage,
+             can_sign_for_me,
+             can_also_sign_for_me,
+             signed_key
+           ) ==
+             :ok
+
+    {:ok, signed} = Commitment.commit(cpid_oo, <<3>>)
+    # Verify data signed by someone who signs for us
+    assert Verification.verify_request(signed, <<3>>, our_id, storage)
   end
 end

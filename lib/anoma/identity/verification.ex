@@ -10,6 +10,7 @@ defmodule Anoma.Identity.Verification do
   alias Anoma.Crypto.Id
   alias Anoma.Crypto.Sign
   alias Anoma.Storage
+  alias Anoma.Identity.SignsFor
 
   @spec verify_request(binary(), term(), Id.Extern.t(), false | Storage.t()) ::
           boolean
@@ -39,9 +40,16 @@ defmodule Anoma.Identity.Verification do
   end
 
   # detached mode version of signs for
-  @spec signs_for_lookup(binary(), binary(), Id.Extern.t(), any()) :: boolean
-  defp signs_for_lookup(_commitment, _bin_message, _id, _table) do
-    false
+  @spec signs_for_lookup(
+          binary(),
+          binary(),
+          Id.Extern.t(),
+          false | Storage.t()
+        ) :: boolean
+  defp signs_for_lookup(commitment, bin_message, id, table) do
+    table &&
+      SignsFor.known(table, id)
+      |> Enum.any?(&verify_request(commitment, bin_message, &1, table))
   end
 
   # This one is used when we have combined lookup only
