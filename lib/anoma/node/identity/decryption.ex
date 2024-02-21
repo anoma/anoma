@@ -16,9 +16,9 @@ defmodule Anoma.Node.Identity.Decryption do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec decrypt(GenServer.server(), term()) ::
-          {:ok, binary()} | {:error, any()}
-  def decrypt(server, data) do
+  @spec decrypt(GenServer.server(), binary()) ::
+          {:ok, term()} | {:error, any()}
+  def decrypt(server, data) when is_binary(data) do
     GenServer.call(server, {:decrypt, data})
   end
 
