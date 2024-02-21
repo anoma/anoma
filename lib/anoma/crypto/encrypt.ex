@@ -1,6 +1,9 @@
 defmodule Anoma.Crypto.Encrypt do
   @moduledoc false
 
+  @type public() :: box_public()
+  @type secret() :: box_secret()
+
   @type box_public() :: <<_::256>>
   @type box_secret() :: <<_::256>>
 
