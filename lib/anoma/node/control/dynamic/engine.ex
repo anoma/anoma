@@ -32,16 +32,16 @@ defmodule Anoma.Node.Control.Dynamic.Engine do
   end
 
   def handle_call({:get, key}, _from, engine) do
-    {:reply, Storage.get(engine.storage, key), engine}
+    {:reply, Storage.get(engine.storage, [:dynamic, key]), engine}
   end
 
   def handle_call({:set, key, value}, _from, engine) do
-    {:reply, Storage.put(engine.storage, key, value), engine}
+    {:reply, Storage.put(engine.storage, [:dynamic, key], value), engine}
   end
 
   def handle_call({:delete, key}, _from, engine) do
     with {:ok, _value} <- Storage.get(engine.storage, key) do
-      {:reply, Storage.put(engine.storage, key, 0), engine}
+      {:reply, Storage.put(engine.storage, [:dynamic, key], 0), engine}
     else
       :absent -> {:reply, :absent, engine}
     end

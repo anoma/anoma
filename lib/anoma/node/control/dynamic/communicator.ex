@@ -59,13 +59,13 @@ defmodule Anoma.Node.Control.Dynamic.Communicator do
   end
 
   def handle_continue({:broadcast_get, key, value}, _from, state) do
-    rel_subs = Control.handle_subs(state.subscribers, key)
+    rel_subs = Control.handle_subs(state.subscribers, :dynamic, key)
     Utility.broadcast(rel_subs, {:dynamic_config_changed, key, value})
     {:noreply, state}
   end
 
   def handle_continue({:broadcast_delete, key}, _from, state) do
-    rel_subs = Control.handle_subs(state.subscribers, key)
+    rel_subs = Control.handle_subs(state.subscribers, :dynamic, key)
     Utility.broadcast(rel_subs, {:dynamic_config_unset, key})
     {:noreply, state}
   end

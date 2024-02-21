@@ -43,7 +43,7 @@ defmodule Anoma.Node.Control.Measure.Communicator do
   end
 
   def handle_cast({:record, key, value}, agent) do
-    rel_subs = Control.handle_subs(agent.subscribers, key)
+    rel_subs = Control.handle_subs(agent.subscribers, :measurment, key)
 
     Utility.broadcast(
       rel_subs,

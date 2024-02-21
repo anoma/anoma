@@ -8,6 +8,6 @@ defmodule Anoma.Node.Control.Static do
   alias Anoma.Storage
 
   def get(storage, key) do
-    {key, Storage.get(storage, key)}
+    {key, Storage.get(storage, [:static, key])}
   end
 end

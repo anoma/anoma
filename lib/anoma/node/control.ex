@@ -24,10 +24,10 @@ defmodule Anoma.Node.Control do
 
   def shutdown(supervisor), do: Supervisor.stop(supervisor, :normal)
 
-  def handle_subs(subs, key) do
+  def handle_subs(subs, atom, key) do
     subs
     |> MapSet.to_list()
-    |> Enum.filter(fn {_sub, k} -> k == key end)
+    |> Enum.filter(fn {_sub, k} -> k == {atom, key} end)
     |> Enum.map(fn {sub, _k} -> sub end)
     |> MapSet.new()
   end
