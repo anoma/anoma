@@ -70,7 +70,8 @@ defmodule Anoma.Node do
        name: prims.mempool,
        block_storage: args[:block_storage],
        ordering: coms.ordering,
-       executor: coms.executor}
+       executor: coms.executor},
+      {Anoma.Node.Pinger, name: coms.mempool, environment: args[:environment]}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
