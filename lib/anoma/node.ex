@@ -20,9 +20,13 @@ defmodule Anoma.Node do
     - `name_mempool`
     - `name_executor`
     - `name_ordering`
+    - `name_dynamic`
+    - `name_measure`
     - `name_mempool_com`
     - `name_executor_com`
     - `name_ordering_com`
+    - `name_dynamic_com`
+    - `name_measure_com`
 
   ### Created Tables
     - `storage.qualified`
@@ -39,6 +43,8 @@ defmodule Anoma.Node do
     field(:mempool, GenServer.server())
     field(:ordering, GenServer.server())
     field(:executor, GenServer.server())
+    field(:dynamic, GenServer.server())
+    field(:measure, GenServer.server())
   end
 
   def start_link(args) do
@@ -61,16 +67,19 @@ defmodule Anoma.Node do
 
   def init({coms, prims, args}) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
+    storage = args[:storage]
 
     children = [
       {Anoma.Node.Executor,
        env |> Map.to_list() |> Keyword.put(:name, prims.executor)},
-      {Anoma.Node.Storage, name: prims.ordering, table: args[:storage]},
+      {Anoma.Node.Storage, name: prims.ordering, table: storage},
       {Anoma.Node.Mempool,
        name: prims.mempool,
        block_storage: args[:block_storage],
        ordering: coms.ordering,
-       executor: coms.executor}
+       executor: coms.executor},
+      {Anoma.Node.Control,
+       dyn: prims.dynamic, meas: prims.measure, storage: storage}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
@@ -81,7 +90,16 @@ defmodule Anoma.Node do
     exec = Utility.append_name(name, "_executor")
     mem = Utility.append_name(name, "_mempool")
     ord = Utility.append_name(name, "_ordering")
-    %Node{mempool: mem, ordering: ord, executor: exec}
+    dyn = Utility.append_name(name, "_dynamic")
+    meas = Utility.append_name(name, "_measure")
+
+    %Node{
+      mempool: mem,
+      ordering: ord,
+      executor: exec,
+      dynamic: dyn,
+      measure: meas
+    }
   end
 
   @spec com_names(atom()) :: Node.t()
@@ -89,7 +107,16 @@ defmodule Anoma.Node do
     exec = Utility.append_name(name, "_executor_com")
     mem = Utility.append_name(name, "_mempool_com")
     ord = Utility.append_name(name, "_ordering_com")
-    %Node{mempool: mem, ordering: ord, executor: exec}
+    dyn = Utility.append_name(name, "_dynamic_com")
+    meas = Utility.append_name(name, "_measure_com")
+
+    %Node{
+      mempool: mem,
+      ordering: ord,
+      executor: exec,
+      dynamic: dyn,
+      measure: meas
+    }
   end
 
   def shutdown(supervisor), do: Supervisor.stop(supervisor, :normal)
