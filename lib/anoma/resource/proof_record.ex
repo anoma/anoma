@@ -1,6 +1,4 @@
 defmodule Anoma.Resource.ProofRecord do
-  @moduledoc false
-
   alias __MODULE__
   use TypedStruct
 

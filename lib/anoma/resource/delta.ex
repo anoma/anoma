@@ -1,6 +1,4 @@
 defmodule Anoma.Resource.Delta do
-  @moduledoc false
-
   # usually non_neg_integer, but not in execution
   @type t() :: %{binary() => integer()}
 

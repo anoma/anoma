@@ -1,6 +1,4 @@
 defmodule Anoma.Resource.Proof do
-  @moduledoc false
-
   use TypedStruct
 
   # a transparent resource logic proof is just the resource
