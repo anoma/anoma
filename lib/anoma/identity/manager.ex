@@ -63,9 +63,35 @@ defmodule Anoma.Identity.Manager do
     end
   end
 
+  @doc """
+  I delete the given key.
+
+  Note that depending on the backend the following could happen:
+
+  1. If there is an active Decryption and Commitment engine and the
+     backend is a memory backend, then the keys can still be used for
+     singing and decryption. However once these engines die there is
+     not a way to get them back after deletion.
+  2. If there is an active Decryption and Commitment engine and the
+     backend is external, then they can't be used anymore as the
+     actual keys are gone from the external device.
+  3. One can no longer connect to the key given it does not exist in
+     the system anymore
+  """
   @spec delete(Id.Extern.t(), Backend.t()) :: resp(nil)
-  def delete(_id, _backend) do
-    throw("to be implemented")
+  def delete(id, mem = %Backend.Memory{}) do
+    salted_key = Id.salt_keys(id, mem.symmetric)
+
+    # If we can read the salted public key, then you can decrypt the
+    # private key as well, making it known to whoever is submitting
+    trans =
+      fn -> :mnesia.delete({mem.table, salted_key.sign}) end
+      |> :mnesia.transaction()
+
+    case trans do
+      {:atomic, :ok} -> {:ok, nil}
+      _ -> {:error, "bad transaction, failed to delete key"}
+    end
   end
 
   ############################################################

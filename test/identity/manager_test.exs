@@ -54,4 +54,10 @@ defmodule AnomaTest.Identity.Manager do
     refute Map.has_key?(com, :decryption) || Map.has_key?(dec, :commitment)
     assert Map.has_key?(com, :commitment) && Map.has_key?(dec, :decryption)
   end
+
+  test "delete works", %{mem: mem} do
+    {_, pub} = Manager.generate(mem, :ed25519, :commit_and_decrypt)
+    Manager.delete(pub, mem)
+    assert {:error, _} = Manager.connect(pub, mem, :commit_and_decrypt)
+  end
 end
