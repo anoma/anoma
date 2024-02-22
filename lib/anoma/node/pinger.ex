@@ -1,10 +1,17 @@
 defmodule Anoma.Node.Pinger do
   @moduledoc """
-  I provide automatic block execution every 10 seconds in the production environment.
+  I provide periodic block execution based on submitted mempool name and time.
   """
   use GenServer
+  use TypedStruct
 
   alias Anoma.Node.Mempool.Communicator, as: Mcom
+  alias __MODULE__
+
+  typedstruct do
+    field(:mempool, atom())
+    field(:time, non_neg_integer() | atom(), default: :no_timer)
+  end
 
   def start_link(args) do
     Mcom.hard_reset(args[:name])
@@ -12,24 +19,28 @@ defmodule Anoma.Node.Pinger do
   end
 
   def init(args) do
-    if args[:environment] == :prod do
-      pinger(args[:name])
-    end
+    time = args[:time]
+    name = args[:name]
 
-    {:ok, args}
+    pinger(time)
+    {:ok, %Pinger{mempool: name, time: time}}
   end
 
-  def handle_info({:execute, mempool}, state) do
-    Mcom.execute(mempool)
-    pinger(mempool)
+  def handle_info(:execute, state) do
+    Mcom.execute(state.mempool)
+    pinger(state.time)
 
     {:noreply, state}
   end
 
   @doc """
-  I send the :execute message every 10 seconds.
+  I send the :execute message after specified time if ever.
   """
-  def pinger(mempool) do
-    Process.send_after(self(), {:execute, mempool}, 10000)
+  def pinger(time) do
+    if time == :no_timer do
+      :ok
+    else
+      Process.send_after(self(), :execute, time)
+    end
   end
 end
