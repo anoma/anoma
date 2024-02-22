@@ -61,6 +61,7 @@ defmodule Anoma.Node do
 
   def init({coms, prims, args}) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
+    memcom = coms.mempool
 
     children = [
       {Anoma.Node.Executor,
@@ -71,7 +72,11 @@ defmodule Anoma.Node do
        block_storage: args[:block_storage],
        ordering: coms.ordering,
        executor: coms.executor},
-      {Anoma.Node.Pinger, name: coms.mempool, environment: args[:environment]}
+      if args[:environment] == :prod do
+        {Anoma.Node.Pinger, name: memcom, time: 10000}
+      else
+        {Anoma.Node.Pinger, name: memcom, time: :no_timer}
+      end
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
