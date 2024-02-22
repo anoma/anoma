@@ -7,7 +7,7 @@ defmodule Anoma.Node.Control.Dynamic.Engine do
   alias Anoma.Node.Utility
 
   typedstruct do
-    field(:storage, GenServer.server())
+    field(:storage, Storage.t())
   end
 
   def init(arg) do
