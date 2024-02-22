@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Control.Static do
+defmodule Anoma.Static do
   @moduledoc """
   I implement the static configuration engine.
 
