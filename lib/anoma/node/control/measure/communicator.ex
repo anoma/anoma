@@ -4,16 +4,13 @@ defmodule Anoma.Node.Control.Measure.Communicator do
   use TypedStruct
   use GenServer
 
-  alias Anoma.Node.Control
   alias Anoma.Node.Control.Measure.Engine
   alias Anoma.Node.Utility
 
   typedstruct do
     field(:engine, GenServer.server(), enforce: true)
 
-    field(:subscribers, MapSet.t({GenServer.server(), atom()}),
-      default: MapSet.new()
-    )
+    field(:subscribers, Enum.t(), default: %{})
   end
 
   def init(args) do
@@ -38,15 +35,19 @@ defmodule Anoma.Node.Control.Measure.Communicator do
     {:noreply,
      %Communicator{
        agent
-       | subscribers: MapSet.put(agent.subscribers, {subscriber, key})
+       | subscribers:
+           Map.update(
+             agent.subscribers,
+             key,
+             MapSet.new([subscriber]),
+             fn set -> MapSet.put(set, subscriber) end
+           )
      }}
   end
 
   def handle_cast({:record, key, value}, agent) do
-    rel_subs = Control.handle_subs(agent.subscribers, :measurment, key)
-
     Utility.broadcast(
-      rel_subs,
+      Map.get(agent.subscribers, key),
       {:measurement_changed, key, value, Time.utc_now()}
     )
 

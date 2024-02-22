@@ -4,16 +4,13 @@ defmodule Anoma.Node.Control.Dynamic.Communicator do
   use TypedStruct
   use GenServer
 
-  alias Anoma.Node.Control
   alias Anoma.Node.Control.Dynamic.Engine
   alias Anoma.Node.Utility
 
   typedstruct do
     field(:engine, GenServer.server(), enforce: true)
 
-    field(:subscribers, MapSet.t({GenServer.server(), atom()}),
-      default: MapSet.new()
-    )
+    field(:subscribers, Enum.t(), default: %{})
   end
 
   def init(args) do
@@ -40,7 +37,13 @@ defmodule Anoma.Node.Control.Dynamic.Communicator do
     {:noreply,
      %Communicator{
        agent
-       | subscribers: MapSet.put(agent.subscribers, {subscriber, key})
+       | subscribers:
+           Map.update(
+             agent.subscribers,
+             key,
+             MapSet.new([subscriber]),
+             fn set -> MapSet.put(set, subscriber) end
+           )
      }}
   end
 
@@ -59,14 +62,20 @@ defmodule Anoma.Node.Control.Dynamic.Communicator do
   end
 
   def handle_continue({:broadcast_get, key, value}, _from, state) do
-    rel_subs = Control.handle_subs(state.subscribers, :dynamic, key)
-    Utility.broadcast(rel_subs, {:dynamic_config_changed, key, value})
+    Utility.broadcast(
+      Map.get(state.subscribers, key),
+      {:dynamic_config_changed, key, value}
+    )
+
     {:noreply, state}
   end
 
   def handle_continue({:broadcast_delete, key}, _from, state) do
-    rel_subs = Control.handle_subs(state.subscribers, :dynamic, key)
-    Utility.broadcast(rel_subs, {:dynamic_config_unset, key})
+    Utility.broadcast(
+      Map.get(state.subscribers, key),
+      {:dynamic_config_unset, key}
+    )
+
     {:noreply, state}
   end
 end
