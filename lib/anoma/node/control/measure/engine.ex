@@ -24,12 +24,12 @@ defmodule Anoma.Node.Control.Measure.Engine do
 
   def handle_cast({:record, key, value}, engine) do
     with {:ok, list} <- Storage.get(engine.storage, key) do
-      Storage.put(engine.storage, [:measurmeent, key], [
+      Storage.put(engine.storage, measure_space(key), [
         timestamp(value) | list
       ])
     else
       :absent ->
-        Storage.put(engine.storage, [:measurement, key], [timestamp(value)])
+        Storage.put(engine.storage, measure_space(key), [timestamp(value)])
     end
 
     {:noreply, engine}
@@ -37,5 +37,9 @@ defmodule Anoma.Node.Control.Measure.Engine do
 
   def timestamp(meas) do
     {meas, Time.utc_now()}
+  end
+
+  defp measure_space(key) do
+    [:measurement, key]
   end
 end

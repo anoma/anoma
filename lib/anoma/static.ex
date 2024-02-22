@@ -8,6 +8,10 @@ defmodule Anoma.Static do
   alias Anoma.Storage
 
   def get(storage, key) do
-    {key, Storage.get(storage, [:static, key])}
+    {key, Storage.get(storage, static_space(key))}
+  end
+
+  defp static_space(key) do
+    [:static, key]
   end
 end
