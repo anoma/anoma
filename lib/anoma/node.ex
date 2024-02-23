@@ -20,9 +20,11 @@ defmodule Anoma.Node do
     - `name_mempool`
     - `name_executor`
     - `name_ordering`
+    - `name_clock`
     - `name_mempool_com`
     - `name_executor_com`
     - `name_ordering_com`
+    - `name_clock_com`
 
   ### Created Tables
     - `storage.qualified`
@@ -39,6 +41,7 @@ defmodule Anoma.Node do
     field(:mempool, GenServer.server())
     field(:ordering, GenServer.server())
     field(:executor, GenServer.server())
+    field(:clock, GenServer.server())
   end
 
   def start_link(args) do
@@ -70,7 +73,9 @@ defmodule Anoma.Node do
        name: prims.mempool,
        block_storage: args[:block_storage],
        ordering: coms.ordering,
-       executor: coms.executor}
+       executor: coms.executor},
+      {Anoma.Node.Time,
+       name: prims.clock, start: System.monotonic_time(:millisecond)}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)
@@ -81,7 +86,8 @@ defmodule Anoma.Node do
     exec = Utility.append_name(name, "_executor")
     mem = Utility.append_name(name, "_mempool")
     ord = Utility.append_name(name, "_ordering")
-    %Node{mempool: mem, ordering: ord, executor: exec}
+    clock = Utility.append_name(name, "_clock")
+    %Node{mempool: mem, ordering: ord, executor: exec, clock: clock}
   end
 
   @spec com_names(atom()) :: Node.t()
@@ -89,7 +95,8 @@ defmodule Anoma.Node do
     exec = Utility.append_name(name, "_executor_com")
     mem = Utility.append_name(name, "_mempool_com")
     ord = Utility.append_name(name, "_ordering_com")
-    %Node{mempool: mem, ordering: ord, executor: exec}
+    clock = Utility.append_name(name, "_clock_com")
+    %Node{mempool: mem, ordering: ord, executor: exec, clock: clock}
   end
 
   def shutdown(supervisor), do: Supervisor.stop(supervisor, :normal)
