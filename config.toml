@@ -1,0 +1,24 @@
+# I am a configuration file in the TOML format.
+# I posess all the info needed to startup a new Anoma Node with an
+# appropriate Intent Pool.
+
+[node]
+
+# I provide the names of node components and associated storage
+
+name = "name"
+qualified = "qualified_name"
+order = "order_name"
+snapshot_path = "path"
+block_storage = "block"
+
+#Put "no_timer" in no automatic execution needed
+ping_time = 10000
+
+[intent]
+
+# I provide the names of intent pool components
+
+name = "name_intent"
+
+
