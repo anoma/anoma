@@ -4,7 +4,7 @@ defmodule AnomaTest.Identity.SignsFor do
   alias Anoma.Storage
   alias Anoma.Node.Identity.Commitment
   alias Anoma.Crypto.Id
-  alias Anoma.Identity.{SignsFor, Verification}
+  alias Anoma.Identity.{SignsFor, Verification, Evidence}
   alias Anoma.Crypto.Id
 
   doctest(Anoma.Identity.SignsFor)
@@ -31,10 +31,18 @@ defmodule AnomaTest.Identity.SignsFor do
 
     {:ok, signed_key} = Commitment.commit(cpid, can_sign_for_me)
 
-    assert SignsFor.sign_for(storage, our_id, can_sign_for_me, signed_key) ==
+    assert SignsFor.sign_for(storage, %Evidence{
+             signature_key: our_id,
+             signed_data: can_sign_for_me,
+             signature: signed_key
+           }) ==
              :ok
 
-    assert SignsFor.sign_for(storage, our_id, can_not_sign_for_me, signed_key) ==
+    assert SignsFor.sign_for(storage, %Evidence{
+             signature_key: our_id,
+             signed_data: can_not_sign_for_me,
+             signature: signed_key
+           }) ==
              :key_not_verified
 
     assert SignsFor.known(storage, our_id) == MapSet.new([can_sign_for_me])
@@ -59,7 +67,11 @@ defmodule AnomaTest.Identity.SignsFor do
 
     {:ok, signed_key} = Commitment.commit(cpid, can_sign_for_me)
 
-    assert SignsFor.sign_for(storage, our_id, can_sign_for_me, signed_key) ==
+    assert SignsFor.sign_for(storage, %Evidence{
+             signature_key: our_id,
+             signed_data: can_sign_for_me,
+             signature: signed_key
+           }) ==
              :ok
 
     {:ok, signed} = Commitment.commit(cpid_o, <<3>>)
@@ -71,9 +83,11 @@ defmodule AnomaTest.Identity.SignsFor do
 
     assert SignsFor.sign_for(
              storage,
-             can_sign_for_me,
-             can_also_sign_for_me,
-             signed_key
+             %Evidence{
+               signature_key: can_sign_for_me,
+               signed_data: can_also_sign_for_me,
+               signature: signed_key
+             }
            ) ==
              :ok
 
