@@ -23,7 +23,8 @@ defmodule AnomaTest.Node.Mempool do
         name: name,
         snapshot_path: snapshot_path,
         storage: storage,
-        block_storage: :mempool_blocks
+        block_storage: :mempool_blocks,
+        ping_time: :no_timer
       )
     end
 
