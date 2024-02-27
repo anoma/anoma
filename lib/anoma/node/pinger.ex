@@ -35,21 +35,20 @@ defmodule Anoma.Node.Pinger do
     GenServer.cast(server, {:set_timer, num})
   end
 
-
   def handle_cast(:stop, state) do
-    {:noreply, %__MODULE__{state | time: :no_timer} }
+    {:noreply, %__MODULE__{state | time: :no_timer}}
   end
 
   def handle_cast({:set_timer, num}, state) do
     pinger(num)
-    {:noreply, %__MODULE__{state | time: num} }
+    {:noreply, %__MODULE__{state | time: num}}
   end
-
 
   def handle_info(:execute, state) do
     if state.time != :no_timer do
       Mcom.execute(state.mempool)
     end
+
     pinger(state.time)
 
     {:noreply, state}

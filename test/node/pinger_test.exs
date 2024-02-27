@@ -18,6 +18,7 @@ defmodule AnomaTest.Node.Pinger do
     node = Anoma.Node.com_names(name)
 
     pinger = :pinger_pinger
+
     unless Process.whereis(:pinger_mempool_com) do
       Anoma.Node.start_link(
         name: name,
