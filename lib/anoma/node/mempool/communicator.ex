@@ -87,6 +87,11 @@ defmodule Anoma.Node.Mempool.Communicator do
     {:noreply, state}
   end
 
+  def terminate(trace, state) do
+    IO.inspect(state, label: "ordering: terminate trace")
+    IO.inspect(trace, label: "ordering: terminate trace")
+  end
+
   ############################################################
   #                  Genserver Implementation                #
   ############################################################

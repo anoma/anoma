@@ -3,6 +3,7 @@ defmodule AnomaTest.Node.Pinger do
 
   alias Anoma.Node.Mempool.Communicator, as: Mcom
   alias Anoma.Node.Executor.Communicator, as: Ccom
+  alias Anoma.Node.Pinger
   import TestHelper.Nock
 
   setup_all do
@@ -16,6 +17,7 @@ defmodule AnomaTest.Node.Pinger do
 
     node = Anoma.Node.com_names(name)
 
+    pinger = :pinger_pinger
     unless Process.whereis(:pinger_mempool_com) do
       Anoma.Node.start_link(
         name: name,
@@ -26,10 +28,11 @@ defmodule AnomaTest.Node.Pinger do
       )
     end
 
-    [node: node]
+    [node: node, pinger: pinger]
   end
 
-  test "Execution is done automatically", %{node: node} do
+  test "Execution is done automatically", %{node: node, pinger: pinger} do
+    Pinger.set_timer(pinger, 10)
     key = 555
     zero = zero_counter(key)
 
@@ -38,7 +41,6 @@ defmodule AnomaTest.Node.Pinger do
     pid_zero = Mcom.tx(node.mempool, {:kv, zero}).pid
 
     assert_receive {:"$gen_cast", {:process_done, ^pid_zero}}
-
-    GenServer.stop(:pinger_pinger)
+    Pinger.stop(pinger)
   end
 end

@@ -93,4 +93,9 @@ defmodule Anoma.Node.Storage.Communicator do
     Ordering.hard_reset(state.primary(), initial)
     {:noreply, state}
   end
+
+  def terminate(trace, state) do
+    IO.inspect(state, label: "ordering: terminate trace")
+    IO.inspect(trace, label: "ordering: terminate trace")
+  end
 end
