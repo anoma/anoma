@@ -36,6 +36,7 @@ defmodule Anoma.Node.Executor.Communicator do
     field(:subscribers, ACom.t(), default: ACom.new())
     field(:spawner, atom())
     field(:ambiant_env, Nock.t())
+    field(:tasks, list(Task.t()), default: [])
   end
 
   def init(args) do
@@ -77,7 +78,7 @@ defmodule Anoma.Node.Executor.Communicator do
       > id = System.unique_integer([:positive])
       1931
       > zero = [[1, 777 | 0], 0, Nock.stdlib_core()]
-      > task = Communicator.new_transaction(executor, id, zero)
+      > task = Communicator.new_transaction(executor, id, {:kv, zero})
       %Task{
         mfa: {Anoma.Node.Executor.Worker, :run, 3},
         owner: #PID<0.264.0>,
@@ -149,6 +150,11 @@ defmodule Anoma.Node.Executor.Communicator do
     GenServer.cast(communicator, :reset)
   end
 
+  # TODO, only kill the given transactions
+  def kill_transactions(communicator, _trans) do
+    GenServer.call(communicator, :kill)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -163,18 +169,29 @@ defmodule Anoma.Node.Executor.Communicator do
 
   def handle_call({:transaction, order, gate}, _from, state) do
     task = spawn_transactions(order, gate, state)
-    {:reply, task.pid, state}
+    {:reply, task.pid, %__MODULE__{state | tasks: [task | state.tasks]}}
   end
 
   def handle_call({:transaction, order, gate, env}, _from, state) do
     task =
       spawn_transactions(order, gate, %Communicator{state | ambiant_env: env})
 
-    {:reply, task.pid, state}
+    {:reply, task.pid, %__MODULE__{state | tasks: [task | state.tasks]}}
+  end
+
+  def handle_call(:kill, _from, agent) do
+    kill(agent.tasks)
+    {:reply, :ok, %Communicator{agent | tasks: []}}
+  end
+
+  def handle_cast(:kill, agent) do
+    kill(agent.tasks)
+    {:reply, :ok, %Communicator{agent | tasks: []}}
   end
 
   def handle_cast(:reset, agent) do
-    {:noreply, %Communicator{agent | subscribers: MapSet.new()}}
+    kill(agent.tasks)
+    {:noreply, %Communicator{agent | subscribers: MapSet.new(), tasks: []}}
   end
 
   # TODO communicate this information somehow
@@ -200,5 +217,11 @@ defmodule Anoma.Node.Executor.Communicator do
       gate,
       state.ambiant_env
     ])
+  end
+
+  @spec kill(Task.t()) :: :ok
+  defp kill(tasks) do
+    Enum.each(tasks, &Task.shutdown/1)
+    :ok
   end
 end

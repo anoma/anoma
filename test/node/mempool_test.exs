@@ -92,7 +92,7 @@ defmodule AnomaTest.Node.Mempool do
     Ccom.subscribe(node.executor, self())
     Mcom.hard_reset(node.mempool)
 
-    zero_tx = Mcom.tx(node.mempool, zero_counter(key))
+    zero_tx = Mcom.tx(node.mempool, {:kv, zero_counter(key)})
     assert Mcom.pending_txs(node.mempool) == [zero_tx]
     Mcom.soft_reset(node.mempool)
   end
@@ -102,7 +102,7 @@ defmodule AnomaTest.Node.Mempool do
 
     Mcom.hard_reset(node.mempool)
 
-    zero_tx = Mcom.tx(node.mempool, zero_counter(777))
+    zero_tx = Mcom.tx(node.mempool, {:kv, zero_counter(777)})
 
     assert_receive {:"$gen_cast", {:submitted, ^zero_tx}}
     Mcom.soft_reset(node.mempool)

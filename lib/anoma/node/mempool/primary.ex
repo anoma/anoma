@@ -95,13 +95,13 @@ defmodule Anoma.Node.Mempool.Primary do
   end
 
   def handle_cast(:soft_reset, state) do
-    kill_transactions(state.transactions)
+    kill_transactions(state.transactions, state.executor)
     {:noreply, reset_state(state)}
   end
 
   def handle_cast(:hard_reset, state) do
     snapshot = Ecom.snapshot(state.executor)
-    kill_transactions(state.transactions)
+    kill_transactions(state.transactions, state.executor)
     reset_blocks(state)
     Scom.hard_reset(state.ordering, snapshot)
     {:noreply, reset_state(state)}
@@ -191,15 +191,15 @@ defmodule Anoma.Node.Mempool.Primary do
     Block.create_table(state.block_storage, false)
   end
 
-  @spec kill_transactions(list(Transaction.t())) :: :ok
-  def kill_transactions(transactions) do
+  @spec kill_transactions(list(Transaction.t()), GenServer.server()) :: :ok
+  def kill_transactions(transactions, executor) do
     instrument({:kill, length(transactions)})
 
     for transaction <- transactions do
       instrument({:killing_pid, transaction})
-      Process.exit(Transaction.pid(transaction), :kill)
     end
 
+    Ecom.kill_transactions(executor, transactions)
     :ok
   end
 
