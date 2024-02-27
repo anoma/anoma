@@ -8,8 +8,8 @@ defmodule AnomaTest.Node.Pinger do
 
   setup_all do
     storage = %Anoma.Storage{
-      qualified: AnomaTest.Mempool.Qualified,
-      order: AnomaTest.Mempool.Order
+      qualified: AnomaTest.Pinger.Qualified,
+      order: AnomaTest.Pinger.Order
     }
 
     name = :pinger
