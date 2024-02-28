@@ -11,6 +11,7 @@ defmodule Anoma.Node.Intent.Communicator do
   alias Anoma.Intent
   alias Anoma.Node.Utility
   alias Anoma.Node.Intent.Pool
+  alias Anoma.Node.Logger
 
   typedstruct do
     field(:subscribers, ACom.t(), default: ACom.new())
@@ -78,28 +79,45 @@ defmodule Anoma.Node.Intent.Communicator do
   ############################################################
 
   def handle_cast({:new_intent, intent}, agent) do
-    if :ok == Pool.new_intent(agent.pool, intent) do
+    logger = agent.logger
+    pool = agent.pool
+
+    if :ok == Pool.new_intent(pool, intent) do
       broadcast_intent(agent, intent)
     end
+
+    log_info({:submit, pool, logger})
 
     {:noreply, agent}
   end
 
-  def handle_cast({:remove_intent, intent}, communicator) do
-    if :ok == Pool.remove_intent(communicator.pool, intent) do
-      broadcast_remove(communicator, intent)
+  def handle_cast({:remove_intent, intent}, agent) do
+    logger = agent.logger
+    pool = agent.pool
+
+    if :ok == Pool.remove_intent(pool, intent) do
+      broadcast_remove(agent, intent)
     end
 
-    {:noreply, communicator}
+    log_info({:remove, pool, logger})
+
+    {:noreply, agent}
   end
 
   def handle_cast({:on_sub, new_sub}, agent) do
     broadcast_intents(agent, new_sub)
+
+    log_info({:sub, new_sub, agent.logger})
+
     {:noreply, agent}
   end
 
-  def handle_call(:intents, _from, com) do
-    {:reply, Pool.intents(com.pool), com}
+  def handle_call(:intents, _from, agent) do
+    pool = agent.pool
+    intents = Pool.intents(pool)
+    log_info({:all, pool, agent.logger})
+
+    {:reply, intents, agent}
   end
 
   ############################################################
@@ -112,6 +130,8 @@ defmodule Anoma.Node.Intent.Communicator do
       com.subscribers,
       {:new_intent, intent}
     )
+
+    log_info({:cast_new, com.subscribers, com.logger})
   end
 
   @spec broadcast_remove(t(), Intent.t()) :: :ok
@@ -120,11 +140,52 @@ defmodule Anoma.Node.Intent.Communicator do
       com.subscribers,
       {:remove_intent, intent}
     )
+
+    log_info({:cast_rem, com.subscribers, com.logger})
   end
 
   @spec broadcast_intents(t(), GenServer.server()) :: :ok
   defp broadcast_intents(agent, new_sub) do
-    intents = Pool.intents(agent.pool)
+    pool = agent.pool
+    intents = Pool.intents(pool)
+    log_info({:cast_int, new_sub, agent.logger})
+
     Utility.broadcast([new_sub], {:intents, intents})
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:submit, pool, logger}) do
+    Logger.add(logger, self(), "Intent submit request for: #{inspect(pool)}")
+  end
+
+  defp log_info({:remove, pool, logger}) do
+    Logger.add(logger, self(), "Intent remove request for: #{inspect(pool)}")
+  end
+
+  defp log_info({:all, pool, logger}) do
+    Logger.add(logger, self(), "Intents viewed for: #{inspect(pool)}")
+  end
+
+  defp log_info({:cast_new, subs, logger}) do
+    Logger.add(logger, self(), "Broadcast new intent to: #{inspect(subs)}")
+  end
+
+  defp log_info({:cast_rem, subs, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Broadcast removed intent to: #{inspect(subs)}"
+    )
+  end
+
+  defp log_info({:sub, sub, logger}) do
+    Logger.add(logger, self(), "New sub added: #{inspect(sub)}")
+  end
+
+  defp log_info({:cast_int, sub, logger}) do
+    Logger.add(logger, self(), "Broadcast intents to: #{inspect(sub)}")
   end
 end

@@ -40,34 +40,36 @@ defmodule Anoma.Node.Logger do
   ############################################################
 
   def add(logger, engine, msg) do
-    GenServer.reply(logger, {:add, logger, engine, msg})
+    GenServer.cast(logger, {:add, logger, engine, msg})
   end
 
   def get(logger) do
-    GenServer.reply(logger, {:get_all, logger})
+    GenServer.call(logger, {:get_all, logger})
   end
 
   def get(logger, engine) do
-    GenServer.reply(logger, {:get, logger, engine})
+    GenServer.call(logger, {:get, logger, engine})
   end
 
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
 
-  def handle_call({:add, logger, engine, msg}, _from, state) do
+  def handle_cast({:add, logger, engine, msg}, state) do
     Storage.put(
       state.storage,
       [logger, engine, Communicator.get_time(state.clock)],
       msg
     )
+
+    {:noreply, state}
   end
 
   def handle_call({:get_all, logger}, _from, state) do
-    Storage.get_keyspace(state.storage, [logger])
+    {:reply, Storage.get_keyspace(state.storage, [logger]), state}
   end
 
   def handle_call({:get, logger, engine}, _from, state) do
-    Storage.get_keyspace(state.storage, [logger, engine])
+    {:reply, Storage.get_keyspace(state.storage, [logger, engine]), state}
   end
 end
