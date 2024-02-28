@@ -3,16 +3,25 @@ defmodule Anoma.Node.Solver.Solver do
   I am a strawman intent solver for testing purposes.
   """
 
+  alias __MODULE__
+
   use GenServer
+  use TypedStruct
   import Bitwise
   alias Anoma.Resource.Transaction
+
+  typedstruct do
+    field(:unsolved, list(), default: [])
+    field(:solved, list(), defalt: [])
+    field(:logger, atom())
+  end
 
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg, Anoma.Node.Utility.name(arg))
   end
 
-  def init(_init) do
-    {:ok, {[], []}}
+  def init(names) do
+    {:ok, %Solver{logger: names[:logger]}}
   end
 
   @spec add_intent(GenServer.server(), Transaction.t()) ::
@@ -43,22 +52,22 @@ defmodule Anoma.Node.Solver.Solver do
   # todo should use a better comparator and less quadratic for the
   # things that don't have to be quadratic
 
-  defp handle_solve({unsolved, solved}) do
+  defp handle_solve({unsolved, solved}, agent) do
     {new_unsolved, new_solved} = solve(unsolved)
 
     {:reply, Enum.map(new_solved, &hd/1),
-     {new_unsolved, new_solved ++ solved}}
+     %Solver{agent | unsolved: new_unsolved, solved: new_solved ++ solved}}
   end
 
-  def handle_call({:add_intent, intent}, _from, {unsolved, solved}) do
-    handle_solve({[intent | unsolved], solved})
+  def handle_call({:add_intent, intent}, _from, agent) do
+    handle_solve({[intent | agent.unsolved], agent.solved}, agent)
   end
 
-  def handle_call({:del_intents, deleted}, _from, {unsolved, solved}) do
-    unsolved = Enum.filter(unsolved, fn x -> x in deleted end)
+  def handle_call({:del_intents, deleted}, _from, agent) do
+    unsolved = Enum.filter(agent.unsolved, fn x -> x in deleted end)
 
     {nolonger_solved, still_solved} =
-      Enum.split_with(solved, fn x ->
+      Enum.split_with(agent.solved, fn x ->
         Enum.any?(tl(x), fn x -> x in deleted end)
       end)
 
@@ -68,11 +77,11 @@ defmodule Anoma.Node.Solver.Solver do
       |> Enum.concat()
       |> Enum.filter(fn x -> x not in deleted end)
 
-    handle_solve({unsolved ++ nolonger_solved, still_solved})
+    handle_solve({unsolved ++ nolonger_solved, still_solved}, agent)
   end
 
-  def handle_call(:get_solved, _from, {unsolved, solved}) do
-    {:reply, Enum.map(solved, &hd/1), {unsolved, solved}}
+  def handle_call(:get_solved, _from, agent) do
+    {:reply, Enum.map(agent.solved, &hd/1), agent}
   end
 
   # powerset enumeration with binary numbers, because I am lazy

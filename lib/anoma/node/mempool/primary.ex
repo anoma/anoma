@@ -21,6 +21,8 @@ defmodule Anoma.Node.Mempool.Primary do
     field(:key, {Serializer.public_key(), Serializer.private_key()},
       default: :crypto.generate_key(:rsa, {1024, 65537})
     )
+
+    field(:logger, atom(), enforce: false)
   end
 
   def start_link(args) do

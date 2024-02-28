@@ -19,7 +19,11 @@ defmodule AnomaTest.Node.Executor do
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
     unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :executor_storage, table: storage)
+      Anoma.Node.Storage.start_link(
+        name: :executor_storage,
+        table: storage,
+        logger: :executor_logger
+      )
     end
 
     unless Process.whereis(executor) do

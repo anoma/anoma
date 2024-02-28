@@ -26,7 +26,7 @@ defmodule AnomaTest.Node.Solver do
       nullifiers: [Resource.nullifier(rxb, keyb.secret)]
     }
 
-    Solver.start_link(:solver_test)
+    Solver.start_link(logger: :solver_test_logger, name: :solver_test)
     Solver.Communicator.subscribe(:solver_test_com, self(), false)
 
     Solver.Communicator.add_intent(:solver_test_com, tx1)

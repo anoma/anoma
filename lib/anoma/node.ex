@@ -51,8 +51,9 @@ defmodule Anoma.Node do
     coms = com_names(args[:name])
     prims = names(args[:name])
     args = args |> Keyword.put(:ordering, coms.ordering)
+    logger = Utility.append_name(args[:name], "_logger")
 
-    resp = Supervisor.start_link(__MODULE__, {coms, prims, args})
+    resp = Supervisor.start_link(__MODULE__, {coms, prims, args, logger})
 
     unless args[:old_storage] do
       Anoma.Storage.ensure_new(storage)
@@ -62,18 +63,23 @@ defmodule Anoma.Node do
     resp
   end
 
-  def init({coms, prims, args}) do
+  def init({coms, prims, args, logger}) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
 
     children = [
       {Anoma.Node.Executor,
-       env |> Map.to_list() |> Keyword.put(:name, prims.executor)},
-      {Anoma.Node.Storage, name: prims.ordering, table: args[:storage]},
+       env
+       |> Map.to_list()
+       |> Keyword.put(:logger, logger)
+       |> Keyword.put(:name, prims.executor)},
+      {Anoma.Node.Storage,
+       name: prims.ordering, table: args[:storage], logger: logger},
       {Anoma.Node.Mempool,
        name: prims.mempool,
        block_storage: args[:block_storage],
        ordering: coms.ordering,
-       executor: coms.executor},
+       executor: coms.executor,
+       logger: logger},
       {Anoma.Node.Time,
        name: prims.clock, start: System.monotonic_time(:millisecond)}
     ]

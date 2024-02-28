@@ -18,10 +18,15 @@ defmodule Anoma.Node.Storage.Communicator do
   typedstruct do
     field(:primary, atom(), enforce: true)
     field(:subscribers, ACom.t(), default: ACom.new())
+    field(:logger, atom(), enforce: false)
   end
 
-  def init(name: name) do
-    {:ok, %Communicator{primary: name}}
+  def init(name: name, logger: logger) do
+    {:ok,
+     %Communicator{
+       primary: name,
+       logger: logger
+     }}
   end
 
   def start_link(arg) do

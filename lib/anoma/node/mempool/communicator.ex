@@ -12,10 +12,17 @@ defmodule Anoma.Node.Mempool.Communicator do
   typedstruct do
     field(:primary, GenServer.server(), enforce: true)
     field(:subscribers, ACom.t(), default: ACom.new())
+    field(:logger, atom(), enforce: false)
   end
 
   def init(args) do
-    {:ok, %Communicator{primary: args[:name]}}
+    name = args[:name]
+
+    {:ok,
+     %Communicator{
+       primary: name,
+       logger: args[:logger]
+     }}
   end
 
   def start_link(arg) do

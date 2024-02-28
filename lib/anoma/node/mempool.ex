@@ -7,7 +7,8 @@ defmodule Anoma.Node.Mempool do
 
   def init(args) do
     children = [
-      {Anoma.Node.Mempool.Communicator, name: args[:name]},
+      {Anoma.Node.Mempool.Communicator,
+       name: args[:name], logger: args[:logger]},
       {Anoma.Node.Mempool.Primary, args}
     ]
 

@@ -36,6 +36,7 @@ defmodule Anoma.Node.Executor.Communicator do
     field(:subscribers, ACom.t(), default: ACom.new())
     field(:spawner, atom())
     field(:ambiant_env, Nock.t())
+    field(:logger, atom(), enforce: false)
   end
 
   def init(args) do
@@ -43,7 +44,12 @@ defmodule Anoma.Node.Executor.Communicator do
       Map.merge(%Nock{}, args |> Enum.into(%{}))
       |> Map.delete(:name)
 
-    {:ok, %Communicator{spawner: args[:name], ambiant_env: environment}}
+    {:ok,
+     %Communicator{
+       spawner: args[:name],
+       logger: args[:logger],
+       ambiant_env: environment
+     }}
   end
 
   def start_link(arg) do

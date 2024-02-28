@@ -17,7 +17,11 @@ defmodule AnomaTest.Nock do
     ordering = :nock_storage_com
 
     unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :nock_storage, table: storage)
+      Anoma.Node.Storage.start_link(
+        name: :nock_storage,
+        table: storage,
+        logger: :nock_logger
+      )
     end
 
     snapshot_path = [:my_special_nock_snaphsot | 0]

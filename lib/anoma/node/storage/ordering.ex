@@ -48,10 +48,15 @@ defmodule Anoma.Node.Storage.Ordering do
     field(:table, Storage.t(), default: %Anoma.Storage{})
     field(:next_order, non_neg_integer(), default: 1)
     field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
+    field(:logger, atom(), enforce: false)
   end
 
   def init(opts) do
-    return = %Ordering{table: opts[:table]}
+    return = %Ordering{
+      table: opts[:table],
+      logger: opts[:logger]
+    }
+
     # idempotent
     Storage.setup(return.table)
     :mnesia.subscribe({:table, return.table.qualified, :simple})

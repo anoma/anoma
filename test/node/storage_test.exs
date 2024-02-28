@@ -18,7 +18,11 @@ defmodule AnomaTest.Node.Storage do
     ordering = :node_storage_com
 
     unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :node_storage, table: storage)
+      Anoma.Node.Storage.start_link(
+        name: :node_storage,
+        table: storage,
+        logger: :node_logger
+      )
     end
 
     [ordering: ordering]

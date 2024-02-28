@@ -9,10 +9,10 @@ defmodule Anoma.Node.Storage do
     init(name: name, table: %Anoma.Storage{})
   end
 
-  def init(name: name, table: table) do
+  def init(name: name, table: table, logger: logger) do
     children = [
-      {Anoma.Node.Storage.Communicator, name: name},
-      {Anoma.Node.Storage.Ordering, name: name, table: table}
+      {Anoma.Node.Storage.Communicator, name: name, logger: logger},
+      {Anoma.Node.Storage.Ordering, name: name, table: table, logger: logger}
     ]
 
     Supervisor.init(children, strategy: :one_for_all)

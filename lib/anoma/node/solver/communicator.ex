@@ -8,10 +8,15 @@ defmodule Anoma.Node.Solver.Communicator do
   typedstruct do
     field(:subscribers, MapSet.t(GenServer.server()), default: MapSet.new())
     field(:solver, atom(), require: true)
+    field(:logger, atom(), enforce: false)
   end
 
-  def init(name: name) do
-    {:ok, %Communicator{solver: name}}
+  def init(name: name, logger: logger) do
+    {:ok,
+     %Communicator{
+       solver: name,
+       logger: logger
+     }}
   end
 
   def start_link(arg) do

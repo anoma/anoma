@@ -5,10 +5,11 @@ defmodule Anoma.Node.Solver do
     Supervisor.start_link(__MODULE__, init_state)
   end
 
-  def init(name) do
+  def init(names) do
     children = [
-      {Anoma.Node.Solver.Communicator, name: name},
-      {Anoma.Node.Solver.Solver, name: name}
+      {Anoma.Node.Solver.Communicator,
+       name: names[:name], logger: names[:logger]},
+      {Anoma.Node.Solver.Solver, name: names[:name], logger: names[:logger]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
