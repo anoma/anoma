@@ -113,35 +113,53 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
 
   def handle_call(:state, _from, state) do
+    log_info({:state, state, state.logger})
+
     {:reply, state, state}
   end
 
   def handle_call(:next_order, _from, state) do
-    {:reply, state.next_order, state}
+    next_order = state.next_order
+    log_info({:next, next_order, state.logger})
+
+    {:reply, next_order, state}
   end
 
   def handle_call({:true_order, id}, _from, state) do
-    {:reply, Map.get(state.hash_to_order, id), state}
+    order = Map.get(state.hash_to_order, id)
+    log_info({true, order, state.logger})
+
+    {:reply, order, state}
   end
 
   def handle_call({:new_order, trans}, _from, state) do
     {next_order, new_map} = handle_new_order(trans, state)
+    log_info({:new, next_order, new_map, state.logger})
 
     {:reply, :ok, %{state | next_order: next_order, hash_to_order: new_map}}
   end
 
   def handle_call(:storage, _from, state) do
+    table = state.table
+    log_info({:storage, table, state.logger})
+
     {:reply, state.table, state}
   end
 
   def handle_cast(:reset, state) do
-    {:noreply, %Ordering{table: state.table}}
+    table = state.table
+    log_info({:reset, table, state.logger})
+
+    {:noreply, %Ordering{table: table}}
   end
 
   def handle_cast({:hard_reset, initial_snapshot}, state) do
     storage = state.table
     Storage.ensure_new(storage)
     Storage.put_snapshot(storage, initial_snapshot)
+
+    log_info({:hard_reset, storage, initial_snapshot, state.logger})
+
     {:noreply, %Ordering{table: state.table}}
   end
 
@@ -201,9 +219,11 @@ defmodule Anoma.Node.Storage.Ordering do
   def handle_new_order(ordered_transactions, state) do
     num_txs = length(ordered_transactions)
     instrument({:new_tx, num_txs})
+    log_info({:new_handle, num_txs, state.logger})
 
     for order <- ordered_transactions do
       instrument({:ready, Order.pid(order)})
+      log_info({:ready_handle, Order.pid(order), state.logger})
       send(Order.pid(order), {:read_ready, Order.index(order)})
     end
 
@@ -237,5 +257,73 @@ defmodule Anoma.Node.Storage.Ordering do
 
   defp instrument({:getting_key, full_key}) do
     Logger.info("getting at: #{inspect(full_key)}")
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  # Keeping usual logging above for now
+
+  defp log_info({:state, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested state: #{inspect(state)}"
+    )
+  end
+
+  defp log_info({:next, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested next order: #{inspect(state)}"
+    )
+  end
+
+  defp log_info({true, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested true order: #{inspect(state)}"
+    )
+  end
+
+  defp log_info({:new, order, map, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Requested new order.
+      Next order: #{inspect(order)}. New hash: #{inspect(map)}")
+  end
+
+  defp log_info({:storage, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested storage table: #{inspect(state)}"
+    )
+  end
+
+  defp log_info({:reset, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested reset. Table: #{inspect(state)}"
+    )
+  end
+
+  defp log_info({:hard_reset, table, snap, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Requested hard reset.
+      Table: #{inspect(table)}. Snapshot: #{inspect(snap)}")
+  end
+
+  defp log_info({:new_handle, state, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "New tx count: #{inspect(state)}")
+  end
+
+  defp log_info({:ready_handle, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Sending read ready to: #{inspect(state)}"
+    )
   end
 end

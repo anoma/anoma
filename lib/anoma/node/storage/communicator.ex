@@ -14,6 +14,7 @@ defmodule Anoma.Node.Storage.Communicator do
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Utility
   alias Anoma.Storage
+  alias Anoma.Node.Logger
 
   typedstruct do
     field(:primary, atom(), enforce: true)
@@ -70,32 +71,113 @@ defmodule Anoma.Node.Storage.Communicator do
   # Please give things to the subscribers
 
   def handle_call(:state, _from, com) do
-    {:reply, Ordering.state(com.primary), com}
+    primary = com.primary
+    log_info({:state, primary, com.logger})
+
+    {:reply, Ordering.state(primary), com}
   end
 
   def handle_call(:next_order, _from, com) do
-    {:reply, Ordering.next_order(com.primary), com}
+    primary = com.primary
+    log_info({:next, primary, com.logger})
+
+    {:reply, Ordering.next_order(primary), com}
   end
 
   def handle_call({:true_order, id}, _from, com) do
-    {:reply, Ordering.true_order(com.primary, id), com}
+    primary = com.primary
+    log_info({true, primary, com.logger})
+
+    {:reply, Ordering.true_order(primary, id), com}
   end
 
   def handle_call({:new_order, trans}, _from, com) do
-    {:reply, Ordering.new_order(com.primary, trans), com}
+    primary = com.primary
+    log_info({:new, primary, com.logger})
+
+    {:reply, Ordering.new_order(primary, trans), com}
   end
 
   def handle_call(:storage, _from, state) do
-    {:reply, Ordering.get_storage(state.primary()), state}
+    primary = state.primary
+    log_info({:storage, primary, state.logger})
+
+    {:reply, Ordering.get_storage(state.primary), state}
   end
 
   def handle_cast(:reset, state) do
-    Ordering.reset(state.primary())
+    primary = state.primary
+    log_info({:reset, primary, state.logger})
+
+    Ordering.reset(state.primary)
     {:noreply, state}
   end
 
   def handle_cast({:hard_reset, initial}, state) do
-    Ordering.hard_reset(state.primary(), initial)
+    primary = state.primary
+    log_info({:hard_reset, primary, state.logger})
+
+    Ordering.hard_reset(state.primary, initial)
     {:noreply, state}
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:state, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Communicator asked for the state of #{inspect(primary)}"
+    )
+  end
+
+  defp log_info({:next, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Communicator asked for next order of #{inspect(primary)}"
+    )
+  end
+
+  defp log_info({true, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Asked fo true order from communicator of #{inspect(primary)}"
+    )
+  end
+
+  defp log_info({:new, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Communicator asked for new order of #{inspect(primary)}"
+    )
+  end
+
+  defp log_info({:storage, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Communicator asked to get storage of #{inspect(primary)}"
+    )
+  end
+
+  defp log_info({:reset, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Communicator asked to reset of #{inspect(primary)}"
+    )
+  end
+
+  defp log_info({:hard_reset, primary, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Communicator asked to hard reset of #{inspect(primary)}"
+    )
   end
 end
