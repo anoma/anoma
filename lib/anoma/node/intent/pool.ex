@@ -13,10 +13,11 @@ defmodule Anoma.Node.Intent.Pool do
   @type intents :: MapSet.t(Intent.t())
   typedstruct do
     field(:intents, intents, default: MapSet.new())
+    field(:logger, atom())
   end
 
-  def init(_init) do
-    {:ok, %Pool{}}
+  def init(args) do
+    {:ok, %Pool{logger: args[:logger]}}
   end
 
   def start_link(arg) do

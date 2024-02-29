@@ -14,10 +14,12 @@ defmodule Anoma.Node.Intent do
     Supervisor.start_link(__MODULE__, init_state)
   end
 
-  def init(name) do
+  def init(names) do
     children = [
-      {Anoma.Node.Intent.Communicator, name: name, init: MapSet.new()},
-      {Anoma.Node.Intent.Pool, name: name, init: MapSet.new()}
+      {Anoma.Node.Intent.Communicator,
+       name: names[:name], init: MapSet.new(), logger: names[:logger]},
+      {Anoma.Node.Intent.Pool,
+       name: names[:name], init: MapSet.new(), logger: names[:logger]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

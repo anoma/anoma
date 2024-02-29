@@ -24,6 +24,8 @@ defmodule Anoma do
       order: Anoma.Order
     }
 
+    logger_name = :anoma_logger
+
     name = :anoma
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
@@ -33,9 +35,9 @@ defmodule Anoma do
        snapshot_path: snapshot_path,
        storage: storage,
        block_storage: :anoma_block},
-      {Anoma.Node.Intent, :anoma_intent},
+      {Anoma.Node.Intent, name: :anoma_intent, logger: logger_name},
       {Anoma.Node.Logger,
-       name: :anoma_logger, storage: storage, clock: :anoma_clock_com}
+       name: logger_name, storage: storage, clock: :anoma_clock_com}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Anoma)

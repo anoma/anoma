@@ -15,10 +15,16 @@ defmodule Anoma.Node.Intent.Communicator do
   typedstruct do
     field(:subscribers, ACom.t(), default: ACom.new())
     field(:pool, atom(), enforce: true)
+    field(:logger, atom())
   end
 
-  def init(name: name, init: subscribers) do
-    {:ok, %Communicator{pool: name, subscribers: subscribers}}
+  def init(name: name, init: subscribers, logger: logger) do
+    {:ok,
+     %Communicator{
+       pool: name,
+       subscribers: subscribers,
+       logger: logger
+     }}
   end
 
   def start_link(arg) do
