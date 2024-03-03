@@ -32,7 +32,6 @@ defmodule Anoma.Node.Mempool.Primary do
   def init(args) do
     primary =
       Map.merge(%Primary{}, args |> Enum.into(%{}))
-      |> Map.delete(:name)
 
     # TODO add a flag in storage for yes if we want rocksdb copies
     Block.create_table(primary.block_storage, false)
@@ -78,32 +77,46 @@ defmodule Anoma.Node.Mempool.Primary do
   ############################################################
 
   def handle_call(:state, _from, state) do
+    log_info({:state, state, state.logger})
+
     {:reply, state, state}
   end
 
   def handle_call({:tx, tx_code}, _from, state) do
     ntrans = handle_tx(tx_code, state)
     nstate = %Primary{state | transactions: [ntrans | state.transactions]}
+    log_info({:tx, nstate.transactions, state.logger})
     {:reply, ntrans, nstate}
   end
 
   def handle_call(:execute, _from, state) do
     {length_ran, new_state} = handle_execute(state)
+    log_info({:execute, state.logger})
+
     {:reply, {:ok, length_ran}, new_state}
   end
 
   def handle_call(:pending_txs, _from, state) do
-    {:reply, state.transactions, state}
+    txs = state.transactions
+    log_info({:pending, txs, state.logger})
+
+    {:reply, txs, state}
   end
 
   def handle_cast(:soft_reset, state) do
-    kill_transactions(state.transactions)
+    logger = state.logger
+    log_info({:soft, logger})
+
+    kill_transactions(state)
+
     {:noreply, reset_state(state)}
   end
 
   def handle_cast(:hard_reset, state) do
+    logger = state.logger
+    log_info({:hard, logger})
     snapshot = Ecom.snapshot(state.executor)
-    kill_transactions(state.transactions)
+    kill_transactions(state)
     reset_blocks(state)
     Scom.hard_reset(state.ordering, snapshot)
     {:noreply, reset_state(state)}
@@ -116,7 +129,9 @@ defmodule Anoma.Node.Mempool.Primary do
   @spec handle_tx(Transaction.execution(), t()) :: Transaction.t()
   def handle_tx(tx_code, state) do
     random_tx_id = random_id()
+    log_info({:fire, state.executor, random_tx_id, state.logger})
     pid = Ecom.fire_new_transaction(state.executor, random_tx_id, tx_code)
+
     Transaction.new(random_tx_id, pid, tx_code)
   end
 
@@ -127,6 +142,8 @@ defmodule Anoma.Node.Mempool.Primary do
     choose_and_execute_ordering(state, executing)
     save_block(state, block)
     new_state = %Primary{state | transactions: left, round: state.round + 1}
+    log_info({:execute_handle, new_state, state.logger})
+
     {length(executing), new_state}
   end
 
@@ -149,10 +166,12 @@ defmodule Anoma.Node.Mempool.Primary do
       order(transactions, Scom.next_order(state.ordering))
 
     # send in the ordering for the write ready
+    log_info({:order, state.ordering, state.logger})
     Scom.new_order(state.ordering, ordered_transactions)
 
     # also send in the logic for write ready
     instrument({:write, length(ordered_transactions)})
+    log_info({:write, length(ordered_transactions), state.logger})
 
     for ord <- ordered_transactions do
       send(Order.pid(ord), {:write_ready, Order.index(ord)})
@@ -163,6 +182,8 @@ defmodule Anoma.Node.Mempool.Primary do
 
   @spec produce_block(t(), list(Transaction.t())) :: Block.t()
   def produce_block(state, trans) do
+    log_info({:produce, trans, state.logger})
+
     trans
     |> Enum.map(&persistent_transaction/1)
     |> Base.new()
@@ -172,6 +193,7 @@ defmodule Anoma.Node.Mempool.Primary do
   @spec save_block(t(), Block.t()) :: {:atomic, :ok} | {:aborted, any()}
   def save_block(state, block) do
     encoded = Block.encode(block, state.block_storage)
+    log_info({:encode_block, block, state.logger})
     :mnesia.transaction(fn -> :mnesia.write(encoded) end)
   end
 
@@ -188,17 +210,24 @@ defmodule Anoma.Node.Mempool.Primary do
   ############################################################
 
   def reset_blocks(state) do
-    :mnesia.delete_table(state.block_storage)
+    storage = state.block_storage
+    :mnesia.delete_table(storage)
+    log_info({:delete_table, storage, state.logger})
     # TODO add a flag in storage for yes if we want rocksdb copies
-    Block.create_table(state.block_storage, false)
+    Block.create_table(storage, false)
   end
 
-  @spec kill_transactions(list(Transaction.t())) :: :ok
-  def kill_transactions(transactions) do
+  @spec kill_transactions(Primary.t()) :: :ok
+  def kill_transactions(state) do
+    transactions = state.transactions
+    logger = state.logger
+
     instrument({:kill, length(transactions)})
+    log_info({:kill, length(state.transactions), logger})
 
     for transaction <- transactions do
       instrument({:killing_pid, transaction})
+      log_info({:killing_pid, transaction, logger})
       Process.exit(Transaction.pid(transaction), :kill)
     end
 
@@ -235,5 +264,103 @@ defmodule Anoma.Node.Mempool.Primary do
 
   defp instrument({:write, len}) do
     Logger.info("Sending :write_ready to #{inspect(len)} processes")
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:state, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested state: #{inspect(state)})"
+    )
+  end
+
+  defp log_info({:tx, state, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Transaction added. New pool: #{inspect(state)})"
+    )
+  end
+
+  defp log_info({:execute, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Requested execution")
+  end
+
+  defp log_info({:pending, txs, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Reqested pending transactions: #{inspect(txs)})"
+    )
+  end
+
+  defp log_info({:soft, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Requested soft reset")
+  end
+
+  defp log_info({:hard, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Requested hard reset")
+  end
+
+  defp log_info({:fire, ex, id, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Requested transaction fire.
+      Executor: #{inspect(ex)}.
+      Id : #{inspect(id)}")
+  end
+
+  defp log_info({:execute_handle, state, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "New state: #{inspect(state)})")
+  end
+
+  defp log_info({:order, ordering, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Requested ordering from: #{inspect(ordering)})"
+    )
+  end
+
+  defp log_info({:write, length, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Sending :write_ready to #{inspect(length)} processes"
+    )
+  end
+
+  defp log_info({:produce, trans, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Producing block. Transsactions: #{inspect(trans)}"
+    )
+  end
+
+  defp log_info({:encode_block, block, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Encoding block: #{inspect(block)}")
+  end
+
+  defp log_info({:delete_table, storage, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Deleting table: #{inspect(storage)} processes"
+    )
+  end
+
+  defp log_info({:kill, length, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "Got Kill Signal killing #{inspect(length)} processes"
+    )
+  end
+
+  defp log_info({:killing_pid, pid, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Killing: #{inspect(pid)}")
   end
 end
