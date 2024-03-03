@@ -9,6 +9,7 @@ defmodule Anoma.Node.Solver.Solver do
   use TypedStruct
   import Bitwise
   alias Anoma.Resource.Transaction
+  alias Anoma.Node.Logger
 
   typedstruct do
     field(:unsolved, list(), default: [])
@@ -54,17 +55,21 @@ defmodule Anoma.Node.Solver.Solver do
 
   defp handle_solve({unsolved, solved}, agent) do
     {new_unsolved, new_solved} = solve(unsolved)
+    log_info({:solve, unsolved, solved, agent.logger})
 
     {:reply, Enum.map(new_solved, &hd/1),
      %Solver{agent | unsolved: new_unsolved, solved: new_solved ++ solved}}
   end
 
   def handle_call({:add_intent, intent}, _from, agent) do
+    log_info({:add, intent, agent.logger})
     handle_solve({[intent | agent.unsolved], agent.solved}, agent)
   end
 
   def handle_call({:del_intents, deleted}, _from, agent) do
     unsolved = Enum.filter(agent.unsolved, fn x -> x in deleted end)
+    logger = agent.logger
+    log_info({:del, deleted, logger})
 
     {nolonger_solved, still_solved} =
       Enum.split_with(agent.solved, fn x ->
@@ -77,11 +82,15 @@ defmodule Anoma.Node.Solver.Solver do
       |> Enum.concat()
       |> Enum.filter(fn x -> x not in deleted end)
 
+    log_info({:del_solved, nolonger_solved, logger})
+
     handle_solve({unsolved ++ nolonger_solved, still_solved}, agent)
   end
 
   def handle_call(:get_solved, _from, agent) do
-    {:reply, Enum.map(agent.solved, &hd/1), agent}
+    solved = agent.solved
+    log_info({:get, solved, agent.logger})
+    {:reply, Enum.map(solved, &hd/1), agent}
   end
 
   # powerset enumeration with binary numbers, because I am lazy
@@ -129,5 +138,39 @@ defmodule Anoma.Node.Solver.Solver do
         solve(unbalanced, balanced, n - 1)
       end
     end
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:solve, unsolved, solved, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Solved. Unsolved: #{inspect(unsolved)}. Solved: #{solved}."
+    )
+  end
+
+  defp log_info({:add, intent, logger}) do
+    Logger.add(logger, self(), "Request to add intent: #{inspect(intent)}.")
+  end
+
+  defp log_info({:del, intent, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Request to delete intent: #{inspect(intent)}."
+    )
+  end
+
+  defp log_info({:del_solved, nolonger_solved, logger}) do
+    Logger.add(logger, self(), "After intent deletion,
+      following transactions are no longer solved:
+      #{inspect(nolonger_solved)}.")
+  end
+
+  defp log_info({:get, solved, logger}) do
+    Logger.add(logger, self(), "Request to get solved: #{inspect(solved)}.")
   end
 end

@@ -4,6 +4,7 @@ defmodule Anoma.Node.Solver.Communicator do
   alias __MODULE__
   alias Anoma.Node.Utility
   alias Anoma.Node.Solver.Solver
+  alias Anoma.Node.Logger
 
   typedstruct do
     field(:subscribers, MapSet.t(GenServer.server()), default: MapSet.new())
@@ -49,12 +50,18 @@ defmodule Anoma.Node.Solver.Communicator do
   end
 
   def handle_cast({:add_intent, intent}, com) do
-    solutions = Solver.add_intent(com.solver, intent)
+    solver = com.solver
+    subs = com.subscribers
+    logger = com.logger
+    solutions = Solver.add_intent(solver, intent)
+    log_info({:add, solver, com.logger})
 
     # Be nice and don't tell anyone about empty solutions
     if solutions != [] do
+      log_info({:solution_cast, subs, logger})
+
       Utility.broadcast(
-        com.subscribers,
+        subs,
         {:solutions, solutions}
       )
     end
@@ -63,11 +70,17 @@ defmodule Anoma.Node.Solver.Communicator do
   end
 
   def handle_cast({:del_intents, intents}, com) do
-    solutions = Solver.del_intents(com.solver, intents)
+    subs = com.subscribers
+    solver = com.solver
+    logger = com.logger
+    log_info({:del, solver, logger})
+    solutions = Solver.del_intents(solver, intents)
 
     if solutions != [] do
+      log_info({:solution_cast, subs, logger})
+
       Utility.broadcast(
-        com.subscribers,
+        subs,
         {:solutions, solutions}
       )
     end
@@ -77,6 +90,8 @@ defmodule Anoma.Node.Solver.Communicator do
 
   def handle_cast({:subscribe, new_sub, want_old}, com) do
     if want_old do
+      log_info({:solution_cast, new_sub, com.logger})
+
       Utility.broadcast(
         [new_sub],
         {:solutions, Solver.get_solved(com.solver)}
@@ -88,6 +103,37 @@ defmodule Anoma.Node.Solver.Communicator do
   end
 
   def handle_call(:get_solved, _from, com) do
-    {:reply, Solver.get_solved(com.solver), com}
+    solver = com.solver
+    log_info({:get, solver, com.logger})
+
+    {:reply, Solver.get_solved(solver), com}
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:add, solver, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Requested to add intent from: #{inspect(solver)}"
+    )
+  end
+
+  defp log_info({:solution_cast, subs, logger}) do
+    Logger.add(logger, self(), "Broadcast solutions to: #{inspect(subs)}")
+  end
+
+  defp log_info({:del, solver, logger}) do
+    Logger.add(
+      logger,
+      self(),
+      "Requested to delete intent from: #{inspect(solver)}"
+    )
+  end
+
+  defp log_info({:get, solver, logger}) do
+    Logger.add(logger, self(), "Requested solution from: #{inspect(solver)}")
   end
 end
