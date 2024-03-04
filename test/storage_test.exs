@@ -109,10 +109,10 @@ defmodule AnomaTest.Storage do
       key_2_res = {["foo", "bar", "faz"], 1}
 
       assert Enum.sort([key_1_res, key_2_res]) ==
-               Storage.get_keyspace(storage, ["foo"])
+               Enum.sort(Storage.get_keyspace(storage, ["foo"]))
 
       assert Enum.sort([key_1_res, key_2_res]) ==
-               Storage.get_keyspace(storage, ["foo", "bar"])
+               Enum.sort(Storage.get_keyspace(storage, ["foo", "bar"]))
 
       assert [key_1_res] ==
                Storage.get_keyspace(storage, ["foo", "bar", "baz"])
