@@ -10,7 +10,10 @@ defmodule Anoma.Node.Executor.Worker do
 
   @spec run(Noun.t(), {:kv | :rm, Noun.t()}, Nock.t()) :: :ok | :error
   def run(order, {:kv, gate}, env) do
+    logger = env.logger
+
     instrument({:dispatch, order})
+    log_info({:dispatch, order, logger})
     storage = Communicator.get_storage(env.ordering)
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
@@ -18,12 +21,16 @@ defmodule Anoma.Node.Executor.Worker do
       true_order = wait_for_ready(env, order)
 
       instrument({:writing, true_order})
+      log_info({:writing, true_order, logger})
       Storage.put(storage, key, value)
+      log_info({:put, key, logger})
       snapshot(storage, env)
+      log_info({:success_run, logger})
       :ok
     else
       _ ->
         instrument(:fail)
+        log_info({:fail, logger})
         wait_for_ready(env, order)
         snapshot(storage, env)
         :error
@@ -31,7 +38,10 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   def run(order, {:rm, gate}, env) do
+    logger = env.logger
+
     instrument({:dispatch, order})
+    log_info({:dispatch, order, logger})
     storage = Communicator.get_storage(env.ordering)
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
@@ -41,6 +51,7 @@ defmodule Anoma.Node.Executor.Worker do
       true_order = wait_for_ready(env, order)
 
       instrument({:writing, true_order})
+      log_info({:writing, true_order, logger})
       # this is not quite correct, but storage has to be revisited as a whole
       # for it to be made correct.
       # in particular, the get/put api must be deleted, since it cannot be correct,
@@ -49,18 +60,22 @@ defmodule Anoma.Node.Executor.Worker do
       for commitment <- vm_resource_tx.commitments do
         cm_key = ["rm", "commitments", commitment]
         Storage.put(storage, cm_key, true)
+        log_info({:put, cm_key, logger})
       end
 
       for nullifier <- vm_resource_tx.nullifiers do
         nf_key = ["rm", "nullifiers", nullifier]
         Storage.put(storage, nf_key, true)
+        log_info({:put, nf_key, logger})
       end
 
       snapshot(storage, env)
+      log_info({:success_run, logger})
       :ok
     else
       _ ->
         instrument(:fail)
+        log_info({:fail, logger})
         wait_for_ready(env, order)
         snapshot(storage, env)
         :error
@@ -69,7 +84,10 @@ defmodule Anoma.Node.Executor.Worker do
 
   @spec wait_for_ready(Nock.t(), Noun.t()) :: any()
   def wait_for_ready(env, order) do
+    logger = env.logger
+
     instrument(:ensure_read)
+    log_info({:ensure_read, logger})
 
     Ordering.caller_blocking_read_id(
       env.ordering,
@@ -77,10 +95,12 @@ defmodule Anoma.Node.Executor.Worker do
     )
 
     instrument(:waiting_write_ready)
+    log_info({:waiting_write_ready, logger})
 
     receive do
       {:write_ready, order} ->
         instrument(:write_ready)
+        log_info({:write_ready, logger})
         order
     end
   end
@@ -89,6 +109,7 @@ defmodule Anoma.Node.Executor.Worker do
   def snapshot(storage, env) do
     snapshot = hd(env.snapshot_path)
     instrument({:snapshot, {storage, snapshot}})
+    log_info({:snap, {storage, snapshot}, env.logger})
     Storage.put_snapshot(storage, snapshot)
   end
 
@@ -118,6 +139,60 @@ defmodule Anoma.Node.Executor.Worker do
 
   defp instrument({:snapshot, {s, ss}}) do
     Logger.debug(
+      "Taking snapshot key #{inspect(ss)} in storage #{inspect(s)}"
+    )
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:dispatch, order, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Worker dispatched.
+    Order id: #{inspect(order)}")
+  end
+
+  defp log_info({:writing, order, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Worker writing.
+    True order: #{inspect(order)}")
+  end
+
+  defp log_info({:fail, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Worker failed!")
+  end
+
+  defp log_info({:put, key, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Putting #{inspect(key)}")
+  end
+
+  defp log_info({:success_run, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "Run succesfull!")
+  end
+
+  defp log_info({:ensure_read, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "#{inspect(self())}: making sure the snapshot is ready"
+    )
+  end
+
+  defp log_info({:waiting_write_ready, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      "#{inspect(self())}: waiting for a write ready"
+    )
+  end
+
+  defp log_info({:write_ready, logger}) do
+    Anoma.Node.Logger.add(logger, self(), "#{inspect(self())}: write ready")
+  end
+
+  defp log_info({:snap, {s, ss}, logger}) do
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
       "Taking snapshot key #{inspect(ss)} in storage #{inspect(s)}"
     )
   end
