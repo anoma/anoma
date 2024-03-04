@@ -6,6 +6,8 @@ defmodule AnomaTest.Node.Solver do
     alias Anoma.Resource.Transaction
     alias Anoma.Resource.ProofRecord
     alias Anoma.Node.Solver
+    alias Anoma.Node.IntentPool
+    alias Anoma.Node.Router
 
     keya = Anoma.Crypto.Sign.new_keypair()
     keyb = Anoma.Crypto.Sign.new_keypair()
@@ -26,14 +28,21 @@ defmodule AnomaTest.Node.Solver do
       nullifiers: [Resource.nullifier(rxb, keyb.secret)]
     }
 
-    Solver.start_link(:solver_test)
-    Solver.Communicator.subscribe(:solver_test_com, self(), false)
+    {:ok, router} = Router.start()
+    {:ok, intents} = Router.new_topic(router)
+    {:ok, solutions} = Router.new_topic(router)
+    {:ok, iip} = Router.start_engine(router, IntentPool, intents)
 
-    Solver.Communicator.add_intent(:solver_test_com, tx1)
-    Solver.Communicator.add_intent(:solver_test_com, tx2)
+    {:ok, _sip} =
+      Router.start_engine(router, Solver, {router, iip, intents, solutions})
+
+    :ok = Router.call(router, {:subscribe_topic, solutions, :local})
+
+    IntentPool.new_intent(iip, tx1)
+    IntentPool.new_intent(iip, tx2)
 
     receive do
-      {:"$gen_cast", {:solutions, [solution]}} ->
+      {:"$gen_cast", {_, {:solutions, [solution]}}} ->
         assert Enum.all?([commitment(rxa), commitment(ryb)], fn x ->
                  x in solution.commitments
                end)

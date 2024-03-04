@@ -35,7 +35,6 @@ defmodule Anoma do
     ]
 
     children = [
-      {Anoma.Node.Intent, :anoma_intent},
       if Application.get_env(name, :env) == :prod do
         {Anoma.Node, [{:ping_time, 10000} | node_settings]}
       else
