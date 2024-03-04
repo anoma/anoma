@@ -22,8 +22,9 @@ defmodule Anoma.Node.Executor.Worker do
       snapshot(storage, env)
       :ok
     else
-      _ ->
+      e ->
         instrument(:fail)
+        Logger.warning("#{inspect(e)}: error")
         wait_for_ready(env, order)
         snapshot(storage, env)
         :error
