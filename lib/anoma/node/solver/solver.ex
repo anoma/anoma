@@ -1,35 +1,36 @@
-defmodule Anoma.Node.Solver.Solver do
+defmodule Anoma.Node.Solver do
   @moduledoc """
   I am a strawman intent solver for testing purposes.
   """
 
-  use GenServer
+  use TypedStruct
   import Bitwise
   alias Anoma.Resource.Transaction
+  alias Anoma.Node.Router
+  alias __MODULE__
+  require Logger
 
-  def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, Anoma.Node.Utility.name(arg))
+  typedstruct do
+    field(:solutions_topic, Router.Addr.t())
+    field(:unsolved, [Transaction.t()], default: [])
+    field(:solved, [Transaction.t()], default: [])
+    field(:solved_set, MapSet.t(Transaction.t()), default: MapSet.new())
   end
 
-  def init(_init) do
-    {:ok, {[], []}}
+  def init({router, intent_pool, intents, solutions}) do
+    unsolved = Enum.to_list(Router.call(intent_pool, :intents))
+    :ok = Router.call(router, {:subscribe_topic, intents, :local})
+
+    {:ok,
+     %Solver{
+       solutions_topic: solutions,
+       unsolved: unsolved
+     }}
   end
 
-  @spec add_intent(GenServer.server(), Transaction.t()) ::
-          list(Transaction.t())
-  def add_intent(server, intent) do
-    GenServer.call(server, {:add_intent, intent})
-  end
-
-  @spec del_intents(GenServer.server(), Transaction.t()) ::
-          list(Transaction.t())
-  def del_intents(server, intents) do
-    GenServer.call(server, {:del_intents, intents})
-  end
-
-  @spec get_solved(GenServer.server()) :: list(Transaction.t())
-  def get_solved(server) do
-    GenServer.call(server, :get_solved)
+  @spec get_solved(Router.Addr.t()) :: list(Transaction.t())
+  def get_solved(solver) do
+    Router.call(solver, :get_solved)
   end
 
   # unsolved is a list of transactions solved is a list of
@@ -43,36 +44,65 @@ defmodule Anoma.Node.Solver.Solver do
   # todo should use a better comparator and less quadratic for the
   # things that don't have to be quadratic
 
-  defp handle_solve({unsolved, solved}) do
-    {new_unsolved, new_solved} = solve(unsolved)
+  defp handle_solve(s) do
+    {new_unsolved, new_solved} = solve(s.unsolved)
+    Logger.info("solutions #{inspect(new_solved)}")
 
-    {:reply, Enum.map(new_solved, &hd/1),
-     {new_unsolved, new_solved ++ solved}}
+    if new_solved != [] do
+      Router.cast(
+        s.solutions_topic,
+        {:solutions, Enum.map(new_solved, &hd/1)}
+      )
+    end
+
+    solved_set =
+      Enum.reduce(new_solved, s.solved_set, fn [_ | intents], set ->
+        Enum.reduce(intents, set, fn intent, set ->
+          MapSet.put(set, intent)
+        end)
+      end)
+
+    {:noreply,
+     %{
+       s
+       | unsolved: new_unsolved,
+         solved: new_solved ++ s.solved,
+         solved_set: solved_set
+     }}
   end
 
-  def handle_call({:add_intent, intent}, _from, {unsolved, solved}) do
-    handle_solve({[intent | unsolved], solved})
+  def handle_cast({:new_intent, intent}, _, s) do
+    if intent not in s.unsolved && !MapSet.member?(s.solved_set, intent) do
+      handle_solve(%{s | unsolved: [intent | s.unsolved]})
+    else
+      {:noreply, s}
+    end
   end
 
-  def handle_call({:del_intents, deleted}, _from, {unsolved, solved}) do
-    unsolved = Enum.filter(unsolved, fn x -> x in deleted end)
+  def handle_cast({:remove_intent, deleted}, _, s) do
+    unsolved = Enum.filter(s.unsolved, fn x -> x != deleted end)
 
     {nolonger_solved, still_solved} =
-      Enum.split_with(solved, fn x ->
-        Enum.any?(tl(x), fn x -> x in deleted end)
-      end)
+      Enum.split_with(s.solved, fn x -> deleted in tl(x) end)
 
     nolonger_solved =
       nolonger_solved
       |> Enum.map(&tl/1)
       |> Enum.concat()
-      |> Enum.filter(fn x -> x not in deleted end)
+      |> Enum.filter(fn x -> x != deleted end)
 
-    handle_solve({unsolved ++ nolonger_solved, still_solved})
+    solved_set = MapSet.delete(s.solved_set, deleted)
+
+    handle_solve(%{
+      s
+      | unsolved: unsolved ++ nolonger_solved,
+        solved: still_solved,
+        solved_set: solved_set
+    })
   end
 
-  def handle_call(:get_solved, _from, {unsolved, solved}) do
-    {:reply, Enum.map(solved, &hd/1), {unsolved, solved}}
+  def handle_call(:get_solved, _from, s) do
+    {:reply, Enum.map(s.solved, &hd/1), s}
   end
 
   # powerset enumeration with binary numbers, because I am lazy
