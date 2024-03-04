@@ -129,6 +129,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Communicator asked for the state of #{inspect(primary)}"
     )
   end
@@ -137,6 +138,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Communicator asked for next order of #{inspect(primary)}"
     )
   end
@@ -145,6 +147,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Asked fo true order from communicator of #{inspect(primary)}"
     )
   end
@@ -153,6 +156,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Communicator asked for new order of #{inspect(primary)}"
     )
   end
@@ -161,6 +165,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Communicator asked to get storage of #{inspect(primary)}"
     )
   end
@@ -169,6 +174,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :debug,
       "Communicator asked to reset of #{inspect(primary)}"
     )
   end
@@ -177,6 +183,7 @@ defmodule Anoma.Node.Storage.Communicator do
     Logger.add(
       logger,
       self(),
+      :debug,
       "Communicator asked to hard reset of #{inspect(primary)}"
     )
   end

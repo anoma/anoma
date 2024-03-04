@@ -7,8 +7,7 @@ defmodule Anoma.Node.Mempool.Communicator do
   use TypedStruct
   alias Anoma.Transaction
   alias Anoma.Node.Mempool.Primary
-  alias Anoma.Node.Utility
-  alias Anoma.Node.Logger
+  alias Anoma.Node.{Utility, Logger}
 
   typedstruct do
     field(:primary, GenServer.server(), enforce: true)
@@ -127,13 +126,19 @@ defmodule Anoma.Node.Mempool.Communicator do
   ############################################################
 
   defp log_info({:state, primary, logger}) do
-    Logger.add(logger, self(), "Requested state from: #{inspect(primary)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Requested state from: #{inspect(primary)}"
+    )
   end
 
   defp log_info({:tx, primary, logger}) do
     Logger.add(
       logger,
       self(),
+      :info,
       "Requested to add transaction from: #{inspect(primary)}"
     )
   end
@@ -142,6 +147,7 @@ defmodule Anoma.Node.Mempool.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Requested to execute block from: #{inspect(primary)}"
     )
   end
@@ -150,6 +156,7 @@ defmodule Anoma.Node.Mempool.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Requested pending transactions from: #{inspect(primary)}"
     )
   end
@@ -158,6 +165,7 @@ defmodule Anoma.Node.Mempool.Communicator do
     Logger.add(
       logger,
       self(),
+      :debug,
       "Requested soft reset from: #{inspect(primary)}"
     )
   end
@@ -166,18 +174,19 @@ defmodule Anoma.Node.Mempool.Communicator do
     Logger.add(
       logger,
       self(),
+      :debug,
       "Requested hard reset from: #{inspect(primary)}"
     )
   end
 
   defp log_info({:broadcast_tx, primary, subs, logger}) do
-    Logger.add(logger, self(), "Broadcasting transaction.
+    Logger.add(logger, self(), :info, "Broadcasting transaction.
       Primary: #{inspect(primary)}.
       Subscribers: #{inspect(subs)}")
   end
 
   defp log_info({:broadcast_ex, primary, subs, logger}) do
-    Logger.add(logger, self(), "Broadcasting execution.
+    Logger.add(logger, self(), :info, "Broadcasting execution.
       Primar: #{inspect(primary)}
       Subscribers: #{inspect(subs)}")
   end

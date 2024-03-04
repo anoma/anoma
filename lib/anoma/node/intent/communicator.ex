@@ -158,34 +158,50 @@ defmodule Anoma.Node.Intent.Communicator do
   ############################################################
 
   defp log_info({:submit, pool, logger}) do
-    Logger.add(logger, self(), "Intent submit request for: #{inspect(pool)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Intent submit request for: #{inspect(pool)}"
+    )
   end
 
   defp log_info({:remove, pool, logger}) do
-    Logger.add(logger, self(), "Intent remove request for: #{inspect(pool)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Intent remove request for: #{inspect(pool)}"
+    )
   end
 
   defp log_info({:all, pool, logger}) do
-    Logger.add(logger, self(), "Intents viewed for: #{inspect(pool)}")
+    Logger.add(logger, self(), :info, "Intents viewed for: #{inspect(pool)}")
   end
 
   defp log_info({:cast_new, subs, logger}) do
-    Logger.add(logger, self(), "Broadcast new intent to: #{inspect(subs)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Broadcast new intent to: #{inspect(subs)}"
+    )
   end
 
   defp log_info({:cast_rem, subs, logger}) do
     Logger.add(
       logger,
       self(),
+      :info,
       "Broadcast removed intent to: #{inspect(subs)}"
     )
   end
 
   defp log_info({:sub, sub, logger}) do
-    Logger.add(logger, self(), "New sub added: #{inspect(sub)}")
+    Logger.add(logger, self(), :info, "New sub added: #{inspect(sub)}")
   end
 
   defp log_info({:cast_int, sub, logger}) do
-    Logger.add(logger, self(), "Broadcast intents to: #{inspect(sub)}")
+    Logger.add(logger, self(), :info, "Broadcast intents to: #{inspect(sub)}")
   end
 end

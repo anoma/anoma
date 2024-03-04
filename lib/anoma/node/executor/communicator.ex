@@ -233,40 +233,46 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   defp log_info({:state, state, logger}) do
-    Logger.add(logger, self(), "Requested state: #{inspect(state)}")
+    Logger.add(logger, self(), :info, "Requested state: #{inspect(state)}")
   end
 
   defp log_info({:snap, hd, logger}) do
-    Logger.add(logger, self(), "Requested snapshot: #{inspect(hd)}")
+    Logger.add(logger, self(), :info, "Requested snapshot: #{inspect(hd)}")
   end
 
   defp log_info({:tx_call, logger}) do
-    Logger.add(logger, self(), "Requested to spawn transaction")
+    Logger.add(logger, self(), :info, "Requested to spawn transaction")
   end
 
   defp log_info({:tx_call_pid, pid, logger}) do
-    Logger.add(logger, self(), "Spawned transaction. PID: #{inspect(pid)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Spawned transaction. PID: #{inspect(pid)}"
+    )
   end
 
   defp log_info({:tx_call_env, env, logger}) do
     Logger.add(
       logger,
       self(),
+      :info,
       "Requested to spawn transaction in environment: #{inspect(env)}"
     )
   end
 
   defp log_info({:reset_sub, logger}) do
-    Logger.add(logger, self(), "Requested subscribers reset")
+    Logger.add(logger, self(), :debug, "Requested subscribers reset")
   end
 
   defp log_info({:broadcast_down, subs, logger}) do
-    Logger.add(logger, self(), "Broadcasting process with tag :DOWN.
+    Logger.add(logger, self(), :debug, "Broadcasting process with tag :DOWN.
     Subs: #{inspect(subs)}")
   end
 
   defp log_info({:broadcast_process, subs, logger}) do
-    Logger.add(logger, self(), "Broadcasting process.
+    Logger.add(logger, self(), :info, "Broadcasting process.
     Subs: #{inspect(subs)}")
   end
 
@@ -274,6 +280,7 @@ defmodule Anoma.Node.Executor.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Spawning worker with order: #{inspect(order)}"
     )
   end

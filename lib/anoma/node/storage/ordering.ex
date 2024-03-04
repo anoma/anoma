@@ -33,11 +33,9 @@ defmodule Anoma.Node.Storage.Ordering do
   use TypedStruct
   use GenServer
   alias Anoma.Node.Storage.Communicator
-  alias Anoma.Node.Utility
+  alias Anoma.Node.{Utility, Logger}
   alias Anoma.{Storage, Order}
   alias __MODULE__
-
-  require Logger
 
   @type ordered_transactions() ::
           list(Order.t())
@@ -192,12 +190,8 @@ defmodule Anoma.Node.Storage.Ordering do
     read_order =
       case maybe_true_order do
         nil ->
-          instrument({:waiting, {self(), id}})
-
           receive do
             {:read_ready, true_order} ->
-              instrument({:read_ready, {self(), id, true_order}})
-
               true_order
           end
 
@@ -206,7 +200,6 @@ defmodule Anoma.Node.Storage.Ordering do
       end
 
     full_key = [read_order | subkey]
-    instrument({:getting_key, full_key})
     Storage.blocking_read(storage, full_key)
   end
 
@@ -218,11 +211,9 @@ defmodule Anoma.Node.Storage.Ordering do
           {non_neg_integer(), %{key() => non_neg_integer()}}
   def handle_new_order(ordered_transactions, state) do
     num_txs = length(ordered_transactions)
-    instrument({:new_tx, num_txs})
     log_info({:new_handle, num_txs, state.logger})
 
     for order <- ordered_transactions do
-      instrument({:ready, Order.pid(order)})
       log_info({:ready_handle, Order.pid(order), state.logger})
       send(Order.pid(order), {:read_ready, Order.index(order)})
     end
@@ -237,92 +228,75 @@ defmodule Anoma.Node.Storage.Ordering do
   end
 
   ############################################################
-  #                      Instrumentation                     #
-  ############################################################
-  defp instrument({:new_tx, num_txs}) do
-    Logger.info("New tx count: #{inspect(num_txs)}")
-  end
-
-  defp instrument({:ready, pid}) do
-    Logger.info("sending read ready to #{inspect(pid)}")
-  end
-
-  defp instrument({:waiting, id}) do
-    Logger.info("#{inspect(id)}, Waiting on read ready")
-  end
-
-  defp instrument({:read_ready, info}) do
-    Logger.info("#{inspect(info)}, got read ready")
-  end
-
-  defp instrument({:getting_key, full_key}) do
-    Logger.info("getting at: #{inspect(full_key)}")
-  end
-
-  ############################################################
   #                     Logging Info                         #
   ############################################################
 
   # Keeping usual logging above for now
 
   defp log_info({:state, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Requested state: #{inspect(state)}"
     )
   end
 
   defp log_info({:next, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Requested next order: #{inspect(state)}"
     )
   end
 
   defp log_info({true, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Requested true order: #{inspect(state)}"
     )
   end
 
   defp log_info({:new, order, map, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Requested new order.
+    Logger.add(logger, self(), :info, "Requested new order.
       Next order: #{inspect(order)}. New hash: #{inspect(map)}")
   end
 
   defp log_info({:storage, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Requested storage table: #{inspect(state)}"
     )
   end
 
   defp log_info({:reset, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :debug,
       "Requested reset. Table: #{inspect(state)}"
     )
   end
 
   defp log_info({:hard_reset, table, snap, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Requested hard reset.
+    Logger.add(logger, self(), :debug, "Requested hard reset.
       Table: #{inspect(table)}. Snapshot: #{inspect(snap)}")
   end
 
   defp log_info({:new_handle, state, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "New tx count: #{inspect(state)}")
+    Logger.add(logger, self(), :info, "New tx count: #{inspect(state)}")
   end
 
   defp log_info({:ready_handle, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Sending read ready to: #{inspect(state)}"
     )
   end

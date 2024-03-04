@@ -148,31 +148,32 @@ defmodule Anoma.Node.Executor.Worker do
   ############################################################
 
   defp log_info({:dispatch, order, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Worker dispatched.
+    Anoma.Node.Logger.add(logger, self(), :info, "Worker dispatched.
     Order id: #{inspect(order)}")
   end
 
   defp log_info({:writing, order, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Worker writing.
+    Anoma.Node.Logger.add(logger, self(), :info, "Worker writing.
     True order: #{inspect(order)}")
   end
 
   defp log_info({:fail, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Worker failed!")
+    Anoma.Node.Logger.add(logger, self(), :error, "Worker failed!")
   end
 
   defp log_info({:put, key, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Putting #{inspect(key)}")
+    Anoma.Node.Logger.add(logger, self(), :info, "Putting #{inspect(key)}")
   end
 
   defp log_info({:success_run, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Run succesfull!")
+    Anoma.Node.Logger.add(logger, self(), :info, "Run succesfull!")
   end
 
   defp log_info({:ensure_read, logger}) do
     Anoma.Node.Logger.add(
       logger,
       self(),
+      :info,
       "#{inspect(self())}: making sure the snapshot is ready"
     )
   end
@@ -181,18 +182,25 @@ defmodule Anoma.Node.Executor.Worker do
     Anoma.Node.Logger.add(
       logger,
       self(),
+      :info,
       "#{inspect(self())}: waiting for a write ready"
     )
   end
 
   defp log_info({:write_ready, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "#{inspect(self())}: write ready")
+    Anoma.Node.Logger.add(
+      logger,
+      self(),
+      :info,
+      "#{inspect(self())}: write ready"
+    )
   end
 
   defp log_info({:snap, {s, ss}, logger}) do
     Anoma.Node.Logger.add(
       logger,
       self(),
+      :info,
       "Taking snapshot key #{inspect(ss)} in storage #{inspect(s)}"
     )
   end

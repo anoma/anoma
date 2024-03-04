@@ -108,38 +108,55 @@ defmodule Anoma.Node.Intent.Pool do
   ############################################################
 
   defp log_info({:new, logger}) do
-    Logger.add(logger, self(), "Asked to add new intent")
+    Logger.add(logger, self(), :info, "Asked to add new intent")
   end
 
   defp log_info({:remove, logger}) do
-    Logger.add(logger, self(), "Asked to remove intent")
+    Logger.add(logger, self(), :info, "Asked to remove intent")
   end
 
   defp log_info({:all, intents, logger}) do
-    Logger.add(logger, self(), "Intents viewed in pool: #{inspect(intents)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Intents viewed in pool: #{inspect(intents)}"
+    )
   end
 
   defp log_info({:remove_t, intent, logger}) do
-    Logger.add(logger, self(), "Intent removed from pool: #{inspect(intent)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Intent removed from pool: #{inspect(intent)}"
+    )
   end
 
   defp log_info({:remove_f, intent, logger}) do
     Logger.add(
       logger,
       self(),
+      :info,
       "Request to remove intent,
       yet no matching intent in pool: #{inspect(intent)}"
     )
   end
 
   defp log_info({:new_t, intent, logger}) do
-    Logger.add(logger, self(), "Intent added to pool: #{inspect(intent)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Intent added to pool: #{inspect(intent)}"
+    )
   end
 
   defp log_info({:new_f, intent, logger}) do
     Logger.add(
       logger,
       self(),
+      :info,
       "Request to add new intent,
       yet a matching intent is already in the pool: #{inspect(intent)}"
     )

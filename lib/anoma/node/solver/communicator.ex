@@ -117,23 +117,35 @@ defmodule Anoma.Node.Solver.Communicator do
     Logger.add(
       logger,
       self(),
+      :info,
       "Requested to add intent from: #{inspect(solver)}"
     )
   end
 
   defp log_info({:solution_cast, subs, logger}) do
-    Logger.add(logger, self(), "Broadcast solutions to: #{inspect(subs)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Broadcast solutions to: #{inspect(subs)}"
+    )
   end
 
   defp log_info({:del, solver, logger}) do
     Logger.add(
       logger,
       self(),
+      :debug,
       "Requested to delete intent from: #{inspect(solver)}"
     )
   end
 
   defp log_info({:get, solver, logger}) do
-    Logger.add(logger, self(), "Requested solution from: #{inspect(solver)}")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Requested solution from: #{inspect(solver)}"
+    )
   end
 end

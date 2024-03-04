@@ -9,12 +9,12 @@ defmodule Anoma.Node.Logger do
   use TypedStruct
   use GenServer
 
-  alias __MODULE__
-
   alias List
   alias Anoma.Storage
   alias Anoma.Node.Utility
   alias Anoma.Node.Time.Communicator
+
+  require Logger
 
   # Maybe add timestamps from local wall clock as well?
 
@@ -24,7 +24,7 @@ defmodule Anoma.Node.Logger do
   end
 
   def init(args) do
-    {:ok, %Logger{storage: args[:storage], clock: args[:clock]}}
+    {:ok, %Anoma.Node.Logger{storage: args[:storage], clock: args[:clock]}}
   end
 
   def start_link(args) do
@@ -39,8 +39,8 @@ defmodule Anoma.Node.Logger do
   #                    Genserver Behavior                    #
   ############################################################
 
-  def add(logger, engine, msg) do
-    GenServer.cast(logger, {:add, logger, engine, msg})
+  def add(logger, engine, atom, msg) do
+    GenServer.cast(logger, {:add, logger, engine, atom, msg})
   end
 
   def get(logger) do
@@ -55,12 +55,14 @@ defmodule Anoma.Node.Logger do
   #                  Genserver Implementation                #
   ############################################################
 
-  def handle_cast({:add, logger, engine, msg}, state) do
+  def handle_cast({:add, logger, engine, atom, msg}, state) do
     Storage.put(
       state.storage,
-      [logger, engine, Communicator.get_time(state.clock)],
+      [logger, engine, Communicator.get_time(state.clock), atom],
       msg
     )
+
+    log_fun({atom, msg})
 
     {:noreply, state}
   end
@@ -72,4 +74,10 @@ defmodule Anoma.Node.Logger do
   def handle_call({:get, logger, engine}, _from, state) do
     {:reply, Storage.get_keyspace(state.storage, [logger, engine]), state}
   end
+
+  defp log_fun({:debug, msg}), do: Logger.debug(msg)
+
+  defp log_fun({:info, msg}), do: Logger.info(msg)
+
+  defp log_fun({:error, msg}), do: Logger.error(msg)
 end

@@ -148,29 +148,41 @@ defmodule Anoma.Node.Solver.Solver do
     Logger.add(
       logger,
       self(),
+      :info,
       "Solved. Unsolved: #{inspect(unsolved)}. Solved: #{solved}."
     )
   end
 
   defp log_info({:add, intent, logger}) do
-    Logger.add(logger, self(), "Request to add intent: #{inspect(intent)}.")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Request to add intent: #{inspect(intent)}."
+    )
   end
 
   defp log_info({:del, intent, logger}) do
     Logger.add(
       logger,
       self(),
+      :debug,
       "Request to delete intent: #{inspect(intent)}."
     )
   end
 
   defp log_info({:del_solved, nolonger_solved, logger}) do
-    Logger.add(logger, self(), "After intent deletion,
+    Logger.add(logger, self(), :debug, "After intent deletion,
       following transactions are no longer solved:
       #{inspect(nolonger_solved)}.")
   end
 
   defp log_info({:get, solved, logger}) do
-    Logger.add(logger, self(), "Request to get solved: #{inspect(solved)}.")
+    Logger.add(
+      logger,
+      self(),
+      :info,
+      "Request to get solved: #{inspect(solved)}."
+    )
   end
 end

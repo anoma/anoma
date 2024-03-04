@@ -1,13 +1,13 @@
 defmodule Anoma.Node.Mempool.Primary do
   use GenServer
   use TypedStruct
-  require Logger
 
   alias Anoma.{Block, Transaction, Order, Serializer}
   alias Anoma.Block.Base
   alias Anoma.Node.Executor.Communicator, as: Ecom
   alias Anoma.Node.Storage.Communicator, as: Scom
   alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Logger
   alias __MODULE__
 
   @type transactions :: list(Transaction.t())
@@ -170,7 +170,6 @@ defmodule Anoma.Node.Mempool.Primary do
     Scom.new_order(state.ordering, ordered_transactions)
 
     # also send in the logic for write ready
-    instrument({:write, length(ordered_transactions)})
     log_info({:write, length(ordered_transactions), state.logger})
 
     for ord <- ordered_transactions do
@@ -222,11 +221,9 @@ defmodule Anoma.Node.Mempool.Primary do
     transactions = state.transactions
     logger = state.logger
 
-    instrument({:kill, length(transactions)})
     log_info({:kill, length(state.transactions), logger})
 
     for transaction <- transactions do
-      instrument({:killing_pid, transaction})
       log_info({:killing_pid, transaction, logger})
       Process.exit(Transaction.pid(transaction), :kill)
     end
@@ -254,113 +251,109 @@ defmodule Anoma.Node.Mempool.Primary do
     )
   end
 
-  defp instrument({:kill, len}) do
-    Logger.info("Got Kill Signal killing #{inspect(len)} processes")
-  end
-
-  defp instrument({:killing_pid, pid}) do
-    Logger.debug("Killing: #{inspect(pid)}")
-  end
-
-  defp instrument({:write, len}) do
-    Logger.info("Sending :write_ready to #{inspect(len)} processes")
-  end
-
   ############################################################
   #                     Logging Info                         #
   ############################################################
 
   defp log_info({:state, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Requested state: #{inspect(state)})"
     )
   end
 
   defp log_info({:tx, state, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Transaction added. New pool: #{inspect(state)})"
     )
   end
 
   defp log_info({:execute, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Requested execution")
+    Logger.add(logger, self(), :info, "Requested execution")
   end
 
   defp log_info({:pending, txs, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Reqested pending transactions: #{inspect(txs)})"
     )
   end
 
   defp log_info({:soft, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Requested soft reset")
+    Logger.add(logger, self(), :debug, "Requested soft reset")
   end
 
   defp log_info({:hard, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Requested hard reset")
+    Logger.add(logger, self(), :debug, "Requested hard reset")
   end
 
   defp log_info({:fire, ex, id, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Requested transaction fire.
+    Logger.add(logger, self(), :info, "Requested transaction fire.
       Executor: #{inspect(ex)}.
       Id : #{inspect(id)}")
   end
 
   defp log_info({:execute_handle, state, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "New state: #{inspect(state)})")
+    Logger.add(logger, self(), :info, "New state: #{inspect(state)})")
   end
 
   defp log_info({:order, ordering, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Requested ordering from: #{inspect(ordering)})"
     )
   end
 
   defp log_info({:write, length, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Sending :write_ready to #{inspect(length)} processes"
     )
   end
 
   defp log_info({:produce, trans, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :info,
       "Producing block. Transsactions: #{inspect(trans)}"
     )
   end
 
   defp log_info({:encode_block, block, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Encoding block: #{inspect(block)}")
+    Logger.add(logger, self(), :info, "Encoding block: #{inspect(block)}")
   end
 
   defp log_info({:delete_table, storage, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :debug,
       "Deleting table: #{inspect(storage)} processes"
     )
   end
 
   defp log_info({:kill, length, logger}) do
-    Anoma.Node.Logger.add(
+    Logger.add(
       logger,
       self(),
+      :debug,
       "Got Kill Signal killing #{inspect(length)} processes"
     )
   end
 
   defp log_info({:killing_pid, pid, logger}) do
-    Anoma.Node.Logger.add(logger, self(), "Killing: #{inspect(pid)}")
+    Logger.add(logger, self(), :debug, "Killing: #{inspect(pid)}")
   end
 end
