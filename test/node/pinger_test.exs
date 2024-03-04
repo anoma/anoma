@@ -1,8 +1,8 @@
 defmodule AnomaTest.Node.Pinger do
   use ExUnit.Case, async: true
 
-  alias Anoma.Node.Mempool.Communicator, as: Mcom
-  alias Anoma.Node.Executor.Communicator, as: Ccom
+  alias Anoma.Node.Mempool
+  alias Anoma.Node.Router
   import TestHelper.Nock
 
   setup_all do
@@ -14,17 +14,16 @@ defmodule AnomaTest.Node.Pinger do
     name = :pinger
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
-    node = Anoma.Node.com_names(name)
-
-    unless Process.whereis(:pinger_mempool_com) do
+    {:ok, nodes} =
       Anoma.Node.start_link(
         name: name,
         snapshot_path: snapshot_path,
         storage: storage,
-        block_storage: :pinger_blocks,
-        ping_time: 10
+        block_storage: :mempool_blocks,
+        ping_time: 1
       )
-    end
+
+    node = Anoma.Node.state(nodes)
 
     [node: node]
   end
@@ -33,12 +32,14 @@ defmodule AnomaTest.Node.Pinger do
     key = 555
     zero = zero_counter(key)
 
-    Ccom.subscribe(node.executor, self())
+    assert :ok =
+             Router.call(
+               node.router,
+               {:subscribe_topic, node.executor_topic.id, :local}
+             )
 
-    pid_zero = Mcom.tx(node.mempool, {:kv, zero}).pid
+    pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
 
-    assert_receive {:"$gen_cast", {:process_done, ^pid_zero}}
-
-    GenServer.stop(:pinger_pinger)
+    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_zero}}}
   end
 end

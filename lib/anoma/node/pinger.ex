@@ -5,18 +5,13 @@ defmodule Anoma.Node.Pinger do
   use GenServer
   use TypedStruct
 
-  alias Anoma.Node.Mempool.Communicator, as: Mcom
-  alias Anoma.Node.Utility
+  alias Anoma.Node.Router
+  alias Anoma.Node.Mempool
   alias __MODULE__
 
   typedstruct do
-    field(:mempool, atom())
+    field(:mempool, Router.Addr.t())
     field(:time, non_neg_integer() | atom(), default: :no_timer)
-  end
-
-  def start_link(args) do
-    Mcom.hard_reset(args[:mempool])
-    GenServer.start_link(__MODULE__, args, Utility.name(args))
   end
 
   def init(args) do
@@ -28,7 +23,7 @@ defmodule Anoma.Node.Pinger do
   end
 
   def handle_info(:execute, state) do
-    Mcom.execute(state.mempool)
+    Mempool.execute(state.mempool)
     pinger(state.time)
 
     {:noreply, state}
