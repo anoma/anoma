@@ -4,7 +4,7 @@ defmodule AnomaTest.Nock do
   import Nock
   import TestHelper.Nock
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.Communicator
+  alias Anoma.Node.Storage.Ordering
 
   doctest(Nock)
 
@@ -14,11 +14,12 @@ defmodule AnomaTest.Nock do
       order: AnomaTest.Nock.Order
     }
 
-    ordering = :nock_storage_com
-
-    unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :nock_storage, table: storage)
-    end
+    {:ok, router} = Anoma.Node.Router.start()
+    # on_exit(fn -> Anoma.Node.Router.stop(router.id) end)
+    {:ok, ordering} =
+      Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering, %{
+        table: storage
+      })
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
@@ -47,13 +48,13 @@ defmodule AnomaTest.Nock do
     test "successful scry", %{env: env} do
       key = 777
       id = System.unique_integer([:positive])
-      storage = Communicator.get_storage(env.ordering)
+      storage = Ordering.get_storage(env.ordering)
       increment = increment_counter_val(key)
 
       Storage.ensure_new(storage)
 
       # setup id in the system for snapshot 1
-      Communicator.new_order(env.ordering, [Order.new(1, id, self())])
+      Ordering.new_order(env.ordering, [Order.new(1, id, self())])
       # put the key with some value
       Storage.put(storage, key, 5)
       # Now snapshot it so we can scry
@@ -65,13 +66,13 @@ defmodule AnomaTest.Nock do
     test "scry may return error if not found", %{env: env} do
       key = 666
       id = System.unique_integer([:positive])
-      storage = Communicator.get_storage(env.ordering)
+      storage = Ordering.get_storage(env.ordering)
       increment = increment_counter_val(key)
 
       Storage.ensure_new(storage)
 
       # setup id in the system for snapshot 1
-      Communicator.new_order(env.ordering, [Order.new(1, id, self())])
+      Ordering.new_order(env.ordering, [Order.new(1, id, self())])
       # Now snapshot it so we can scry
       Storage.put_snapshot(storage, hd(env.snapshot_path))
       assert :error = nock(increment, [9, 2, 10, [6, 1 | id], 0 | 1], env)

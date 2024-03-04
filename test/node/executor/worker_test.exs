@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Executor.Worker do
   use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.Communicator
+  alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Executor.Worker
   import TestHelper.Nock
 
@@ -12,11 +12,12 @@ defmodule AnomaTest.Node.Executor.Worker do
       order: AnomaTest.Worker.Order
     }
 
-    ordering = :worker_storage_com
+    {:ok, router} = Anoma.Node.Router.start()
 
-    unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :worker_storage, table: storage)
-    end
+    {:ok, ordering} =
+      Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering,
+        table: storage
+      )
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
@@ -30,23 +31,23 @@ defmodule AnomaTest.Node.Executor.Worker do
     id_1 = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
 
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
     increment = increment_counter_val(key)
 
     Storage.ensure_new(storage)
-    Communicator.reset(env.ordering)
+    Ordering.reset(env.ordering)
 
     spawn_1 = Task.async(Worker, :run, [id_1, {:kv, increment}, env])
     spawn_2 = Task.async(Worker, :run, [id_2, {:kv, increment}, env])
 
     # simulate sending in 2 different orders
-    ord_1 = Communicator.next_order(env.ordering)
+    ord_1 = Ordering.next_order(env.ordering)
 
-    Communicator.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1.pid)])
 
-    ord_2 = Communicator.next_order(env.ordering)
+    ord_2 = Ordering.next_order(env.ordering)
 
-    Communicator.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
 
     # Setup default value for storage
     Storage.put(storage, key, 0)
@@ -66,14 +67,14 @@ defmodule AnomaTest.Node.Executor.Worker do
     key = 555
     id = System.unique_integer([:positive])
 
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
     increment = increment_counter_val(key)
 
     Storage.ensure_new(storage)
-    Communicator.reset(env.ordering)
+    Ordering.reset(env.ordering)
 
     spawn = Task.async(Worker, :run, [id, {:kv, increment}, env])
-    Communicator.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
+    Ordering.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
 
     # do not setup storage, just snapshot with our key
     Storage.put_snapshot(storage, hd(env.snapshot_path))
@@ -90,14 +91,14 @@ defmodule AnomaTest.Node.Executor.Worker do
   test "failed worker waits for a snapshot before write", %{env: env} do
     id = System.unique_integer([:positive])
 
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
     bogus = [0 | 1]
 
     Storage.ensure_new(storage)
-    Communicator.reset(env.ordering)
+    Ordering.reset(env.ordering)
 
     spawn = Task.async(Worker, :run, [id, {:kv, bogus}, env])
-    Communicator.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
+    Ordering.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
 
     # we say that it can write, however we should still be alive, due
     # to the storage snapshot not being ready for it
@@ -116,10 +117,10 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     id = System.unique_integer([:positive])
 
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
 
     Storage.ensure_new(storage)
-    Communicator.reset(env.ordering)
+    Ordering.reset(env.ordering)
 
     keypair = Anoma.Crypto.Sign.new_keypair()
 
@@ -152,7 +153,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
     spawn = Task.async(Worker, :run, [id, {:rm, rm_executor_tx}, env])
-    Communicator.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
+    Ordering.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
 
     send(spawn.pid, {:write_ready, 0})
     assert :ok == Task.await(spawn)

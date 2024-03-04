@@ -2,10 +2,8 @@ defmodule AnomaTest.Node.Storage do
   use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.{Communicator, Ordering}
+  alias Anoma.Node.Storage.Ordering
 
-  doctest(Anoma.Node.Storage)
-  doctest(Anoma.Node.Storage.Communicator)
   doctest(Anoma.Node.Storage.Ordering)
 
   setup_all do
@@ -15,49 +13,50 @@ defmodule AnomaTest.Node.Storage do
       order: AnomaTest.Node.Storage.Order
     }
 
-    ordering = :node_storage_com
+    {:ok, router} = Anoma.Node.Router.start()
 
-    unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :node_storage, table: storage)
-    end
+    {:ok, ordering} =
+      Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering, %{
+        table: storage
+      })
 
     [ordering: ordering]
   end
 
   test "reset works", %{ordering: ordering} do
-    Communicator.new_order(ordering, [Order.new(1, <<3>>, self())])
-    Communicator.reset(ordering)
-    ordering = Communicator.state(ordering)
+    Ordering.new_order(ordering, [Order.new(1, <<3>>, self())])
+    Ordering.reset(ordering)
+    ordering = Ordering.state(ordering)
     assert ordering.hash_to_order == %{}
     assert ordering.next_order == 1
   end
 
   test "added to the hash_ordering", %{ordering: ordering} do
-    Communicator.reset(ordering)
+    Ordering.reset(ordering)
 
-    Communicator.new_order(
+    Ordering.new_order(
       ordering,
       [Order.new(1, <<3>>, self()), Order.new(1, <<3>>, self())]
     )
 
-    ordering = Communicator.state(ordering)
+    ordering = Ordering.state(ordering)
     assert ordering.hash_to_order == %{<<3>> => 1}
   end
 
   test "getting proper offsets", %{ordering: ordering} do
-    Communicator.reset(ordering)
-    assert 1 == Communicator.next_order(ordering)
+    Ordering.reset(ordering)
+    assert 1 == Ordering.next_order(ordering)
 
-    Communicator.new_order(ordering, [
+    Ordering.new_order(ordering, [
       Order.new(1, <<3>>, self()),
       Order.new(2, <<3>>, self())
     ])
 
-    assert 3 == Communicator.next_order(ordering)
+    assert 3 == Ordering.next_order(ordering)
   end
 
   test "receiving read readies", %{ordering: ordering} do
-    Communicator.new_order(ordering, [
+    Ordering.new_order(ordering, [
       Order.new(3, <<3>>, self()),
       Order.new(4, <<3>>, self())
     ])
@@ -67,22 +66,22 @@ defmodule AnomaTest.Node.Storage do
   end
 
   test "we properly cache orders", %{ordering: ordering} do
-    Communicator.reset(ordering)
-    assert Communicator.true_order(ordering, <<3>>) == nil
-    Communicator.new_order(ordering, [Order.new(1, <<3>>, self())])
-    assert Communicator.true_order(ordering, <<3>>) == 1
+    Ordering.reset(ordering)
+    assert Ordering.true_order(ordering, <<3>>) == nil
+    Ordering.new_order(ordering, [Order.new(1, <<3>>, self())])
+    assert Ordering.true_order(ordering, <<3>>) == 1
   end
 
   describe "User Blocking API" do
     test "properly get same snapshot", %{ordering: ordering} do
       sstore = :babylon_2
       testing_atom = System.unique_integer()
-      storage = Communicator.get_storage(ordering)
+      storage = Ordering.get_storage(ordering)
 
-      Communicator.reset(ordering)
+      Ordering.reset(ordering)
       Storage.ensure_new(storage)
 
-      Communicator.new_order(ordering, [Order.new(1, <<1>>, self())])
+      Ordering.new_order(ordering, [Order.new(1, <<1>>, self())])
       Storage.put(storage, testing_atom, 1)
       Storage.put_snapshot(storage, sstore)
       Storage.put(storage, testing_atom, 2)
@@ -104,9 +103,9 @@ defmodule AnomaTest.Node.Storage do
     test "properly waits until it's turn", %{ordering: ordering} do
       sstore = :babylon_3
       testing_atom = System.unique_integer()
-      storage = Communicator.get_storage(ordering)
+      storage = Ordering.get_storage(ordering)
 
-      Communicator.reset(ordering)
+      Ordering.reset(ordering)
       Storage.ensure_new(storage)
 
       home = self()
@@ -128,19 +127,19 @@ defmodule AnomaTest.Node.Storage do
       Storage.put_snapshot(storage, sstore)
 
       assert Process.alive?(waiting)
-      Communicator.new_order(ordering, [Order.new(1, <<1>>, waiting)])
+      Ordering.new_order(ordering, [Order.new(1, <<1>>, waiting)])
       assert_receive {:received, 1}
     end
 
     test "properly get snapshot from id", %{ordering: ordering} do
       sstore = :babylon_4
       testing_atom = System.unique_integer()
-      storage = Communicator.get_storage(ordering)
+      storage = Ordering.get_storage(ordering)
 
-      Communicator.reset(ordering)
+      Ordering.reset(ordering)
       Storage.ensure_new(storage)
 
-      Communicator.new_order(ordering, [
+      Ordering.new_order(ordering, [
         Order.new(1, <<1>>, self()),
         Order.new(2, <<2>>, self())
       ])
