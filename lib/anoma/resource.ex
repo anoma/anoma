@@ -15,7 +15,7 @@ defmodule Anoma.Resource do
 
   typedstruct enforce: true do
     # resource logic
-    field(:logic, Noun.t(), default: [[1 | 0], 0 | 0])
+    field(:logic, Noun.t(), default: [[1 | 0], [0 | 0] | 0])
     # fungibility label
     field(:label, binary(), default: <<>>)
     # quantity
@@ -118,7 +118,9 @@ defmodule Anoma.Resource do
 
   def transparent_run_resource_logic(transaction, resource) do
     logic = resource.logic
-    arg = Anoma.Resource.Transaction.to_noun(transaction)
+    self = Anoma.Resource.to_noun(resource)
+    tx = Anoma.Resource.Transaction.to_noun(transaction)
+    arg = [self | tx]
     result = Nock.nock(logic, [9, 2, 10, [6, 1 | arg], 0 | 1])
     Logger.debug("resource logic nock result: #{inspect(result)}")
 

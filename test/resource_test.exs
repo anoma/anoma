@@ -120,11 +120,13 @@ defmodule AnomaTest.Resource do
     keypair = Sign.new_keypair()
 
     # this logic just tests that the tx delta equals the zero delta
+    zero_delta_logic = Noun.Format.parse_always("[[5 [1 0] [0 446]] 0 0]")
+
     resource = %{
       new_with_npk(keypair.public)
       | label: "space bucks",
         quantity: 10,
-        logic: Noun.Format.parse_always("[[5 [1 0] [0 222]] 0 0]")
+        logic: zero_delta_logic
     }
 
     # valid tx delta (tx burns 10 space bucks).
@@ -148,7 +150,7 @@ defmodule AnomaTest.Resource do
       new_with_npk(keypair.public)
       | label: "space bucks",
         quantity: 10,
-        logic: Noun.Format.parse_always("[[5 [1 0] [0 222]] 0 0]")
+        logic: zero_delta_logic
     }
 
     cm_br = commitment(balancing_resource)
@@ -168,21 +170,15 @@ defmodule AnomaTest.Resource do
     counter_logic = [
       Noun.Format.parse_always("""
       [ 6
-        [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 58] 0 2]
-        [ 6
-          [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 118] 0 2]
-          [ 6
-            [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 478] 0 2]
-            [6 [5 [1 0] 0 222] [0 0] 6 [0 1.778] [1 0] 1 1]
+        [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 118] 0 2]
+        [6
+          [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 238] 0 2]
+          [6
+            [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 958] 0 2]
+            [6 [5 [1 0] 0 446] [0 0] 6 [0 3.570] [1 0] 1 1] 1 1] 1 1]
             1
             1
           ]
-          1
-          1
-        ]
-        1
-        1
-      ]
       """),
       0 | Nock.logics_core()
     ]
