@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Executor.Communicator do
+defmodule Anoma.Node.Executor do
   @moduledoc """
   I Manage the Pub Sub behavior
 
@@ -26,39 +26,21 @@ defmodule Anoma.Node.Executor.Communicator do
   alias Anoma.Transaction
   alias __MODULE__
   use TypedStruct
-  use Anoma.Communicator, sub_field: :subscribers
-  alias Anoma.Communicator, as: ACom
 
   alias Anoma.Node.Executor.Worker
-  alias Anoma.Node.Utility
+  alias Anoma.Node.Router
   alias Anoma.Node.Logger
 
   typedstruct do
-    field(:subscribers, ACom.t(), default: ACom.new())
-    field(:spawner, atom())
+    field(:task_completion_topic, Router.Addr.t())
     field(:ambiant_env, Nock.t())
-    field(:logger, atom(), enforce: false)
+    field(:tasks, list(Task.t()), default: [])
+    field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init(args) do
-    environment =
-      Map.merge(%Nock{}, args |> Enum.into(%{}))
-      |> Map.delete(:name)
-
+  def init({env, topic, logger}) do
     {:ok,
-     %Communicator{
-       spawner: args[:name],
-       logger: args[:logger],
-       ambiant_env: environment
-     }}
-  end
-
-  def start_link(arg) do
-    GenServer.start_link(
-      __MODULE__,
-      arg,
-      Utility.name(arg, &Utility.com_name/1)
-    )
+     %Executor{ambiant_env: env, task_completion_topic: topic, logger: logger}}
   end
 
   ############################################################
@@ -70,7 +52,7 @@ defmodule Anoma.Node.Executor.Communicator do
   Spawns a new transaction, the returned task's owner is the caller.
 
   ### Inputs
-    - `communicator` - the genserver to send the message to
+    - `executor` - the genserver to send the message to
     - `order` - the unique ID of the transaction
     - `gate` - a Nock function that we will spawn a task for
 
@@ -84,7 +66,7 @@ defmodule Anoma.Node.Executor.Communicator do
       > id = System.unique_integer([:positive])
       1931
       > zero = [[1, 777 | 0], 0, Nock.stdlib_core()]
-      > task = Communicator.new_transaction(executor, id, zero)
+      > task = Executor.new_transaction(executor, id, {:kv, zero})
       %Task{
         mfa: {Anoma.Node.Executor.Worker, :run, 3},
         owner: #PID<0.264.0>,
@@ -92,17 +74,17 @@ defmodule Anoma.Node.Executor.Communicator do
         ref: #Reference<0.0.33795.904691850.4087414796.24378>
       }
   """
-  @spec new_transaction(GenServer.server(), Noun.t(), Noun.t()) :: Task.t()
-  def new_transaction(communicator, order, gate) do
-    state = state(communicator)
+  @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t()) :: Task.t()
+  def new_transaction(executor, order, gate) do
+    state = state(executor)
     spawn_transactions(order, gate, state)
   end
 
-  @spec new_transaction(GenServer.server(), Noun.t(), Noun.t(), Nock.t()) ::
+  @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t(), Nock.t()) ::
           Task.t()
-  def new_transaction(communicator, order, gate, env) do
-    state = state(communicator)
-    spawn_transactions(order, gate, %Communicator{state | ambiant_env: env})
+  def new_transaction(executor, order, gate, env) do
+    state = state(executor)
+    spawn_transactions(order, gate, %Executor{state | ambiant_env: env})
   end
 
   @doc """
@@ -113,47 +95,46 @@ defmodule Anoma.Node.Executor.Communicator do
   messages to this task or terminating the task
   """
   @spec fire_new_transaction(
-          GenServer.server(),
+          Router.Addr.t(),
           Noun.t(),
           Transaction.execution()
         ) :: pid()
-  def fire_new_transaction(communicator, order, gate) do
-    GenServer.call(communicator, {:transaction, order, gate})
+  def fire_new_transaction(executor, order, gate) do
+    Router.call(executor, {:transaction, order, gate})
   end
 
-  @spec fire_new_transaction(GenServer.server(), Noun.t(), Noun.t(), Nock.t()) ::
+  @spec fire_new_transaction(Router.Addr.t(), Noun.t(), Noun.t(), Nock.t()) ::
           pid()
-  def fire_new_transaction(communicator, order, gate, env) do
-    GenServer.call(communicator, {:transaction, order, gate, env})
+  def fire_new_transaction(executor, order, gate, env) do
+    Router.call(executor, {:transaction, order, gate, env})
   end
 
   @doc """
   Returns the snapshot path, the Nock code is using
 
   ### Example
-    iex> alias Anoma.Node.Executor
-    iex> alias Anoma.Node.Executor.Communicator
-    iex> Executor.start_link(snapshot_path: [:a | 0], ordering: nil, name: :snapshot_doc)
-    iex> Communicator.snapshot(:snapshot_doc_com)
+    iex> alias Anoma.Node.{Executor, Router}
+    iex> {:ok, router} = Router.start
+    iex> snap = %{snapshot_path: [:a | 0], ordering: nil}
+    iex> args = {snap, Router.new_topic(router), nil}
+    iex> {:ok, addr} = Router.start_engine(router, Executor, args)
+    iex> Executor.snapshot(addr)
     :a
   """
-  def snapshot(communicator) do
-    GenServer.call(communicator, :snapshot)
+  def snapshot(executor) do
+    Router.call(executor, :snapshot)
   end
 
   @doc """
-  Returns the current state of the communicator
+  Returns the current state of the executor
   """
-  def state(communicator) do
-    GenServer.call(communicator, :state)
+  def state(executor) do
+    Router.call(executor, :state)
   end
 
-  @doc """
-  Resets the subscribers list
-  """
-  @spec reset(GenServer.server()) :: :ok
-  def reset(communicator) do
-    GenServer.cast(communicator, :reset)
+  # TODO, only kill the given transactions
+  def kill_transactions(communicator, _trans) do
+    Router.call(communicator, :kill)
   end
 
   ############################################################
@@ -177,7 +158,7 @@ defmodule Anoma.Node.Executor.Communicator do
     log_info({:tx_call, logger})
     task = spawn_transactions(order, gate, state)
     log_info({:tx_call_pid, task.pid, logger})
-    {:reply, task.pid, state}
+    {:reply, task.pid, %__MODULE__{state | tasks: [task | state.tasks]}}
   end
 
   def handle_call({:transaction, order, gate, env}, _from, state) do
@@ -186,29 +167,37 @@ defmodule Anoma.Node.Executor.Communicator do
     log_info({:tx_call_env, env, logger})
 
     task =
-      spawn_transactions(order, gate, %Communicator{state | ambiant_env: env})
+      spawn_transactions(order, gate, %Executor{state | ambiant_env: env})
 
     log_info({:tx_call_pid, task.pid, logger})
-    {:reply, task.pid, state}
+
+    {:reply, task.pid, %__MODULE__{state | tasks: [task | state.tasks]}}
+  end
+
+  def handle_call(:kill, _from, agent) do
+    kill(agent.tasks)
+    {:reply, :ok, %__MODULE__{agent | tasks: []}}
+  end
+
+  def handle_cast(:kill, agent) do
+    kill(agent.tasks)
+    {:reply, :ok, %__MODULE__{agent | tasks: []}}
   end
 
   def handle_cast(:reset, agent) do
     log_info({:reset_sub, agent.logger})
-    {:noreply, %Communicator{agent | subscribers: MapSet.new()}}
+    {:noreply, %__MODULE__{agent | tasks: []}}
   end
 
-  # TODO communicate this information somehow
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    subs = state.subscribers
-    log_info({:broadcast_down, subs, state.logger})
-    Utility.broadcast(subs, {:process_done, pid})
+    log_info({:cast_down, state.logger})
+    Router.cast(state.task_completion_topic, {:process_done, pid})
     {:noreply, state}
   end
 
   def handle_info(process, state) do
-    subs = state.subscribers
-    log_info({:broadcast_process, subs, state.logger})
-    Utility.broadcast(subs, {:process_done, process})
+    log_info({:cast_process, state.logger})
+    Router.cast(state.task_completion_topic, {:process_done, process})
     {:noreply, state}
   end
 
@@ -221,11 +210,17 @@ defmodule Anoma.Node.Executor.Communicator do
   defp spawn_transactions(order, gate, state) do
     log_info({:spawn, order, state.logger})
 
-    Task.Supervisor.async(state.spawner, Worker, :run, [
+    Task.async(Worker, :run, [
       order,
       gate,
       state.ambiant_env
     ])
+  end
+
+  @spec kill(Task.t()) :: :ok
+  defp kill(tasks) do
+    Enum.each(tasks, &Task.shutdown/1)
+    :ok
   end
 
   ############################################################
@@ -233,21 +228,20 @@ defmodule Anoma.Node.Executor.Communicator do
   ############################################################
 
   defp log_info({:state, state, logger}) do
-    Logger.add(logger, self(), :info, "Requested state: #{inspect(state)}")
+    Logger.add(logger, :info, "Requested state: #{inspect(state)}")
   end
 
   defp log_info({:snap, hd, logger}) do
-    Logger.add(logger, self(), :info, "Requested snapshot: #{inspect(hd)}")
+    Logger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")
   end
 
   defp log_info({:tx_call, logger}) do
-    Logger.add(logger, self(), :info, "Requested to spawn transaction")
+    Logger.add(logger, :info, "Requested to spawn transaction")
   end
 
   defp log_info({:tx_call_pid, pid, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Spawned transaction. PID: #{inspect(pid)}"
     )
@@ -256,30 +250,26 @@ defmodule Anoma.Node.Executor.Communicator do
   defp log_info({:tx_call_env, env, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Requested to spawn transaction in environment: #{inspect(env)}"
     )
   end
 
   defp log_info({:reset_sub, logger}) do
-    Logger.add(logger, self(), :debug, "Requested subscribers reset")
+    Logger.add(logger, :debug, "Requested subscribers reset")
   end
 
-  defp log_info({:broadcast_down, subs, logger}) do
-    Logger.add(logger, self(), :debug, "Broadcasting process with tag :DOWN.
-    Subs: #{inspect(subs)}")
+  defp log_info({:cast_down, logger}) do
+    Logger.add(logger, :debug, "Broadcasting process with tag :DOWN.")
   end
 
-  defp log_info({:broadcast_process, subs, logger}) do
-    Logger.add(logger, self(), :info, "Broadcasting process.
-    Subs: #{inspect(subs)}")
+  defp log_info({:cast_process, logger}) do
+    Logger.add(logger, :info, "Broadcasting process.")
   end
 
   defp log_info({:spawn, order, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Spawning worker with order: #{inspect(order)}"
     )

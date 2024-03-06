@@ -11,8 +11,8 @@ defmodule Anoma.Node.Logger do
 
   alias List
   alias Anoma.Storage
-  alias Anoma.Node.Utility
-  alias Anoma.Node.Time.Communicator
+  alias Anoma.Node.Router
+  alias Anoma.Node.Clock
 
   require Logger
 
@@ -20,45 +20,43 @@ defmodule Anoma.Node.Logger do
 
   typedstruct do
     field(:storage, Storage.t())
-    field(:clock, atom())
+    field(:clock, Router.Addr.t())
   end
 
   def init(args) do
     {:ok, %Anoma.Node.Logger{storage: args[:storage], clock: args[:clock]}}
   end
 
-  def start_link(args) do
-    GenServer.start_link(
-      __MODULE__,
-      args,
-      Utility.name(args)
-    )
-  end
-
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def add(logger, engine, atom, msg) do
-    GenServer.cast(logger, {:add, logger, engine, atom, msg})
+  def add(logger, atom, msg) do
+    unless logger == nil do
+      Router.cast(logger, {:add, logger, atom, msg})
+    end
   end
 
   def get(logger) do
-    GenServer.call(logger, {:get_all, logger})
+    unless logger == nil do
+      Router.call(logger, {:get_all, logger})
+    end
   end
 
   def get(logger, engine) do
-    GenServer.call(logger, {:get, logger, engine})
+    unless logger == nil do
+      Router.call(logger, {:get, logger, engine})
+    end
   end
 
   ############################################################
   #                  Genserver Implementation                #
   ############################################################
 
-  def handle_cast({:add, logger, engine, atom, msg}, state) do
+  def handle_cast({:add, logger, atom, msg}, addr, state) do
     Storage.put(
       state.storage,
-      [logger, engine, Communicator.get_time(state.clock), atom],
+      [logger, addr.id, Clock.get_time(state.clock), atom],
       msg
     )
 

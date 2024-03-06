@@ -24,20 +24,22 @@ defmodule Anoma do
       order: Anoma.Order
     }
 
-    logger_name = :anoma_logger
-
     name = :anoma
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
+    node_settings = [
+      name: name,
+      snapshot_path: snapshot_path,
+      storage: storage,
+      block_storage: :anoma_block
+    ]
+
     children = [
-      {Anoma.Node,
-       name: name,
-       snapshot_path: snapshot_path,
-       storage: storage,
-       block_storage: :anoma_block},
-      {Anoma.Node.Intent, name: :anoma_intent, logger: logger_name},
-      {Anoma.Node.Logger,
-       name: logger_name, storage: storage, clock: :anoma_clock_com}
+      if Application.get_env(name, :env) == :prod do
+        {Anoma.Node, [{:ping_time, 10000} | node_settings]}
+      else
+        {Anoma.Node, [{:ping_time, :no_timer} | node_settings]}
+      end
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Anoma)

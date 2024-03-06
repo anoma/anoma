@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Time.Clock do
+defmodule Anoma.Node.Clock do
   @moduledoc """
   I am the implmentation of the Local Wall Clock Engine.
 
@@ -10,7 +10,7 @@ defmodule Anoma.Node.Time.Clock do
   use TypedStruct
   use GenServer
 
-  alias Anoma.Node.Utility
+  alias Anoma.Node.Router
 
   typedstruct do
     field(:start, integer())
@@ -20,22 +20,18 @@ defmodule Anoma.Node.Time.Clock do
     {:ok, %Clock{start: args[:start]}}
   end
 
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, Utility.name(args))
-  end
-
   ############################################################
   #                      Public RPC API                      #
   ############################################################
 
-  @spec get_time(GenServer.server()) :: integer()
+  @spec get_time(Router.Addr.t()) :: integer()
   def get_time(clock) do
-    GenServer.call(clock, :get_time)
+    Router.call(clock, :get_time)
   end
 
-  @spec get_epoch(GenServer.server()) :: integer()
+  @spec get_epoch(Router.Addr.t()) :: integer()
   def get_epoch(clock) do
-    GenServer.call(clock, :get_epoch)
+    Router.call(clock, :get_epoch)
   end
 
   ############################################################

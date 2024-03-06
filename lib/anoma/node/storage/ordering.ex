@@ -12,28 +12,10 @@ defmodule Anoma.Node.Storage.Ordering do
        saved for this node.
 
     2. We keep a hash_to_order to cache the id => order mapping
-
-  There are two ways to work with me. One is through my communicator
-  (Calls to `Anoma.Node.Storage.Communicator`). These will be computed
-  on my `GenServer` process. The other way is directly through me in
-  my `User blocking API` (done through `Anoma.Node.Storage.Ordering`),
-  these will block the caller's process.
-
-  To try to make this extra explicit, caller blocking functions have
-  `caller_blocking` prepended to their name. For these functions, you
-  should pass the communicator process and not my own, as you should
-  always go through my communicator
-
-  ### API (Use me through my Communicator!)
-  ### Caller Blocking API
-    - `caller_blocking_read_id/2`
-    - `caller_blocking_read_id/3`
   """
 
   use TypedStruct
-  use GenServer
-  alias Anoma.Node.Storage.Communicator
-  alias Anoma.Node.{Utility, Logger}
+  alias Anoma.Node.{Router, Logger}
   alias Anoma.{Storage, Order}
   alias __MODULE__
 
@@ -46,7 +28,7 @@ defmodule Anoma.Node.Storage.Ordering do
     field(:table, Storage.t(), default: %Anoma.Storage{})
     field(:next_order, non_neg_integer(), default: 1)
     field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
-    field(:logger, atom(), enforce: false)
+    field(:logger, Router.Addr.t(), enforce: false)
   end
 
   def init(opts) do
@@ -61,49 +43,44 @@ defmodule Anoma.Node.Storage.Ordering do
     {:ok, return}
   end
 
-  @spec start_link(keyword()) :: :ignore | {:error, any()} | {:ok, pid()}
-  def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, Utility.name(arg))
-  end
-
   ############################################################
   #                      Public RPC API                      #
   ############################################################
 
-  @spec state(GenServer.server()) :: t()
+  @spec state(Router.Addr.t()) :: t()
   def state(ordering) do
-    GenServer.call(ordering, :state)
+    Router.call(ordering, :state)
   end
 
-  @spec next_order(GenServer.server()) :: non_neg_integer()
+  @spec next_order(Router.Addr.t()) :: non_neg_integer()
   def next_order(ordering) do
-    GenServer.call(ordering, :next_order)
+    Router.call(ordering, :next_order)
   end
 
-  @spec true_order(GenServer.server(), any()) :: non_neg_integer() | nil
+  @spec true_order(Router.Addr.t(), any()) :: non_neg_integer() | nil
   def true_order(ordering, id) do
-    GenServer.call(ordering, {:true_order, id})
+    Router.call(ordering, {:true_order, id})
   end
 
-  @spec new_order(GenServer.server(), ordered_transactions()) ::
+  @spec new_order(Router.Addr.t(), ordered_transactions()) ::
           :error | {:ok, any()}
   def new_order(ordering, ordered) do
-    GenServer.call(ordering, {:new_order, ordered})
+    Router.call(ordering, {:new_order, ordered})
   end
 
-  @spec get_storage(GenServer.server()) :: Storage.t()
+  @spec get_storage(Router.Addr.t()) :: Storage.t()
   def get_storage(ordering) do
-    GenServer.call(ordering, :storage)
+    Router.call(ordering, :storage)
   end
 
-  @spec reset(GenServer.server()) :: :ok
+  @spec reset(Router.Addr.t()) :: :ok
   def reset(ordering) do
-    GenServer.cast(ordering, :reset)
+    Router.cast(ordering, :reset)
   end
 
-  @spec hard_reset(GenServer.server(), atom()) :: :ok
+  @spec hard_reset(Router.Addr.t(), atom()) :: :ok
   def hard_reset(ordering, initial_snapshot) do
-    GenServer.cast(ordering, {:hard_reset, initial_snapshot})
+    Router.cast(ordering, {:hard_reset, initial_snapshot})
   end
 
   ############################################################
@@ -141,17 +118,17 @@ defmodule Anoma.Node.Storage.Ordering do
     table = state.table
     log_info({:storage, table, state.logger})
 
-    {:reply, state.table, state}
+    {:reply, table, state}
   end
 
-  def handle_cast(:reset, state) do
+  def handle_cast(:reset, _from, state) do
     table = state.table
     log_info({:reset, table, state.logger})
 
     {:noreply, %Ordering{table: table}}
   end
 
-  def handle_cast({:hard_reset, initial_snapshot}, state) do
+  def handle_cast({:hard_reset, initial_snapshot}, _from, state) do
     storage = state.table
     Storage.ensure_new(storage)
     Storage.put_snapshot(storage, initial_snapshot)
@@ -170,7 +147,7 @@ defmodule Anoma.Node.Storage.Ordering do
   Translate from ids to true order
 
   ### Parameters
-    - `coms` - the communicator process
+    - `ordering` - the ordering process
 
     - `[id | subkey]` -
 
@@ -181,11 +158,11 @@ defmodule Anoma.Node.Storage.Ordering do
   ### Returns
   returns the given key at a specific value
   """
-  @spec caller_blocking_read_id(GenServer.server(), Noun.t()) ::
+  @spec caller_blocking_read_id(Router.Addr.t(), Noun.t()) ::
           :error | {:ok, any()}
-  def caller_blocking_read_id(coms, [id | subkey]) do
-    maybe_true_order = Communicator.true_order(coms, id)
-    storage = Communicator.get_storage(coms)
+  def caller_blocking_read_id(ordering, [id | subkey]) do
+    maybe_true_order = true_order(ordering, id)
+    storage = get_storage(ordering)
 
     read_order =
       case maybe_true_order do
@@ -236,7 +213,6 @@ defmodule Anoma.Node.Storage.Ordering do
   defp log_info({:state, state, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Requested state: #{inspect(state)}"
     )
@@ -245,7 +221,6 @@ defmodule Anoma.Node.Storage.Ordering do
   defp log_info({:next, state, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Requested next order: #{inspect(state)}"
     )
@@ -254,21 +229,19 @@ defmodule Anoma.Node.Storage.Ordering do
   defp log_info({true, state, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Requested true order: #{inspect(state)}"
     )
   end
 
   defp log_info({:new, order, map, logger}) do
-    Logger.add(logger, self(), :info, "Requested new order.
+    Logger.add(logger, :info, "Requested new order.
       Next order: #{inspect(order)}. New hash: #{inspect(map)}")
   end
 
   defp log_info({:storage, state, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Requested storage table: #{inspect(state)}"
     )
@@ -277,25 +250,23 @@ defmodule Anoma.Node.Storage.Ordering do
   defp log_info({:reset, state, logger}) do
     Logger.add(
       logger,
-      self(),
       :debug,
       "Requested reset. Table: #{inspect(state)}"
     )
   end
 
   defp log_info({:hard_reset, table, snap, logger}) do
-    Logger.add(logger, self(), :debug, "Requested hard reset.
+    Logger.add(logger, :debug, "Requested hard reset.
       Table: #{inspect(table)}. Snapshot: #{inspect(snap)}")
   end
 
   defp log_info({:new_handle, state, logger}) do
-    Logger.add(logger, self(), :info, "New tx count: #{inspect(state)}")
+    Logger.add(logger, :info, "New tx count: #{inspect(state)}")
   end
 
   defp log_info({:ready_handle, state, logger}) do
     Logger.add(
       logger,
-      self(),
       :info,
       "Sending read ready to: #{inspect(state)}"
     )
