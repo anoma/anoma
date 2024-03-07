@@ -1,0 +1,16 @@
+[package]
+name = "cairo"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "cairo"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.31.0"
+cairo-platinum-prover = { git = "https://github.com/lambdaclass/lambdaworks", version = "0.5.0"}
+stark-platinum-prover = { git = "https://github.com/lambdaclass/lambdaworks", version = "0.5.0"}
+bincode = "2.0.0-rc.3"

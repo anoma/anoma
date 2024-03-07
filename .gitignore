@@ -37,3 +37,6 @@ anoma-*.tar
 
 # Mnesia disk-backed databases
 Mnesia*/
+
+# external rust lib
+*.so
