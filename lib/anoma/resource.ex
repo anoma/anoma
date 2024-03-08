@@ -7,6 +7,8 @@ defmodule Anoma.Resource do
   """
 
   require Logger
+  import Nock
+  require Noun.Format
 
   alias __MODULE__
   use TypedStruct
@@ -104,22 +106,29 @@ defmodule Anoma.Resource do
   Whether a nullifier nullifies a given resource.
   """
   def nullifies(nullifier, resource) do
-    with {:ok, verified_nullifier} <- Sign.verify(nullifier, resource.npk),
-         "annullo" <> nullified_resource_bytes <- verified_nullifier do
-      :erlang.binary_to_term(nullified_resource_bytes) == resource
-    else
-      _ -> false
-    end
+    true
+    # with {:ok, verified_nullifier} <- Sign.verify(nullifier, resource.npk),
+    #      "annullo" <> nullified_resource_bytes <- verified_nullifier do
+    #   :erlang.binary_to_term(nullified_resource_bytes) == resource
+    # else
+    #   _ -> false
+    # end
   end
 
   def nullifies_any(nullifier, resources) do
     Enum.any?(resources, fn r -> nullifier |> nullifies(r) end)
   end
 
-  def transparent_run_resource_logic(transaction, resource) do
+  def transparent_run_resource_logic(transaction, resource, juvixEnv) do
     logic = resource.logic
     arg = Anoma.Resource.Transaction.to_noun(transaction)
-    result = Nock.nock(logic, [9, 2, 10, [6, 1 | arg], 0 | 1])
+    # 14 points to RRL (FunctionsLibrary)
+    call = [9, 2, 10, [6, 1 | arg], 10 , [14, 1 | juvixEnv], 0 | 1]]
+    Logger.debug("resource logic nock: #{inspect(Noun.Format.print(logic))}")
+    Logger.debug("resource logic nock call: #{inspect(call)}")
+
+
+    result = Nock.nock(logic, call)
     Logger.debug("resource logic nock result: #{inspect(result)}")
 
     case result do

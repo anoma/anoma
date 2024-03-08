@@ -109,6 +109,10 @@ defmodule Noun.Format do
     to_string(noun)
   end
 
+  def print([]) do
+    "0"
+  end
+
   def print([h | t]) do
     "[" <> print(h) <> " " <> print_tail(t) <> "]"
   end

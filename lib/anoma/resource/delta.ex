@@ -1,6 +1,6 @@
 defmodule Anoma.Resource.Delta do
-  @moduledoc false
-
+  import Noun
+  require Noun
   # usually non_neg_integer, but not in execution
   @type t() :: %{binary() => integer()}
 

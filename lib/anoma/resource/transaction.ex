@@ -11,6 +11,8 @@ defmodule Anoma.Resource.Transaction do
   import Anoma.Resource
   alias Anoma.Resource.Delta
   alias Anoma.Resource.ProofRecord
+  import Noun
+  require Noun
 
   # doesn't have all the fields yet.
   typedstruct enforce: true do
@@ -49,21 +51,21 @@ defmodule Anoma.Resource.Transaction do
         extra | _preference
       ]) do
     %Transaction{
-      roots: roots,
-      commitments: commitments,
-      nullifiers: nullifiers,
+      roots: list_nock_to_erlang(roots),
+      commitments: list_nock_to_erlang(commitments),
+      nullifiers: list_nock_to_erlang(nullifiers),
       proofs:
-        for proof <- proofs do
+        for proof <- list_nock_to_erlang(proofs) do
           ProofRecord.from_noun(proof)
         end,
-      delta: Delta.from_noun(delta),
+      delta: Delta.from_noun(list_nock_to_erlang(delta)),
       extra: extra,
       preference: nil
     }
   end
 
   @spec verify(t()) :: boolean()
-  def verify(transaction) do
+  def verify(transaction, juvixEnv) do
     # the transparent proofs are just all the involved resources
     proved_resources =
       for proof_record <- transaction.proofs do

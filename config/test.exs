@@ -1,5 +1,5 @@
 import Config
 
 config :logger,
-  level: :error,
-  backends: []
+  level: :debug,
+  backends: [:console]
