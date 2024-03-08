@@ -49,7 +49,7 @@ defmodule AnomaTest.Nock do
       key = 777
       id = System.unique_integer([:positive])
       storage = Ordering.get_storage(env.ordering)
-      increment = increment_counter_val(key)
+      {:ok, increment} = nock(increment_counter_val(key), [9, 2, 0 | 1], env)
 
       Storage.ensure_new(storage)
 
@@ -67,7 +67,7 @@ defmodule AnomaTest.Nock do
       key = 666
       id = System.unique_integer([:positive])
       storage = Ordering.get_storage(env.ordering)
-      increment = increment_counter_val(key)
+      {:ok, increment} = nock(increment_counter_val(key), [9, 2, 0 | 1], env)
 
       Storage.ensure_new(storage)
 
