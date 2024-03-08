@@ -9,11 +9,13 @@ defmodule Anoma.Node.Executor.Worker do
   require Logger
 
   @spec run(Noun.t(), {:kv | :rm, Noun.t()}, Nock.t()) :: :ok | :error
-  def run(order, {:kv, gate}, env) do
+  def run(order, {:kv, proto_tx}, env) do
     instrument({:dispatch, order})
     storage = Ordering.get_storage(env.ordering)
 
-    with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
+    with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
+         {:ok, ordered_tx} <-
+           nock(stage_2_tx, [10, [6, 1 | order], 0 | 1], env),
          {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       true_order = wait_for_ready(env, order)
 

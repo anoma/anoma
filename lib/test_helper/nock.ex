@@ -46,13 +46,13 @@ defmodule TestHelper.Nock do
   def increment_counter_val(val) do
     arm = [[1 | val], 4, 12, [1 | 0], [0 | 6], 1, val | 0]
     sample = 0
-    [arm, sample | logics_core()]
+    [[8, [1 | sample], [1 | arm], 0 | 1] | logics_core()]
   end
 
   # [%ctr 0]
   def zero_counter(val) do
     arm = [1, val | 0]
     sample = 0
-    [arm, sample | logics_core()]
+    [[8, [1 | sample], [1 | arm], 0 | 1] | logics_core()]
   end
 end
