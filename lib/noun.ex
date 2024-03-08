@@ -174,4 +174,30 @@ defmodule Noun do
       when is_integer(integer) and integer >= 0 do
     integer
   end
+
+  @spec condensed_print(t()) :: String.t()
+  def condensed_print([]) do
+    "~"
+  end
+
+  def condensed_print(<<>>) do
+    "~"
+  end
+
+  def condensed_print(atom) when is_integer(atom) do
+    Integer.to_string(atom)
+  end
+
+  def condensed_print(atom) when is_binary(atom) do
+    "0x" <> Base.encode16(atom)
+  end
+
+  def condensed_print(cell = [h | t]) do
+    cond do
+      cell == Nock.stdlib_core() -> "<stdlib>"
+      cell == Nock.rm_core() -> "<rm>"
+      cell == Nock.logics_core() -> "<logics>"
+      true -> "[" <> condensed_print(h) <> " " <> condensed_print(t) <> "]"
+    end
+  end
 end
