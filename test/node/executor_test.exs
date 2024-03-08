@@ -26,7 +26,7 @@ defmodule AnomaTest.Node.Executor do
       Router.start_engine(
         router,
         Anoma.Node.Executor,
-        {env, Router.new_topic(router)}
+        {env, Router.new_topic(router), nil}
       )
 
     [env: env, executor: executor]

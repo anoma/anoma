@@ -6,23 +6,24 @@ defmodule Anoma.Node.Solver do
   use TypedStruct
   import Bitwise
   alias Anoma.Resource.Transaction
-  alias Anoma.Node.Router
+  alias Anoma.Node.{Router, Logger}
   alias __MODULE__
-  require Logger
 
   typedstruct do
     field(:solutions_topic, Router.Addr.t())
     field(:unsolved, [Transaction.t()], default: [])
     field(:solved, [Transaction.t()], default: [])
     field(:solved_set, MapSet.t(Transaction.t()), default: MapSet.new())
+    field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init({router, intent_pool, intents, solutions}) do
+  def init({router, logger, intent_pool, intents, solutions}) do
     unsolved = Enum.to_list(Router.call(intent_pool, :intents))
     :ok = Router.call(router, {:subscribe_topic, intents, :local})
 
     {:ok,
      %Solver{
+       logger: logger,
        solutions_topic: solutions,
        unsolved: unsolved
      }}
@@ -46,7 +47,7 @@ defmodule Anoma.Node.Solver do
 
   defp handle_solve(s) do
     {new_unsolved, new_solved} = solve(s.unsolved)
-    Logger.info("solutions #{inspect(new_solved)}")
+    log_info({:solve, new_unsolved, new_solved, s.logger})
 
     if new_solved != [] do
       Router.cast(
@@ -73,6 +74,7 @@ defmodule Anoma.Node.Solver do
 
   def handle_cast({:new_intent, intent}, _, s) do
     if intent not in s.unsolved && !MapSet.member?(s.solved_set, intent) do
+      log_info({:add, intent, s.logger})
       handle_solve(%{s | unsolved: [intent | s.unsolved]})
     else
       {:noreply, s}
@@ -82,6 +84,9 @@ defmodule Anoma.Node.Solver do
   def handle_cast({:remove_intent, deleted}, _, s) do
     unsolved = Enum.filter(s.unsolved, fn x -> x != deleted end)
 
+    logger = s.logger
+    log_info({:del, deleted, logger})
+
     {nolonger_solved, still_solved} =
       Enum.split_with(s.solved, fn x -> deleted in tl(x) end)
 
@@ -90,6 +95,8 @@ defmodule Anoma.Node.Solver do
       |> Enum.map(&tl/1)
       |> Enum.concat()
       |> Enum.filter(fn x -> x != deleted end)
+
+    log_info({:del_solved, nolonger_solved, logger})
 
     solved_set = MapSet.delete(s.solved_set, deleted)
 
@@ -102,6 +109,7 @@ defmodule Anoma.Node.Solver do
   end
 
   def handle_call(:get_solved, _from, s) do
+    log_info({:get, s.solved, s.logger})
     {:reply, Enum.map(s.solved, &hd/1), s}
   end
 
@@ -150,5 +158,47 @@ defmodule Anoma.Node.Solver do
         solve(unbalanced, balanced, n - 1)
       end
     end
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:solve, unsolved, solved, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Solved. Unsolved: #{inspect(unsolved)}. Solved: #{inspect(solved)}."
+    )
+  end
+
+  defp log_info({:add, intent, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Request to add intent: #{inspect(intent)}."
+    )
+  end
+
+  defp log_info({:del, intent, logger}) do
+    Logger.add(
+      logger,
+      :debug,
+      "Request to delete intent: #{inspect(intent)}."
+    )
+  end
+
+  defp log_info({:del_solved, nolonger_solved, logger}) do
+    Logger.add(logger, :debug, "After intent deletion,
+    following transactions are no longer solved:
+    #{inspect(nolonger_solved)}.")
+  end
+
+  defp log_info({:get, solved, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Request to get solved: #{inspect(solved)}."
+    )
   end
 end

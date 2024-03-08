@@ -29,15 +29,18 @@ defmodule Anoma.Node.Executor do
 
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router
+  alias Anoma.Node.Logger
 
   typedstruct do
     field(:task_completion_topic, Router.Addr.t())
     field(:ambiant_env, Nock.t())
     field(:tasks, list(Task.t()), default: [])
+    field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init({env, topic}) do
-    {:ok, %Executor{ambiant_env: env, task_completion_topic: topic}}
+  def init({env, topic, logger}) do
+    {:ok,
+     %Executor{ambiant_env: env, task_completion_topic: topic, logger: logger}}
   end
 
   ############################################################
@@ -112,7 +115,9 @@ defmodule Anoma.Node.Executor do
   ### Example
     iex> alias Anoma.Node.{Executor, Router}
     iex> {:ok, router} = Router.start
-    iex> {:ok, addr} = Router.start_engine(router, Executor, {%{snapshot_path: [:a | 0], ordering: nil}, Router.new_topic(router)})
+    iex> snap = %{snapshot_path: [:a | 0], ordering: nil}
+    iex> args = {snap, Router.new_topic(router), nil}
+    iex> {:ok, addr} = Router.start_engine(router, Executor, args)
     iex> Executor.snapshot(addr)
     :a
   """
@@ -137,21 +142,34 @@ defmodule Anoma.Node.Executor do
   ############################################################
 
   def handle_call(:state, _from, state) do
+    log_info({:state, state, state.logger})
     {:reply, state, state}
   end
 
   def handle_call(:snapshot, _from, state) do
-    {:reply, hd(state.ambiant_env.snapshot_path), state}
+    hd = hd(state.ambiant_env.snapshot_path)
+    log_info({:snap, hd, state.logger})
+    {:reply, hd, state}
   end
 
   def handle_call({:transaction, order, gate}, _from, state) do
+    logger = state.logger
+
+    log_info({:tx_call, logger})
     task = spawn_transactions(order, gate, state)
+    log_info({:tx_call_pid, task.pid, logger})
     {:reply, task.pid, %__MODULE__{state | tasks: [task | state.tasks]}}
   end
 
   def handle_call({:transaction, order, gate, env}, _from, state) do
+    logger = state.logger
+
+    log_info({:tx_call_env, env, logger})
+
     task =
       spawn_transactions(order, gate, %Executor{state | ambiant_env: env})
+
+    log_info({:tx_call_pid, task.pid, logger})
 
     {:reply, task.pid, %__MODULE__{state | tasks: [task | state.tasks]}}
   end
@@ -167,17 +185,18 @@ defmodule Anoma.Node.Executor do
   end
 
   def handle_cast(:reset, agent) do
-    kill(agent.tasks)
+    log_info({:reset_sub, agent.logger})
     {:noreply, %__MODULE__{agent | tasks: []}}
   end
 
-  # TODO communicate this information somehow
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
+    log_info({:cast_down, state.logger})
     Router.cast(state.task_completion_topic, {:process_done, pid})
     {:noreply, state}
   end
 
   def handle_info(process, state) do
+    log_info({:cast_process, state.logger})
     Router.cast(state.task_completion_topic, {:process_done, process})
     {:noreply, state}
   end
@@ -189,6 +208,8 @@ defmodule Anoma.Node.Executor do
   # make this more interesting later
   @spec spawn_transactions(Noun.t(), Noun.t(), t()) :: Task.t()
   defp spawn_transactions(order, gate, state) do
+    log_info({:spawn, order, state.logger})
+
     Task.async(Worker, :run, [
       order,
       gate,
@@ -200,5 +221,57 @@ defmodule Anoma.Node.Executor do
   defp kill(tasks) do
     Enum.each(tasks, &Task.shutdown/1)
     :ok
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:state, state, logger}) do
+    Logger.add(logger, :info, "Requested state: #{inspect(state)}")
+  end
+
+  defp log_info({:snap, hd, logger}) do
+    Logger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")
+  end
+
+  defp log_info({:tx_call, logger}) do
+    Logger.add(logger, :info, "Requested to spawn transaction")
+  end
+
+  defp log_info({:tx_call_pid, pid, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Spawned transaction. PID: #{inspect(pid)}"
+    )
+  end
+
+  defp log_info({:tx_call_env, env, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Requested to spawn transaction in environment: #{inspect(env)}"
+    )
+  end
+
+  defp log_info({:reset_sub, logger}) do
+    Logger.add(logger, :debug, "Requested subscribers reset")
+  end
+
+  defp log_info({:cast_down, logger}) do
+    Logger.add(logger, :debug, "Broadcasting process with tag :DOWN.")
+  end
+
+  defp log_info({:cast_process, logger}) do
+    Logger.add(logger, :info, "Broadcasting process.")
+  end
+
+  defp log_info({:spawn, order, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Spawning worker with order: #{inspect(order)}"
+    )
   end
 end
