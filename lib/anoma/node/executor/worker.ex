@@ -38,7 +38,8 @@ defmodule Anoma.Node.Executor.Worker do
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
          vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
-         true <- Anoma.Resource.Transaction.verify(vm_resource_tx) do
+         true <- Anoma.Resource.Transaction.verify(vm_resource_tx),
+         true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
       true_order = wait_for_ready(env, order)
 
       instrument({:writing, true_order})
@@ -65,6 +66,15 @@ defmodule Anoma.Node.Executor.Worker do
         wait_for_ready(env, order)
         snapshot(storage, env)
         :error
+    end
+  end
+
+  @spec rm_nullifier_check(Storage.t(), list(binary())) :: bool()
+  def rm_nullifier_check(storage, nullifiers) do
+    for nullifier <- nullifiers, reduce: true do
+      acc ->
+        nf_key = ["rm", "nullifiers", nullifier]
+        acc && Storage.get(storage, nf_key) == :absent
     end
   end
 
