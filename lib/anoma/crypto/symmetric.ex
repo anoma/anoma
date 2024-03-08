@@ -2,6 +2,9 @@ defmodule Anoma.Crypto.Symmetric do
   @typedoc """
   I represent the symmetric types available to the system
   """
+
+  alias Anoma.Crypto.Randomness
+
   @type t() :: xchacha()
 
   # should we include AD data? For our purposes I think not?
@@ -11,7 +14,7 @@ defmodule Anoma.Crypto.Symmetric do
 
   @spec random_xchacha_nonce() :: xchacha_nonce()
   def random_xchacha_nonce() do
-    :enacl.randombytes(:enacl.aead_xchacha20poly1305_ietf_NPUBBYTES())
+    Randomness.get_random(:enacl.aead_xchacha20poly1305_ietf_NPUBBYTES())
   end
 
   @spec random_xchacha_key() :: xchacha_key()

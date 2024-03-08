@@ -11,6 +11,7 @@ defmodule Nock do
   alias Anoma.Storage
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Router
 
   @type jettedness() ::
           :jetted
@@ -28,7 +29,7 @@ defmodule Nock do
   """
   typedstruct do
     field(:jet, jettedness(), default: :jetted)
-    field(:ordering, GenServer.server() | nil, default: nil)
+    field(:ordering, Router.Addr.t() | nil, default: nil)
     field(:snapshot_path, Noun.t() | nil, default: nil)
   end
 

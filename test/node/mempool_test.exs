@@ -2,9 +2,9 @@ defmodule AnomaTest.Node.Mempool do
   use ExUnit.Case, async: true
 
   alias Anoma.Storage
-  alias Anoma.Node.Storage.Communicator, as: Scom
-  alias Anoma.Node.Executor.Communicator, as: Ccom
-  alias Anoma.Node.Mempool.Communicator, as: Mcom
+  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Mempool
+  alias Anoma.Node.Router
   import TestHelper.Nock
 
   setup_all do
@@ -16,72 +16,92 @@ defmodule AnomaTest.Node.Mempool do
     name = :mempool
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
-    node = Anoma.Node.com_names(name)
-
-    unless Process.whereis(:mempool_mempool_com) do
+    {:ok, nodes} =
       Anoma.Node.start_link(
         name: name,
         snapshot_path: snapshot_path,
         storage: storage,
-        block_storage: :mempool_blocks
+        block_storage: :mempool_blocks,
+        ping_time: :no_timer
       )
-    end
+
+    node = Anoma.Node.state(nodes)
 
     [node: node]
   end
 
   test "successful process", %{node: node} do
     key = 555
-    storage = Scom.get_storage(node.ordering)
+    storage = Ordering.get_storage(node.ordering)
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
-    Ccom.subscribe(node.executor, self())
-    Mcom.hard_reset(node.mempool)
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.executor_topic.id, :local}
+      )
 
-    pid_zero = Mcom.tx(node.mempool, {:kv, zero}).pid
+    Mempool.hard_reset(node.mempool)
 
-    Mcom.execute(node.mempool)
-    pid_one = Mcom.tx(node.mempool, {:kv, increment}).pid
-    pid_two = Mcom.tx(node.mempool, {:kv, increment}).pid
+    pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
 
-    Mcom.execute(node.mempool)
-    assert_receive {:"$gen_cast", {:process_done, ^pid_zero}}
-    assert_receive {:"$gen_cast", {:process_done, ^pid_one}}
-    assert_receive {:"$gen_cast", {:process_done, ^pid_two}}
+    Mempool.execute(node.mempool)
+    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
+    pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
+
+    Mempool.execute(node.mempool)
+    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_zero}}}
+    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_one}}}
+    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_two}}}
     assert {:ok, 2} = Storage.get(storage, key)
-    Ccom.reset(node.executor)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.executor_topic.id, :local}
+      )
   end
 
   test "Processes still snapshots", %{node: node} do
     key = 555
-    storage = Scom.get_storage(node.ordering)
+    storage = Ordering.get_storage(node.ordering)
     increment = increment_counter_val(key)
 
-    Ccom.subscribe(node.executor, self())
-    Mcom.hard_reset(node.mempool)
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.executor_topic.id, :local}
+      )
 
-    pid_one = Mcom.tx(node.mempool, {:kv, increment}).pid
-    pid_two = Mcom.tx(node.mempool, {:kv, increment}).pid
+    Mempool.hard_reset(node.mempool)
 
-    Mcom.execute(node.mempool)
-    assert_receive {:"$gen_cast", {:process_done, ^pid_one}}
-    assert_receive {:"$gen_cast", {:process_done, ^pid_two}}
+    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
+    pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
+
+    Mempool.execute(node.mempool)
+    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_one}}}
+    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_two}}}
     assert :absent = Storage.get(storage, key)
-    Ccom.reset(node.executor)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.executor_topic.id, :local}
+      )
   end
 
   test "Processes gets killed", %{node: node} do
     key = 333
-    storage = Scom.get_storage(node.ordering)
+    storage = Ordering.get_storage(node.ordering)
 
-    Mcom.hard_reset(node.mempool)
+    Mempool.hard_reset(node.mempool)
 
-    pid_zero = Mcom.tx(node.mempool, {:kv, zero_counter(key)}).pid
+    pid_zero = Mempool.tx(node.mempool, {:kv, zero_counter(key)}).pid
 
-    Mcom.soft_reset(node.mempool)
+    Mempool.soft_reset(node.mempool)
 
-    Mcom.execute(node.mempool)
+    Mempool.execute(node.mempool)
 
     assert not Process.alive?(pid_zero)
     assert :absent = Storage.get(storage, key)
@@ -89,22 +109,44 @@ defmodule AnomaTest.Node.Mempool do
 
   test "Transaction print", %{node: node} do
     key = 666
-    Ccom.subscribe(node.executor, self())
-    Mcom.hard_reset(node.mempool)
 
-    zero_tx = Mcom.tx(node.mempool, zero_counter(key))
-    assert Mcom.pending_txs(node.mempool) == [zero_tx]
-    Mcom.soft_reset(node.mempool)
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.executor_topic.id, :local}
+      )
+
+    Mempool.hard_reset(node.mempool)
+
+    zero_tx = Mempool.tx(node.mempool, {:kv, zero_counter(key)})
+    assert Mempool.pending_txs(node.mempool) == [zero_tx]
+    Mempool.soft_reset(node.mempool)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.executor_topic.id, :local}
+      )
   end
 
   test "Transactions broadcast", %{node: node} do
-    Mcom.subscribe(node.mempool, self())
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic.id, :local}
+      )
 
-    Mcom.hard_reset(node.mempool)
+    Mempool.hard_reset(node.mempool)
 
-    zero_tx = Mcom.tx(node.mempool, zero_counter(777))
+    zero_tx = Mempool.tx(node.mempool, {:kv, zero_counter(777)})
 
-    assert_receive {:"$gen_cast", {:submitted, ^zero_tx}}
-    Mcom.soft_reset(node.mempool)
+    assert_receive {:"$gen_cast", {_, {:submitted, ^zero_tx}}}
+    Mempool.soft_reset(node.mempool)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.mempool_topic.id, :local}
+      )
   end
 end

@@ -1,10 +1,10 @@
 defmodule Anoma.Node do
   @moduledoc """
-  I am the supervisor for Anoma Nodes
+  I act as a registry for Anoma Nodes
 
   ## Required Arguments
 
-    - `name` - name to register the nodes
+    - `name` - name for this process
     - `snapshot_path` : [`atom()` | 0]
       - A snapshot location for the service (used in the worker)
     - `storage` : `Anoma.Storage.t()` - The Storage tables to use
@@ -16,43 +16,35 @@ defmodule Anoma.Node do
        - by default it is `false`
   ## Registered names
 
-  From the given `name` argument we derive the following:
-    - `name_mempool`
-    - `name_executor`
-    - `name_ordering`
-    - `name_clock`
-    - `name_mempool_com`
-    - `name_executor_com`
-    - `name_ordering_com`
-    - `name_clock_com`
-
   ### Created Tables
     - `storage.qualified`
     - `storage.order`
     - `block_storage`
   """
 
-  use Supervisor
+  use GenServer
   use TypedStruct
-  alias Anoma.Node.Utility
+  alias Anoma.Node.Router
   alias __MODULE__
 
   typedstruct enforce: true do
-    field(:mempool, GenServer.server())
-    field(:ordering, GenServer.server())
-    field(:executor, GenServer.server())
-    field(:clock, GenServer.server())
+    field(:router, Router.addr())
+    field(:ordering, Router.addr())
+    field(:executor, Router.addr())
+    field(:executor_topic, Router.addr())
+    field(:mempool, Router.addr())
+    field(:mempool_topic, Router.addr())
+    field(:pinger, Router.addr())
+    field(:clock, Router.addr())
   end
 
   def start_link(args) do
     snap = args[:snapshot_path]
     storage = args[:storage]
 
-    coms = com_names(args[:name])
-    prims = names(args[:name])
-    args = args |> Keyword.put(:ordering, coms.ordering)
-
-    resp = Supervisor.start_link(__MODULE__, {coms, prims, args})
+    name = args[:name]
+    args = Enum.filter(args, fn {k, _} -> k != :name end)
+    resp = GenServer.start_link(__MODULE__, args, name: name)
 
     unless args[:old_storage] do
       Anoma.Storage.ensure_new(storage)
@@ -62,42 +54,63 @@ defmodule Anoma.Node do
     resp
   end
 
-  def init({coms, prims, args}) do
+  def init(args) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
+    ping_name = Anoma.Node.Utility.append_name(args[:name], "_pinger")
 
-    children = [
-      {Anoma.Node.Executor,
-       env |> Map.to_list() |> Keyword.put(:name, prims.executor)},
-      {Anoma.Node.Storage, name: prims.ordering, table: args[:storage]},
-      {Anoma.Node.Mempool,
-       name: prims.mempool,
-       block_storage: args[:block_storage],
-       ordering: coms.ordering,
-       executor: coms.executor},
-      {Anoma.Node.Time,
-       name: prims.clock, start: System.monotonic_time(:millisecond)}
-    ]
+    {:ok, router} = Router.start()
 
-    Supervisor.init(children, strategy: :one_for_all)
+    {:ok, ordering} =
+      Router.start_engine(router, Anoma.Node.Storage.Ordering,
+        table: args[:storage]
+      )
+
+    env = %{env | ordering: ordering}
+    {:ok, executor_topic} = Router.new_topic(router)
+
+    {:ok, executor} =
+      Router.start_engine(router, Anoma.Node.Executor, {env, executor_topic})
+
+    {:ok, mempool_topic} = Router.new_topic(router)
+
+    {:ok, mempool} =
+      Router.start_engine(router, Anoma.Node.Mempool,
+        block_storage: args[:block_storage],
+        ordering: ordering,
+        executor: executor,
+        topic: mempool_topic
+      )
+
+    {:ok, pinger} =
+      Router.start_engine(router, Anoma.Node.Pinger,
+        name: ping_name,
+        mempool: mempool,
+        time: args[:ping_time]
+      )
+
+    {:ok, clock} =
+      Router.start_engine(router, Anoma.Node.Clock,
+        start: System.monotonic_time(:millisecond)
+      )
+
+    {:ok,
+     %Node{
+       router: router,
+       ordering: ordering,
+       executor: executor,
+       mempool: mempool,
+       pinger: pinger,
+       clock: clock,
+       executor_topic: executor_topic,
+       mempool_topic: mempool_topic
+     }}
   end
 
-  @spec names(atom()) :: Node.t()
-  def names(name) do
-    exec = Utility.append_name(name, "_executor")
-    mem = Utility.append_name(name, "_mempool")
-    ord = Utility.append_name(name, "_ordering")
-    clock = Utility.append_name(name, "_clock")
-    %Node{mempool: mem, ordering: ord, executor: exec, clock: clock}
+  def state(nodes) do
+    GenServer.call(nodes, :state)
   end
 
-  @spec com_names(atom()) :: Node.t()
-  def com_names(name) do
-    exec = Utility.append_name(name, "_executor_com")
-    mem = Utility.append_name(name, "_mempool_com")
-    ord = Utility.append_name(name, "_ordering_com")
-    clock = Utility.append_name(name, "_clock_com")
-    %Node{mempool: mem, ordering: ord, executor: exec, clock: clock}
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
   end
-
-  def shutdown(supervisor), do: Supervisor.stop(supervisor, :normal)
 end

@@ -2,33 +2,32 @@ defmodule AnomaTest.Node.Executor do
   use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.Communicator
-  alias Anoma.Node.Executor.Communicator, as: CCom
+  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Executor
+  alias Anoma.Node.Router
+  alias Router
   import TestHelper.Nock
 
   setup_all do
     storage = %Anoma.Storage{
-      qualified: AnomaTest.Exectuor.Qualified,
+      qualified: AnomaTest.Executor.Qualified,
       order: AnomaTest.Executor.Order
     }
 
-    ordering = :executor_storage_com
-    executor = :executor_test_com
+    {:ok, router} = Router.start()
+
+    {:ok, ordering} =
+      Router.start_engine(router, Anoma.Node.Storage.Ordering, table: storage)
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
-    unless Process.whereis(ordering) do
-      Anoma.Node.Storage.start_link(name: :executor_storage, table: storage)
-    end
-
-    unless Process.whereis(executor) do
-      Anoma.Node.Executor.start_link(
-        env
-        |> Map.to_list()
-        |> Keyword.put(:name, :executor_test)
+    {:ok, executor} =
+      Router.start_engine(
+        router,
+        Anoma.Node.Executor,
+        {env, Router.new_topic(router)}
       )
-    end
 
     [env: env, executor: executor]
   end
@@ -39,23 +38,23 @@ defmodule AnomaTest.Node.Executor do
     id_1 = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
 
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
     increment = increment_counter_val(key)
 
     Storage.ensure_new(storage)
-    Communicator.reset(env.ordering)
+    Ordering.reset(env.ordering)
 
-    spawn_1 = CCom.new_transaction(executor, id_1, {:kv, increment})
-    spawn_2 = CCom.new_transaction(executor, id_2, {:kv, increment})
+    spawn_1 = Executor.new_transaction(executor, id_1, {:kv, increment})
+    spawn_2 = Executor.new_transaction(executor, id_2, {:kv, increment})
 
     # simulate sending in 2 different orders
-    ord_1 = Communicator.next_order(env.ordering)
+    ord_1 = Ordering.next_order(env.ordering)
 
-    Communicator.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1.pid)])
 
-    ord_2 = Communicator.next_order(env.ordering)
+    ord_2 = Ordering.next_order(env.ordering)
 
-    Communicator.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
 
     # Setup default value for storage
     Storage.put(storage, key, 0)

@@ -3,7 +3,7 @@ defmodule Anoma.Node.Executor.Worker do
   I am a Nock worker, supporting scry.
   """
   alias Anoma.Storage
-  alias Anoma.Node.Storage.{Communicator, Ordering}
+  alias Anoma.Node.Storage.Ordering
 
   import Nock
   require Logger
@@ -11,7 +11,7 @@ defmodule Anoma.Node.Executor.Worker do
   @spec run(Noun.t(), {:kv | :rm, Noun.t()}, Nock.t()) :: :ok | :error
   def run(order, {:kv, gate}, env) do
     instrument({:dispatch, order})
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
@@ -22,8 +22,9 @@ defmodule Anoma.Node.Executor.Worker do
       snapshot(storage, env)
       :ok
     else
-      _ ->
+      e ->
         instrument(:fail)
+        Logger.warning("#{inspect(e)}: error")
         wait_for_ready(env, order)
         snapshot(storage, env)
         :error
@@ -32,7 +33,7 @@ defmodule Anoma.Node.Executor.Worker do
 
   def run(order, {:rm, gate}, env) do
     instrument({:dispatch, order})
-    storage = Communicator.get_storage(env.ordering)
+    storage = Ordering.get_storage(env.ordering)
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),

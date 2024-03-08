@@ -1,39 +1,36 @@
-defmodule Anoma.Node.Mempool.Primary do
+defmodule Anoma.Node.Mempool do
   use GenServer
   use TypedStruct
   require Logger
 
   alias Anoma.{Block, Transaction, Order, Serializer}
   alias Anoma.Block.Base
-  alias Anoma.Node.Executor.Communicator, as: Ecom
-  alias Anoma.Node.Storage.Communicator, as: Scom
+  alias Anoma.Node.Executor
   alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Router
   alias __MODULE__
 
   @type transactions :: list(Transaction.t())
   typedstruct do
-    field(:ordering, GenServer.server())
-    field(:executor, GenServer.server())
+    field(:ordering, Router.Addr.t())
+    field(:executor, Router.Addr.t())
     field(:block_storage, atom(), default: Anoma.Block)
     field(:transactions, transactions, default: [])
     field(:round, non_neg_integer(), default: 0)
+    field(:topic, Router.Addr.t())
 
     field(:key, {Serializer.public_key(), Serializer.private_key()},
       default: :crypto.generate_key(:rsa, {1024, 65537})
     )
   end
 
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: args[:name])
-  end
-
   def init(args) do
     primary =
-      Map.merge(%Primary{}, args |> Enum.into(%{}))
-      |> Map.delete(:name)
+      Map.merge(%Mempool{}, args |> Enum.into(%{}))
 
     # TODO add a flag in storage for yes if we want rocksdb copies
     Block.create_table(primary.block_storage, false)
+    Logger.info("mempool topic #{inspect(primary.topic)}")
     {:ok, primary}
   end
 
@@ -41,34 +38,34 @@ defmodule Anoma.Node.Mempool.Primary do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec execute(GenServer.server()) :: non_neg_integer()
+  @spec execute(Router.Addr.t()) :: non_neg_integer()
   def execute(server) do
-    GenServer.call(server, :execute, 10_000)
+    Router.call(server, :execute, 10_000)
   end
 
-  @spec tx(GenServer.server(), Transaction.execution()) :: Transaction.t()
+  @spec tx(Router.Addr.t(), Transaction.execution()) :: Transaction.t()
   def tx(server, tx_code) do
-    GenServer.call(server, {:tx, tx_code}, 10_000)
+    Router.call(server, {:tx, tx_code}, 10_000)
   end
 
-  @spec soft_reset(GenServer.server()) :: :ok
+  @spec soft_reset(Router.Addr.t()) :: :ok
   def soft_reset(server) do
-    GenServer.cast(server, :soft_reset)
+    Router.cast(server, :soft_reset)
   end
 
-  @spec hard_reset(GenServer.server()) :: :ok
+  @spec hard_reset(Router.Addr.t()) :: :ok
   def hard_reset(server) do
-    GenServer.cast(server, :hard_reset)
+    Router.cast(server, :hard_reset)
   end
 
-  @spec state(GenServer.server()) :: t()
+  @spec state(Router.Addr.t()) :: t()
   def state(server) do
-    GenServer.call(server, :state)
+    Router.call(server, :state)
   end
 
-  @spec pending_txs(GenServer.server()) :: transactions
+  @spec pending_txs(Router.Addr.t()) :: transactions
   def pending_txs(server) do
-    GenServer.call(server, :pending_txs)
+    Router.call(server, :pending_txs)
   end
 
   ############################################################
@@ -81,12 +78,14 @@ defmodule Anoma.Node.Mempool.Primary do
 
   def handle_call({:tx, tx_code}, _from, state) do
     ntrans = handle_tx(tx_code, state)
-    nstate = %Primary{state | transactions: [ntrans | state.transactions]}
+    nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
+    Router.cast(state.topic, {:submitted, ntrans})
     {:reply, ntrans, nstate}
   end
 
   def handle_call(:execute, _from, state) do
     {length_ran, new_state} = handle_execute(state)
+    Router.cast(state.topic, {:executed, {:ok, length_ran}})
     {:reply, {:ok, length_ran}, new_state}
   end
 
@@ -94,16 +93,16 @@ defmodule Anoma.Node.Mempool.Primary do
     {:reply, state.transactions, state}
   end
 
-  def handle_cast(:soft_reset, state) do
-    kill_transactions(state.transactions)
+  def handle_cast(:soft_reset, _from, state) do
+    kill_transactions(state.transactions, state.executor)
     {:noreply, reset_state(state)}
   end
 
-  def handle_cast(:hard_reset, state) do
-    snapshot = Ecom.snapshot(state.executor)
-    kill_transactions(state.transactions)
+  def handle_cast(:hard_reset, _from, state) do
+    snapshot = Executor.snapshot(state.executor)
+    kill_transactions(state.transactions, state.executor)
     reset_blocks(state)
-    Scom.hard_reset(state.ordering, snapshot)
+    Ordering.hard_reset(state.ordering, snapshot)
     {:noreply, reset_state(state)}
   end
 
@@ -114,7 +113,7 @@ defmodule Anoma.Node.Mempool.Primary do
   @spec handle_tx(Transaction.execution(), t()) :: Transaction.t()
   def handle_tx(tx_code, state) do
     random_tx_id = random_id()
-    pid = Ecom.fire_new_transaction(state.executor, random_tx_id, tx_code)
+    pid = Executor.fire_new_transaction(state.executor, random_tx_id, tx_code)
     Transaction.new(random_tx_id, pid, tx_code)
   end
 
@@ -124,7 +123,7 @@ defmodule Anoma.Node.Mempool.Primary do
     block = produce_block(state, executing)
     choose_and_execute_ordering(state, executing)
     save_block(state, block)
-    new_state = %Primary{state | transactions: left, round: state.round + 1}
+    new_state = %Mempool{state | transactions: left, round: state.round + 1}
     {length(executing), new_state}
   end
 
@@ -144,10 +143,10 @@ defmodule Anoma.Node.Mempool.Primary do
   def choose_and_execute_ordering(state, transactions) do
     # get an ordering for the transactions we are executing
     ordered_transactions =
-      order(transactions, Scom.next_order(state.ordering))
+      order(transactions, Ordering.next_order(state.ordering))
 
     # send in the ordering for the write ready
-    Scom.new_order(state.ordering, ordered_transactions)
+    Ordering.new_order(state.ordering, ordered_transactions)
 
     # also send in the logic for write ready
     instrument({:write, length(ordered_transactions)})
@@ -191,21 +190,21 @@ defmodule Anoma.Node.Mempool.Primary do
     Block.create_table(state.block_storage, false)
   end
 
-  @spec kill_transactions(list(Transaction.t())) :: :ok
-  def kill_transactions(transactions) do
+  @spec kill_transactions(list(Transaction.t()), Router.Addr.t()) :: :ok
+  def kill_transactions(transactions, executor) do
     instrument({:kill, length(transactions)})
 
     for transaction <- transactions do
       instrument({:killing_pid, transaction})
-      Process.exit(Transaction.pid(transaction), :kill)
     end
 
+    Executor.kill_transactions(executor, transactions)
     :ok
   end
 
   @spec reset_state(t()) :: t()
   def reset_state(state) do
-    %Primary{state | transactions: [], round: 0}
+    %Mempool{state | transactions: [], round: 0}
   end
 
   @spec persistent_transaction(Transaction.t()) ::
