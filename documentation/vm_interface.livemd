@@ -1,0 +1,87 @@
+# Anoma VM interface
+
+The Anoma VM proceeds by executing user code, written in Nock, in several
+execution contexts. This document details the various available execution
+contexts, and the interface the VM uses to interoperate with Nock code.
+
+## The Executor context
+
+The Executor context proceeds according to one of several modes:
+
+- `kv` mode: updates keys in a simple key-value store, and
+- `rm` mode: assembles resource machine transactions to be passed to the
+  resource machine context.
+
+An additional mode is planned for the shielded resource machine, when
+integrated; and `kv` mode is an early prototype of what will evolve into
+the content-addressed blob storage facility.
+
+`kv` and `rm` modes share the same execution interface: they expect a Nock
+`gate`. A `gate` is a function-like object with the following form:
+
+```
+[code [sample context]]
+```
+
+`code` is a Nock formula intended to be run with the gate as subject, while
+`sample` is a placeholder for arguments to the gate. `context` contains any
+additional code or data referenced; this includes at least the standard
+library, but may be larger than it.
+
+In both `kv` and `rm` modes, the submitted transaction is a gate, and the
+argument placed in the sample is its opaque order ID. The output expected
+is the following tuple:
+
+```
+[[read-keyspaces write-keyspaces] second-gate]
+```
+
+In `kv` mode, `read-keyspaces` and `write-keyspaces` are subspaces of the
+key-value store which the transaction plans to read or write, respectively.
+The VM may use this information to place locks or otherwise prepare for
+transaction execution. It is an error to read outside the declared
+`read-keyspaces` or write outside the declared `write-keyspaces`
+
+In `rm` mode, `read-keyspaces` and `write-keyspaces` are always the entire
+`rm` keyspace. Every `rm` transaction updates the commitment and nullifier
+trees.
+
+The scry operation is illegal in the execution of the first gate, because
+the transaction has not declared its read locks yet.
+
+The second gate may perform the scry operation. It is more properly termed
+a `trap` as it takes no arguments. However, its scries are restricted to
+the `read-keyspaces` returned along with it.
+
+The scry operation blocks until its read lock is released by the VM. It may
+fail, causing the whole transaction to fail, if it reads an invalid or
+disallowed key.
+
+The second gate's output is a list of key-value pairs to update in `kv`
+mode, and a resource machine transaction in `rm` mode.
+
+## The Resource Machine context
+
+When the VM's resource machine implementation processes a resource
+transaction, this includes the execution of resource logics in each
+resource. Shielded resource transactions will proceed similarly, but
+within the shielded VM rather than the Nock VM.
+
+A resource logic is also a gate, and the arguments it takes are the tuple
+
+```
+[self resource-transaction]
+```
+
+where `self` is a copy of the entire resource running the logic, and
+`resource-transaction` is the Nock serialization of the entire resource
+transaction (which includes all resources, in the transparent resource
+machine).
+
+Its output is a simple boolean: `0` for success, `1` for failure.
+
+## Gas metering
+
+All Nock execution is metered simply: starting with a meter value of 0,
+incrementing by 1 for each recursion back into simple Nock evaluation,
+and incrementing by a defined per-jet constant for each jet invoked.
