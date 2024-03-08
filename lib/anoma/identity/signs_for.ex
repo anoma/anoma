@@ -1,12 +1,20 @@
 defmodule Anoma.Identity.SignsFor do
-  alias Anoma.Identity.Verification
+  alias Anoma.Identity.{Evidence, Verification}
   alias Anoma.Storage
   alias Anoma.Crypto.Id
 
-  @spec sign_for(Storage.t(), Id.Extern.t(), Id.Extern.t(), binary()) ::
+  @spec sign_for(Storage.t(), Evidence.name()) ::
           :key_not_verified | :ok | :could_not_update_storage
-  def sign_for(tab = %Storage{}, our_key, trusted_key, signature) do
-    if Verification.verify_request(signature, trusted_key, our_key, tab) do
+  def sign_for(
+        tab = %Storage{},
+        ev = %Evidence{signed_data: trusted_key, signature_key: our_key}
+      ) do
+    if Verification.verify_request(
+         ev.signature,
+         trusted_key,
+         ev.signature_key,
+         tab
+       ) do
       key_space = [name_space(), our_key]
 
       new_set =
