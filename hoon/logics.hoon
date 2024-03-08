@@ -4,12 +4,12 @@
 |%
 ++  balanced-delta
   ^-  resource-logic
-  |=  tx=resource-transaction
+  |=  [self=resource tx=resource-transaction]
   ^-  ?
   =(~ delta.tx)
 ++  counter
   ^-  resource-logic
-  |=  tx=resource-transaction
+  |=  [self=resource tx=resource-transaction]
   ^-  ?
   ?.  =(1 (length commitments.tx))
     |
