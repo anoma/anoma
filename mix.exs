@@ -40,7 +40,7 @@ defmodule Anoma.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:enacl, "~> 1.2"},
+      {:enacl, git: "https://github.com/dabaer/enacl/", branch: "patch-1"},
       {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
       {:typed_struct, "~> 0.3.0"},
       {:xxhash, "~> 0.3"},
