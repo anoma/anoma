@@ -22,6 +22,14 @@ defmodule Anoma.Node.Pinger do
     {:ok, %Pinger{mempool: mempool, time: time}}
   end
 
+  def set_timer(server, time) do
+    Router.call(server, {:set, time})
+  end
+
+  def handle_call({:set, time}, _from, state) do
+    {:reply, "Timer set to #{inspect(time)}", %Pinger{state | time: time}}
+  end
+
   def handle_info(:execute, state) do
     Mempool.execute(state.mempool)
     pinger(state.time)
