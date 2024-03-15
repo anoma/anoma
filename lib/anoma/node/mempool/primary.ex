@@ -18,7 +18,6 @@ defmodule Anoma.Node.Mempool do
     field(:transactions, transactions, default: [])
     field(:round, non_neg_integer(), default: 0)
     field(:topic, Router.Addr.t())
-    field(:solver_topic, Router.Addr.t(), enforce: false)
 
     field(:key, {Serializer.public_key(), Serializer.private_key()},
       default: :crypto.generate_key(:rsa, {1024, 65537})
@@ -70,11 +69,6 @@ defmodule Anoma.Node.Mempool do
     Router.call(server, :pending_txs)
   end
 
-  @spec set_solver(Router.Addr.t(), Router.Addr.t(), Router.Addr.t()) :: :ok
-  def set_solver(server, solver, router) do
-    Router.call(server, {:solver, solver, router})
-  end
-
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -90,6 +84,7 @@ defmodule Anoma.Node.Mempool do
     nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
     Router.cast(state.topic, {:submitted, ntrans})
     log_info({:tx, nstate.transactions, state.logger})
+
     {:reply, ntrans, nstate}
   end
 
@@ -122,19 +117,6 @@ defmodule Anoma.Node.Mempool do
     reset_blocks(state)
     Ordering.hard_reset(state.ordering, snapshot)
     {:noreply, reset_state(state)}
-  end
-
-  def handle_cast({:solver, solver, router}, _from, state) do
-    topic = state.solver_topic
-
-    if topic == nil do
-      Router.call(router, {:subscribe_topic, solver, :local})
-    else
-      Router.call(router, {:unsubscribe_topic, topic, :local})
-      Router.call(router, {:subscribe_topic, solver, :local})
-    end
-
-    {:noreply, %Mempool{state | solver_topic: solver}}
   end
 
   ############################################################
