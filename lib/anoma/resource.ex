@@ -106,24 +106,22 @@ defmodule Anoma.Resource do
   Whether a nullifier nullifies a given resource.
   """
   def nullifies(nullifier, resource) do
-    true
-    # with {:ok, verified_nullifier} <- Sign.verify(nullifier, resource.npk),
-    #      "annullo" <> nullified_resource_bytes <- verified_nullifier do
-    #   :erlang.binary_to_term(nullified_resource_bytes) == resource
-    # else
-    #   _ -> false
-    # end
+    with {:ok, verified_nullifier} <- Sign.verify(nullifier, resource.npk),
+         "annullo" <> nullified_resource_bytes <- verified_nullifier do
+      :erlang.binary_to_term(nullified_resource_bytes) == resource
+    else
+      _ -> false
+    end
   end
 
   def nullifies_any(nullifier, resources) do
     Enum.any?(resources, fn r -> nullifier |> nullifies(r) end)
   end
 
-  def transparent_run_resource_logic(transaction, resource, juvixEnv) do
+  def transparent_run_resource_logic(transaction, resource) do
     logic = resource.logic
     arg = Anoma.Resource.Transaction.to_noun(transaction)
-    # 14 points to RRL (FunctionsLibrary)
-    call = [9, 2, 10, [6, 1 | arg], 10 , [14, 1 | juvixEnv], 0 | 1]]
+    call = [9, 2, 10, [6, 1 | arg], 0 | 1]
     Logger.debug("resource logic nock: #{inspect(Noun.Format.print(logic))}")
     Logger.debug("resource logic nock call: #{inspect(call)}")
 

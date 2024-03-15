@@ -165,68 +165,90 @@ defmodule AnomaTest.Resource do
   end
 
   test "counter logic" do
-    # {:ok contents} = File.read("Counter.nockma")
-    # nockFunction = Noun.Format.parse_always(contents)
-
-    {:ok, contents} = File.read("CounterTransaction.nockma")
-    counterTransaction = Noun.Format.parse_always(contents)
-
-    {:ok, contentsEnv} = File.read("CounterTransactionEnv.nockma")
-    counterTransactionEnv = Noun.Format.parse_always(contentsEnv)
+    {:ok, contents} = File.read("Counter.nockma")
+    nockFunction = Noun.Format.parse_always(contents)
 
 
-    # counter_logic = [
-    #   Noun.Format.parse_always("""
-    #   [ 6
-    #     [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 58] 0 2]
-    #     [ 6
-    #       [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 118] 0 2]
-    #       [ 6
-    #         [5 [1 1] 8 [9 1.406 0 127] 9 2 10 [6 0 478] 0 2]
-    #         [6 [5 [1 0] 0 222] [0 0] 6 [0 1.778] [1 0] 1 1]
-    #         1
-    #         1
-    #       ]
-    #       1
-    #       1
-    #     ]
-    #     1
-    #     1
-    #   ]
-    #   """),
-    #   0 | Nock.logics_core()
-    # ]
+    keypair = Sign.new_keypair()
 
-    # keypair = Sign.new_keypair()
+    zeroed_counter = %{
+      new_with_npk(keypair.public)
+      | label: "counter",
+        quantity: 0,
+        logic: nockFunction
+    }
 
-    # zeroed_counter = %{
-    #   new_with_npk(keypair.public)
-    #   | label: "counter",
-    #     quantity: 0,
-    #     logic: nockFunction
-    # }
+    incremented_counter = %{
+      new_with_npk(keypair.public)
+      | label: "counter",
+        quantity: 1,
+        logic: nockFunction
+    }
 
-    # incremented_counter = %{
-    #   new_with_npk(keypair.public)
-    #   | label: "counter",
-    #     quantity: 1,
-    #     logic: nockFunction
-    # }
+    nf_0 = nullifier(zeroed_counter, keypair.secret)
+    pf_0 = ProofRecord.prove(zeroed_counter)
 
-    # nf_0 = nullifier(zeroed_counter, keypair.secret)
-    # pf_0 = ProofRecord.prove(zeroed_counter)
+    cm_1 = commitment(incremented_counter)
+    pf_1 = ProofRecord.prove(incremented_counter)
 
-    # cm_1 = commitment(incremented_counter)
-    # pf_1 = ProofRecord.prove(incremented_counter)
+    tx = %Transaction{
+      commitments: [cm_1],
+      nullifiers: [nf_0],
+      proofs: [pf_0, pf_1],
+      delta: %{kind(zeroed_counter) => 1}
+    }
 
-    tx = Transaction.from_noun(counterTransaction)
-    # tx = %Transaction{
-    #   commitments: [cm_1],
-    #   nullifiers: [nf_0],
-    #   proofs: [pf_0, pf_1],
-    #   delta: %{kind(zeroed_counter) => 1}
-    # }
-
-    assert Transaction.verify(tx, counterTransactionEnv)
+    assert Transaction.verify(tx)
   end
+
+  test "counter logic through projection of a transaction" do
+    {:ok, contents} = File.read("CounterTransactionLogic.nockma")
+    nockFunction = Noun.Format.parse_always(contents)
+
+    keypair = Sign.new_keypair()
+
+    zeroed_counter = %{
+      new_with_npk(keypair.public)
+      | label: "counter",
+        quantity: 0,
+        logic: nockFunction
+    }
+
+    incremented_counter = %{
+      new_with_npk(keypair.public)
+      | label: "counter",
+        quantity: 1,
+        logic: nockFunction
+    }
+
+    nf_0 = nullifier(zeroed_counter, keypair.secret)
+    pf_0 = ProofRecord.prove(zeroed_counter)
+
+    cm_1 = commitment(incremented_counter)
+    pf_1 = ProofRecord.prove(incremented_counter)
+
+    tx = %Transaction{
+      commitments: [cm_1],
+      nullifiers: [nf_0],
+      proofs: [pf_0, pf_1],
+      delta: %{kind(zeroed_counter) => 1}
+    }
+
+    assert Transaction.verify(tx)
+  end
+
+  test "counter logic transaction" do
+    {:ok, contents} = File.read("CounterTransactionLogic.nockma")
+    transactionBuilder = Noun.Format.parse_always(contents)
+
+    call = [9, 2, 0 | 1]
+    {:ok, counterTx} = Nock.nock(transactionBuilder, call)
+    :ok = File.write!("counterTx", inspect(counterTx))
+
+    # Logger.debug("resource logic nock call: #{inspect(call)}")
+    tx = Transaction.from_noun(counterTx)
+
+    assert Transaction.verify(tx)
+  end
+
 end

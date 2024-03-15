@@ -64,8 +64,7 @@ defmodule Anoma.Resource.Transaction do
     }
   end
 
-  @spec verify(t()) :: boolean()
-  def verify(transaction, juvixEnv) do
+  def verify(transaction) do
     # the transparent proofs are just all the involved resources
     proved_resources =
       for proof_record <- transaction.proofs do
@@ -87,6 +86,8 @@ defmodule Anoma.Resource.Transaction do
       length(committed) == length(transaction.commitments) &&
         length(nullified) == length(transaction.nullifiers)
 
+    Logger.debug("committed length: #{inspect(length(committed))}")
+    Logger.debug("nullified length: #{inspect(length(nullified))}")
     Logger.debug("resource set valid: #{inspect(resource_set_valid)}")
 
     committed_delta_sum =
@@ -113,6 +114,7 @@ defmodule Anoma.Resource.Transaction do
     delta_valid = tx_delta_sum == transaction.delta
     Logger.debug("delta valid: #{inspect(delta_valid)}")
 
+    Logger.debug ("proved_resources:  #{inspect(proved_resources)}")
     # now run the resource logics, passing the transactions
     all_logics_valid =
       for resource <- proved_resources, reduce: true do
