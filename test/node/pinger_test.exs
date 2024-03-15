@@ -41,5 +41,7 @@ defmodule AnomaTest.Node.Pinger do
     pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
 
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_zero}}}
+
+    Anoma.Node.Pinger.set_timer(node.pinger, :no_timer)
   end
 end
