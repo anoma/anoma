@@ -22,6 +22,11 @@ defmodule Anoma.Node.Pinger do
     {:ok, %Pinger{mempool: mempool, time: time}}
   end
 
+  @doc """
+  Given a server S and time T I change the timer set for the struct
+  connected to S setting it to T. Set T to :no_timer to stop the
+  pinger.
+  """
   def set_timer(server, time) do
     Router.call(server, {:set, time})
   end
