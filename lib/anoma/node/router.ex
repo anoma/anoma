@@ -28,9 +28,14 @@ defmodule Anoma.Node.Router do
 
   typedstruct do
     # slightly space-inefficient (duplicates extern), but more convenient
-    field(:local_engines, %{Id.Extern.t() => Id.t()})
+    field(:local_engines, %{Id.Extern.t() => {Id.t(), GenServer.server()}})
     # mapping of TopicId -> subscriber addrs
     field(:topic_table, %{Id.Extern.t() => MapSet.t(Addr.t())}, default: %{})
+    # engine => call id, callee id it's waiting for a response on
+    field(:waiting_engines, %{Id.Extern.t() => {non_neg_integer(), Id.Extern.t()}}, default: %{})
+
+    # largest id of any outgoing call.  perhaps should be per-engine, or per caller-callee pair (TG points out that not making it per caller-callee pair leaks information; but the alternative leaks space...)
+    field(:max_call_id, non_neg_integer(), default: 0)
 
     # topics to which local engines are subscribed--redundant given the above, but useful
     field(:local_engine_subs, %{addr() => Id.Extern.t()}, default: %{})
@@ -38,6 +43,7 @@ defmodule Anoma.Node.Router do
     field(:addr, addr())
     field(:registry, atom())
     field(:supervisor, atom())
+    field(:transport, addr())
     # mapping id -> [pending messages]
     field(:msg_queue, map(), default: %{})
   end
@@ -110,7 +116,7 @@ defmodule Anoma.Node.Router do
        },
        supervisor: supervisor,
        registry: registry,
-       local_engines: %{id.external => id}
+       local_engines: %{id.external => {id, server}}
      }}
   end
 
@@ -136,8 +142,12 @@ defmodule Anoma.Node.Router do
   # in this case, rather than the router doing all the work itself, it
   # returns a continuation so we don't bottleneck
   def call(addr = %Addr{router: router, server: nil}, msg, timeout) do
-    Logger.info("calling non-local addr #{inspect(addr)}")
-    GenServer.call(router, {:call, addr, msg, timeout}).()
+    GenServer.cast(router, {:call, addr, self(), msg, timeout})
+    receive do
+      #{:call_response, {:error, :timed_out}} -> exit("timed out")
+      # ^^ do we want this?
+      {:call_response, res} -> res
+    end
   end
 
   def self_addr(ctx) do
@@ -163,6 +173,11 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  def id_to_addr(router = %Addr{}, id) do
+    # todo need to check if it's the id of a local engine
+    %{router | server: nil, id: id}
+  end
+
   # not sure exactly how this will work for real, but it's convenient
   # to have for testing right now
   def new_topic(router) do
@@ -185,8 +200,21 @@ defmodule Anoma.Node.Router do
     start_engine(router, module, Id.new_keypair(), arg)
   end
 
-  def handle_cast({:init_local_engine, id, _pid}, s) do
-    s = %{s | local_engines: Map.put(s.local_engines, id.external, id)}
+  def start_transport(router, id) do
+    case start_engine(router, Anoma.Node.Transport, id, router) do
+      res = {:ok, addr} ->
+        GenServer.cast(router.server, {:init_transport, addr})
+        res
+      err -> err
+    end
+  end
+  def start_transport(router) do start_transport(router, Id.new_keypair) end
+
+  def handle_cast({:init_transport, transport}, s) do
+    {:noreply, %{s | transport: transport}}
+  end
+  def handle_cast({:init_local_engine, id, server}, s) do
+    s = %{s | local_engines: Map.put(s.local_engines, id.external, {id, server})}
     {:noreply, s}
   end
 
@@ -215,21 +243,78 @@ defmodule Anoma.Node.Router do
     {:noreply, do_cast(s, addr, pid_to_addr(s, pid), msg)}
   end
 
-  # def handle_self_cast(_, _, _) when false do
-  # end
+  def handle_cast({src, msg}, s) do
+    s= handle_self_cast(msg, src, s)
+    %Router{} = s
+    {:noreply, s}
+  end
 
-  # def handle_cast({src, msg}, s) do
-  #   {:noreply, handle_self_cast(msg, src, s)}
-  # end
-
-  def handle_call({:call, addr, msg, timeout}, {pid, _}, s) do
-    {res, s} = do_call(s, addr, pid_to_addr(s, pid), msg, timeout)
-    {:reply, res, s}
+  def handle_cast({:call, addr, src_pid, msg, timeout}, s) do
+    {:noreply, do_call(s, addr, pid_to_addr(s, src_pid), msg, timeout)}
   end
 
   def handle_call({src, msg}, _, s) do
     {res, s} = handle_self_call(msg, src, s)
+    %Router{} = s
     {:reply, res, s}
+  end
+
+  def handle_self_cast({:p2p_raw, _node_id, msg}, %{server: server}, s) when server != nil do
+    case :erlang.binary_to_term(msg) do
+      {src_id = %Id.Extern{}, msg, sig} ->
+        if not Anoma.Crypto.Sign.verify_detatched(sig, msg, src_id.sign) do
+          Logger.info("dropping message; bad signature")
+          s
+        else
+          case :erlang.binary_to_term(msg) do
+            {dst = %Id.Extern{}, msg} ->
+              src = %Addr{s.addr | server: nil, id: src_id}
+              case Map.get(s.local_engines, dst) do
+                nil ->
+                  Logger.info("dropping message; unknown engine")
+                  s
+                {_, server} ->
+                  case msg do
+                    {:response, call_id, msg} ->
+                      # is the engine waiting for a message with this id from this id (todo maybe signs for)?
+                      if Map.get(s.waiting_engines, dst) === {call_id, src_id} do
+                        #send(server, {:call_response, msg})
+                        Registry.send(elem(server, 2), {:call_response, msg})
+                        %{s | waiting_engines: Map.delete(s.waiting_engines, dst)}
+                      else
+                        # timeout expired, or confused or malicious correspondant; drop
+                        Logger.info("dropping message; response but no corresponding call")
+                      end
+                    {:cast, msg} ->
+                      GenServer.cast(server, {src, msg})
+                      s
+                    {:call, call_id, msg} ->
+                      {resp, s} =
+                        if dst === s.id do
+                          # message for us? have to handle specially
+                          handle_self_call(msg, src, s)
+                        else
+                          {GenServer.call(server, {src, msg}), s}
+                        end
+                      send_to_transport(s, src_id, dst, {:response, call_id, resp})
+                      s
+                    # unknown message format; drop
+                    _ ->
+                      Logger.info("dropping message (3); invalid format #{inspect(:erlang.binary_to_term(msg))}")
+                      s
+                  end
+              end
+            # unknown message format; drop
+            _ ->
+              Logger.info("dropping message (2); invalid format #{inspect(:erlang.binary_to_term(msg))}")
+              s
+          end
+        end
+      # unknown message format; drop
+      _ ->
+        Logger.info("dropping message (1); invalid format #{inspect(:erlang.binary_to_term(msg))}")
+        s
+    end
   end
 
   def handle_self_call(:supervisor, _, s) do
@@ -306,6 +391,17 @@ defmodule Anoma.Node.Router do
     s
   end
 
+  defp do_cast(s, %Addr{id: id}, src, msg) when is_map_key(s.local_engines, id) do
+    GenServer.cast(elem(Map.fetch!(s.local_engines, id), 1), {src, msg})
+    s
+  end
+
+  # send to a remote address
+  defp do_cast(s, %Addr{id: id}, %Addr{id: src_id}, msg) do
+    send_to_transport(s, id, src_id, {:cast, msg})
+    s
+  end
+
   # send to a topic we know about
   defp do_cast(s, %Addr{id: id}, src, msg)
        when is_map_key(s.topic_table, id) do
@@ -317,6 +413,37 @@ defmodule Anoma.Node.Router do
   # call to an address with a known pid
   defp do_call(s, %Addr{server: server}, src, msg, timeout)
        when server != nil do
-    {fn -> GenServer.call(server, {src, msg}, timeout) end, s}
+    res = GenServer.call(server, {src, msg}, timeout)
+    GenServer.cast(src.server, {:call_response, res})
+    s
+  end
+  # call to remote address
+  defp do_call(s, %Addr{id: id}, %Addr{id: src_id}, msg, timeout) do
+    send_to_transport(s, id, src_id, {:call, s.max_call_id, msg})
+    :erlang.send_after(timeout, self(), {:timeout_message, src_id, s.max_call_id})
+    %{s |
+      max_call_id: 1 + s.max_call_id,
+      waiting_engines: Map.put(s.waiting_engines, src_id, {s.max_call_id, id})}
+  end
+
+  def handle_info({:timeout_message, src_id, call_id}, s) do
+    {:noreply,
+      # we have to check the call id matches; otherwise this could spuriously fail.  there are some other potential ways of dealing with timeouts, but meh
+      case Map.get(s.waiting_engines, src_id) do
+        {^call_id, _} ->
+          #send(elem(Map.fetch!(s.local_engines, src_id), 1), {:call_response, {:error, :timed_out}})
+          Registry.send(elem(elem(Map.fetch!(s.local_engines, src_id), 1), 2), {:call_response, {:error, :timed_out}})
+          %{s | waiting_engines: Map.delete(s.waiting_engines, src_id)}
+        _ -> s
+      end}
+  end
+
+  defp send_to_transport(s, dst, src, msg) do
+    msg = :erlang.term_to_binary({dst, msg})
+    sig = with {id, _} <- Map.fetch!(s.local_engines, src) do
+      Anoma.Crypto.Sign.sign_detatched(msg, id.internal.sign)
+    end
+    encoded = :erlang.term_to_binary({src, msg, sig})
+    cast(s.transport, {:send, dst, encoded})
   end
 end

@@ -79,13 +79,13 @@ defmodule Anoma.Node.Mempool do
   def handle_call({:tx, tx_code}, _from, state) do
     ntrans = handle_tx(tx_code, state)
     nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
-    Router.cast(state.topic, {:submitted, ntrans})
+    #Router.cast(state.topic, {:submitted, ntrans})
     {:reply, ntrans, nstate}
   end
 
   def handle_call(:execute, _from, state) do
     {length_ran, new_state} = handle_execute(state)
-    Router.cast(state.topic, {:executed, {:ok, length_ran}})
+    #Router.cast(state.topic, {:executed, {:ok, length_ran}})
     {:reply, {:ok, length_ran}, new_state}
   end
 

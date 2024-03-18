@@ -106,6 +106,10 @@ defmodule Anoma.Node.Storage.Ordering do
     {:reply, state.table, state}
   end
 
+  def handle_call({:get, key}, _from, state) do
+    {:reply, Storage.get(state.table, key), state}
+  end
+
   def handle_cast(:reset, _from, state) do
     {:noreply, %Ordering{table: state.table}}
   end

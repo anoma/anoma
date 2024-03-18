@@ -29,6 +29,7 @@ defmodule Anoma.Node do
 
   typedstruct enforce: true do
     field(:router, Router.addr())
+    field(:transport, Router.addr())
     field(:ordering, Router.addr())
     field(:executor, Router.addr())
     field(:executor_topic, Router.addr())
@@ -59,6 +60,8 @@ defmodule Anoma.Node do
 
     {:ok, router} = Router.start()
 
+    {:ok, transport} = Router.start_transport(router)
+
     {:ok, ordering} =
       Router.start_engine(router, Anoma.Node.Storage.Ordering,
         table: args[:storage]
@@ -87,9 +90,19 @@ defmodule Anoma.Node do
         time: args[:ping_time]
       )
 
+    if Application.get_env(:anoma, :env) == :prod do
+      Logger.configure(level: :all)
+      Router.cast(transport, {:start_server, {:quic, "0.0.0.0", 24768}})
+      IO.inspect(Anoma.Crypto.Id.print(router.id))
+      IO.inspect(Anoma.Crypto.Id.print(transport.id))
+      IO.inspect(Anoma.Crypto.Id.print(mempool.id))
+      IO.inspect(Anoma.Crypto.Id.print(ordering.id))
+    end
+
     {:ok,
      %Node{
        router: router,
+       transport: transport,
        ordering: ordering,
        executor: executor,
        mempool: mempool,

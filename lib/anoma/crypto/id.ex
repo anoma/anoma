@@ -25,6 +25,14 @@ defmodule Anoma.Crypto.Id do
     field(:encrypt, Encrypt.public())
   end
 
+  def print(id) do
+    Base.encode64(:erlang.term_to_binary(id))
+  end
+  def read(id) do
+    {:ok, s} = Base.decode64(id)
+    :erlang.binary_to_term(s)
+  end
+
   @spec new_keypair() :: t()
   def new_keypair() do
     %{public: spub, secret: ssec} = Sign.new_keypair()
