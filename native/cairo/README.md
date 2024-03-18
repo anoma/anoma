@@ -12,6 +12,7 @@ defmodule Cairo do
 
   # When your NIF is loaded, it will override this function.
   def cairo0_run_and_prove(_arg1), do: :erlang.nif_error(:nif_not_loaded)
+  def cairo_prove(_arg1, _arg2), do: :erlang.nif_error(:nif_not_loaded)
   def cairo_verify(_arg1, _arg2), do: :erlang.nif_error(:nif_not_loaded)
 end
 ```
