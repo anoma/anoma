@@ -22,6 +22,22 @@ defmodule Anoma.Node.Pinger do
     {:ok, %Pinger{mempool: mempool, time: time}}
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  def state(server) do
+    Router.call(server, :state)
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
+  end
+
   def handle_info(:execute, state) do
     Mempool.execute(state.mempool)
     pinger(state.time)
