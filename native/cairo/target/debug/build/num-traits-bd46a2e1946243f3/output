@@ -1,0 +1,10 @@
+cargo:rustc-cfg=has_to_int_unchecked
+cargo:rustc-cfg=has_reverse_bits
+cargo:rustc-cfg=has_leading_trailing_ones
+cargo:rustc-cfg=has_div_euclid
+cargo:rustc-cfg=has_copysign
+cargo:rustc-cfg=has_is_subnormal
+cargo:rustc-cfg=has_total_cmp
+cargo:rustc-cfg=has_int_to_from_bytes
+cargo:rustc-cfg=has_float_to_from_bytes
+cargo:rerun-if-changed=build.rs
