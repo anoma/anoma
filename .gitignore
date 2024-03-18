@@ -38,5 +38,11 @@ anoma-*.tar
 # Mnesia disk-backed databases
 Mnesia*/
 
-# external rust lib
+# Ignore external rust lib
 *.so
+
+# Ignore Cargo.lock
+Cargo.lock
+
+# Ignore rust target
+target/

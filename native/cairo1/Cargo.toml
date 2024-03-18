@@ -1,0 +1,18 @@
+[package]
+name = "cairo1"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "cairo1"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.31.0"
+bincode = "2.0.0-rc.3"
+cairo1-run = { git = "https://github.com/heliaxdev/cairo-vm", branch = "anoma"}
+cairo-vm = { git = "https://github.com/heliaxdev/cairo-vm", branch = "anoma"}
+cairo-lang-compiler = { version = "=2.5.4", default-features = false }
+cairo-lang-sierra = { version = "=2.5.4", default-features = false }

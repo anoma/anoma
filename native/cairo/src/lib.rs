@@ -4,7 +4,7 @@ use cairo_platinum_prover::runner::run::generate_prover_args;
 use stark_platinum_prover::proof::options::{ProofOptions, SecurityLevel};
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn cairo_run_and_prove(program_content: String) -> (Vec<u8>, Vec<u8>) {
+fn cairo0_run_and_prove(program_content: String) -> (Vec<u8>, Vec<u8>) {
     let (main_trace, pub_inputs) =
         generate_prover_args(program_content.as_bytes(), CairoLayout::Plain).unwrap();
 
@@ -31,7 +31,4 @@ fn cairo_verify(proof: Vec<u8>, public_input: Vec<u8>) -> bool {
     verify_cairo_proof(&proof, &pub_inputs, &proof_options)
 }
 
-rustler::init!(
-    "Elixir.Anoma.Cairo",
-    [cairo_run_and_prove, cairo_verify]
-);
+rustler::init!("Elixir.Anoma.Cairo", [cairo0_run_and_prove, cairo_verify]);
