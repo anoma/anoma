@@ -1,0 +1,15 @@
+[package]
+name = "starknetcrypto"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[lib]
+name = "starknetcrypto"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.31.0"
+starknet-crypto = "0.6.1"
+starknet-ff = "0.3.6"
