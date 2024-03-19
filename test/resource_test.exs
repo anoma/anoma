@@ -7,6 +7,13 @@ defmodule AnomaTest.Resource do
   alias Anoma.Resource.Transaction
   alias Anoma.Crypto.Sign
 
+  test "shielded commtiments" do
+    keypair_a = Sign.new_keypair()
+    a_r1 = new_with_npk(keypair_a.public)
+    s_commitment(a_r1)
+  end
+
+
   test "commitments and nullifiers" do
     keypair_a = Sign.new_keypair()
     keypair_b = Sign.new_keypair()

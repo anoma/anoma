@@ -52,6 +52,16 @@ defmodule Anoma.Resource do
     "committo" <> :erlang.term_to_binary(resource)
   end
 
+  @doc "A shielded commitment to the given resource."
+  def s_commitment(resource = %Resource{}) do
+    resource_bin = :erlang.term_to_binary(resource)
+    resource_bytes = :binary.bin_to_list(resource_bin)
+    padding_length = rem(length(resource_bytes), 64)
+    padding = List.duplicate(0, padding_length)
+    padded_resource_bytes = padding ++ resource_bytes
+    Anoma.Cairo.poseidon_single(padded_resource_bytes)
+  end
+
   @doc """
   The nullifier of the given resource.
   (It's up to the caller to use the right secret.)
