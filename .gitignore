@@ -37,3 +37,6 @@ anoma-*.tar
 
 # Mnesia disk-backed databases
 Mnesia*/
+
+# Docs versioning
+.doc-versions.js

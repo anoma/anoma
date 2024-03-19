@@ -1,10 +1,12 @@
 defmodule Anoma.MixProject do
   use Mix.Project
 
+  @version "0.10.0"
+
   def project do
     [
       app: :anoma,
-      version: "0.10.0",
+      version: @version,
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -59,6 +61,8 @@ defmodule Anoma.MixProject do
     [
       main: "readme",
       extras: extras(),
+      source_ref: "v#{@version}",
+      javascript_config_path: "./.doc-versions.js",
       extra_section: "GUIDES",
       groups_for_extras: group_for_extras(),
       groups_for_modules: group_for_modules(),
