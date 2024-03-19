@@ -3,11 +3,14 @@ defmodule Anoma.Node.Solver do
   I am a strawman intent solver for testing purposes.
   """
 
-  use TypedStruct
-  import Bitwise
   alias Anoma.Resource.Transaction
   alias Anoma.Node.{Router, Logger}
   alias __MODULE__
+
+  use TypedStruct
+  use Router.Engine
+
+  import Bitwise
 
   typedstruct do
     field(:solutions_topic, Router.Addr.t())

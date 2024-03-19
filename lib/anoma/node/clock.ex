@@ -7,10 +7,10 @@ defmodule Anoma.Node.Clock do
   """
 
   alias __MODULE__
-  use TypedStruct
-  use GenServer
-
   alias Anoma.Node.Router
+
+  use TypedStruct
+  use Router.Engine
 
   typedstruct do
     field(:start, integer())

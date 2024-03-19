@@ -3,6 +3,11 @@
 defmodule Anoma.Node.Router.Engine do
   use GenServer
 
+  defmacro __using__(_) do
+    quote do
+    end
+  end
+
   def start_link({router, mod, id, arg}) do
     GenServer.start_link(__MODULE__, {router, mod, id, arg},
       name: Anoma.Node.Router.process_name(mod, id.external)
