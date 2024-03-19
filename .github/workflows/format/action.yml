@@ -1,0 +1,12 @@
+name: Format
+description: "Checks if the files are formatted as intended"
+runs:
+  using: "composite"
+  steps:
+    - name: Format check
+      shell: bash
+      run: mix format --check-formatted
+
+    - name: All files whitespace error check
+      shell: bash
+      run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD

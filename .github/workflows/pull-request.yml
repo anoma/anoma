@@ -32,69 +32,14 @@ jobs:
         merge -m 'Automerge with next'
         ${{ github.event.pull_request.head.sha }}
 
-    - name: Install system dependencies
+    - uses: ./.github/workflows/setup
       if: steps.try_merge.outcome != 'failure'
-      run: sudo apt-get install -y libsodium-dev
-
-    - name: Set up Elixir
-      id: beam
-      if: steps.try_merge.outcome != 'failure'
-      uses: erlef/setup-beam@v1.16.0
       with:
-        elixir-version: '1.15.6'
-        otp-version: '26.1.2'
+        fail-on-failure: true
 
-    - name: Restore dependencies cache
+    - uses: ./.github/workflows/checks
       if: steps.try_merge.outcome != 'failure'
-      uses: actions/cache@v3.3.2
-      with:
-        path: deps
-        key: |
-          mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-        restore-keys: |
-          mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
 
-    - name: Install dependencies
-      if: steps.try_merge.outcome != 'failure'
-      run: mix deps.get
 
-    - name: Restore PLT cache
-      id: plt_cache
-      if: steps.try_merge.outcome != 'failure'
-      uses: actions/cache/restore@v3.3.2
-      with:
-        path: plts
-        key: |
-          plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-        restore-keys: |
-          plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
-
-    - name: Create PLTs
-      if: steps.plt_cache.outputs.cache-hit != 'true' &&
-          steps.try_merge.outcome != 'failure'
-      run: mix dialyzer --plt
-
-    - name: Save PLT cache
-      uses: actions/cache/save@v3.3.2
-      if: steps.plt_cache.outputs.cache-hit != 'true' &&
-          steps.try_merge.outcome != 'failure'
-      with:
-        path: plts
-        key: |
-          plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-
-    - name: Run tests
-      if: steps.try_merge.outcome != 'failure'
-      run: mix test
-
-    - name: Run dialyzer
+    - uses: ./.github/workflows/format
       if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}
-      run: mix dialyzer --format github
-
-    - name: Format check
-      if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}
-      run: mix format --check-formatted
-
-    - name: All files whitespace error check
-      if: ${{ !cancelled() && steps.try_merge.outcome != 'failure' }}
-      run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD

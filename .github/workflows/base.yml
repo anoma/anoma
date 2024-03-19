@@ -15,39 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.0
 
-      - name: Install system dependencies
-        run: sudo apt-get install -y libsodium-dev
-
-      - name: Set up Elixir
-        id: beam
-        uses: erlef/setup-beam@v1.16.0
-        with:
-          elixir-version: '1.15.6'
-          otp-version: '26.1.2'
-
-      - name: Restore dependencies cache
-        uses: actions/cache@v3.3.2
-        with:
-          path: deps
-          key: |
-            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
-
-      - name: Fetch dependencies
-        run: mix deps.get
-
-      - name: Build dependencies
-        run: mix deps.compile
-
-      - name: Restore PLT cache
-        uses: actions/cache@v3.3.2
-        with:
-          path: plts
-          key: |
-            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+      - uses: ./.github/workflows/setup
 
       - name: Create PLTs
         run: mix dialyzer --plt
@@ -60,56 +28,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.0
 
-      - name: Install system dependencies
-        run: sudo apt-get install -y libsodium-dev
-
-      - name: Set up Elixir
-        id: beam
-        uses: erlef/setup-beam@v1.16.0
+      - uses: ./.github/workflows/setup
         with:
-          elixir-version: '1.15.6'
-          otp-version: '26.1.2'
+          fail-on-failure: true
 
-      - name: Restore dependencies cache
-        id: deps-cache
-        uses: actions/cache/restore@v3.3.2
-        with:
-          path: deps
-          key: |
-            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
+      - uses: ./.github/workflows/checks
 
-      - name: Fail on dependencies cache miss
-        if: ${{ steps.deps-cache.outputs.cache-hit != 'true' }}
-        run: /bin/false
-
-      - name: Restore PLT cache
-        id: plt-cache
-        uses: actions/cache/restore@v3.3.2
-        with:
-          path: plts
-          key: |
-            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
-
-      - name: Fail on PLT cache miss
-        if: ${{ steps.plt-cache.outputs.cache-hit != 'true' }}
-        run: /bin/false
-
-      - name: Run tests
-        run: mix test
-
-      - name: Run dialyzer
+      - uses: ./.github/workflows/format
         if: ${{ !cancelled() }}
-        run: mix dialyzer --format github
 
-      - name: Format check
-        if: ${{ !cancelled() }}
-        run: mix format --check-formatted
-
-      - name: All files whitespace error check
-        if: ${{ !cancelled() }}
-        run: git diff-tree --check 4b825dc642cb6eb9a060e54bf8d69288fbee4904 HEAD
   build-docs:
     name: build docs
     needs: construct-caches
@@ -118,41 +45,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.0
 
-      - name: Install system dependencies
-        run: sudo apt-get install -y libsodium-dev
-
-      - name: Set up Elixir
-        id: beam
-        uses: erlef/setup-beam@v1.16.0
+      - uses: ./.github/workflows/setup
         with:
-          elixir-version: '1.15.6'
-          otp-version: '26.1.2'
+          fail-on-failure: true
 
-      - name: Restore dependencies cache
-        id: deps-cache
-        uses: actions/cache/restore@v3.3.2
-        with:
-          path: deps
-          key: |
-            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-
-      - name: Fail on dependencies cache miss
-        if: ${{ steps.deps-cache.outputs.cache-hit != 'true' }}
-        run: /bin/false
-
-      - name: Restore PLT cache
-        id: plt-cache
-        uses: actions/cache/restore@v3.3.2
-        with:
-          path: plts
-          key: |
-            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
-
-      - name: Fail on PLT cache miss
-        if: ${{ steps.plt-cache.outputs.cache-hit != 'true' }}
-        run: /bin/false
 
       - name: Build docs
         run: mix docs

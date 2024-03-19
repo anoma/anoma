@@ -1,0 +1,13 @@
+name: Checks
+description: "Checking if the the topic passes type checking and tests"
+runs:
+  using: "composite"
+  steps:
+    - name: Run tests
+      shell: bash
+      run: mix test
+
+    - name: Run dialyzer
+      shell: bash
+      if: ${{ !cancelled() }}
+      run: mix dialyzer --format github
