@@ -159,6 +159,7 @@ jobs:
       - name: Publish to Pages
         uses: peaceiris/actions-gh-pages@v3.9.3
         with:
+          keep_files: true
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           publish_dir: ./doc
           publish_branch: gh-pages
