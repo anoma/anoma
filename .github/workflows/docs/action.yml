@@ -15,7 +15,7 @@ runs:
   steps:
       - name: Build docs
         shell: bash
-        run: mix docs
+        run: make docs
 
       - name: Publish to Pages
         uses: peaceiris/actions-gh-pages@v3.9.3

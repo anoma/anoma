@@ -44,6 +44,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.0
+        with:
+          fetch-depth: 0
 
       - uses: ./.github/workflows/setup
         with:
