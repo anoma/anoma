@@ -17,6 +17,11 @@ runs:
         shell: bash
         run: make docs
 
+      - name: Building release docs
+        shell: bash
+        if: ${{ inputs.release == 'true' }}
+        run: make docs-release
+
       - name: Publish to Pages
         uses: peaceiris/actions-gh-pages@v3.9.3
         with:
