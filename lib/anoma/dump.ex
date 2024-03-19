@@ -1,6 +1,7 @@
 defmodule Anoma.Dump do
   @moduledoc """
-  I dump the state of the current Node session given a node reference.
+  I dump current state of a supplied node and load the
+  apporpriate file with info necessary to start a new node.
 
   We do not dump the clock so as to keep consistencies for the
   measuremenet of the future session.
@@ -19,6 +20,24 @@ defmodule Anoma.Dump do
 
     File.open(name <> ".txt", [:write], fn file ->
       file |> IO.binwrite(term)
+    end)
+  end
+
+  @doc """
+  I read the given file which I assume contains binary info and convert
+  it to an Elixir
+  """
+  def load(name) do
+    {:ok, bin} = load_bin(name)
+    :erlang.binary_to_term(bin)
+  end
+
+  @doc """
+  I binread the given file which I assume contains binary info
+  """
+  def load_bin(name) do
+    File.open(name, [:read], fn file ->
+      file |> IO.binread(:all)
     end)
   end
 
