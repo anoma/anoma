@@ -7,4 +7,8 @@ test:
 docs:
 	./scripts/docs.sh
 
-.PHONY: build test
+docs-release:
+	make docs
+	./scripts/docs-version.sh
+
+.PHONY: build test docs
