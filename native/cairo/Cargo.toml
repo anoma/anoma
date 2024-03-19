@@ -13,6 +13,4 @@ crate-type = ["cdylib"]
 rustler = "0.31.0"
 cairo-platinum-prover = { git = "https://github.com/lambdaclass/lambdaworks", version = "0.5.0"}
 stark-platinum-prover = { git = "https://github.com/lambdaclass/lambdaworks", version = "0.5.0"}
-starknet-crypto = "0.6.1"
-starknet-ff = "0.3.6"
 bincode = "2.0.0-rc.3"

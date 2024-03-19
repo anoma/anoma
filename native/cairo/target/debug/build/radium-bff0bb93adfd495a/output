@@ -1,5 +1,0 @@
-cargo:rustc-cfg=radium_atomic_8
-cargo:rustc-cfg=radium_atomic_16
-cargo:rustc-cfg=radium_atomic_32
-cargo:rustc-cfg=radium_atomic_64
-cargo:rustc-cfg=radium_atomic_ptr
