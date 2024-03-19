@@ -155,7 +155,7 @@ jobs:
         run: /bin/false
 
       - name: Build docs
-        uses: lee-dohm/generate-elixir-docs@v1
+        run: mix docs
       - name: Publish to Pages
         uses: peaceiris/actions-gh-pages@v3.9.3
         with:
