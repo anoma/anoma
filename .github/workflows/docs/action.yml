@@ -1,0 +1,26 @@
+name: Documentation
+description: "Builds documentation"
+
+inputs:
+  release:
+        description: 'Are we creating a new release?'
+        required: false
+        default: false
+  deploy_key:
+        description: 'Secret keys for deployment'
+        required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: Build docs
+        shell: bash
+        run: mix docs
+
+      - name: Publish to Pages
+        uses: peaceiris/actions-gh-pages@v3.9.3
+        with:
+          keep_files: true
+          deploy_key: ${{ inputs.deploy_key }}
+          publish_dir: ./doc
+          publish_branch: gh-pages
