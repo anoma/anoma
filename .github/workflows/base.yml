@@ -157,8 +157,8 @@ jobs:
       - name: Build docs
         uses: lee-dohm/generate-elixir-docs@v1
       - name: Publish to Pages
-        uses: peaceiris/actions-gh-pages@v1.0.1
-        env:
-          ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          PUBLISH_DIR: ./doc
-          PUBLISH_BRANCH: gh-pages
+        uses: peaceiris/actions-gh-pages@v3.9.3
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          publish_dir: ./doc
+          publish_branch: gh-pages
