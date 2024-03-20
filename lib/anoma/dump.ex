@@ -60,6 +60,7 @@ defmodule Anoma.Dump do
 
   @doc """
   I get the engine states in order:
+  - router
   - logger
   - ordering
   - mempool
@@ -67,9 +68,11 @@ defmodule Anoma.Dump do
   - executor
   """
   def get_state(node) do
+    state = node |> Node.state()
+    router = state.router
+
     node =
-      node
-      |> Node.state()
+      state
       |> Map.filter(fn {key, _value} ->
         key not in [
           :router,
@@ -81,14 +84,18 @@ defmodule Anoma.Dump do
       end)
       |> Map.to_list()
 
-    node
-    |> Enum.map(fn {atom, engine} ->
-      {atom, module_match(atom).state(engine)}
-    end)
+    list =
+      node
+      |> Enum.map(fn {atom, engine} ->
+        {atom, module_match(atom).state(engine)}
+      end)
+
+    [{:router, router} | list]
   end
 
   @doc """
   I get the node tables in order:
+  - storage (names)
   - qualified
   - order
   - block_storage
@@ -113,7 +120,7 @@ defmodule Anoma.Dump do
       end)
       |> List.to_tuple()
 
-    [qualified: q, order: o, block_storage: b]
+    [storage: table, qualified: q, order: o, block_storage: b]
   end
 
   def module_match(address) do
