@@ -165,9 +165,9 @@ defmodule Anoma.Resource do
           0 -> true
           1 -> false
         end,
-      nonce: Noun.atom_integer_to_binary(nonce),
-      npk: Noun.atom_integer_to_binary(npk),
-      rseed: Noun.atom_integer_to_binary(rseed)
+      nonce: Noun.atom_integer_to_binary(nonce, 32),
+      npk: Noun.atom_integer_to_binary(npk, 32),
+      rseed: Noun.atom_integer_to_binary(rseed, 32)
     }
   end
 end

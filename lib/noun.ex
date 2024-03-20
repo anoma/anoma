@@ -146,6 +146,19 @@ defmodule Noun do
     [h | list_nock_to_erlang(t)]
   end
 
+  # Return binary if it's already long enough
+  @spec pad_trailing(binary(), non_neg_integer()) :: binary()
+  def pad_trailing(binary, len)
+      when is_binary(binary) and is_integer(len) and len >= 0 and
+             byte_size(binary) >= len do
+    binary
+  end
+
+  def pad_trailing(binary, len)
+      when is_binary(binary) and is_integer(len) and len >= 0 do
+    binary <> <<0::size((len - byte_size(binary)) * 8)>>
+  end
+
   @spec atom_integer_to_binary(0) :: <<>>
   # special case: zero is the empty binary
   def atom_integer_to_binary(0) do
@@ -162,6 +175,13 @@ defmodule Noun do
   @spec atom_integer_to_binary(binary()) :: binary()
   def atom_integer_to_binary(binary) when is_binary(binary) do
     binary
+  end
+
+  @spec atom_integer_to_binary(non_neg_integer(), non_neg_integer()) ::
+          binary()
+  def atom_integer_to_binary(integer, length)
+      when is_integer(integer) and integer >= 0 do
+    pad_trailing(:binary.encode_unsigned(integer, :little), length)
   end
 
   @spec atom_binary_to_integer(binary()) :: non_neg_integer()
