@@ -38,9 +38,9 @@ brew install elixir
 ```
 
 Sadly the [enacl](https://github.com/jlouis/enacl) library for
-libsodium has issues for computers with apple silicion.
+libsodium has issues for computers with apple silicon.
 
-Before running the installation insturctions please make sure to
+Before running the installation instructions please make sure to
 export the following.
 
 ```sh
@@ -57,7 +57,7 @@ libsodium.
 
 ### Linux
 
-All the dependecies can be grabbed from your distro's package manager.
+All the dependencies can be grabbed from your distro's package manager.
 
 ## Installation
 
@@ -91,11 +91,11 @@ This codebase follows a git style similar to
 
 New code should be based on `base`, and no attempt to keep it up to
 sync with `main` should be had. When one's topic is ready, just submit
-a PR on github and a maintiner will handle any merge conflicts.
+a PR on github and a maintainer will handle any merge conflicts.
 
 There are bi-weekly releases, so do not be afraid if a maintainer says
-the PR is merged but it's still oepn, this just means that it's merged
-into `next` or `main` and will be inclueded in the next scheduled
+the PR is merged but it's still open, this just means that it's merged
+into `next` or `main` and will be included in the next scheduled
 release.
 
 For more information on a smooth git experience check out the [git
