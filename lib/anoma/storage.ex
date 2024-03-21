@@ -153,11 +153,13 @@ defmodule Anoma.Storage do
 
         case result do
           [{_, ^key, value}] ->
+            :mnesia.unsubscribe({:table, storage.qualified, :simple})
             {:ok, value}
 
           [] ->
             receive do
               {:mnesia_table_event, {:write, {_, ^key, value}, _}} ->
+                :mnesia.unsubscribe({:table, storage.qualified, :simple})
                 {:ok, value}
             end
         end
