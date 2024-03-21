@@ -19,9 +19,6 @@ defmodule Anoma.Node.Router do
     (Hence, at least one of id and server must be known; potentially both are.)
     """
     field(:router, GenServer.server())
-    # :erlang.binary_to_atom("registry " <> router.sign, :latin1)
-    field(:registry, atom())
-
     field(:id, Id.Extern.t())
     field(:server, GenServer.server())
   end
@@ -36,48 +33,47 @@ defmodule Anoma.Node.Router do
     field(:local_engine_subs, %{addr() => Id.Extern.t()}, default: %{})
     field(:id, Id.Extern.t())
     field(:addr, addr())
-    field(:registry, atom())
     field(:supervisor, atom())
     # mapping id -> [pending messages]
     field(:msg_queue, map(), default: %{})
   end
 
-  def registry_name(id) do
-    :erlang.binary_to_atom("registry " <> id.sign, :latin1)
+  # A module name A.B is represented by an atom with name "Elixir.A.B"; strip away the "Elixir." part
+  defp atom_to_nice_string(atom) do
+    res = Atom.to_string(atom)
+
+    if String.starts_with?(res, "Elixir.") do
+      binary_part(res, 7, byte_size(res) - 7)
+    else
+      res
+    end
   end
 
-  def supervisor_name(id) do
-    :erlang.binary_to_atom("supervisor " <> id.sign, :latin1)
+  def process_name(module, id) do
+    :erlang.binary_to_atom(
+      atom_to_nice_string(module) <> " " <> Base.encode64(id.sign)
+    )
   end
 
   def start_link(id) do
     GenServer.start_link(__MODULE__, id,
-      name: {:via, Registry, {registry_name(id.external), id.external}}
+      name: process_name(__MODULE__, id.external)
     )
   end
 
   def start(id) do
-    supervisor = supervisor_name(id.external)
-    registry = registry_name(id.external)
+    supervisor = process_name(:supervisor, id.external)
 
     {:ok, _} =
       DynamicSupervisor.start_link(name: supervisor, strategy: :one_for_one)
 
-    {:ok, _} =
-      DynamicSupervisor.start_child(
-        supervisor,
-        {Registry, keys: :unique, name: registry}
-      )
-
-    # {:ok, _} = Registry.start_link(keys: :unique, name: __MODULE__.Registry)
-    router = {:via, Registry, {registry, id.external}}
+    router = process_name(__MODULE__, id.external)
 
     case DynamicSupervisor.start_child(supervisor, {__MODULE__, id}) do
       {:ok, _} ->
         {:ok,
          %Addr{
            id: id.external,
-           registry: registry,
            server: router,
            router: router
          }}
@@ -95,21 +91,18 @@ defmodule Anoma.Node.Router do
   end
 
   def init(id) do
-    supervisor = supervisor_name(id.external)
-    registry = registry_name(id.external)
-    server = {:via, Registry, {registry, id.external}}
+    supervisor = process_name(:supervisor, id.external)
+    server = process_name(__MODULE__, id.external)
 
     {:ok,
      %Router{
        id: id.external,
        addr: %Addr{
          router: server,
-         registry: registry,
          id: id.external,
          server: server
        },
        supervisor: supervisor,
-       registry: registry,
        local_engines: %{id.external => id}
      }}
   end
@@ -121,7 +114,7 @@ defmodule Anoma.Node.Router do
 
   def cast(addr = %Addr{router: router, server: nil}, msg) do
     Logger.info("casting to non-local addr #{inspect(addr)}")
-    GenServer.cast(router, {:cast, addr, self(), msg})
+    GenServer.cast(router, {:cast, addr, self_addr(addr), msg})
   end
 
   # default timeout for GenServer.call
@@ -137,30 +130,15 @@ defmodule Anoma.Node.Router do
   # returns a continuation so we don't bottleneck
   def call(addr = %Addr{router: router, server: nil}, msg, timeout) do
     Logger.info("calling non-local addr #{inspect(addr)}")
-    GenServer.call(router, {:call, addr, msg, timeout}).()
+    GenServer.call(router, {:call, addr, self_addr(addr), msg, timeout}).()
   end
 
-  def self_addr(ctx) do
-    pid_to_addr(ctx, self())
-  end
-
-  def pid_to_addr(%Router{addr: addr}, pid) do
-    pid_to_addr(addr, pid)
-  end
-
-  def pid_to_addr(%Addr{registry: registry, router: router}, pid) do
-    case Registry.lookup(registry, pid) do
-      [{_, id}] ->
-        %Addr{
-          id: id,
-          registry: registry,
-          router: router,
-          server: {:via, Registry, {registry, id}}
-        }
-
-      [] ->
-        %Addr{server: pid}
-    end
+  def self_addr(%Addr{router: router}) do
+    %Addr{
+      router: router,
+      id: Process.get(:engine_id),
+      server: Process.get(:engine_server) || self()
+    }
   end
 
   # not sure exactly how this will work for real, but it's convenient
@@ -175,8 +153,16 @@ defmodule Anoma.Node.Router do
            call(router, :supervisor),
            {Anoma.Node.Router.Engine, {router, module, id, arg}}
          ) do
-      {:ok, pid} -> {:ok, pid_to_addr(router, pid)}
-      err -> err
+      {:ok, _} ->
+        {:ok,
+         %Addr{
+           router: router,
+           id: id.external,
+           server: process_name(module, id.external)
+         }}
+
+      err ->
+        err
     end
   end
 
@@ -211,8 +197,8 @@ defmodule Anoma.Node.Router do
     {:noreply, s}
   end
 
-  def handle_cast({:cast, addr, pid, msg}, s) do
-    {:noreply, do_cast(s, addr, pid_to_addr(s, pid), msg)}
+  def handle_cast({:cast, addr, src_addr, msg}, s) do
+    {:noreply, do_cast(s, addr, src_addr, msg)}
   end
 
   # def handle_self_cast(_, _, _) when false do
@@ -222,8 +208,8 @@ defmodule Anoma.Node.Router do
   #   {:noreply, handle_self_cast(msg, src, s)}
   # end
 
-  def handle_call({:call, addr, msg, timeout}, {pid, _}, s) do
-    {res, s} = do_call(s, addr, pid_to_addr(s, pid), msg, timeout)
+  def handle_call({:call, addr, src_addr, msg, timeout}, _, s) do
+    {res, s} = do_call(s, addr, src_addr, msg, timeout)
     {:reply, res, s}
   end
 
@@ -242,7 +228,7 @@ defmodule Anoma.Node.Router do
     if Map.has_key?(s.topic_table, id) do
       {{:error, :already_exists}, s}
     else
-      {{:ok, %Addr{id: id, router: s.addr.router, registry: s.registry}},
+      {{:ok, %Addr{id: id, router: s.addr.router}},
        %{s | topic_table: Map.put(s.topic_table, id, MapSet.new())}}
     end
   end
