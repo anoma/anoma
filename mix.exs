@@ -79,6 +79,7 @@ defmodule Anoma.MixProject do
       {:optimus, "~> 0.2"},
       {:burrito, "~> 1.0.4"},
       {:toml, "~> 0.7"},
+      {:cairo, git: "https://github.com/anoma/aarm-cairo", rev: "32e9adb"},
       {:plug_crypto, "~> 2.0"},
       {:msgpack, "~> 0.8.1"}
     ]
