@@ -59,4 +59,19 @@ defmodule Anoma.Mnesia do
     catch_all = [{:"$1", [], [:"$$"]}]
     :mnesia.dirty_select(table, catch_all)
   end
+
+  @doc """
+
+  I help dump all data in a given table in a non-dirty way.
+
+  """
+  def dump(table) do
+    catch_all = [{:"$1", [], [:"$$"]}]
+    select = fn -> :mnesia.select(table, catch_all) end
+
+    case :mnesia.transaction(select) do
+      {:atomic, res} -> {:ok, res}
+      _ -> :error
+    end
+  end
 end
