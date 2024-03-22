@@ -14,6 +14,12 @@ defmodule Anoma.Node.Pinger do
     field(:time, non_neg_integer() | atom(), default: :no_timer)
   end
 
+  def init(%Pinger{} = state) do
+    pinger(state.time)
+
+    {:ok, state}
+  end
+
   def init(args) do
     time = args[:time]
     mempool = args[:mempool]

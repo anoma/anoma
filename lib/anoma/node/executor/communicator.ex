@@ -38,6 +38,10 @@ defmodule Anoma.Node.Executor do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
+  def init(%Executor{} = state) do
+    {:ok, state}
+  end
+
   def init({env, topic, logger}) do
     {:ok,
      %Executor{ambiant_env: env, task_completion_topic: topic, logger: logger}}
@@ -74,6 +78,7 @@ defmodule Anoma.Node.Executor do
         ref: #Reference<0.0.33795.904691850.4087414796.24378>
       }
   """
+
   @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t()) :: Task.t()
   def new_transaction(executor, order, gate) do
     state = state(executor)
