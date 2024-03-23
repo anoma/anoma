@@ -18,8 +18,8 @@ defmodule Anoma.Node.Router do
       engine, which can only talk to other local engines.
     (Hence, at least one of id and server must be known; potentially both are.)
     """
-    field(:router, GenServer.server())
-    field(:id, Id.Extern.t())
+    field(:router, Addr.t())
+    field(:id, Id.Extern.t() | nil)
     field(:server, GenServer.server())
   end
 
@@ -49,18 +49,24 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @spec process_name(atom(), Id.Extern.t()) :: atom()
   def process_name(module, id) do
     :erlang.binary_to_atom(
       atom_to_nice_string(module) <> " " <> Base.encode64(id.sign)
     )
   end
 
+  @spec start_link(Id.t()) :: GenServer.on_start()
   def start_link(id) do
     GenServer.start_link(__MODULE__, id,
       name: process_name(__MODULE__, id.external)
     )
   end
 
+  @spec start(Id.t()) ::
+          :ignore
+          | {:error, {:already_started, pid()} | :max_children | term()}
+          | {:ok, Addr.t()}
   def start(id) do
     supervisor = process_name(:supervisor, id.external)
 
@@ -83,6 +89,7 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t()}
   def start() do
     start(Id.new_keypair())
   end
@@ -90,6 +97,7 @@ defmodule Anoma.Node.Router do
   def stop(_router) do
   end
 
+  @spec init(Id.t()) :: {:ok, Router.t()}
   def init(id) do
     supervisor = process_name(:supervisor, id.external)
     server = process_name(__MODULE__, id.external)
@@ -108,6 +116,7 @@ defmodule Anoma.Node.Router do
   end
 
   # public interface
+  @spec cast(Addr.t(), term()) :: :ok
   def cast(addr = %Addr{server: server}, msg) when server != nil do
     GenServer.cast(server, {self_addr(addr), msg})
   end
@@ -117,11 +126,13 @@ defmodule Anoma.Node.Router do
     GenServer.cast(router, {:cast, addr, self_addr(addr), msg})
   end
 
+  @spec call(Addr.t(), term()) :: term()
   def call(addr, msg) do
     # default timeout for GenServer.call
     call(addr, msg, 5000)
   end
 
+  @spec call(Addr.t(), term(), :erlang.timeout()) :: term()
   def call(addr = %Addr{server: server}, msg, _timeout) when server != nil do
     # use an infinite timeout for local calls--timeout is only significant for inter-node calls
     GenServer.call(server, {self_addr(addr), msg}, :infinity)
@@ -134,6 +145,7 @@ defmodule Anoma.Node.Router do
     GenServer.call(router, {:call, addr, self_addr(addr), msg, timeout}).()
   end
 
+  @spec self_addr(Addr.t()) :: Addr.t()
   def self_addr(%Addr{router: router}) do
     %Addr{
       router: router,
@@ -144,30 +156,41 @@ defmodule Anoma.Node.Router do
 
   # not sure exactly how this will work for real, but it's convenient
   # to have for testing right now
+  @spec new_topic(Addr.t()) :: {:ok, Addr.t()} | {:error, :already_exists}
   def new_topic(router) do
     call(router, {:create_topic, Id.new_keypair().external, :local})
   end
 
+  @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
+          {:ok, Addr.t()}
+          | :ignore
+          | {:error, {:already_started, pid()} | :max_children | term()}
+          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
+          # if we can remove please do
+          | any()
   def start_engine(router, module, id, arg) do
-    # case Anoma.Node.Router.Engine.start_link({module, id, arg}) do
-    case DynamicSupervisor.start_child(
-           call(router, :supervisor),
-           {Anoma.Node.Router.Engine, {router, module, id, arg}}
-         ) do
-      {:ok, _} ->
-        {:ok,
-         %Addr{
-           router: router,
-           id: id.external,
-           server: process_name(module, id.external)
-         }}
-
-      err ->
-        err
+    with {:ok, _} <-
+           DynamicSupervisor.start_child(
+             call(router, :supervisor),
+             {Anoma.Node.Router.Engine, {router, module, id, arg}}
+           ) do
+      {:ok,
+       %Addr{
+         router: router,
+         id: id.external,
+         server: process_name(module, id.external)
+       }}
     end
   end
 
   # start a new instance of an engine, without caring about the id
+  @spec start_engine(Addr.t(), atom(), any()) ::
+          {:ok, Addr.t()}
+          | :ignore
+          | {:error, any()}
+          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
+          # if we can remove please do
+          | any()
   def start_engine(router, module, arg) do
     start_engine(router, module, Id.new_keypair(), arg)
   end
@@ -287,6 +310,7 @@ defmodule Anoma.Node.Router do
   end
 
   # send to an address with a known pid
+  @spec do_cast(t(), Addr.t(), Addr.t(), term()) :: t()
   defp do_cast(s, %Addr{server: server}, src, msg) when server != nil do
     Logger.info("cast to #{inspect(server)}")
     GenServer.cast(server, {src, msg})
@@ -302,6 +326,8 @@ defmodule Anoma.Node.Router do
   end
 
   # call to an address with a known pid
+  @spec do_call(t(), Addr.t(), Addr.t(), term(), :erlang.timeout()) ::
+          {function(), t()}
   defp do_call(s, %Addr{server: server}, src, msg, timeout)
        when server != nil do
     {fn -> GenServer.call(server, {src, msg}, timeout) end, s}
