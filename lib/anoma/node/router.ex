@@ -1,4 +1,233 @@
 defmodule Anoma.Node.Router do
+  @moduledoc """
+
+  I have a few use cases and APIs throughout an Anoma application:
+
+  1. I provide central routing infrastructure for inter-node and
+     intra-node communication
+
+  1. I provide service's for topic creation and
+     `Anoma.Node.Router.Engine` creation
+
+  1. I provide a behavior interface similar to `GenServer` for both
+     [`Engine`](`Anoma.Node.Router.Engine`) messaging and `Topic`
+     messaging
+
+
+  ## Router Topology
+
+  A good view of my topology and how various
+  `Anoma.Node.Router.Engine` and topic's relate to me can be seen by
+  the following diagram.
+
+  ```mermaid
+  graph TB
+    S(Router Supervisor)
+    R(Router)
+    C(Engine #1) ~~~ B(Engine #2)
+    T1(Topic #1) ~~~ T2(Topic #2)
+    S ==>R & B & C
+    S -.->T1 & T2
+    R <-->|router| B & C & T1 & T2
+  ```
+
+  `Anoma.Node.Router.Engine`'s that are spawned via `start_engine/3`
+  are added to the supervisor, and messages sent via `call/3` or
+  `cast/2` may be routed through myself.
+
+  Topics are handled somewhat specially. Since they serve a much more
+  limited role, I handle and manage them personally and the dashed
+  lines in the diagram are not real. However for building a conceptual
+  model, we can view `Topics` spawned by `new_topic/1` as spawning an
+  [`Engine`](`Anoma.Node.Router.Engine`), and messages sent via
+  `call/3` or `cast/2` as being routed through myself.
+
+  ## Server Terminology
+
+  For the sake of this document, the word `Server` will refer to both
+  [`Engines`](`Anoma.Node.Router.Engine`) and `Topics`.
+
+  ## Router PIDs
+
+  The IDs of the various topics and
+  [engines](`Anoma.Node.Router.Engine`), are not regular Erlang
+  PID's. Instead we use our own address schema laid out in
+  `Anoma.Node.Router.Addr`. Further information can also be found in
+  our specs (link to specs when they are online).
+
+  ## Router API
+
+  I offer an API for anyone wishing to call me. These functions are:
+
+  - `start/0`
+  - `start/1`
+  - `new_topic/1`
+  - `start_engine/3`
+  - `start_engine/4`
+  - `subscribe_topic/2`
+  - `subscribe_topic/3`
+
+  ## Server APIs
+
+  When writing server code, My module acts as a `GenServer` behavior,
+  in that one should be using these functions when writing code to
+  talk to the `Server`:
+
+  - `call/2`
+  - `call/3`
+  - `cast/2`
+
+  The API I offer is very reminiscent of `GenServer`'s API, however
+  please read the [examples](#module-examples) section to get a sense
+  on how the server code differs.
+
+  ## Client/Server APIs
+
+  Much like `GenServer`, user's typically don't call my `call/3` or
+  `cast/2` directly. Instead the user wraps the calls in new functions
+  representing the public API of the server. These wrappers are called
+  the **client API**.
+
+  ### Examples
+
+  To get a good feel for writing idiomatic code using me, and how my
+  API is differs from `GenServer`, we will look at an implementation
+  of a stack and see how it [differs from GenServer's stack
+  example](https://hexdocs.pm/elixir/GenServer.html#module-client-server-apis)
+
+      defmodule Stack do
+        alias Anoma.Node.Router
+
+        use Router.Engine
+
+        @spec init(String.t()) :: {:ok, list(String.t())}
+        def init(elements) do
+          initial_state = String.split(elements, ",", trim: true)
+          {:ok, initial_state}
+        end
+
+        @spec push(Router.addr(), String.t()) :: :ok
+        def push(pid, element) do
+          Router.cast(pid, {:push, element})
+        end
+
+        @spec pop(Addr.t()) :: String.t()
+        def pop(pid) do
+          Router.call(pid, :pop)
+        end
+
+        def handle_call(:pop, _from, state) do
+          [to_caller | new_state] = state
+          {:reply, to_caller, new_state}
+        end
+
+        def handle_cast({:push, element}, _from, state) do
+          new_state = [element | state]
+          {:noreply, new_state}
+        end
+      end
+
+  And we can use this Engine like the following
+
+      iex> {:ok, router} = Router.start()
+      iex> {:ok, stack} = Router.start_engine(router, Stack, "hello")
+      iex> Stack.pop(stack)
+      "hello"
+      iex> Stack.push(stack, "hi")
+      :ok
+      iex> Stack.pop(stack)
+      "hi"
+
+  Overall having both server and client functionality that is clearly
+  labeled, leads to good user UI's.
+
+  ### Difference in Design from `GenServer`
+
+  The Stack example shows how my API differs from `Genserver`:
+
+  1. There is currently no `GenServer.start_link/3` for the Router
+
+  1. Even `handle_cast`'s take a `from` parameter
+
+  1. We use `Anoma.Node.Router.Engine` and not `GenServer`
+
+  1. Further `call/2` by default has an :infinite timeout
+
+  ### Summarizing the interactions between Server and Clients
+
+  For basic `Server`'s we can summarize interactions between all
+  parties as follows.
+
+    ```mermaid
+    sequenceDiagram
+      participant C as Client (Process/Engine)
+      participant R as Router (Engine)
+      participant S as Server (Engine)
+      participant M as Module (Code)
+
+      note right of C: Typically started by an init process
+      C->>+R: Router.start_engine(router, module, arg, options)
+      R->>+S: GenServer.start_link(router, module, arg, options)
+      S-->>+M: init(arg)
+      M-->>-S: {:ok, state} | :ignore | {:error, reason}
+      S->>-R: {:ok, addr} | :ignore | {:error, reason}
+      R->>-C: {:ok, addr} | :ignore | {:error, reason}
+
+      note right of C: call is synchronous
+      C->>+R: Router.call(addr, message)
+      note right of R: For known engines this is optimized away
+      R->>+S: GenSever.call(pid, {self, message})
+      S-->>+M: handle_call(message, from, state)
+      M-->>-S: {:reply, reply, state} | {:stop, reason, reply, state}
+      S->>-C: reply
+
+      note right of C: cast is asynchronous
+      C-)R: Router.cast(addr, message)
+      note right of R: For known engines this is optimized away
+      R-)S: GenServer.cast(pid, message)
+      S-->>+M: handle_cast(message, state)
+      M-->>-S: {:noreply, state} | {:stop, reason, state}
+
+      note right of C: send is asynchronous. the PAID must be known
+      C-)S: Kernel.send(pid, message)
+      S-->>+M: handle_info(message, state)
+      M-->>-S: {:noreply, state} | {:stop, reason, state}
+  ```
+
+  What this diagram doesn't show is how Topic messaging works, and for
+  that, this diagram may be of assistance.
+
+    ```mermaid
+    sequenceDiagram
+      participant C as Client (Process/Engine)
+      participant S2 as Server2 (Engine)
+      participant R as Router (Engine)
+      participant T as Topic (Topic)
+      participant S as Server (Engine)
+
+
+      note right of R: For simplicity we do not display a client
+      S2-)+R: GenServer.subscribe(router, topic)
+      R-->>+T: GenSever.call(addr, {self, message})
+      T-->>-R: :ok | {:error, :no_such_topic}
+      R-)-S2: :ok | {:error, :no_such_topic}
+
+
+      note right of C: cast is asynchronous
+      C-)R: Router.cast(addr, message)
+      R-)+S: GenServer.cast(pid, message)
+      note right of S: Imagine this call sends an update to a topic
+      S-)-R: Router.cast(topic_addr, msg)
+      R-->>T: Genserver.cast(pid, msg)
+      T-->>R: Router.cast(addr_S2, msg)
+      R-)S2: Genserver.cast(pid, msg)
+  ```
+
+  The dotted lines in the diagram are theoretically how `Tasks` could
+  be implemented, however this is implementation dependent, and does
+  indeed differ from the diagram.
+
+  """
   use GenServer
   use TypedStruct
   require Logger
@@ -20,7 +249,7 @@ defmodule Anoma.Node.Router do
     """
     field(:router, Addr.t())
     field(:id, Id.Extern.t() | nil)
-    field(:server, GenServer.server())
+    field(:server, GenServer.server() | nil)
   end
 
   typedstruct do
