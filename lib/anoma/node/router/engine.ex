@@ -18,6 +18,26 @@ defmodule Anoma.Node.Router.Engine do
     field(:module_state, term())
   end
 
+  @type from() :: Router.addr()
+
+  @callback handle_call(request :: term, from, state :: term) ::
+              {:reply, reply, new_state}
+              | {:reply, reply, new_state,
+                 timeout | :hibernate | {:continue, continue_arg :: term}}
+              | {:noreply, new_state}
+              | {:noreply, new_state,
+                 timeout | :hibernate | {:continue, continue_arg :: term}}
+              | {:stop, reason, reply, new_state}
+              | {:stop, reason, new_state}
+            when reply: term, new_state: term, reason: term
+
+  @callback handle_cast(request :: term, from, state :: term) ::
+              {:noreply, new_state}
+              | {:noreply, new_state,
+                 timeout | :hibernate | {:continue, continue_arg :: term}}
+              | {:stop, reason :: term, new_state}
+            when new_state: term
+
   @spec start_link({Router.addr(), atom(), Id.t(), term()}) ::
           :ignore | {:error, any()} | {:ok, pid()}
   def start_link({router, mod, id, arg}) do

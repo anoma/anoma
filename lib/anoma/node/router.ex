@@ -292,6 +292,9 @@ defmodule Anoma.Node.Router do
     )
   end
 
+  @doc """
+  Starts a new router with a given cryptographic ID.
+  """
   @spec start(Id.t()) ::
           :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
@@ -318,6 +321,9 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @doc """
+  Starts a new router, with a random `Anoma.Crypto.Id`.
+  """
   @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t()}
   def start() do
     start(Id.new_keypair())
@@ -345,6 +351,31 @@ defmodule Anoma.Node.Router do
   end
 
   # public interface
+
+  @doc """
+  Makes a synchronous call to the `Server` and waits for a reply.
+
+  Call has a few interesting cases we can consider
+
+  1. Casting to a local [`Engine`](`Anoma.Node.Router.Engine`)
+
+  1. Calling to a non local [`Engine`](`Anoma.Node.Router.Engine`)
+
+  1. Casting to a `Topic`
+
+
+  For the local [`Engine`](`Anoma.Node.Router.Engine`), then their
+  [`Engine.handle_cast/3`](`c:Anoma.Node.Router.Engine.handle_cast/3`)
+  will be called on the [`Engine`](`Anoma.Node.Router.Engine`) to
+  handle the request.
+
+  Calling a non local [`Engine`](`Anoma.Node.Router.Engine`) isn't
+  handled yet.
+
+  For `Topics` any `cast/2` sent, then triggers a series of `cast/2`
+  to all subscribed `Process`'s
+
+  """
   @spec cast(Addr.t(), term()) :: :ok
   def cast(addr = %Addr{server: server}, msg) when server != nil do
     GenServer.cast(server, {self_addr(addr), msg})
@@ -355,15 +386,46 @@ defmodule Anoma.Node.Router do
     GenServer.cast(router, {:cast, addr, self_addr(addr), msg})
   end
 
+  @doc """
+  See `call/3` for documentation.
+  """
   @spec call(Addr.t(), term()) :: term()
   def call(addr, msg) do
     # default timeout for GenServer.call
     call(addr, msg, 5000)
   end
 
+  @doc """
+  Makes a synchronous call to the `Server` and waits for a reply.
+
+  Call has a few interesting cases we can consider
+
+  1. Calling a local [`Engine`](`Anoma.Node.Router.Engine`)
+
+  1. Calling a non local [`Engine`](`Anoma.Node.Router.Engine`)
+
+  We can not `call/3` a `Topic`, and thus those instances are not
+  handled.
+
+  Currently we do not handle the non local
+  [`Engine`](`Anoma.Node.Router.Engine`) case.
+
+  For the local [`Engine`](`Anoma.Node.Router.Engine`), then their
+  [`Engine.handle_call/3`](`c:Anoma.Node.Router.Engine.handle_call/3`)
+  will be called on the [`Engine`](`Anoma.Node.Router.Engine`) to
+  handle the request.
+
+  ### Timeouts
+
+  By default the timeout is infinite for local calls. For non local
+  calls the timeout is not yet defined and will be iterated upon in
+  future versions
+
+  """
   @spec call(Addr.t(), term(), :erlang.timeout()) :: term()
   def call(addr = %Addr{server: server}, msg, _timeout) when server != nil do
-    # use an infinite timeout for local calls--timeout is only significant for inter-node calls
+    # use an infinite timeout for local calls--timeout is only
+    # significant for inter-node calls
     GenServer.call(server, {self_addr(addr), msg}, :infinity)
   end
 
@@ -385,11 +447,17 @@ defmodule Anoma.Node.Router do
 
   # not sure exactly how this will work for real, but it's convenient
   # to have for testing right now
+  @doc """
+  Creates a new topic. Takes the address of the router.
+  """
   @spec new_topic(Addr.t()) :: {:ok, Addr.t()} | {:error, :already_exists}
   def new_topic(router) do
     call(router, {:create_topic, Id.new_keypair().external, :local})
   end
 
+  @doc """
+  Starts a new Engine
+  """
   @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
           {:ok, Addr.t()}
           | :ignore
