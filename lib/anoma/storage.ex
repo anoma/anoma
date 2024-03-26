@@ -63,6 +63,7 @@ defmodule Anoma.Storage do
   typedstruct do
     field(:qualified, atom(), default: Anoma.Node.Storage.Qualified)
     field(:order, atom(), default: Anoma.Node.Storage.Order)
+    field(:rm_commitments, atom(), default: Anoma.Node.Storage.RMCommitments)
   end
 
   @type result(res) :: {:atomic, res} | {:aborted, any()}
@@ -85,6 +86,14 @@ defmodule Anoma.Storage do
   #                       Creation API                       #
   ############################################################
 
+  # hardcoded cm tree spec for now
+  @spec cm_tree_spec() :: CommitmentTree.Spec.t()
+  def cm_tree_spec() do
+    CommitmentTree.Spec.new(32, 2, 256, fn {x, y} ->
+      :crypto.hash(:sha256, x <> y)
+    end)
+  end
+
   @doc """
   I setup storage with the given tables: `t()`.
 
@@ -94,11 +103,13 @@ defmodule Anoma.Storage do
   @spec setup(t()) :: :ok | {:aborted, any()}
   # If this ever gets big, turn it into a map filter situation
   def setup(t) do
-    case {:mnesia.create_table(t.qualified, attributes: [:key, :value]),
-          :mnesia.create_table(t.order, attributes: [:key, :order])} do
-      {{:atomic, :ok}, {:atomic, :ok}} -> :ok
-      {a, {:atomic, :ok}} -> a
-      {_a____________, b} -> b
+    with {:atomic, :ok} <-
+           :mnesia.create_table(t.qualified, attributes: [:key, :value]),
+         {:atomic, :ok} <-
+           :mnesia.create_table(t.order, attributes: [:key, :order]),
+         {:atomic, :ok} <-
+           :mnesia.create_table(t.rm_commitments, attributes: [:index, :hash]) do
+      CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
     end
   end
 
@@ -106,6 +117,7 @@ defmodule Anoma.Storage do
   def remove(storage) do
     :mnesia.delete_table(storage.qualified)
     :mnesia.delete_table(storage.order)
+    :mnesia.delete_table(storage.rm_commitments)
   end
 
   @spec ensure_new(t()) :: :ok | {:aborted, any()}

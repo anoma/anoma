@@ -21,7 +21,8 @@ defmodule Anoma do
   def start(_type, _args) do
     storage = %Anoma.Storage{
       qualified: Anoma.Qualified,
-      order: Anoma.Order
+      order: Anoma.Order,
+      rm_commitments: Anoma.RMCommitments
     }
 
     name = :anoma
