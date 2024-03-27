@@ -56,6 +56,11 @@ defmodule Anoma.Node.Router do
     )
   end
 
+  # Temporary functionality.
+  def start(%Id.Extern{} = id) do
+    start(%Anoma.Crypto.Id{external: id})
+  end
+
   def start(id) do
     supervisor = supervisor_name(id.external)
     registry = registry_name(id.external)
@@ -167,6 +172,10 @@ defmodule Anoma.Node.Router do
   # to have for testing right now
   def new_topic(router) do
     call(router, {:create_topic, Id.new_keypair().external, :local})
+  end
+
+  def new_topic(router, id) do
+    call(router, {:create_topic, id.external, :local})
   end
 
   def start_engine(router, module, id, arg) do
