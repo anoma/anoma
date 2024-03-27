@@ -6,9 +6,16 @@ defmodule Anoma.Cli do
       description: """
       Starts up Anoma.
       """,
-      allow_unknown_args: false,
+      allow_unknown_args: true,
       parse_double_dash: true,
       args: [],
+      flags: [
+        nohalt: [
+          long: "--no-halt",
+          help: "typical IEX command",
+          required: false
+        ]
+      ],
       options: [],
       subcommands: [
         nockma: Nock.Cli.argument_option()

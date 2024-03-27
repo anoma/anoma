@@ -25,7 +25,7 @@ defmodule Anoma.MixProject do
 
   def releases do
     [
-      app4: [
+      anoma: [
         steps: [:assemble, &Burrito.wrap/1],
         burrito: [
           targets: [
