@@ -22,7 +22,7 @@ defmodule Anoma.Transaction do
     %Transaction{id: id, pid: pid, transaction: transaction}
   end
 
-  @spec id(t()) :: pid()
+  @spec pid(t()) :: pid()
   def pid(t), do: t.pid
 
   @spec id(t()) :: Noun.t()
