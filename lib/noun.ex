@@ -10,7 +10,10 @@ defmodule Noun do
   require Integer
 
   @type noun_atom() :: non_neg_integer() | binary() | []
-  @type noun_cell() :: nonempty_improper_list(t(), t())
+  @type noun_cell() ::
+          nonempty_improper_list(t(), t())
+          # hack for gradient https://github.com/esl/gradient/issues/181
+          | list(t())
   @type t() :: noun_atom() | noun_cell()
 
   # erlang has something called 'atom' already, so we say is_noun_atom
@@ -109,12 +112,16 @@ defmodule Noun do
 
   # leave binaries, which are most likely to be large, as binaries.
   @spec normalize_noun_atom(noun_atom()) :: binary()
-  def normalize_noun_atom(atom) when is_noun_atom(atom) do
-    cond do
-      atom == [] -> <<>>
-      is_integer(atom) -> atom_integer_to_binary(atom)
-      is_binary(atom) -> atom
-    end
+  def normalize_noun_atom(atom) when atom == [] do
+    <<>>
+  end
+
+  def normalize_noun_atom(atom) when is_binary(atom) do
+    atom
+  end
+
+  def normalize_noun_atom(atom) when is_integer(atom) do
+    atom_integer_to_binary(atom)
   end
 
   @spec mug(t()) :: non_neg_integer()
@@ -152,7 +159,7 @@ defmodule Noun do
     <<>>
   end
 
-  @spec atom_integer_to_binary(pos_integer()) :: binary()
+  @spec atom_integer_to_binary(non_neg_integer()) :: binary()
   def atom_integer_to_binary(integer)
       when is_integer(integer) and integer >= 0 do
     :binary.encode_unsigned(integer, :little)

@@ -41,15 +41,20 @@ defmodule TestHelper.Nock do
     [arm, sample | logics_core()]
   end
 
+  @spec increment_counter_arm(Noun.t()) :: Noun.t()
+  def increment_counter_arm(val),
+    do: [[1 | val], 4, 12, [1 | 0], [0 | 6], 1, val | 0]
+
   # TODO :: Add hoon code for this
   @spec increment_counter_val(Noun.t()) :: Noun.t()
   def increment_counter_val(val) do
-    arm = [[1 | val], 4, 12, [1 | 0], [0 | 6], 1, val | 0]
+    arm = increment_counter_arm(val)
     sample = 0
     [[8, [1 | sample], [1 | arm], 0 | 1] | logics_core()]
   end
 
   # [%ctr 0]
+  @spec zero_counter(Noun.t()) :: Noun.t()
   def zero_counter(val) do
     arm = [1, val | 0]
     sample = 0

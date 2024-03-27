@@ -274,7 +274,10 @@ defmodule Anoma.Storage do
   defp checked_read_at(storage, key, order) do
     instrument({:get_order, order})
 
-    with {:atomic, [{_, [^order, ^key | 0], value}]} <-
+    # Gradient doesn't like matching numbers
+    zero = 0
+
+    with {:atomic, [{_, [^order, ^key | ^zero], value}]} <-
            read_at_order(storage, key, order) do
       {:ok, value}
     else

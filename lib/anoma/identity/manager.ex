@@ -24,7 +24,7 @@ defmodule Anoma.Identity.Manager do
 
   @type resp(t) :: {:ok, t} | {:error, String.t()}
 
-  @type instance() :: %{commitment: pid(), decryption: pid()}
+  @type instance() :: %{optional(:commitment) => pid(), optional(:decryption) => pid()}
 
   @spec generate(Backend.t(), Parameters.t(), Capabilities.t()) ::
           resp({instance(), Id.Extern.t()})

@@ -8,19 +8,19 @@ defmodule Anoma.Crypto.Id do
 
   @type identities() :: Intern.t() | Extern.t() | t()
 
-  typedstruct do
+  typedstruct enforce: true do
     field(:internal, Intern.t())
     field(:external, Extern.t())
     field(:kind_sign, atom(), default: :ed25519)
     field(:kind_encrypt, atom(), default: :box)
   end
 
-  typedstruct module: Intern do
+  typedstruct module: Intern, enforce: true do
     field(:sign, Sign.secret())
     field(:encrypt, Encrypt.secret())
   end
 
-  typedstruct module: Extern do
+  typedstruct module: Extern, enforce: true do
     field(:sign, Sign.public())
     field(:encrypt, Encrypt.public())
   end

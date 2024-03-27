@@ -1243,7 +1243,10 @@ defmodule Nock do
     ordering = env.ordering
 
     if ordering && env.snapshot_path && id do
-      with [id, key | 0] <- id,
+      # Gradient doesn't like matching numbers
+      zero = 0
+
+      with [id, key | ^zero] <- id,
            snap_id = [id | env.snapshot_path],
            {:ok, snap} <- Ordering.caller_blocking_read_id(ordering, snap_id),
            instrument({:snapshot, snap}),
