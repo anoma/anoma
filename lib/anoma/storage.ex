@@ -131,10 +131,69 @@ defmodule Anoma.Storage do
   @spec put(t(), order_key(), qualified_value()) :: result(:ok)
   def put(storage, key, value) do
     with {:atomic, order} <- read_order(storage, key),
-         new_order = calculate_order(order),
+         new_order = next_order(order),
          {:atomic, :ok} <- write_at_order(storage, key, value, new_order) do
       instrument({:put_order, new_order})
       {:atomic, :ok}
+    end
+  end
+
+  @spec delete_key_all(t(), order_key()) :: :error | {:atomic, :ok}
+  def delete_key_all(storage, key) do
+    instrument({:delete_key_all, key})
+
+    with {:atomic, order} <- read_order(storage, key) do
+      case order do
+        [] ->
+          {:atomic, :ok}
+
+        [{_, _, order}] ->
+          delete_all_tx = fn ->
+            for o <- 1..order,
+                do: :mnesia.delete({storage.qualified, [o, key | 0]})
+
+            :mnesia.delete({storage.order, key})
+          end
+
+          :mnesia.transaction(delete_all_tx)
+
+          {:atomic, :ok}
+
+        _ ->
+          :error
+      end
+    end
+  end
+
+  @spec delete_key(t(), order_key()) :: :error | {:atomic, :ok}
+  def delete_key(storage, key) do
+    instrument({:delete_key, key})
+
+    with {:atomic, order} <- read_order(storage, key) do
+      case order do
+        [] ->
+          {:atomic, :ok}
+
+        [{_, _, o}] ->
+          delete_tx = fn ->
+            :mnesia.delete({storage.qualified, [o, key | 0]})
+
+            prev_o = prev_order(order)
+
+            if prev_o > 0 do
+              :mnesia.write({storage.order, key, prev_o})
+            else
+              :mnesia.delete({storage.order, key})
+            end
+          end
+
+          :mnesia.transaction(delete_tx)
+
+          {:atomic, :ok}
+
+        _ ->
+          :error
+      end
     end
   end
 
@@ -265,9 +324,13 @@ defmodule Anoma.Storage do
   #                          Helpers                         #
   ############################################################
 
-  @spec calculate_order([{any(), any(), number()}]) :: number()
-  def calculate_order([{_, _, order}]), do: order + 1
-  def calculate_order([]), do: 1
+  @spec next_order([{any(), any(), number()}]) :: number()
+  def next_order([{_, _, order}]), do: order + 1
+  def next_order([]), do: 1
+
+  @spec prev_order([{any(), any(), number()}]) :: number()
+  def prev_order([{_, _, order}]), do: order - 1
+  def prev_order([]), do: 0
 
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
@@ -355,6 +418,14 @@ defmodule Anoma.Storage do
   end
 
   defp instrument({:error_missing, key, order}) do
-    Logger.error("Missing Key: #{inspect(key)} at order: #{inspect(order)}")
+    Logger.error("Missing key: #{inspect(key)} at order: #{inspect(order)}")
+  end
+
+  defp instrument({:delete_key_all, key}) do
+    Logger.debug("Deleting all by key: #{inspect(key)}")
+  end
+
+  defp instrument({:delete_key, key}) do
+    Logger.debug("Deleting key: #{inspect(key)}")
   end
 end
