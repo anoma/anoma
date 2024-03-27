@@ -37,7 +37,7 @@ defmodule Anoma.Dump do
   @spec load(String.t()) :: any()
   def load(name) do
     {:ok, bin} = load_bin(name)
-    :erlang.binary_to_term(bin)
+    Plug.Crypto.non_executable_binary_to_term(bin)
   end
 
   @doc """
