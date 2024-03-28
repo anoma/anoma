@@ -36,9 +36,22 @@ defmodule Anoma do
 
     children = [
       if Application.get_env(name, :env) == :prod do
-        {Anoma.Node, [{:ping_time, 10000} | node_settings]}
+        {Anoma.Node,
+         [
+           new_storage: true,
+           name: name,
+           settings:
+             [{:ping_time, 10000} | node_settings] |> Anoma.Node.start_min()
+         ]}
       else
-        {Anoma.Node, [{:ping_time, :no_timer} | node_settings]}
+        {Anoma.Node,
+         [
+           new_storage: true,
+           name: name,
+           settings:
+             [{:ping_time, :no_timer} | node_settings]
+             |> Anoma.Node.start_min()
+         ]}
       end
     ]
 
