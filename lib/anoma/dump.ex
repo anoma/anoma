@@ -72,7 +72,7 @@ defmodule Anoma.Dump do
   def launch(file, name) do
     load = load(file)
 
-    node_settings = [new_storage: false, name: name, setings: load]
+    node_settings = [new_storage: false, name: name, settings: load]
 
     Anoma.Node.start_link(node_settings)
   end
