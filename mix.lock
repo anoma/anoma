@@ -13,6 +13,7 @@
   "mnesia_rocksdb": {:git, "https://github.com/mariari/mnesia_rocksdb", "b07f7438af140947efed633c0391f0db839d95fb", []},
   "nimble_parsec": {:hex, :nimble_parsec, "1.4.0", "51f9b613ea62cfa97b25ccc2c1b4216e81df970acd8e16e8d1bdc58fef21370d", [:mix], [], "hexpm", "9c565862810fb383e9838c1dd2d7d2c437b3d13b267414ba6af33e50d2d1cf28"},
   "optimus": {:hex, :optimus, "0.5.0", "7050c0ea7fc448605d77c30bcf34c582919ae2ac1a92116d6c2d404bec822931", [:mix], [], "hexpm", "acfc75b341952d5d1dde8e0550425ecd3b656dfefa1bb4f14aea10005936378a"},
+  "plug_crypto": {:hex, :plug_crypto, "2.0.0", "77515cc10af06645abbfb5e6ad7a3e9714f805ae118fa1a70205f80d2d70fe73", [:mix], [], "hexpm", "53695bae57cc4e54566d993eb01074e4d894b65a3766f1c43e2c61a1b0f45ea9"},
   "recon": {:hex, :recon, "2.5.4", "05dd52a119ee4059fa9daa1ab7ce81bc7a8161a2f12e9d42e9d551ffd2ba901c", [:mix, :rebar3], [], "hexpm", "e9ab01ac7fc8572e41eb59385efeb3fb0ff5bf02103816535bacaedf327d0263"},
   "recon_ex": {:hex, :recon_ex, "0.9.1", "51558b6eb347753dcf9c884ba68d49dbbec607fc4296815b72a0c8995d5d3203", [:mix], [{:recon, "~> 2.3.1", [hex: :recon, repo: "hexpm", optional: false]}], "hexpm", "ca124759162c082adbb29078eadb9ab102425493c94387221d1e11acd0e050f7"},
   "redbug": {:hex, :redbug, "2.0.9", "47a0802ea5ca5f2c54bd9b0be429ff3ac839e85a277e97105d7e6107174b25f3", [:rebar3], [], "hexpm", "048cecdd53183a57e0f8a3f81bed2ea4c3ad424d319eabd5ef158b9fc3ea2c69"},
