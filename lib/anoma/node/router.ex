@@ -147,6 +147,10 @@ defmodule Anoma.Node.Router do
     call(router, {:create_topic, Id.new_keypair().external, :local})
   end
 
+  def new_topic(router, id) do
+    call(router, {:create_topic, id.external, :local})
+  end
+
   def start_engine(router, module, id, arg) do
     # case Anoma.Node.Router.Engine.start_link({module, id, arg}) do
     case DynamicSupervisor.start_child(
