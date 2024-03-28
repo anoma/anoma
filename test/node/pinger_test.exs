@@ -56,14 +56,14 @@ defmodule AnomaTest.Node.Pinger do
 
     pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
 
-    assert_receive {:"$gen_cast", {_, {:submitted, _}}}
+    assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
 
     pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
     pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
 
-    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_zero}}}
-    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_one}}}
-    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_two}}}
+    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}
+    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
+    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_two}}}
 
     assert {:ok, 2} = Storage.get(storage, key)
 

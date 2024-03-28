@@ -65,14 +65,15 @@ defmodule Anoma.Node.Router.Engine do
     end
   end
 
-  @spec handle_cast({Router.addr(), term()}, t()) :: any()
-  def handle_cast({src, msg}, state = %__MODULE__{}) do
+  @spec handle_cast({any(), Router.addr(), term()}, t()) :: any()
+  def handle_cast({:router_cast, src, msg}, state = %__MODULE__{}) do
     {:noreply, ns} = state.module.handle_cast(msg, src, state.module_state)
     {:noreply, %__MODULE__{state | module_state: ns}}
   end
 
-  @spec handle_call({Router.addr(), term()}, GenServer.from(), t()) :: any()
-  def handle_call({src, msg}, _, state = %__MODULE__{}) do
+  @spec handle_call({any(), Router.addr(), term()}, GenServer.from(), t()) ::
+          any()
+  def handle_call({:router_call, src, msg}, _, state = %__MODULE__{}) do
     case state.module.handle_call(msg, src, state.module_state) do
       {:reply, res, new_state} ->
         {:reply, res, %__MODULE__{state | module_state: new_state}}

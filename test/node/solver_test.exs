@@ -48,7 +48,7 @@ defmodule AnomaTest.Node.Solver do
     IntentPool.new_intent(iip, tx2)
 
     receive do
-      {:"$gen_cast", {_, {:solutions, [solution]}}} ->
+      {:"$gen_cast", {_, _, {:solutions, [solution]}}} ->
         assert Enum.all?([commitment(rxa), commitment(ryb)], fn x ->
                  x in solution.commitments
                end)
