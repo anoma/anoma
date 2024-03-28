@@ -85,7 +85,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     assert :error == Task.await(spawn)
     # check that we snapshotted
     assert {:atomic, [{_, _, 2}]} =
-             Storage.read_order(storage, hd(env.snapshot_path))
+             Storage.read_order_tx(storage, hd(env.snapshot_path))
   end
 
   test "failed worker waits for a snapshot before write", %{env: env} do

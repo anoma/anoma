@@ -33,8 +33,11 @@ defmodule Anoma.Storage do
   functions, but beware, this is an unintended way of using the API
      - `query_key_space/2`
      - `read_order/2`
+     - `read_order_tx/2`
      - `read_at_order/3`
+     - `read_at_order_tx/3`
      - `write_at_order/4`
+     - `write_at_order_tx/4`
 
 
   Please see my testing module `AnomaTest.Storage` to learn more on
@@ -121,7 +124,7 @@ defmodule Anoma.Storage do
 
   @spec get(t(), order_key()) :: :absent | {:ok, qualified_value()}
   def get(storage, key) do
-    with {:atomic, [{_, ^key, order}]} <- read_order(storage, key) do
+    with {:atomic, [{_, ^key, order}]} <- read_order_tx(storage, key) do
       checked_read_at(storage, key, order)
     else
       _ -> :absent
@@ -130,12 +133,14 @@ defmodule Anoma.Storage do
 
   @spec put(t(), order_key(), qualified_value()) :: result(:ok)
   def put(storage, key, value) do
-    with {:atomic, order} <- read_order(storage, key),
-         new_order = calculate_order(order),
-         {:atomic, :ok} <- write_at_order(storage, key, value, new_order) do
+    tx = fn ->
+      order = read_order(storage, key)
+      new_order = calculate_order(order)
+      write_at_order(storage, key, value, new_order)
       instrument({:put_order, new_order})
-      {:atomic, :ok}
     end
+
+    :mnesia.transaction(tx)
   end
 
   @spec blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
@@ -236,29 +241,43 @@ defmodule Anoma.Storage do
   end
 
   @spec read_order(t(), order_key()) ::
-          result(list({atom(), Noun.t(), non_neg_integer()}))
+          list({atom(), Noun.t(), non_neg_integer()})
   def read_order(storage, key) do
-    order_tx = fn -> :mnesia.read(storage.order, key) end
-    :mnesia.transaction(order_tx)
+    :mnesia.read(storage.order, key)
+  end
+
+  @spec read_order_tx(t(), order_key()) ::
+          result(list({atom(), Noun.t(), non_neg_integer()}))
+  def read_order_tx(storage, key) do
+    tx = fn -> read_order(storage, key) end
+    :mnesia.transaction(tx)
   end
 
   @spec read_at_order(t(), Noun.t(), non_neg_integer()) ::
-          result(list({atom(), qualified_key(), qualified_value()}))
+          list({atom(), qualified_key(), qualified_value()})
   def read_at_order(storage, key, order) do
-    value_tx = fn -> :mnesia.read(storage.qualified, [order, key | 0]) end
-    :mnesia.transaction(value_tx)
+    :mnesia.read(storage.qualified, qualified_key(key, order))
+  end
+
+  @spec read_at_order_tx(t(), Noun.t(), non_neg_integer()) ::
+          result(list({atom(), qualified_key(), qualified_value()}))
+  def read_at_order_tx(storage, key, order) do
+    tx = fn -> read_at_order(storage, key, order) end
+    :mnesia.transaction(tx)
   end
 
   @spec write_at_order(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
-          result(:ok)
+          :ok
   def write_at_order(storage, key, value, order) do
-    write_tx = fn ->
-      :mnesia.write({storage.order, key, order})
+    :mnesia.write({storage.order, key, order})
+    :mnesia.write({storage.qualified, qualified_key(key, order), value})
+  end
 
-      :mnesia.write({storage.qualified, [order, key | 0], value})
-    end
-
-    :mnesia.transaction(write_tx)
+  @spec write_at_order_tx(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
+          result(:ok)
+  def write_at_order_tx(storage, key, value, order) do
+    tx = fn -> write_at_order(storage, key, value, order) end
+    :mnesia.transaction(tx)
   end
 
   ############################################################
@@ -269,13 +288,16 @@ defmodule Anoma.Storage do
   def calculate_order([{_, _, order}]), do: order + 1
   def calculate_order([]), do: 1
 
+  @spec qualified_key(Noun.t(), non_neg_integer()) :: qualified_key()
+  defp qualified_key(key, order), do: [order, key | 0]
+
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
   defp checked_read_at(storage, key, order) do
     instrument({:get_order, order})
 
     with {:atomic, [{_, [^order, ^key | 0], value}]} <-
-           read_at_order(storage, key, order) do
+           read_at_order_tx(storage, key, order) do
       {:ok, value}
     else
       _ -> :absent

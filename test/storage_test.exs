@@ -81,9 +81,9 @@ defmodule AnomaTest.Storage do
   describe "Querying by hand" do
     test "Reading at a known order gives results", %{storage: storage} do
       testing_atom = 750_089_999
-      Storage.write_at_order(storage, testing_atom, 10, 3)
+      Storage.write_at_order_tx(storage, testing_atom, 10, 3)
 
-      assert Storage.read_at_order(storage, testing_atom, 3) ==
+      assert Storage.read_at_order_tx(storage, testing_atom, 3) ==
                {:atomic, [{storage.qualified, [3, testing_atom | 0], 10}]}
     end
 
@@ -91,9 +91,9 @@ defmodule AnomaTest.Storage do
       storage: storage
     } do
       testing_atom = 999_888_777_666
-      Storage.write_at_order(storage, testing_atom, 10, 3)
+      Storage.write_at_order_tx(storage, testing_atom, 10, 3)
 
-      assert Storage.read_order(storage, testing_atom) ==
+      assert Storage.read_order_tx(storage, testing_atom) ==
                {:atomic, [{storage.order, testing_atom, 3}]}
     end
   end
@@ -133,7 +133,7 @@ defmodule AnomaTest.Storage do
     test "snapshots properly get the latest", %{storage: storage} do
       snapshot_storage = :super_hot
       testing_atom = 111_222_333_444_555_666
-      Storage.write_at_order(storage, testing_atom, 10, 3)
+      Storage.write_at_order_tx(storage, testing_atom, 10, 3)
       assert {:atomic, :ok} = Storage.put_snapshot(storage, snapshot_storage)
       assert {:ok, snapshot} = Storage.get(storage, snapshot_storage)
       assert Storage.in_snapshot(snapshot, testing_atom) == 3
