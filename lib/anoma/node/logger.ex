@@ -23,6 +23,10 @@ defmodule Anoma.Node.Logger do
     field(:clock, Router.Addr.t())
   end
 
+  def init(%Anoma.Node.Logger{} = state) do
+    {:ok, state}
+  end
+
   def init(args) do
     {:ok, %Anoma.Node.Logger{storage: args[:storage], clock: args[:clock]}}
   end

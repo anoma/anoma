@@ -16,6 +16,10 @@ defmodule Anoma.Node.Clock do
     field(:start, integer())
   end
 
+  def init(%Clock{} = state) do
+    {:ok, state}
+  end
+
   def init(args) do
     {:ok, %Clock{start: args[:start]}}
   end
