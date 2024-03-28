@@ -41,8 +41,6 @@ defmodule AnomaTest.Node.Mempool do
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
-    require IEx; IEx.pry()
-
     :ok =
       Router.call(
         node.router,
