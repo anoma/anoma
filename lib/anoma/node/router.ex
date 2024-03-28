@@ -175,7 +175,7 @@ defmodule Anoma.Node.Router do
   end
 
   def new_topic(router, id) do
-    call(router, {:create_topic, id.external, :local})
+    call(router, {:create_topic, id, :local})
   end
 
   def start_engine(router, module, id, arg) do

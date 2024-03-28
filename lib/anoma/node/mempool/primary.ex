@@ -27,7 +27,6 @@ defmodule Anoma.Node.Mempool do
   end
 
   def init(%Mempool{} = state) do
-    Block.create_table(state.block_storage, false)
     {:ok, state}
   end
 

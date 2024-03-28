@@ -12,7 +12,6 @@ defmodule Anoma.Dump do
   alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock}
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Crypto.Id
-  alias Anoma.Node.Router
 
   @doc """
   I dump the current state with storage. I accept a string as a name,
@@ -36,8 +35,9 @@ defmodule Anoma.Dump do
 
   @spec load(String.t()) :: any()
   def load(name) do
-    {:ok, bin} = load_bin(name)
-    Plug.Crypto.non_executable_binary_to_term(bin)
+    with {:ok, bin} <- load_bin(name) do
+      Plug.Crypto.non_executable_binary_to_term(bin)
+    end
   end
 
   @doc """
@@ -70,25 +70,9 @@ defmodule Anoma.Dump do
 
   @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
   def launch(file, name) do
-    {_r, _mt, _et, _l, _s, _o, _m, _p, _e, {:storage, names},
-     {:qualified, qual}, {:order, ord},
-     {:block_storage, block}} =
-      load(file)
+    load = load(file)
 
-    storage = hd(names)
-    block_storage = names |> tl() |> hd()
-    tables = qual ++ ord ++ block
-
-    Anoma.Storage.ensure_new(storage)
-    :mnesia.delete_table(block_storage)
-    Anoma.Block.create_table(block_storage, false)
-
-    tables
-    |> Enum.map(fn x ->
-      fn -> :mnesia.write(x) end |> :mnesia.transaction()
-    end)
-
-    node_settings = [dump: true, name: name, set: load(file)]
+    node_settings = [new_storage: false, name: name, setings: load]
 
     Anoma.Node.start_link(node_settings)
   end
@@ -104,12 +88,17 @@ defmodule Anoma.Dump do
     end)
   end
 
-  @type engine :: {atom(), Id.Extern.t(), struct()}
-  @type address :: {atom(), Router.addr()}
-  @type storage :: {atom(), list()}
+  @type log_eng :: {Id.Extern.t(), Logger.t()}
+  @type clock_eng :: {Id.Extern.t(), Clock.t()}
+  @type ord_eng :: {Id.Extern.t(), Ordering.t()}
+  @type mem_eng :: {Id.Extern.t(), Mempool.t()}
+  @type ping_eng :: {Id.Extern.t(), Pinger.t()}
+  @type ex_eng :: {Id.Extern.t(), Executor.t()}
+  @type stores :: {Anoma.Storage.t(), atom()}
 
   @doc """
   I get all the info on the node tables and engines in order:
+  - router
   - logger
   - clock
   - ordering
@@ -125,10 +114,23 @@ defmodule Anoma.Dump do
   """
 
   @spec get_all(atom()) ::
-          {address, address, address, engine, engine, engine, engine, engine,
-           engine, storage, storage, storage}
+          %{
+            router: Id.Extern.t(),
+            mempool_topic: Id.Extern.t(),
+            executor_topic: Id.Extern.t(),
+            logger: log_eng,
+            clock: clock_eng,
+            ordering: ord_eng,
+            mempool: mem_eng,
+            pinger: ping_eng,
+            executor: ex_eng,
+            storage: stores,
+            qualified: list(),
+            order: list(),
+            block_storage: list()
+          }
   def get_all(node) do
-    (get_state(node) ++ get_tables(node)) |> List.to_tuple()
+    Map.merge(get_state(node), get_tables(node))
   end
 
   @doc """
@@ -145,10 +147,17 @@ defmodule Anoma.Dump do
   """
 
   @spec get_state(atom()) ::
-          list(
-            {atom(), Router.addr()}
-            | {atom(), Id.Extern.t(), struct()}
-          )
+          %{
+            router: Id.Extern.t(),
+            mempool_topic: Id.Extern.t(),
+            executor_topic: Id.Extern.t(),
+            logger: log_eng,
+            clock: clock_eng,
+            ordering: ord_eng,
+            mempool: mem_eng,
+            pinger: ping_eng,
+            executor: ex_eng
+          }
   def get_state(node) do
     state = node |> Node.state()
     router = state.router
@@ -168,14 +177,19 @@ defmodule Anoma.Dump do
     list =
       node
       |> Enum.map(fn {atom, engine} ->
-        {atom, engine.id, module_match(atom).state(engine)}
+        %{atom => {engine.id, module_match(atom).state(engine)}}
       end)
 
-    [
-      {:router, router},
-      {:mempool_topic, state.mempool_topic},
-      {:executor_topic, state.executor_topic}
-    ] ++ list
+    map = Enum.reduce(list, fn x, acc -> Map.merge(acc, x) end)
+
+    Map.merge(
+      %{
+        router: router.id,
+        mempool_topic: state.mempool_topic.id,
+        executor_topic: state.executor_topic.id
+      },
+      map
+    )
   end
 
   @doc """
@@ -186,7 +200,12 @@ defmodule Anoma.Dump do
   - block_storage
   """
 
-  @spec get_tables(atom()) :: list({atom(), list()})
+  @spec get_tables(atom()) :: %{
+          storage: stores,
+          qualified: list(),
+          order: list(),
+          block_storage: list()
+        }
   def get_tables(node) do
     node = node |> Node.state()
     table = Ordering.state(node.ordering).table
@@ -203,7 +222,7 @@ defmodule Anoma.Dump do
       end)
       |> List.to_tuple()
 
-    [storage: [table, block], qualified: q, order: o, block_storage: b]
+    %{storage: {table, block}, qualified: q, order: o, block_storage: b}
   end
 
   @spec module_match(atom()) :: atom()

@@ -18,11 +18,16 @@ defmodule AnomaTest.Node.Mempool do
 
     {:ok, nodes} =
       Anoma.Node.start_link(
+        new_storage: true,
         name: name,
-        snapshot_path: snapshot_path,
-        storage: storage,
-        block_storage: :mempool_blocks,
-        ping_time: :no_timer
+        settings:
+          [
+            snapshot_path: snapshot_path,
+            storage: storage,
+            block_storage: :mempool_blocks,
+            ping_time: :no_timer
+          ]
+          |> Anoma.Node.start_min()
       )
 
     node = Anoma.Node.state(nodes)
@@ -35,6 +40,8 @@ defmodule AnomaTest.Node.Mempool do
     storage = Ordering.get_storage(node.ordering)
     increment = increment_counter_val(key)
     zero = zero_counter(key)
+
+    require IEx; IEx.pry()
 
     :ok =
       Router.call(
@@ -55,6 +62,9 @@ defmodule AnomaTest.Node.Mempool do
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_one}}}
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_two}}}
     assert {:ok, 2} = Storage.get(storage, key)
+
+    require IEx
+    IEx.pry()
 
     :ok =
       Router.call(

@@ -32,9 +32,6 @@ defmodule Anoma.Node.Storage.Ordering do
   end
 
   def init(%Anoma.Node.Storage.Ordering{} = state) do
-    Storage.setup(state.table)
-
-    :mnesia.subscribe({:table, state.table.qualified, :simple})
     {:ok, state}
   end
 
@@ -46,7 +43,6 @@ defmodule Anoma.Node.Storage.Ordering do
 
     # idempotent
     Storage.setup(return.table)
-    :mnesia.subscribe({:table, return.table.qualified, :simple})
     {:ok, return}
   end
 
