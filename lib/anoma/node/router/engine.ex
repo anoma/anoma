@@ -5,13 +5,13 @@ defmodule Anoma.Node.Router.Engine do
 
   def start_link({router, mod, id, arg}) do
     GenServer.start_link(__MODULE__, {router, mod, id, arg},
-      name: {:via, Registry, {router.registry, id.external}}
+      name: {:via, Registry, {router.registry, id}}
     )
   end
 
   def init({router, mod, id, arg}) do
     GenServer.cast(router.router, {:init_local_engine, id, self()})
-    Registry.register(router.registry, self(), id.external)
+    Registry.register(router.registry, self(), id)
     Process.flag(:trap_exit, true)
 
     case mod.init(arg) do
