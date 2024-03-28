@@ -52,18 +52,13 @@ defmodule Anoma.Node.Router do
 
   def start_link(id) do
     GenServer.start_link(__MODULE__, id,
-      name: {:via, Registry, {registry_name(id.external), id.external}}
+      name: {:via, Registry, {registry_name(id), id}}
     )
   end
 
-  # Temporary functionality.
-  def start(%Id.Extern{} = id) do
-    start(%Anoma.Crypto.Id{external: id})
-  end
-
   def start(id) do
-    supervisor = supervisor_name(id.external)
-    registry = registry_name(id.external)
+    supervisor = supervisor_name(id)
+    registry = registry_name(id)
 
     {:ok, _} =
       DynamicSupervisor.start_link(name: supervisor, strategy: :one_for_one)
@@ -75,13 +70,13 @@ defmodule Anoma.Node.Router do
       )
 
     # {:ok, _} = Registry.start_link(keys: :unique, name: __MODULE__.Registry)
-    router = {:via, Registry, {registry, id.external}}
+    router = {:via, Registry, {registry, id}}
 
     case DynamicSupervisor.start_child(supervisor, {__MODULE__, id}) do
       {:ok, _} ->
         {:ok,
          %Addr{
-           id: id.external,
+           id: id,
            registry: registry,
            server: router,
            router: router
@@ -93,29 +88,29 @@ defmodule Anoma.Node.Router do
   end
 
   def start() do
-    start(Id.new_keypair())
+    start(Id.new_keypair().external)
   end
 
   def stop(_router) do
   end
 
   def init(id) do
-    supervisor = supervisor_name(id.external)
-    registry = registry_name(id.external)
-    server = {:via, Registry, {registry, id.external}}
+    supervisor = supervisor_name(id)
+    registry = registry_name(id)
+    server = {:via, Registry, {registry, id}}
 
     {:ok,
      %Router{
-       id: id.external,
+       id: id,
        addr: %Addr{
          router: server,
          registry: registry,
-         id: id.external,
+         id: id,
          server: server
        },
        supervisor: supervisor,
        registry: registry,
-       local_engines: %{id.external => id}
+       local_engines: %{id => id}
      }}
   end
 
@@ -191,11 +186,11 @@ defmodule Anoma.Node.Router do
 
   # start a new instance of an engine, without caring about the id
   def start_engine(router, module, arg) do
-    start_engine(router, module, Id.new_keypair(), arg)
+    start_engine(router, module, Id.new_keypair().external, arg)
   end
 
   def handle_cast({:init_local_engine, id, _pid}, s) do
-    s = %{s | local_engines: Map.put(s.local_engines, id.external, id)}
+    s = %{s | local_engines: Map.put(s.local_engines, id, id)}
     {:noreply, s}
   end
 
