@@ -61,9 +61,6 @@ defmodule AnomaTest.Node.Mempool do
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_two}}}
     assert {:ok, 2} = Storage.get(storage, key)
 
-    require IEx
-    IEx.pry()
-
     :ok =
       Router.call(
         node.router,
