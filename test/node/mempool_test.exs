@@ -32,7 +32,6 @@ defmodule AnomaTest.Node.Mempool do
 
   test "successful process", %{node: node} do
     key = 555
-    storage = Ordering.get_storage(node.ordering)
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
@@ -54,7 +53,7 @@ defmodule AnomaTest.Node.Mempool do
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_zero}}}
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_one}}}
     assert_receive {:"$gen_cast", {_, {:process_done, ^pid_two}}}
-    assert {:ok, 2} = Storage.get(storage, key)
+    assert {:ok, 2} = Router.call(node.router, {:storage_get, key})
 
     :ok =
       Router.call(

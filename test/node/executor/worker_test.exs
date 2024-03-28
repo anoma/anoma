@@ -1,9 +1,11 @@
 defmodule AnomaTest.Node.Executor.Worker do
   use ExUnit.Case, async: true
 
+  alias Anoma.Identity.Name
   alias Anoma.{Storage, Order}
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Executor.Worker
+  alias Anoma.Node.Router
   import TestHelper.Nock
 
   setup_all do
@@ -12,7 +14,8 @@ defmodule AnomaTest.Node.Executor.Worker do
       order: AnomaTest.Worker.Order
     }
 
-    {:ok, router} = Anoma.Node.Router.start()
+    namespace = %Name{storage: storage, keyspace: nil, name: "router"}
+    {:ok, router} = Anoma.Node.Router.start(namespace: namespace)
 
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering,
@@ -21,7 +24,11 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
-    env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
+    env = %Nock{
+      snapshot_path: snapshot_path,
+      ordering: ordering,
+      router: router
+    }
 
     [env: env]
   end
@@ -50,17 +57,17 @@ defmodule AnomaTest.Node.Executor.Worker do
     Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
 
     # Setup default value for storage
-    Storage.put(storage, key, 0)
+    Router.call(env.router, {:storage_put, key, 0})
     # Now set the snapshot up that scry expects
     Storage.put_snapshot(storage, hd(env.snapshot_path))
     # tell the first spawn it can write
     send(spawn_1.pid, {:write_ready, 1})
     assert :ok == Task.await(spawn_1)
-    assert {:ok, 1} == Storage.get(storage, key)
+    assert {:ok, 1} == Router.call(env.router, {:storage_get, key})
 
     send(spawn_2.pid, {:write_ready, 2})
     assert :ok == Task.await(spawn_2)
-    assert {:ok, 2} == Storage.get(storage, key)
+    assert {:ok, 2} == Router.call(env.router, {:storage_get, key})
   end
 
   test "failed worker", %{env: env} do

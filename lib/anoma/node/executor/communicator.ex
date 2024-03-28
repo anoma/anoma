@@ -32,15 +32,21 @@ defmodule Anoma.Node.Executor do
   alias Anoma.Node.Logger
 
   typedstruct do
+    field(:router, Router.Addr.t(), enforce: true)
     field(:task_completion_topic, Router.Addr.t())
     field(:ambiant_env, Nock.t())
     field(:tasks, list(Task.t()), default: [])
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init({env, topic, logger}) do
+  def init({env, topic, logger, router}) do
     {:ok,
-     %Executor{ambiant_env: env, task_completion_topic: topic, logger: logger}}
+     %Executor{
+       ambiant_env: env,
+       task_completion_topic: topic,
+       logger: logger,
+       router: router
+     }}
   end
 
   ############################################################
@@ -116,7 +122,7 @@ defmodule Anoma.Node.Executor do
     iex> alias Anoma.Node.{Executor, Router}
     iex> {:ok, router} = Router.start
     iex> snap = %{snapshot_path: [:a | 0], ordering: nil}
-    iex> args = {snap, Router.new_topic(router), nil}
+    iex> args = {snap, Router.new_topic(router), nil, router}
     iex> {:ok, addr} = Router.start_engine(router, Executor, args)
     iex> Executor.snapshot(addr)
     :a

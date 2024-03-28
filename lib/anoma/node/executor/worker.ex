@@ -20,9 +20,9 @@ defmodule Anoma.Node.Executor.Worker do
            nock(stage_2_tx, [10, [6, 1 | order], 0 | 1], env),
          {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       true_order = wait_for_ready(env, order)
-
       log_info({:writing, true_order, logger})
-      Storage.put(storage, key, value)
+      Anoma.Node.Router.call(env.router, {:storage_put, key, value})
+
       log_info({:put, key, logger})
       snapshot(storage, env)
       log_info({:success_run, logger})
@@ -46,7 +46,7 @@ defmodule Anoma.Node.Executor.Worker do
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
          vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
          true <- Anoma.Resource.Transaction.verify(vm_resource_tx),
-         true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
+         true <- rm_nullifier_check(env.router, vm_resource_tx.nullifiers) do
       true_order = wait_for_ready(env, order)
 
       log_info({:writing, true_order, logger})
@@ -57,13 +57,13 @@ defmodule Anoma.Node.Executor.Worker do
       # the latter requires the merkle tree to be complete
       for commitment <- vm_resource_tx.commitments do
         cm_key = ["rm", "commitments", commitment]
-        Storage.put(storage, cm_key, true)
+        Anoma.Node.Router.call(env.router, {:storage_put, cm_key, true})
         log_info({:put, cm_key, logger})
       end
 
       for nullifier <- vm_resource_tx.nullifiers do
         nf_key = ["rm", "nullifiers", nullifier]
-        Storage.put(storage, nf_key, true)
+        Anoma.Node.Router.call(env.router, {:storage_put, nf_key, true})
         log_info({:put, nf_key, logger})
       end
 
@@ -79,12 +79,14 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec rm_nullifier_check(Storage.t(), list(binary())) :: bool()
-  def rm_nullifier_check(storage, nullifiers) do
+  @spec rm_nullifier_check(Router.Addr.t(), list(binary())) :: bool()
+  def rm_nullifier_check(router, nullifiers) do
     for nullifier <- nullifiers, reduce: true do
       acc ->
         nf_key = ["rm", "nullifiers", nullifier]
-        acc && Storage.get(storage, nf_key) == :absent
+
+        acc &&
+          Anoma.Node.Router.call(router, {:storage_get, nf_key}) == :absent
     end
   end
 

@@ -26,7 +26,7 @@ defmodule AnomaTest.Identity.Name do
 
     Storage.ensure_new(storage)
 
-    namespace = %Name{storage: storage, keyspace: tab}
+    namespace = %Name{storage: storage, keyspace: tab, name: "Alice"}
 
     [ns: namespace, st: storage, mem: mem]
   end
@@ -36,7 +36,7 @@ defmodule AnomaTest.Identity.Name do
     {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
     {:ok, commited} = Commitment.commit(com, "Alice")
     name = [Name.name_space(), "Alice"]
-    assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok
+    assert Name.reserve_namespace(namespace, pub, commited) == :ok
     assert Storage.get_keyspace(storage, name) == [{name, pub}]
   end
 
@@ -45,13 +45,10 @@ defmodule AnomaTest.Identity.Name do
     # First pass all good
     {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
     {:ok, commited} = Commitment.commit(com, "Alice")
-    assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok
+    assert Name.reserve_namespace(namespace, pub, commited) == :ok
     # no longer good
-    assert Name.reserve_namespace(namespace, "Alice", pub, commited) ==
+    assert Name.reserve_namespace(namespace, pub, commited) ==
              :already_there
-
-    assert Name.reserve_namespace(namespace, "A", pub, commited) ==
-             :improper_data
   end
 
   test "Adding to a namespace", %{ns: namespace, mem: mem, st: storage} do
@@ -59,11 +56,11 @@ defmodule AnomaTest.Identity.Name do
     {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
     {:ok, commited} = Commitment.commit(com, "Alice")
 
-    assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok
+    assert Name.reserve_namespace(namespace, pub, commited) == :ok
 
     {_, new_identity} = Manager.generate(mem, :ed25519, :commit)
 
-    keyspace = ["Alice", "Urbit"]
+    keyspace = ["Urbit"]
 
     {:ok, attestation} =
       Commitment.commit(com, {keyspace, new_identity})
@@ -76,10 +73,7 @@ defmodule AnomaTest.Identity.Name do
     assert Name.add(namespace, attestation, {keyspace, ["Alice", "Anoma"]}) ==
              :improper_data
 
-    assert Name.add(namespace, attestation, {["Londo", "Narn"], new_identity}) ==
-             :no_namespace
-
-    assert Name.all_identities(namespace, "Alice") ==
+    assert Name.all_identities(namespace) ==
              MapSet.new([new_identity, pub])
   end
 end

@@ -21,10 +21,16 @@ defmodule Anoma.Node.Logger do
   typedstruct do
     field(:storage, Storage.t())
     field(:clock, Router.Addr.t())
+    field(:router, Router.Addr.t())
   end
 
   def init(args) do
-    {:ok, %Anoma.Node.Logger{storage: args[:storage], clock: args[:clock]}}
+    {:ok,
+     %Anoma.Node.Logger{
+       storage: args[:storage],
+       clock: args[:clock],
+       router: args[:router]
+     }}
   end
 
   ############################################################
@@ -54,10 +60,10 @@ defmodule Anoma.Node.Logger do
   ############################################################
 
   def handle_cast({:add, logger, atom, msg}, addr, state) do
-    Storage.put(
-      state.storage,
-      [logger, addr.id, Clock.get_time(state.clock), atom],
-      msg
+    Router.call(
+      state.router,
+      {:storage_put, [logger, addr.id, Clock.get_time(state.clock), atom],
+       msg}
     )
 
     log_fun({atom, msg})
@@ -66,11 +72,14 @@ defmodule Anoma.Node.Logger do
   end
 
   def handle_call({:get_all, logger}, _from, state) do
-    {:reply, Storage.get_keyspace(state.storage, [logger]), state}
+    {:reply, Router.call(state.router, {:storage_get_keyspace, [logger]}),
+     state}
   end
 
   def handle_call({:get, logger, engine}, _from, state) do
-    {:reply, Storage.get_keyspace(state.storage, [logger, engine]), state}
+    {:reply,
+     Router.call(state.router, {:storage_get_keyspace, [logger, engine]}),
+     state}
   end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)

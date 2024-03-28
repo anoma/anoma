@@ -6,6 +6,9 @@ defmodule Anoma.Node.Router do
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router.Addr
+  alias Anoma.Storage
+  alias Anoma.Identity.Name
+  alias Anoma.Crypto.Sign
 
   @type addr() :: Addr.t()
 
@@ -40,6 +43,8 @@ defmodule Anoma.Node.Router do
     field(:supervisor, atom())
     # mapping id -> [pending messages]
     field(:msg_queue, map(), default: %{})
+    # the namespace backing this router
+    field(:namespace, Anoma.Identity.Name.t())
   end
 
   def registry_name(id) do
@@ -50,13 +55,15 @@ defmodule Anoma.Node.Router do
     :erlang.binary_to_atom("supervisor " <> id.sign, :latin1)
   end
 
-  def start_link(id) do
-    GenServer.start_link(__MODULE__, id,
+  def start_link({namespace, id}) do
+    GenServer.start_link(__MODULE__, {namespace, id},
       name: {:via, Registry, {registry_name(id.external), id.external}}
     )
   end
 
-  def start(id) do
+  def start(arg \\ []) do
+    id = arg[:id] || Id.new_keypair()
+    namespace = arg[:namespace]
     supervisor = supervisor_name(id.external)
     registry = registry_name(id.external)
 
@@ -72,7 +79,10 @@ defmodule Anoma.Node.Router do
     # {:ok, _} = Registry.start_link(keys: :unique, name: __MODULE__.Registry)
     router = {:via, Registry, {registry, id.external}}
 
-    case DynamicSupervisor.start_child(supervisor, {__MODULE__, id}) do
+    case DynamicSupervisor.start_child(
+           supervisor,
+           {__MODULE__, {namespace, id}}
+         ) do
       {:ok, _} ->
         {:ok,
          %Addr{
@@ -87,17 +97,14 @@ defmodule Anoma.Node.Router do
     end
   end
 
-  def start() do
-    start(Id.new_keypair())
-  end
-
   def stop(_router) do
   end
 
-  def init(id) do
+  def init({namespace, id}) do
     supervisor = supervisor_name(id.external)
     registry = registry_name(id.external)
     server = {:via, Registry, {registry, id.external}}
+    namespace && (:ok = reserve_namespace(namespace, id))
 
     {:ok,
      %Router{
@@ -110,8 +117,17 @@ defmodule Anoma.Node.Router do
        },
        supervisor: supervisor,
        registry: registry,
-       local_engines: %{id.external => id}
+       local_engines: %{id.external => id},
+       namespace: namespace
      }}
+  end
+
+  # reserve a namespace for the router using the given key
+  defp reserve_namespace(namespace, id) do
+    attestation =
+      Anoma.Crypto.Sign.sign_detatched(namespace.name, id.internal.sign)
+
+    Anoma.Identity.Name.reserve_namespace(namespace, id.external, attestation)
   end
 
   # public interface
@@ -230,6 +246,58 @@ defmodule Anoma.Node.Router do
   def handle_call({src, msg}, _, s) do
     {res, s} = handle_self_call(msg, src, s)
     {:reply, res, s}
+  end
+
+  def handle_self_call({:storage_put, key, value}, _, s) do
+    id = s.local_engines[s.id]
+
+    with x when x in [:ok, :already_there] <-
+           reserve_namespace(s.namespace, id) do
+      attestation =
+        Sign.sign_detatched(
+          :erlang.term_to_binary({key, value}),
+          id.internal.sign
+        )
+
+      {Name.put(s.namespace, attestation, {key, value}), s}
+    else
+      error -> {error, s}
+    end
+  end
+
+  def handle_self_call({:storage_get, key}, _, s) do
+    id = s.local_engines[s.id]
+
+    with x when x in [:ok, :already_there] <-
+           reserve_namespace(s.namespace, id) do
+      {Name.get(s.namespace, key), s}
+    else
+      error -> {error, s}
+    end
+  end
+
+  def handle_self_call({:storage_get_keyspace, key}, _, s) do
+    id = s.local_engines[s.id]
+
+    with x when x in [:ok, :already_there] <-
+           reserve_namespace(s.namespace, id) do
+      {Name.get_keyspace(s.namespace, key), s}
+    else
+      error -> {error, s}
+    end
+  end
+
+  def handle_self_call({:storage_get_at_snapshot, snap, key}, _, s) do
+    id = s.local_engines[s.id]
+
+    with x when x in [:ok, :already_there] <-
+           reserve_namespace(s.namespace, id) do
+      {Storage.get_at_snapshot(snap, [
+         Name.name_space() | [s.namespace.name | key]
+       ]), s}
+    else
+      error -> {error, s}
+    end
   end
 
   def handle_self_call(:supervisor, _, s) do

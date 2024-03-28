@@ -24,6 +24,7 @@ defmodule Anoma.Node do
 
   use GenServer
   use TypedStruct
+  alias Anoma.Identity.Name
   alias Anoma.Node.Router
   alias __MODULE__
 
@@ -45,6 +46,7 @@ defmodule Anoma.Node do
 
     name = args[:name]
     args = Enum.filter(args, fn {k, _} -> k != :name end)
+
     resp = GenServer.start_link(__MODULE__, args, name: name)
 
     unless args[:old_storage] do
@@ -59,7 +61,9 @@ defmodule Anoma.Node do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
     ping_name = Anoma.Node.Utility.append_name(args[:name], "_pinger")
 
-    {:ok, router} = Router.start()
+    namespace = %Name{storage: args[:storage], keyspace: nil, name: "node"}
+    {:ok, router} = Router.start(namespace: namespace)
+    env = %{env | router: router}
 
     {:ok, clock} =
       Router.start_engine(router, Anoma.Node.Clock,
@@ -69,7 +73,8 @@ defmodule Anoma.Node do
     {:ok, logger} =
       Router.start_engine(router, Anoma.Node.Logger,
         storage: args[:storage],
-        clock: clock
+        clock: clock,
+        router: router
       )
 
     {:ok, ordering} =
@@ -85,7 +90,7 @@ defmodule Anoma.Node do
       Router.start_engine(
         router,
         Anoma.Node.Executor,
-        {env, executor_topic, logger}
+        {env, executor_topic, logger, router}
       )
 
     {:ok, mempool_topic} = Router.new_topic(router)

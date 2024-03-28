@@ -8,7 +8,6 @@ defmodule Nock do
 
   use TypedStruct
 
-  alias Anoma.Storage
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Router
@@ -28,6 +27,7 @@ defmodule Nock do
 
   """
   typedstruct do
+    field(:router, Router.Addr.t() | nil, default: nil)
     field(:jet, jettedness(), default: :jetted)
     field(:ordering, Router.Addr.t() | nil, default: nil)
     field(:snapshot_path, Noun.t() | nil, default: nil)
@@ -1247,7 +1247,8 @@ defmodule Nock do
            snap_id = [id | env.snapshot_path],
            {:ok, snap} <- Ordering.caller_blocking_read_id(ordering, snap_id),
            instrument({:snapshot, snap}),
-           {:ok, value} <- Storage.get_at_snapshot(snap, key) do
+           {:ok, value} <-
+             Router.call(env.router, {:storage_get_at_snapshot, snap, key}) do
         instrument({:got_value, value})
         {:ok, value}
       else

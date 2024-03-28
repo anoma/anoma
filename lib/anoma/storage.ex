@@ -254,7 +254,6 @@ defmodule Anoma.Storage do
   def write_at_order(storage, key, value, order) do
     write_tx = fn ->
       :mnesia.write({storage.order, key, order})
-
       :mnesia.write({storage.qualified, [order, key | 0], value})
     end
 

@@ -5,6 +5,8 @@ defmodule AnomaTest.Nock do
   import TestHelper.Nock
   alias Anoma.{Storage, Order}
   alias Anoma.Node.Storage.Ordering
+  alias Anoma.Identity.Name
+  alias Anoma.Node.Router
 
   doctest(Nock)
 
@@ -14,7 +16,8 @@ defmodule AnomaTest.Nock do
       order: AnomaTest.Nock.Order
     }
 
-    {:ok, router} = Anoma.Node.Router.start()
+    namespace = %Name{storage: storage, keyspace: nil, name: "node"}
+    {:ok, router} = Anoma.Node.Router.start(namespace: namespace)
     # on_exit(fn -> Anoma.Node.Router.stop(router.id) end)
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering, %{
@@ -23,7 +26,11 @@ defmodule AnomaTest.Nock do
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
-    env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
+    env = %Nock{
+      snapshot_path: snapshot_path,
+      ordering: ordering,
+      router: router
+    }
 
     [env: env]
   end
@@ -56,7 +63,7 @@ defmodule AnomaTest.Nock do
       # setup id in the system for snapshot 1
       Ordering.new_order(env.ordering, [Order.new(1, id, self())])
       # put the key with some value
-      Storage.put(storage, key, 5)
+      Router.call(env.router, {:storage_put, key, 5})
       # Now snapshot it so we can scry
       Storage.put_snapshot(storage, hd(env.snapshot_path))
       assert {:ok, val} = nock(increment, [9, 2, 10, [6, 1 | id], 0 | 1], env)
