@@ -16,4 +16,11 @@ build:
 test:
 	mix test
 
-.PHONY: build test
+docs:
+	./scripts/docs.sh
+
+docs-release:
+	make docs
+	./scripts/docs-version.sh
+
+.PHONY: build test docs
