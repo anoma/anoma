@@ -49,7 +49,8 @@ defmodule Anoma do
   def start_logic() do
     storage = %Anoma.Storage{
       qualified: Anoma.Qualified,
-      order: Anoma.Order
+      order: Anoma.Order,
+      rm_commitments: Anoma.RMCommitments
     }
 
     name = :anoma
