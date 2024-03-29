@@ -54,3 +54,20 @@ jobs:
           gh release upload --clobber "${{ github.ref_name }}" \
             anoma_otp_${{ matrix.otp }} \
             anoma-otp-${{ matrix.otp }}.sha{1,256}sum \
+  build-docs:
+    name: build docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.0
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/workflows/setup
+        with:
+          fail-on-failure: ${{ true }}
+
+      - uses: ./.github/workflows/docs
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          release: ${{ true }}
