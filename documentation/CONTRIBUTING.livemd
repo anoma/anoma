@@ -3,17 +3,26 @@
 # Contributing
 
 ## Index
+1. [Contributing](./CONTRIBUTING.livemd)
+   1. [Git](./contributing/git.livemd)
+   2. [Hoon](./contributing/hoon.livemd)
+   3. [Iex](./contributing/iex.livemd)
+   4. [Observer](./contributing/observer.livemd)
+   5. [Testing](./contributing/testing.livemd)
+      1. [Running Tests](./contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./contributing/testing/writing-tests.livemd)
+   6. [Understanding](./contributing/understanding.livemd)
+2. [Hoon](./hoon.livemd)
+   1. [Calling](./hoon/calling.livemd)
+   2. [Dumping](./hoon/dumping.livemd)
+   3. [Setting Up](./hoon/setting-up.livemd)
+3. [Index](./index.livemd)
+4. [Index_docs](./index_docs.livemd)
+5. [Visualization](./visualization.livemd)
+   1. [Actors](./visualization/actors.livemd)
+6. [Vm_interface](./vm_interface.livemd)
 
-* [Index](./index_docs.livemd)
-  * [Contributing](./CONTRIBUTING.livemd)
-    1. [IEx](./contributing/iex.livemd)
-    2. [Observer](./contributing/observer.livemd)
-    3. [Understanding any module](./contributing/understanding.livemd)
-    4. [Testing](./contributing/testing.livemd)
-    5. [Git](./contributing/git.livemd)
-    6. [Hoon](./contributing/hoon.livemd)
-
-<!-- livebook:{"break_markdown":true} -->
+## Contributing
 
 Please view any concept in the index for any sections you may be interested in.
 

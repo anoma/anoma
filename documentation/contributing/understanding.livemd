@@ -3,10 +3,24 @@
 # Understanding any code in Anoma
 
 ## Index
-
-* [Index](../index_docs.livemd)
-  * [Contributing](../CONTRIBUTING.livemd)
-    * [Understanding any module](./understanding.livemd)
+1. [Contributing](./../CONTRIBUTING.livemd)
+   1. [Git](./../contributing/git.livemd)
+   2. [Hoon](./../contributing/hoon.livemd)
+   3. [Iex](./../contributing/iex.livemd)
+   4. [Observer](./../contributing/observer.livemd)
+   5. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+   6. [Understanding](./../contributing/understanding.livemd)
+2. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+3. [Index](./../index.livemd)
+4. [Index_docs](./../index_docs.livemd)
+5. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+6. [Vm_interface](./../vm_interface.livemd)
 
 ## Figuring out what a module does
 
@@ -26,11 +40,11 @@ h(Anoma.Node)
 
                                    Anoma.Node
 
-I am the supervisor for Anoma Nodes
+I act as a registry for Anoma Nodes
 
 ## Required Arguments
 
-  • name - name to register the nodes
+  • name - name for this process
   • snapshot_path : [atom() | 0]
     • A snapshot location for the service (used in the worker)
 
@@ -44,15 +58,6 @@ I am the supervisor for Anoma Nodes
 ## Registered names
 
 
-
-From the given name argument we derive the following:
-
-  • name_mempool
-  • name_executor
-  • name_ordering
-  • name_mempool_com
-  • name_executor_com
-  • name_ordering_com
 
 ### Created Tables
 
@@ -87,9 +92,10 @@ that assertions can be copied and pasted to IEX
 ```elixir
 # output redacted for length
 alias Anoma.Storage
-alias Anoma.Node.Storage.Communicator, as: Scom
-alias Anoma.Node.Executor.Communicator, as: Ccom
-alias Anoma.Node.Mempool.Communicator, as: Mcom
+alias Anoma.Node.Storage.Ordering
+alias Anoma.Node.Mempool
+alias Anoma.Node.Router
+
 import TestHelper.Nock
 
 import ExUnit.Assertions
@@ -114,7 +120,7 @@ storage = %Anoma.Storage{
 name = :mempool
 snapshot_path = [:my_special_nock_snaphsot | 0]
 
-node = Anoma.Node.com_names(name)
+node = Anoma.Node.state(name)
 
 unless Process.whereis(:mempool_mempool_com) do
   Anoma.Node.start_link(
@@ -133,9 +139,150 @@ node
 
 ```
 %Anoma.Node{
-  executor: :mempool_executor_com,
-  ordering: :mempool_ordering_com,
-  mempool: :mempool_mempool_com
+  logger: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Logger 0UFKnKepVKxm8B1uH/QkoKh0hLuVQ8TrRGf+4dFY+Zw=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<49, 47, 91, 248, 87, 123, 100, 79, 0, 37, 176, 239, 240, 27, 218, 11, 63, 251, 170,
+        244, 75, 20, 116, 142, 149, 64, 1, 81, 42, 139, 210, 44>>,
+      sign: <<209, 65, 74, 156, 167, 169, 84, 172, 102, 240, 29, 110, 31, 244, 36, 160, 168, 116,
+        132, 187, 149, 67, 196, 235, 68, 103, 254, 225, 209, 88, 249, 156>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+          128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+        sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+          24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+      },
+      router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+    }
+  },
+  clock: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Clock qoWUQLrfe8KstPBZsIN9e6Escpvdu5LbUUCS1SoGVYw=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<141, 195, 214, 28, 18, 243, 25, 172, 222, 0, 152, 202, 137, 215, 147, 57, 71, 196,
+        13, 93, 148, 71, 58, 222, 4, 173, 137, 126, 228, 55, 181, 48>>,
+      sign: <<170, 133, 148, 64, 186, 223, 123, 194, 172, 180, 240, 89, 176, 131, 125, 123, 161, 44,
+        114, 155, 221, 187, 146, 219, 81, 64, 146, 213, 42, 6, 85, 140>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+          128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+        sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+          24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+      },
+      router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+    }
+  },
+  pinger: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Pinger QeQQ09SN+5MeUCoc5hrKec7jJhKcrtSt+g879DFP0aY=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<98, 214, 175, 27, 239, 163, 208, 126, 208, 197, 212, 140, 32, 152, 249, 1, 180,
+        245, 181, 143, 171, 251, 99, 160, 21, 174, 16, 128, 35, 100, 227, 75>>,
+      sign: <<65, 228, 16, 211, 212, 141, 251, 147, 30, 80, 42, 28, 230, 26, 202, 121, 206, 227, 38,
+        18, 156, 174, 212, 173, 250, 15, 59, 244, 49, 79, 209, 166>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+          128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+        sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+          24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+      },
+      router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+    }
+  },
+  mempool_topic: %Anoma.Node.Router.Addr{
+    server: nil,
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<111, 103, 214, 144, 51, 40, 198, 132, 2, 11, 19, 47, 228, 153, 121, 250, 201, 147,
+        248, 105, 164, 121, 218, 177, 11, 155, 204, 208, 20, 202, 55, 12>>,
+      sign: <<248, 79, 247, 60, 208, 85, 198, 79, 222, 145, 122, 214, 201, 141, 145, 255, 218, 208,
+        168, 250, 173, 25, 37, 111, 214, 134, 93, 99, 36, 0, 154, 28>>
+    },
+    router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+  },
+  mempool: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Mempool KNPB2ijsWnfve4L8Iuq434po8eFCJNK+EvKQ4Vd2Tqw=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<167, 148, 18, 166, 207, 244, 170, 202, 95, 3, 187, 9, 217, 157, 97, 177, 208, 76,
+        163, 136, 148, 60, 160, 248, 68, 61, 142, 67, 47, 229, 82, 30>>,
+      sign: <<40, 211, 193, 218, 40, 236, 90, 119, 239, 123, 130, 252, 34, 234, 184, 223, 138, 104,
+        241, 225, 66, 36, 210, 190, 18, 242, 144, 225, 87, 118, 78, 172>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+          128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+        sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+          24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+      },
+      router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+    }
+  },
+  executor_topic: %Anoma.Node.Router.Addr{
+    server: nil,
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<250, 161, 209, 10, 200, 171, 194, 37, 114, 235, 167, 193, 45, 245, 92, 157, 121,
+        106, 195, 86, 139, 58, 214, 217, 105, 181, 51, 76, 178, 55, 240, 37>>,
+      sign: <<188, 255, 80, 242, 172, 114, 141, 55, 239, 90, 234, 3, 38, 172, 76, 203, 220, 62, 127,
+        225, 249, 184, 214, 101, 227, 76, 95, 88, 235, 190, 14, 58>>
+    },
+    router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+  },
+  executor: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Executor zdsJtoPjG67QStGoPdiqdjF8wYg5J8Op5i1Bx9V2HCc=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<161, 173, 246, 156, 52, 73, 176, 104, 173, 192, 224, 111, 212, 231, 14, 136, 230,
+        151, 241, 237, 239, 180, 127, 69, 59, 149, 86, 210, 133, 246, 106, 20>>,
+      sign: <<205, 219, 9, 182, 131, 227, 27, 174, 208, 74, 209, 168, 61, 216, 170, 118, 49, 124,
+        193, 136, 57, 39, 195, 169, 230, 45, 65, 199, 213, 118, 28, 39>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+          128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+        sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+          24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+      },
+      router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+    }
+  },
+  ordering: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Storage.Ordering oCXn2nJdaIIF+wTv8PreeZ56RXH6TKNVH2Vk+EP4FzI=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<137, 234, 55, 245, 216, 126, 69, 133, 161, 185, 181, 4, 138, 160, 234, 238, 82,
+        157, 113, 175, 169, 23, 67, 177, 90, 99, 60, 94, 0, 237, 51, 53>>,
+      sign: <<160, 37, 231, 218, 114, 93, 104, 130, 5, 251, 4, 239, 240, 250, 222, 121, 158, 122,
+        69, 113, 250, 76, 163, 85, 31, 101, 100, 248, 67, 248, 23, 50>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+          128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+        sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+          24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+      },
+      router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+    }
+  },
+  router: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<94, 28, 181, 242, 67, 161, 117, 206, 37, 31, 232, 223, 176, 59, 233, 72, 171, 91,
+        128, 32, 13, 85, 217, 89, 101, 177, 80, 142, 50, 59, 42, 36>>,
+      sign: <<30, 209, 148, 133, 48, 20, 5, 203, 237, 177, 99, 155, 147, 145, 153, 163, 128, 231,
+        24, 41, 194, 1, 227, 145, 247, 139, 243, 222, 78, 176, 193, 158>>
+    },
+    router: :"Anoma.Node.Router HtGUhTAUBcvtsWObk5GZo4DnGCnCAeOR94vz3k6wwZ4="
+  }
 }
 ```
 
@@ -151,16 +298,21 @@ get hands on what each function and message does.
 ```elixir
 # test "successful process", %{node: node} do
 key = 555
-storage = Scom.get_storage(node.ordering)
+storage = Ordering.get_storage(node.ordering)
 increment = increment_counter_val(key)
 zero = zero_counter(key)
 
-Ccom.subscribe(node.executor, self())
-Mcom.hard_reset(node.mempool)
+:ok =
+  Router.call(
+    node.router,
+    {:subscribe_topic, node.executor_topic.id, :local}
+  )
 
-pid_zero = Mcom.tx(node.mempool, zero).pid
+Mempool.hard_reset(node.mempool)
 
-Mcom.execute(node.mempool)
+pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
+
+Mempool.execute(node.mempool)
 ```
 
 <!-- livebook:{"output":true} -->

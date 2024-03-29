@@ -25,35 +25,17 @@ Development can be followed in multiple ways:
 
 To have a working Anoma Node the following dependencies are required:
 
-1. `libsodium`
-2. `cmake`
+1. `cmake`
 2. `Erlang`
 3. `Elixir`
+4. `zig`
 
 ### OSX
 
 ```sh
-brew install libsodium
 brew install elixir
+brew install zig
 ```
-
-Sadly the [enacl](https://github.com/jlouis/enacl) library for
-libsodium has issues for computers with apple silicion.
-
-Before running the installation insturctions please make sure to
-export the following.
-
-```sh
-export CPATH=/opt/homebrew/include
-export LIBRARY_PATH=/opt/homebrew/lib
-
-export CFLAGS="-arch arm64"
-export CXXFLAGS="-arch arm64"
-export LDFLAGS="-arch arm64"
-```
-
-Otherwise, the system will start yelling about not being able to find
-libsodium.
 
 ### Linux
 
