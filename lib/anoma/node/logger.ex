@@ -56,7 +56,7 @@ defmodule Anoma.Node.Logger do
   def handle_cast({:add, logger, atom, msg}, addr, state) do
     Storage.put(
       state.storage,
-      [logger, addr.id, Clock.get_time(state.clock), atom],
+      [logger.id, addr.id, Clock.get_time(state.clock), atom],
       msg
     )
 
@@ -66,11 +66,12 @@ defmodule Anoma.Node.Logger do
   end
 
   def handle_call({:get_all, logger}, _from, state) do
-    {:reply, Storage.get_keyspace(state.storage, [logger]), state}
+    {:reply, Storage.get_keyspace(state.storage, [logger.id]), state}
   end
 
   def handle_call({:get, logger, engine}, _from, state) do
-    {:reply, Storage.get_keyspace(state.storage, [logger, engine]), state}
+    {:reply, Storage.get_keyspace(state.storage, [logger.id, engine.id]),
+     state}
   end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)
