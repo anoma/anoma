@@ -399,7 +399,7 @@ defmodule Anoma.Node.Router do
   """
   @spec cast(Addr.t(), term()) :: :ok
   def cast(addr = %Addr{server: server}, msg) when server != nil do
-    GenServer.cast(server, {self_addr(addr), msg})
+    GenServer.cast(server, {:router_cast, self_addr(addr), msg})
   end
 
   def cast(addr = %Addr{router: router, server: nil}, msg) do
@@ -447,7 +447,7 @@ defmodule Anoma.Node.Router do
   def call(addr = %Addr{server: server}, msg, _timeout) when server != nil do
     # use an infinite timeout for local calls--timeout is only
     # significant for inter-node calls
-    GenServer.call(server, {self_addr(addr), msg}, :infinity)
+    GenServer.call(server, {:router_call, self_addr(addr), msg}, :infinity)
   end
 
   # in this case, rather than the router doing all the work itself, it
@@ -503,7 +503,7 @@ defmodule Anoma.Node.Router do
     {:reply, res, s}
   end
 
-  def handle_call({src, msg}, _, s) do
+  def handle_call({:router_call, src, msg}, _, s) do
     {res, s} = handle_self_call(msg, src, s)
     {:reply, res, s}
   end
@@ -583,7 +583,7 @@ defmodule Anoma.Node.Router do
   @spec do_cast(t(), Addr.t(), Addr.t(), term()) :: t()
   defp do_cast(s, %Addr{server: server}, src, msg) when server != nil do
     Logger.info("cast to #{inspect(server)}")
-    GenServer.cast(server, {src, msg})
+    GenServer.cast(server, {:router_cast, src, msg})
     s
   end
 

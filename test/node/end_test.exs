@@ -64,7 +64,7 @@ defmodule AnomaTest.Node.End do
       )
 
     assert {:ok, 1} = Mempool.execute(mempool)
-    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_zero}}}
+    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}
 
     keya = Sign.new_keypair()
     keyb = Sign.new_keypair()
@@ -92,17 +92,17 @@ defmodule AnomaTest.Node.End do
 
     :ok = Router.call(router, {:subscribe_topic, node.mempool_topic, :local})
 
-    assert_receive {:"$gen_cast", {_, {:solutions, _}}}
+    assert_receive {:"$gen_cast", {_, _, {:solutions, _}}}
 
     Solver.mempool_send(s, mempool)
 
     pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
 
-    assert_receive {:"$gen_cast", {_, {:submitted, _}}}
+    assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
 
     assert {:ok, 2} = Mempool.execute(mempool)
 
-    assert_receive {:"$gen_cast", {_, {:process_done, ^pid_one}}}
+    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
 
     assert {:ok, 1} = Storage.get(storage, key)
 

@@ -30,6 +30,7 @@ defmodule Anoma.Node.Pinger do
     Router.call(server, {:set, time})
   end
 
+  @spec start(Router.Addr.t()) :: any()
   def start(server) do
     Router.call(server, :start)
   end
