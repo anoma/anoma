@@ -117,13 +117,14 @@ defmodule Anoma.Node.Router do
     GenServer.cast(router, {:cast, addr, self_addr(addr), msg})
   end
 
-  # default timeout for GenServer.call
   def call(addr, msg) do
+    # default timeout for GenServer.call
     call(addr, msg, 5000)
   end
 
-  def call(addr = %Addr{server: server}, msg, timeout) when server != nil do
-    GenServer.call(server, {self_addr(addr), msg}, timeout)
+  def call(addr = %Addr{server: server}, msg, _timeout) when server != nil do
+    # use an infinite timeout for local calls--timeout is only significant for inter-node calls
+    GenServer.call(server, {self_addr(addr), msg}, :infinity)
   end
 
   # in this case, rather than the router doing all the work itself, it
