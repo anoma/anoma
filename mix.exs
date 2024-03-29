@@ -17,7 +17,25 @@ defmodule Anoma.MixProject do
       name: "Anoma",
       docs: docs(),
       # Nockma eval
-      escript: escript()
+      escript: escript(),
+      # Burrito release
+      releases: releases()
+    ]
+  end
+
+  def releases do
+    [
+      anoma: [
+        steps: [:assemble, &Burrito.wrap/1],
+        burrito: [
+          targets: [
+            linux: [os: :linux, cpu: :x86_64]
+            # macos: [os: :darwin, cpu: :x86_64],
+            # macos_m1: [os: :darwin, cpu: :aarch64],
+            # windows: [os: :windows, cpu: :x86_64]
+          ]
+        ]
+      ]
     ]
   end
 
@@ -32,7 +50,8 @@ defmodule Anoma.MixProject do
         :observer,
         :wx,
         :runtime_tools,
-        :debugger
+        :debugger,
+        :enacl
       ]
     ]
   end
@@ -50,7 +69,8 @@ defmodule Anoma.MixProject do
       {:kino, git: "https://github.com/livebook-dev/kino"},
       {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
-      {:optimus, "~> 0.2"}
+      {:optimus, "~> 0.2"},
+      {:burrito, "~> 1.0.4"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
