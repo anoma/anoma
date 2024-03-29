@@ -1,18 +1,27 @@
 defmodule Anoma.Dump do
   @moduledoc """
-  I dump the state of the current Node session given a node reference.
+  I provide an interface to dump current state and load appropriate
+  external files to launch them as Anoma nodes.
 
   You can also use me to dump info such as current states and tables
-  in a readable map format.
+  in a readable map format as well as get info stored in external
+  files in binary format.
 
-  ### Public API
+  ### Dumping API
 
-  I give access to following public functionality:
+  I give access to following public dumping functionality:
 
   - `dump/2`
   - `get_all/1`
   - `get_state/1`
   - `get_tables/1`
+
+  ### Loading API
+
+  I give access to following public loading functionality
+
+  - `launch/2`
+  - `load/1`
   """
 
   alias Anoma.Mnesia
@@ -36,6 +45,56 @@ defmodule Anoma.Dump do
     File.open(name <> ".txt", [:write], fn file ->
       file |> IO.binwrite(term)
     end)
+  end
+
+  @doc """
+  I launch a node given a file containing a binary version of an 12-tuple
+  with appropriate info in the following order:
+  - router id
+  - mempool topic id
+  - executor topic id
+  - logger
+  - clock
+  - ordering
+  - mempool
+  - pinger
+  - executor
+  - storage names
+  - qualified
+  - order
+  - block_storage
+
+  All engines have info on their states and id's so that checkpointing
+  the system will keep all adresses used in the previous session.
+  Note that I ensure that the apporpriate tables
+  are new.
+
+  Check whether your transactions have had an assigned worker. If not,
+  relaunch them directly.
+  """
+
+  @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
+  def launch(file, name) do
+    load = load(file)
+
+    node_settings = [new_storage: false, name: name, settings: load]
+
+    Anoma.Node.start_link(node_settings)
+  end
+
+  @doc """
+  I read the given file which I assume contains binary info and convert
+  it to an Elixir term.
+
+  As the dumped state may have extra atoms not present in the session,
+  I currently allow for atom creation in the loaded term.
+  """
+
+  @spec load(String.t()) :: any()
+  def load(name) do
+    with {:ok, bin} <- File.read(name) do
+      Plug.Crypto.non_executable_binary_to_term(bin)
+    end
   end
 
   @type log_eng :: {Id.Extern.t(), Logger.t()}
