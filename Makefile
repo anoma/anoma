@@ -5,6 +5,7 @@ test:
 	mix test
 
 docs:
+	mix toc
 	./scripts/docs.sh
 
 docs-release:
