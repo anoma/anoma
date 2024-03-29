@@ -11,7 +11,8 @@ defmodule Anoma.MixProject do
       dialyzer: [
         plt_local_path: "plts/anoma.plt",
         plt_core_path: "plts/core.plt",
-        flags: ["-Wno_improper_lists"]
+        flags: ["-Wno_improper_lists"],
+        plt_add_apps: [:mix]
       ],
       # Docs
       name: "Anoma",
@@ -96,23 +97,7 @@ defmodule Anoma.MixProject do
   end
 
   def extras() do
-    [
-      "README.md",
-      "documentation/index.livemd",
-      "documentation/index_docs.livemd",
-      "documentation/CONTRIBUTING.livemd",
-      "documentation/contributing/iex.livemd",
-      "documentation/contributing/observer.livemd",
-      "documentation/contributing/understanding.livemd",
-      "documentation/contributing/testing.livemd",
-      "documentation/contributing/git.livemd",
-      "documentation/visualization.livemd",
-      "documentation/visualization/actors.livemd",
-      "documentation/hoon.livemd",
-      "documentation/hoon/dumping.livemd",
-      "documentation/hoon/setting-up.livemd",
-      "documentation/hoon/calling.livemd"
-    ]
+    ["README.md" | all_docs("./documentation")]
   end
 
   def escript do
@@ -171,4 +156,19 @@ defmodule Anoma.MixProject do
   end
 
   defp docs_before_closing_body_tag(_), do: ""
+
+  defp all_docs(dir) do
+    [dir | dir_from_path(dir)]
+    |> Stream.map(fn x -> Path.wildcard(Path.join(x, "*livemd")) end)
+    |> Stream.concat()
+    |> Enum.sort()
+  end
+
+  defp dir_from_path(dir) do
+    File.ls!(dir)
+    |> Stream.map(&Path.join(dir, &1))
+    |> Stream.filter(&File.dir?(&1))
+    |> Enum.map(fn x -> [x | dir_from_path(x)] end)
+    |> Enum.concat()
+  end
 end
