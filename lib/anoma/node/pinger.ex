@@ -27,6 +27,10 @@ defmodule Anoma.Node.Pinger do
     {:ok, %Pinger{mempool: mempool, time: time}}
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
   @doc """
   Given a server S and time T I change the timer set for the struct
   connected to S setting it to T. Set T to :no_timer to stop the
@@ -39,6 +43,18 @@ defmodule Anoma.Node.Pinger do
   @spec start(Router.Addr.t()) :: any()
   def start(server) do
     Router.call(server, :start)
+  end
+
+  def state(server) do
+    Router.call(server, :state)
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
   end
 
   def handle_call(:start, _from, state) do
