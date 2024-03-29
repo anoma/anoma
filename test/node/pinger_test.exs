@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Pinger do
   use ExUnit.Case, async: true
 
-  alias Anoma.Node.{Mempool, Router}
+  alias Anoma.Node.{Mempool, Router, Pinger}
   alias Anoma.Storage
   alias Anoma.Node.Storage.Ordering
   import TestHelper.Nock
@@ -21,7 +21,7 @@ defmodule AnomaTest.Node.Pinger do
         snapshot_path: snapshot_path,
         storage: storage,
         block_storage: :pinger_blocks,
-        ping_time: 1
+        ping_time: :no_timer
       )
 
     node = Anoma.Node.state(nodes)
@@ -35,6 +35,8 @@ defmodule AnomaTest.Node.Pinger do
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
+    pinger = node.pinger
+
     ex_id = node.executor_topic.id
     mem_t = node.mempool_topic
 
@@ -45,6 +47,10 @@ defmodule AnomaTest.Node.Pinger do
       )
 
     Mempool.hard_reset(node.mempool)
+
+    Pinger.set_timer(pinger, 1)
+
+    Pinger.start(pinger)
 
     :ok = Router.call(node.router, {:subscribe_topic, mem_t, :local})
 
