@@ -31,7 +31,7 @@ defmodule Nock do
     field(:jet, jettedness(), default: :jetted)
     field(:ordering, Router.Addr.t() | nil, default: nil)
     field(:snapshot_path, Noun.t() | nil, default: nil)
-    field(:logger, atom(), enforce: false)
+    field(:logger, Router.Addr.t(), enforce: false)
   end
 
   @dialyzer :no_improper_lists

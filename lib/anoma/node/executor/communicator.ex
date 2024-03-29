@@ -41,7 +41,11 @@ defmodule Anoma.Node.Executor do
 
   def init({env, topic, logger}) do
     {:ok,
-     %Executor{ambiant_env: env, task_completion_topic: topic, logger: logger}}
+     %Executor{
+       ambiant_env: %Nock{env | logger: logger},
+       task_completion_topic: topic,
+       logger: logger
+     }}
   end
 
   ############################################################
@@ -116,7 +120,7 @@ defmodule Anoma.Node.Executor do
   ### Example
     iex> alias Anoma.Node.{Executor, Router}
     iex> {:ok, router} = Router.start
-    iex> snap = %{snapshot_path: [:a | 0], ordering: nil}
+    iex> snap = %Nock{snapshot_path: [:a | 0], ordering: nil}
     iex> args = {snap, Router.new_topic(router), nil}
     iex> {:ok, addr} = Router.start_engine(router, Executor, args)
     iex> Executor.snapshot(addr)
