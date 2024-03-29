@@ -267,30 +267,16 @@ defmodule Anoma.Node.Router do
     field(:msg_queue, map(), default: %{})
   end
 
-  # A module name A.B is represented by an atom with name "Elixir.A.B"; strip away the "Elixir." part
-  defp atom_to_nice_string(atom) do
-    res = Atom.to_string(atom)
-
-    if String.starts_with?(res, "Elixir.") do
-      binary_part(res, 7, byte_size(res) - 7)
-    else
-      res
-    end
-  end
-
-  @spec process_name(atom(), Id.Extern.t()) :: atom()
-  def process_name(module, id) do
-    :erlang.binary_to_atom(
-      atom_to_nice_string(module) <> " " <> Base.encode64(id.sign)
-    )
-  end
-
   @spec start_link(Id.t()) :: GenServer.on_start()
   def start_link(id) do
     GenServer.start_link(__MODULE__, id,
       name: process_name(__MODULE__, id.external)
     )
   end
+
+  ############################################################
+  #                        Public API                        #
+  ############################################################
 
   @doc """
   Starts a new router with a given cryptographic ID.
@@ -329,28 +315,63 @@ defmodule Anoma.Node.Router do
     start(Id.new_keypair())
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  # not sure exactly how this will work for real, but it's convenient
+  # to have for testing right now
+  @doc """
+  Creates a new topic. Takes the address of the router.
+  """
+  @spec new_topic(Addr.t()) :: {:ok, Addr.t()} | {:error, :already_exists}
+  def new_topic(router) do
+    call(router, {:create_topic, Id.new_keypair().external, :local})
+  end
+
+  @doc """
+  Starts a new Engine
+  """
+  @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
+          {:ok, Addr.t()}
+          | :ignore
+          | {:error, {:already_started, pid()} | :max_children | term()}
+          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
+          # if we can remove please do
+          | any()
+  def start_engine(router, module, id, arg) do
+    with {:ok, _} <-
+           DynamicSupervisor.start_child(
+             call(router, :supervisor),
+             {Anoma.Node.Router.Engine, {router, module, id, arg}}
+           ) do
+      {:ok,
+       %Addr{
+         router: router,
+         id: id.external,
+         server: process_name(module, id.external)
+       }}
+    end
+  end
+
+  # start a new instance of an engine, without caring about the id
+  @spec start_engine(Addr.t(), atom(), any()) ::
+          {:ok, Addr.t()}
+          | :ignore
+          | {:error, any()}
+          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
+          # if we can remove please do
+          | any()
+  def start_engine(router, module, arg) do
+    start_engine(router, module, Id.new_keypair(), arg)
+  end
+
   def stop(_router) do
   end
 
-  @spec init(Id.t()) :: {:ok, Router.t()}
-  def init(id) do
-    supervisor = process_name(:supervisor, id.external)
-    server = process_name(__MODULE__, id.external)
-
-    {:ok,
-     %Router{
-       id: id.external,
-       addr: %Addr{
-         router: server,
-         id: id.external,
-         server: server
-       },
-       supervisor: supervisor,
-       local_engines: %{id.external => id}
-     }}
-  end
-
-  # public interface
+  ############################################################
+  #                     Public Server API                    #
+  ############################################################
 
   @doc """
   Makes a synchronous call to the `Server` and waits for a reply.
@@ -436,61 +457,9 @@ defmodule Anoma.Node.Router do
     GenServer.call(router, {:call, addr, self_addr(addr), msg, timeout}).()
   end
 
-  @spec self_addr(Addr.t()) :: Addr.t()
-  def self_addr(%Addr{router: router}) do
-    %Addr{
-      router: router,
-      id: Process.get(:engine_id),
-      server: Process.get(:engine_server) || self()
-    }
-  end
-
-  # not sure exactly how this will work for real, but it's convenient
-  # to have for testing right now
-  @doc """
-  Creates a new topic. Takes the address of the router.
-  """
-  @spec new_topic(Addr.t()) :: {:ok, Addr.t()} | {:error, :already_exists}
-  def new_topic(router) do
-    call(router, {:create_topic, Id.new_keypair().external, :local})
-  end
-
-  @doc """
-  Starts a new Engine
-  """
-  @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
-          {:ok, Addr.t()}
-          | :ignore
-          | {:error, {:already_started, pid()} | :max_children | term()}
-          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
-          # if we can remove please do
-          | any()
-  def start_engine(router, module, id, arg) do
-    with {:ok, _} <-
-           DynamicSupervisor.start_child(
-             call(router, :supervisor),
-             {Anoma.Node.Router.Engine, {router, module, id, arg}}
-           ) do
-      {:ok,
-       %Addr{
-         router: router,
-         id: id.external,
-         server: process_name(module, id.external)
-       }}
-    end
-  end
-
-  # start a new instance of an engine, without caring about the id
-  @spec start_engine(Addr.t(), atom(), any()) ::
-          {:ok, Addr.t()}
-          | :ignore
-          | {:error, any()}
-          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
-          # if we can remove please do
-          | any()
-  def start_engine(router, module, arg) do
-    start_engine(router, module, Id.new_keypair(), arg)
-  end
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
 
   def handle_cast({:init_local_engine, id, _pid}, s) do
     s = %{s | local_engines: Map.put(s.local_engines, id.external, id)}
@@ -538,6 +507,10 @@ defmodule Anoma.Node.Router do
     {res, s} = handle_self_call(msg, src, s)
     {:reply, res, s}
   end
+
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
 
   def handle_self_call(:supervisor, _, s) do
     {s.supervisor, s}
@@ -628,5 +601,55 @@ defmodule Anoma.Node.Router do
   defp do_call(s, %Addr{server: server}, src, msg, timeout)
        when server != nil do
     {fn -> GenServer.call(server, {src, msg}, timeout) end, s}
+  end
+
+  ############################################################
+  #                          Helpers                         #
+  ############################################################
+
+  # A module name A.B is represented by an atom with name
+  # "Elixir.A.B"; strip away the "Elixir." part
+  defp atom_to_nice_string(atom) do
+    res = Atom.to_string(atom)
+
+    if String.starts_with?(res, "Elixir.") do
+      binary_part(res, 7, byte_size(res) - 7)
+    else
+      res
+    end
+  end
+
+  @spec process_name(atom(), Id.Extern.t()) :: atom()
+  def process_name(module, id) do
+    :erlang.binary_to_atom(
+      atom_to_nice_string(module) <> " " <> Base.encode64(id.sign)
+    )
+  end
+
+  @spec init(Id.t()) :: {:ok, Router.t()}
+  def init(id) do
+    supervisor = process_name(:supervisor, id.external)
+    server = process_name(__MODULE__, id.external)
+
+    {:ok,
+     %Router{
+       id: id.external,
+       addr: %Addr{
+         router: server,
+         id: id.external,
+         server: server
+       },
+       supervisor: supervisor,
+       local_engines: %{id.external => id}
+     }}
+  end
+
+  @spec self_addr(Addr.t()) :: Addr.t()
+  def self_addr(%Addr{router: router}) do
+    %Addr{
+      router: router,
+      id: Process.get(:engine_id),
+      server: Process.get(:engine_server) || self()
+    }
   end
 end
