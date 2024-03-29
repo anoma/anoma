@@ -14,10 +14,12 @@ defmodule Anoma.Node.Storage.Ordering do
     2. We keep a hash_to_order to cache the id => order mapping
   """
 
-  use TypedStruct
   alias Anoma.Node.{Router, Logger}
   alias Anoma.{Storage, Order}
   alias __MODULE__
+
+  use TypedStruct
+  use Router.Engine
 
   @type ordered_transactions() ::
           list(Order.t())

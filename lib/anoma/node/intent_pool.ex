@@ -6,10 +6,11 @@ defmodule Anoma.Node.IntentPool do
   """
 
   alias __MODULE__
-  use TypedStruct
-
   alias Anoma.Intent
   alias Anoma.Node.{Router, Logger}
+
+  use TypedStruct
+  use Router.Engine
 
   @type intents :: MapSet.t(Intent.t())
   typedstruct do

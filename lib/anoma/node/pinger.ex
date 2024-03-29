@@ -2,12 +2,12 @@ defmodule Anoma.Node.Pinger do
   @moduledoc """
   I provide periodic block execution based on submitted mempool name and time.
   """
-  use GenServer
-  use TypedStruct
-
   alias Anoma.Node.Router
   alias Anoma.Node.Mempool
   alias __MODULE__
+
+  use TypedStruct
+  use Router.Engine
 
   typedstruct do
     field(:mempool, Router.Addr.t())
