@@ -329,6 +329,12 @@ defmodule Anoma.Node.Router do
     call(router, {:create_topic, Id.new_keypair().external, :local})
   end
 
+  @spec new_topic(Addr.t(), Id.t()) ::
+          {:ok, Addr.t()} | {:error, :already_exists}
+  def new_topic(router, id) do
+    call(router, {:create_topic, id.external, :local})
+  end
+
   @doc """
   Starts a new Engine
   """

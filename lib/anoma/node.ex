@@ -2,19 +2,27 @@ defmodule Anoma.Node do
   @moduledoc """
   I act as a registry for Anoma Nodes
 
-  ## Required Arguments
+  There are two ways to launch a Node. Either with minimal
+  arguments or having the full specification for all the
+  engines, including their external ID's.
+
+  All inputs should come in format of a list of atom-value
+  2-tuples, `{:settings, map()}` specifying the info on
+  all relevant engines and storages possibly including their
+  tables presented in a dumped format, `{:name, atom()}`
+  specifying the name of the node, and `{:new_storage, bool()}`
+  specifying whether the table names, if supplied, need to be
+  set-up without any deletions.
+
+  For more info on format check `start_min/1`
+
+  ## Minimal Arguments
 
     - `name` - name for this process
     - `snapshot_path` : [`atom()` | 0]
       - A snapshot location for the service (used in the worker)
     - `storage` : `Anoma.Storage.t()` - The Storage tables to use
     - `block_storage` - a location to store the blocks produced
-  ## Optional Arguments
-
-    - `jet` : `Nock.jettedness()` - how jetted the system should be
-    - `old_storage` : `boolean` - states if the storage should be freshly made
-       - by default it is `false`
-  ## Registered names
 
   ### Created Tables
     - `storage.qualified`
@@ -24,7 +32,9 @@ defmodule Anoma.Node do
 
   use GenServer
   use TypedStruct
-  alias Anoma.Node.Router
+  alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger}
+  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Crypto.Id
   alias __MODULE__
 
   typedstruct enforce: true do
@@ -39,72 +49,108 @@ defmodule Anoma.Node do
     field(:logger, Router.addr())
   end
 
+  @doc """
+  I assume I am fed a list with atom-value 2-tuples
+  :new_storage, :name, :settings. If :new_storage has
+  value true, I need a snapshot_path: key in the
+  settings.
+
+  I ensure that the storages are deleted and created.
+  Afterwards, if the storage is truly new, I put the snapshot
+  in the ordering. Otherwise, I simply repopulate the tables
+  from a supplied list by the settings.
+  Check Anoma.Dump for format descriptions.
+  """
+
   def start_link(args) do
-    snap = args[:snapshot_path]
-    storage = args[:storage]
-
+    settings = args[:settings]
     name = args[:name]
-    args = Enum.filter(args, fn {k, _} -> k != :name end)
-    resp = GenServer.start_link(__MODULE__, args, name: name)
+    {storage, block_storage} = settings[:storage]
+    storage_setup(storage, block_storage)
 
-    unless args[:old_storage] do
-      Anoma.Storage.ensure_new(storage)
+    if args[:new_storage] do
+      snap = settings[:snapshot_path]
+
       Anoma.Storage.put_snapshot(storage, hd(snap))
+    else
+      tables =
+        settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
+
+      tables
+      |> Enum.map(fn x ->
+        fn -> :mnesia.write(x) end |> :mnesia.transaction()
+      end)
     end
 
-    resp
+    GenServer.start_link(__MODULE__, settings, name: name)
   end
 
   def init(args) do
-    env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
-    ping_name = Anoma.Node.Utility.append_name(args[:name], "_pinger")
+    {log_id, log_st} = args[:logger]
+    {clock_id, _clock_st} = args[:clock]
+    {ord_id, ord_st} = args[:ordering]
+    {mem_id, mem_st} = args[:mempool]
+    {ping_id, ping_st} = args[:pinger]
+    {ex_id, ex_st} = args[:executor]
 
-    {:ok, router} = Router.start()
+    {:ok, router} = start_router(args[:router])
 
     {:ok, clock} =
-      Router.start_engine(router, Anoma.Node.Clock,
+      start_engine(router, Clock, clock_id,
         start: System.monotonic_time(:millisecond)
       )
 
     {:ok, logger} =
-      Router.start_engine(router, Anoma.Node.Logger,
-        storage: args[:storage],
-        clock: clock
+      start_engine(
+        router,
+        Logger,
+        log_id,
+        %Logger{log_st | clock: clock}
       )
 
     {:ok, ordering} =
-      Router.start_engine(router, Anoma.Node.Storage.Ordering,
-        table: args[:storage],
-        logger: logger
+      start_engine(
+        router,
+        Ordering,
+        ord_id,
+        %Ordering{ord_st | logger: logger}
       )
 
-    env = %{env | ordering: ordering}
-    {:ok, executor_topic} = Router.new_topic(router)
+    {:ok, executor_topic} = new_topic(router, args[:executor_topic])
 
     {:ok, executor} =
-      Router.start_engine(
+      start_engine(
         router,
-        Anoma.Node.Executor,
-        {env, executor_topic, logger}
+        Executor,
+        ex_id,
+        %Executor{
+          ex_st
+          | logger: logger,
+            task_completion_topic: executor_topic,
+            ambiant_env: %Nock{
+              ex_st.ambiant_env
+              | logger: logger,
+                ordering: ordering
+            }
+        }
       )
 
-    {:ok, mempool_topic} = Router.new_topic(router)
+    {:ok, mempool_topic} = new_topic(router, args[:mempool_topic])
 
     {:ok, mempool} =
-      Router.start_engine(router, Anoma.Node.Mempool,
-        block_storage: args[:block_storage],
-        ordering: ordering,
-        executor: executor,
-        topic: mempool_topic,
-        logger: logger
-      )
+      start_engine(router, Mempool, mem_id, %Mempool{
+        mem_st
+        | logger: logger,
+          topic: mempool_topic,
+          ordering: ordering,
+          executor: executor
+      })
 
     {:ok, pinger} =
-      Router.start_engine(router, Anoma.Node.Pinger,
-        name: ping_name,
-        mempool: mempool,
-        time: args[:ping_time]
-      )
+      start_engine(router, Pinger, ping_id, %Pinger{
+        ping_st
+        | mempool: mempool
+      })
 
     Anoma.Node.Pinger.start(pinger)
 
@@ -122,11 +168,62 @@ defmodule Anoma.Node do
      }}
   end
 
+  @doc """
+  Given minimal arguments, I create appropriate setup for the
+  `:settings` argument for Node initialization.
+  """
+  def start_min(args) do
+    env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
+    storage = args[:storage]
+    block_storage = args[:block_storage]
+
+    %{
+      clock: {nil, %Clock{}},
+      logger: {nil, %Logger{storage: storage}},
+      ordering: {nil, %Ordering{table: storage}},
+      executor: {nil, %Executor{ambiant_env: env}},
+      mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
+      pinger: {nil, %Pinger{time: args[:ping_time]}},
+      storage: {storage, block_storage},
+      snapshot_path: args[:snapshot_path]
+    }
+  end
+
   def state(nodes) do
     GenServer.call(nodes, :state)
   end
 
   def handle_call(:state, _from, state) do
     {:reply, state, state}
+  end
+
+  defp storage_setup(storage, block_storage) do
+    Anoma.Storage.ensure_new(storage)
+    :mnesia.delete_table(block_storage)
+    Anoma.Block.create_table(block_storage, false)
+  end
+
+  defp start_router(router) do
+    if router == nil do
+      Router.start()
+    else
+      Router.start(%Id{external: router})
+    end
+  end
+
+  defp start_engine(router, module, id, state) do
+    if id == nil do
+      Router.start_engine(router, module, state)
+    else
+      Router.start_engine(router, module, %Id{external: id}, state)
+    end
+  end
+
+  defp new_topic(router, id) do
+    if id == nil do
+      Router.new_topic(router)
+    else
+      Router.new_topic(router, %Id{external: id})
+    end
   end
 end
