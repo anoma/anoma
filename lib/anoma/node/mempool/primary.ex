@@ -84,6 +84,7 @@ defmodule Anoma.Node.Mempool do
     nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
     Router.cast(state.topic, {:submitted, ntrans})
     log_info({:tx, nstate.transactions, state.logger})
+
     {:reply, ntrans, nstate}
   end
 

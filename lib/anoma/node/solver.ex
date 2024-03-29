@@ -37,6 +37,10 @@ defmodule Anoma.Node.Solver do
     Router.call(solver, :get_solved)
   end
 
+  def mempool_send(solver, mempool) do
+    Router.cast(solver, {:send, mempool})
+  end
+
   # unsolved is a list of transactions solved is a list of
   # [balanced_tx | unbalanced_constituents] we keep around the solved
   # transactions because there's no guarantee that our solution is
@@ -109,6 +113,25 @@ defmodule Anoma.Node.Solver do
         solved: still_solved,
         solved_set: solved_set
     })
+  end
+
+  # Currentltly just clear out all solved\unsolved\solutions
+  # after sending info to mempool.
+
+  def handle_cast({:send, mempool}, _from, s) do
+    solved = s.solved
+
+    unless solved == [] do
+      for tx <- solved do
+        Router.call(
+          mempool,
+          {:tx,
+           {:rm, [[1 | Anoma.Resource.Transaction.to_noun(hd(tx))], 0 | 0]}}
+        )
+      end
+    end
+
+    {:noreply, s}
   end
 
   def handle_call(:get_solved, _from, s) do
