@@ -106,6 +106,8 @@ defmodule Anoma.Node do
         time: args[:ping_time]
       )
 
+    Anoma.Node.Pinger.start(pinger)
+
     {:ok,
      %Node{
        router: router,
