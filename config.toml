@@ -1,0 +1,15 @@
+# I am a configuration file in the TOML format.
+# I posess the minimal info needed to startup a new Anoma Node
+
+[node]
+
+# I provide the names of node components and associated storage
+
+name = "name"
+qualified = "qualified_name"
+order = "order_name"
+snapshot_path = "path"
+block_storage = "block"
+
+#Put "no_timer" if no automatic execution needed
+ping_time = 10000

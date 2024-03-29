@@ -1,0 +1,8 @@
+[node]
+
+name = "config_test"
+qualified = "config_qualified"
+order = "order_qualified"
+snapshot_path = "my_special_nock_snapshot"
+block_storage = "config_test_blocks"
+ping_time = "no_timer"
