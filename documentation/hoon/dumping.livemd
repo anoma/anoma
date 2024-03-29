@@ -9,10 +9,24 @@ Mix.install([
 ```
 
 ## Index
-
-* [Index](../index_docs.livemd)
-  * [Hoon](../hoon.livemd)
-    * [Dumping](./dumping.livemd)
+1. [Contributing](./../CONTRIBUTING.livemd)
+   1. [Git](./../contributing/git.livemd)
+   2. [Hoon](./../contributing/hoon.livemd)
+   3. [Iex](./../contributing/iex.livemd)
+   4. [Observer](./../contributing/observer.livemd)
+   5. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+   6. [Understanding](./../contributing/understanding.livemd)
+2. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+3. [Index](./../index.livemd)
+4. [Index_docs](./../index_docs.livemd)
+5. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+6. [Vm_interface](./../vm_interface.livemd)
 
 ## Dumping Nock
 
@@ -515,10 +529,4 @@ VegaLite.new(width: 200, height: 300, title: "Indexing Series")
 |> VegaLite.mark(:bar)
 |> VegaLite.encode_field(:x, "indicies", type: :quantitative)
 |> VegaLite.encode_field(:y, "series", type: :quantitative)
-```
-
-<!-- livebook:{"output":true} -->
-
-```vega-lite
-{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"indicies":1,"series":1},{"indicies":2,"series":3},{"indicies":3,"series":7},{"indicies":4,"series":15},{"indicies":5,"series":31}]},"encoding":{"x":{"field":"indicies","type":"quantitative"},"y":{"field":"series","type":"quantitative"}},"height":300,"mark":"bar","title":"Indexing Series","width":200}
 ```

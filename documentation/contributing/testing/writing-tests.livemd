@@ -1,0 +1,207 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Writing Tests
+
+## Index
+1. [Contributing](./../../CONTRIBUTING.livemd)
+   1. [Git](./../../contributing/git.livemd)
+   2. [Hoon](./../../contributing/hoon.livemd)
+   3. [Iex](./../../contributing/iex.livemd)
+   4. [Observer](./../../contributing/observer.livemd)
+   5. [Testing](./../../contributing/testing.livemd)
+      1. [Running Tests](./../../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../../contributing/testing/writing-tests.livemd)
+   6. [Understanding](./../../contributing/understanding.livemd)
+2. [Hoon](./../../hoon.livemd)
+   1. [Calling](./../../hoon/calling.livemd)
+   2. [Dumping](./../../hoon/dumping.livemd)
+   3. [Setting Up](./../../hoon/setting-up.livemd)
+3. [Index](./../../index.livemd)
+4. [Index_docs](./../../index_docs.livemd)
+5. [Visualization](./../../visualization.livemd)
+   1. [Actors](./../../visualization/actors.livemd)
+6. [Vm_interface](./../../vm_interface.livemd)
+
+## Conventions
+
+Since the [figuring out](./understanding.livemd) page demonstrates that well laid out test files are the key to understanding how modules work, it is important to write tests so this can always be achieved.
+
+The following sections will lay out how we can achieve this.
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Make sure names from the test matches setup_all
+
+```elixir
+ExUnit.start()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+defmodule AnomaTest.LiveBook.Nam do
+  use ExUnit.Case
+
+  setup_all do
+    special = 3
+    [special: special]
+  end
+
+  test "this is acceptable", %{special: special} do
+    assert special == 3
+  end
+
+  test "this test is not acceptable", %{special: spec} do
+    assert spec == 3
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, AnomaTest.LiveBook.Nam, <<70, 79, 82, 49, 0, 0, 14, ...>>,
+ {:"test this test is not acceptable", 1}}
+```
+
+If this convention is not followed, then the user can not simply be
+copy and paste the lines to figure out how to use the module.
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Write setup_all to not crash on reevaluation
+
+```elixir
+defmodule AnomaTest.LiveBook.NoCrash do
+  use ExUnit.Case
+
+  setup_all do
+    name = :intent_example
+
+    unless Process.whereis(name) do
+      Anoma.Node.Intent.init(name)
+    end
+
+    [intent_pool: name]
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+warning: Anoma.Node.Intent.init/1 is undefined (module Anoma.Node.Intent is not available or is yet to be defined)
+  documentation/contributing/testing.livemd#cell:qbrtwwd53rvqgtpz:8: AnomaTest.LiveBook.NoCrash.__ex_unit_setup_all_0/1
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, AnomaTest.LiveBook.NoCrash, <<70, 79, 82, 49, 0, 0, 11, ...>>,
+ {:__ex_unit_setup_all_0, 1}}
+```
+
+* Here we check if the process is running. This way if it is
+  already in IEX we simply don't disturb it but rename it to point
+  to the correct one we wish to operate over.
+* If we did not do this check the other commands may fail and IEX
+  may not be trapped to continue.
+* `mix test` will not catch this
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Try to make tests idempotent
+
+Let us demonstrate this point, by making a simple queue service.
+
+```elixir
+defmodule Queue do
+  use GenServer
+
+  def init(_init) do
+    {:ok, :queue.new()}
+  end
+
+  def start_link(arg) do
+    GenServer.start_link(__MODULE__, arg, name: arg)
+  end
+
+  def reset(queue) do
+    GenServer.cast(queue, :reset)
+  end
+
+  def enqueue(queue, name) do
+    GenServer.cast(queue, {:enqueue, name})
+  end
+
+  def pop(queue) do
+    GenServer.call(queue, :pop)
+  end
+
+  def handle_cast(:reset, _pool) do
+    {:noreply, :queue.new()}
+  end
+
+  def handle_cast({:enqueue, val}, pool) do
+    {:noreply, :queue.cons(val, pool)}
+  end
+
+  def handle_call(:pop, _from, queue) do
+    {:reply, :queue.get_r(queue), :queue.drop_r(queue)}
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, Queue, <<70, 79, 82, 49, 0, 0, 18, ...>>, {:handle_call, 3}}
+```
+
+```elixir
+defmodule AnomaTest.LiveBook.Idempotent do
+  use ExUnit.Case
+
+  setup_all do
+    name = :queue_name
+
+    unless Process.whereis(name) do
+      Queue.start_link(name)
+    end
+
+    [queue: name]
+  end
+
+  test "reset", %{queue: name} do
+    # Make sure we get reliable results!
+    Queue.reset(name)
+    Queue.enqueue(name, 5)
+    Queue.enqueue(name, 4)
+    assert 5 == Queue.pop(name)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, AnomaTest.LiveBook.Idempotent, <<70, 79, 82, 49, 0, 0, 15, ...>>, {:"test reset", 1}}
+```
+
+Here before getting values from the queue, we make sure it's fresh by resetting it.
+
+In the `Queue` case it's contrived, however a lot of genservers in the codebase work like this!
+
+Something important to note is that `mix test` will not catch this!
+
+So please try to keep tests isolated from each other.
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Try to Name Values
+
+For debugging purposes, it is best to name values, and so you can rerun values on command, or help the debugging process.

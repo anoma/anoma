@@ -7,21 +7,27 @@ Mix.install([
 ```
 
 ## Index
+1. [Contributing](./CONTRIBUTING.livemd)
+   1. [Git](./contributing/git.livemd)
+   2. [Hoon](./contributing/hoon.livemd)
+   3. [Iex](./contributing/iex.livemd)
+   4. [Observer](./contributing/observer.livemd)
+   5. [Testing](./contributing/testing.livemd)
+      1. [Running Tests](./contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./contributing/testing/writing-tests.livemd)
+   6. [Understanding](./contributing/understanding.livemd)
+2. [Hoon](./hoon.livemd)
+   1. [Calling](./hoon/calling.livemd)
+   2. [Dumping](./hoon/dumping.livemd)
+   3. [Setting Up](./hoon/setting-up.livemd)
+3. [Index](./index.livemd)
+4. [Index_docs](./index_docs.livemd)
+5. [Visualization](./visualization.livemd)
+   1. [Actors](./visualization/actors.livemd)
+6. [Vm_interface](./vm_interface.livemd)
+
+## TOC
 
 This notebook organizes a set of lessons to help you get started with Anoma!
 
 This book uses livebook, it is best viewed from within it! However most sections can be viewed fine in github or your text editor.
-
-1. [Contributing](./CONTRIBUTING.livemd)
-   1. [IEx](./contributing/iex.livemd)
-   2. [Observer](./contributing/observer.livemd)
-   3. [Understanding any module](./contributing/understanding.livemd)
-   4. [Testing](./contributing/testing.livemd)
-   5. [Git](./contributing/git.livemd)
-   6. [Hoon](./contributing/hoon.livemd)
-2. [Visualizing Anoma](./visualization.livemd)
-   1. [Actors](./visualization/actors.livemd)
-3. [Hoon](./hoon.livemd)
-   1. [Setting up](./hoon/setting-up.livemd)
-   2. [Dumping](./hoon/dumping.livemd)
-   3. [Calling](./hoon/calling.livemd)

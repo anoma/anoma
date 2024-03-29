@@ -1,10 +1,24 @@
 # IEx
 
 ## Index
-
-* [Index](../index_docs.livemd)
-  * [Contributing](../CONTRIBUTING.livemd)
-    * [IEx](./iex.livemd)
+1. [Contributing](./../CONTRIBUTING.livemd)
+   1. [Git](./../contributing/git.livemd)
+   2. [Hoon](./../contributing/hoon.livemd)
+   3. [Iex](./../contributing/iex.livemd)
+   4. [Observer](./../contributing/observer.livemd)
+   5. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+   6. [Understanding](./../contributing/understanding.livemd)
+2. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+3. [Index](./../index.livemd)
+4. [Index_docs](./../index_docs.livemd)
+5. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+6. [Vm_interface](./../vm_interface.livemd)
 
 ## Running multiple IEX's in the same Image/Environments
 
