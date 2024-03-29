@@ -7,6 +7,11 @@ defmodule Anoma.Node.Router.Engine do
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router
 
+  defmacro __using__(_) do
+    quote do
+    end
+  end
+
   typedstruct do
     field(:router_addr, Router.addr())
     field(:module, module())

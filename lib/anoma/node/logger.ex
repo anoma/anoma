@@ -6,13 +6,13 @@ defmodule Anoma.Node.Logger do
   the clock used for timestamping.
   """
 
-  use TypedStruct
-  use GenServer
-
   alias List
   alias Anoma.Storage
   alias Anoma.Node.Router
   alias Anoma.Node.Clock
+
+  use TypedStruct
+  use Router.Engine
 
   require Logger
 

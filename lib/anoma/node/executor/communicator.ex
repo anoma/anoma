@@ -23,13 +23,14 @@ defmodule Anoma.Node.Executor do
   - `state/1`
   - `subscribe/2`
   """
-  alias Anoma.Transaction
   alias __MODULE__
-  use TypedStruct
-
+  alias Anoma.Transaction
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router
   alias Anoma.Node.Logger
+
+  use TypedStruct
+  use Router.Engine
 
   typedstruct do
     field(:task_completion_topic, Router.Addr.t())
