@@ -26,6 +26,10 @@ defmodule Anoma.Node.Mempool do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
+  def init(%Mempool{} = state) do
+    {:ok, state}
+  end
+
   def init(args) do
     primary =
       Map.merge(%Mempool{}, args |> Enum.into(%{}))

@@ -39,6 +39,10 @@ defmodule Anoma.Node.Executor do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
+  def init(%Executor{} = state) do
+    {:ok, state}
+  end
+
   def init({env, topic, logger}) do
     {:ok,
      %Executor{
