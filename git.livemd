@@ -1,0 +1,418 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Git
+
+## Index
+
+* [Index](../index_docs.livemd)
+  * [Contributing](../CONTRIBUTING.livemd)
+    * [Git](./git.livemd)
+
+## Git
+
+Git is a decent version control(VC) system, however there are ways to
+make the VC process a lot smoother.
+
+This document is best viewed from within liveview, as the charts do not render on github currently.
+
+## Terminology
+
+* `topic` - this is any branch that serves to fix some problem in the
+  codebase
+
+* `feature` - some new concept to the codebase. Many topics can serve
+  to fulfill one feature.
+
+* `release` - A release of the code. This is a git `tag` on `main`
+  that signifies a new version of the software. This typically bumps
+  base to the latest release as well
+
+* `base` - the base branch one should base work off of
+
+* `main` - sometimes called `master`, is the branch that prepares for
+  a release.
+
+* `next` - a branch that has a superset of features that will be
+  included in the next release
+
+* `maint` - a maintnance branch that will be updated if bugs are found
+
+* `integreation branch` - a topic that merges a bunch of other topics
+
+## Naming conventions
+
+Name your topic like `name/feature` to avoid clashing with other
+people's topics.
+
+There are some standard branches that do not follow this pattern but
+those are described in the `Terminology` section of this document
+
+## General Principles
+
+These are some general principles which should help maintainers easily
+integrate your code, and have your work help out other devs on the
+codebase.
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Do not include unrelated changes into your commits
+
+* For example, if you see some unrelated bug in the same file as your
+  own, don't fix it in your general commit, make a new topic based on
+  when the bug was introduced and merge that into your topic if it
+  impacts your topic.
+
+* This makes reviewing much easier as the reviewer can read your
+  commit message and see changes only related to that included
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Make topics early and often!
+
+This allows your work to be incrementally integrated into a
+release. If you put all your work into one topic, bug fixes and all,
+then the following will occur
+
+1. The changes will not be reviewed properly
+
+   * On big projects with tight deadlines, sometimes some feature
+     *X* is wanted. However if *X* is a single topic with a messy
+     history, the only options are either to scrap the feature or
+     accept it as is poor code in all.
+   * If this was properly split up parts of *X* could be merged
+     now, with the more controversial features being held up in
+     *next*, without having to sacrifice the quality of the
+     codebase.
+
+2. Other team members can not share similar work
+
+   * Often a lot of different tasks, may find the same
+     deficiencies in the codebase.
+
+   * For a real example, let's take the following commit and topic
+
+     ```example
+     802ab9e * anoma/mariari/nock-testing-file Move the helper functions
+     73bfd7d * v0.3.0
+      2 files changed, 44 insertions(+), 34 deletions(-)
+     lib/test_helper/nock.ex | 43 +++++++++++++++++++++++++++++++++++++++++++
+     test/nock_test.exs      | 35 +----------------------------------
+     ```
+
+     Here we find that we `mariari` moved some testing functions from
+     `test/` to `lib/`, as elixir tests don't share code in the best
+     way. This allows other files in `test/` to reuse the same
+     functions that were previously found in `test/nock_test.exs`.  In
+     fact there are multiple topics that ended up using this. Both the
+     executor topic and worker topic
+
+     * `8de0c7e anoma/mariari/worker`
+       * `1d6bc99 anoma/mariari/executor`
+
+     both needed this. Since the worker relies upon the executor,
+     they both don't merge in this topic separately, but if they
+     were separate they would want to share this change.
+
+* If these changes were orchestrated by different people, then
+  they would have made this change twice! Meaning that in the git
+  history the work has been done in different commits! This means
+  that when it comes time to merge in work, there will be a
+  conflict between these two. Rather than being able to reuse
+  other's work and save other devs time, this will come up when
+  reviewers read the code, with unrelated changes, or when the
+  maintainers try to merge things together and find annoying
+  conflicts
+
+1. Work can not be incrementally included
+2. Others might just do the work before you
+
+* If one is too slow on finishing their topic and making it one big
+  commit, then someone else might redo the same work and put it up
+  for review, but instead of them reusing your code, they wrote it
+  from scratch, wasting both your time and their time.
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Base topics on base
+
+Basing code on `main` has the following errors:
+
+1. Code merged in main before a release may turn out to have issues
+2. Git merges and conflict resolutions lead to spurious base points
+3. Other topics can not reuse your code
+4. Useless temporal history is had
+
+Basing on someone's topic that you require and will merge in anyways
+is fine.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Code merged in main before a release may turn out to have issues
+
+Imagine main has the following history
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'base'}} }%%
+gitGraph TB:
+commit id: "73bfd7d" tag: "v0.3.0"
+branch Topic-Y
+commit id: "4381bd3"
+checkout base
+merge Topic-Y id: "52b44a6"
+```
+
+and your code hapens to be base on 52b44a6, then the history will look something like:
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'my-cool-feature'}} }%%
+gitGraph TB:
+commit id: "73bfd7d" tag: "v0.3.0"
+branch Topic-Y
+commit id: "4381bd3"
+checkout my-cool-feature
+merge Topic-Y id: "52b44a6: main merge feature-y"
+commit id: "7dabf44"
+```
+
+Later before a release, we find out that *Topic-Y* has issues, and any
+code that is based on *Topic-Y* will have to sit this release
+out. Normally to check for this, the protocol is quite simple we just:
+
+1. Do not include any topics that are based on *Topic-Y* or merges
+   *Topic-Y* into the release
+2. Pull any topic based on *Topic-Y* from `main`
+
+becomes muddied, as if one's topic was based on `main` after *Topic-Y*
+is in, then it's unclear if that topic is unaffected.
+
+Thus *my-cool-feature* may be cut from the release, even if it was
+perfectly fine and did not rely on *Topic-Y*.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Git merges and conflict resolutions lead to spurious base points
+
+Further, if we have two topics *my-feature-x* and *my-feature-y* based
+on `main`, then the history would look something like this
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'base'}} }%%
+gitGraph TB:
+commit id: "73bfd7d" tag: "v0.3.0"
+branch main
+branch ray/mnesia-attach
+commit id: "97bef7"
+checkout main
+merge ray/mnesia-attach id: "13b3e4a"
+
+
+checkout base
+branch proper-topic
+commit id: "8087564: add a new feature"
+
+checkout main
+branch topic-x
+commit id: "bc4b2a1: new cool feature"
+
+checkout main
+merge proper-topic id: "2dd991a"
+
+checkout main
+branch topic-y
+commit id: "546a8f9: add feature: conflicts X!"
+
+checkout main
+merge topic-x id: "90d91e7"
+merge topic-y id: "0438922"
+```
+
+In a textual form this looks like:
+
+```
+0438922 *   main Merge branch 'topic-y'
+        |\
+546a8f9 | * topic-y Added a feature that conflcits with X!
+90d91e7 * |   Merge branch 'topic-x'
+        |\ \
+        | |/
+        |/|
+bc4b2a1 | * topic-x Added a cool feature
+2dd991a * |   Merge branch 'proper-topic'
+        |\ \
+        | |/
+        |/|
+8087564 | * proper-topic Add a new feature
+13b3e4a * |   Merge branch 'ray/mnesia-attach'
+        |\ \
+        | |/
+        |/|
+97b6ef7 | * ray/mnesia-attach mnesia:
+        |/
+73bfd7d * v0.3.0 base
+
+```
+
+When *topic-x* and *topic-y* have a conflict, the shared base of their base is
+
+```bash
+4 taichi@Gensokyo:~/Documents/Work/Repo/anoma-all git:main: % git merge-base topic-x topic-y
+13b3e4a215ea6222a1b1092ad242d3fa31e7040b
+```
+
+which is `13b3e4a * | Merge branch 'ray/mnesia-attach'` and not
+`73bfd7d * v0.3.0 anoma/base`, meaning that when a conflict is shown
+in the merge `0438922`, then the diff from a 3 way diff will show the
+mnesia changes, potentially making it unclear to others way the
+potentially issues may be.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Other topics can not reuse your code
+
+It is a bad idea to base code on `main`, as `main` contains random
+merged topics before a release. This makes it so other topics who wish
+to use yours also has to merge all the random topics on `main`.
+
+This is easy to see with the following example:
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'simple-config'}} }%%
+gitGraph TB:
+commit id: "73bfd7d: base" tag: "v0.3.0"
+branch major-changes
+commit id: "97bef7: structural changes"
+checkout simple-config
+merge major-changes id: "5b16844: merge into main"
+commit id: "f098de0: general config"
+```
+
+Here we have a topic `major-changes` that makes all sorts of changes,
+and since we based our code off main, these are all included in
+simple-config-change.
+
+However imagine we wish to overhaul the configuration a bit
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'configuration-upgrade'}} }%%
+gitGraph TB:
+commit id: "73bfd7d: base" tag: "v0.3.0"
+commit id: "f098de0: Basic config changes"
+```
+
+Now if we wish to merge in `simple-config-change` we have
+
+```mermaid
+%%{init:
+{ 'logLevel': 'debug',
+  'theme': 'forest',
+  'gitGraph': {'showBranches': true,
+               'showCommitLabel':true,
+               'mainBranchName': 'configuration-upgrade'}} }%%
+gitGraph TB:
+commit id: "73bfd7d: base" tag: "v0.3.0"
+
+branch simple-config
+checkout configuration-upgrade
+branch major-changes
+commit id: "97bef7: structural changes"
+
+checkout configuration-upgrade
+commit id: "f098de0: Basic config changes"
+
+checkout simple-config
+merge major-changes id: "5b16844: merge into main"
+commit id: "f098de0: general config"
+
+checkout configuration-upgrade
+merge simple-config id: "f6230df"
+```
+
+Besides having a spurious main merged into our topic now, we are
+forced to deal with `major-changes` causing various conflicts with
+your topic, making this merge untenable.
+
+Meaning that this code has to be recreated in `configuration-upgrade`
+instead of reusing `simple-config-change`, fixing the problem in 2
+places, and having a conflict when it comes time for a release.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Useless temporal history is had
+
+As we can see in the previous examples, when we base off of `main`, we
+end up in a scenario, where the date in which someone is branching is
+baked into the code. As maintainers we don't care about when the code
+was made, just the fact that it was. Thus this is a bit of history
+that simply adds noise
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Merge other people's topics into yours
+
+If you need some work that is already merged into `next` or `main`,
+simply merge that topic into yours! Since the bases are well situated,
+you will only deal with reasonable conflicts that you should have
+context for.
+
+<!-- livebook:{"branch_parent_index":4} -->
+
+## Base bug fixes on the commit that introduced the bug
+
+Basing a bug fix on when the bug is introduced is superior than basing
+it on the latest release, as this means that it can be merged into any
+`maint` branches we may have.
+
+For example:
+
+```
+73bfd7d * v0.3.0 Anoma 0.3.0
+...
+10f8636 * v0.2.0 Anoma 0.2.0
+...
+34fcd78 * v0.1.0 Release v0.1.0
+```
+
+if a bug was found in a topic between `v0.1.0` and `v0.2.0`, and we
+based it on when the bug was found we can merge it on `v0.2.0` and
+have `v0.2.1` release from there. And have a `v0.3.1` release as well.
+
+```
+2373834 *   v0.2.1 Merge branch 'bug-fix' into HEAD
+        |\
+da24431 | * bug-fix fix bug
+10f8636 * | v0.2.0 Anoma 0.2.0
+```
+
+```
+19c6f03 *   v0.3.1 Merge branch 'bug-fix' into HEAD
+        |\
+da24431 | * bug-fix fix bug
+73bfd7d * | v0.3.0 Anoma 0.3.0
+```
+
+notice how we can merge this in with no conflicts!

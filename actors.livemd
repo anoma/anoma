@@ -1,0 +1,210 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# The Actors
+
+## Index
+
+* [Index](../index_docs.livemd)
+  * [Visualizing Anoma](../visualization.livemd)
+    * [Actors](./actors.livemd)
+
+## An overview of Anoma
+
+A good overview of Actors can be seen by looking at the supervision tree of Anoma itself.
+
+```elixir
+Kino.Process.render_sup_tree(Anoma, direction: :left_right)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph LR;
+0(Anoma):::root ---> 1(#PID<0.334.0>):::supervisor
+0(Anoma):::root ---> 4(#PID<0.290.0>):::supervisor
+1(#PID<0.334.0>):::supervisor ---> 2(anoma_intent):::worker
+1(#PID<0.334.0>):::supervisor ---> 3(anoma_intent_com):::worker
+4(#PID<0.290.0>):::supervisor ---> 5(#PID<0.299.0>):::supervisor
+4(#PID<0.290.0>):::supervisor ---> 8(#PID<0.294.0>):::supervisor
+4(#PID<0.290.0>):::supervisor ---> 11(#PID<0.291.0>):::supervisor
+5(#PID<0.299.0>):::supervisor ---> 6(anoma_mempool):::worker
+5(#PID<0.299.0>):::supervisor ---> 7(anoma_mempool_com):::worker
+8(#PID<0.294.0>):::supervisor ---> 9(anoma_ordering):::worker
+8(#PID<0.294.0>):::supervisor ---> 10(anoma_ordering_com):::worker
+11(#PID<0.291.0>):::supervisor ---> 12(anoma_executor):::supervisor
+11(#PID<0.291.0>):::supervisor ---> 13(anoma_executor_com):::worker
+classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+
+
+```
+
+## Mempool
+
+A good view of visualizing Anoma can be seen through running the
+mempool, as it orchastrates the other actors in Anoma to act
+
+<!-- livebook:{"break_markdown":true} -->
+
+First we will create a transaction and see how that changes the base supervision tree before executing
+
+```elixir
+alias Anoma.Storage
+alias Anoma.Node.Storage.Communicator, as: Scom
+alias Anoma.Node.Executor.Communicator, as: Ccom
+alias Anoma.Node.Mempool.Communicator, as: Mcom
+import TestHelper.Nock
+
+storage = %Anoma.Storage{
+  qualified: Anoma.Qualified,
+  order: Anoma.Order
+}
+
+name = :anoma
+snapshot_path = [:my_special_nock_snaphsot | 0]
+node = Anoma.Node.com_names(name)
+key = 555
+zero = zero_counter(key)
+pid_zero = Mcom.tx(node.mempool, zero).pid
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#PID<0.115163.0>
+```
+
+The previous evaluations PID can be seen in the diagram below!
+
+```elixir
+Kino.Process.render_sup_tree(Anoma, direction: :left_right)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+graph LR;
+0(Anoma):::root ---> 1(#PID<0.334.0>):::supervisor
+0(Anoma):::root ---> 4(#PID<0.290.0>):::supervisor
+1(#PID<0.334.0>):::supervisor ---> 2(anoma_intent):::worker
+1(#PID<0.334.0>):::supervisor ---> 3(anoma_intent_com):::worker
+4(#PID<0.290.0>):::supervisor ---> 5(#PID<0.299.0>):::supervisor
+4(#PID<0.290.0>):::supervisor ---> 8(#PID<0.294.0>):::supervisor
+4(#PID<0.290.0>):::supervisor ---> 11(#PID<0.291.0>):::supervisor
+5(#PID<0.299.0>):::supervisor ---> 6(anoma_mempool):::worker
+5(#PID<0.299.0>):::supervisor ---> 7(anoma_mempool_com):::worker
+8(#PID<0.294.0>):::supervisor ---> 9(anoma_ordering):::worker
+8(#PID<0.294.0>):::supervisor ---> 10(anoma_ordering_com):::worker
+11(#PID<0.291.0>):::supervisor ---> 12(anoma_executor):::supervisor
+11(#PID<0.291.0>):::supervisor ---> 14(anoma_executor_com):::worker
+12(anoma_executor):::supervisor ---> 13(#PID<0.115163.0>):::worker
+14(anoma_executor_com):::worker -..- 13(#PID<0.115163.0>):::worker
+classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
+classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
+classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
+classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+
+
+```
+
+Now let us see what happens between the actors when we run the mempool
+
+```elixir
+Kino.Process.render_seq_trace(fn -> Mcom.execute(node.mempool) end)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+sequenceDiagram
+participant 6 AS mnesia_subscr;
+participant 8 AS mnesia_locker;
+participant 7 AS mnesia_tm;
+participant 3 AS anoma_ordering_com;
+participant 4 AS anoma_ordering;
+participant 1 AS anoma_mempool_com;
+participant 2 AS anoma_mempool;
+participant 0 AS self();
+participant 5 AS #35;PID<0.115163.0>;
+0->>1: CALL: execute
+1->>2: CALL: execute
+2->>3: CALL: next_order
+3->>4: CALL: next_order
+
+
+2->>3: CALL: new_order
+3->>4: CALL: new_order
+4->>5: INFO: read_ready
+
+5->>6: CALL: change
+
+6->>5: INFO: tuple
+2->>5: INFO: write_ready
+2->>7: INFO: tuple
+5->>7: INFO: tuple
+7->>2: INFO: mnesia_tm
+7->>5: INFO: mnesia_tm
+5->>8: INFO: tuple
+2->>8: INFO: tuple
+8->>5: INFO: mnesia_locker
+8->>2: INFO: mnesia_locker
+5->>8: INFO: release_tid
+5->>7: INFO: delete_transaction
+5->>7: INFO: tuple
+7->>5: INFO: mnesia_tm
+2->>8: INFO: release_tid
+2->>7: INFO: delete_transaction
+5->>8: INFO: tuple
+
+
+8->>5: INFO: mnesia_locker
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok, 1}
+```
+
+As we can see, we get a fairly solid overview of what actors sent what messages
+
+<!-- livebook:{"break_markdown":true} -->
+
+We can also see what processes startup when we start an execution
+
+```elixir
+Kino.Process.render_seq_trace(fn -> Mcom.tx(node.mempool, increment_counter_val(555)).pid() end)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+sequenceDiagram
+participant 3 AS anoma_executor_com;
+participant 4 AS anoma_executor;
+participant 1 AS anoma_mempool_com;
+participant 2 AS anoma_mempool;
+participant 0 AS self();
+participant 5 AS #35;PID<0.115185.0>;
+0->>1: CALL: tx
+1->>2: CALL: tx
+2->>3: CALL: transaction
+3->>4: CALL: start_task
+4->>5: SPAWN
+activate 5
+4->>3: INFO: tuple
+3->>5: INFO: tuple
+
+
+
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#PID<0.115185.0>
+```

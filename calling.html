@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="project" content="Anoma v0.10.0">
+
+
+    <title>Calling — Anoma v0.10.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-D260AD77.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-CILPWI2Q.js"></script>
+
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.10.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Anoma</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
+
+<h1>
+
+
+  <span>Calling</span>
+</h1>
+
+  <div class="livebook-badge-container">
+    <a href="#" class="livebook-badge">
+      <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+    </a>
+  </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ul><li><a href="index_docs.html">Index</a><ul><li><a href="hoon.html">Hoon</a><ul><li><a href="calling.html">Calling</a></li></ul></li></ul></li></ul><h2 id="calling-conventions" class="section-heading">
+  <a href="#calling-conventions" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Calling Conventions</span>
+</h2>
+<p>For this section, it is assumed that one is comfortable with the techniques outlined in the <a href="dumping.html">dumping guide</a>, in particular familiarity with:</p><ol><li><a href="https://developers.urbit.org/reference/hoon/rune/dot#-dottar">dottar(.*)</a></li><li><a href="https://developers.urbit.org/reference/hoon/rune/zap#-zaptis">zaptis(!=)</a></li></ol><p>is had, if one is uncomfortable with what is shown here, it would be a good idea to skim back over the <a href="dumping.html">dumping guide</a> for more information.</p><p>With that disclaimer out of the way, let us talk about calling conventions.</p><h2 id="basic-nock-calls" class="section-heading">
+  <a href="#basic-nock-calls" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Basic Nock Calls</span>
+</h2>
+<p>There are a few ways to call Nock functions, recall that the structure of a functions look like this:</p><pre><code class="nock">[function sample environment-defined-in]</code></pre><ul><li><em>Function</em> is some nock logic we wish to run</li><li><em>Sample</em> is the default argument of the function if non is given</li><li><em>Environment-defined-in</em> is the environment the function is defined in and relies upon.</li></ul><p>A good basic example can be seen below:</p><pre><code class="hoon">[[0 6] 777 999]</code></pre><p>This function has an arbitrary environment of <code class="inline">999</code> and a sample of <code class="inline">777</code>. The logic itself simply grabs the sample from the environment.</p><p>A good visualization of the indexing can be seen below</p><pre><code class="mermaid">stateDiagram-v2
+1 --&gt; 2
+1 --&gt; 3
+2 --&gt; 4
+2 --&gt; 5
+3 --&gt; 6
+3 --&gt; 7</code></pre><p>where we have in our concrete example</p><table><thead><tr><th style="text-align: left;">Index</th><th style="text-align: left;">Nock</th></tr></thead><tbody><tr><td style="text-align: left;">1</td><td style="text-align: left;"><code class="inline">[[0 6] 777 999]</code></td></tr><tr><td style="text-align: left;">2</td><td style="text-align: left;"><code class="inline">[0 6]</code></td></tr><tr><td style="text-align: left;">3</td><td style="text-align: left;"><code class="inline">[777 999]</code></td></tr><tr><td style="text-align: left;">4</td><td style="text-align: left;"><code class="inline">0</code></td></tr><tr><td style="text-align: left;">5</td><td style="text-align: left;"><code class="inline">6</code></td></tr><tr><td style="text-align: left;">6</td><td style="text-align: left;"><code class="inline">777</code></td></tr><tr><td style="text-align: left;">7</td><td style="text-align: left;"><code class="inline">999</code></td></tr></tbody></table><!-- livebook:{"break_markdown":true} --><p>Thus if we wish to call our code example, the most basic way is by invoking nock <code class="inline">9</code>. Continuing our example from above, let us see the most basic call of it.</p><pre><code class="hoon">&gt; .*  [[0 6] 777 999]  [9 2 0 1]
+777</code></pre><p>To better understand what the <code class="inline">9</code> is doing let us ask us the nock structure of it</p><pre><code class="hoon">&gt; ;;  nock  [9 2 0 1]
+[%9 p=2 q=[%0 p=1]]</code></pre><p>Here we can see the <code class="inline">9</code> takes 2 arguments, a <code class="inline">p=2</code> and a <code class="inline">q=[0 1]</code> argument.</p><p>The <code class="inline">q=[0 1]</code> argument goes off first. The point of this is to determine what module/layer (called an <a href="https://developers.urbit.org/reference/glossary/core">core</a> in hoon) the particular function (called a <a href="https://developers.urbit.org/reference/glossary/gate">gate</a> in hoon) belongs to.</p><p>From here the <code class="inline">p=2</code> is the location of the function/<a href="https://developers.urbit.org/reference/glossary/gate">gate</a>.</p><p>In our example we know the function is indexed at 2, so thus we simply call the logic with the environment it's defined inside, meaning we simply get out the <code class="inline">6</code>th index which we have observed above is 777</p><!-- livebook:{"break_markdown":true} --><p><code class="inline">[9 2 0 1]</code> isn't too interesting on it's own, all we have managed to do, is make fancy default values.</p><p>However, since the logic we are running indexs into the sample, all we have to do is fine a formula that replaces the sample with the desired value</p><pre><code class="hoon">&gt; .*  [[0 6] 777 999]  [9 2 10 [6 1 888] 0 1]
+888
+&gt; ;;  nock  [9 2 10 [6 1 888] 0 1]
+[%9 p=2 q=[%10 p=[p=6 q=[%1 p=888]] q=[%0 p=1]]]</code></pre><p>Above we do exactly that, all it took was adding a simple <code class="inline">10 [6 1 888]</code>, however let us analyze what this does.</p><p><code class="inline">%10</code> is better known as replace at axis, the axis is the first value of <code class="inline">[6 1 888]</code> which in this case is position <code class="inline">6</code>. We then run the formula <code class="inline">[1 888]</code> which is simply saying return the constant <code class="inline">888</code>, then <code class="inline">10</code> finishes and replaced position <code class="inline">6</code> with the result, giving the logic located at <code class="inline">2</code> (I.E. <code class="inline">[0 6]</code>) the new sample to run against.</p><p>Since the <code class="inline">%9</code>'s <code class="inline">q=...</code> has the replaced value, this ends up being the context for the <code class="inline">p=2</code> to run inside, and thus we have a computation that is effectively:</p><pre><code class="hoon">&gt; .*  [[0 6] 888 999] [9 2 0 1]
+888</code></pre><p>We will in the next section see how Hoon functions are defined, as they give further detail in how we use instruction <code class="inline">9</code>.</p><h2 id="hoon-gates-what-are-they-really" class="section-heading">
+  <a href="#hoon-gates-what-are-they-really" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Hoon Gates: What are they really?</span>
+</h2>
+<p>Something interesting is comparing the <code class="inline">9</code> described here to <a href="dumping.html#dumping-indexing-offsets">dumping the indicies found in the dumping guide</a>.</p><p>Namely we saw:</p><pre><code class="hoon">&gt; !=(dec:anoma)
+[7 [0 46] 9 342 0 15]</code></pre><p>What is incongruous, is that we described <code class="inline">9</code> as calling a function, but in the dumping section, we make it seem like it's effectively only doing indexing to bring the name ready to be called.</p><p>This all has to do with how hoon stores nock functions, they do something quite clever.</p><p>Instead of just storing the function as code itself, it stores it similarly to this</p><pre><code class="hoon">[[1 [[0 6] 777 999]] 666 909]</code></pre><p>Where we store a nock function that evaluates to the code, the <code class="inline">1</code> instruction is simply that, when we evaluate this form we get</p><pre><code class="hoon">&gt; .*  [[1 [[0 6] 777 999]] 666 909]  [9 2 0 1]
+[[0 6] 777 999]</code></pre><p>for which we can now call it</p><pre><code class="hoon">&gt; .*  .*  [[1 [[0 6] 777 999]] 666 909]  [9 2 0 1]  [9 2 0 1]
+777</code></pre><p>In this case, it doesn't do much, but it makes sense if we look at a real example.</p><pre><code class="hoon">&gt; .*  add:anoma  [0 2]
+[ 6
+  [5 [1 0] 0 12]
+  [0 13]
+  9
+  2
+  10
+  [6 [8 [9 342 0 7] 9 2 10 [6 0 28] 0 2] 4 0 13]
+  0
+  1
+]</code></pre><p>On this example I want to focus on the <code class="inline">dec</code> call <code class="inline">[8 [9 342 0 7] 9 2 10 ...]</code>. We know this is dec, as we already know it's offset inside layer 1 is <code class="inline">342</code>, but it's located at <code class="inline">7</code> as we've pushed <code class="inline">add</code> with its sample to the tree, making layer 1's index go to 7 (see the <a href="dumping.html#how-index-of-layers-change">section on how indicies change</a>) relative to <code class="inline">add</code>.</p><p>What is very interesting, is that since the <a href="https://developers.urbit.org/reference/glossary/gate">gate</a> evaluates to the nock function we wish, we can follow it up with the simple <code class="inline">[9 2 10 [6 ...] 0 ...]</code> pattern we found before.</p><p>Meaning that we have decoupled indexing with calling. If Hoon did not do this, then we are in an awkward position that the <code class="inline">[9 342 0 7]</code> somehow has to get <code class="inline">0 7</code> index before running the application change <code class="inline">0 28</code>, complicating the formula. Making it a simple constant function allows the formulas to stay manageable.</p><p>Some other minor notes. The call: <code class="inline">[9 2 10 [6 0 28] 0 2]</code> ends with <code class="inline">0 2</code> instead of <code class="inline">0 1</code> because we have bushed with <code class="inline">8</code>, more on this later.</p><p>We will continue to expand this in the next section, but first let us learn how to evaluate code in the context of Anoma as the standard environment.</p><h2 id="evaluating-calls-in-the-anoma-context" class="section-heading">
+  <a href="#evaluating-calls-in-the-anoma-context" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Evaluating Calls in The Anoma Context</span>
+</h2>
+<p>For actually writing code for Anoma, the dump of dec that we saw:</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="o">!=</span><span class="p" data-group-id="4328473667-1">(</span><span class="n">dec</span><span class="ss">:anoma</span><span class="p" data-group-id="4328473667-1">)</span><span class="w">
+</span><span class="p" data-group-id="4328473667-2">[</span><span class="mi">7</span><span class="w"> </span><span class="p" data-group-id="4328473667-3">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">46</span><span class="p" data-group-id="4328473667-3">]</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="mi">342</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="p" data-group-id="4328473667-2">]</span></code></pre><p>would not actually run in the Anoma standard library. This is because it is assuming the current environment which has the Hoon standard library.</p><pre><code class="hoon">&gt; .*  anoma  [7 [0 46] 9 342 0 15]
+dojo: hoon expression failed</code></pre><p>Rather than by hand editing the <code class="inline">7 [0 46]</code> out, we can instead tell Hoon that the context of the computation is in Anoma, and this is done through <a href="https://developers.urbit.org/reference/hoon/rune/tis#-tisgar">tisgar(=&gt;)</a>.</p><p>A good example can be seen here:</p><pre><code class="hoon">&gt; =&gt;  anoma  !=(dec)
+[9 342 0 15]</code></pre><p>Which gives us the correct computation to run dec on Anoma.</p><pre><code class="hoon">&gt; =&gt;  anoma  .*  .  [9 342 0 15]
+[ [ 6
+    [5 [1 0] 0 6]
+...
+:: dec core emitted
+
+&gt; =&gt;  anoma  .*  .*  .  [9 342 0 15]  [9 2 10 [6 1 777] 0 1]
+776</code></pre><h2 id="what-a-hoon-function-call-actually-does" class="section-heading">
+  <a href="#what-a-hoon-function-call-actually-does" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">What a Hoon function call actually does</span>
+</h2>
+<p>So far this document has only outlined calling Hoon functions by hand, but what does the cannonical application form generate?</p><pre><code class="hoon">&gt; =&gt;  anoma  (dec 3)
+2</code></pre><p>Well we can ask <a href="https://developers.urbit.org/reference/hoon/rune/zap#-zaptis">zaptis(!=)</a> what this expression means</p><pre><code class="hoon">&gt; =&gt;  anoma  !=((dec 3))
+[8 [9 342 0 15] 9 2 10 [6 7 [0 3] 1 3] 0 2]
+&gt; ;;  nock  =&gt;  anoma  !=((dec 3))
+[ %8
+  p=[%9 p=342 q=[%0 p=15]]
+  q=[%9 p=2 q=[%10 p=[p=6 q=[%7 p=[%0 p=3] q=[%1 p=3]]] q=[%0 p=2]]]
+]</code></pre><p>Let us break down this expression</p><ol><li><code class="inline">[%8 p=[9 342 ...] q=[9 2 ...]]</code><ul><li><code class="inline">8</code> simply does a push on subject, with the <code class="inline">p</code> getting consed onto the environment. We've seen this <code class="inline">p</code> before, it is simply the formula for <code class="inline">dec</code>.</li><li>Thus after the <code class="inline">p</code> we have <code class="inline">[dec anoma]</code> filling the environment</li><li>This is now the context for the <code class="inline">q=</code></li></ul></li><li><code class="inline">[%9 p=2 q=[%10 ...]]</code><ul><li>We've seen this <code class="inline">[9 2 10 [6 ...] ...]</code> call before, like before the function within the current layer is located at 2. However what is different is the specifics of the <code class="inline">q</code></li></ul></li><li><code class="inline">[%10 p=[p=6 q=[%7 p=[%0 p=3] q=[%1 p=3]]] q=[0 2]]</code><ul><li>This 10 is a replace at axis 6 like we have seen before, but let us note the <code class="inline">q=[0 2]</code>.</li><li>Most example's we've seen have been <code class="inline">[0 1]</code>, this example has a <code class="inline">[0 2]</code> as the first <code class="inline">%8</code> pushed the <code class="inline">dec</code> function onto the environment, meaning that the function we wish to replace <code class="inline">6</code> of is really at index 2!</li><li>An important note is that this rule expands to a replace where the <code class="inline">q</code> and <code class="inline">p</code> are ran on the original environment.</li><li>This means that <code class="inline">q=[%7 ...]</code> gets to run in the environment where the surrounding environment still exists</li></ul></li><li><code class="inline">[%7 p=[%0 p=3] q=[%1 p=3]]</code><ul><li>Here are where things get interesting, <code class="inline">%7</code> is simply composition, thus <code class="inline">p</code> is ran on the environment then <code class="inline">q</code> is.</li><li>This is important because the <code class="inline">p=[%0 p=3]</code> simply restores the original environment<pre><code class="hoon">&gt; .*  999  [8 [1 1] 0 1]
+[1 999]
+&gt; .*  999  [8 [1 1] 0 3]
+999</code></pre></li><li>Meaning that computation <code class="inline">q</code> can be ran as if the <code class="inline">%8</code> never happened.</li><li>The Hoon compiler is sometimes smart and will optimize out the <code class="inline">%7</code></li></ul></li><li><code class="inline">[%1 p=3]</code><ul><li>We simply put 3 as the argument</li><li>Dec now runs with 3 as we expect.</li></ul></li></ol><p>Thus as we can see, the calling convention of Hoon is not very complicated, and is mostly sensible about trying to preserve the environments things are called in.</p><h2 id="paramarterized-modules-or-how-gates-are-just-cores" class="section-heading">
+  <a href="#paramarterized-modules-or-how-gates-are-just-cores" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Paramarterized Modules: Or How Gates are just Cores</span>
+</h2>
+<p>A common occurence in our standard library is the use of paramartized modules. However something interesting to note is that on the <a href="https://developers.urbit.org/reference/glossary/gate">gate</a> documentation, it mentions</p><blockquote><p>A <a href="https://developers.urbit.org/reference/glossary/gate">gate</a> is <a href="https://developers.urbit.org/reference/glossary/core">core</a> with one arm named $ (buc). They are often called Hoon functions because they have many of the same properties of functions from other programming languages.</p></blockquote><p>Meaning that every time we have been calling <code class="inline">add</code> we've really been calling a module with a function named $ inside</p><pre><code class="hoon">&gt; =&gt;  anoma  $:add
+0</code></pre><p>Thus the calling conventions we've discussed above are exactly the same for modules!</p><p>Let us look at the <code class="inline">lsh</code> function for confirmation</p><pre><code class="hoon">&gt; =&gt;  anoma  !=(block)  ::  layer 4
+[9 10 0 1]
+&gt; =&gt;  anoma  !=(lsh:block)
+[7 [9 10 0 1] 9 90 0 1]
+&gt; =&gt;  anoma  !=((lsh:block 3 4))
+[8 [7 [9 10 0 1] 9 90 0 1] 9 2 10 [6 [7 [0 3] 1 3] 7 [0 3] 1 4] 0 2]</code></pre><p>We can see here that block is located at index <code class="inline">10</code> inside of the anoma environment. Also note the <code class="inline">9</code> call, we are calling block to bring it to the front!</p><p>next we check <code class="inline">lsh</code> which is located <code class="inline">90</code> within it, nothing out of the ordinary. We use <code class="inline">%7</code> to compose the indexing into the structure, which is reasonable.</p><p>When we call <code class="inline">lsh</code> on <code class="inline">3</code> and <code class="inline">4</code> the result is exactly like we expect, we generate out the <code class="inline">%8</code> call that we disected above.</p><p>So we can already call the <code class="inline">lsh</code> function as if no paramartized was had. This makes sense as we know that each <a href="https://developers.urbit.org/reference/glossary/gate">gate</a> has a sample that it takes if no substitution is had.</p><p>Now let us replace the default block value with <code class="inline">999</code> (note you don't want to run this, it'll be too slow)</p><pre><code class="hoon">&gt; =&gt;  anoma  !=((~(lsh block 999) 3 4))
+[ 8
+  [8 [9 10 0 1] 9 90 10 [6 7 [0 3] 1 999] 0 2]
+  9
+  2
+  10
+  [6 [7 [0 3] 1 3] 7 [0 3] 1 4]
+  0
+  2
+]</code></pre><p>The only difference that was had was in in  <code class="inline">[8 [9 10 0 1] 9 90 10 [6 7 [0 3] 1 999] 0 2]</code>. The rest of the formula stayed the same.</p><p>However looking at this change, this should not be very shocking, as we have analyzed with the function above, we are simply pushing <code class="inline">block</code> to the front of the env with the <code class="inline">[8 [9 10 0 1] ...]</code>, leaing the environment being <code class="inline">[block anoma]</code>, then we simply wish to call <code class="inline">90</code> where <code class="inline">lsh</code> is located with the <code class="inline">6</code> index of the <code class="inline">block</code> environment being set to <code class="inline">999</code>.</p><p>Note the <code class="inline">6</code> index is a gate's argument which we can see with this call:</p><pre><code class="hoon">&gt; =&gt;  anoma  !=(block-size:block)
+[7 [9 10 0 1] 0 6]</code></pre><p>Then we simply compute the rest of <code class="inline">lsh</code> with the default value being 999. Using a non large number we can see how this changes the results.</p><pre><code class="hoon">&gt; =&gt;  anoma  (~(lsh block 1) 3 4)
+256
+&gt; =&gt;  anoma  (~(lsh block 0) 3 4)
+32
+&gt; =&gt;  anoma  (lsh:block 3 4)
+32</code></pre>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="setting-up.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Setting up Hoon
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+  </div>
+</div>
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Anoma.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

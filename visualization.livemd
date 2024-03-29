@@ -1,0 +1,15 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Visualizing Anoma
+
+## Index
+
+* [Index](./index_docs.livemd)
+  * [Visualizing Anoma](./visualization.livemd)
+    1. [Actors](./visualization/actors.livemd)
+
+## Note on this section
+
+This section provides extra visual diagrams on various components of
+Anoma, and serves to give an intuitive understanding on how Anoma
+works.

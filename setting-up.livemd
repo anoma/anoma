@@ -1,0 +1,85 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Setting up Hoon
+
+## Index
+
+* [Index](../index_docs.livemd)
+  * [Hoon](../hoon.livemd)
+    * [Setting up](./setting-up.livemd)
+
+## Getting a Good Hoon environment
+
+A good starting point is to read [Hoon's docs on environment](https://developers.urbit.org/guides/core/environment)
+
+It's good to follow it until the section "Mount a desk"
+
+From here we can setup the environment quite nicely
+
+<!-- livebook:{"break_markdown":true} -->
+
+```hoon
+|merge %anoma our %base
+|mount %anoma
+```
+
+From here we want to remove all the uneeded files, get it to the following state:
+
+<!-- livebook:{"break_markdown":true} -->
+
+```bash
+8 taichi@Gensokyo:~/Documents/Workspace/Hoon/zod git:master:? % tree anoma
+anoma
+├── mar
+│   ├── hoon.hoon
+│   ├── mime.hoon
+│   ├── noun.hoon
+│   ├── txt-diff.hoon
+│   └── txt.hoon
+└── sys.kelvin
+
+2 directories, 6 files
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+with `sys.kelvin` having only `[%zuse 412]`
+
+Now that we have our minimal state, we can symlink in the files in
+https://github.com/anoma/anoma/tree/base/hoon
+
+into `lib`. It should now look something like this
+
+```bash
+9 taichi@Gensokyo:~/Documents/Workspace/Hoon/zod git:master:? % tree anoma
+anoma
+├── lib
+│   ├── anoma.hoon -> .../hoon/anoma.hoon
+│   ├── logics.hoon -> .../hoon/logics.hoon
+│   ├── resource-machine.hoon -> .../hoon/resource-machine.hoon
+│   └── tests.hoon -> .../hoon/tests.hoon
+├── mar
+│   ├── hoon.hoon
+│   ├── mime.hoon
+│   ├── noun.hoon
+│   ├── txt-diff.hoon
+│   └── txt.hoon
+└── sys.kelvin
+
+3 directories, 10 files
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+Now we can mount our anoma code into hoon
+
+```hoon
+> |commit %anoma
+>=
+> =anoma /=anoma=/lib/anoma/hoon
+> =resource-machine -build-file /=anoma=/lib/resource-machine/hoon
+> =logics -build-file /=anoma=/lib/logics/hoon
+> =tests -build-file /=anoma=/lib/tests/hoon
+```
+
+From here, the hoon environment is ready to be used and it should work just as Anoma uses Nock.

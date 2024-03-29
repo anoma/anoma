@@ -1,0 +1,85 @@
+<!-- livebook:{"file_entries":[{"name":"2024-01-08-172805_1016x497_scrot.png","type":"attachment"},{"name":"2024-01-08-173044_1845x1082_scrot.png","type":"attachment"},{"name":"2024-01-08-174448_1283x720_scrot.png","type":"attachment"},{"name":"2024-01-08-174522_1420x684_scrot.png","type":"attachment"},{"name":"2024-01-08-174628_443x186_scrot.png","type":"attachment"},{"name":"Application_view.jpg","type":"attachment"}],"persist_outputs":true} -->
+
+# Observer
+
+## Index
+
+* [Index](../index_docs.livemd)
+  * [Contributing](../CONTRIBUTING.livemd)
+    * [Observer](./observer.livemd)
+
+## How To use Observer
+
+It is sometimes useful to have multiple terminals/IEX's in the same
+running system, or perhaps to connect to a running deploy Anoma
+Instance. We can connect to other IEX instances in this way:
+
+## Viewing Anoma
+
+One can view Anoma by going to the Applications view of the Observer pane and clicking on anoma
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/Application_view.jpg)
+
+<!-- livebook:{"break_markdown":true} -->
+
+This view is quite nice because if we spawn a process, we can see it attach
+
+```elixir
+alias Anoma.Storage
+alias Anoma.Node.Storage.Communicator, as: Scom
+alias Anoma.Node.Executor.Communicator, as: Ccom
+alias Anoma.Node.Mempool.Communicator, as: Mcom
+import TestHelper.Nock
+
+storage = %Anoma.Storage{
+  qualified: Anoma.Qualified,
+  order: Anoma.Order
+}
+
+name = :anoma
+snapshot_path = [:my_special_nock_snaphsot | 0]
+node = Anoma.Node.com_names(name)
+key = 555
+zero = zero_counter(key)
+pid_zero = Mcom.tx(node.mempool, zero).pid
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#PID<0.4479.0>
+```
+
+Then we can see this same process as a child to one of the pools
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/2024-01-08-172805_1016x497_scrot.png)
+
+## Looking at Mnesia Tables
+
+One can go to the Table view, and click view to turn it from `ets` tables to `mnesia` tables.
+
+Now you should be able to see this:
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/2024-01-08-174522_1420x684_scrot.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+If we click on a table like the one highlighted we can see the values in the table
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/2024-01-08-174448_1283x720_scrot.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+Click on the data inside of here gives us an inspector pane of the data
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/2024-01-08-174628_443x186_scrot.png)

@@ -1,0 +1,524 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Dumping
+
+```elixir
+Mix.install([
+  {:kino_vega_lite, "~> 0.1.10"}
+])
+```
+
+## Index
+
+* [Index](../index_docs.livemd)
+  * [Hoon](../hoon.livemd)
+    * [Dumping](./dumping.livemd)
+
+## Dumping Nock
+
+Given a functioning Hoon environment with Anoma loaded, we can now start [dumping](https://en.wikipedia.org/wiki/Core_dump) various data in the environment.
+
+This guide hopefully serves as a good way to give you the tools needed to [dump](https://en.wikipedia.org/wiki/Core_dump) anything for yourself.
+
+## Dumping Functions
+
+[Dumping](https://en.wikipedia.org/wiki/Core_dump) any [Hoon gate](https://developers.urbit.org/reference/glossary/gate) is relatively easy.
+
+However, first we need to learn how to get Hoon to let us use Nock properly. A good way is by reading the [dot(.)](https://developers.urbit.org/reference/hoon/rune/dot) section, as [runes](https://developers.urbit.org/reference/hoon/rune) starting with `.` deal with nock operations.
+
+In particular we wish to focus on [dottar(.*)](https://developers.urbit.org/reference/hoon/rune/dot#-dottar), which deals with calling nock on some expression.
+
+We won't go into detail about calling functions in this section, however there is another section that focuses solely on how to call functions and how it works in Nock.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Speaking of functions, we should know just a few things about the layout of functions, and their important indicies.
+
+Functions in Hoon are laid out as the following:
+
+```nock
+[function sample environment-defined-in]
+```
+
+* _Function_ is some nock logic we wish to run
+* _Sample_ is the default argument of the function if non is given
+* _Environment-defined-in_ is the environment the function is defined in and relies upon.
+
+A good basic example can be seen below:
+
+```hoon
+[[0 6] 777 999]
+```
+
+This function has an arbitrary environment of `999` and a sample of `777`. The logic itself simply grabs the sample from the environment.
+
+A good visualization of the indexing can be seen below
+
+```mermaid
+stateDiagram-v2
+1 --> 2
+1 --> 3
+2 --> 4
+2 --> 5
+3 --> 6
+3 --> 7
+```
+
+where we have in our concrete example
+
+| Index | Nock              |
+| ----- | ----------------- |
+| 1     | `[[0 6] 777 999]` |
+| 2     | `[0 6]`           |
+| 3     | `[777 999]`       |
+| 4     | `0`               |
+| 5     | `6`               |
+| 6     | `777`             |
+| 7     | `999`             |
+
+With some basics out of the way, let us get to [dumping](https://en.wikipedia.org/wiki/Core_dump) hoon functions!
+
+<!-- livebook:{"break_markdown":true} -->
+
+We shall dump the most basic of functions, decrement!
+
+We can do this simply by bringing decrement to the front of the environment, and getting it in the function form of `[function sample environment]` we saw before. We can do this by simply stating the name of the function we wish, and then get the function out of it by getting the second index!
+
+Note that Hoon uses `function:module` (`f:mn:...:m1`) form.
+
+```nock
+.*  dec:anoma  [0 2]
+[6 [5 [1 0] 0 6] [0 0] 8 [1 0] 8 [1 6 [5 [0 30] 4 0 6] [0 6] 9 2 10 [6 4 0 6] 0 1] 9 2 0 1]
+```
+
+The logic here doesn't particularly matter, but here we have the nock definiton of decrement, which is wonderful!
+
+<!-- livebook:{"break_markdown":true} -->
+
+This can be done to any function, regardless of how nested the modules are
+
+```hoon
+> .*  lsh:block:anoma  [0 2]
+[ 8
+  [9 4 0 255]
+  9
+  2
+  10
+  [6 [0 29] 7 [0 3] 8 [9 4 0 31] 9 2 10 [6 7 [0 3] 8 [9 4 0 255] 9 2 10 [6 [7 [0 3] 9 182 0 7] 0 28] 0 2] 0 2]
+  0
+  2
+]
+```
+
+## Casting to Nock, a useful tool
+
+A good way to visualize the dump, is by casting the result to nock
+
+```hoon
+> ;;  nock  [9 2 0 1]
+[%9 p=2 q=[%0 p=1]
+```
+
+the `p`'s and `q`'s are arguments and the `%9` and `%0` are the nock instructions being ran.
+
+From here, the [instruction set can be consluted for the meaning of any particular instruction](https://developers.urbit.org/reference/nock/definition#instructions).
+
+```hoon
+> ;;  nock  .*  dec.anoma  [0 2]
+[ %6
+  p=[%5 p=[%1 p=0] q=[%0 p=6]]
+  q=[%0 p=0]
+  r=[%8 p=[%1 p=0] q=[%8 p=[%1 p=[6 [5 [0 30] 4 0 6] [0 6] 9 2 10 [6 4 0 6] 0 1]] q=[%9 p=2 q=[%0 p=1]]]]
+]
+```
+
+## Dumping Types
+
+Types in Hoon are just functions!
+
+A good example can be found by looking at the resource-type
+
+```hoon
+> .*  resource:resource-machine  [0 2]
+[ 8
+  [ [8 [7 [0 7] 9 47 0 1] 9 2 10 [6 0 28] 0 2]
+    [6 [6 [3 0 26] [1 1] 1 0] [0 26] 0 0]
+    [6 [6 [3 0 54] [1 1] 1 0] [0 54] 0 0]
+    [6 [6 [3 0 110] [1 1] 1 0] [0 110] 0 0]
+    [6 [5 [1 0] 0 222] [1 0] 6 [5 [1 1] 0 222] [1 1] 0 0]
+    [6 [6 [3 0 446] [1 1] 1 0] [0 446] 0 0]
+    [6 [6 [3 0 894] [1 1] 1 0] [0 894] 0 0]
+    6
+    [6 [3 0 895] [1 1] 1 0]
+    [0 895]
+    0
+    0
+  ]
+  8
+  [5 [0 14] 0 2]
+  0
+  6
+]
+```
+
+This however does not show how to dump the structure of a type well enough, however this can be fixed by simply just calling it!
+
+<!-- livebook:{"break_markdown":true} -->
+
+calling a type leads to something like this
+
+```hoon
+> (resource:resource-machine)
+[   logic
+  < 1|xpg
+    [ [ roots=it(@)
+        commitments=it(@)
+        nullifiers=it(@)
+        proofs=it(#4)
+        delta=it([denom=@ sign=?(%.y %.n) amount=@])
+        extra=@
+        preference=%~
+      ]
+      [ roots=it(@)
+        commitments=it(@)
+        nullifiers=it(@)
+          proofs
+        it( ^#4
+          [   logic
+            < 1|xpg
+              [ [ roots=it(@)
+                  commitments=it(@)
+                  nullifiers=it(@)
+                  proofs=it(#4)
+                  delta=it([denom=@ sign=?(%.y %.n) amount=@])
+                  extra=@
+                  preference=%~
+                ]
+                [ roots=it(@)
+                  commitments=it(@)
+                  nullifiers=it(@)
+                  proofs=it(#4)
+                  delta=it([denom=@ sign=?(%.y %.n) amount=@])
+                  extra=@
+                  preference=%~
+                ]
+                ?(%.y %.n)
+              ]
+            >
+            label=@t
+            quantity=@
+            data=@
+            eph=?(%.y %.n)
+            nonce=@
+            npk=@
+            rseed=@
+          ]
+        )
+        delta=it([denom=@ sign=?(%.y %.n) amount=@])
+        extra=@
+        preference=%~
+      ]
+      ?(%.y %.n)
+    ]
+  >
+  label=''
+  quantity=0
+  data=0
+  eph=%.y
+  nonce=0
+  npk=0
+  rseed=0
+]
+```
+
+Which just gives the default values. If the result is hard to read, then no problem, just forget the type information!
+
+```
+> `*`(resource:resource-machine)
+[[[0 15] [0 0 0 0 0 0 0] [0 0 0 0 0 0 0] 0] 0 0 0 0 0 0 0]
+```
+
+Here we simply jsut cast it to the any type, forgetting all information, and we can now see the format of the empty resource.
+
+## Dump Modules
+
+Dumping modules is the same as dumping functions, it's just a matter that one's terminal will be flooded
+
+```hoon
+> .*  resource-machine  [0 2]
+[ [1 0]
+...
+  0
+  1
+]
+```
+
+Thus feel free to dump away. This is only useful when trying to copy this to the Elixir codebase.
+
+## Dumping Hoon for Elixir
+
+Since Anoma itself runs Nock and not Hoon, we have to take the Hoon code we have and include it in Elixir somehow.
+
+This process isn't particular difficult, and we can do it by simply using the tools we've learned in this document.
+
+<!-- livebook:{"break_markdown":true} -->
+
+For example, it's not uncommon when the standard library that test indicies are not out of date and need to be updated, or maybe we define out a new hoon function for testing.
+
+In these scenarios, there is a very easy way to update the code.
+
+Let us look at the fibonacci example in Elixir
+
+<!-- livebook:{"break_markdown":true} -->
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+# can be found in https://github.com/anoma/anoma/blob/base/lib/test_helper/nock.ex
+  @spec factorial() :: Noun.t()
+  def factorial() do
+    arm = Noun.Format.parse_always("
+    [ 8
+      [1 1 0]
+      8
+      [ 1
+        6
+        [5 [0 30] 1 0]
+        [0 13]
+        9
+        2
+        10
+        [30 8 [9 342 0 255] 9 2 10 [6 0 62] 0 2]
+        10
+        [6 [8 [9 20 0 255] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        0
+        1
+      ]
+      9
+      2
+      0
+      1
+    ]")
+    sample = 1
+    [arm, sample | logics_core()]
+  end
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+Here we have some just plain old nock string representing the function, and we append the context to it via normal Elixir. We do this to save space, as we really don't want to dump the entire `Nock.logics_core/0` for every simple function.
+
+On the Hoon side we just run this to get the proper new logic
+
+```hoon
+> .*  fib:tests  [0 2]
+[ 8
+  [1 1 0]
+  8
+  [ 1
+    6
+    [5 [0 30] 1 0]
+    [0 13]
+    9
+    2
+    10
+    [30 8 [9 342 0 1.023] 9 2 10 [6 0 62] 0 2]
+    10
+    [6 [8 [9 20 0 1.023] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+    0
+    1
+  ]
+  9
+  2
+  0
+  1
+]
+```
+
+and then replace the old logic with the new code.
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  @spec factorial() :: Noun.t()
+  def factorial() do
+    arm = Noun.Format.parse_always("
+    [ 8
+      [1 1 0]
+      8
+      [ 1
+        6
+        [5 [0 30] 1 0]
+        [0 13]
+        9
+        2
+        10
+        [30 8 [9 342 0 1.023] 9 2 10 [6 0 62] 0 2]
+        10
+        [6 [8 [9 20 0 1.023] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        0
+        1
+      ]
+      9
+      2
+      0
+      1
+    ]")
+    sample = 1
+    [arm,, sample | logics_core()]
+  end
+```
+
+The process is the same for the code in `Nock`, just dump the `[0 2]` index of the module and replace the string with the result you get in your terminal.
+
+## Dumping Indexing Offsets
+
+The tools that we have explored so far only deal with dumping definitions, however they do not explain where these functions are stored in the environment.
+
+That is where [zaptis(!=)](https://developers.urbit.org/reference/hoon/rune/zap#-zaptis) comes handy.
+
+[zaptis(!=)](https://developers.urbit.org/reference/hoon/rune/zap#-zaptis) simply gives us the hoon expression of the argument handed to it.
+
+<!-- livebook:{"break_markdown":true} -->
+
+Let us start off simple with [zaptis(!=)](https://developers.urbit.org/reference/hoon/rune/zap#-zaptis), let us look at what saying `anoma` actually does.
+
+```hoon
+> !=(anoma)
+[0 46]
+```
+
+Interesting, we can see that saying anoma, indexs into the current environment by `46`. The current environment in Hoon can be conjured with `.`.
+
+```hoon
+> !=(.)
+[0 1]
+```
+
+With this knowledge in hand, we can verify that anoma really is at index 46!
+
+```hoon
+> =(.*(. [0 46]) anoma)
+%.y
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+Now that we know how to get the index for names like anoma, what about trying to get the index of a function like `dec` inside of the anoma environment.
+
+```hoon
+> !=(dec:anoma)
+[7 [0 46] 9 342 0 15]
+> ;;  nock  !=(dec:anoma)
+[%7 p=[%0 p=46] q=[%9 p=342 q=[%0 p=15]]]
+```
+
+Here it's a bit more complicated to let us break it down step by step.
+
+1. `[%7 p=[%0 p=46] q=...]`
+   * In the section where we are calling `%7`.
+   * This has the effect of just trying to get anoma to be the subject of the following `q` computation.
+2. Now at `q=[%9 p=342 q=[%0 p=15]]` we are running this on anoma itself.
+   * `%9` is rather basic, trying to call the given index `p` at arm `q`.
+   * In our case, `dec` is located at index `342` inside of arm at the layer/module located at `[0 15]`.
+   * `[0 15]` is really layer 1 in the source code and is properly documented as such
+
+```hoon
+~%  %one  +  ~
+|%
+++  dec  ::  +342
+  ~/  %dec
+  |=  a=@
+  ?<  =(0 a)
+  =|  b=@
+  |-  ^-  @
+  ?:  =(a +(b))  b
+  $(b +(b))
+
+```
+
+Thus, it's not very complicated, thus in the form
+
+```hoon
+> !=(dec:anoma)
+[7 [0 46] 9 342 0 15]
+```
+
+all we have to pay attention to is the `342` and the `15`, some more examples show this off well
+
+```hoon
+> !=(dec:anoma) ::  index 342 at layer 1
+[7 [0 46] 9 342 0 15]
+> !=(add:anoma) ::  index 20 at layer 1
+[7 [0 46] 9 20 0 15]
+> !=(trap:anoma) ::  index 20 at layer 2
+[7 [0 46] 9 20 0 7]
+> !=(unit:anoma) ::  index 42 at layer 2
+[7 [0 46] 9 42 0 7]
+```
+
+Here for any non nested module we can see the layers and indexs quite plainly!
+
+<!-- livebook:{"branch_parent_index":7} -->
+
+## How Index of Layers Change
+
+The hoon environment is a binary tree. Included below is an extended diagram that we will use for our explanation.
+
+```mermaid
+stateDiagram-v2
+1 --> 2
+1 --> 3
+3 --> 6
+3 --> 7
+7 --> 14
+7 --> 15
+15 --> 30
+15 --> 31
+```
+
+Whenever, a layer is made in hoon, we should think of it as pushed onto the env. So for Anoma the layers can be seen like this
+
+```mermaid
+stateDiagram-v2
+layer_four --> code_in_layer_four
+layer_four --> layer_three
+layer_three --> code_in_layer_three
+layer_three --> layer_two
+layer_two --> code_in_layer_two
+layer_two --> layer_one
+layer_one --> code_in_layer_one
+layer_one --> 0_3_99
+```
+
+If we pushed layer 5, then everything shifts, layer 1 moves from 15 to 31.
+
+Thus the indexing works on a rather simple formula that can be read about: [here](https://oeis.org/A000918). The code is not exactly this formula, but below we will show how it shapes up.
+
+```elixir
+series = 1..5 |> Enum.map(fn i -> 2 ** i - 1 end)
+indicies = 1..5
+my_data = %{series: series, indicies: indicies}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{series: [1, 3, 7, 15, 31], indicies: 1..5}
+```
+
+<!-- livebook:{"attrs":"eyJjaGFydF90aXRsZSI6IkluZGV4aW5nIFNlcmllcyIsImhlaWdodCI6MzAwLCJsYXllcnMiOlt7ImFjdGl2ZSI6dHJ1ZSwiY2hhcnRfdHlwZSI6ImJhciIsImNvbG9yX2ZpZWxkIjpudWxsLCJjb2xvcl9maWVsZF9hZ2dyZWdhdGUiOm51bGwsImNvbG9yX2ZpZWxkX2JpbiI6bnVsbCwiY29sb3JfZmllbGRfc2NhbGVfc2NoZW1lIjpudWxsLCJjb2xvcl9maWVsZF90eXBlIjpudWxsLCJkYXRhX3ZhcmlhYmxlIjoibXlfZGF0YSIsImdlb2RhdGFfY29sb3IiOiJncmVlbiIsImxhdGl0dWRlX2ZpZWxkIjoiYSIsImxvbmdpdHVkZV9maWVsZCI6ImIiLCJ4X2ZpZWxkIjoiaW5kaWNpZXMiLCJ4X2ZpZWxkX2FnZ3JlZ2F0ZSI6bnVsbCwieF9maWVsZF9iaW4iOm51bGwsInhfZmllbGRfc2NhbGVfdHlwZSI6bnVsbCwieF9maWVsZF90eXBlIjoicXVhbnRpdGF0aXZlIiwieV9maWVsZCI6InNlcmllcyIsInlfZmllbGRfYWdncmVnYXRlIjpudWxsLCJ5X2ZpZWxkX2JpbiI6bnVsbCwieV9maWVsZF9zY2FsZV90eXBlIjpudWxsLCJ5X2ZpZWxkX3R5cGUiOiJxdWFudGl0YXRpdmUifV0sInZsX2FsaWFzIjoiRWxpeGlyLlZlZ2FMaXRlIiwid2lkdGgiOjIwMH0","chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 200, height: 300, title: "Indexing Series")
+|> VegaLite.data_from_values(my_data, only: ["indicies", "series"])
+|> VegaLite.mark(:bar)
+|> VegaLite.encode_field(:x, "indicies", type: :quantitative)
+|> VegaLite.encode_field(:y, "series", type: :quantitative)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"indicies":1,"series":1},{"indicies":2,"series":3},{"indicies":3,"series":7},{"indicies":4,"series":15},{"indicies":5,"series":31}]},"encoding":{"x":{"field":"indicies","type":"quantitative"},"y":{"field":"series","type":"quantitative"}},"height":300,"mark":"bar","title":"Indexing Series","width":200}
+```

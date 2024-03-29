@@ -1,0 +1,24 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Hoon
+
+## Index
+
+* [Index](./index_docs.livemd)
+  * [Hoon](./hoon.livemd)
+    1. [Setting up](./hoon/setting-up.livemd)
+    2. [Dumping](./hoon/dumping.livemd)
+    3. [Calling Conventions](./hoon/calling.livemd)
+
+## About This Guide
+
+This guide hopefully serves you to be able to reason about the nock
+code in Anoma. It is written for a non Hoon audience, so if you are
+familiar with Hoon, you may find use in the Nock code as there is a
+big emphesis on nock itself, rather than just Hoon. If you are not
+familiar with Hoon, this merely shows you how to use the
+[Urbit](https://urbit.org/) environment to aid Nock code.
+
+A good general guide to Hoon can be found [At the Hoon School](https://developers.urbit.org/guides/core/hoon-school).
+Hopefully the documention here serves as a good companion piece for
+anyone interested in Nock, Hoon, or Anoma.
