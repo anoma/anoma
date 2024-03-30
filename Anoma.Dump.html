@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="project" content="Anoma v0.11.0">
+
+
+    <title>Anoma.Dump — Anoma v0.11.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+
+      <script src="./.doc-versions.js"></script>
+
+    <script async src="dist/html-CILPWI2Q.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.11.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Anoma</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
+
+<h1>
+
+  <span translate="no">Anoma.Dump</span> 
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>I provide an interface to dump current state and load appropriate
+external files to launch them as Anoma nodes.</p><p>You can also use me to dump info such as current states and tables
+in a readable map format as well as get info stored in external
+files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
+  <a href="#module-dumping-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Dumping API</span>
+</h3>
+<p>I give access to following public dumping functionality:</p><ul><li><a href="#dump/2"><code class="inline">dump/2</code></a></li><li><a href="#get_all/1"><code class="inline">get_all/1</code></a></li><li><a href="#get_state/1"><code class="inline">get_state/1</code></a></li><li><a href="#get_tables/1"><code class="inline">get_tables/1</code></a></li></ul><h3 id="module-loading-api" class="section-heading">
+  <a href="#module-loading-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Loading API</span>
+</h3>
+<p>I give access to following public loading functionality</p><ul><li><a href="#launch/2"><code class="inline">launch/2</code></a></li><li><a href="#load/1"><code class="inline">load/1</code></a></li></ul>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:clock_eng/0" translate="no">clock_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:ex_eng/0" translate="no">ex_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:log_eng/0" translate="no">log_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:mem_eng/0" translate="no">mem_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:ord_eng/0" translate="no">ord_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:ping_eng/0" translate="no">ping_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:stores/0" translate="no">stores()</a>
+
+      </div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dump/2" translate="no">dump(name, node)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I dump the current state with storage. I accept a string as a name,
+so that the resulting file will be created as name.txt and then a
+node whose info presented as a map I dump as a binary.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_all/1" translate="no">get_all(node)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I get all the info on the node tables and engines in order</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_state/1" translate="no">get_state(node)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I get the engine states in order</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_tables/1" translate="no">get_tables(node)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I get the node tables in order</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#launch/2" translate="no">launch(file, name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I launch a node given a file containing a binary version of an 12-tuple
+with appropriate info in the following order</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#load/1" translate="no">load(name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I read the given file which I assume contains binary info and convert
+it to an Elixir term.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:clock_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:clock_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">clock_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> clock_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Clock.html#t:t/0">Anoma.Node.Clock.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:ex_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:ex_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">ex_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> ex_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Executor.html#t:t/0">Anoma.Node.Executor.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:log_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:log_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">log_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> log_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Logger.html#t:t/0">Anoma.Node.Logger.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:mem_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:mem_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">mem_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> mem_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Mempool.html#t:t/0">Anoma.Node.Mempool.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:ord_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:ord_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">ord_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> ord_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Storage.Ordering.html#t:t/0">Anoma.Node.Storage.Ordering.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:ping_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:ping_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">ping_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> ping_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Pinger.html#t:t/0">Anoma.Node.Pinger.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:stores/0">
+
+  <div class="detail-header">
+    <a href="#t:stores/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">stores()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> stores() :: {<a href="Anoma.Storage.html#t:t/0">Anoma.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="dump/2">
+
+  <div class="detail-header">
+    <a href="#dump/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dump(name, node)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dump(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: {:ok, :ok} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+<p>I dump the current state with storage. I accept a string as a name,
+so that the resulting file will be created as name.txt and then a
+node whose info presented as a map I dump as a binary.</p><p>The map typing can be seen in <code class="inline">get_all</code></p>
+  </section>
+</section>
+<section class="detail" id="get_all/1">
+
+  <div class="detail-header">
+    <a href="#get_all/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_all(node)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_all(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: %{
+  router: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  mempool_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  executor_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  logger: <a href="#t:log_eng/0">log_eng</a>(),
+  clock: <a href="#t:clock_eng/0">clock_eng</a>(),
+  ordering: <a href="#t:ord_eng/0">ord_eng</a>(),
+  mempool: <a href="#t:mem_eng/0">mem_eng</a>(),
+  pinger: <a href="#t:ping_eng/0">ping_eng</a>(),
+  executor: <a href="#t:ex_eng/0">ex_eng</a>(),
+  storage: <a href="#t:stores/0">stores</a>(),
+  qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()
+}</pre>
+
+      </div>
+
+<p>I get all the info on the node tables and engines in order:</p><ul><li>router</li><li>logger</li><li>clock</li><li>ordering</li><li>mempool</li><li>pinger</li><li>executor</li><li>table names</li><li>qualified</li><li>order</li><li>block_storage
+And turn the info into a tuple</li></ul>
+  </section>
+</section>
+<section class="detail" id="get_state/1">
+
+  <div class="detail-header">
+    <a href="#get_state/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_state(node)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_state(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: %{
+  router: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  mempool_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  executor_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  logger: <a href="#t:log_eng/0">log_eng</a>(),
+  clock: <a href="#t:clock_eng/0">clock_eng</a>(),
+  ordering: <a href="#t:ord_eng/0">ord_eng</a>(),
+  mempool: <a href="#t:mem_eng/0">mem_eng</a>(),
+  pinger: <a href="#t:ping_eng/0">ping_eng</a>(),
+  executor: <a href="#t:ex_eng/0">ex_eng</a>()
+}</pre>
+
+      </div>
+
+<p>I get the engine states in order:</p><ul><li>router</li><li>mempool topic</li><li>executor topic</li><li>logger</li><li>clock</li><li>ordering</li><li>mempool</li><li>pinger</li><li>executor</li></ul>
+  </section>
+</section>
+<section class="detail" id="get_tables/1">
+
+  <div class="detail-header">
+    <a href="#get_tables/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_tables(node)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_tables(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: %{
+  storage: <a href="#t:stores/0">stores</a>(),
+  qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()
+}</pre>
+
+      </div>
+
+<p>I get the node tables in order:</p><ul><li>storage (names)</li><li>qualified</li><li>order</li><li>block_storage</li></ul>
+  </section>
+</section>
+<section class="detail" id="launch/2">
+
+  <div class="detail-header">
+    <a href="#launch/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">launch(file, name)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok,
+   %Anoma.Node{
+     clock: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     executor: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     executor_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     logger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     mempool_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     pinger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     router: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+   }}
+  | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I launch a node given a file containing a binary version of an 12-tuple
+with appropriate info in the following order:</p><ul><li>router id</li><li>mempool topic id</li><li>executor topic id</li><li>logger</li><li>clock</li><li>ordering</li><li>mempool</li><li>pinger</li><li>executor</li><li>storage names</li><li>qualified</li><li>order</li><li>block_storage</li></ul><p>All engines have info on their states and id's so that checkpointing
+the system will keep all adresses used in the previous session.
+Note that I ensure that the apporpriate tables
+are new.</p><p>Check whether your transactions have had an assigned worker. If not,
+relaunch them directly.</p>
+  </section>
+</section>
+<section class="detail" id="load/1">
+
+  <div class="detail-header">
+    <a href="#load/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">load(name)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> load(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I read the given file which I assume contains binary info and convert
+it to an Elixir term.</p><p>As the dumped state may have extra atoms not present in the session,
+I currently allow for atom creation in the loaded term.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Anoma.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Calling — Anoma v0.10.0</title>
+    <title>Calling — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -130,7 +140,7 @@ GUIDES
   </a>
   <span class="text">Index</span>
 </h2>
-<ul><li><a href="index_docs.html">Index</a><ul><li><a href="hoon.html">Hoon</a><ul><li><a href="calling.html">Calling</a></li></ul></li></ul></li></ul><h2 id="calling-conventions" class="section-heading">
+<ol><li><a href="contributing.html">Contributing</a><ol><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li><li><a href="understanding.html">Understanding</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="index.html">Index</a></li><li><a href="index_docs.html">Index_docs</a></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="calling-conventions" class="section-heading">
   <a href="#calling-conventions" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -179,8 +189,8 @@ GUIDES
   </a>
   <span class="text">Evaluating Calls in The Anoma Context</span>
 </h2>
-<p>For actually writing code for Anoma, the dump of dec that we saw:</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="o">!=</span><span class="p" data-group-id="4328473667-1">(</span><span class="n">dec</span><span class="ss">:anoma</span><span class="p" data-group-id="4328473667-1">)</span><span class="w">
-</span><span class="p" data-group-id="4328473667-2">[</span><span class="mi">7</span><span class="w"> </span><span class="p" data-group-id="4328473667-3">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">46</span><span class="p" data-group-id="4328473667-3">]</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="mi">342</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="p" data-group-id="4328473667-2">]</span></code></pre><p>would not actually run in the Anoma standard library. This is because it is assuming the current environment which has the Hoon standard library.</p><pre><code class="hoon">&gt; .*  anoma  [7 [0 46] 9 342 0 15]
+<p>For actually writing code for Anoma, the dump of dec that we saw:</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="o">!=</span><span class="p" data-group-id="9863563118-1">(</span><span class="n">dec</span><span class="ss">:anoma</span><span class="p" data-group-id="9863563118-1">)</span><span class="w">
+</span><span class="p" data-group-id="9863563118-2">[</span><span class="mi">7</span><span class="w"> </span><span class="p" data-group-id="9863563118-3">[</span><span class="mi">0</span><span class="w"> </span><span class="mi">46</span><span class="p" data-group-id="9863563118-3">]</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="mi">342</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">15</span><span class="p" data-group-id="9863563118-2">]</span></code></pre><p>would not actually run in the Anoma standard library. This is because it is assuming the current environment which has the Hoon standard library.</p><pre><code class="hoon">&gt; .*  anoma  [7 [0 46] 9 342 0 15]
 dojo: hoon expression failed</code></pre><p>Rather than by hand editing the <code class="inline">7 [0 46]</code> out, we can instead tell Hoon that the context of the computation is in Anoma, and this is done through <a href="https://developers.urbit.org/reference/hoon/rune/tis#-tisgar">tisgar(=&gt;)</a>.</p><p>A good example can be seen here:</p><pre><code class="hoon">&gt; =&gt;  anoma  !=(dec)
 [9 342 0 15]</code></pre><p>Which gives us the correct computation to run dec on Anoma.</p><pre><code class="hoon">&gt; =&gt;  anoma  .*  .  [9 342 0 15]
 [ [ 6
@@ -236,17 +246,26 @@ dojo: hoon expression failed</code></pre><p>Rather than by hand editing the <cod
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
-      <a href="setting-up.html" class="bottom-actions-button" rel="prev">
+      <a href="hoon-2.html" class="bottom-actions-button" rel="prev">
         <span class="subheader">
           ← Previous Page
         </span>
         <span class="title">
-Setting up Hoon
+Hoon
         </span>
       </a>
 
   </div>
   <div class="bottom-actions-item">
+
+      <a href="dumping.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Dumping
+        </span>
+      </a>
 
   </div>
 </div>

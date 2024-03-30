@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Anoma.Mnesia — Anoma v0.10.0</title>
+    <title>Anoma.Mnesia — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -115,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Mnesia</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.10.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
 
 </h1>
 
@@ -127,7 +137,7 @@ GUIDES
   </a>
   <span class="text">Usage</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="n">i</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="2036726464-1">(</span><span class="p" data-group-id="2036726464-1">)</span></code></pre><h3 id="module-initialization" class="section-heading">
+<pre><code class="makeup elixir" translate="no"><span class="n">i</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">init</span><span class="p" data-group-id="9959820265-1">(</span><span class="p" data-group-id="9959820265-1">)</span></code></pre><h3 id="module-initialization" class="section-heading">
   <a href="#module-initialization" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -172,6 +182,16 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
       </div>
 
         <div class="summary-synopsis"><p>I help dump all data in a given table</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dump/1" translate="no">dump(table)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I help dump all data in a given table in a non-dirty way.</p></div>
 
     </div>
 
@@ -233,12 +253,29 @@ database open at a time.</p><h3 id="module-querying" class="section-heading">
   </a>
   <span class="text">Example</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="gp unselectable">iex(15)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">create_table</span><span class="p" data-group-id="1998675964-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1998675964-2">[</span><span class="ss">attributes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1998675964-3">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">:job</span><span class="p" data-group-id="1998675964-3">]</span><span class="p" data-group-id="1998675964-2">]</span><span class="p" data-group-id="1998675964-1">)</span><span class="w">
- </span><span class="p" data-group-id="1998675964-4">{</span><span class="ss">:atomic</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="1998675964-4">}</span><span class="w">
- </span><span class="gp unselectable">iex(16)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">dirty_write</span><span class="p" data-group-id="1998675964-5">(</span><span class="p" data-group-id="1998675964-6">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="1998675964-6">}</span><span class="p" data-group-id="1998675964-5">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="gp unselectable">iex(15)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">create_table</span><span class="p" data-group-id="3647982030-1">(</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3647982030-2">[</span><span class="ss">attributes</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3647982030-3">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:name</span><span class="p">,</span><span class="w"> </span><span class="ss">:job</span><span class="p" data-group-id="3647982030-3">]</span><span class="p" data-group-id="3647982030-2">]</span><span class="p" data-group-id="3647982030-1">)</span><span class="w">
+ </span><span class="p" data-group-id="3647982030-4">{</span><span class="ss">:atomic</span><span class="p">,</span><span class="w"> </span><span class="ss">:ok</span><span class="p" data-group-id="3647982030-4">}</span><span class="w">
+ </span><span class="gp unselectable">iex(16)&gt; </span><span class="nc">:mnesia</span><span class="o">.</span><span class="n">dirty_write</span><span class="p" data-group-id="3647982030-5">(</span><span class="p" data-group-id="3647982030-6">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="3647982030-6">}</span><span class="p" data-group-id="3647982030-5">)</span><span class="w">
  </span><span class="ss">:ok</span><span class="w">
- </span><span class="gp unselectable">iex(17)&gt; </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">dirty_dump</span><span class="p" data-group-id="1998675964-7">(</span><span class="ss">:test</span><span class="p" data-group-id="1998675964-7">)</span><span class="w">
- </span><span class="p" data-group-id="1998675964-8">[</span><span class="p" data-group-id="1998675964-9">[</span><span class="p" data-group-id="1998675964-10">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="1998675964-10">}</span><span class="p" data-group-id="1998675964-9">]</span><span class="p" data-group-id="1998675964-8">]</span></code></pre>
+ </span><span class="gp unselectable">iex(17)&gt; </span><span class="nc">Anoma.Mnesia</span><span class="o">.</span><span class="n">dirty_dump</span><span class="p" data-group-id="3647982030-7">(</span><span class="ss">:test</span><span class="p" data-group-id="3647982030-7">)</span><span class="w">
+ </span><span class="p" data-group-id="3647982030-8">[</span><span class="p" data-group-id="3647982030-9">[</span><span class="p" data-group-id="3647982030-10">{</span><span class="ss">:test</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;G&#39;kar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ambassador&quot;</span><span class="p" data-group-id="3647982030-10">}</span><span class="p" data-group-id="3647982030-9">]</span><span class="p" data-group-id="3647982030-8">]</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="dump/1">
+
+  <div class="detail-header">
+    <a href="#dump/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dump(table)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I help dump all data in a given table in a non-dirty way.</p><p>See <a href="#dirty_dump/1"><code class="inline">dirty_dump/1</code></a></p>
   </section>
 </section>
 <section class="detail" id="init/0">

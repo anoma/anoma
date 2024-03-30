@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Anoma.Node.Executor — Anoma v0.10.0</title>
+    <title>Anoma.Node.Executor — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -115,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Executor</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.10.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
 
 </h1>
 
@@ -203,7 +213,7 @@ the response. Instead the response is handled by the pool.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(arg)</a>
+        <a href="#init/1" translate="no">init(state)</a>
 
       </div>
 
@@ -419,7 +429,7 @@ messages to this task or terminating the task</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">init(arg)</h1>
+    <h1 class="signature" translate="no">init(state)</h1>
 
 
   </div>
@@ -485,16 +495,16 @@ messages to this task or terminating the task</p>
   <span class="text">Example</span>
 </h3>
 <p>  we assume a running Worker, see <code class="inline">executor_test.exs</code> for a full
-  example</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="5427602846-1">(</span><span class="p" data-group-id="5427602846-2">[</span><span class="ss">:positive</span><span class="p" data-group-id="5427602846-2">]</span><span class="p" data-group-id="5427602846-1">)</span><span class="w">
+  example</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="6626124618-1">(</span><span class="p" data-group-id="6626124618-2">[</span><span class="ss">:positive</span><span class="p" data-group-id="6626124618-2">]</span><span class="p" data-group-id="6626124618-1">)</span><span class="w">
 </span><span class="mi">1931</span><span class="w">
-</span><span class="o">&gt;</span><span class="w"> </span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5427602846-3">[</span><span class="p" data-group-id="5427602846-4">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">777</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5427602846-4">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="5427602846-5">(</span><span class="p" data-group-id="5427602846-5">)</span><span class="p" data-group-id="5427602846-3">]</span><span class="w">
-</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Executor</span><span class="o">.</span><span class="n">new_transaction</span><span class="p" data-group-id="5427602846-6">(</span><span class="n">executor</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5427602846-7">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="5427602846-7">}</span><span class="p" data-group-id="5427602846-6">)</span><span class="w">
-</span><span class="p" data-group-id="5427602846-8">%</span><span class="nc" data-group-id="5427602846-8">Task</span><span class="p" data-group-id="5427602846-8">{</span><span class="w">
-  </span><span class="ss">mfa</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5427602846-9">{</span><span class="nc">Anoma.Node.Executor.Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="5427602846-9">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">owner</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5427602846-10">#</span><span class="nc" data-group-id="5427602846-10">PID</span><span class="p" data-group-id="5427602846-10">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">264</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="5427602846-10">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">pid</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5427602846-11">#</span><span class="nc" data-group-id="5427602846-11">PID</span><span class="p" data-group-id="5427602846-11">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">753</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="5427602846-11">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">ref</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5427602846-12">#</span><span class="nc" data-group-id="5427602846-12">Reference</span><span class="p" data-group-id="5427602846-12">&lt;</span><span class="mf">0.0</span><span class="o">.</span><span class="mf">33795.904691850</span><span class="o">.</span><span class="mf">4087414796.24378</span><span class="p" data-group-id="5427602846-12">&gt;</span><span class="w">
-</span><span class="p" data-group-id="5427602846-8">}</span></code></pre>
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="6626124618-3">[</span><span class="p" data-group-id="6626124618-4">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">777</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="6626124618-4">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="6626124618-5">(</span><span class="p" data-group-id="6626124618-5">)</span><span class="p" data-group-id="6626124618-3">]</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Executor</span><span class="o">.</span><span class="n">new_transaction</span><span class="p" data-group-id="6626124618-6">(</span><span class="n">executor</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6626124618-7">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="6626124618-7">}</span><span class="p" data-group-id="6626124618-6">)</span><span class="w">
+</span><span class="p" data-group-id="6626124618-8">%</span><span class="nc" data-group-id="6626124618-8">Task</span><span class="p" data-group-id="6626124618-8">{</span><span class="w">
+  </span><span class="ss">mfa</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6626124618-9">{</span><span class="nc">Anoma.Node.Executor.Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="6626124618-9">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">owner</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6626124618-10">#</span><span class="nc" data-group-id="6626124618-10">PID</span><span class="p" data-group-id="6626124618-10">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">264</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="6626124618-10">&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">pid</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6626124618-11">#</span><span class="nc" data-group-id="6626124618-11">PID</span><span class="p" data-group-id="6626124618-11">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">753</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="6626124618-11">&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">ref</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6626124618-12">#</span><span class="nc" data-group-id="6626124618-12">Reference</span><span class="p" data-group-id="6626124618-12">&lt;</span><span class="mf">0.0</span><span class="o">.</span><span class="mf">33795.904691850</span><span class="o">.</span><span class="mf">4087414796.24378</span><span class="p" data-group-id="6626124618-12">&gt;</span><span class="w">
+</span><span class="p" data-group-id="6626124618-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="new_transaction/4">
@@ -543,7 +553,7 @@ messages to this task or terminating the task</p>
 </h3>
 <p>  iex&gt; alias Anoma.Node.{Executor, Router}
   iex&gt; {:ok, router} = Router.start
-  iex&gt; snap = %{snapshot_path: [:a | 0], ordering: nil}
+  iex&gt; snap = %Nock{snapshot_path: [:a | 0], ordering: nil}
   iex&gt; args = {snap, Router.new_topic(router), nil}
   iex&gt; {:ok, addr} = Router.start_engine(router, Executor, args)
   iex&gt; Executor.snapshot(addr)

@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Anoma — Anoma v0.10.0</title>
+    <title>Anoma — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -135,30 +145,21 @@ other views are typically a better way to view this</li></ul></li></ol><h2 id="d
   </a>
   <span class="text">Dependencies</span>
 </h2>
-<p>To have a working Anoma Node the following dependencies are required:</p><ol><li><code class="inline">libsodium</code></li><li><code class="inline">cmake</code></li><li><code class="inline">Erlang</code></li><li><code class="inline">Elixir</code></li></ol><h3 id="osx" class="section-heading">
+<p>To have a working Anoma Node the following dependencies are required:</p><ol><li><code class="inline">cmake</code></li><li><code class="inline">Erlang</code></li><li><code class="inline">Elixir</code></li><li><code class="inline">zig</code></li></ol><h3 id="osx" class="section-heading">
   <a href="#osx" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">OSX</span>
 </h3>
-<pre><code class="makeup sh" translate="no"><span class="">brew install libsodium
-</span><span class="">brew install elixir
-</span></code></pre><p>Sadly the <a href="https://github.com/jlouis/enacl">enacl</a> library for
-libsodium has issues for computers with apple silicion.</p><p>Before running the installation insturctions please make sure to
-export the following.</p><pre><code class="makeup sh" translate="no"><span class="">export CPATH=/opt/homebrew/include
-</span><span class="">export LIBRARY_PATH=/opt/homebrew/lib
-</span><span class="">
-</span><span class="">export CFLAGS=&quot;-arch arm64&quot;
-</span><span class="">export CXXFLAGS=&quot;-arch arm64&quot;
-</span><span class="">export LDFLAGS=&quot;-arch arm64&quot;
-</span></code></pre><p>Otherwise, the system will start yelling about not being able to find
-libsodium.</p><h3 id="linux" class="section-heading">
+<pre><code class="makeup sh" translate="no"><span class="">brew install elixir
+</span><span class="">brew install zig
+</span></code></pre><h3 id="linux" class="section-heading">
   <a href="#linux" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Linux</span>
 </h3>
-<p>All the dependecies can be grabbed from your distro's package manager.</p><h2 id="installation" class="section-heading">
+<p>All the dependencies can be grabbed from your distro's package manager.</p><h2 id="installation" class="section-heading">
   <a href="#installation" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -186,9 +187,9 @@ depth details about the codebase.</p><h3 id="git" class="section-heading">
 <a href="https://git-scm.com/">git</a> or
 <a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git">linux</a>.</p><p>New code should be based on <code class="inline">base</code>, and no attempt to keep it up to
 sync with <code class="inline">main</code> should be had. When one's topic is ready, just submit
-a PR on github and a maintiner will handle any merge conflicts.</p><p>There are bi-weekly releases, so do not be afraid if a maintainer says
-the PR is merged but it's still oepn, this just means that it's merged
-into <code class="inline">next</code> or <code class="inline">main</code> and will be inclueded in the next scheduled
+a PR on github and a maintainer will handle any merge conflicts.</p><p>There are bi-weekly releases, so do not be afraid if a maintainer says
+the PR is merged but it's still open, this just means that it's merged
+into <code class="inline">next</code> or <code class="inline">main</code> and will be included in the next scheduled
 release.</p><p>For more information on a smooth git experience check out the <a href="git.html">git
 section in contributor's guide</a></p><p>Happy hacking, and don't be afraid to submit patches.</p>
 <div class="bottom-actions">

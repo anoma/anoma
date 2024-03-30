@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="project" content="Anoma v0.11.0">
+
+
+    <title>Livebook — Anoma v0.11.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+
+      <script src="./.doc-versions.js"></script>
+
+    <script async src="dist/html-CILPWI2Q.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.11.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Anoma</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
+
+<h1>
+
+  <span translate="no">Livebook</span> 
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>I generate out extra information for Livebook</p><p>My main purpose is to generate out the TOC for each livebook
+document we have.</p><p>to do this please run <a href="#toc_toplevel/0"><code class="inline">toc_toplevel/0</code></a></p><h2 id="module-api" class="section-heading">
+  <a href="#module-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">API</span>
+</h2>
+<ul><li><a href="#toc_toplevel/0"><code class="inline">toc_toplevel/0</code></a></li><li><a href="#get_all_livemd_documents/0"><code class="inline">get_all_livemd_documents/0</code></a></li><li><a href="#example_toc/0"><code class="inline">example_toc/0</code></a></li></ul>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#add_heading_num/1" translate="no">add_heading_num(documents)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#change_header/4" translate="no">change_header(markdown, header_level, start_header, new_text)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I replace the header with the given TOC</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#count_depth/1" translate="no">count_depth(path)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#dir_from_path/1" translate="no">dir_from_path(dir)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#example_toc/0" translate="no">example_toc()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I provide an example of what a TOC looks like</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#generate_heading/4" translate="no">generate_heading(path, depth, numbering, from_depth \\ 1)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#generate_TOC/2" translate="no">generate_TOC(documents, from_depth \\ 0)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Generates out a TOC, given a series of nested documents</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_all_livemd_documents/0" translate="no">get_all_livemd_documents()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I get out all live view docs</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_livemd_documents/1" translate="no">get_livemd_documents(dir)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets all livemd documents in a sorted list given a path.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#inject_TOC/2" translate="no">inject_TOC(toc, path)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#toc_toplevel/0" translate="no">toc_toplevel()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I generate out the TOC for all liveview docs</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="add_heading_num/1">
+
+  <div class="detail-header">
+    <a href="#add_heading_num/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_heading_num(documents)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_heading_num([<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]) :: [
+  {<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
+]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="change_header/4">
+
+  <div class="detail-header">
+    <a href="#change_header/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">change_header(markdown, header_level, start_header, new_text)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I replace the header with the given TOC</p><h3 id="change_header/4-example" class="section-heading">
+  <a href="#change_header/4-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h3>
+<blockquote><p>markdown_text = &quot;## Intro ... </p></blockquote><h2 id="change_header/4-index" class="section-heading">
+  <a href="#change_header/4-index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<p> text here 
+ ## Conclusion 
+ All good&quot;</p><blockquote><p>Livebook.change_header(markdown_text, &quot;##&quot;, &quot;Index&quot;, &quot;New Content&quot;) |&gt; IO.puts</p></blockquote><pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="c1">## Intro ...</span><span class="w">
+ </span><span class="c1">## Index</span><span class="w">
+ </span><span class="nc">New</span><span class="w"> </span><span class="nc">Content</span><span class="w">
+ </span><span class="c1">## Conclusion</span><span class="w">
+ </span><span class="nc">All</span><span class="w"> </span><span class="n">good</span><span class="w">
+</span><span class="ss">:ok</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="count_depth/1">
+
+  <div class="detail-header">
+    <a href="#count_depth/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">count_depth(path)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> count_depth(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="dir_from_path/1">
+
+  <div class="detail-header">
+    <a href="#dir_from_path/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dir_from_path(dir)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> dir_from_path(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="example_toc/0">
+
+  <div class="detail-header">
+    <a href="#example_toc/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">example_toc()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> example_toc() :: :ok</pre>
+
+      </div>
+
+<p>I provide an example of what a TOC looks like</p>
+  </section>
+</section>
+<section class="detail" id="generate_heading/4">
+
+    <span id="generate_heading/3"></span>
+
+  <div class="detail-header">
+    <a href="#generate_heading/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">generate_heading(path, depth, numbering, from_depth \\ 1)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> generate_heading(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
+) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="generate_TOC/2">
+
+    <span id="generate_TOC/1"></span>
+
+  <div class="detail-header">
+    <a href="#generate_TOC/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">generate_TOC(documents, from_depth \\ 0)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> generate_TOC([<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()], <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+<p>Generates out a TOC, given a series of nested documents</p><p>We take a path, and a place where we should be calculating the TOC from.</p><h2 id="generate_TOC/2-example" class="section-heading">
+  <a href="#generate_TOC/2-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h2>
+
+  </section>
+</section>
+<section class="detail" id="get_all_livemd_documents/0">
+
+  <div class="detail-header">
+    <a href="#get_all_livemd_documents/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_all_livemd_documents()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_all_livemd_documents() :: [<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()]</pre>
+
+      </div>
+
+<p>I get out all live view docs</p>
+  </section>
+</section>
+<section class="detail" id="get_livemd_documents/1">
+
+  <div class="detail-header">
+    <a href="#get_livemd_documents/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_livemd_documents(dir)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_livemd_documents(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: [<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()]</pre>
+
+      </div>
+
+<p>Gets all livemd documents in a sorted list given a path.</p>
+  </section>
+</section>
+<section class="detail" id="inject_TOC/2">
+
+  <div class="detail-header">
+    <a href="#inject_TOC/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">inject_TOC(toc, path)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> inject_TOC(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="toc_toplevel/0">
+
+  <div class="detail-header">
+    <a href="#toc_toplevel/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">toc_toplevel()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I generate out the TOC for all liveview docs</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Anoma.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

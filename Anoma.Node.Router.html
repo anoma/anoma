@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Anoma.Node.Router — Anoma v0.10.0</title>
+    <title>Anoma.Node.Router — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -115,10 +125,199 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Router</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.10.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>I have a few use cases and APIs throughout an Anoma application:</p><ol><li><p>I provide central routing infrastructure for inter-node and
+intra-node communication</p></li><li><p>I provide service's for topic creation and
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a> creation</p></li><li><p>I provide a behavior interface similar to <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> for both
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> messaging and <code class="inline">Topic</code>
+messaging</p></li></ol><h2 id="module-router-topology" class="section-heading">
+  <a href="#module-router-topology" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Router Topology</span>
+</h2>
+<p>A good view of my topology and how various
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a> and topic's relate to me can be seen by
+the following diagram.</p><pre><code class="mermaid">graph TB
+  S(Router Supervisor)
+  R(Router)
+  C(Engine #1) ~~~ B(Engine #2)
+  T1(Topic #1) ~~~ T2(Topic #2)
+  S ==&gt;R &amp; B &amp; C
+  S -.-&gt;T1 &amp; T2
+  R &lt;--&gt;|router| B &amp; C &amp; T1 &amp; T2</code></pre><p><a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a>'s that are spawned via <a href="#start_engine/3"><code class="inline">start_engine/3</code></a>
+are added to the supervisor, and messages sent via <a href="#call/3"><code class="inline">call/3</code></a> or
+<a href="#cast/2"><code class="inline">cast/2</code></a> may be routed through myself.</p><p>Topics are handled somewhat specially. Since they serve a much more
+limited role, I handle and manage them personally and the dashed
+lines in the diagram are not real. However for building a conceptual
+model, we can view <code class="inline">Topics</code> spawned by <a href="#new_topic/1"><code class="inline">new_topic/1</code></a> as spawning an
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, and messages sent via
+<a href="#call/3"><code class="inline">call/3</code></a> or <a href="#cast/2"><code class="inline">cast/2</code></a> as being routed through myself.</p><h2 id="module-server-terminology" class="section-heading">
+  <a href="#module-server-terminology" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Server Terminology</span>
+</h2>
+<p>For the sake of this document, the word <code class="inline">Server</code> will refer to both
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Engines</code></a> and <code class="inline">Topics</code>.</p><h2 id="module-router-pids" class="section-heading">
+  <a href="#module-router-pids" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Router PIDs</span>
+</h2>
+<p>The IDs of the various topics and
+<a href="Anoma.Node.Router.Engine.html">engines</a>, are not regular Erlang
+PID's. Instead we use our own address schema laid out in
+<a href="Anoma.Node.Router.Addr.html"><code class="inline">Anoma.Node.Router.Addr</code></a>. Further information can also be found in
+our specs (link to specs when they are online).</p><h2 id="module-router-api" class="section-heading">
+  <a href="#module-router-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Router API</span>
+</h2>
+<p>I offer an API for anyone wishing to call me. These functions are:</p><ul><li><a href="#start/0"><code class="inline">start/0</code></a></li><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#new_topic/1"><code class="inline">new_topic/1</code></a></li><li><a href="#start_engine/3"><code class="inline">start_engine/3</code></a></li><li><a href="#start_engine/4"><code class="inline">start_engine/4</code></a></li><li><code class="inline">subscribe_topic/2</code></li><li><code class="inline">subscribe_topic/3</code></li></ul><h2 id="module-server-apis" class="section-heading">
+  <a href="#module-server-apis" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Server APIs</span>
+</h2>
+<p>When writing server code, My module acts as a <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> behavior,
+in that one should be using these functions when writing code to
+talk to the <code class="inline">Server</code>:</p><ul><li><a href="#call/2"><code class="inline">call/2</code></a></li><li><a href="#call/3"><code class="inline">call/3</code></a></li><li><a href="#cast/2"><code class="inline">cast/2</code></a></li></ul><p>The API I offer is very reminiscent of <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>'s API, however
+please read the <a href="#module-examples">examples</a> section to get a sense
+on how the server code differs.</p><h2 id="module-client-server-apis" class="section-heading">
+  <a href="#module-client-server-apis" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Client/Server APIs</span>
+</h2>
+<p>Much like <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>, user's typically don't call my <a href="#call/3"><code class="inline">call/3</code></a> or
+<a href="#cast/2"><code class="inline">cast/2</code></a> directly. Instead the user wraps the calls in new functions
+representing the public API of the server. These wrappers are called
+the <strong>client API</strong>.</p><h3 id="module-examples" class="section-heading">
+  <a href="#module-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h3>
+<p>To get a good feel for writing idiomatic code using me, and how my
+API is differs from <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>, we will look at an implementation
+of a stack and see how it <a href="https://hexdocs.pm/elixir/GenServer.html#module-client-server-apis">differs from GenServer's stack
+example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="5282824187-1">do</span><span class="w">
+  </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="w">
+
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Router.Engine</span><span class="w">
+
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="5282824187-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5282824187-3">(</span><span class="p" data-group-id="5282824187-3">)</span><span class="p" data-group-id="5282824187-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="5282824187-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="5282824187-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5282824187-6">(</span><span class="p" data-group-id="5282824187-6">)</span><span class="p" data-group-id="5282824187-5">)</span><span class="p" data-group-id="5282824187-4">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="5282824187-7">(</span><span class="n">elements</span><span class="p" data-group-id="5282824187-7">)</span><span class="w"> </span><span class="k" data-group-id="5282824187-8">do</span><span class="w">
+    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="5282824187-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="5282824187-9">)</span><span class="w">
+    </span><span class="p" data-group-id="5282824187-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="5282824187-10">}</span><span class="w">
+  </span><span class="k" data-group-id="5282824187-8">end</span><span class="w">
+
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="5282824187-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="5282824187-12">(</span><span class="p" data-group-id="5282824187-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5282824187-13">(</span><span class="p" data-group-id="5282824187-13">)</span><span class="p" data-group-id="5282824187-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="5282824187-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="5282824187-14">)</span><span class="w"> </span><span class="k" data-group-id="5282824187-15">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="5282824187-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5282824187-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="5282824187-17">}</span><span class="p" data-group-id="5282824187-16">)</span><span class="w">
+  </span><span class="k" data-group-id="5282824187-15">end</span><span class="w">
+
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="5282824187-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5282824187-19">(</span><span class="p" data-group-id="5282824187-19">)</span><span class="p" data-group-id="5282824187-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5282824187-20">(</span><span class="p" data-group-id="5282824187-20">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="5282824187-21">(</span><span class="n">pid</span><span class="p" data-group-id="5282824187-21">)</span><span class="w"> </span><span class="k" data-group-id="5282824187-22">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="5282824187-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="5282824187-23">)</span><span class="w">
+  </span><span class="k" data-group-id="5282824187-22">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="5282824187-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5282824187-24">)</span><span class="w"> </span><span class="k" data-group-id="5282824187-25">do</span><span class="w">
+    </span><span class="p" data-group-id="5282824187-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="5282824187-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
+    </span><span class="p" data-group-id="5282824187-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="5282824187-27">}</span><span class="w">
+  </span><span class="k" data-group-id="5282824187-25">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="5282824187-28">(</span><span class="p" data-group-id="5282824187-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="5282824187-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5282824187-28">)</span><span class="w"> </span><span class="k" data-group-id="5282824187-30">do</span><span class="w">
+    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5282824187-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="5282824187-31">]</span><span class="w">
+    </span><span class="p" data-group-id="5282824187-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="5282824187-32">}</span><span class="w">
+  </span><span class="k" data-group-id="5282824187-30">end</span><span class="w">
+</span><span class="k" data-group-id="5282824187-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="3861691443-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p" data-group-id="3861691443-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="3861691443-2">(</span><span class="p" data-group-id="3861691443-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="3861691443-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="3861691443-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="3861691443-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="3861691443-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="3861691443-5">(</span><span class="n">stack</span><span class="p" data-group-id="3861691443-5">)</span><span class="w">
+</span><span class="s">&quot;hello&quot;</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="3861691443-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="3861691443-6">)</span><span class="w">
+</span><span class="ss">:ok</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="3861691443-7">(</span><span class="n">stack</span><span class="p" data-group-id="3861691443-7">)</span><span class="w">
+</span><span class="s">&quot;hi&quot;</span></code></pre><p>Overall having both server and client functionality that is clearly
+labeled, leads to good user UI's.</p><h3 id="module-difference-in-design-from-genserver" class="section-heading">
+  <a href="#module-difference-in-design-from-genserver" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Difference in Design from <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a></span>
+</h3>
+<p>The Stack example shows how my API differs from <code class="inline">Genserver</code>:</p><ol><li><p>There is currently no <a href="https://hexdocs.pm/elixir/GenServer.html#start_link/3"><code class="inline">GenServer.start_link/3</code></a> for the Router</p></li><li><p>Even <code class="inline">handle_cast</code>'s take a <code class="inline">from</code> parameter</p></li><li><p>We use <a href="Anoma.Node.Router.Engine.html"><code class="inline">Anoma.Node.Router.Engine</code></a> and not <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a></p></li><li><p>Further <a href="#call/2"><code class="inline">call/2</code></a> by default has an :infinite timeout</p></li></ol><h3 id="module-summarizing-the-interactions-between-server-and-clients" class="section-heading">
+  <a href="#module-summarizing-the-interactions-between-server-and-clients" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Summarizing the interactions between Server and Clients</span>
+</h3>
+<p>For basic <code class="inline">Server</code>'s we can summarize interactions between all
+parties as follows.</p><pre><code class="mermaid">  sequenceDiagram
+    participant C as Client (Process/Engine)
+    participant R as Router (Engine)
+    participant S as Server (Engine)
+    participant M as Module (Code)
+
+    note right of C: Typically started by an init process
+    C-&gt;&gt;+R: Router.start_engine(router, module, arg, options)
+    R-&gt;&gt;+S: GenServer.start_link(router, module, arg, options)
+    S--&gt;&gt;+M: init(arg)
+    M--&gt;&gt;-S: {:ok, state} | :ignore | {:error, reason}
+    S-&gt;&gt;-R: {:ok, addr} | :ignore | {:error, reason}
+    R-&gt;&gt;-C: {:ok, addr} | :ignore | {:error, reason}
+
+    note right of C: call is synchronous
+    C-&gt;&gt;+R: Router.call(addr, message)
+    note right of R: For known engines this is optimized away
+    R-&gt;&gt;+S: GenSever.call(pid, {self, message})
+    S--&gt;&gt;+M: handle_call(message, from, state)
+    M--&gt;&gt;-S: {:reply, reply, state} | {:stop, reason, reply, state}
+    S-&gt;&gt;-C: reply
+
+    note right of C: cast is asynchronous
+    C-)R: Router.cast(addr, message)
+    note right of R: For known engines this is optimized away
+    R-)S: GenServer.cast(pid, message)
+    S--&gt;&gt;+M: handle_cast(message, state)
+    M--&gt;&gt;-S: {:noreply, state} | {:stop, reason, state}
+
+    note right of C: send is asynchronous. the PAID must be known
+    C-)S: Kernel.send(pid, message)
+    S--&gt;&gt;+M: handle_info(message, state)
+    M--&gt;&gt;-S: {:noreply, state} | {:stop, reason, state}</code></pre><p>What this diagram doesn't show is how Topic messaging works, and for
+that, this diagram may be of assistance.</p><pre><code class="mermaid">  sequenceDiagram
+    participant C as Client (Process/Engine)
+    participant S2 as Server2 (Engine)
+    participant R as Router (Engine)
+    participant T as Topic (Topic)
+    participant S as Server (Engine)
+
+
+    note right of R: For simplicity we do not display a client
+    S2-)+R: GenServer.subscribe(router, topic)
+    R--&gt;&gt;+T: GenSever.call(addr, {self, message})
+    T--&gt;&gt;-R: :ok | {:error, :no_such_topic}
+    R-)-S2: :ok | {:error, :no_such_topic}
+
+
+    note right of C: cast is asynchronous
+    C-)R: Router.cast(addr, message)
+    R-)+S: GenServer.cast(pid, message)
+    note right of S: Imagine this call sends an update to a topic
+    S-)-R: Router.cast(topic_addr, msg)
+    R--&gt;&gt;T: Genserver.cast(pid, msg)
+    T--&gt;&gt;R: Router.cast(addr_S2, msg)
+    R-)S2: Genserver.cast(pid, msg)</code></pre><p>The dotted lines in the diagram are theoretically how <code class="inline">Tasks</code> could
+be implemented, however this is implementation dependent, and does
+indeed differ from the diagram.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -161,6 +360,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>See <a href="#call/3"><code class="inline">call/3</code></a> for documentation.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -169,6 +370,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -176,6 +379,8 @@ GUIDES
         <a href="#cast/2" translate="no">cast(addr, msg)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p></div>
 
     </div>
 
@@ -213,6 +418,16 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>Creates a new topic. Takes the address of the router.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_topic/2" translate="no">new_topic(router, id)</a>
+
+      </div>
+
     </div>
 
     <div class="summary-row">
@@ -237,6 +452,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>Starts a new router, with a random <a href="Anoma.Crypto.Id.html"><code class="inline">Anoma.Crypto.Id</code></a>.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -244,6 +461,8 @@ GUIDES
         <a href="#start/1" translate="no">start(id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Starts a new router with a given cryptographic ID.</p></div>
 
     </div>
 
@@ -260,6 +479,8 @@ GUIDES
         <a href="#start_engine/4" translate="no">start_engine(router, module, id, arg)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Starts a new Engine</p></div>
 
     </div>
 
@@ -375,7 +596,13 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> call(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
+
+<p>See <a href="#call/3"><code class="inline">call/3</code></a> for documentation.</p>
   </section>
 </section>
 <section class="detail" id="call/3">
@@ -392,7 +619,26 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> call(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(), <a href="https://www.erlang.org/doc/man/erlang.html#type-timeout">:erlang.timeout</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()</pre>
+
+      </div>
+
+<p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p><p>Call has a few interesting cases we can consider</p><ol><li><p>Calling a local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Calling a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li></ol><p>We can not <a href="#call/3"><code class="inline">call/3</code></a> a <code class="inline">Topic</code>, and thus those instances are not
+handled.</p><p>Currently we do not handle the non local
+<a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> case.</p><p>For the local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, then their
+<a href="Anoma.Node.Router.Engine.html#c:handle_call/3"><code class="inline">Engine.handle_call/3</code></a>
+will be called on the <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> to
+handle the request.</p><h3 id="call/3-timeouts" class="section-heading">
+  <a href="#call/3-timeouts" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Timeouts</span>
+</h3>
+<p>By default the timeout is infinite for local calls. For non local
+calls the timeout is not yet defined and will be iterated upon in
+future versions</p>
   </section>
 </section>
 <section class="detail" id="cast/2">
@@ -409,7 +655,18 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> cast(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Makes a synchronous call to the <code class="inline">Server</code> and waits for a reply.</p><p>Call has a few interesting cases we can consider</p><ol><li><p>Casting to a local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Calling to a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a></p></li><li><p>Casting to a <code class="inline">Topic</code></p></li></ol><p>For the local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a>, then their
+<a href="Anoma.Node.Router.Engine.html#c:handle_cast/3"><code class="inline">Engine.handle_cast/3</code></a>
+will be called on the <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> to
+handle the request.</p><p>Calling a non local <a href="Anoma.Node.Router.Engine.html"><code class="inline">Engine</code></a> isn't
+handled yet.</p><p>For <code class="inline">Topics</code> any <a href="#cast/2"><code class="inline">cast/2</code></a> sent, then triggers a series of <a href="#cast/2"><code class="inline">cast/2</code></a>
+to all subscribed <a href="https://hexdocs.pm/elixir/Process.html"><code class="inline">Process</code></a>'s</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -460,6 +717,12 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
@@ -476,6 +739,37 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_topic(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) ::
+  {:ok, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()} | {:error, :already_exists}</pre>
+
+      </div>
+
+<p>Creates a new topic. Takes the address of the router.</p>
+  </section>
+</section>
+<section class="detail" id="new_topic/2">
+
+  <div class="detail-header">
+    <a href="#new_topic/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new_topic(router, id)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_topic(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()) ::
+  {:ok, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()} | {:error, :already_exists}</pre>
+
+      </div>
 
 
   </section>
@@ -494,6 +788,12 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> process_name(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -510,6 +810,12 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> self_addr(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -528,7 +834,13 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> start() :: :ignore | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | {:ok, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}</pre>
+
+      </div>
+
+<p>Starts a new router, with a random <a href="Anoma.Crypto.Id.html"><code class="inline">Anoma.Crypto.Id</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="start/1">
@@ -545,7 +857,16 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()) ::
+  :ignore
+  | {:error, {:already_started, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()} | :max_children | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}
+  | {:ok, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}</pre>
+
+      </div>
+
+<p>Starts a new router with a given cryptographic ID.</p>
   </section>
 </section>
 <section class="detail" id="start_engine/3">
@@ -561,6 +882,13 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_engine(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) ::
+  {:ok, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()} | :ignore | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -579,7 +907,17 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> start_engine(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()) ::
+  {:ok, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}
+  | :ignore
+  | {:error, {:already_started, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()} | :max_children | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}
+  | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>Starts a new Engine</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -595,6 +933,12 @@ GUIDES
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link(<a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
 
 
   </section>

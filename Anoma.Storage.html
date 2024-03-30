@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Anoma.Storage — Anoma v0.10.0</title>
+    <title>Anoma.Storage — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -115,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Storage</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.10.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
 
 </h1>
 
@@ -138,7 +148,7 @@ value</li></ol><h2 id="module-types" class="section-heading">
   <span class="text">API</span>
 </h2>
 <p>The important functions for this API are</p><ul><li><a href="#setup/1"><code class="inline">setup/1</code></a></li><li><a href="#ensure_new/1"><code class="inline">ensure_new/1</code></a></li><li><a href="#get/2"><code class="inline">get/2</code></a></li><li><code class="inline">get/3</code></li><li><a href="#put/3"><code class="inline">put/3</code></a></li><li><code class="inline">put/4</code></li><li><a href="#blocking_read/2"><code class="inline">blocking_read/2</code></a></li><li><code class="inline">blocking_read/3</code></li></ul><p>For Querying keyspace the following functions are useful</p><ul><li><a href="#get_keyspace/2"><code class="inline">get_keyspace/2</code></a></li></ul><p>If one wants to query the tables by hand then there are manual
-functions, but beware, this is an unintended way of using the API</p><ul><li><code class="inline">query_key_space/2</code></li><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><a href="#write_at_order/4"><code class="inline">write_at_order/4</code></a></li></ul><p>Please see my testing module <code class="inline">AnomaTest.Storage</code> to learn more on
+functions, but beware, this is an unintended way of using the API</p><ul><li><code class="inline">query_key_space/2</code></li><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><a href="#read_order_tx/2"><code class="inline">read_order_tx/2</code></a></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><a href="#read_at_order_tx/3"><code class="inline">read_at_order_tx/3</code></a></li><li><a href="#write_at_order/4"><code class="inline">write_at_order/4</code></a></li><li><a href="#write_at_order_tx/4"><code class="inline">write_at_order_tx/4</code></a></li></ul><p>Please see my testing module <code class="inline">AnomaTest.Storage</code> to learn more on
 how to use me</p><h3 id="module-snapshots" class="section-heading">
   <a href="#module-snapshots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
@@ -255,6 +265,14 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#cm_tree_spec/0" translate="no">cm_tree_spec()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#ensure_new/1" translate="no">ensure_new(storage)</a>
 
       </div>
@@ -319,6 +337,14 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#read_at_order_tx/3" translate="no">read_at_order_tx(storage, key, order)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#read_keyspace_order/2" translate="no">read_keyspace_order(storage, key_query)</a>
 
       </div>
@@ -330,6 +356,14 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#read_order/2" translate="no">read_order(storage, key)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#read_order_tx/2" translate="no">read_order_tx(storage, key)</a>
 
       </div>
 
@@ -364,6 +398,14 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#write_at_order/4" translate="no">write_at_order(storage, key, value, order)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#write_at_order_tx/4" translate="no">write_at_order_tx(storage, key, value, order)</a>
 
       </div>
 
@@ -536,7 +578,7 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Storage{order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Storage{order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
 
       </div>
 
@@ -620,6 +662,29 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="cm_tree_spec/0">
+
+  <div class="detail-header">
+    <a href="#cm_tree_spec/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">cm_tree_spec()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> cm_tree_spec() :: <a href="CommitmentTree.Spec.html#t:t/0">CommitmentTree.Spec.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -802,7 +867,32 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> read_at_order(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> read_at_order(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: [
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="#t:qualified_key/0">qualified_key</a>(), <a href="#t:qualified_value/0">qualified_value</a>()}
+]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="read_at_order_tx/3">
+
+  <div class="detail-header">
+    <a href="#read_at_order_tx/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">read_at_order_tx(storage, key, order)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> read_at_order_tx(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
   <a href="#t:result/1">result</a>([{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="#t:qualified_key/0">qualified_key</a>(), <a href="#t:qualified_value/0">qualified_value</a>()}])</pre>
 
       </div>
@@ -849,7 +939,31 @@ how to use me</p><h3 id="module-snapshots" class="section-heading">
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> read_order(<a href="#t:t/0">t</a>(), <a href="#t:order_key/0">order_key</a>()) :: <a href="#t:result/1">result</a>([{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}])</pre>
+          <pre translate="no"><span class="attribute">@spec</span> read_order(<a href="#t:t/0">t</a>(), <a href="#t:order_key/0">order_key</a>()) :: [{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="read_order_tx/2">
+
+  <div class="detail-header">
+    <a href="#read_order_tx/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">read_order_tx(storage, key)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> read_order_tx(<a href="#t:t/0">t</a>(), <a href="#t:order_key/0">order_key</a>()) ::
+  <a href="#t:result/1">result</a>([{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}])</pre>
 
       </div>
 
@@ -942,7 +1056,30 @@ fails due to already being setup, we will try the others.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> write_at_order(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="#t:result/1">result</a>(:ok)</pre>
+          <pre translate="no"><span class="attribute">@spec</span> write_at_order(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="write_at_order_tx/4">
+
+  <div class="detail-header">
+    <a href="#write_at_order_tx/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">write_at_order_tx(storage, key, value, order)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> write_at_order_tx(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="#t:result/1">result</a>(:ok)</pre>
 
       </div>
 

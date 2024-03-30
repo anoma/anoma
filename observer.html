@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Observer — Anoma v0.10.0</title>
+    <title>Observer — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -130,7 +140,7 @@ GUIDES
   </a>
   <span class="text">Index</span>
 </h2>
-<ul><li><a href="index_docs.html">Index</a><ul><li><a href="contributing.html">Contributing</a><ul><li><a href="observer.html">Observer</a></li></ul></li></ul></li></ul><h2 id="how-to-use-observer" class="section-heading">
+<ol><li><a href="contributing.html">Contributing</a><ol><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li><li><a href="understanding.html">Understanding</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="index.html">Index</a></li><li><a href="index_docs.html">Index_docs</a></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="how-to-use-observer" class="section-heading">
   <a href="#how-to-use-observer" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -150,17 +160,17 @@ Instance. We can connect to other IEX instances in this way:</p><h2 id="viewing-
 </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Mempool.Communicator</span><span class="p">,</span><span class="w"> </span><span class="ss">as</span><span class="p">:</span><span class="w"> </span><span class="nc">Mcom</span><span class="w">
 </span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
 
-</span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="4903667974-1">%</span><span class="nc" data-group-id="4903667974-1">Anoma.Storage</span><span class="p" data-group-id="4903667974-1">{</span><span class="w">
+</span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="8071876631-1">%</span><span class="nc" data-group-id="8071876631-1">Anoma.Storage</span><span class="p" data-group-id="8071876631-1">{</span><span class="w">
   </span><span class="ss">qualified</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Qualified</span><span class="p">,</span><span class="w">
   </span><span class="ss">order</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Order</span><span class="w">
-</span><span class="p" data-group-id="4903667974-1">}</span><span class="w">
+</span><span class="p" data-group-id="8071876631-1">}</span><span class="w">
 
 </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:anoma</span><span class="w">
-</span><span class="n">snapshot_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="4903667974-2">[</span><span class="ss">:my_special_nock_snaphsot</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="4903667974-2">]</span><span class="w">
-</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">com_names</span><span class="p" data-group-id="4903667974-3">(</span><span class="n">name</span><span class="p" data-group-id="4903667974-3">)</span><span class="w">
+</span><span class="n">snapshot_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="8071876631-2">[</span><span class="ss">:my_special_nock_snaphsot</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="8071876631-2">]</span><span class="w">
+</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">com_names</span><span class="p" data-group-id="8071876631-3">(</span><span class="n">name</span><span class="p" data-group-id="8071876631-3">)</span><span class="w">
 </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">555</span><span class="w">
-</span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zero_counter</span><span class="p" data-group-id="4903667974-4">(</span><span class="n">key</span><span class="p" data-group-id="4903667974-4">)</span><span class="w">
-</span><span class="n">pid_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcom</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="4903667974-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="4903667974-5">)</span><span class="o">.</span><span class="n">pid</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="6774656636-1">#</span><span class="nc" data-group-id="6774656636-1">PID</span><span class="p" data-group-id="6774656636-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">4479</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="6774656636-1">&gt;</span></code></pre><p>Then we can see this same process as a child to one of the pools</p><!-- livebook:{"break_markdown":true} --><p><img src="files/2024-01-08-172805_1016x497_scrot.png" alt=""/></p><h2 id="looking-at-mnesia-tables" class="section-heading">
+</span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zero_counter</span><span class="p" data-group-id="8071876631-4">(</span><span class="n">key</span><span class="p" data-group-id="8071876631-4">)</span><span class="w">
+</span><span class="n">pid_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcom</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="8071876631-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="8071876631-5">)</span><span class="o">.</span><span class="n">pid</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="1463476116-1">#</span><span class="nc" data-group-id="1463476116-1">PID</span><span class="p" data-group-id="1463476116-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">4479</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1463476116-1">&gt;</span></code></pre><p>Then we can see this same process as a child to one of the pools</p><!-- livebook:{"break_markdown":true} --><p><img src="files/2024-01-08-172805_1016x497_scrot.png" alt=""/></p><h2 id="looking-at-mnesia-tables" class="section-heading">
   <a href="#looking-at-mnesia-tables" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -182,12 +192,12 @@ IEx
   </div>
   <div class="bottom-actions-item">
 
-      <a href="understanding.html" class="bottom-actions-button" rel="next">
+      <a href="testing.html" class="bottom-actions-button" rel="next">
         <span class="subheader">
           Next Page →
         </span>
         <span class="title">
-Understanding any code in Anoma
+Testing
         </span>
       </a>
 

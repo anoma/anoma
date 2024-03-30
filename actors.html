@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>The Actors — Anoma v0.10.0</title>
+    <title>The Actors — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -130,26 +140,21 @@ GUIDES
   </a>
   <span class="text">Index</span>
 </h2>
-<ul><li><a href="index_docs.html">Index</a><ul><li><a href="visualization.html">Visualizing Anoma</a><ul><li><a href="actors.html">Actors</a></li></ul></li></ul></li></ul><h2 id="an-overview-of-anoma" class="section-heading">
+<ol><li><a href="contributing.html">Contributing</a><ol><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li><li><a href="understanding.html">Understanding</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="index.html">Index</a></li><li><a href="index_docs.html">Index_docs</a></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="an-overview-of-anoma" class="section-heading">
   <a href="#an-overview-of-anoma" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">An overview of Anoma</span>
 </h2>
-<p>A good overview of Actors can be seen by looking at the supervision tree of Anoma itself.</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_sup_tree</span><span class="p" data-group-id="6536809288-1">(</span><span class="nc">Anoma</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:left_right</span><span class="p" data-group-id="6536809288-1">)</span></code></pre><pre><code class="mermaid output">graph LR;
-0(Anoma):::root ---&gt; 1(#PID&lt;0.334.0&gt;):::supervisor
-0(Anoma):::root ---&gt; 4(#PID&lt;0.290.0&gt;):::supervisor
-1(#PID&lt;0.334.0&gt;):::supervisor ---&gt; 2(anoma_intent):::worker
-1(#PID&lt;0.334.0&gt;):::supervisor ---&gt; 3(anoma_intent_com):::worker
-4(#PID&lt;0.290.0&gt;):::supervisor ---&gt; 5(#PID&lt;0.299.0&gt;):::supervisor
-4(#PID&lt;0.290.0&gt;):::supervisor ---&gt; 8(#PID&lt;0.294.0&gt;):::supervisor
-4(#PID&lt;0.290.0&gt;):::supervisor ---&gt; 11(#PID&lt;0.291.0&gt;):::supervisor
-5(#PID&lt;0.299.0&gt;):::supervisor ---&gt; 6(anoma_mempool):::worker
-5(#PID&lt;0.299.0&gt;):::supervisor ---&gt; 7(anoma_mempool_com):::worker
-8(#PID&lt;0.294.0&gt;):::supervisor ---&gt; 9(anoma_ordering):::worker
-8(#PID&lt;0.294.0&gt;):::supervisor ---&gt; 10(anoma_ordering_com):::worker
-11(#PID&lt;0.291.0&gt;):::supervisor ---&gt; 12(anoma_executor):::supervisor
-11(#PID&lt;0.291.0&gt;):::supervisor ---&gt; 13(anoma_executor_com):::worker
+<p>A good overview of Actors can be seen by looking at the supervision tree of Anoma itself.</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1792409363-1">{</span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1792409363-2">[</span><span class="n">pid1</span><span class="p">,</span><span class="w"> </span><span class="n">pid2</span><span class="p" data-group-id="1792409363-2">]</span><span class="p" data-group-id="1792409363-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Process</span><span class="o">.</span><span class="n">info</span><span class="p" data-group-id="1792409363-3">(</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="1792409363-4">(</span><span class="ss">:anoma</span><span class="p" data-group-id="1792409363-4">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:links</span><span class="p" data-group-id="1792409363-3">)</span><span class="w">
+</span><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_sup_tree</span><span class="p" data-group-id="1792409363-5">(</span><span class="n">pid2</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:left_right</span><span class="p" data-group-id="1792409363-5">)</span></code></pre><pre><code class="mermaid output">graph LR;
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 4(Anoma.Node.Storage.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
 classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
 classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
 classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
@@ -163,103 +168,91 @@ classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
 </h2>
 <p>A good view of visualizing Anoma can be seen through running the
 mempool, as it orchastrates the other actors in Anoma to act</p><!-- livebook:{"break_markdown":true} --><p>First we will create a transaction and see how that changes the base supervision tree before executing</p><pre><code class="makeup elixir" translate="no"><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Storage</span><span class="w">
-</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Communicator</span><span class="p">,</span><span class="w"> </span><span class="ss">as</span><span class="p">:</span><span class="w"> </span><span class="nc">Scom</span><span class="w">
-</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Executor.Communicator</span><span class="p">,</span><span class="w"> </span><span class="ss">as</span><span class="p">:</span><span class="w"> </span><span class="nc">Ccom</span><span class="w">
-</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Mempool.Communicator</span><span class="p">,</span><span class="w"> </span><span class="ss">as</span><span class="p">:</span><span class="w"> </span><span class="nc">Mcom</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Ordering</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Mempool</span><span class="w">
+</span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="w">
 </span><span class="kn">import</span><span class="w"> </span><span class="nc">TestHelper.Nock</span><span class="w">
 
-</span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5054887854-1">%</span><span class="nc" data-group-id="5054887854-1">Anoma.Storage</span><span class="p" data-group-id="5054887854-1">{</span><span class="w">
+</span><span class="n">storage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="0065083937-1">%</span><span class="nc" data-group-id="0065083937-1">Anoma.Storage</span><span class="p" data-group-id="0065083937-1">{</span><span class="w">
   </span><span class="ss">qualified</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Qualified</span><span class="p">,</span><span class="w">
   </span><span class="ss">order</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Order</span><span class="w">
-</span><span class="p" data-group-id="5054887854-1">}</span><span class="w">
+</span><span class="p" data-group-id="0065083937-1">}</span><span class="w">
 
 </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:anoma</span><span class="w">
-</span><span class="n">snapshot_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5054887854-2">[</span><span class="ss">:my_special_nock_snaphsot</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5054887854-2">]</span><span class="w">
-</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">com_names</span><span class="p" data-group-id="5054887854-3">(</span><span class="n">name</span><span class="p" data-group-id="5054887854-3">)</span><span class="w">
+</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Anoma.Node</span><span class="o">.</span><span class="n">state</span><span class="p" data-group-id="0065083937-2">(</span><span class="n">name</span><span class="p" data-group-id="0065083937-2">)</span><span class="w">
 </span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">555</span><span class="w">
-</span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zero_counter</span><span class="p" data-group-id="5054887854-4">(</span><span class="n">key</span><span class="p" data-group-id="5054887854-4">)</span><span class="w">
-</span><span class="n">pid_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcom</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="5054887854-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="5054887854-5">)</span><span class="o">.</span><span class="n">pid</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="8958772827-1">#</span><span class="nc" data-group-id="8958772827-1">PID</span><span class="p" data-group-id="8958772827-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">115163</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="8958772827-1">&gt;</span></code></pre><p>The previous evaluations PID can be seen in the diagram below!</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_sup_tree</span><span class="p" data-group-id="4829429659-1">(</span><span class="nc">Anoma</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:left_right</span><span class="p" data-group-id="4829429659-1">)</span></code></pre><pre><code class="mermaid output">graph LR;
-0(Anoma):::root ---&gt; 1(#PID&lt;0.334.0&gt;):::supervisor
-0(Anoma):::root ---&gt; 4(#PID&lt;0.290.0&gt;):::supervisor
-1(#PID&lt;0.334.0&gt;):::supervisor ---&gt; 2(anoma_intent):::worker
-1(#PID&lt;0.334.0&gt;):::supervisor ---&gt; 3(anoma_intent_com):::worker
-4(#PID&lt;0.290.0&gt;):::supervisor ---&gt; 5(#PID&lt;0.299.0&gt;):::supervisor
-4(#PID&lt;0.290.0&gt;):::supervisor ---&gt; 8(#PID&lt;0.294.0&gt;):::supervisor
-4(#PID&lt;0.290.0&gt;):::supervisor ---&gt; 11(#PID&lt;0.291.0&gt;):::supervisor
-5(#PID&lt;0.299.0&gt;):::supervisor ---&gt; 6(anoma_mempool):::worker
-5(#PID&lt;0.299.0&gt;):::supervisor ---&gt; 7(anoma_mempool_com):::worker
-8(#PID&lt;0.294.0&gt;):::supervisor ---&gt; 9(anoma_ordering):::worker
-8(#PID&lt;0.294.0&gt;):::supervisor ---&gt; 10(anoma_ordering_com):::worker
-11(#PID&lt;0.291.0&gt;):::supervisor ---&gt; 12(anoma_executor):::supervisor
-11(#PID&lt;0.291.0&gt;):::supervisor ---&gt; 14(anoma_executor_com):::worker
-12(anoma_executor):::supervisor ---&gt; 13(#PID&lt;0.115163.0&gt;):::worker
-14(anoma_executor_com):::worker -..- 13(#PID&lt;0.115163.0&gt;):::worker
+</span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">zero_counter</span><span class="p" data-group-id="0065083937-3">(</span><span class="n">key</span><span class="p" data-group-id="0065083937-3">)</span><span class="w">
+</span><span class="n">pid_zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mempool</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="0065083937-4">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0065083937-5">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="0065083937-5">}</span><span class="p" data-group-id="0065083937-4">)</span><span class="o">.</span><span class="n">pid</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="1817423900-1">#</span><span class="nc" data-group-id="1817423900-1">PID</span><span class="p" data-group-id="1817423900-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">438</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1817423900-1">&gt;</span></code></pre><p>The previous evaluations PID can be seen in the diagram below!</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9454258294-1">{</span><span class="bp">_</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9454258294-2">[</span><span class="n">pid1</span><span class="p">,</span><span class="w"> </span><span class="n">pid2</span><span class="p" data-group-id="9454258294-2">]</span><span class="p" data-group-id="9454258294-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Process</span><span class="o">.</span><span class="n">info</span><span class="p" data-group-id="9454258294-3">(</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="9454258294-4">(</span><span class="ss">:anoma</span><span class="p" data-group-id="9454258294-4">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:links</span><span class="p" data-group-id="9454258294-3">)</span><span class="w">
+</span><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_sup_tree</span><span class="p" data-group-id="9454258294-5">(</span><span class="n">pid2</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:left_right</span><span class="p" data-group-id="9454258294-5">)</span></code></pre><pre><code class="mermaid output">graph LR;
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 4(Anoma.Node.Storage.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---&gt; 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
 classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
 classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
 classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
 classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
 
-</code></pre><p>Now let us see what happens between the actors when we run the mempool</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="7962768081-1">(</span><span class="k" data-group-id="7962768081-2">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Mcom</span><span class="o">.</span><span class="n">execute</span><span class="p" data-group-id="7962768081-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p" data-group-id="7962768081-3">)</span><span class="w"> </span><span class="k" data-group-id="7962768081-2">end</span><span class="p" data-group-id="7962768081-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
-participant 6 AS mnesia_subscr;
-participant 8 AS mnesia_locker;
-participant 7 AS mnesia_tm;
-participant 3 AS anoma_ordering_com;
-participant 4 AS anoma_ordering;
-participant 1 AS anoma_mempool_com;
-participant 2 AS anoma_mempool;
+</code></pre><p>Now let us see what happens between the actors when we run the mempool</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="0482072507-1">(</span><span class="w">
+  </span><span class="p" data-group-id="0482072507-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="0482072507-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="0482072507-3">)</span><span class="p" data-group-id="0482072507-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="0482072507-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">Mempool</span><span class="o">.</span><span class="n">execute</span><span class="p" data-group-id="0482072507-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p" data-group-id="0482072507-5">)</span><span class="w">
+  </span><span class="k" data-group-id="0482072507-4">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Node.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="0482072507-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
+participant 3 AS code_server;
+participant 7 AS mnesia_locker;
+participant 6 AS mnesia_tm;
+participant 8 AS Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=;
+participant 2 AS Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=;
+participant 4 AS Anoma.Node.Storage.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=;
+participant 1 AS Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=;
 participant 0 AS self();
-participant 5 AS #35;PID&lt;0.115163.0&gt;;
+participant 5 AS #35;PID&lt;0.438.0&gt;;
 0-&gt;&gt;1: CALL: execute
-1-&gt;&gt;2: CALL: execute
-2-&gt;&gt;3: CALL: next_order
-3-&gt;&gt;4: CALL: next_order
-
-
-2-&gt;&gt;3: CALL: new_order
-3-&gt;&gt;4: CALL: new_order
-4-&gt;&gt;5: INFO: read_ready
-
-5-&gt;&gt;6: CALL: change
-
-6-&gt;&gt;5: INFO: tuple
-2-&gt;&gt;5: INFO: write_ready
-2-&gt;&gt;7: INFO: tuple
-5-&gt;&gt;7: INFO: tuple
-7-&gt;&gt;2: INFO: mnesia_tm
-7-&gt;&gt;5: INFO: mnesia_tm
-5-&gt;&gt;8: INFO: tuple
-2-&gt;&gt;8: INFO: tuple
-8-&gt;&gt;5: INFO: mnesia_locker
-8-&gt;&gt;2: INFO: mnesia_locker
-5-&gt;&gt;8: INFO: release_tid
-5-&gt;&gt;7: INFO: delete_transaction
-5-&gt;&gt;7: INFO: tuple
-7-&gt;&gt;5: INFO: mnesia_tm
-2-&gt;&gt;8: INFO: release_tid
-2-&gt;&gt;7: INFO: delete_transaction
-5-&gt;&gt;8: INFO: tuple
-
-
-8-&gt;&gt;5: INFO: mnesia_locker
-</code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="9476670123-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="9476670123-1">}</span></code></pre><p>As we can see, we get a fairly solid overview of what actors sent what messages</p><!-- livebook:{"break_markdown":true} --><p>We can also see what processes startup when we start an execution</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="0142676669-1">(</span><span class="k" data-group-id="0142676669-2">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Mcom</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="0142676669-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="n">increment_counter_val</span><span class="p" data-group-id="0142676669-4">(</span><span class="mi">555</span><span class="p" data-group-id="0142676669-4">)</span><span class="p" data-group-id="0142676669-3">)</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="0142676669-5">(</span><span class="p" data-group-id="0142676669-5">)</span><span class="w"> </span><span class="k" data-group-id="0142676669-2">end</span><span class="p" data-group-id="0142676669-1">)</span></code></pre><pre><code class="mermaid output">sequenceDiagram
-participant 3 AS anoma_executor_com;
-participant 4 AS anoma_executor;
-participant 1 AS anoma_mempool_com;
-participant 2 AS anoma_mempool;
-participant 0 AS self();
-participant 5 AS #35;PID&lt;0.115185.0&gt;;
-0-&gt;&gt;1: CALL: tx
-1-&gt;&gt;2: CALL: tx
-2-&gt;&gt;3: CALL: transaction
-3-&gt;&gt;4: CALL: start_task
-4-&gt;&gt;5: SPAWN
-activate 5
-4-&gt;&gt;3: INFO: tuple
-3-&gt;&gt;5: INFO: tuple
-
-
-
-</code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="4534688213-1">#</span><span class="nc" data-group-id="4534688213-1">PID</span><span class="p" data-group-id="4534688213-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">115185</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="4534688213-1">&gt;</span></code></pre>
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;4: CALL: next_order
+4-&gt;&gt;1: INFO: tuple
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;3: INFO: code_call
+3-&gt;&gt;1: INFO: code_server
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;4: CALL: new_order
+4-&gt;&gt;1: INFO: tuple
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;5: INFO: write_ready
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;6: INFO: tuple
+6-&gt;&gt;1: INFO: mnesia_tm
+1-&gt;&gt;7: INFO: tuple
+7-&gt;&gt;1: INFO: mnesia_locker
+1-&gt;&gt;7: INFO: release_tid
+1-&gt;&gt;6: INFO: delete_transaction
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;2: ADD LEVEL: info
+1-&gt;&gt;8: CAST: cast
+1-&gt;&gt;0: INFO: tuple
+</code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="7227065104-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7227065104-1">}</span></code></pre><p>As we can see, we get a fairly solid overview of what actors sent what messages</p><!-- livebook:{"break_markdown":true} --><p>We can also see what processes startup when we start an execution</p><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="4962744021-1">(</span><span class="w">
+  </span><span class="p" data-group-id="4962744021-2">[</span><span class="nc">Process</span><span class="o">.</span><span class="n">whereis</span><span class="p" data-group-id="4962744021-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="o">.</span><span class="n">server</span><span class="p" data-group-id="4962744021-3">)</span><span class="p" data-group-id="4962744021-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="4962744021-4">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Mempool</span><span class="o">.</span><span class="n">tx</span><span class="p" data-group-id="4962744021-5">(</span><span class="n">node</span><span class="o">.</span><span class="n">mempool</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4962744021-6">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">increment_counter_val</span><span class="p" data-group-id="4962744021-7">(</span><span class="mi">555</span><span class="p" data-group-id="4962744021-7">)</span><span class="p" data-group-id="4962744021-6">}</span><span class="p" data-group-id="4962744021-5">)</span><span class="o">.</span><span class="n">pid</span><span class="p" data-group-id="4962744021-8">(</span><span class="p" data-group-id="4962744021-8">)</span><span class="w"> </span><span class="k" data-group-id="4962744021-4">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Node.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="4962744021-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="7310259794-1">#</span><span class="nc" data-group-id="7310259794-1">PID</span><span class="p" data-group-id="7310259794-1">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">1147</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="7310259794-1">&gt;</span></code></pre><pre><code class="makeup elixir" translate="no"><span class="nc">Kino.Process</span><span class="o">.</span><span class="n">render_seq_trace</span><span class="p" data-group-id="2138184243-1">(</span><span class="w">
+  </span><span class="ss">:all</span><span class="p">,</span><span class="w">
+  </span><span class="k" data-group-id="2138184243-2">fn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Anoma.Node.Logger</span><span class="o">.</span><span class="n">add</span><span class="p" data-group-id="2138184243-3">(</span><span class="n">node</span><span class="o">.</span><span class="n">logger</span><span class="p">,</span><span class="w"> </span><span class="ss">:info</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;help&quot;</span><span class="p" data-group-id="2138184243-3">)</span><span class="w"> </span><span class="k" data-group-id="2138184243-2">end</span><span class="p">,</span><span class="w">
+  </span><span class="ss">message_label</span><span class="p">:</span><span class="w"> </span><span class="o">&amp;</span><span class="nc">Anoma.Node.Utility</span><span class="o">.</span><span class="n">message_label</span><span class="o">/</span><span class="mi">1</span><span class="w">
+</span><span class="p" data-group-id="2138184243-1">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre>
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
@@ -275,7 +268,7 @@ Visualizing Anoma
   </div>
   <div class="bottom-actions-item">
 
-      <a href="hoon.html" class="bottom-actions-button" rel="next">
+      <a href="hoon-2.html" class="bottom-actions-button" rel="next">
         <span class="subheader">
           Next Page →
         </span>

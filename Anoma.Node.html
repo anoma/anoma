@@ -5,18 +5,18 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.10.0">
+    <meta name="project" content="Anoma v0.11.0">
 
 
-    <title>Anoma.Node — Anoma v0.10.0</title>
+    <title>Anoma.Node — Anoma v0.11.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D260AD77.js"></script>
+    <script src="dist/sidebar_items-14FDD4DB.js"></script>
 
-      <script src="docs_config.js"></script>
+      <script src="./.doc-versions.js"></script>
 
     <script async src="dist/html-CILPWI2Q.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.10.0
+          v0.11.0
         </div>
       </div>
     </div>
@@ -71,6 +71,12 @@ GUIDES
         </li>
 
 
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
     </ul>
   </div>
 
@@ -82,6 +88,10 @@ GUIDES
       <ul id="modules-full-list" class="full-list"></ul>
     </div>
 
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
 
 </nav>
 
@@ -115,31 +125,27 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.10.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I act as a registry for Anoma Nodes</p><h2 id="module-required-arguments" class="section-heading">
-  <a href="#module-required-arguments" class="hover-link">
+<p>I act as a registry for Anoma Nodes</p><p>There are two ways to launch a Node. Either with minimal
+arguments or having the full specification for all the
+engines, including their external ID's.</p><p>All inputs should come in format of a list of atom-value
+2-tuples, <code class="inline">{:settings, map()}</code> specifying the info on
+all relevant engines and storages possibly including their
+tables presented in a dumped format, <code class="inline">{:name, atom()}</code>
+specifying the name of the node, and <code class="inline">{:new_storage, bool()}</code>
+specifying whether the table names, if supplied, need to be
+set-up without any deletions.</p><p>For more info on format check <a href="#start_min/1"><code class="inline">start_min/1</code></a></p><h2 id="module-minimal-arguments" class="section-heading">
+  <a href="#module-minimal-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Required Arguments</span>
+  <span class="text">Minimal Arguments</span>
 </h2>
-<ul><li><code class="inline">name</code> - name for this process</li><li><p><code class="inline">snapshot_path</code> : [<code class="inline">atom()</code> | 0]</p><ul><li>A snapshot location for the service (used in the worker)</li></ul></li><li><code class="inline">storage</code> : <code class="inline">Anoma.Storage.t()</code> - The Storage tables to use</li><li><code class="inline">block_storage</code> - a location to store the blocks produced</li></ul><h2 id="module-optional-arguments" class="section-heading">
-  <a href="#module-optional-arguments" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Optional Arguments</span>
-</h2>
-<ul><li><code class="inline">jet</code> : <code class="inline">Nock.jettedness()</code> - how jetted the system should be</li><li><code class="inline">old_storage</code> : <code class="inline">boolean</code> - states if the storage should be freshly made<ul><li>by default it is <code class="inline">false</code></li></ul></li></ul><h2 id="module-registered-names" class="section-heading">
-  <a href="#module-registered-names" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Registered names</span>
-</h2>
-<h3 id="module-created-tables" class="section-heading">
+<ul><li><code class="inline">name</code> - name for this process</li><li><p><code class="inline">snapshot_path</code> : [<code class="inline">atom()</code> | 0]</p><ul><li>A snapshot location for the service (used in the worker)</li></ul></li><li><code class="inline">storage</code> : <code class="inline">Anoma.Storage.t()</code> - The Storage tables to use</li><li><code class="inline">block_storage</code> - a location to store the blocks produced</li></ul><h3 id="module-created-tables" class="section-heading">
   <a href="#module-created-tables" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -200,6 +206,22 @@ GUIDES
         <a href="#start_link/1" translate="no">start_link(args)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I assume I am fed a list with atom-value 2-tuples
+:new_storage, :name, :settings. If :new_storage has
+value true, I need a snapshot_path: key in the
+settings.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_min/1" translate="no">start_min(args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Given minimal arguments, I create appropriate setup for the
+<code class="inline">:settings</code> argument for Node initialization.</p></div>
 
     </div>
 
@@ -317,7 +339,32 @@ GUIDES
 
   <section class="docstring">
 
+<p>I assume I am fed a list with atom-value 2-tuples
+:new_storage, :name, :settings. If :new_storage has
+value true, I need a snapshot_path: key in the
+settings.</p><p>I ensure that the storages are deleted and created.
+Afterwards, if the storage is truly new, I put the snapshot
+in the ordering. Otherwise, I simply repopulate the tables
+from a supplied list by the settings.
+Check Anoma.Dump for format descriptions.</p>
+  </section>
+</section>
+<section class="detail" id="start_min/1">
 
+  <div class="detail-header">
+    <a href="#start_min/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_min(args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Given minimal arguments, I create appropriate setup for the
+<code class="inline">:settings</code> argument for Node initialization.</p>
   </section>
 </section>
 <section class="detail" id="state/1">
