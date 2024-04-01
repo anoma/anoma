@@ -38,7 +38,7 @@ graph LR;
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Storage.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
@@ -61,7 +61,7 @@ First we will create a transaction and see how that changes the base supervision
 
 ```elixir
 alias Anoma.Storage
-alias Anoma.Node.Storage.Ordering
+alias Anoma.Node.Ordering
 alias Anoma.Node.Mempool
 alias Anoma.Node.Router
 import TestHelper.Nock
@@ -98,7 +98,7 @@ graph LR;
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Storage.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
+0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
 0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
@@ -131,7 +131,7 @@ participant 7 AS mnesia_locker;
 participant 6 AS mnesia_tm;
 participant 8 AS Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=;
 participant 2 AS Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=;
-participant 4 AS Anoma.Node.Storage.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=;
+participant 4 AS Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=;
 participant 1 AS Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=;
 participant 0 AS self();
 participant 5 AS #35;PID<0.438.0>;
