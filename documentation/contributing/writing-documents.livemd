@@ -1,4 +1,4 @@
-<!-- livebook:{"persist_outputs":true} -->
+<!-- livebook:{"file_entries":[{"name":"writing-docs-configure-system.png","type":"attachment"},{"name":"writing-docs-kroki.png","type":"attachment"},{"name":"writing-docs-smart-box.png","type":"attachment"}],"persist_outputs":true} -->
 
 # Writing Documents
 
@@ -56,7 +56,9 @@ This let's you take advantage of the pre-installed `kino` tools, and lets you ge
 
 This can be achieved by click on runtime settings:
 
-![](https://fly.io/docs/images/livebook-runtime-link.webp)
+<div>
+<img src="./files/writing-docs-configure-system.png" width="300" >
+</div>
 
 From here, click on configure and connect it to your running Anoma instance.
 
@@ -68,8 +70,59 @@ All the standard livebook tools can be used, but Anoma has some extra dependenci
 
 Namely under, the `+Smart` section, we can generate out various kinds of documents:
 
-![](https://pomf2.lain.la/f/aqdphlv9.png)
+![](files/writing-docs-smart-box.png)
+
+The diagram will give you [Kroki diagrams](https://kroki.io/), and the UI will look something like this:
+
+![](files/writing-docs-kroki.png)
+
+However currently, due to a bug, writing text in the `Diagram source` will not change the generated diagram.
+
+It is important to click the pencil icon, and edit it by hand.
 
 ## Generating the index
 
-![](https://pomf2.lain.la/f/aqdphlv9.png)
+To have an Index for a document, one must have a section named `Index`.
+
+Once one has the `Index`, one can generate it by running `mix toc` or `make docs`.
+
+Because livebook does not pull the files for changes, you may have to close the book and open it back up to have the relevant sections be up to date.
+
+<!-- livebook:{"branch_parent_index":5} -->
+
+## Controlling the index sections
+
+To control the order of the index, the project has a file that controls the ordering.
+
+```elixir
+"doc_order.exs" |> File.read!() |> IO.puts()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  {"documentation",
+   [
+     {"toc", []},
+     {"contributing",
+      [
+        {"understanding-any-module", []},
+        {"writing-documents", []}
+      ]},
+     {"visualization", []},
+     {"hoon", []}
+   ]}
+]
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+This is a priority list of documents, so the higher up a document is, the higher it will be presented in the `index`.
+
+Running `mix toc` takes this into account. Note that to make sure your changes are reflected, run **mix clean** to make sure the wanted order is generated.
