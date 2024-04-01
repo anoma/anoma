@@ -1,0 +1,75 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Writing Documents
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Writing Documents](./../contributing/writing-documents.livemd)
+   3. [Git](./../contributing/git.livemd)
+   4. [Hoon](./../contributing/hoon.livemd)
+   5. [Iex](./../contributing/iex.livemd)
+   6. [Observer](./../contributing/observer.livemd)
+   7. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+8. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Vm_interface](./../vm_interface.livemd)
+
+## The writing from within Anoma
+
+One of the more important parts of the Anoma project is understanding how the codebase works, and how it evolves.
+
+A good way to start on this process is by reading and writing documentation and making visual tools to better solidify knowledge for oneself and others.
+
+To better do this, the codebase as a few levels of documentations:
+
+1. The specs (link TBA)
+2. These livebook documents
+3. Module level documentation
+
+`1.` is what specifies what `Anoma` is abstractly.
+
+`2.` serves the purpose of general knowledge transfer. Some documents serve to provide newcomers with information about various parts of Anoma's development process, others provide visual presentations to various parts of the codebase, while even others provide indepth analys of the codebase.
+
+`3.` is documents regarding module and function specifics. This is often augmented by `2.` for better context and examples.
+
+## Making a new document
+
+To create a new document, it is simple as creating a new `.livemd` file in the folder location you wish it to be organized under.
+
+Thus a file at `documentation/contributing/testing/foo.livemd` would be organized under the section `contribution/testing/`.
+
+The file can either be made in livebook itself, or via the host operating system.
+
+## Connect to Anoma
+
+One should connect the document to a locally running IEX instance of Anoma.
+
+This let's you take advantage of the pre-installed `kino` tools, and lets you generate documentation/diagrams over real Anoma Code.
+
+This can be achieved by click on runtime settings:
+
+![](https://fly.io/docs/images/livebook-runtime-link.webp)
+
+From here, click on configure and connect it to your running Anoma instance.
+
+## Making diagrams
+
+Diagrams are an import piece of documentation.
+
+All the standard livebook tools can be used, but Anoma has some extra dependencies that can help creating documentation.
+
+Namely under, the `+Smart` section, we can generate out various kinds of documents:
+
+![](https://pomf2.lain.la/f/aqdphlv9.png)
+
+## Generating the index
+
+![](https://pomf2.lain.la/f/aqdphlv9.png)

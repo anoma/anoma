@@ -4,7 +4,8 @@
      {"toc", []},
      {"contributing",
       [
-        {"understanding-any-module", []}
+        {"understanding-any-module", []},
+        {"writing-documents", []}
       ]},
      {"visualization", []},
      {"hoon", []}
