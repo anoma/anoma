@@ -2,9 +2,9 @@ defmodule AnomaTest.Node.Storage do
   use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
 
-  doctest(Anoma.Node.Storage.Ordering)
+  doctest(Anoma.Node.Ordering)
 
   setup_all do
     # base storage testing default
@@ -16,7 +16,7 @@ defmodule AnomaTest.Node.Storage do
     {:ok, router} = Anoma.Node.Router.start()
 
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering, %{
+      Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering, %{
         table: storage
       })
 

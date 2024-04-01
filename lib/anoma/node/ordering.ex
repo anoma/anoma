@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Storage.Ordering do
+defmodule Anoma.Node.Ordering do
   @moduledoc """
   I am a simple mnesia-backed key-value store in an anoma node.
 
@@ -33,7 +33,7 @@ defmodule Anoma.Node.Storage.Ordering do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init(%Anoma.Node.Storage.Ordering{} = state) do
+  def init(%Anoma.Node.Ordering{} = state) do
     {:ok, state}
   end
 

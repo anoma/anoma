@@ -10,7 +10,7 @@ defmodule Nock do
 
   alias Anoma.Storage
   alias __MODULE__
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.Router
 
   @type jettedness() ::

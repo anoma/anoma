@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Executor do
   use ExUnit.Case, async: true
 
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.Executor
   alias Anoma.Node.Router
   alias Router
@@ -17,7 +17,7 @@ defmodule AnomaTest.Node.Executor do
     {:ok, router} = Router.start()
 
     {:ok, ordering} =
-      Router.start_engine(router, Anoma.Node.Storage.Ordering, table: storage)
+      Router.start_engine(router, Anoma.Node.Ordering, table: storage)
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
