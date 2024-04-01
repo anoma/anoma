@@ -17,6 +17,8 @@ jobs:
 
       - uses: ./.github/workflows/setup
 
+      - uses: ./.github/workflows/cache
+
       - uses: ./.github/workflows/checks
 
       - uses: ./.github/workflows/format

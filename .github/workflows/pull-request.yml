@@ -34,8 +34,11 @@ jobs:
 
     - uses: ./.github/workflows/setup
       if: steps.try_merge.outcome != 'failure'
+
+    - uses: ./.github/workflows/cache
+      if: steps.try_merge.outcome != 'failure'
       with:
-        fail-on-failure: false
+        save-plt: true
 
     - uses: ./.github/workflows/checks
       if: steps.try_merge.outcome != 'failure'
