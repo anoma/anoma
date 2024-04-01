@@ -19,6 +19,7 @@ test:
 docs:
 	mix toc
 	./scripts/docs.sh
+	./scripts/docs-files.sh
 
 docs-release:
 	make docs
