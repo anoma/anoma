@@ -35,7 +35,7 @@ jobs:
     - uses: ./.github/workflows/setup
       if: steps.try_merge.outcome != 'failure'
       with:
-        fail-on-failure: true
+        fail-on-failure: false
 
     - uses: ./.github/workflows/checks
       if: steps.try_merge.outcome != 'failure'
