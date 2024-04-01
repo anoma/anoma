@@ -62,7 +62,7 @@ interactive shell.
 
 ## Contributing
 
-Please read the [contributor's guide](./documentation/CONTRIBUTING.livemd) for in
+Please read the [contributor's guide](./documentation/contributing.livemd) for in
 depth details about the codebase.
 
 ### Git

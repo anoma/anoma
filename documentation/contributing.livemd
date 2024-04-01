@@ -1,6 +1,6 @@
 <!-- livebook:{"persist_outputs":true} -->
 
-# Visualizing Anoma
+# Contributing
 
 ## Index
 1. [Toc](./toc.livemd)
@@ -21,8 +21,8 @@
    3. [Setting Up](./hoon/setting-up.livemd)
 5. [Vm_interface](./vm_interface.livemd)
 
-## Note on this section
+## Contributing
 
-This section provides extra visual diagrams on various components of
-Anoma, and serves to give an intuitive understanding on how Anoma
-works.
+Please view any concept in the index for any sections you may be interested in.
+
+Please feel free to contribute to these docs and improve them!

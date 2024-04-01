@@ -3,24 +3,23 @@
 # Understanding any code in Anoma
 
 ## Index
-1. [Contributing](./../CONTRIBUTING.livemd)
-   1. [Git](./../contributing/git.livemd)
-   2. [Hoon](./../contributing/hoon.livemd)
-   3. [Iex](./../contributing/iex.livemd)
-   4. [Observer](./../contributing/observer.livemd)
-   5. [Testing](./../contributing/testing.livemd)
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Git](./../contributing/git.livemd)
+   3. [Hoon](./../contributing/hoon.livemd)
+   4. [Iex](./../contributing/iex.livemd)
+   5. [Observer](./../contributing/observer.livemd)
+   6. [Testing](./../contributing/testing.livemd)
       1. [Running Tests](./../contributing/testing/running-tests.livemd)
       2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
-   6. [Understanding](./../contributing/understanding.livemd)
-2. [Hoon](./../hoon.livemd)
+7. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
    1. [Calling](./../hoon/calling.livemd)
    2. [Dumping](./../hoon/dumping.livemd)
    3. [Setting Up](./../hoon/setting-up.livemd)
-3. [Index](./../index.livemd)
-4. [Index_docs](./../index_docs.livemd)
-5. [Visualization](./../visualization.livemd)
-   1. [Actors](./../visualization/actors.livemd)
-6. [Vm_interface](./../vm_interface.livemd)
+5. [Vm_interface](./../vm_interface.livemd)
 
 ## Figuring out what a module does
 
@@ -64,7 +63,6 @@ I act as a registry for Anoma Nodes
   • storage.qualified
   • storage.order
   • block_storage
-
 ```
 
 However, this typically doesn't show off how one uses said
