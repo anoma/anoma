@@ -120,6 +120,7 @@ defmodule Livebook do
     # going to a sister after nesting
     |> Enum.reduce({[], 0, 0, []}, fn {file, depth_f},
                                       {list, depth_prev, last, stack} ->
+      up_n = depth_prev - depth_f
       # If the previous depth agrees, increment the numbers
       cond do
         # The previous filing was our sister
@@ -132,8 +133,8 @@ defmodule Livebook do
 
         # The previous file is a sister of one of our ancestors
         depth_f < depth_prev ->
-          {[{file, depth_f, hd(stack) + 1} | list], depth_f, hd(stack) + 1,
-           tl(stack)}
+          {[{file, depth_f, hd(stack) + 1} | list], depth_f,
+           Enum.at(stack, up_n - 1) + 1, Enum.drop(stack, up_n)}
       end
     end)
     |> elem(0)
