@@ -7,13 +7,26 @@ defmodule Livebook do
 
   to do this please run `toc_toplevel/0`
 
+  To set a certain order please set `sort_order/0` to have the updated
+  order
+
   ## API
 
+  - `sort_order/0`
   - `toc_toplevel/0`
   - `get_all_livemd_documents/0`
   - `example_toc/0`
 
   """
+
+  @type sort() :: list({String.t(), sort()})
+
+  @sort_order "doc_order.exs" |> Code.eval_file() |> elem(0)
+  @spec sort_order() :: sort()
+
+  def sort_order() do
+    @sort_order
+  end
 
   ####################################################################
   ##                            Auto Run                             #
@@ -86,7 +99,7 @@ defmodule Livebook do
     [dir | dir_from_path(dir)]
     |> Stream.map(fn x -> Path.wildcard(Path.join(x, "*livemd")) end)
     |> Stream.concat()
-    |> Enum.sort()
+    |> Enum.sort_by(&insert_sort_order/1)
   end
 
   ####################################################################
@@ -163,6 +176,36 @@ defmodule Livebook do
     |> Stream.filter(&File.dir?(&1))
     |> Enum.map(fn x -> [x | dir_from_path(x)] end)
     |> Enum.concat()
+  end
+
+  ####################################################################
+  ##                         Custom Sorting                          #
+  ####################################################################
+  @spec sort_value(maybe_improper_list()) :: list(number())
+  defp sort_value(document) do
+    sort_value(document, sort_order(), [])
+  end
+
+  defp sort_value([], _sort, starting) do
+    Enum.reverse([0 | starting])
+  end
+
+  defp sort_value([path | rest], sort, starting) do
+    index =
+      Enum.find_index(sort, fn {sort_doc, _} ->
+        path == sort_doc
+      end)
+
+    if index do
+      sort_value(rest, Enum.at(sort, index) |> elem(1), [index | starting])
+    else
+      Enum.reverse([2 ** 32 | starting])
+    end
+  end
+
+  @spec insert_sort_order(String.t()) :: {list(number()), String.t()}
+  defp insert_sort_order(str) do
+    {sort_value(Path.rootname(str) |> Path.split()), str}
   end
 
   ####################################################################
