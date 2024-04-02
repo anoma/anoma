@@ -74,12 +74,16 @@ defmodule Anoma.Node.Router.Engine do
   @spec handle_call({any(), Router.addr(), term()}, GenServer.from(), t()) ::
           any()
   def handle_call({:router_call, src, msg}, _, state = %__MODULE__{}) do
-    case state.module.handle_call(msg, src, state.module_state) do
-      {:reply, res, new_state} ->
-        {:reply, res, %__MODULE__{state | module_state: new_state}}
+    if msg == :state do
+      {:reply, state.module_state, state}
+    else
+      case state.module.handle_call(msg, src, state.module_state) do
+        {:reply, res, new_state} ->
+          {:reply, res, %__MODULE__{state | module_state: new_state}}
 
-      {:reply, res, new_state, cont = {:continue, _}} ->
-        {:reply, res, %__MODULE__{state | module_state: new_state}, cont}
+        {:reply, res, new_state, cont = {:continue, _}} ->
+          {:reply, res, %__MODULE__{state | module_state: new_state}, cont}
+      end
     end
   end
 
