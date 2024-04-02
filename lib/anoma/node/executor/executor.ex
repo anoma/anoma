@@ -150,11 +150,6 @@ defmodule Anoma.Node.Executor do
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_call(:state, _from, state) do
-    log_info({:state, state, state.logger})
-    {:reply, state, state}
-  end
-
   def handle_call(:snapshot, _from, state) do
     hd = hd(state.ambiant_env.snapshot_path)
     log_info({:snap, hd, state.logger})
@@ -235,10 +230,6 @@ defmodule Anoma.Node.Executor do
   ############################################################
   #                     Logging Info                         #
   ############################################################
-
-  defp log_info({:state, state, logger}) do
-    Logger.add(logger, :info, "Requested state: #{inspect(state)}")
-  end
 
   defp log_info({:snap, hd, logger}) do
     Logger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")

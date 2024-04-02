@@ -73,10 +73,6 @@ defmodule Anoma.Node.Logger do
     {:noreply, state}
   end
 
-  def handle_call(:state, _from, state) do
-    {:reply, state, state}
-  end
-
   def handle_call({:get_all, logger}, _from, state) do
     {:reply, Storage.get_keyspace(state.storage, [logger.id]), state}
   end
