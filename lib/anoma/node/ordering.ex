@@ -33,10 +33,6 @@ defmodule Anoma.Node.Ordering do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init(%Anoma.Node.Ordering{} = state) do
-    {:ok, state}
-  end
-
   def init(opts) do
     return = %Ordering{
       table: opts[:table],
