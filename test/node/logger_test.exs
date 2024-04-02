@@ -12,20 +12,24 @@ defmodule AnomaTest.Node.Logger do
     {:ok, router} = Router.start()
 
     {:ok, clock} =
-      Router.start_engine(router, Anoma.Node.Clock,
-        start: System.monotonic_time(:millisecond)
+      Router.start_engine(
+        router,
+        Anoma.Node.Clock,
+        {:init, start: System.monotonic_time(:millisecond)}
       )
 
     {:ok, logger} =
-      Router.start_engine(router, Anoma.Node.Logger,
-        storage: storage,
-        clock: clock
+      Router.start_engine(
+        router,
+        Anoma.Node.Logger,
+        {:init, storage: storage, clock: clock}
       )
 
     {:ok, ordering} =
-      Router.start_engine(router, Anoma.Node.Ordering,
-        table: storage,
-        logger: logger
+      Router.start_engine(
+        router,
+        Anoma.Node.Ordering,
+        {:init, table: storage, logger: logger}
       )
 
     [logger: logger, ordering: ordering]

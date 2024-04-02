@@ -15,8 +15,10 @@ defmodule AnomaTest.Node.Executor.Worker do
     {:ok, router} = Anoma.Node.Router.start()
 
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering,
-        table: storage
+      Anoma.Node.Router.start_engine(
+        router,
+        Anoma.Node.Ordering,
+        {:init, table: storage}
       )
 
     snapshot_path = [:my_special_nock_snaphsot | 0]

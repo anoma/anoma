@@ -17,7 +17,11 @@ defmodule AnomaTest.Node.Executor do
     {:ok, router} = Router.start()
 
     {:ok, ordering} =
-      Router.start_engine(router, Anoma.Node.Ordering, table: storage)
+      Router.start_engine(
+        router,
+        Anoma.Node.Ordering,
+        {:init, table: storage}
+      )
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
@@ -26,7 +30,7 @@ defmodule AnomaTest.Node.Executor do
       Router.start_engine(
         router,
         Anoma.Node.Executor,
-        {env, Router.new_topic(router), nil}
+        {:init, {env, Router.new_topic(router), nil}}
       )
 
     [env: env, executor: executor]

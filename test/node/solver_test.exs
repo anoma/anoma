@@ -33,13 +33,13 @@ defmodule AnomaTest.Node.Solver do
     {:ok, solutions} = Router.new_topic(router)
 
     {:ok, iip} =
-      Router.start_engine(router, IntentPool, {intents, nil})
+      Router.start_engine(router, IntentPool, {:init, {intents, nil}})
 
     {:ok, _sip} =
       Router.start_engine(
         router,
         Solver,
-        {router, nil, iip, intents, solutions}
+        {:init, {router, nil, iip, intents, solutions}}
       )
 
     :ok = Router.call(router, {:subscribe_topic, solutions, :local})

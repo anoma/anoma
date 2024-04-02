@@ -6,7 +6,9 @@ defmodule AnomaTest.Node.Clock do
 
   setup_all do
     {:ok, router} = Router.start()
-    {:ok, clock} = Router.start_engine(router, Anoma.Node.Clock, start: 0)
+
+    {:ok, clock} =
+      Router.start_engine(router, Anoma.Node.Clock, {:init, start: 0})
 
     [server: clock]
   end

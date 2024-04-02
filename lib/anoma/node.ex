@@ -96,8 +96,11 @@ defmodule Anoma.Node do
     {:ok, router} = start_router(args[:router])
 
     {:ok, clock} =
-      start_engine(router, Clock, clock_id,
-        start: System.monotonic_time(:millisecond)
+      start_engine(
+        router,
+        Clock,
+        clock_id,
+        {:init, start: System.monotonic_time(:millisecond)}
       )
 
     {:ok, logger} =
@@ -105,7 +108,7 @@ defmodule Anoma.Node do
         router,
         Logger,
         log_id,
-        %Logger{log_st | clock: clock}
+        {:struct, %Logger{log_st | clock: clock}}
       )
 
     {:ok, ordering} =
@@ -113,7 +116,7 @@ defmodule Anoma.Node do
         router,
         Ordering,
         ord_id,
-        %Ordering{ord_st | logger: logger}
+        {:struct, %Ordering{ord_st | logger: logger}}
       )
 
     {:ok, executor_topic} = new_topic(router, args[:executor_topic])
@@ -123,34 +126,47 @@ defmodule Anoma.Node do
         router,
         Executor,
         ex_id,
-        %Executor{
-          ex_st
-          | logger: logger,
-            task_completion_topic: executor_topic,
-            ambiant_env: %Nock{
-              ex_st.ambiant_env
-              | logger: logger,
-                ordering: ordering
-            }
-        }
+        {:struct,
+         %Executor{
+           ex_st
+           | logger: logger,
+             task_completion_topic: executor_topic,
+             ambiant_env: %Nock{
+               ex_st.ambiant_env
+               | logger: logger,
+                 ordering: ordering
+             }
+         }}
       )
 
     {:ok, mempool_topic} = new_topic(router, args[:mempool_topic])
 
     {:ok, mempool} =
-      start_engine(router, Mempool, mem_id, %Mempool{
-        mem_st
-        | logger: logger,
-          topic: mempool_topic,
-          ordering: ordering,
-          executor: executor
-      })
+      start_engine(
+        router,
+        Mempool,
+        mem_id,
+        {:struct,
+         %Mempool{
+           mem_st
+           | logger: logger,
+             topic: mempool_topic,
+             ordering: ordering,
+             executor: executor
+         }}
+      )
 
     {:ok, pinger} =
-      start_engine(router, Pinger, ping_id, %Pinger{
-        ping_st
-        | mempool: mempool
-      })
+      start_engine(
+        router,
+        Pinger,
+        ping_id,
+        {:struct,
+         %Pinger{
+           ping_st
+           | mempool: mempool
+         }}
+      )
 
     Anoma.Node.Pinger.start(pinger)
 

@@ -46,8 +46,9 @@ defmodule Anoma.Node.Router.Engine do
     )
   end
 
-  @spec init({Router.addr(), atom(), Id.t(), term()}) :: {:ok, t()} | any()
-  def init({router, mod, id, arg}) do
+  @spec init({Router.addr(), atom(), Id.t(), {:init, term()}}) ::
+          {:ok, t()} | any()
+  def init({router, mod, id, {:init, arg}}) do
     GenServer.cast(router.router, {:init_local_engine, id, self()})
     Process.put(:engine_id, id.external)
 
@@ -62,6 +63,16 @@ defmodule Anoma.Node.Router.Engine do
 
       err ->
         err
+    end
+  end
+
+  @spec init({Router.addr(), atom(), Id.t(), {:struct, term()}}) ::
+          {:ok, t()} | {:error, String.t()} | any()
+  def init({router, mod, _id, {:struct, arg}}) do
+    if arg.__struct__ == mod do
+      {:ok, %__MODULE__{router_addr: router, module: mod, module_state: arg}}
+    else
+      {:error, "Module argument mismatch"}
     end
   end
 

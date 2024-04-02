@@ -336,20 +336,30 @@ defmodule Anoma.Node.Router do
   end
 
   @doc """
-  Starts a new Engine
+  Starts a new Engine. Last argument ought to be a tuple {atom, arg}.
+
+  If atom == :init, we use the internal engine function on startup.
+
+  If atom == :struct, we launch the engine by specifying its initial
+  state as just arg, which ought to be a structure relevant to module
   """
-  @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
+  @spec start_engine(
+          Addr.t(),
+          atom(),
+          Id.t(),
+          {:init | :struct, term()}
+        ) ::
           {:ok, Addr.t()}
           | :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
           # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
           # if we can remove please do
           | any()
-  def start_engine(router, module, id, arg) do
+  def start_engine(router, module, id, {atom, arg}) do
     with {:ok, _} <-
            DynamicSupervisor.start_child(
              call(router, :supervisor),
-             {Anoma.Node.Router.Engine, {router, module, id, arg}}
+             {Anoma.Node.Router.Engine, {router, module, id, {atom, arg}}}
            ) do
       {:ok,
        %Addr{
@@ -361,15 +371,15 @@ defmodule Anoma.Node.Router do
   end
 
   # start a new instance of an engine, without caring about the id
-  @spec start_engine(Addr.t(), atom(), any()) ::
+  @spec start_engine(Addr.t(), atom(), {:init | :struct, any()}) ::
           {:ok, Addr.t()}
           | :ignore
           | {:error, any()}
           # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
           # if we can remove please do
           | any()
-  def start_engine(router, module, arg) do
-    start_engine(router, module, Id.new_keypair(), arg)
+  def start_engine(router, module, {atom, arg}) do
+    start_engine(router, module, Id.new_keypair(), {atom, arg})
   end
 
   def stop(_router) do

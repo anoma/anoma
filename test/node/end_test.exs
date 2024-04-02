@@ -44,13 +44,15 @@ defmodule AnomaTest.Node.End do
 
     {:ok, intents} = Router.new_topic(router)
     {:ok, solutions} = Router.new_topic(router)
-    {:ok, ip} = Router.start_engine(router, IntentPool, {intents, nil})
+
+    {:ok, ip} =
+      Router.start_engine(router, IntentPool, {:init, {intents, nil}})
 
     {:ok, s} =
       Router.start_engine(
         router,
         Solver,
-        {router, nil, ip, intents, solutions}
+        {:init, {router, nil, ip, intents, solutions}}
       )
 
     key = 555

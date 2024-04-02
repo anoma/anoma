@@ -126,7 +126,7 @@ defmodule Anoma.Node.Executor do
     iex> {:ok, router} = Router.start
     iex> snap = %Nock{snapshot_path: [:a | 0], ordering: nil}
     iex> args = {snap, Router.new_topic(router), nil}
-    iex> {:ok, addr} = Router.start_engine(router, Executor, args)
+    iex> {:ok, addr} = Router.start_engine(router, Executor, {:init, args})
     iex> Executor.snapshot(addr)
     :a
   """
