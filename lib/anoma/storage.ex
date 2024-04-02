@@ -404,7 +404,7 @@ defmodule Anoma.Storage do
   end
 
   defp instrument({:error_missing, key, order}) do
-    Logger.error("Missing Key: #{inspect(key)} at order: #{inspect(order)}")
+    Logger.error("Missing key: #{inspect(key)} at order: #{inspect(order)}")
   end
 
   defp instrument({:delete_key, key}) do
