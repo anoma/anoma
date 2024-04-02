@@ -155,6 +155,12 @@ defmodule Anoma.Storage do
     :mnesia.transaction(tx)
   end
 
+  @spec delete_key(t(), order_key()) :: result(:ok)
+  def delete_key(storage, key) do
+    instrument({:delete_key, key})
+    put(storage, key, :absent)
+  end
+
   @spec blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
   def blocking_read(storage, key) do
     instrument({:read, key})
@@ -280,14 +286,14 @@ defmodule Anoma.Storage do
     :mnesia.transaction(tx)
   end
 
-  @spec write_at_order(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
+  @spec write_at_order(t(), Noun.t(), qualified_value(), non_neg_integer()) ::
           :ok
   def write_at_order(storage, key, value, order) do
     :mnesia.write({storage.order, key, order})
     :mnesia.write({storage.qualified, qualified_key(key, order), value})
   end
 
-  @spec write_at_order_tx(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
+  @spec write_at_order_tx(t(), Noun.t(), qualified_value(), non_neg_integer()) ::
           result(:ok)
   def write_at_order_tx(storage, key, value, order) do
     tx = fn -> write_at_order(storage, key, value, order) end
@@ -312,7 +318,14 @@ defmodule Anoma.Storage do
 
     with {:atomic, [{_, [^order, ^key | 0], value}]} <-
            read_at_order_tx(storage, key, order) do
-      {:ok, value}
+      case value do
+        # the key has been removed
+        :absent ->
+          :absent
+
+        _ ->
+          {:ok, value}
+      end
     else
       _ -> :absent
     end
@@ -392,5 +405,9 @@ defmodule Anoma.Storage do
 
   defp instrument({:error_missing, key, order}) do
     Logger.error("Missing Key: #{inspect(key)} at order: #{inspect(order)}")
+  end
+
+  defp instrument({:delete_key, key}) do
+    Logger.debug("Deleting key: #{inspect(key)}")
   end
 end
