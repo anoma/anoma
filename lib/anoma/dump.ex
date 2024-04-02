@@ -28,6 +28,7 @@ defmodule Anoma.Dump do
   alias Anoma.Node
   alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock}
   alias Anoma.Node.Ordering
+  alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
 
   @doc """
@@ -186,7 +187,7 @@ defmodule Anoma.Dump do
     list =
       node
       |> Enum.map(fn {atom, engine} ->
-        %{atom => {engine.id, module_match(atom).state(engine)}}
+        %{atom => {engine.id, Engine.get_state(engine)}}
       end)
 
     map = Enum.reduce(list, fn x, acc -> Map.merge(acc, x) end)
@@ -217,8 +218,8 @@ defmodule Anoma.Dump do
         }
   def get_tables(node) do
     node = node |> Node.state()
-    table = Ordering.state(node.ordering).table
-    block = Mempool.state(node.mempool).block_storage
+    table = Engine.get_state(node.ordering).table
+    block = Engine.get_state(node.mempool).block_storage
     qual = table.qualified
     ord = table.order
 
@@ -232,17 +233,5 @@ defmodule Anoma.Dump do
       |> List.to_tuple()
 
     %{storage: {table, block}, qualified: q, order: o, block_storage: b}
-  end
-
-  @spec module_match(atom()) :: atom()
-  defp module_match(address) do
-    case address do
-      :logger -> Logger
-      :pinger -> Pinger
-      :mempool -> Mempool
-      :executor -> Executor
-      :ordering -> Ordering
-      :clock -> Clock
-    end
   end
 end

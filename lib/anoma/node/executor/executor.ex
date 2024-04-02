@@ -28,6 +28,7 @@ defmodule Anoma.Node.Executor do
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router
   alias Anoma.Node.Logger
+  alias Anoma.Node.Router.Engine
 
   use TypedStruct
   use Router.Engine
@@ -85,14 +86,14 @@ defmodule Anoma.Node.Executor do
   """
   @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t()) :: Task.t()
   def new_transaction(executor, order, gate) do
-    state = state(executor)
+    state = Engine.get_state(executor)
     spawn_transactions(order, gate, state)
   end
 
   @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t(), Nock.t()) ::
           Task.t()
   def new_transaction(executor, order, gate, env) do
-    state = state(executor)
+    state = Engine.get_state(executor)
     spawn_transactions(order, gate, %Executor{state | ambiant_env: env})
   end
 

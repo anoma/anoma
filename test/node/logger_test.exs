@@ -32,7 +32,7 @@ defmodule AnomaTest.Node.Logger do
   end
 
   test "Logging succesfull", %{logger: logger, ordering: ordering} do
-    Anoma.Node.Ordering.state(ordering)
+    Anoma.Node.Ordering.next_order(ordering)
 
     {list, _msg} = Anoma.Node.Logger.get(logger) |> hd()
 
