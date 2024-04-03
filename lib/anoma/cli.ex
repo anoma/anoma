@@ -14,6 +14,11 @@ defmodule Anoma.Cli do
           long: "--no-halt",
           help: "typical IEX command",
           required: false
+        ],
+        no_rocksdb: [
+          long: "--no-rocks",
+          help: "Do not use the rocksdb mnesia backend",
+          required: false
         ]
       ],
       options: [],
@@ -31,11 +36,11 @@ defmodule Anoma.Cli do
           Keyword.t()
   def cli_arguments_to_start_arguments(%Optimus.ParseResult{
         args: _args,
-        flags: _flags,
+        flags: %{no_rocksdb: not_rocks},
         options: _options,
         unknown: _unknown
       }) do
-    [use_rocks: false]
+    [use_rocks: not not_rocks]
   end
 
   @spec start_application([String.t()]) :: {:ok, pid()} | {:error, any()}
