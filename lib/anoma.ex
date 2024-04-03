@@ -35,32 +35,28 @@ defmodule Anoma do
     name = :anoma
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
-    node_settings = [
-      name: name,
-      snapshot_path: snapshot_path,
-      storage_data: storage,
-      block_storage: :anoma_block
-    ]
+    node_settings =
+      [
+        name: name,
+        snapshot_path: snapshot_path,
+        storage_data: storage,
+        block_storage: :anoma_block,
+        ping_time:
+          if Application.get_env(name, :env) == :prod do
+            10000
+          else
+            :no_timer
+          end
+      ]
+      |> Anoma.Node.start_min()
 
     children = [
-      if Application.get_env(name, :env) == :prod do
-        {Anoma.Node,
-         [
-           new_storage: true,
-           name: name,
-           settings:
-             [{:ping_time, 10000} | node_settings] |> Anoma.Node.start_min()
-         ]}
-      else
-        {Anoma.Node,
-         [
-           new_storage: true,
-           name: name,
-           settings:
-             [{:ping_time, :no_timer} | node_settings]
-             |> Anoma.Node.start_min()
-         ]}
-      end
+      {Anoma.Node,
+       [
+         new_storage: true,
+         name: name,
+         settings: node_settings
+       ]}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Anoma)
