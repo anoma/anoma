@@ -35,7 +35,7 @@ defmodule Anoma.Cli do
         options: _options,
         unknown: _unknown
       }) do
-    []
+    [use_rocks: false]
   end
 
   @spec start_application([String.t()]) :: {:ok, pid()} | {:error, any()}

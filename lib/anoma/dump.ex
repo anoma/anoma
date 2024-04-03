@@ -78,7 +78,12 @@ defmodule Anoma.Dump do
   def launch(file, name) do
     load = load(file)
 
-    node_settings = [new_storage: false, name: name, settings: load]
+    node_settings = [
+      new_storage: false,
+      name: name,
+      settings: load,
+      use_rocks: load[:use_rocks]
+    ]
 
     Anoma.Node.start_link(node_settings)
   end
@@ -138,7 +143,8 @@ defmodule Anoma.Dump do
             storage_data: stores,
             qualified: list(),
             order: list(),
-            block_storage: list()
+            block_storage: list(),
+            use_rocks: boolean()
           }
   def get_all(node) do
     Map.merge(get_state(node), get_tables(node))
@@ -216,7 +222,8 @@ defmodule Anoma.Dump do
           storage_data: stores,
           qualified: list(),
           order: list(),
-          block_storage: list()
+          block_storage: list(),
+          use_rocks: boolean()
         }
   def get_tables(node) do
     node = node |> Node.state()
@@ -224,6 +231,13 @@ defmodule Anoma.Dump do
     block = Engine.get_state(node.mempool).block_storage
     qual = table.qualified
     ord = table.order
+    # TODO more robust checking here
+    rocks =
+      if :ram_copies == :mnesia.table_info(qual, :storage_type) do
+        false
+      else
+        true
+      end
 
     {q, o, b} =
       [qual, ord, block]
@@ -234,6 +248,12 @@ defmodule Anoma.Dump do
       end)
       |> List.to_tuple()
 
-    %{storage_data: {table, block}, qualified: q, order: o, block_storage: b}
+    %{
+      storage_data: {table, block},
+      qualified: q,
+      order: o,
+      block_storage: b,
+      use_rocks: rocks
+    }
   end
 end

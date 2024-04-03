@@ -23,6 +23,7 @@ defmodule AnomaTest.Node.End do
       Anoma.Node.start_link(
         new_storage: true,
         name: name,
+        use_rocks: true,
         settings:
           [
             snapshot_path: snapshot_path,

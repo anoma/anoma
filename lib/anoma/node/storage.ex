@@ -18,7 +18,9 @@ defmodule Anoma.Node.Storage do
   ## API
   The important functions for this API are
      - `setup/1`
+     - `setup/2`
      - `ensure_new/1`
+     - `ensure_new/2`
      - `get/2`
      - `get/3`
      - `put/3`
@@ -38,6 +40,11 @@ defmodule Anoma.Node.Storage do
      - `read_at_order_tx/3`
      - `write_at_order/4`
      - `write_at_order_tx/4`
+
+  If one is wanting to setup storage manually, then we expose the
+  following functions used on the actor
+    - `do_ensure_new/1`
+    - `do_ensure_new/2`
 
 
   Please see my testing module `AnomaTest.Storage` to learn more on
@@ -129,16 +136,10 @@ defmodule Anoma.Node.Storage do
     Router.call(t, :setup)
   end
 
-  @spec ensure_new(Router.Addr.t()) :: :ok | {:aborted, any()}
-  def ensure_new(storage = %Router.Addr{}) do
-    Router.call(storage, :ensure_new)
-  end
-
-  @spec ensure_new(t()) :: :ok | {:aborted, any()}
-  def ensure_new(storage = %__MODULE__{}) do
-    # We don't care about errors that can happen here
-    do_remove(storage)
-    do_setup(storage)
+  @spec ensure_new(Router.Addr.t(), boolean()) :: :ok | {:aborted, any()}
+  @spec ensure_new(Anoma.Node.Router.Addr.t()) :: :ok | {:aborted, any()}
+  def ensure_new(storage = %Router.Addr{}, rocks \\ false) do
+    Router.call(storage, {:ensure_new, rocks})
   end
 
   @spec get(Router.Addr.t(), order_key()) ::
@@ -198,6 +199,18 @@ defmodule Anoma.Node.Storage do
   end
 
   ############################################################
+  #                     User Setup API                       #
+  ############################################################
+
+  @spec do_ensure_new(t()) :: :ok | {:aborted, any()}
+  @spec do_ensure_new(t(), boolean()) :: :ok | {:aborted, any()}
+  def do_ensure_new(storage = %__MODULE__{}, rocks \\ false) do
+    # We don't care about errors that can happen here
+    do_remove(storage)
+    do_setup(storage, rocks)
+  end
+
+  ############################################################
   #                       Creation API                       #
   ############################################################
 
@@ -209,15 +222,40 @@ defmodule Anoma.Node.Storage do
     end)
   end
 
+  @doc """
+  I setup storage with the given tables: `t()`.
+
+  I will try to setup all values of storage, even if the first one
+  fails due to already being setup, we will try the others.
+
+  Further the rocksdb flag denotes if we should back the table with rocksdb
+  """
   @spec do_setup(t()) :: :ok | {:aborted, any()}
-  # If this ever gets big, turn it into a map filter situation
-  defp do_setup(t = %__MODULE__{}) do
+  @spec do_setup(t(), boolean()) :: :ok | {:aborted, any()}
+  def do_setup(t = %__MODULE__{}, rocks \\ false) do
+    add_rocks = fn attrs ->
+      if rocks do
+        [{:rocksdb_copies, [node()]} | attrs]
+      else
+        attrs
+      end
+    end
+
     with {:atomic, :ok} <-
-           :mnesia.create_table(t.qualified, attributes: [:key, :value]),
+           :mnesia.create_table(
+             t.qualified,
+             add_rocks.(attributes: [:key, :value])
+           ),
          {:atomic, :ok} <-
-           :mnesia.create_table(t.order, attributes: [:key, :order]),
+           :mnesia.create_table(
+             t.order,
+             add_rocks.(attributes: [:key, :order])
+           ),
          {:atomic, :ok} <-
-           :mnesia.create_table(t.rm_commitments, attributes: [:index, :hash]) do
+           :mnesia.create_table(
+             t.rm_commitments,
+             add_rocks.(attributes: [:index, :hash])
+           ) do
       CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
     end
   end
@@ -540,8 +578,8 @@ defmodule Anoma.Node.Storage do
     {:reply, do_get(storage, key), storage}
   end
 
-  def handle_call(:ensure_new, _, storage) do
-    {:reply, ensure_new(storage), storage}
+  def handle_call({:ensure_new, rocks}, _, storage) do
+    {:reply, do_ensure_new(storage, rocks), storage}
   end
 
   def handle_call({:put_snapshot, key}, _, storage) do

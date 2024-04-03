@@ -25,7 +25,7 @@ defmodule Anoma do
     Anoma.Cli.start_application(arguments)
   end
 
-  def start_logic(_) do
+  def start_logic(use_rocks: rocks_flag) do
     storage = %Anoma.Node.Storage{
       qualified: Anoma.Qualified,
       order: Anoma.Order,
@@ -55,6 +55,7 @@ defmodule Anoma do
        [
          new_storage: true,
          name: name,
+         use_rocks: rocks_flag,
          settings: node_settings
        ]}
     ]
