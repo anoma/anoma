@@ -38,7 +38,7 @@ defmodule Anoma do
     node_settings = [
       name: name,
       snapshot_path: snapshot_path,
-      storage: storage,
+      storage_data: storage,
       block_storage: :anoma_block
     ]
 

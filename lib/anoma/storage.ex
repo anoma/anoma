@@ -52,6 +52,8 @@ defmodule Anoma.Storage do
     - `get_at_snapshot/2`
   """
 
+  alias Anoma.Node.Router
+
   use TypedStruct
 
   require Logger
@@ -84,6 +86,31 @@ defmodule Anoma.Storage do
   @type qualified_value() :: any()
 
   @type snapshot() :: {t(), list({order_key(), non_neg_integer()})}
+
+  def init(%Anoma.Storage{} = state) do
+    {:ok, state}
+  end
+
+  def init(opts) do
+    return = %Anoma.Storage{
+      qualified: opts[:qualified],
+      order: opts[:order],
+      rm_commitments: opts[:rm_commitments]
+    }
+
+    # idempotent
+    # Storage.setup(return)
+    {:ok, return}
+  end
+
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  @spec state(Router.Addr.t()) :: t()
+  def state(storage) do
+    Router.call(storage, :state)
+  end
 
   ############################################################
   #                       Creation API                       #
@@ -409,5 +436,13 @@ defmodule Anoma.Storage do
 
   defp instrument({:delete_key, key}) do
     Logger.debug("Deleting key: #{inspect(key)}")
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
   end
 end

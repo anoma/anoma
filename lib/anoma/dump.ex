@@ -104,6 +104,7 @@ defmodule Anoma.Dump do
   @type mem_eng :: {Id.Extern.t(), Mempool.t()}
   @type ping_eng :: {Id.Extern.t(), Pinger.t()}
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
+  @type storage_eng :: {Id.Extern.t(), Anoma.Storage.t()}
   @type stores :: {Anoma.Storage.t(), atom()}
 
   @doc """
@@ -133,7 +134,7 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
-            storage: stores,
+            storage_data: stores,
             qualified: list(),
             order: list(),
             block_storage: list()
@@ -211,7 +212,7 @@ defmodule Anoma.Dump do
   """
 
   @spec get_tables(atom()) :: %{
-          storage: stores,
+          storage_data: stores,
           qualified: list(),
           order: list(),
           block_storage: list()
@@ -232,6 +233,6 @@ defmodule Anoma.Dump do
       end)
       |> List.to_tuple()
 
-    %{storage: {table, block}, qualified: q, order: o, block_storage: b}
+    %{storage_data: {table, block}, qualified: q, order: o, block_storage: b}
   end
 end

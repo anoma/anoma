@@ -17,7 +17,7 @@ defmodule AnomaTest.Node.Dump do
         settings:
           [
             snapshot_path: snapshot_path,
-            storage: storage,
+            storage_data: storage,
             block_storage: :dump_blocks,
             ping_time: :no_timer
           ]
