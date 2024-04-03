@@ -41,7 +41,7 @@ defmodule Anoma.Configuration do
     [
       {:name, node["name"] |> String.to_atom()},
       {:snapshot_path, [path | 0]},
-      {:storage,
+      {:storage_data,
        %Anoma.Storage{
          qualified: node["qualified"] |> String.to_atom(),
          order: node["order"] |> String.to_atom()

@@ -47,6 +47,7 @@ defmodule Anoma.Node do
     field(:pinger, Router.addr())
     field(:clock, Router.addr())
     field(:logger, Router.addr())
+    field(:storage, Router.addr())
   end
 
   @doc """
@@ -65,7 +66,7 @@ defmodule Anoma.Node do
   def start_link(args) do
     settings = args[:settings]
     name = args[:name]
-    {storage, block_storage} = settings[:storage]
+    {storage, block_storage} = settings[:storage_data]
     storage_setup(storage, block_storage)
 
     if args[:new_storage] do
@@ -92,8 +93,12 @@ defmodule Anoma.Node do
     {mem_id, mem_st} = args[:mempool]
     {ping_id, ping_st} = args[:pinger]
     {ex_id, ex_st} = args[:executor]
+    {storage_id, storage_st} = args[:storage]
 
     {:ok, router} = start_router(args[:router])
+
+    {:ok, storage} =
+      start_engine(router, Anoma.Storage, storage_id, storage_st)
 
     {:ok, clock} =
       start_engine(router, Clock, clock_id,
@@ -164,7 +169,8 @@ defmodule Anoma.Node do
        clock: clock,
        logger: logger,
        executor_topic: executor_topic,
-       mempool_topic: mempool_topic
+       mempool_topic: mempool_topic,
+       storage: storage
      }}
   end
 
@@ -174,7 +180,7 @@ defmodule Anoma.Node do
   """
   def start_min(args) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
-    storage = args[:storage]
+    storage = args[:storage_data]
     block_storage = args[:block_storage]
 
     %{
@@ -184,7 +190,8 @@ defmodule Anoma.Node do
       executor: {nil, %Executor{ambiant_env: env}},
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
       pinger: {nil, %Pinger{time: args[:ping_time]}},
-      storage: {storage, block_storage},
+      storage: {nil, storage},
+      storage_data: {storage, block_storage},
       snapshot_path: args[:snapshot_path]
     }
   end
