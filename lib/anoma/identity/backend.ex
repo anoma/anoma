@@ -4,6 +4,7 @@ defmodule Anoma.Identity.Backend do
   """
   alias Anoma.Identity.Backend.{Memory, Remote, Local}
   alias Anoma.Crypto.Symmetric
+  alias Anoma.Storage
   use TypedStruct
 
   @type t() :: Memory.t() | Local.t() | Remote.t()
@@ -25,14 +26,13 @@ defmodule Anoma.Identity.Backend do
         encrypt the public and private key, and along with the
         `External.t/1` can index into table
 
-     - `table` - this is the local table in which where in memory this
-       will be stored
+     - `storage` - this is the storage where in memory this will be stored
 
     """
     typedstruct enforce: true do
       field(:symmetric, Symmetric.t())
       field(:nonce, binary(), default: nil)
-      field(:table, atom())
+      field(:storage, Storage.t())
     end
   end
 
