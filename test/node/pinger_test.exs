@@ -22,7 +22,7 @@ defmodule AnomaTest.Node.Pinger do
         settings:
           [
             snapshot_path: snapshot_path,
-            storage: storage,
+            storage_data: storage,
             block_storage: :pinger_blocks,
             ping_time: :no_timer
           ]

@@ -103,6 +103,7 @@ defmodule Anoma.Dump do
   @type mem_eng :: {Id.Extern.t(), Mempool.t()}
   @type ping_eng :: {Id.Extern.t(), Pinger.t()}
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
+  @type storage_eng :: {Id.Extern.t(), Anoma.Storage.t()}
   @type stores :: {Anoma.Storage.t(), atom()}
 
   @doc """
@@ -165,7 +166,7 @@ defmodule Anoma.Dump do
             ordering: ord_eng,
             mempool: mem_eng,
             pinger: ping_eng,
-            executor: ex_eng
+            executor: ex_eng,
           }
   def get_state(node) do
     state = node |> Node.state()
@@ -231,7 +232,7 @@ defmodule Anoma.Dump do
       end)
       |> List.to_tuple()
 
-    %{storage: {table, block}, qualified: q, order: o, block_storage: b}
+    %{storage_data: {table, block}, qualified: q, order: o, block_storage: b}
   end
 
   @spec module_match(atom()) :: atom()
@@ -243,6 +244,7 @@ defmodule Anoma.Dump do
       :executor -> Executor
       :ordering -> Ordering
       :clock -> Clock
+      :storage -> Anoma.Storage
     end
   end
 end
