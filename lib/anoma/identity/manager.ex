@@ -35,7 +35,7 @@ defmodule Anoma.Identity.Manager do
 
     Storage.put(
       mem.storage,
-      [name_space(), salted_pair.external.sign],
+      storage_key(salted_pair.external.sign),
       salted_pair
     )
 
@@ -50,7 +50,7 @@ defmodule Anoma.Identity.Manager do
     salted_key = Id.salt_keys(id, mem.symmetric)
 
     with {:ok, identity} <-
-           Storage.get(mem.storage, [name_space(), salted_key.sign]) do
+           Storage.get(mem.storage, storage_key(salted_key.sign)) do
       identity
       |> Id.unsalt_keys(mem.symmetric)
       |> start_links(cap)
@@ -78,7 +78,7 @@ defmodule Anoma.Identity.Manager do
   @spec delete(Id.Extern.t(), Backend.t()) :: resp(nil)
   def delete(id, mem = %Backend.Memory{}) do
     salted_key = Id.salt_keys(id, mem.symmetric)
-    res = Storage.delete_key(mem.storage, [name_space(), salted_key.sign])
+    res = Storage.delete_key(mem.storage, storage_key(salted_key.sign))
 
     case res do
       {:atomic, :ok} -> {:ok, nil}
@@ -117,6 +117,8 @@ defmodule Anoma.Identity.Manager do
       {:ok, %{commitment: cpid, decryption: dpid}}
     end
   end
+
+  defp storage_key(key), do: [name_space(), key]
 
   @base_name_space "identity_manager"
   def name_space, do: @base_name_space
