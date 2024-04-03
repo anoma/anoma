@@ -105,7 +105,7 @@ defmodule Anoma.Crypto.Id do
   end
 
   @doc """
-  I salt the given keys for storage further storage. Or for storage
+  I salt the given keys for further storage. Or for storage
   lookup
 
   I can be used on `t\0`, `Intern.t\0` or `Extern.t\0`.
