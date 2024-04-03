@@ -10,8 +10,8 @@ defmodule Anoma.Identity.Manager do
     - internal identities stored in a browser extension
     - internal identities stored in another machine accessible over the network
 
-  When an identity is generated or connected, the I do not return the
-  internal identity directly, but rather returns handles to the
+  When an identity is generated or connected, I do not return the
+  internal identity directly, but rather return handles to the
   corresponding commitment and decryption engine instances, which can
   be used to generate commitments by and decrypt data encrypted to,
   respectively, the internal identity (which is still kept in whatever
