@@ -110,7 +110,7 @@ defmodule Anoma.Node do
         router,
         Logger,
         log_id,
-        %Logger{log_st | clock: clock}
+        %Logger{log_st | clock: clock, storage: storage}
       )
 
     {:ok, ordering} =
@@ -118,7 +118,7 @@ defmodule Anoma.Node do
         router,
         Ordering,
         ord_id,
-        %Ordering{ord_st | logger: logger}
+        %Ordering{ord_st | logger: logger, table: storage}
       )
 
     {:ok, executor_topic} = new_topic(router, args[:executor_topic])
@@ -185,8 +185,8 @@ defmodule Anoma.Node do
 
     %{
       clock: {nil, %Clock{}},
-      logger: {nil, %Logger{storage: storage}},
-      ordering: {nil, %Ordering{table: storage}},
+      logger: {nil, %Logger{}},
+      ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
       pinger: {nil, %Pinger{time: args[:ping_time]}},
