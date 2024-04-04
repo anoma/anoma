@@ -254,7 +254,7 @@ defmodule Anoma.Node.Router do
 
   typedstruct do
     # slightly space-inefficient (duplicates extern), but more convenient
-    field(:local_engines, %{Id.Extern.t() => Id.t()})
+    field(:local_engines, %{Id.Extern.t() => {Id.t(), GenServer.server()}})
     # mapping of TopicId -> subscriber addrs
     field(:topic_table, %{Id.Extern.t() => MapSet.t(Addr.t())}, default: %{})
 
@@ -467,8 +467,8 @@ defmodule Anoma.Node.Router do
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast({:init_local_engine, id, _pid}, s) do
-    s = %{s | local_engines: Map.put(s.local_engines, id.external, id)}
+  def handle_cast({:init_local_engine, id, server}, s) do
+    s = %{s | local_engines: Map.put(s.local_engines, id.external, {id, server})}
     {:noreply, s}
   end
 
@@ -646,7 +646,7 @@ defmodule Anoma.Node.Router do
          server: server
        },
        supervisor: supervisor,
-       local_engines: %{id.external => id}
+       local_engines: %{id.external => {id, server}}
      }}
   end
 
