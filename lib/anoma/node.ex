@@ -40,6 +40,7 @@ defmodule Anoma.Node do
 
   typedstruct enforce: true do
     field(:router, Router.addr())
+    field(:transport, Router.addr())
     field(:ordering, Router.addr())
     field(:executor, Router.addr())
     field(:executor_topic, Router.addr())
@@ -120,7 +121,7 @@ defmodule Anoma.Node do
     {ping_id, ping_st} = args[:pinger]
     {ex_id, ex_st} = args[:executor]
 
-    {:ok, router} = start_router(args[:router])
+    {:ok, router, transport} = Router.start()
 
     {:ok, clock} =
       start_engine(router, Clock, clock_id,
@@ -184,6 +185,7 @@ defmodule Anoma.Node do
     {:ok,
      %Node{
        router: router,
+       transport: transport,
        ordering: ordering,
        executor: executor,
        mempool: mempool,

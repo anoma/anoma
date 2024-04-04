@@ -235,6 +235,7 @@ defmodule Anoma.Node.Router do
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router.Addr
+  alias Anoma.Node.Transport
 
   @type addr() :: Addr.t()
 
@@ -261,17 +262,17 @@ defmodule Anoma.Node.Router do
     # topics to which local engines are subscribed--redundant given the above, but useful
     field(:local_engine_subs, %{addr() => Id.Extern.t()}, default: %{})
     field(:id, Id.Extern.t())
+    field(:internal_id, Id.t())
     field(:addr, addr())
     field(:supervisor, atom())
+    field(:transport, addr())
     # mapping id -> [pending messages]
     field(:msg_queue, map(), default: %{})
   end
 
-  @spec start_link(Id.t()) :: GenServer.on_start()
-  def start_link(id) do
-    GenServer.start_link(__MODULE__, id,
-      name: process_name(__MODULE__, id.external)
-    )
+  @spec start_link({Id.t(), addr(), addr()}) :: GenServer.on_start()
+  def start_link(init = {_, %{server: name}, _}) do
+    GenServer.start_link(__MODULE__, init, name: name)
   end
 
   ############################################################
@@ -279,40 +280,58 @@ defmodule Anoma.Node.Router do
   ############################################################
 
   @doc """
-  Starts a new router with a given cryptographic ID.
+  Starts a new router with the given cryptographic ID for itself, and another
+  for the transport engine.  On success, returns {:ok, router_addr, transport_addr}
   """
-  @spec start(Id.t()) ::
+  @spec start({Id.t(), Id.t()}) ::
           :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
-          | {:ok, Addr.t()}
-  def start(id) do
-    supervisor = process_name(:supervisor, id.external)
+          | {:ok, Addr.t(), Addr.t()}
+  def start({router_id, transport_id}) do
+    supervisor = process_name(:supervisor, router_id.external)
 
     {:ok, _} =
       DynamicSupervisor.start_link(name: supervisor, strategy: :one_for_one)
 
-    router = process_name(__MODULE__, id.external)
+    router_name = process_name(__MODULE__, router_id.external)
 
-    case DynamicSupervisor.start_child(supervisor, {__MODULE__, id}) do
-      {:ok, _} ->
-        {:ok,
-         %Addr{
-           id: id.external,
-           server: router,
-           router: router
-         }}
+    router_addr = %Addr{
+      id: router_id.external,
+      server: router_name,
+      router: router_name
+    }
 
-      err ->
-        err
+    transport_name = process_name(Transport, transport_id.external)
+
+    transport_addr = %Addr{
+      id: transport_id.external,
+      server: transport_name,
+      router: router_name
+    }
+
+    with {:ok, _} <-
+           DynamicSupervisor.start_child(
+             supervisor,
+             {__MODULE__, {router_id, router_addr, transport_addr}}
+           ) do
+      with {:ok, _} <-
+             DynamicSupervisor.start_child(
+               supervisor,
+               {Anoma.Node.Router.Engine,
+                {router_addr, Transport, transport_id,
+                 {router_addr, router_id}}}
+             ) do
+        {:ok, router_addr, transport_addr}
+      end
     end
   end
 
   @doc """
   Starts a new router, with a random `Anoma.Crypto.Id`.
   """
-  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t()}
+  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t(), Addr.t()}
   def start() do
-    start(Id.new_keypair())
+    start({Id.new_keypair(), Id.new_keypair()})
   end
 
   ############################################################
@@ -636,19 +655,17 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  @spec init(Id.t()) :: {:ok, Router.t()}
-  def init(id) do
+  @spec init({Id.t(), addr(), addr()}) :: {:ok, Router.t()}
+  def init({id, router_addr, transport_addr}) do
     supervisor = process_name(:supervisor, id.external)
     server = process_name(__MODULE__, id.external)
 
     {:ok,
      %Router{
        id: id.external,
-       addr: %Addr{
-         router: server,
-         id: id.external,
-         server: server
-       },
+       internal_id: id,
+       addr: router_addr,
+       transport: transport_addr,
        supervisor: supervisor,
        local_engines: %{id.external => {id, server}}
      }}
