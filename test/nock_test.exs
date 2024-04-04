@@ -14,7 +14,7 @@ defmodule AnomaTest.Nock do
       order: AnomaTest.Nock.Order
     }
 
-    {:ok, router} = Anoma.Node.Router.start()
+    {:ok, router, _} = Anoma.Node.Router.start()
     # on_exit(fn -> Anoma.Node.Router.stop(router.id) end)
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering, %{

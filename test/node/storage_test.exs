@@ -14,7 +14,7 @@ defmodule AnomaTest.Node.Storage do
       order: AnomaTest.Node.Storage.Order
     }
 
-    {:ok, router} = Anoma.Node.Router.start()
+    {:ok, router, _} = Anoma.Node.Router.start()
 
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering, %{

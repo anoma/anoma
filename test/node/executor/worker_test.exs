@@ -12,7 +12,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       order: AnomaTest.Worker.Order
     }
 
-    {:ok, router} = Anoma.Node.Router.start()
+    {:ok, router, _} = Anoma.Node.Router.start()
 
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering,

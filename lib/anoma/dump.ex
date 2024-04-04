@@ -133,6 +133,7 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
+            transport: Id.Extern.t(),
             storage: stores,
             qualified: list(),
             order: list(),
@@ -166,7 +167,8 @@ defmodule Anoma.Dump do
             ordering: ord_eng,
             mempool: mem_eng,
             pinger: ping_eng,
-            executor: ex_eng
+            executor: ex_eng,
+            transport: Id.Extern.t()
           }
   def get_state(node) do
     state = node |> Node.state()
@@ -177,6 +179,7 @@ defmodule Anoma.Dump do
       |> Map.filter(fn {key, _value} ->
         key not in [
           :router,
+          :transport,
           :mempool_topic,
           :executor_topic,
           :__struct__
@@ -195,6 +198,7 @@ defmodule Anoma.Dump do
     Map.merge(
       %{
         router: router.id,
+        transport: state.transport.id,
         mempool_topic: state.mempool_topic.id,
         executor_topic: state.executor_topic.id
       },

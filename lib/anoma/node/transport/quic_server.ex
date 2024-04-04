@@ -42,15 +42,20 @@ defmodule Anoma.Node.Transport.QuicServer do
                peer_bidi_stream_count: 1
              }
            ) do
-      Router.start_engine(
-        router,
-        Transport.QuicConnection,
-        {:listener, router, transport, listener}
-      )
-
       {:ok,
-       %QuicServer{router: router, transport: transport, listener: listener}}
+       %QuicServer{router: router, transport: transport, listener: listener},
+       {:continue, :start_listener}}
     end
+  end
+
+  def handle_continue(:start_listener, s) do
+    Router.start_engine(
+      s.router,
+      Transport.QuicConnection,
+      {:listener, s.router, s.transport, s.listener}
+    )
+
+    {:noreply, s}
   end
 
   def handle_info({:quic, a, b, c}, s) do

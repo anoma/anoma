@@ -123,7 +123,7 @@ defmodule Anoma.Node.Executor do
 
   ### Example
     iex> alias Anoma.Node.{Executor, Router}
-    iex> {:ok, router} = Router.start
+    iex> {:ok, router, _transport} = Router.start()
     iex> snap = %Nock{snapshot_path: [:a | 0], ordering: nil}
     iex> args = {snap, Router.new_topic(router), nil}
     iex> {:ok, addr} = Router.start_engine(router, Executor, args)

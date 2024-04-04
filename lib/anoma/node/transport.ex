@@ -466,7 +466,7 @@ defmodule Anoma.Node.Transport do
         addr = Enum.at(MapSetMap.get(s.known_nodes, node), 0)
 
         if addr != nil do
-          conn = init_connection(s, node, addr)
+          conn = init_connection(s, addr)
 
           state = %ConnectionState{
             type: transport_type(addr),
@@ -503,13 +503,13 @@ defmodule Anoma.Node.Transport do
     end
   end
 
-  @spec init_connection(t(), Id.Extern.t(), transport_addr()) ::
+  @spec init_connection(t(), transport_addr()) ::
           {Router.addr(), transport_type()} | nil
-  defp init_connection(s, node, addr = {:quic, _, _}) do
+  defp init_connection(s, addr = {:quic, _, _}) do
     case Router.start_engine(
            s.router,
            Transport.QuicConnection,
-           {s.router, Router.self_addr(s.router), node, addr}
+           {:client, s.router, Router.self_addr(s.router), addr}
          ) do
       {:ok, addr} -> {addr, :quic}
       _ -> nil
