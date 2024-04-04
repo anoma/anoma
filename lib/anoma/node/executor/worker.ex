@@ -18,9 +18,9 @@ defmodule Anoma.Node.Executor.Worker do
     with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <-
            nock(stage_2_tx, [10, [6, 1 | order], 0 | 1], env),
-         {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+    {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       true_order = wait_for_ready(env, order)
-
+      
       log_info({:writing, true_order, logger})
       Storage.put(storage, key, value)
       log_info({:put, key, logger})
@@ -58,7 +58,7 @@ defmodule Anoma.Node.Executor.Worker do
       cm_tree =
         CommitmentTree.new(
           Anoma.Storage.cm_tree_spec(),
-          storage.rm_commitments
+          Storage.state(storage).rm_commitments
         )
 
       new_tree =

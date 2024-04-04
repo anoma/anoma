@@ -87,7 +87,7 @@ defmodule Anoma.Storage do
 
   @type snapshot() :: {t(), list({order_key(), non_neg_integer()})}
 
-  def init(%Anoma.Storage{} = state) do
+  def init(%__MODULE__{} = state) do
     {:ok, state}
   end
 
@@ -99,7 +99,7 @@ defmodule Anoma.Storage do
     }
 
     # idempotent
-    #Storage.setup(return)
+    Anoma.Storage.setup(return)
     {:ok, return}
   end
 
@@ -108,7 +108,7 @@ defmodule Anoma.Storage do
   ############################################################
 
   @spec state(Router.Addr.t()) :: t()
-  def state(storage) do
+  def state(storage = %Router.Addr{}) do
     Router.call(storage, :state)
   end
 
@@ -132,29 +132,42 @@ defmodule Anoma.Storage do
   """
   @spec setup(t()) :: :ok | {:aborted, any()}
   # If this ever gets big, turn it into a map filter situation
-  def setup(t) do
+  def setup(t = %__MODULE__{}) do
     with {:atomic, :ok} <-
            :mnesia.create_table(t.qualified, attributes: [:key, :value]),
          {:atomic, :ok} <-
            :mnesia.create_table(t.order, attributes: [:key, :order]),
          {:atomic, :ok} <-
            :mnesia.create_table(t.rm_commitments, attributes: [:index, :hash]) do
-      CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
-    end
+             CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
+           end
+  end
+
+  def setup(t = %Router.Addr{}) do
+    Router.call(t, :setup)
+  end
+
+  @spec remove(Router.Addr.t()) :: :ok | {:aborted, any()}
+  def remove(storage = %Router.Addr{}) do
+    Router.call(storage, :remove)
   end
 
   @spec remove(t()) :: :ok | {:aborted, any()}
-  def remove(storage) do
+  def remove(storage = %__MODULE__{}) do
     :mnesia.delete_table(storage.qualified)
     :mnesia.delete_table(storage.order)
     :mnesia.delete_table(storage.rm_commitments)
   end
 
   @spec ensure_new(t()) :: :ok | {:aborted, any()}
-  def ensure_new(storage) do
+  def ensure_new(storage = %__MODULE__{}) do
     # We don't care about errors that can happen here
     remove(storage)
     setup(storage)
+  end
+
+  def ensure_new(storage = %Router.Addr{}) do
+    Router.call(storage, :ensure_new)
   end
 
   ############################################################
@@ -162,16 +175,20 @@ defmodule Anoma.Storage do
   ############################################################
 
   @spec get(t(), order_key()) :: :absent | {:ok, qualified_value()}
-  def get(storage, key) do
+  def get(storage = %__MODULE__{}, key) do
     with {:atomic, [{_, ^key, order}]} <- read_order_tx(storage, key) do
       checked_read_at(storage, key, order)
     else
       _ -> :absent
-    end
+          end
+  end
+
+  def get(storage = %Router.Addr{}, key) do
+    Router.call(storage, {:get, key})
   end
 
   @spec put(t(), order_key(), qualified_value()) :: result(:ok)
-  def put(storage, key, value) do
+  def put(storage = %__MODULE__{}, key, value) do
     tx = fn ->
       order = read_order(storage, key)
       new_order = calculate_order(order)
@@ -182,8 +199,12 @@ defmodule Anoma.Storage do
     :mnesia.transaction(tx)
   end
 
+  def put(storage = %Router.Addr{}, key, value) do
+    Router.call(storage, {:put, key, value})
+  end
+
   @spec blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
-  def blocking_read(storage, key) do
+  def blocking_read(storage = %__MODULE__{}, key) do
     instrument({:read, key})
 
     case key do
@@ -211,6 +232,10 @@ defmodule Anoma.Storage do
       _ ->
         :error
     end
+  end
+
+  def blocking_read(storage = %Router.Addr{}, key) do
+    blocking_read(state(storage), key)
   end
 
   @spec get_keyspace(Anoma.Storage.t(), list(any())) ::
@@ -249,10 +274,14 @@ defmodule Anoma.Storage do
   end
 
   @spec put_snapshot(t(), order_key()) :: result(:ok)
-  def put_snapshot(storage, key) do
+  def put_snapshot(storage = %__MODULE__{}, key) do
     with {:atomic, snapshot} <- snapshot_order(storage) do
       put(storage, key, snapshot)
-    end
+          end
+  end
+
+  def put_snapshot(storage = %Router.Addr{}, key) do
+    Router.call(storage, {:put_snapshot, key})
   end
 
   @spec in_snapshot(snapshot(), order_key()) :: nil | non_neg_integer()
@@ -283,40 +312,44 @@ defmodule Anoma.Storage do
 
   @spec read_order(t(), order_key()) ::
           list({atom(), Noun.t(), non_neg_integer()})
-  def read_order(storage, key) do
+  def read_order(storage = %__MODULE__{}, key) do
     :mnesia.read(storage.order, key)
   end
 
   @spec read_order_tx(t(), order_key()) ::
           result(list({atom(), Noun.t(), non_neg_integer()}))
-  def read_order_tx(storage, key) do
+  def read_order_tx(storage = %__MODULE__{}, key) do
     tx = fn -> read_order(storage, key) end
     :mnesia.transaction(tx)
+          end
+
+  def read_order_tx(storage = %Router.Addr{}, key) do
+    Router.call(storage, {:read_order_tx, key})
   end
 
   @spec read_at_order(t(), Noun.t(), non_neg_integer()) ::
           list({atom(), qualified_key(), qualified_value()})
-  def read_at_order(storage, key, order) do
+  def read_at_order(storage = %__MODULE__{}, key, order) do
     :mnesia.read(storage.qualified, qualified_key(key, order))
   end
 
   @spec read_at_order_tx(t(), Noun.t(), non_neg_integer()) ::
           result(list({atom(), qualified_key(), qualified_value()}))
-  def read_at_order_tx(storage, key, order) do
+  def read_at_order_tx(storage = %__MODULE__{}, key, order) do
     tx = fn -> read_at_order(storage, key, order) end
     :mnesia.transaction(tx)
   end
 
   @spec write_at_order(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
           :ok
-  def write_at_order(storage, key, value, order) do
+  def write_at_order(storage = %__MODULE__{}, key, value, order) do
     :mnesia.write({storage.order, key, order})
     :mnesia.write({storage.qualified, qualified_key(key, order), value})
   end
 
   @spec write_at_order_tx(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
           result(:ok)
-  def write_at_order_tx(storage, key, value, order) do
+  def write_at_order_tx(storage = %__MODULE__{}, key, value, order) do
     tx = fn -> write_at_order(storage, key, value, order) end
     :mnesia.transaction(tx)
   end
@@ -334,7 +367,7 @@ defmodule Anoma.Storage do
 
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
-  defp checked_read_at(storage, key, order) do
+  defp checked_read_at(storage = %Anoma.Storage{}, key, order) do
     instrument({:get_order, order})
 
     with {:atomic, [{_, [^order, ^key | 0], value}]} <-
@@ -348,7 +381,7 @@ defmodule Anoma.Storage do
   @spec checked_read_at_absent_details(t(), Noun.t(), non_neg_integer()) ::
           {:absent, Noun.t(), non_neg_integer()}
           | {qualified_key(), qualified_value()}
-  defp checked_read_at_absent_details(storage, key, order) do
+  defp checked_read_at_absent_details(storage = %__MODULE__{}, key, order) do
     with {:ok, value} <- checked_read_at(storage, key, order) do
       {key, value}
     else
@@ -427,5 +460,33 @@ defmodule Anoma.Storage do
 
   def handle_call(:state, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call(:setup, _, t) do
+    {:reply, setup(t), t}
+  end
+
+  def handle_call(:remove, _, storage) do
+    {:reply, remove(storage), storage}
+  end
+
+  def handle_call({:get, key}, _, storage) do
+    {:reply, get(storage, key), storage}
+  end
+
+  def handle_call(:ensure_new, _, storage) do
+    {:reply, ensure_new(storage), storage}
+  end
+
+  def handle_call({:put_snapshot, key}, _, storage) do
+    {:reply, put_snapshot(storage, key), storage}
+  end
+
+  def handle_call({:put, key, value}, _, storage) do
+    {:reply, put(storage, key, value), storage}
+  end
+
+  def handle_call({:read_order_tx, key}, _, storage) do
+    {:reply, read_order_tx(storage, key), storage}
   end
 end

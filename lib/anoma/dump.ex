@@ -218,7 +218,7 @@ defmodule Anoma.Dump do
         }
   def get_tables(node) do
     node = node |> Node.state()
-    table = Ordering.state(node.ordering).table
+    table = Anoma.Storage.state(Ordering.state(node.ordering).table)
     block = Mempool.state(node.mempool).block_storage
     qual = table.qualified
     ord = table.order

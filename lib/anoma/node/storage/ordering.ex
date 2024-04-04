@@ -168,7 +168,6 @@ defmodule Anoma.Node.Storage.Ordering do
   def caller_blocking_read_id(ordering, [id | subkey]) do
     maybe_true_order = true_order(ordering, id)
     storage = get_storage(ordering)
-
     read_order =
       case maybe_true_order do
         nil ->
@@ -180,7 +179,6 @@ defmodule Anoma.Node.Storage.Ordering do
         true_order ->
           true_order
       end
-
     full_key = [read_order | subkey]
     Storage.blocking_read(storage, full_key)
   end
