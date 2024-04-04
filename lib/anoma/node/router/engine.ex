@@ -55,19 +55,10 @@ defmodule Anoma.Node.Router.Engine do
   def init({router, mod, id, arg}) do
     GenServer.cast(router.router, {:init_local_engine, id, self()})
     Process.put(:engine_id, id.external)
-
     Process.put(:engine_addr, Router.process_name(mod, id.external))
-
     Process.flag(:trap_exit, true)
 
-    case mod.init(arg) do
-      {:ok, state} ->
-        {:ok,
-         %__MODULE__{router_addr: router, module: mod, module_state: state}}
-
-      err ->
-        err
-    end
+    postprocess(mod.init(arg), %__MODULE__{router_addr: router, module: mod})
   end
 
   @spec get_state(Router.addr()) :: struct() | any()
@@ -81,8 +72,7 @@ defmodule Anoma.Node.Router.Engine do
              :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
           | {:stop, any(), any()}
   def handle_cast({:router_cast, src, msg}, state = %__MODULE__{}) do
-    {:noreply, ns} = state.module.handle_cast(msg, src, state.module_state)
-    {:noreply, %__MODULE__{state | module_state: ns}}
+    postprocess(state.module.handle_cast(msg, src, state.module_state), state)
   end
 
   @spec handle_call({any(), Router.addr(), term()}, GenServer.from(), t()) ::
@@ -95,13 +85,7 @@ defmodule Anoma.Node.Router.Engine do
           | {:stop, any(), any()}
           | {:stop, any(), any(), any()}
   def handle_call({:router_call, src, msg}, _, state = %__MODULE__{}) do
-    case state.module.handle_call(msg, src, state.module_state) do
-      {:reply, res, new_state} ->
-        {:reply, res, %__MODULE__{state | module_state: new_state}}
-
-      {:reply, res, new_state, cont = {:continue, _}} ->
-        {:reply, res, %__MODULE__{state | module_state: new_state}, cont}
-    end
+    postprocess(state.module.handle_call(msg, src, state.module_state), state)
   end
 
   @spec handle_call(:get_state, GenServer.from(), %__MODULE__{}) ::
@@ -112,8 +96,7 @@ defmodule Anoma.Node.Router.Engine do
 
   @spec handle_continue(term(), t()) :: {:noreply, t()} | {:stop, term(), t()}
   def handle_continue(arg, state = %__MODULE__{}) do
-    {:noreply, new_state} = state.module.handle_continue(arg, state)
-    {:noreply, %__MODULE__{state | module_state: new_state}}
+    postprocess(state.module.handle_continue(arg, state.module_state), state)
   end
 
   @spec terminate(reason, t()) :: {:stop, reason, t()} when reason: term()
@@ -127,7 +110,34 @@ defmodule Anoma.Node.Router.Engine do
   end
 
   def handle_info(info, state = %__MODULE__{}) do
-    {:noreply, new_state} = state.module.handle_info(info, state.module_state)
-    {:noreply, %__MODULE__{state | module_state: new_state}}
+    postprocess(state.module.handle_info(info, state.module_state), state)
+  end
+
+  defp postprocess(result, state) do
+    case result do
+      {:ok, new_state} ->
+        {:ok, %__MODULE__{state | module_state: new_state}}
+
+      {:ok, new_state, cont} ->
+        {:ok, %__MODULE__{state | module_state: new_state}, cont}
+
+      {:stop, reason, new_state} ->
+        {:stop, reason, %__MODULE__{state | module_state: new_state}}
+
+      {:noreply, new_state} ->
+        {:noreply, %__MODULE__{state | module_state: new_state}}
+
+      {:noreply, new_state, cont} ->
+        {:noreply, %__MODULE__{state | module_state: new_state}, cont}
+
+      {:reply, res, new_state} ->
+        {:reply, res, %__MODULE__{state | module_state: new_state}}
+
+      {:reply, res, new_state, cont} ->
+        {:reply, res, %__MODULE__{state | module_state: new_state}, cont}
+
+      err ->
+        err
+    end
   end
 end
