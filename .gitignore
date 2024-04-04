@@ -40,3 +40,6 @@ Mnesia*/
 
 # Docs versioning
 .doc-versions.js
+
+# Certificate files
+*.pem
