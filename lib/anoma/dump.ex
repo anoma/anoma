@@ -134,12 +134,12 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
+            storage: storage_eng,
             storage_data: stores,
             qualified: list(),
             order: list(),
             block_storage: list()
           }
-
   def get_all(node) do
     Map.merge(get_state(node), get_tables(node))
   end
@@ -167,7 +167,8 @@ defmodule Anoma.Dump do
             ordering: ord_eng,
             mempool: mem_eng,
             pinger: ping_eng,
-            executor: ex_eng
+            executor: ex_eng,
+            storage: storage_eng
           }
   def get_state(node) do
     state = node |> Node.state()
@@ -219,7 +220,7 @@ defmodule Anoma.Dump do
         }
   def get_tables(node) do
     node = node |> Node.state()
-    table = Engine.get_state(node.ordering).table
+    table = Engine.get_state(Engine.get_state(node.ordering).table)
     block = Engine.get_state(node.mempool).block_storage
     qual = table.qualified
     ord = table.order
