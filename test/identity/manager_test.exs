@@ -16,6 +16,11 @@ defmodule AnomaTest.Identity.Manager do
       order: AnomaTest.Identity.Manager.Order
     }
 
+    {:ok, router} = Anoma.Node.Router.start()
+
+    {:ok, storage} =
+      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
+
     Storage.ensure_new(storage)
 
     key = Symmetric.random_xchacha()

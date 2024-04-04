@@ -16,6 +16,9 @@ defmodule AnomaTest.Node.Storage do
 
     {:ok, router} = Anoma.Node.Router.start()
 
+    {:ok, storage} =
+      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
+
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering, %{
         table: storage

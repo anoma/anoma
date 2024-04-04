@@ -1,11 +1,12 @@
 defmodule Anoma.Identity.Name do
   use TypedStruct
   alias Anoma.Storage
+  alias Anoma.Node.Router
   alias Anoma.Crypto.Id
   alias Anoma.Identity.Verification
 
   typedstruct do
-    field(:storage, Storage.t())
+    field(:storage, Router.addr())
     field(:keyspace, atom())
   end
 

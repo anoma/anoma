@@ -4,7 +4,7 @@ defmodule Anoma.Identity.Backend do
   """
   alias Anoma.Identity.Backend.{Memory, Remote, Local}
   alias Anoma.Crypto.Symmetric
-  alias Anoma.Storage
+  alias Anoma.Node.Router
   use TypedStruct
 
   @type t() :: Memory.t() | Local.t() | Remote.t()
@@ -32,7 +32,7 @@ defmodule Anoma.Identity.Backend do
     typedstruct enforce: true do
       field(:symmetric, Symmetric.t())
       field(:nonce, binary(), default: nil)
-      field(:storage, Storage.t())
+      field(:storage, Router.Addr.t())
     end
   end
 
