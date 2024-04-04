@@ -6,6 +6,7 @@ defmodule AnomaTest.Identity.SignsFor do
   alias Anoma.Crypto.Id
   alias Anoma.Identity.{SignsFor, Verification, Evidence}
   alias Anoma.Crypto.Id
+  alias Anoma.Node.Router
 
   doctest(Anoma.Identity.SignsFor)
 
@@ -15,6 +16,13 @@ defmodule AnomaTest.Identity.SignsFor do
       qualified: AnomaTest.Identity.SignsFor.Qualified,
       order: AnomaTest.Identity.SignsFor.Order
     }
+
+    {:ok, router} = Router.start()
+
+    {:ok, storage} =
+      Anoma.Node.Router.start_engine(router, Anoma.Storage,
+        storage
+      )
 
     Storage.ensure_new(storage)
     [st: storage]
