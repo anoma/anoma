@@ -16,7 +16,7 @@ defmodule AnomaTest.Node.Storage do
       namespace: [1, 2, 3]
     }
 
-    {:ok, router} = Anoma.Node.Router.start()
+    {:ok, router, _} = Anoma.Node.Router.start()
 
     {:ok, storage} =
       Anoma.Node.Router.start_engine(router, Storage, storage)

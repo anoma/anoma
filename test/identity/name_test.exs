@@ -17,7 +17,7 @@ defmodule AnomaTest.Identity.Name do
       order: AnomaTest.Identity.Name.Order
     }
 
-    {:ok, router} = Router.start()
+    {:ok, router, _} = Router.start()
 
     {:ok, storage} =
       Router.start_engine(router, Storage, storage)

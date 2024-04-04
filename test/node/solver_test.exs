@@ -28,7 +28,7 @@ defmodule AnomaTest.Node.Solver do
       nullifiers: [Resource.nullifier(rxb, keyb.secret)]
     }
 
-    {:ok, router} = Router.start()
+    {:ok, router, _} = Router.start()
     {:ok, intents} = Router.new_topic(router)
     {:ok, solutions} = Router.new_topic(router)
 
