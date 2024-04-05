@@ -30,20 +30,28 @@ defmodule Anoma.Dump do
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
+  alias Anoma.System.Directories
 
   @doc """
   I dump the current state with storage. I accept a string as a name,
-  so that the resulting file will be created as name.txt and then a
-  node whose info presented as a map I dump as a binary.
+  so that the resulting file will be created as name.txt in the
+  appropriate data directory. As a second argument I accept a node
+  name whose info presented as a map I dump as a binary.
+
+  Note that if the environment is `test` we do not use the XDG format
+  for storing data and instead dump the files in the immadiate app
+  folder.
 
   The map typing can be seen in `get_all`
   """
 
-  @spec dump(String.t(), atom()) :: {:ok, :ok} | {:error, any()}
+  @spec dump(Path.t(), atom()) :: {:ok, :ok} | {:error, any()}
   def dump(name, node) do
     term = node |> get_all() |> :erlang.term_to_binary()
 
-    File.open(name <> ".txt", [:write], fn file ->
+    name
+    |> Directories.data()
+    |> File.open([:write], fn file ->
       file |> IO.binwrite(term)
     end)
   end
@@ -76,7 +84,7 @@ defmodule Anoma.Dump do
 
   @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
   def launch(file, name) do
-    load = load(file)
+    load = file |> Directories.data() |> load()
 
     node_settings = [new_storage: false, name: name, settings: load]
 
