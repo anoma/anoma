@@ -14,9 +14,23 @@ defmodule Anoma.Cli do
           long: "--no-halt",
           help: "typical IEX command",
           required: false
+        ],
+        restore: [
+          long: "--restore",
+          help: "Restore from ",
+          required: false
         ]
       ],
-      options: [],
+      options: [
+        # Should take from home dir once it's ready
+        snapshot_location: [
+          long: "--snapshot-location",
+          help: "Location of the snapshot",
+          parser: :string,
+          required: false,
+          default: fn() -> "./" end
+        ]
+      ],
       subcommands: [
         nockma: Nock.Cli.argument_option()
       ]
