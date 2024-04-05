@@ -18,32 +18,11 @@ defmodule Anoma do
     :world
   end
 
-  # Optimus.t() is opaque so the help fails to type check, but it's OK
-  @dialyzer {:nowarn_function, start: 2}
   def start(_type, _args) do
     arguments = Burrito.Util.Args.get_arguments()
 
-    case Optimus.parse(Anoma.Cli.argument_parser(), arguments) do
-      # This will occur when you launch your repl
-      {:ok, %{flags: %{nohalt: true}}} ->
-        start_logic()
-
-      # This will occur when one tries to test the codebase
-      {:ok, %{unknown: [_, "test" | _]}} ->
-        start_logic()
-
-      {:ok, [:nockma], parsed} ->
-        Nock.Cli.main(parsed)
-        System.halt(0)
-
-      :help ->
-        IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
-        System.halt(0)
-
-      _ ->
-        IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
-        System.halt(1)
-    end
+    # This will invoke start_logic if we want that application
+    Anoma.Cli.start_application(arguments)
   end
 
   def start_logic() do
