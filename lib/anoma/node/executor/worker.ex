@@ -5,6 +5,7 @@ defmodule Anoma.Node.Executor.Worker do
   alias Anoma.Storage
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Logger
+  alias Anoma.Node.Router
 
   import Nock
 
@@ -18,9 +19,9 @@ defmodule Anoma.Node.Executor.Worker do
     with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <-
            nock(stage_2_tx, [10, [6, 1 | order], 0 | 1], env),
-    {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
+         {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       true_order = wait_for_ready(env, order)
-      
+
       log_info({:writing, true_order, logger})
       Storage.put(storage, key, value)
       log_info({:put, key, logger})
@@ -92,7 +93,7 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec rm_nullifier_check(Storage.t(), list(binary())) :: bool()
+  @spec rm_nullifier_check(Router.Addr.t(), list(binary())) :: bool()
   def rm_nullifier_check(storage, nullifiers) do
     for nullifier <- nullifiers, reduce: true do
       acc ->
@@ -121,7 +122,8 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec snapshot(Storage.t(), Nock.t()) :: {:aborted, any()} | {:atomic, :ok}
+  @spec snapshot(Router.Addr.t(), Nock.t()) ::
+          {:aborted, any()} | {:atomic, :ok}
   def snapshot(storage, env) do
     snapshot = hd(env.snapshot_path)
     log_info({:snap, {storage, snapshot}, env.logger})

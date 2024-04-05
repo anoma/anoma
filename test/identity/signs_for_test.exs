@@ -20,9 +20,7 @@ defmodule AnomaTest.Identity.SignsFor do
     {:ok, router} = Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Anoma.Storage,
-        storage
-      )
+      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
 
     Storage.ensure_new(storage)
     [st: storage]

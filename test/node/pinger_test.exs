@@ -69,7 +69,7 @@ defmodule AnomaTest.Node.Pinger do
     assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}
     assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
     assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_two}}}
-    
+
     assert {:ok, 2} = Storage.get(storage, key)
 
     :ok =

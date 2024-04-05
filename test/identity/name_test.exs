@@ -28,9 +28,7 @@ defmodule AnomaTest.Identity.Name do
     {:ok, router} = Router.start()
 
     {:ok, storage} =
-      Router.start_engine(router, Anoma.Storage,
-        storage
-      )
+      Router.start_engine(router, Anoma.Storage, storage)
 
     Storage.ensure_new(storage)
 

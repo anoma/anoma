@@ -90,7 +90,11 @@ defmodule AnomaTest.Storage do
       Storage.write_at_order_tx(storage, testing_atom, 10, 3)
 
       assert Storage.read_at_order_tx(storage, testing_atom, 3) ==
-               {:atomic, [{Storage.state(storage).qualified, [3, testing_atom | 0], 10}]}
+               {:atomic,
+                [
+                  {Storage.state(storage).qualified, [3, testing_atom | 0],
+                   10}
+                ]}
     end
 
     test "Writing at an order gives us the same testing order", %{

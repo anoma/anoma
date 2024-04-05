@@ -17,9 +17,7 @@ defmodule AnomaTest.Node.Executor do
     {:ok, router} = Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Anoma.Storage,
-        storage
-      )
+      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
 
     {:ok, ordering} =
       Router.start_engine(router, Anoma.Node.Storage.Ordering, table: storage)

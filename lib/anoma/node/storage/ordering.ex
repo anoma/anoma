@@ -27,7 +27,7 @@ defmodule Anoma.Node.Storage.Ordering do
   @type key() :: any()
 
   typedstruct do
-    field(:table, Storage.t(), default: %Anoma.Storage{})
+    field(:table, Router.Addr.t(), default: %Router.Addr{})
     field(:next_order, non_neg_integer(), default: 1)
     field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
     field(:logger, Router.Addr.t(), enforce: false)
@@ -73,7 +73,7 @@ defmodule Anoma.Node.Storage.Ordering do
     Router.call(ordering, {:new_order, ordered})
   end
 
-  @spec get_storage(Router.Addr.t()) :: Storage.t()
+  @spec get_storage(Router.Addr.t()) :: Router.Addr.t()
   def get_storage(ordering) do
     Router.call(ordering, :storage)
   end
@@ -168,6 +168,7 @@ defmodule Anoma.Node.Storage.Ordering do
   def caller_blocking_read_id(ordering, [id | subkey]) do
     maybe_true_order = true_order(ordering, id)
     storage = get_storage(ordering)
+
     read_order =
       case maybe_true_order do
         nil ->
@@ -179,6 +180,7 @@ defmodule Anoma.Node.Storage.Ordering do
         true_order ->
           true_order
       end
+
     full_key = [read_order | subkey]
     Storage.blocking_read(storage, full_key)
   end

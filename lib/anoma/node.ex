@@ -97,7 +97,8 @@ defmodule Anoma.Node do
 
     {:ok, router} = start_router(args[:router])
 
-    {:ok, storage} = start_engine(router, Anoma.Storage, storage_id, storage_st)
+    {:ok, storage} =
+      start_engine(router, Anoma.Storage, storage_id, storage_st)
 
     {:ok, clock} =
       start_engine(router, Clock, clock_id,

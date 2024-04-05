@@ -41,7 +41,7 @@ defmodule Anoma.Identity.SignsFor do
     end
   end
 
-  @spec signs_for?(Storage.t(), Id.Extern.t(), Id.Extern.t()) :: boolean
+  @spec signs_for?(Router.Addr.t(), Id.Extern.t(), Id.Extern.t()) :: boolean
   def signs_for?(tab, our_key, key_in_question) do
     known(tab, our_key)
     |> MapSet.member?(key_in_question)

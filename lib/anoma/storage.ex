@@ -53,7 +53,7 @@ defmodule Anoma.Storage do
   """
 
   alias Anoma.Node.Router
-  
+
   use TypedStruct
 
   require Logger
@@ -99,7 +99,7 @@ defmodule Anoma.Storage do
     }
 
     # idempotent
-    Anoma.Storage.setup(return)
+    do_setup(return)
     {:ok, return}
   end
 
@@ -140,7 +140,8 @@ defmodule Anoma.Storage do
     do_setup(storage)
   end
 
-  @spec get(Router.Addr.t(), order_key()) :: :absent | {:ok, qualified_value()}
+  @spec get(Router.Addr.t(), order_key()) ::
+          :absent | {:ok, qualified_value()}
   def get(storage = %Router.Addr{}, key) do
     Router.call(storage, {:get, key})
   end
@@ -150,13 +151,19 @@ defmodule Anoma.Storage do
     Router.call(storage, {:put, key, value})
   end
 
-  @spec write_at_order_tx(Router.Addr.t(), Noun.t(), Noun.t(), non_neg_integer()) ::
+  @spec write_at_order_tx(
+          Router.Addr.t(),
+          Noun.t(),
+          Noun.t(),
+          non_neg_integer()
+        ) ::
           result(:ok)
   def write_at_order_tx(storage = %Router.Addr{}, key, value, order) do
     Router.call(storage, {:write_at_order_tx, key, value, order})
-          end
+  end
 
-  @spec blocking_read(Router.Addr.t(), qualified_key()) :: :error | {:ok, any()}
+  @spec blocking_read(Router.Addr.t(), qualified_key()) ::
+          :error | {:ok, any()}
   def blocking_read(storage = %Router.Addr{}, key) do
     do_blocking_read(state(storage), key)
   end
@@ -167,7 +174,7 @@ defmodule Anoma.Storage do
           | {:atomic, any()}
   def get_keyspace(storage = %Router.Addr{}, key_space) do
     Router.call(storage, {:get_keyspace, key_space})
-          end
+  end
 
   @spec snapshot_order(Router.Addr.t()) :: result(snapshot())
   def snapshot_order(storage = %Router.Addr{}) do
@@ -205,8 +212,8 @@ defmodule Anoma.Storage do
            :mnesia.create_table(t.order, attributes: [:key, :order]),
          {:atomic, :ok} <-
            :mnesia.create_table(t.rm_commitments, attributes: [:index, :hash]) do
-             CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
-           end
+      CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
+    end
   end
 
   @spec do_remove(t()) :: :ok | {:aborted, any()}
@@ -226,7 +233,7 @@ defmodule Anoma.Storage do
       checked_read_at(storage, key, order)
     else
       _ -> :absent
-          end
+    end
   end
 
   @spec do_put(t(), order_key(), qualified_value()) :: result(:ok)
@@ -293,7 +300,7 @@ defmodule Anoma.Storage do
         latest_keys
       end
     end
-          end
+  end
 
   ############################################################
   #                         Snapshots                        #
@@ -311,7 +318,7 @@ defmodule Anoma.Storage do
   def put_snapshot(storage = %__MODULE__{}, key) do
     with {:atomic, snapshot} <- do_snapshot_order(storage) do
       do_put(storage, key, snapshot)
-          end
+    end
   end
 
   @spec put_snapshot(Router.Addr.t(), order_key()) :: result(:ok)
@@ -356,7 +363,7 @@ defmodule Anoma.Storage do
   defp do_read_order_tx(storage = %__MODULE__{}, key) do
     tx = fn -> read_order(storage, key) end
     :mnesia.transaction(tx)
-          end
+  end
 
   @spec read_at_order(t(), Noun.t(), non_neg_integer()) ::
           list({atom(), qualified_key(), qualified_value()})
@@ -369,7 +376,7 @@ defmodule Anoma.Storage do
   defp do_read_at_order_tx(storage = %__MODULE__{}, key, order) do
     tx = fn -> read_at_order(storage, key, order) end
     :mnesia.transaction(tx)
-          end
+  end
 
   @spec write_at_order(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
           :ok
@@ -383,7 +390,7 @@ defmodule Anoma.Storage do
   defp do_write_at_order_tx(storage = %__MODULE__{}, key, value, order) do
     tx = fn -> write_at_order(storage, key, value, order) end
     :mnesia.transaction(tx)
-          end
+  end
 
   ############################################################
   #                          Helpers                         #

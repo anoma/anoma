@@ -133,10 +133,11 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
-            storage: stores,
+            storage: storage_eng,
             qualified: list(),
             order: list(),
-            block_storage: list()
+            block_storage: list(),
+            storage_data: stores
           }
 
   def get_all(node) do
@@ -167,6 +168,7 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
+            storage: storage_eng
           }
   def get_state(node) do
     state = node |> Node.state()
@@ -211,7 +213,7 @@ defmodule Anoma.Dump do
   """
 
   @spec get_tables(atom()) :: %{
-          storage: stores,
+          storage_data: stores,
           qualified: list(),
           order: list(),
           block_storage: list()
