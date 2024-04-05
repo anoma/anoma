@@ -8,7 +8,7 @@ defmodule Nock do
 
   use TypedStruct
 
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias __MODULE__
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Router

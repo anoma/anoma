@@ -2,7 +2,7 @@ defmodule Anoma.Node.Executor.Worker do
   @moduledoc """
   I am a Nock worker, supporting scry.
   """
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Logger
   alias Anoma.Node.Router
@@ -58,7 +58,7 @@ defmodule Anoma.Node.Executor.Worker do
       # the latter requires the merkle tree to be complete
       cm_tree =
         CommitmentTree.new(
-          Anoma.Storage.cm_tree_spec(),
+          Storage.cm_tree_spec(),
           Storage.state(storage).rm_commitments
         )
 

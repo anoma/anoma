@@ -4,7 +4,7 @@ defmodule AnomaTest.Node.Logger do
   alias Anoma.Node.Router
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Anoma.Node.Storage{
       qualified: AnomaTest.Logger.Qualified,
       order: AnomaTest.Logger.Order
     }
@@ -12,7 +12,7 @@ defmodule AnomaTest.Node.Logger do
     {:ok, router} = Router.start()
 
     {:ok, storage} =
-      Router.start_engine(router, Anoma.Storage, storage)
+      Router.start_engine(router, Anoma.Node.Storage, storage)
 
     {:ok, clock} =
       Router.start_engine(router, Anoma.Node.Clock,

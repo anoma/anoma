@@ -7,7 +7,7 @@ defmodule Anoma.Node.Logger do
   """
 
   alias List
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Router
   alias Anoma.Node.Clock
 

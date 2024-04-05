@@ -102,7 +102,7 @@ defmodule Anoma.MixProject do
       Executor: ~r/^Anoma.Node.Executor.?/,
       Identity: [~r/^Anoma.Identity.?/, ~r/^Anoma.Node.Identity.?/],
       Intents: ~r/^Anoma.Node.Intent.?/,
-      Storage: [~r/^Anoma.Node.Storage.?/, Anoma.Storage, Anoma.Order],
+      Storage: [~r/^Anoma.Node.Storage.?/, Anoma.Node.Storage, Anoma.Order],
       "Cryptographic Primitives": [~r/^Anoma.Crypto.?/],
       Solver: [~r/^Anoma.Node.Solver.?/],
       CommitmentTree: [~r/^CommitmentTree.?/],

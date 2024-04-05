@@ -1,10 +1,10 @@
 defmodule AnomaTest.Storage do
   use ExUnit.Case
 
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Router
 
-  doctest(Anoma.Storage)
+  doctest(Anoma.Node.Storage)
 
   setup_all do
     # base storage testing default

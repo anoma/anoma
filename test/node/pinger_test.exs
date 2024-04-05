@@ -2,12 +2,12 @@ defmodule AnomaTest.Node.Pinger do
   use ExUnit.Case, async: true
 
   alias Anoma.Node.{Mempool, Router, Pinger}
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Storage.Ordering
   import TestHelper.Nock
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Storage{
       qualified: AnomaTest.Pinger.Qualified,
       order: AnomaTest.Pinger.Order
     }

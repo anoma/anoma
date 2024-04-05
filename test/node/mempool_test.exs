@@ -1,14 +1,14 @@
 defmodule AnomaTest.Node.Mempool do
   use ExUnit.Case, async: true
 
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Node.Mempool
   alias Anoma.Node.Router
   import TestHelper.Nock
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Storage{
       qualified: AnomaTest.Mempool.Qualified,
       order: AnomaTest.Mempool.Order
     }

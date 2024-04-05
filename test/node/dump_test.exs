@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Dump do
   use ExUnit.Case, async: true
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Anoma.Node.Storage{
       qualified: AnomaTest.Dump.Qualified,
       order: AnomaTest.Dump.Order
     }
