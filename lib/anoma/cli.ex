@@ -23,18 +23,39 @@ defmodule Anoma.Cli do
     )
   end
 
+  @doc """
+  Provides taking CLI argument parsing to arguments used by the
+  application
+  """
+  @spec cli_arguments_to_start_arguments(Optimus.ParseResult.t()) ::
+          Keyword.t()
+  def cli_arguments_to_start_arguments(%Optimus.ParseResult{
+        args: _args,
+        flags: _flags,
+        options: _options,
+        unknown: _unknown
+      }) do
+    []
+  end
+
   # Optimus.t() is opaque so the help fails to type check, but it's OK
   @dialyzer {:nowarn_function, start_application: 1}
   @spec start_application([String.t()]) :: {:ok, pid()} | {:error, any()}
   def start_application(arguments) do
+    start_anoma = fn parsed ->
+      parsed
+      |> cli_arguments_to_start_arguments()
+      |> Anoma.start_logic()
+    end
+
     case Optimus.parse(Anoma.Cli.argument_parser(), arguments) do
       # This will occur when you launch your repl
-      {:ok, %{flags: %{nohalt: true}}} ->
-        Anoma.start_logic()
+      {:ok, args = %{flags: %{nohalt: true}}} ->
+        start_anoma.(args)
 
       # This will occur when one tries to test the codebase
-      {:ok, %{unknown: [_, "test" | _]}} ->
-        Anoma.start_logic()
+      {:ok, args = %{unknown: [_, "test" | _]}} ->
+        start_anoma.(args)
 
       {:ok, [:nockma], parsed} ->
         Nock.Cli.main(parsed)

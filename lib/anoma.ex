@@ -25,7 +25,7 @@ defmodule Anoma do
     Anoma.Cli.start_application(arguments)
   end
 
-  def start_logic() do
+  def start_logic(_) do
     storage = %Anoma.Storage{
       qualified: Anoma.Qualified,
       order: Anoma.Order,
