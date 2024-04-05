@@ -1,13 +1,14 @@
 defmodule AnomaTest.Node.Executor.Worker do
   use ExUnit.Case, async: true
 
-  alias Anoma.{Storage, Order}
+  alias Anoma.Order
+  alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Node.Executor.Worker
   import TestHelper.Nock
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Storage{
       qualified: AnomaTest.Worker.Qualified,
       order: AnomaTest.Worker.Order
     }
@@ -15,12 +16,10 @@ defmodule AnomaTest.Node.Executor.Worker do
     {:ok, router} = Anoma.Node.Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
+      Anoma.Node.Router.start_engine(router, Storage, storage)
 
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering,
-        table: storage
-      )
+      Anoma.Node.Router.start_engine(router, Ordering, table: storage)
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 

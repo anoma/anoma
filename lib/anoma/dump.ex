@@ -26,7 +26,7 @@ defmodule Anoma.Dump do
 
   alias Anoma.Mnesia
   alias Anoma.Node
-  alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock}
+  alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock, Storage}
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
@@ -104,8 +104,8 @@ defmodule Anoma.Dump do
   @type mem_eng :: {Id.Extern.t(), Mempool.t()}
   @type ping_eng :: {Id.Extern.t(), Pinger.t()}
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
-  @type storage_eng :: {Id.Extern.t(), Anoma.Storage.t()}
-  @type stores :: {Anoma.Storage.t(), atom()}
+  @type storage_eng :: {Id.Extern.t(), Storage.t()}
+  @type stores :: {Storage.t(), atom()}
 
   @doc """
   I get all the info on the node tables and engines in order:

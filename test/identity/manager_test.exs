@@ -6,7 +6,7 @@ defmodule AnomaTest.Identity.Manager do
   alias Anoma.Identity.Backend.Memory
   alias Anoma.Identity.Manager
   alias Anoma.Node.Identity.Commitment
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
 
   doctest(Anoma.Identity.Manager)
 
@@ -19,7 +19,7 @@ defmodule AnomaTest.Identity.Manager do
     {:ok, router} = Anoma.Node.Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
+      Anoma.Node.Router.start_engine(router, Storage, storage)
 
     Storage.ensure_new(storage)
 

@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.End do
   use ExUnit.Case, async: true
 
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Node.{Router, Mempool, Solver, IntentPool}
   alias Anoma.Crypto.Sign
@@ -11,7 +11,7 @@ defmodule AnomaTest.Node.End do
   import TestHelper.Nock
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Storage{
       qualified: AnomaTest.End.Qualified,
       order: AnomaTest.End.Order
     }

@@ -3,13 +3,14 @@ defmodule AnomaTest.Nock do
 
   import Nock
   import TestHelper.Nock
-  alias Anoma.{Storage, Order}
+  alias Anoma.Order
+  alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
 
   doctest(Nock)
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Storage{
       qualified: AnomaTest.Nock.Qualified,
       order: AnomaTest.Nock.Order
     }
@@ -17,11 +18,11 @@ defmodule AnomaTest.Nock do
     {:ok, router} = Anoma.Node.Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
+      Anoma.Node.Router.start_engine(router, Storage, storage)
 
     # on_exit(fn -> Anoma.Node.Router.stop(router.id) end)
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering, %{
+      Anoma.Node.Router.start_engine(router, Ordering, %{
         table: storage
       })
 

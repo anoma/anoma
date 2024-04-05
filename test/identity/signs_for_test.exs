@@ -1,7 +1,7 @@
 defmodule AnomaTest.Identity.SignsFor do
   use ExUnit.Case, async: true
 
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Identity.Commitment
   alias Anoma.Crypto.Id
   alias Anoma.Identity.{SignsFor, Verification, Evidence}
@@ -20,7 +20,7 @@ defmodule AnomaTest.Identity.SignsFor do
     {:ok, router} = Router.start()
 
     {:ok, storage} =
-      Anoma.Node.Router.start_engine(router, Anoma.Storage, storage)
+      Anoma.Node.Router.start_engine(router, Storage, storage)
 
     Storage.ensure_new(storage)
     [st: storage]

@@ -1,4 +1,4 @@
-defmodule Anoma.Storage do
+defmodule Anoma.Node.Storage do
   @moduledoc """
   I am the Anoma Storage engine, I consist of two parts:
      1. An ordering map which tells of the latest order in the
@@ -11,9 +11,9 @@ defmodule Anoma.Storage do
     A good way to view this is that for the `t()`, the fields for what
     is stored in mnesia, are simply the order_* and qualified_* values
 
-    type `t Anoma.Storage` to find them all.
+    type `t Anoma.Node.Storage` to find them all.
 
-    Please also type `t Anoma.Storage.t()` to find out more about the
+    Please also type `t Anoma.Node.Storage.t()` to find out more about the
     central type
   ## API
   The important functions for this API are
@@ -53,6 +53,7 @@ defmodule Anoma.Storage do
   """
 
   alias Anoma.Node.Router
+  alias __MODULE__
 
   use TypedStruct
 
@@ -92,7 +93,7 @@ defmodule Anoma.Storage do
   end
 
   def init(opts) do
-    return = %Anoma.Storage{
+    return = %Storage{
       qualified: opts[:qualified],
       order: opts[:order],
       rm_commitments: opts[:rm_commitments]
@@ -290,7 +291,7 @@ defmodule Anoma.Storage do
     end
   end
 
-  @spec get_keyspace(Anoma.Storage.t(), list(any())) ::
+  @spec get_keyspace(Storage.t(), list(any())) ::
           :absent
           | list({qualified_key(), qualified_value()})
           | {:atomic, any()}
@@ -421,7 +422,7 @@ defmodule Anoma.Storage do
 
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
-  defp checked_read_at(storage = %Anoma.Storage{}, key, order) do
+  defp checked_read_at(storage = %Storage{}, key, order) do
     instrument({:get_order, order})
 
     with {:atomic, [{_, [^order, ^key | 0], value}]} <-

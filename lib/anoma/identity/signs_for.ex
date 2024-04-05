@@ -1,6 +1,6 @@
 defmodule Anoma.Identity.SignsFor do
   alias Anoma.Identity.{Evidence, Verification}
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router
 

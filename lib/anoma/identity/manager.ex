@@ -21,7 +21,7 @@ defmodule Anoma.Identity.Manager do
   alias Anoma.Identity.{Backend, Capabilities, Parameters}
   alias Anoma.Node.Identity.{Commitment, Decryption}
   alias Anoma.Crypto.Id
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
 
   @type resp(t) :: {:ok, t} | {:error, String.t()}
 
