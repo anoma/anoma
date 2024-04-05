@@ -3,7 +3,7 @@ defmodule AnomaTest.Node.Pinger do
 
   alias Anoma.Node.{Mempool, Router, Pinger}
   alias Anoma.Node.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   import TestHelper.Nock
 
   setup_all do

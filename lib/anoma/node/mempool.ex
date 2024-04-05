@@ -2,7 +2,7 @@ defmodule Anoma.Node.Mempool do
   alias Anoma.{Block, Transaction, Order, Serializer}
   alias Anoma.Block.Base
   alias Anoma.Node.Executor
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.{Router, Logger}
 
   use Router.Engine
@@ -76,12 +76,6 @@ defmodule Anoma.Node.Mempool do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    log_info({:state, state, state.logger})
-
-    {:reply, state, state}
-  end
 
   def handle_call({:tx, tx_code}, _from, state) do
     ntrans = handle_tx(tx_code, state)
@@ -251,14 +245,6 @@ defmodule Anoma.Node.Mempool do
   ############################################################
   #                     Logging Info                         #
   ############################################################
-
-  defp log_info({:state, state, logger}) do
-    Logger.add(
-      logger,
-      :info,
-      "Requested state: #{inspect(state)})"
-    )
-  end
 
   defp log_info({:tx, state, logger}) do
     Logger.add(

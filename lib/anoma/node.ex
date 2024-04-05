@@ -33,7 +33,7 @@ defmodule Anoma.Node do
   use GenServer
   use TypedStruct
   alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger, Storage}
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Crypto.Id
   alias __MODULE__
 

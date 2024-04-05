@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Mempool do
   use ExUnit.Case, async: true
 
   alias Anoma.Node.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.Mempool
   alias Anoma.Node.Router
   import TestHelper.Nock

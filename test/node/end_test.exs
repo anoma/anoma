@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.End do
   use ExUnit.Case, async: true
 
   alias Anoma.Node.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.{Router, Mempool, Solver, IntentPool}
   alias Anoma.Crypto.Sign
   import alias Anoma.Resource

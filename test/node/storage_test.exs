@@ -3,9 +3,9 @@ defmodule AnomaTest.Node.Storage do
 
   alias Anoma.Order
   alias Anoma.Node.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
 
-  doctest(Anoma.Node.Storage.Ordering)
+  doctest(Anoma.Node.Ordering)
 
   setup_all do
     # base storage testing default

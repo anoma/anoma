@@ -1,4 +1,4 @@
-defmodule Anoma.Node.Storage.Ordering do
+defmodule Anoma.Node.Ordering do
   @moduledoc """
   I am a simple mnesia-backed key-value store in an anoma node.
 
@@ -33,7 +33,7 @@ defmodule Anoma.Node.Storage.Ordering do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  def init(%Anoma.Node.Storage.Ordering{} = state) do
+  def init(%Anoma.Node.Ordering{} = state) do
     {:ok, state}
   end
 
@@ -91,12 +91,6 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    log_info({:state, state, state.logger})
-
-    {:reply, state, state}
-  end
 
   def handle_call(:next_order, _from, state) do
     next_order = state.next_order
@@ -212,16 +206,6 @@ defmodule Anoma.Node.Storage.Ordering do
   ############################################################
   #                     Logging Info                         #
   ############################################################
-
-  # Keeping usual logging above for now
-
-  defp log_info({:state, state, logger}) do
-    Logger.add(
-      logger,
-      :info,
-      "Requested state: #{inspect(state)}"
-    )
-  end
 
   defp log_info({:next, state, logger}) do
     Logger.add(

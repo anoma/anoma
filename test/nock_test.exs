@@ -5,7 +5,7 @@ defmodule AnomaTest.Nock do
   import TestHelper.Nock
   alias Anoma.Order
   alias Anoma.Node.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
 
   doctest(Nock)
 

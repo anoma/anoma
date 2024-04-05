@@ -3,7 +3,7 @@ defmodule AnomaTest.Node.Executor do
 
   alias Anoma.Order
   alias Anoma.Node.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.Executor
   alias Anoma.Node.Router
   alias Router

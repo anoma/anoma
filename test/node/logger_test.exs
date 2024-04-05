@@ -26,7 +26,7 @@ defmodule AnomaTest.Node.Logger do
       )
 
     {:ok, ordering} =
-      Router.start_engine(router, Anoma.Node.Storage.Ordering,
+      Router.start_engine(router, Anoma.Node.Ordering,
         table: storage,
         logger: logger
       )
@@ -35,7 +35,7 @@ defmodule AnomaTest.Node.Logger do
   end
 
   test "Logging succesfull", %{logger: logger, ordering: ordering} do
-    Anoma.Node.Storage.Ordering.state(ordering)
+    Anoma.Node.Ordering.next_order(ordering)
 
     {list, _msg} = Anoma.Node.Logger.get(logger) |> hd()
 
