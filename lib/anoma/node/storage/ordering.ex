@@ -14,8 +14,8 @@ defmodule Anoma.Node.Storage.Ordering do
     2. We keep a hash_to_order to cache the id => order mapping
   """
 
-  alias Anoma.Node.{Router, Logger}
-  alias Anoma.{Storage, Order}
+  alias Anoma.Node.{Router, Logger, Storage}
+  alias Anoma.Order
   alias __MODULE__
 
   use TypedStruct

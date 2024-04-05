@@ -21,7 +21,7 @@ defmodule Anoma.Node do
     - `name` - name for this process
     - `snapshot_path` : [`atom()` | 0]
       - A snapshot location for the service (used in the worker)
-    - `storage` : `Anoma.Storage.t()` - The Storage tables to use
+    - `storage` : `Anoma.Node.Storage.t()` - The Storage tables to use
     - `block_storage` - a location to store the blocks produced
 
   ### Created Tables
@@ -32,7 +32,7 @@ defmodule Anoma.Node do
 
   use GenServer
   use TypedStruct
-  alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger}
+  alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger, Storage}
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Crypto.Id
   alias __MODULE__
@@ -72,7 +72,7 @@ defmodule Anoma.Node do
     if args[:new_storage] do
       snap = settings[:snapshot_path]
 
-      Anoma.Storage.put_snapshot(storage, hd(snap))
+      Storage.put_snapshot(storage, hd(snap))
     else
       tables =
         settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
@@ -98,7 +98,7 @@ defmodule Anoma.Node do
     {:ok, router} = start_router(args[:router])
 
     {:ok, storage} =
-      start_engine(router, Anoma.Storage, storage_id, storage_st)
+      start_engine(router, Storage, storage_id, storage_st)
 
     {:ok, clock} =
       start_engine(router, Clock, clock_id,
@@ -205,7 +205,7 @@ defmodule Anoma.Node do
   end
 
   defp storage_setup(storage, block_storage) do
-    Anoma.Storage.ensure_new(storage)
+    Storage.ensure_new(storage)
     :mnesia.delete_table(block_storage)
     Anoma.Block.create_table(block_storage, false)
   end
