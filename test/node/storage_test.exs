@@ -12,7 +12,8 @@ defmodule AnomaTest.Node.Storage do
     # base storage testing default
     storage = %Storage{
       qualified: AnomaTest.Node.Storage.Qualified,
-      order: AnomaTest.Node.Storage.Order
+      order: AnomaTest.Node.Storage.Order,
+      namespace: [1, 2, 3]
     }
 
     {:ok, router} = Anoma.Node.Router.start()
