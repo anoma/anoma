@@ -263,6 +263,7 @@ defmodule Anoma.Node.Storage do
 
       [_ | _] ->
         :mnesia.subscribe({:table, storage.qualified, :simple})
+        key = namespace_key(storage, key)
         tx = fn -> :mnesia.read(storage.qualified, key) end
         {:atomic, result} = :mnesia.transaction(tx)
 
@@ -388,7 +389,16 @@ defmodule Anoma.Node.Storage do
   @spec read_at_order(t(), Noun.t(), non_neg_integer()) ::
           list({atom(), qualified_key(), qualified_value()})
   def read_at_order(storage = %__MODULE__{}, key, order) do
-    :mnesia.read(storage.qualified, qualified_key(key, order))
+    lst =
+      :mnesia.read(
+        storage.qualified,
+        namespace_key(storage, qualified_key(key, order))
+      )
+
+    for {at, key, val} <- lst do
+      {:ok, key} = denamespace_key(storage, key)
+      {at, key, val}
+    end
   end
 
   @spec read_at_order_tx(t(), Noun.t(), non_neg_integer()) ::
@@ -425,7 +435,11 @@ defmodule Anoma.Node.Storage do
           :ok
   def write_at_order(storage = %__MODULE__{}, key, value, order) do
     :mnesia.write({storage.order, namespace_key(storage, key), order})
-    :mnesia.write({storage.qualified, qualified_key(key, order), value})
+
+    :mnesia.write(
+      {storage.qualified, namespace_key(storage, qualified_key(key, order)),
+       value}
+    )
   end
 
   @spec do_write_at_order_tx(t(), Noun.t(), Noun.t(), non_neg_integer()) ::
