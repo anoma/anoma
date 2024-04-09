@@ -26,6 +26,8 @@ defmodule Anoma do
   end
 
   def start_logic(_) do
+    Anoma.Configuration.create_min()
+
     storage = %Anoma.Storage{
       qualified: Anoma.Qualified,
       order: Anoma.Order,
