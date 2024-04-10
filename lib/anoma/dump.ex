@@ -106,6 +106,19 @@ defmodule Anoma.Dump do
     end
   end
 
+  @doc """
+  Removes the given dump files at the specified address and with the
+  given configuration.
+
+  See `Anoma.System.Directories` for more informaiton about the path
+  resolution and for the second atom.
+  """
+  @spec remove_dump(Path.t()) :: :ok
+  @spec remove_dump(Path.t(), atom()) :: :ok
+  def remove_dump(file, env \\ Application.get_env(:anoma, :env)) do
+    file |> Directories.data(env) |> File.rm!()
+  end
+
   @type log_eng :: {Id.Extern.t(), Logger.t()}
   @type clock_eng :: {Id.Extern.t(), Clock.t()}
   @type ord_eng :: {Id.Extern.t(), Ordering.t()}
