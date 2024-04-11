@@ -32,6 +32,7 @@ defmodule Anoma.Node do
 
   use GenServer
   use TypedStruct
+  alias Anoma.Dump
   alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger}
   alias Anoma.Node.Storage.Ordering
   alias Anoma.Crypto.Id
@@ -86,6 +87,7 @@ defmodule Anoma.Node do
   end
 
   def init(args) do
+    Process.flag(:trap_exit, true)
     {log_id, log_st} = args[:logger]
     {clock_id, _clock_st} = args[:clock]
     {ord_id, ord_st} = args[:ordering]
@@ -197,6 +199,10 @@ defmodule Anoma.Node do
     {:reply, state, state}
   end
 
+  def handle_call({:dump, name}, _from, state) do
+    {:reply, Dump.dump(state, name), state}
+  end
+
   defp storage_setup(storage, block_storage) do
     Anoma.Storage.ensure_new(storage)
     :mnesia.delete_table(block_storage)
@@ -225,5 +231,38 @@ defmodule Anoma.Node do
     else
       Router.new_topic(router, %Id{external: id})
     end
+  end
+
+  @doc """
+  I dump the current state with storage. I accept a string as a name,
+  so that the resulting file will be created as name.txt and then a
+  node whose info presented as a map I dump as a binary.
+
+  The map typing can be seen in `get_all`
+  """
+  @spec dump(term(), String.t()) :: {:ok, :ok} | {:error, any()}
+  def dump(node, name) do
+    GenServer.call(node, {:dump, name})
+  end
+
+  # Do not stop server if reason is normal and the caller is not this process
+  def handle_info({:EXIT, pid, :normal}, state) when pid != self() do
+    {:noreply, state}
+  end
+
+  # Otherwise stop this server
+  def handle_info({:EXIT, _pid, reason}, state) do
+    {:stop, reason, state}
+  end
+
+  # Terminate the server, dumping its state if a path is in the environment
+  def terminate(_reason, state) do
+    storage_loc = System.get_env("SHUTDOWN_AND_SAVE")
+
+    if storage_loc do
+      Dump.dump(state, storage_loc)
+    end
+
+    :ok
   end
 end

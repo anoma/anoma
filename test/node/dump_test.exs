@@ -30,7 +30,7 @@ defmodule AnomaTest.Node.Dump do
   end
 
   test "loading keeps addresses", %{node: node} do
-    Anoma.Dump.dump("dump_test", :dump)
+    Anoma.Node.dump(:dump, "dump_test")
 
     id = node.router.id
     sname = Anoma.Node.Router.process_name(:supervisor, id)

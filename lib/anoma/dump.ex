@@ -37,9 +37,8 @@ defmodule Anoma.Dump do
 
   The map typing can be seen in `get_all`
   """
-
-  @spec dump(String.t(), atom()) :: {:ok, :ok} | {:error, any()}
-  def dump(name, node) do
+  @spec dump(Node.t(), String.t()) :: {:ok, :ok} | {:error, any()}
+  def dump(node, name) do
     term = node |> get_all() |> :erlang.term_to_binary()
 
     File.open(name <> ".txt", [:write], fn file ->
@@ -121,7 +120,7 @@ defmodule Anoma.Dump do
   And turn the info into a tuple
   """
 
-  @spec get_all(atom()) ::
+  @spec get_all(Node.t()) ::
           %{
             router: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
@@ -155,7 +154,7 @@ defmodule Anoma.Dump do
   - executor
   """
 
-  @spec get_state(atom()) ::
+  @spec get_state(Node.t()) ::
           %{
             router: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
@@ -167,8 +166,7 @@ defmodule Anoma.Dump do
             pinger: ping_eng,
             executor: ex_eng
           }
-  def get_state(node) do
-    state = node |> Node.state()
+  def get_state(state) do
     router = state.router
 
     node =
@@ -209,14 +207,13 @@ defmodule Anoma.Dump do
   - block_storage
   """
 
-  @spec get_tables(atom()) :: %{
+  @spec get_tables(Node.t()) :: %{
           storage: stores,
           qualified: list(),
           order: list(),
           block_storage: list()
         }
   def get_tables(node) do
-    node = node |> Node.state()
     table = Ordering.state(node.ordering).table
     block = Mempool.state(node.mempool).block_storage
     qual = table.qualified
