@@ -59,7 +59,12 @@ defmodule Anoma.Block do
   end
 
   def create(block, pub, round) do
-    %Block{block: block, pub_key: pub, id: signable(block, pub, round)}
+    %Block{
+      block: block,
+      pub_key: pub,
+      id: signable(block, pub, round),
+      round: round
+    }
   end
 
   @doc """
