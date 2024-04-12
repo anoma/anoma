@@ -1,6 +1,10 @@
 defmodule AnomaTest.Node.Dump do
   use ExUnit.Case, async: true
 
+  alias Anoma.Node.Mempool
+  alias Anoma.Mnesia
+  import TestHelper.Nock
+
   setup_all do
     storage = %Anoma.Storage{
       qualified: AnomaTest.Dump.Qualified,
@@ -29,7 +33,17 @@ defmodule AnomaTest.Node.Dump do
     [node: node, name: name]
   end
 
-  test "loading keeps addresses", %{node: node, name: name} do
+  test "loading keeps addresses and storage", %{node: node, name: name} do
+    key = 555
+    zero = zero_counter(key)
+    Mempool.hard_reset(node.mempool)
+
+    Mempool.tx(node.mempool, {:kv, zero})
+
+    Mempool.execute(node.mempool)
+
+    block_store_old = Mnesia.dump(:dump_blocks)
+
     Anoma.Dump.dump("dump_test.dmp", name)
 
     id = node.router.id
@@ -42,6 +56,7 @@ defmodule AnomaTest.Node.Dump do
     new_node = Anoma.Node.state(:dump_new)
 
     assert new_node == node
+    assert Mnesia.dump(:dump_blocks) == block_store_old
 
     DynamicSupervisor.stop(sname, :normal)
 
