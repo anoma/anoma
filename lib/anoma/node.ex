@@ -257,8 +257,8 @@ defmodule Anoma.Node do
 
   # Terminate the server, dumping its state if a path is in the environment
   def terminate(_reason, state) do
-    storage_loc = System.get_env("SHUTDOWN_AND_SAVE")
-
+    storage_loc = System.get_env("SHUTDOWN_SAVE_PATH")
+    # Dump state if environment variable is defined
     if storage_loc do
       Dump.dump(state, storage_loc)
     end

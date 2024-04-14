@@ -46,6 +46,13 @@ defmodule Anoma.Node.Router.Engine do
     )
   end
 
+  @spec child_spec({Router.addr(), atom(), Id.t(), term()}) ::
+          Supervisor.child_spec()
+  def child_spec({router, mod, id, arg}) do
+    # Ensure that the ID of the child engine is its keypair
+    %{super({router, mod, id, arg}) | id: id}
+  end
+
   @spec init({Router.addr(), atom(), Id.t(), term()}) :: {:ok, t()} | any()
   def init({router, mod, id, arg}) do
     GenServer.cast(router.router, {:init_local_engine, id, self()})

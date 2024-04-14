@@ -35,7 +35,7 @@ defmodule AnomaTest.Node.Dump do
     id = node.router.id
     sname = Anoma.Node.Router.process_name(:supervisor, id)
 
-    DynamicSupervisor.stop(sname, :normal)
+    Supervisor.stop(sname, :normal)
 
     Anoma.Dump.launch("dump_test.txt", :dump_new)
 
@@ -43,6 +43,6 @@ defmodule AnomaTest.Node.Dump do
 
     assert new_node == node
 
-    DynamicSupervisor.stop(sname, :normal)
+    Supervisor.stop(sname, :normal)
   end
 end

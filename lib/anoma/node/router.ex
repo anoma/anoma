@@ -289,11 +289,11 @@ defmodule Anoma.Node.Router do
     supervisor = process_name(:supervisor, id.external)
 
     {:ok, _} =
-      DynamicSupervisor.start_link(name: supervisor, strategy: :one_for_one)
+      Supervisor.start_link([], name: supervisor, strategy: :one_for_one)
 
     router = process_name(__MODULE__, id.external)
 
-    case DynamicSupervisor.start_child(supervisor, {__MODULE__, id}) do
+    case Supervisor.start_child(supervisor, {__MODULE__, id}) do
       {:ok, _} ->
         {:ok,
          %Addr{
@@ -347,7 +347,7 @@ defmodule Anoma.Node.Router do
           | any()
   def start_engine(router, module, id, arg) do
     with {:ok, _} <-
-           DynamicSupervisor.start_child(
+           Supervisor.start_child(
              call(router, :supervisor),
              {Anoma.Node.Router.Engine, {router, module, id, arg}}
            ) do
