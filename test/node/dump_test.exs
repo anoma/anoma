@@ -35,7 +35,7 @@ defmodule AnomaTest.Node.Dump do
     GenServer.stop(:dump, :normal)
 
     # Make sure that the next created node dumps on shutdown
-    System.put_env("SHUTDOWN_SAVE_PATH", "shutdown_dump_test")
+    System.put_env(Anoma.Node.shutdown_save_path(), "shutdown_dump_test")
 
     Anoma.Dump.launch("dump_test.txt", :dump_new)
 
@@ -47,7 +47,7 @@ defmodule AnomaTest.Node.Dump do
     GenServer.stop(:dump_new, :normal)
 
     # Make sure that the next created node does not dump on shutdown
-    System.delete_env("SHUTDOWN_SAVE_PATH")
+    System.delete_env(Anoma.Node.shutdown_save_path())
 
     Anoma.Dump.launch("shutdown_dump_test.txt", :dump_new_new)
 
