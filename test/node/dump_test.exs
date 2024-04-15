@@ -31,11 +31,11 @@ defmodule AnomaTest.Node.Dump do
 
   test "loading keeps addresses", %{node: node} do
     Anoma.Node.dump(:dump, "dump_test")
+    # Stop the GenServer directly to ensure correct node termination
+    GenServer.stop(:dump, :normal)
 
-    id = node.router.id
-    sname = Anoma.Node.Router.process_name(:supervisor, id)
-
-    Supervisor.stop(sname, :normal)
+    # Make sure that the next created node dumps on shutdown
+    System.put_env("SHUTDOWN_SAVE_PATH", "shutdown_dump_test")
 
     Anoma.Dump.launch("dump_test.txt", :dump_new)
 
@@ -43,6 +43,18 @@ defmodule AnomaTest.Node.Dump do
 
     assert new_node == node
 
-    Supervisor.stop(sname, :normal)
+    # Stop the GenServer directly to ensure correct node termination
+    GenServer.stop(:dump_new, :normal)
+
+    # Make sure that the next created node does not dump on shutdown
+    System.delete_env("SHUTDOWN_SAVE_PATH")
+
+    Anoma.Dump.launch("shutdown_dump_test.txt", :dump_new_new)
+
+    new_node = Anoma.Node.state(:dump_new_new)
+
+    assert new_node == node
+    # Stop the GenServer directly to ensure correct node termination
+    GenServer.stop(:dump_new_new, :normal)
   end
 end
