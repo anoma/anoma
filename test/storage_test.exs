@@ -69,6 +69,7 @@ defmodule AnomaTest.Storage do
                    Storage.blocking_read(storage, [1, testing_atom | 0])
 
           send(home, {:read, value})
+          Process.sleep(1000)
         end)
 
       assert Process.alive?(pid) == true
