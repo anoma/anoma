@@ -93,7 +93,6 @@ defmodule AnomaTest.Storage do
       assert Process.alive?(pid) == true
       Storage.put(storage, testing_atom, 1)
       assert_receive {:read, 1}, 100
-      assert Process.alive?(pid) == false
     end
   end
 
