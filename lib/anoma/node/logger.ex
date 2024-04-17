@@ -58,7 +58,7 @@ defmodule Anoma.Node.Logger do
   attached to a list of 4 elements:
 
   1. ID of the logger calling for storage
-  2. ID of the engine whose info we log
+  2. ID of the engine whose info we log or a PID of the worker process
   3. Timestamp relative to the clock engine used
   4. The urgency atom
 
@@ -80,9 +80,9 @@ defmodule Anoma.Node.Logger do
   `Storage.get_keyspace/2`
 
   I return a list of 2-tuples. Its left element will be a list whose
-  head is the ID of the specified logger, followed by the engine ID, the
-  timestamp, and an atom specifying urgency of the logging message. Its
-  right element will be the message.
+  head is the ID of the specified logger, followed by the engine ID (or
+  worker PID), the timestamp, and an atom specifying urgency of the logging
+  message. Its right element will be the message.
   """
   @spec get(Router.addr() | nil) ::
           list({list(Id.Extern.t() | integer() | atom() | pid()), String.t()})
@@ -99,9 +99,9 @@ defmodule Anoma.Node.Logger do
   engine using `Storage.get_keyspace/2`
 
   I return a list of 2-tuples. Its left element will be a list whose
-  head is the ID of the specified logger, followed by the engine ID, the
-  timestamp, and an atom specifying urgency of the logging message. Its
-  right element will be the message.
+  head is the ID of the specified logger, followed by the engine ID (or
+  worker PID), the timestamp, and an atom specifying urgency of the logging
+  message. Its right element will be the message.
   """
 
   @spec get(Router.addr() | nil, Router.addr() | pid()) ::
