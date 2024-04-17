@@ -116,9 +116,18 @@ defmodule Anoma.Node.Logger do
   ############################################################
 
   def handle_cast({:add, logger, atom, msg}, addr, state) do
+    id = addr.id
+
+    address =
+      if id == nil do
+        addr.server
+      else
+        id
+      end
+
     Storage.put(
       state.storage,
-      [logger.id, addr.id, Clock.get_time(state.clock), atom],
+      [logger.id, address, Clock.get_time(state.clock), atom],
       msg
     )
 
