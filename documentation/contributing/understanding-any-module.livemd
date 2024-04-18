@@ -22,7 +22,8 @@
    3. [Setting Up](./../hoon/setting-up.livemd)
 5. [Analysis](./../analysis.livemd)
    1. [Fema Analysis Pinger](./../analysis/fema-analysis-pinger.livemd)
-6. [Vm_interface](./../vm_interface.livemd)
+6. [Logging](./../logging.livemd)
+7. [Vm_interface](./../vm_interface.livemd)
 
 ## Figuring out what a module does
 
