@@ -28,6 +28,25 @@ defmodule AnomaTest.Storage do
       assert {:ok, 1} = Storage.get(storage, testing_atom)
     end
 
+    test "Deleting key works", %{storage: storage} do
+      testing_atom = :QWERTZ_delete
+      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
+      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 2)
+      assert {:ok, 2} = Storage.get(storage, testing_atom)
+      assert {:atomic, :ok} = Storage.delete_key(storage, testing_atom)
+      assert :absent = Storage.get(storage, testing_atom)
+    end
+
+    test "Deleting key again", %{storage: storage} do
+      testing_atom = :QWERTZ_delete
+      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
+      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 2)
+      assert {:ok, 2} = Storage.get(storage, testing_atom)
+      assert {:atomic, :ok} = Storage.delete_key(storage, testing_atom)
+      assert {:atomic, :ok} = Storage.delete_key(storage, testing_atom)
+      assert :absent = Storage.get(storage, testing_atom)
+    end
+
     test "block_reads work", %{storage: storage} do
       testing_atom = :QWERTZ_blocking
       assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
