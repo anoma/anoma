@@ -60,7 +60,7 @@ defmodule Anoma.Storage do
   I represent the qualified and ordered data of storage
 
   ## Fields
-    - `:qualified` - The key value value map into storage
+    - `:qualified` - The key value map into storage
     - `:order` - A mapping from keys to the properly qualified keys
   """
   typedstruct do
