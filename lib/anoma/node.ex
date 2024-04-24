@@ -33,6 +33,7 @@ defmodule Anoma.Node do
   use GenServer
   use TypedStruct
   alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger}
+  alias Anoma.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Crypto.Id
   alias __MODULE__
@@ -49,6 +50,31 @@ defmodule Anoma.Node do
     field(:logger, Router.addr())
   end
 
+  @type configuration() :: [
+          new_storage: boolean(),
+          name: atom(),
+          settings: engine_configuration()
+        ]
+
+  @type min_engine_configuration() :: [
+          ping_time: :no_timer | non_neg_integer(),
+          name: atom(),
+          snapshot_path: Noun.t(),
+          storage: Storage.t(),
+          block_storage: atom()
+        ]
+
+  @type engine_configuration() :: %{
+          clock: {Router.addr() | nil, Clock.t()},
+          pinger: {Router.addr() | nil, Pinger.t()},
+          logger: {Router.addr() | nil, Logger.t()},
+          ordering: {Router.addr() | nil, Ordering.t()},
+          executor: {Router.addr() | nil, Executor.t()},
+          mempool: {Router.addr() | nil, Mempool.t()},
+          storage: {Storage.t(), atom()},
+          snapshot_path: Noun.t()
+        }
+
   @doc """
   I assume I am fed a list with atom-value 2-tuples
   :new_storage, :name, :settings. If :new_storage has
@@ -62,6 +88,7 @@ defmodule Anoma.Node do
   Check Anoma.Dump for format descriptions.
   """
 
+  @spec start_link(configuration()) :: GenServer.on_start()
   def start_link(args) do
     settings = args[:settings]
     name = args[:name]
@@ -172,6 +199,7 @@ defmodule Anoma.Node do
   Given minimal arguments, I create appropriate setup for the
   `:settings` argument for Node initialization.
   """
+  @spec start_min(min_engine_configuration()) :: engine_configuration()
   def start_min(args) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
     storage = args[:storage]
