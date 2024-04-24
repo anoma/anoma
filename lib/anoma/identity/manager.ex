@@ -10,8 +10,8 @@ defmodule Anoma.Identity.Manager do
     - internal identities stored in a browser extension
     - internal identities stored in another machine accessible over the network
 
-  When an identity is generated or connected, the I do not return the
-  internal identity directly, but rather returns handles to the
+  When an identity is generated or connected, I do not return the
+  internal identity directly, but rather return handles to the
   corresponding commitment and decryption engine instances, which can
   be used to generate commitments by and decrypt data encrypted to,
   respectively, the internal identity (which is still kept in whatever
@@ -21,6 +21,7 @@ defmodule Anoma.Identity.Manager do
   alias Anoma.Identity.{Backend, Capabilities, Parameters}
   alias Anoma.Node.Identity.{Commitment, Decryption}
   alias Anoma.Crypto.Id
+  alias Anoma.Storage
 
   @type resp(t) :: {:ok, t} | {:error, String.t()}
 
@@ -30,15 +31,13 @@ defmodule Anoma.Identity.Manager do
           resp({instance(), Id.Extern.t()})
   def generate(mem = %Backend.Memory{}, :ed25519, cap) do
     pair = Id.new_keypair()
+    salted_pair = Id.salt_keys(pair, mem.symmetric)
 
-    # TODO Store kind of mechanism for both sets of key
-    write_data = pair |> Id.salt_keys(mem.symmetric) |> Id.encode(mem.table)
-
-    write_tx = fn ->
-      :mnesia.write(write_data)
-    end
-
-    :mnesia.transaction(write_tx)
+    Storage.put(
+      mem.storage,
+      storage_key(salted_pair.external.sign),
+      salted_pair
+    )
 
     with {:ok, links} <- start_links(pair, cap) do
       {links, pair.external}
@@ -50,11 +49,9 @@ defmodule Anoma.Identity.Manager do
   def connect(id, mem = %Backend.Memory{}, cap) do
     salted_key = Id.salt_keys(id, mem.symmetric)
 
-    get_tx = fn -> :mnesia.read({mem.table, salted_key.sign}) end
-
-    with {:atomic, [identity]} <- :mnesia.transaction(get_tx) do
+    with {:ok, identity} <-
+           Storage.get(mem.storage, storage_key(salted_key.sign)) do
       identity
-      |> Id.decode()
       |> Id.unsalt_keys(mem.symmetric)
       |> start_links(cap)
     else
@@ -81,14 +78,9 @@ defmodule Anoma.Identity.Manager do
   @spec delete(Id.Extern.t(), Backend.t()) :: resp(nil)
   def delete(id, mem = %Backend.Memory{}) do
     salted_key = Id.salt_keys(id, mem.symmetric)
+    res = Storage.delete_key(mem.storage, storage_key(salted_key.sign))
 
-    # If we can read the salted public key, then you can decrypt the
-    # private key as well, making it known to whoever is submitting
-    trans =
-      fn -> :mnesia.delete({mem.table, salted_key.sign}) end
-      |> :mnesia.transaction()
-
-    case trans do
+    case res do
       {:atomic, :ok} -> {:ok, nil}
       _ -> {:error, "bad transaction, failed to delete key"}
     end
@@ -125,4 +117,9 @@ defmodule Anoma.Identity.Manager do
       {:ok, %{commitment: cpid, decryption: dpid}}
     end
   end
+
+  defp storage_key(key), do: [name_space(), key]
+
+  @base_name_space "identity_manager"
+  def name_space, do: @base_name_space
 end

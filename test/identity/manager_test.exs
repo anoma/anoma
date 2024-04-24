@@ -6,27 +6,32 @@ defmodule AnomaTest.Identity.Manager do
   alias Anoma.Identity.Backend.Memory
   alias Anoma.Identity.Manager
   alias Anoma.Node.Identity.Commitment
+  alias Anoma.Storage
 
   doctest(Anoma.Identity.Manager)
 
   setup_all do
-    tab = :manager_table_test
-    Id.initalize(tab)
+    storage = %Storage{
+      qualified: AnomaTest.Identity.Manager.Qualified,
+      order: AnomaTest.Identity.Manager.Order
+    }
+
+    Storage.ensure_new(storage)
 
     key = Symmetric.random_xchacha()
 
-    mem = %Memory{symmetric: key, table: tab}
-    [tab: tab, key: key, mem: mem]
+    mem = %Memory{symmetric: key, storage: storage}
+    [key: key, mem: mem]
   end
 
-  test "random key is not can not be connected", %{mem: mem} do
+  test "Random key cannot be connected", %{mem: mem} do
     pair = Id.new_keypair()
 
     assert {:error, _} =
              Manager.connect(pair.external, mem, :commit_and_decrypt)
   end
 
-  test "Generating Works", %{mem: mem} do
+  test "Generating works", %{mem: mem} do
     assert {%{commitment: com, decryption: _}, _} =
              Manager.generate(mem, :ed25519, :commit_and_decrypt)
 
@@ -55,7 +60,7 @@ defmodule AnomaTest.Identity.Manager do
     assert Map.has_key?(com, :commitment) && Map.has_key?(dec, :decryption)
   end
 
-  test "delete works", %{mem: mem} do
+  test "Deleting works", %{mem: mem} do
     {_, pub} = Manager.generate(mem, :ed25519, :commit_and_decrypt)
     Manager.delete(pub, mem)
     assert {:error, _} = Manager.connect(pub, mem, :commit_and_decrypt)

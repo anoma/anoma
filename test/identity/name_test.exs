@@ -3,7 +3,6 @@ defmodule AnomaTest.Identity.Name do
 
   alias Anoma.Crypto.Symmetric
   alias Anoma.Storage
-  alias Anoma.Crypto.Id
   alias Anoma.Identity.Backend.Memory
   alias Anoma.Identity.{Manager, Name}
   alias Anoma.Node.Identity.Commitment
@@ -11,13 +10,6 @@ defmodule AnomaTest.Identity.Name do
   doctest(Anoma.Identity.Name)
 
   setup_all do
-    tab = :name_manager_table_test
-    Id.initalize(tab)
-
-    key = Symmetric.random_xchacha()
-
-    mem = %Memory{symmetric: key, table: tab}
-
     # base storage testing default
     storage = %Storage{
       qualified: AnomaTest.Identity.Name.Qualified,
@@ -26,7 +18,12 @@ defmodule AnomaTest.Identity.Name do
 
     Storage.ensure_new(storage)
 
-    namespace = %Name{storage: storage, keyspace: tab}
+    key = Symmetric.random_xchacha()
+
+    mem = %Memory{symmetric: key, storage: storage}
+
+    keyspace = :name_manager_keyspace_test
+    namespace = %Name{storage: storage, keyspace: keyspace}
 
     [ns: namespace, st: storage, mem: mem]
   end

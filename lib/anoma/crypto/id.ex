@@ -45,65 +45,6 @@ defmodule Anoma.Crypto.Id do
     Sign.verify(message, sign)
   end
 
-  @spec encode(Anoma.Crypto.Id.t(), atom()) ::
-          {atom(), Sign.public(), Encrypt.public(), Sign.secret(),
-           Encrypt.secret(), atom(), atom()}
-  @doc """
-  Serializes it for Mnesia
-  """
-  def encode(
-        %__MODULE__{
-          internal: intern,
-          external: extern,
-          kind_sign: ks,
-          kind_encrypt: ke
-        },
-        atom
-      ) do
-    {atom, extern.sign, extern.encrypt, intern.sign, intern.encrypt, ks, ke}
-  end
-
-  @spec decode(
-          {atom(), Sign.public(), Encrypt.public(), Sign.secret(),
-           Encrypt.secret(), atom(), atom()}
-        ) :: t()
-  def decode({_, es, ee, is, ie, ks, ke}) do
-    external = %Extern{sign: es, encrypt: ee}
-    internal = %Intern{sign: is, encrypt: ie}
-
-    %__MODULE__{
-      internal: internal,
-      external: external,
-      kind_sign: ks,
-      kind_encrypt: ke
-    }
-  end
-
-  @doc """
-
-  I initialize the table to be used locally.
-
-  ### Parameters
-     - `table` - the table name to store the data under
-     - `kind` - the kind of table this should be
-  """
-  @spec initalize(atom(), :ram_copies | :disc_copies | :rocksdb_copies) ::
-          any()
-  def initalize(table, kind \\ :ram_copies) when is_atom(table) do
-    attributes =
-      [
-        :pub_sign,
-        :pub_encrypt,
-        :priv_sign,
-        :priv_encrypt,
-        :kind_sign,
-        :king_encrypt
-      ]
-
-    :mnesia.create_table(table, [{:attributes, attributes}, {kind, [node()]}])
-    :mnesia.add_table_index(table, :pub_encrypt)
-  end
-
   @doc """
   I salt the given keys for further storage. Or for storage
   lookup
