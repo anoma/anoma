@@ -67,7 +67,7 @@ defmodule Anoma.Node.Executor.Worker do
             cm_key = ["rm", "commitments", commitment]
             Storage.put(storage, cm_key, true)
             # yeah, this is not using the api right
-            {_, new_root} = CommitmentTree.add(tree, [commitment])
+            CommitmentTree.add(tree, [commitment])
             log_info({:put, cm_key, logger})
             tree
         end
