@@ -46,7 +46,12 @@ defmodule Anoma.Node.Router.Engine do
     )
   end
 
-  @spec init({Router.addr(), atom(), Id.t(), term()}) :: {:ok, t()} | any()
+  @spec init({Router.addr(), atom(), Id.t(), term()}) ::
+          :ignore
+          | {:ok, t()}
+          | {:ok, any(),
+             :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
+          | {:stop, any()}
   def init({router, mod, id, arg}) do
     GenServer.cast(router.router, {:init_local_engine, id, self()})
     Process.put(:engine_id, id.external)
@@ -65,14 +70,25 @@ defmodule Anoma.Node.Router.Engine do
     end
   end
 
-  @spec handle_cast({any(), Router.addr(), term()}, t()) :: any()
+  @spec handle_cast({any(), Router.addr(), term()}, t()) ::
+          {:noreply, any()}
+          | {:noreply, any(),
+             :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
+          | {:stop, any(), any()}
   def handle_cast({:router_cast, src, msg}, state = %__MODULE__{}) do
     {:noreply, ns} = state.module.handle_cast(msg, src, state.module_state)
     {:noreply, %__MODULE__{state | module_state: ns}}
   end
 
   @spec handle_call({any(), Router.addr(), term()}, GenServer.from(), t()) ::
-          any()
+          {:noreply, any()}
+          | {:noreply, any(),
+             :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
+          | {:reply, any(), any()}
+          | {:reply, any(), any(),
+             :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
+          | {:stop, any(), any()}
+          | {:stop, any(), any(), any()}
   def handle_call({:router_call, src, msg}, _, state = %__MODULE__{}) do
     case state.module.handle_call(msg, src, state.module_state) do
       {:reply, res, new_state} ->
