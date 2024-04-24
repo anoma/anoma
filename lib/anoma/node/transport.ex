@@ -11,11 +11,21 @@ defmodule Anoma.Node.Transport do
   # cap messages at 1mb.  todo should be a configuration parameter, maybe more sophisticated policy, etc.
   @max_message_size 1_000_000
 
-  @type transport_type :: :quic
+  @type transport_type :: :quic | :tcp | :unix
   # host, port
-  @type transport_addr :: {:quic, binary(), non_neg_integer()}
+  @type transport_addr ::
+          {:quic, binary(), non_neg_integer()}
+          # host, port
+          | {:tcp, binary(), non_neg_integer()}
+          # file path
+          | {:unix, binary()}
   # host, port
-  @type listen_addr :: {:quic, binary(), non_neg_integer()}
+  @type listen_addr ::
+          {:quic, binary(), non_neg_integer()}
+          # host, port
+          | {:tcp, binary(), non_neg_integer()}
+          # file path
+          | {:unix, binary()}
 
   typedstruct module: ConnectionState do
     field(:type, Anoma.Node.Transport.transport_type())
@@ -72,8 +82,8 @@ defmodule Anoma.Node.Transport do
   end
 
   @spec transport_type(transport_addr()) :: transport_type()
-  def transport_type({:quic, _, _}) do
-    :quic
+  def transport_type(addr) do
+    elem(addr, 0)
   end
 
   @doc """
@@ -191,12 +201,12 @@ defmodule Anoma.Node.Transport do
     {:noreply, s}
   end
 
-  def handle_cast({:start_server, trans = {:quic, host, port}}, _, s) do
+  def handle_cast({:start_server, trans}, _, s) do
     {:noreply,
      case Router.start_engine(
             s.router,
-            Anoma.Node.Transport.QuicServer,
-            {s.router, Router.self_addr(s.router), port, host}
+            trans_server_mod(transport_type(trans)),
+            {s.router, Router.self_addr(s.router), trans}
           ) do
        {:ok, server} -> %{s | servers: Map.put(s.servers, trans, server)}
        _ -> s
@@ -505,15 +515,31 @@ defmodule Anoma.Node.Transport do
 
   @spec init_connection(t(), transport_addr()) ::
           {Router.addr(), transport_type()} | nil
-  defp init_connection(s, addr = {:quic, _, _}) do
+  defp init_connection(s, trans) do
     case Router.start_engine(
            s.router,
-           Transport.QuicConnection,
-           {:client, s.router, Router.self_addr(s.router), addr}
+           trans_connection_mod(transport_type(trans)),
+           {:client, s.router, Router.self_addr(s.router), trans}
          ) do
-      {:ok, addr} -> {addr, :quic}
+      {:ok, addr} -> {addr, transport_type(trans)}
       _ -> nil
     end
+  end
+
+  defp trans_connection_mod(type) do
+    %{
+      quic: Transport.QuicConnection,
+      tcp: Transport.TCPConnection,
+      unix: Transport.TCPConnection
+    }[type]
+  end
+
+  defp trans_server_mod(type) do
+    %{
+      quic: Transport.QuicServer,
+      tcp: Transport.TCPServer,
+      unix: Transport.TCPServer
+    }[type]
   end
 
   defp new_nonce() do

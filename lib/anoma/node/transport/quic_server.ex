@@ -19,19 +19,15 @@ defmodule Anoma.Node.Transport.QuicServer do
     field(:listener, reference())
   end
 
-  def init({router, transport}) do
-    init({router, transport, 24768, "0.0.0.0"})
-  end
-
-  def init({router, transport, port, host}) do
-    init({router, transport, port, host, ~c"cert.pem", ~c"key.pem"})
+  def init({router, transport, addr}) do
+    init({router, transport, addr, ~c"cert.pem", ~c"key.pem"})
   end
 
   # todo: to improve scalability, we could have multiple listeners running
   # concurrently, but there is no point at all in doing that before we stop
   # serialising everything though a single transport/router
   # todo: allow the server to be shut down
-  def init({router, transport, port, _host, cert, key}) do
+  def init({router, transport, {:quic, _host, port}, cert, key}) do
     with {:ok, listener} <-
            :quicer.listen(
              port,
