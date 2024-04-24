@@ -4,6 +4,17 @@ defmodule Anoma.Node.Clock do
 
   I provide info on the time elapsed in milliseconds after the node launched
   and the epoch from which it has been calculated using monotonic time.
+
+  The current implementation launches the epoch by asking for the system
+  monotonic time at the point of an Anoma node launch. This is recommended
+  as all my public API uses system monotonic time to give measurements.
+
+  ### Public API
+
+  I have the following public functionality:
+
+  - `get_time/1`
+  - `get_epoch/1`
   """
 
   alias __MODULE__
@@ -20,6 +31,7 @@ defmodule Anoma.Node.Clock do
     {:ok, state}
   end
 
+  @spec init(list({:start, integer()})) :: {:ok, Clock.t()}
   def init(args) do
     {:ok, %Clock{start: args[:start]}}
   end
@@ -28,10 +40,22 @@ defmodule Anoma.Node.Clock do
   #                      Public RPC API                      #
   ############################################################
 
+  @doc """
+  I get the local time by checking the clock epoch attached to
+  the clock address, taking the current system monotonic time,
+  and then subtracting the former from the latter.
+  """
+
   @spec get_time(Router.Addr.t()) :: integer()
   def get_time(clock) do
     Router.call(clock, :get_time)
   end
+
+  @doc """
+  I get the epoch attached to a clock address. This is usually
+  the system monotonic time as recorder at the start of the
+  node to which the apporproaite clock engine is related.
+  """
 
   @spec get_epoch(Router.Addr.t()) :: integer()
   def get_epoch(clock) do
