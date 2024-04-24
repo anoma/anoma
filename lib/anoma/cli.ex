@@ -55,6 +55,15 @@ defmodule Anoma.Cli do
       {:ok, args = %{unknown: [_, "test" | _]}} ->
         start_anoma.(args)
 
+      # Happens on various debug tooling
+      {:ok, args = %{unknown: [debugger]}} ->
+        if debugger |> String.contains?("elixir-ls") do
+          start_anoma.(args)
+        else
+          top_level_help()
+          System.halt(1)
+        end
+
       {:ok, [:nockma], parsed} ->
         Nock.Cli.main(parsed)
         System.halt(0)
