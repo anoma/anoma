@@ -1,10 +1,10 @@
 [
   {"documentation",
    [
-     {"index", []},
+     {"toc", []},
      {"contributing",
       [
-        {"understanding", []}
+        {"understanding-any-module", []}
       ]},
      {"visualization", []},
      {"hoon", []}
