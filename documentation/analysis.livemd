@@ -1,6 +1,6 @@
 <!-- livebook:{"persist_outputs":true} -->
 
-# Contributing
+# Analysis
 
 ## Index
 1. [Toc](./toc.livemd)
@@ -24,8 +24,6 @@
    1. [Fema Analysis Pinger](./analysis/fema-analysis-pinger.livemd)
 6. [Vm_interface](./vm_interface.livemd)
 
-## Contributing
+## Analysis
 
-Documents in this section cover getting started and contributing back to `Anoma`.
-
-Please feel free to contribute to these docs and improve them! For tips on how to write documents, please refer to the [Writing Documents](./contributing/writing-documents.livemd)
+Documents in this section cover analysis over the code in the repository.

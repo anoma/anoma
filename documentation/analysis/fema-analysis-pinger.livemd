@@ -1,0 +1,153 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Fema Analysis On the Pinger
+
+## Index
+1. [Toc](./../toc.livemd)
+2. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Writing Documents](./../contributing/writing-documents.livemd)
+   3. [Git](./../contributing/git.livemd)
+   4. [Hoon](./../contributing/hoon.livemd)
+   5. [Iex](./../contributing/iex.livemd)
+   6. [Observer](./../contributing/observer.livemd)
+   7. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+8. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+4. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+5. [Analysis](./../analysis.livemd)
+   1. [Fema Analysis Pinger](./../analysis/fema-analysis-pinger.livemd)
+6. [Vm_interface](./../vm_interface.livemd)
+
+## Analysis
+
+This document contains a [FEMA](https://en.wikipedia.org/wiki/Failure_mode_and_effects_analysis) analysis on `Anoma.Node.Pinger`.
+
+The pinger module is responsible for producing blocks at a set time.
+
+In order to get a good feeling of the errors, this document will:
+
+1. Cover the traces of it's public API
+2. Do a more indpeth analysis of the effects, inducing the key calls
+3. Disect how the module could fail
+4. Locate how the API could be misused and create a failure case
+5. Look at the codebase for potential areas where this could occur
+6. Note the nock-on effects on a failing actor on other actors in the `Anoma` system.
+7. Write out each bug in full effect.
+8. Provide a summary of the findings with the precieved severity level
+
+## Pinger API Tracing
+
+Let us startup the Anoma Environment to run the code in.
+
+```elixir
+alias Anoma.Node.{Mempool, Router, Pinger}
+alias Anoma.Storage
+alias Anoma.Node.Storage.Ordering
+import TestHelper.Nock
+
+name = :anoma
+node = Anoma.Node.state(name)
+:all_good
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:all_good
+```
+
+The Pinger has 3 `public` methods that we can abuse `Anoma.Node.Pinger.start/1`, `Anoma.Node.Pinger.state/1`, and `Anoma.Node.Pinger.set_timer/2`.
+
+Let use begin by first tracing what all these methods do in depth
+
+```elixir
+Kino.Process.render_seq_trace(
+  [Process.whereis(node.pinger.server)],
+  fn ->
+    # we should use the router, but pinger is special
+    Pinger.set_timer(node.pinger, 20)
+  end,
+  message_label: &Anoma.Node.Utility.message_label/1
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+sequenceDiagram
+participant 0 AS self();
+participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
+0->>1: CALL: set
+1->>0: INFO: tuple
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"Timer set to 20"
+```
+
+## In Depth Analysis
+
+Now that we have seen the rough API of the Pinger, let us now look deeper at how the interactions work, and see what we can derive.
+
+The first bit to note is that `set_timer` does not actually trigger the pinger to start sending
+
+Analyzing the code, we can see that if **state.time** is set properly, then the pinger will handle a self call of `:execute`.
+
+```elixir
+Kino.Process.render_seq_trace(
+  [Process.whereis(node.pinger.server)],
+  fn ->
+    # we should use the router, but pinger is special
+    send(Process.whereis(node.pinger.server), :execute)
+    :timer.sleep(1)
+  end,
+  message_label: &Anoma.Node.Utility.message_label/1
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```mermaid
+sequenceDiagram
+participant 2 AS Anoma.Node.Mempool 4/XLsEdgkzoiXSBYoBHJexd5ax8K1Sp7feQki1HV45k=;
+participant 0 AS self();
+participant 1 AS Anoma.Node.Pinger HFn/uuQ5P5oDd3yBKS2rDz+Nx++XqLKOL+zJdO70aJg=;
+0->>1: INFO: execute
+1->>2: CALL: execute
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+## Potential Failure Modes
+
+## Failure of use around the codebase
+
+## Death of the Actor
+
+If the actor dies, then the only effect is that blocks won't be producted like expected.
+
+In production this is **critical** as the chain will halt.
+
+On a developer's testing box this is rather benign, as block production should happen on demand, rather than on intervels.
+
+## Full Details of the Failure modes
+
+## Summary Of Failures
+
+| Failure States | Severity | Comment                 |
+| -------------- | -------- | ----------------------- |
+| xyz            | low      | important for operation |
