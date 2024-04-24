@@ -27,7 +27,7 @@ defmodule Anoma.Dump do
   alias Anoma.Mnesia
   alias Anoma.Node
   alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock}
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Crypto.Id
 
   @doc """

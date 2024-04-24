@@ -3,7 +3,7 @@ defmodule Anoma.Node.Executor.Worker do
   I am a Nock worker, supporting scry.
   """
   alias Anoma.Storage
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.Logger
 
   import Nock

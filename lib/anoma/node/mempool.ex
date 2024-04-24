@@ -2,7 +2,7 @@ defmodule Anoma.Node.Mempool do
   alias Anoma.{Block, Transaction, Order, Serializer}
   alias Anoma.Block.Base
   alias Anoma.Node.Executor
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
   alias Anoma.Node.{Router, Logger}
 
   use Router.Engine

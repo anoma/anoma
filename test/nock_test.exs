@@ -4,7 +4,7 @@ defmodule AnomaTest.Nock do
   import Nock
   import TestHelper.Nock
   alias Anoma.{Storage, Order}
-  alias Anoma.Node.Storage.Ordering
+  alias Anoma.Node.Ordering
 
   doctest(Nock)
 
@@ -17,7 +17,7 @@ defmodule AnomaTest.Nock do
     {:ok, router} = Anoma.Node.Router.start()
     # on_exit(fn -> Anoma.Node.Router.stop(router.id) end)
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Anoma.Node.Storage.Ordering, %{
+      Anoma.Node.Router.start_engine(router, Anoma.Node.Ordering, %{
         table: storage
       })
 

@@ -90,7 +90,7 @@ that assertions can be copied and pasted to IEX
 ```elixir
 # output redacted for length
 alias Anoma.Storage
-alias Anoma.Node.Storage.Ordering
+alias Anoma.Node.Ordering
 alias Anoma.Node.Mempool
 alias Anoma.Node.Router
 
@@ -253,7 +253,7 @@ node
     }
   },
   ordering: %Anoma.Node.Router.Addr{
-    server: :"Anoma.Node.Storage.Ordering oCXn2nJdaIIF+wTv8PreeZ56RXH6TKNVH2Vk+EP4FzI=",
+    server: :"Anoma.Node.Ordering oCXn2nJdaIIF+wTv8PreeZ56RXH6TKNVH2Vk+EP4FzI=",
     id: %Anoma.Crypto.Id.Extern{
       encrypt: <<137, 234, 55, 245, 216, 126, 69, 133, 161, 185, 181, 4, 138, 160, 234, 238, 82,
         157, 113, 175, 169, 23, 67, 177, 90, 99, 60, 94, 0, 237, 51, 53>>,
