@@ -20,7 +20,6 @@ defmodule Anoma.Node.Executor do
   - `fire_new_transaction/3`
   - `fire_new_transaction/4`
   - `snapshot/1`
-  - `state/1`
   - `subscribe/2`
   """
   alias __MODULE__
@@ -28,6 +27,7 @@ defmodule Anoma.Node.Executor do
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router
   alias Anoma.Node.Logger
+  alias Anoma.Node.Router.Engine
 
   use TypedStruct
   use Router.Engine
@@ -85,14 +85,14 @@ defmodule Anoma.Node.Executor do
   """
   @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t()) :: Task.t()
   def new_transaction(executor, order, gate) do
-    state = state(executor)
+    state = Engine.get_state(executor)
     spawn_transactions(order, gate, state)
   end
 
   @spec new_transaction(Router.Addr.t(), Noun.t(), Noun.t(), Nock.t()) ::
           Task.t()
   def new_transaction(executor, order, gate, env) do
-    state = state(executor)
+    state = Engine.get_state(executor)
     spawn_transactions(order, gate, %Executor{state | ambiant_env: env})
   end
 
@@ -134,13 +134,6 @@ defmodule Anoma.Node.Executor do
     Router.call(executor, :snapshot)
   end
 
-  @doc """
-  Returns the current state of the executor
-  """
-  def state(executor) do
-    Router.call(executor, :state)
-  end
-
   # TODO, only kill the given transactions
   def kill_transactions(communicator, _trans) do
     Router.call(communicator, :kill)
@@ -149,11 +142,6 @@ defmodule Anoma.Node.Executor do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    log_info({:state, state, state.logger})
-    {:reply, state, state}
-  end
 
   def handle_call(:snapshot, _from, state) do
     hd = hd(state.ambiant_env.snapshot_path)
@@ -235,10 +223,6 @@ defmodule Anoma.Node.Executor do
   ############################################################
   #                     Logging Info                         #
   ############################################################
-
-  defp log_info({:state, state, logger}) do
-    Logger.add(logger, :info, "Requested state: #{inspect(state)}")
-  end
 
   defp log_info({:snap, hd, logger}) do
     Logger.add(logger, :info, "Requested snapshot: #{inspect(hd)}")

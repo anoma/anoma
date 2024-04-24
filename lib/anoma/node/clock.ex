@@ -62,18 +62,9 @@ defmodule Anoma.Node.Clock do
     Router.call(clock, :get_epoch)
   end
 
-  @spec state(Router.Addr.t()) :: Clock.t()
-  def state(server) do
-    Router.call(server, :state)
-  end
-
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    {:reply, state, state}
-  end
 
   def handle_call(:get_time, _from, clock) do
     {:reply, System.monotonic_time(:millisecond) - clock.start, clock}

@@ -3,6 +3,7 @@ defmodule AnomaTest.Node.Storage do
 
   alias Anoma.{Storage, Order}
   alias Anoma.Node.Ordering
+  alias Anoma.Node.Router.Engine
 
   doctest(Anoma.Node.Ordering)
 
@@ -26,7 +27,7 @@ defmodule AnomaTest.Node.Storage do
   test "reset works", %{ordering: ordering} do
     Ordering.new_order(ordering, [Order.new(1, <<3>>, self())])
     Ordering.reset(ordering)
-    ordering = Ordering.state(ordering)
+    ordering = Engine.get_state(ordering)
     assert ordering.hash_to_order == %{}
     assert ordering.next_order == 1
   end
@@ -39,7 +40,7 @@ defmodule AnomaTest.Node.Storage do
       [Order.new(1, <<3>>, self()), Order.new(1, <<3>>, self())]
     )
 
-    ordering = Ordering.state(ordering)
+    ordering = Engine.get_state(ordering)
     assert ordering.hash_to_order == %{<<3>> => 1}
   end
 

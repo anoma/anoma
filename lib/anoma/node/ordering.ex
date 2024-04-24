@@ -52,11 +52,6 @@ defmodule Anoma.Node.Ordering do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec state(Router.Addr.t()) :: t()
-  def state(ordering) do
-    Router.call(ordering, :state)
-  end
-
   @spec next_order(Router.Addr.t()) :: non_neg_integer()
   def next_order(ordering) do
     Router.call(ordering, :next_order)
@@ -91,12 +86,6 @@ defmodule Anoma.Node.Ordering do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    log_info({:state, state, state.logger})
-
-    {:reply, state, state}
-  end
 
   def handle_call(:next_order, _from, state) do
     next_order = state.next_order
@@ -212,16 +201,6 @@ defmodule Anoma.Node.Ordering do
   ############################################################
   #                     Logging Info                         #
   ############################################################
-
-  # Keeping usual logging above for now
-
-  defp log_info({:state, state, logger}) do
-    Logger.add(
-      logger,
-      :info,
-      "Requested state: #{inspect(state)}"
-    )
-  end
 
   defp log_info({:next, state, logger}) do
     Logger.add(

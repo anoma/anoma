@@ -63,11 +63,6 @@ defmodule Anoma.Node.Mempool do
     Router.cast(server, :hard_reset)
   end
 
-  @spec state(Router.Addr.t()) :: t()
-  def state(server) do
-    Router.call(server, :state)
-  end
-
   @spec pending_txs(Router.Addr.t()) :: transactions
   def pending_txs(server) do
     Router.call(server, :pending_txs)
@@ -76,12 +71,6 @@ defmodule Anoma.Node.Mempool do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    log_info({:state, state, state.logger})
-
-    {:reply, state, state}
-  end
 
   def handle_call({:tx, tx_code}, _from, state) do
     ntrans = handle_tx(tx_code, state)
@@ -251,14 +240,6 @@ defmodule Anoma.Node.Mempool do
   ############################################################
   #                     Logging Info                         #
   ############################################################
-
-  defp log_info({:state, state, logger}) do
-    Logger.add(
-      logger,
-      :info,
-      "Requested state: #{inspect(state)})"
-    )
-  end
 
   defp log_info({:tx, state, logger}) do
     Logger.add(

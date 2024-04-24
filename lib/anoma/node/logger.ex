@@ -111,10 +111,6 @@ defmodule Anoma.Node.Logger do
     end
   end
 
-  def state(server) do
-    Router.call(server, :state)
-  end
-
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -129,10 +125,6 @@ defmodule Anoma.Node.Logger do
     log_fun({atom, msg})
 
     {:noreply, state}
-  end
-
-  def handle_call(:state, _from, state) do
-    {:reply, state, state}
   end
 
   def handle_call({:get_all, logger}, _from, state) do
