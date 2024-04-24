@@ -5,7 +5,7 @@ defmodule Anoma.Node.Identity.Commitment do
   alias Anoma.Crypto.Sign
   alias Anoma.Identity.Encapsulated
 
-  @typep mode() :: :combined | :detatched
+  @typep mode() :: :combined | :detached
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
@@ -22,7 +22,7 @@ defmodule Anoma.Node.Identity.Commitment do
   @spec commit(GenServer.server(), term()) ::
           {:ok, binary()} | {:error, String.t()}
   def commit(server, data) do
-    GenServer.call(server, {:commit, data, :detatched})
+    GenServer.call(server, {:commit, data, :detached})
   end
 
   @spec commit_combined(GenServer.server(), term()) ::
@@ -51,8 +51,8 @@ defmodule Anoma.Node.Identity.Commitment do
     {:ok, Sign.sign(data, sec)}
   end
 
-  defp commit_to_data(:ed25519, :detatched, data, sec) do
-    {:ok, Sign.sign_detatched(data, sec)}
+  defp commit_to_data(:ed25519, :detached, data, sec) do
+    {:ok, Sign.sign_detached(data, sec)}
   end
 
   defp commit_to_data(_, _, _, _) do

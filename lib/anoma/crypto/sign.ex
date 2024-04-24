@@ -15,8 +15,8 @@ defmodule Anoma.Crypto.Sign do
     :enacl.sign(message, secret)
   end
 
-  @spec sign_detatched(binary(), ed25519_secret()) :: binary()
-  def sign_detatched(message, secret) do
+  @spec sign_detached(binary(), ed25519_secret()) :: binary()
+  def sign_detached(message, secret) do
     :enacl.sign_detached(message, secret)
   end
 
@@ -25,8 +25,8 @@ defmodule Anoma.Crypto.Sign do
     :enacl.sign_open(signed_message, public)
   end
 
-  @spec verify_detatched(binary, binary, ed25519_public()) :: boolean()
-  def verify_detatched(signature, message, public) do
+  @spec verify_detached(binary, binary, ed25519_public()) :: boolean()
+  def verify_detached(signature, message, public) do
     :enacl.sign_verify_detached(signature, message, public)
   end
 end

@@ -17,7 +17,7 @@ defmodule Anoma.Identity.Verification do
   def verify_request(commitment, msg, id = %Id.Extern{}, signsFor \\ false) do
     bin_message = binary(msg)
 
-    Sign.verify_detatched(commitment, bin_message, id.sign) ||
+    Sign.verify_detached(commitment, bin_message, id.sign) ||
       (signsFor && signs_for_lookup(commitment, bin_message, id, signsFor))
   end
 
