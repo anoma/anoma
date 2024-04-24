@@ -69,7 +69,8 @@ defmodule Anoma.MixProject do
       {:recon, "~> 2.5.4"},
       {:rexbug, ">= 2.0.0-rc1"},
       # until the next Kino release
-      {:kino, git: "https://github.com/livebook-dev/kino"},
+      {:kino_kroki, "~> 0.1.0"},
+      {:kino, git: "https://github.com/livebook-dev/kino", override: true},
       {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
       {:optimus, "~> 0.2"},
