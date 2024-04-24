@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="project" content="Anoma v0.12.0">
+
+
+    <title>Writing Documents — Anoma v0.12.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
+
+      <script src="./.doc-versions.js"></script>
+
+    <script async src="dist/html-CILPWI2Q.js"></script>
+
+
+  </head>
+  <body data-type="extras" class="page-livemd">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.12.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Anoma</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
+
+<h1>
+
+
+  <span>Writing Documents</span>
+</h1>
+
+  <div class="livebook-badge-container">
+    <a href="#" class="livebook-badge">
+      <img src="https://livebook.dev/badge/v1/blue.svg" alt="Run in Livebook" width="150" />
+    </a>
+  </div>
+
+<h2 id="index" class="section-heading">
+  <a href="#index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Index</span>
+</h2>
+<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="the-writing-from-within-anoma" class="section-heading">
+  <a href="#the-writing-from-within-anoma" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">The writing from within Anoma</span>
+</h2>
+<p>One of the more important parts of the Anoma project is understanding how the codebase works, and how it evolves.</p><p>A good way to start on this process is by reading and writing documentation and making visual tools to better solidify knowledge for oneself and others.</p><p>To better do this, the codebase as a few levels of documentations:</p><ol><li>The specs (link TBA)</li><li>These livebook documents</li><li>Module level documentation</li></ol><p><code class="inline">1.</code> is what specifies what <a href="Anoma.html"><code class="inline">Anoma</code></a> is abstractly.</p><p><code class="inline">2.</code> serves the purpose of general knowledge transfer. Some documents serve to provide newcomers with information about various parts of Anoma's development process, others provide visual presentations to various parts of the codebase, while even others provide indepth analys of the codebase.</p><p><code class="inline">3.</code> is documents regarding module and function specifics. This is often augmented by <code class="inline">2.</code> for better context and examples.</p><h2 id="making-a-new-document" class="section-heading">
+  <a href="#making-a-new-document" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Making a new document</span>
+</h2>
+<p>To create a new document, it is simple as creating a new <code class="inline">.livemd</code> file in the folder location you wish it to be organized under.</p><p>Thus a file at <code class="inline">documentation/contributing/testing/foo.livemd</code> would be organized under the section <code class="inline">contribution/testing/</code>.</p><p>The file can either be made in livebook itself, or via the host operating system.</p><h2 id="connect-to-anoma" class="section-heading">
+  <a href="#connect-to-anoma" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Connect to Anoma</span>
+</h2>
+<p>One should connect the document to a locally running IEX instance of Anoma.</p><p>This let's you take advantage of the pre-installed <code class="inline">kino</code> tools, and lets you generate documentation/diagrams over real Anoma Code.</p><p>This can be achieved by click on runtime settings:</p><div><img src="./files/writing-docs-configure-system.png" width="300" ></div><p>From here, click on configure and connect it to your running Anoma instance.</p><h2 id="making-diagrams" class="section-heading">
+  <a href="#making-diagrams" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Making diagrams</span>
+</h2>
+<p>Diagrams are an import piece of documentation.</p><p>All the standard livebook tools can be used, but Anoma has some extra dependencies that can help creating documentation.</p><p>Namely under, the <code class="inline">+Smart</code> section, we can generate out various kinds of documents:</p><p><img src="files/writing-docs-smart-box.png" alt=""/></p><p>The diagram will give you <a href="https://kroki.io/">Kroki diagrams</a>, and the UI will look something like this:</p><p><img src="files/writing-docs-kroki.png" alt=""/></p><p>However currently, due to a bug, writing text in the <code class="inline">Diagram source</code> will not change the generated diagram.</p><p>It is important to click the pencil icon, and edit it by hand.</p><h2 id="generating-the-index" class="section-heading">
+  <a href="#generating-the-index" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Generating the index</span>
+</h2>
+<p>To have an Index for a document, one must have a section named <code class="inline">Index</code>.</p><p>Once one has the <code class="inline">Index</code>, one can generate it by running <a href="Mix.Tasks.Toc.html"><code class="inline">mix toc</code></a> or <code class="inline">make docs</code>.</p><p>Because livebook does not pull the files for changes, you may have to close the book and open it back up to have the relevant sections be up to date.</p><!-- livebook:{"branch_parent_index":5} --><h2 id="controlling-the-index-sections" class="section-heading">
+  <a href="#controlling-the-index-sections" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Controlling the index sections</span>
+</h2>
+<p>To control the order of the index, the project has a file that controls the ordering.</p><pre><code class="makeup elixir" translate="no"><span class="s">&quot;doc_order.exs&quot;</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">read!</span><span class="p" data-group-id="1540685732-1">(</span><span class="p" data-group-id="1540685732-1">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="1540685732-2">(</span><span class="p" data-group-id="1540685732-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="9521347384-1">[</span><span class="w">
+  </span><span class="p" data-group-id="9521347384-2">{</span><span class="s">&quot;documentation&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="9521347384-3">[</span><span class="w">
+     </span><span class="p" data-group-id="9521347384-4">{</span><span class="s">&quot;toc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9521347384-5">[</span><span class="p" data-group-id="9521347384-5">]</span><span class="p" data-group-id="9521347384-4">}</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="9521347384-6">{</span><span class="s">&quot;contributing&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="9521347384-7">[</span><span class="w">
+        </span><span class="p" data-group-id="9521347384-8">{</span><span class="s">&quot;understanding-any-module&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9521347384-9">[</span><span class="p" data-group-id="9521347384-9">]</span><span class="p" data-group-id="9521347384-8">}</span><span class="p">,</span><span class="w">
+        </span><span class="p" data-group-id="9521347384-10">{</span><span class="s">&quot;writing-documents&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9521347384-11">[</span><span class="p" data-group-id="9521347384-11">]</span><span class="p" data-group-id="9521347384-10">}</span><span class="w">
+      </span><span class="p" data-group-id="9521347384-7">]</span><span class="p" data-group-id="9521347384-6">}</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="9521347384-12">{</span><span class="s">&quot;visualization&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9521347384-13">[</span><span class="p" data-group-id="9521347384-13">]</span><span class="p" data-group-id="9521347384-12">}</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="9521347384-14">{</span><span class="s">&quot;hoon&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9521347384-15">[</span><span class="p" data-group-id="9521347384-15">]</span><span class="p" data-group-id="9521347384-14">}</span><span class="w">
+   </span><span class="p" data-group-id="9521347384-3">]</span><span class="p" data-group-id="9521347384-2">}</span><span class="w">
+</span><span class="p" data-group-id="9521347384-1">]</span><span class="w">
+</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>This is a priority list of documents, so the higher up a document is, the higher it will be presented in the <code class="inline">index</code>.</p><p>Running <a href="Mix.Tasks.Toc.html"><code class="inline">mix toc</code></a> takes this into account. Note that to make sure your changes are reflected, run <strong>mix clean</strong> to make sure the wanted order is generated.</p>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="understanding-any-module.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Understanding any code in Anoma
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="visualization.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Visualizing Anoma
+        </span>
+      </a>
+
+  </div>
+</div>
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Anoma.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.11.0">
+    <meta name="project" content="Anoma v0.12.0">
 
 
-    <title>Anoma.Node.Executor — Anoma v0.11.0</title>
+    <title>Anoma.Node.Executor — Anoma v0.12.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.11.0
+          v0.12.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Executor</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
 
 </h1>
 
@@ -138,7 +138,7 @@ transactions come in</p><p>Currently I only communicate:</p><ul><li>When tasks a
   </a>
   <span class="text">API</span>
 </h3>
-<p>My public facing API is</p><ul><li><a href="#new_transaction/3"><code class="inline">new_transaction/3</code></a></li><li><a href="#new_transaction/4"><code class="inline">new_transaction/4</code></a></li><li><a href="#fire_new_transaction/3"><code class="inline">fire_new_transaction/3</code></a></li><li><a href="#fire_new_transaction/4"><code class="inline">fire_new_transaction/4</code></a></li><li><a href="#snapshot/1"><code class="inline">snapshot/1</code></a></li><li><a href="#state/1"><code class="inline">state/1</code></a></li><li><code class="inline">subscribe/2</code></li></ul>
+<p>My public facing API is</p><ul><li><a href="#new_transaction/3"><code class="inline">new_transaction/3</code></a></li><li><a href="#new_transaction/4"><code class="inline">new_transaction/4</code></a></li><li><a href="#fire_new_transaction/3"><code class="inline">fire_new_transaction/3</code></a></li><li><a href="#fire_new_transaction/4"><code class="inline">fire_new_transaction/4</code></a></li><li><a href="#snapshot/1"><code class="inline">snapshot/1</code></a></li><li><code class="inline">subscribe/2</code></li></ul>
   </section>
 
 
@@ -252,16 +252,6 @@ the response. Instead the response is handled by the pool.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>Returns the snapshot path, the Nock code is using</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#state/1" translate="no">state(executor)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns the current state of the executor</p></div>
 
     </div>
 
@@ -495,16 +485,16 @@ messages to this task or terminating the task</p>
   <span class="text">Example</span>
 </h3>
 <p>  we assume a running Worker, see <code class="inline">executor_test.exs</code> for a full
-  example</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="5660281878-1">(</span><span class="p" data-group-id="5660281878-2">[</span><span class="ss">:positive</span><span class="p" data-group-id="5660281878-2">]</span><span class="p" data-group-id="5660281878-1">)</span><span class="w">
+  example</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="1061052743-1">(</span><span class="p" data-group-id="1061052743-2">[</span><span class="ss">:positive</span><span class="p" data-group-id="1061052743-2">]</span><span class="p" data-group-id="1061052743-1">)</span><span class="w">
 </span><span class="mi">1931</span><span class="w">
-</span><span class="o">&gt;</span><span class="w"> </span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="5660281878-3">[</span><span class="p" data-group-id="5660281878-4">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">777</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="5660281878-4">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="5660281878-5">(</span><span class="p" data-group-id="5660281878-5">)</span><span class="p" data-group-id="5660281878-3">]</span><span class="w">
-</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Executor</span><span class="o">.</span><span class="n">new_transaction</span><span class="p" data-group-id="5660281878-6">(</span><span class="n">executor</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5660281878-7">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="5660281878-7">}</span><span class="p" data-group-id="5660281878-6">)</span><span class="w">
-</span><span class="p" data-group-id="5660281878-8">%</span><span class="nc" data-group-id="5660281878-8">Task</span><span class="p" data-group-id="5660281878-8">{</span><span class="w">
-  </span><span class="ss">mfa</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5660281878-9">{</span><span class="nc">Anoma.Node.Executor.Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="5660281878-9">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">owner</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5660281878-10">#</span><span class="nc" data-group-id="5660281878-10">PID</span><span class="p" data-group-id="5660281878-10">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">264</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="5660281878-10">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">pid</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5660281878-11">#</span><span class="nc" data-group-id="5660281878-11">PID</span><span class="p" data-group-id="5660281878-11">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">753</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="5660281878-11">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">ref</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5660281878-12">#</span><span class="nc" data-group-id="5660281878-12">Reference</span><span class="p" data-group-id="5660281878-12">&lt;</span><span class="mf">0.0</span><span class="o">.</span><span class="mf">33795.904691850</span><span class="o">.</span><span class="mf">4087414796.24378</span><span class="p" data-group-id="5660281878-12">&gt;</span><span class="w">
-</span><span class="p" data-group-id="5660281878-8">}</span></code></pre>
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="1061052743-3">[</span><span class="p" data-group-id="1061052743-4">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">777</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="1061052743-4">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="1061052743-5">(</span><span class="p" data-group-id="1061052743-5">)</span><span class="p" data-group-id="1061052743-3">]</span><span class="w">
+</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Executor</span><span class="o">.</span><span class="n">new_transaction</span><span class="p" data-group-id="1061052743-6">(</span><span class="n">executor</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1061052743-7">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="1061052743-7">}</span><span class="p" data-group-id="1061052743-6">)</span><span class="w">
+</span><span class="p" data-group-id="1061052743-8">%</span><span class="nc" data-group-id="1061052743-8">Task</span><span class="p" data-group-id="1061052743-8">{</span><span class="w">
+  </span><span class="ss">mfa</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1061052743-9">{</span><span class="nc">Anoma.Node.Executor.Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="1061052743-9">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">owner</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1061052743-10">#</span><span class="nc" data-group-id="1061052743-10">PID</span><span class="p" data-group-id="1061052743-10">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">264</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1061052743-10">&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">pid</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1061052743-11">#</span><span class="nc" data-group-id="1061052743-11">PID</span><span class="p" data-group-id="1061052743-11">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">753</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1061052743-11">&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">ref</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1061052743-12">#</span><span class="nc" data-group-id="1061052743-12">Reference</span><span class="p" data-group-id="1061052743-12">&lt;</span><span class="mf">0.0</span><span class="o">.</span><span class="mf">33795.904691850</span><span class="o">.</span><span class="mf">4087414796.24378</span><span class="p" data-group-id="1061052743-12">&gt;</span><span class="w">
+</span><span class="p" data-group-id="1061052743-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="new_transaction/4">
@@ -558,23 +548,6 @@ messages to this task or terminating the task</p>
   iex&gt; {:ok, addr} = Router.start_engine(router, Executor, args)
   iex&gt; Executor.snapshot(addr)
   :a</p>
-  </section>
-</section>
-<section class="detail" id="state/1">
-
-  <div class="detail-header">
-    <a href="#state/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">state(executor)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Returns the current state of the executor</p>
   </section>
 </section>
 

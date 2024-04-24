@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.11.0">
+    <meta name="project" content="Anoma v0.12.0">
 
 
-    <title>API Reference — Anoma v0.11.0</title>
+    <title>API Reference — Anoma v0.12.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.11.0
+          v0.12.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
 
-  <span>API Reference <small class="app-vsn">Anoma v0.11.0</small></span>
+  <span>API Reference <small class="app-vsn">Anoma v0.12.0</small></span>
 </h1>
 
 
@@ -452,9 +452,8 @@ information in order to choose how to verify a commitment.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>I am a logging engine. I have a storage field which accepts the
-storage used for the logging tied to a specific node, the number
-of messages which get stored per engine, as well as the name of
-the clock used for timestamping.</p></div>
+storage used for the logging tied to a specific node, as well as
+the name of the clock used for timestamping.</p></div>
 
 </div>
 <div class="summary-row">
@@ -466,11 +465,21 @@ the clock used for timestamping.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.Node.Ordering.html" translate="no">Anoma.Node.Ordering</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a simple mnesia-backed key-value store in an anoma node.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.Node.Pinger.html" translate="no">Anoma.Node.Pinger</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>I provide periodic block execution based on submitted mempool name and time.</p></div>
+    <div class="summary-synopsis"><p>I provide periodic block execution based on submitted mempool address
+and time by calling the execution API in the mempool engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -510,15 +519,6 @@ If the server is known, but the id is not, then this is a local-only
   </div>
 
     <div class="summary-synopsis"><p>I am a strawman intent solver for testing purposes.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Anoma.Node.Storage.Ordering.html" translate="no">Anoma.Node.Storage.Ordering</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I am a simple mnesia-backed key-value store in an anoma node.</p></div>
 
 </div>
 <div class="summary-row">
@@ -646,11 +646,30 @@ commitment tree.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="IdentityMap.html" translate="no">IdentityMap</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A map with an identity value; all keys not explicitly assigned a value map to
+the identity.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Livebook.html" translate="no">Livebook</a>
 
   </div>
 
     <div class="summary-synopsis"><p>I generate out extra information for Livebook</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="MapSetMap.html" translate="no">MapSetMap</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>An IdentityMap where the values are MapSets, plus some convenient helper functions.</p></div>
 
 </div>
 <div class="summary-row">

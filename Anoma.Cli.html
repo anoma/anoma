@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.11.0">
+    <meta name="project" content="Anoma v0.12.0">
 
 
-    <title>Anoma.Cli — Anoma v0.11.0</title>
+    <title>Anoma.Cli — Anoma v0.12.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.11.0
+          v0.12.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Cli</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
 
 </h1>
 
@@ -153,7 +153,26 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#main/1" translate="no">main(argv)</a>
+        <a href="#cli_arguments_to_start_arguments/1" translate="no">cli_arguments_to_start_arguments(parse_result)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Provides taking CLI argument parsing to arguments used by the
+application</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_application/1" translate="no">start_application(arguments)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#top_level_help/0" translate="no">top_level_help()</a>
 
       </div>
 
@@ -195,14 +214,14 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="main/1">
+<section class="detail" id="cli_arguments_to_start_arguments/1">
 
   <div class="detail-header">
-    <a href="#main/1" class="detail-link" title="Link to this function">
+    <a href="#cli_arguments_to_start_arguments/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">main(argv)</h1>
+    <h1 class="signature" translate="no">cli_arguments_to_start_arguments(parse_result)</h1>
 
 
   </div>
@@ -211,9 +230,50 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> main([<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()]) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> cli_arguments_to_start_arguments(<a href="https://hexdocs.pm/optimus/0.5.0/Optimus.ParseResult.html#t:t/0">Optimus.ParseResult.t</a>()) :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()</pre>
 
       </div>
+
+<p>Provides taking CLI argument parsing to arguments used by the
+application</p>
+  </section>
+</section>
+<section class="detail" id="start_application/1">
+
+  <div class="detail-header">
+    <a href="#start_application/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_application(arguments)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_application([<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="top_level_help/0">
+
+  <div class="detail-header">
+    <a href="#top_level_help/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">top_level_help()</h1>
+
+
+  </div>
+
+  <section class="docstring">
 
 
   </section>

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.11.0">
+    <meta name="project" content="Anoma v0.12.0">
 
 
-    <title>Anoma.Node.Clock — Anoma v0.11.0</title>
+    <title>Anoma.Node.Clock — Anoma v0.12.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.11.0
+          v0.12.0
         </div>
       </div>
     </div>
@@ -125,14 +125,22 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Clock</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
 <p>I am the implmentation of the Local Wall Clock Engine.</p><p>I provide info on the time elapsed in milliseconds after the node launched
-and the epoch from which it has been calculated using monotonic time.</p>
+and the epoch from which it has been calculated using monotonic time.</p><p>The current implementation launches the epoch by asking for the system
+monotonic time at the point of an Anoma node launch. This is recommended
+as all my public API uses system monotonic time to give measurements.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I have the following public functionality:</p><ul><li><a href="#get_time/1"><code class="inline">get_time/1</code></a></li><li><a href="#get_epoch/1"><code class="inline">get_epoch/1</code></a></li></ul>
   </section>
 
 
@@ -168,6 +176,10 @@ and the epoch from which it has been calculated using monotonic time.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I get the epoch attached to a clock address. This is usually
+the system monotonic time as recorder at the start of the
+node to which the apporproaite clock engine is related.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -176,11 +188,15 @@ and the epoch from which it has been calculated using monotonic time.</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I get the local time by checking the clock epoch attached to
+the clock address, taking the current system monotonic time,
+and then subtracting the former from the latter.</p></div>
+
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_call/3" translate="no">handle_call(atom, from, state)</a>
+        <a href="#handle_call/3" translate="no">handle_call(atom, from, clock)</a>
 
       </div>
 
@@ -189,14 +205,6 @@ and the epoch from which it has been calculated using monotonic time.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#init/1" translate="no">init(state)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#state/1" translate="no">state(server)</a>
 
       </div>
 
@@ -270,7 +278,9 @@ and the epoch from which it has been calculated using monotonic time.</p>
 
       </div>
 
-
+<p>I get the epoch attached to a clock address. This is usually
+the system monotonic time as recorder at the start of the
+node to which the apporproaite clock engine is related.</p>
   </section>
 </section>
 <section class="detail" id="get_time/1">
@@ -293,7 +303,9 @@ and the epoch from which it has been calculated using monotonic time.</p>
 
       </div>
 
-
+<p>I get the local time by checking the clock epoch attached to
+the clock address, taking the current system monotonic time,
+and then subtracting the former from the latter.</p>
   </section>
 </section>
 <section class="detail" id="handle_call/3">
@@ -303,7 +315,7 @@ and the epoch from which it has been calculated using monotonic time.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_call(atom, from, state)</h1>
+    <h1 class="signature" translate="no">handle_call(atom, from, clock)</h1>
 
 
   </div>
@@ -327,26 +339,9 @@ and the epoch from which it has been calculated using monotonic time.</p>
 
   <section class="docstring">
 
-
-  </section>
-</section>
-<section class="detail" id="state/1">
-
-  <div class="detail-header">
-    <a href="#state/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">state(server)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> state(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> init([{:start, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()}]) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 

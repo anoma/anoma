@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.11.0">
+    <meta name="project" content="Anoma v0.12.0">
 
 
-    <title>Anoma.Crypto.Id — Anoma v0.11.0</title>
+    <title>Anoma.Crypto.Id — Anoma v0.12.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.11.0
+          v0.12.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Crypto.Id</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
 
 </h1>
 
@@ -171,34 +171,6 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#decode/1" translate="no">decode(arg)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#encode/2" translate="no">encode(id, atom)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Serializes it for Mnesia</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#initalize/2" translate="no">initalize(table, kind \\ :ram_copies)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I initialize the table to be used locally.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#new_keypair/0" translate="no">new_keypair()</a>
 
       </div>
@@ -211,7 +183,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>I salt the given keys for storage further storage. Or for storage
+        <div class="summary-synopsis"><p>I salt the given keys for further storage. Or for storage
 lookup</p></div>
 
     </div>
@@ -318,88 +290,6 @@ lookup</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="decode/1">
-
-  <div class="detail-header">
-    <a href="#decode/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">decode(arg)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> decode(
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Anoma.Crypto.Sign.html#t:public/0">Anoma.Crypto.Sign.public</a>(), <a href="Anoma.Crypto.Encrypt.html#t:public/0">Anoma.Crypto.Encrypt.public</a>(),
-   <a href="Anoma.Crypto.Sign.html#t:secret/0">Anoma.Crypto.Sign.secret</a>(), <a href="Anoma.Crypto.Encrypt.html#t:secret/0">Anoma.Crypto.Encrypt.secret</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}
-) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="encode/2">
-
-  <div class="detail-header">
-    <a href="#encode/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">encode(id, atom)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> encode(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Anoma.Crypto.Sign.html#t:public/0">Anoma.Crypto.Sign.public</a>(), <a href="Anoma.Crypto.Encrypt.html#t:public/0">Anoma.Crypto.Encrypt.public</a>(),
-   <a href="Anoma.Crypto.Sign.html#t:secret/0">Anoma.Crypto.Sign.secret</a>(), <a href="Anoma.Crypto.Encrypt.html#t:secret/0">Anoma.Crypto.Encrypt.secret</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
-
-      </div>
-
-<p>Serializes it for Mnesia</p>
-  </section>
-</section>
-<section class="detail" id="initalize/2">
-
-    <span id="initalize/1"></span>
-
-  <div class="detail-header">
-    <a href="#initalize/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">initalize(table, kind \\ :ram_copies)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> initalize(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), :ram_copies | :disc_copies | :rocksdb_copies) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
-
-      </div>
-
-<p>I initialize the table to be used locally.</p><h3 id="initalize/2-parameters" class="section-heading">
-  <a href="#initalize/2-parameters" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Parameters</span>
-</h3>
-<ul><li><code class="inline">table</code> - the table name to store the data under</li><li><code class="inline">kind</code> - the kind of table this should be</li></ul>
-  </section>
-</section>
 <section class="detail" id="new_keypair/0">
 
   <div class="detail-header">
@@ -443,7 +333,7 @@ lookup</p></div>
 
       </div>
 
-<p>I salt the given keys for storage further storage. Or for storage
+<p>I salt the given keys for further storage. Or for storage
 lookup</p><p>I can be used on <code class="inline">t </code>, <code class="inline">Intern.t </code> or <code class="inline">Extern.t </code>.</p><ul><li><code class="inline">t </code> is useful for salting for storage</li><li><code class="inline">Extern.t </code> is useful for looking up keys for storage</li><li><code class="inline">Intern.t </code> is useful in case one wants to see the salted key</li></ul>
   </section>
 </section>

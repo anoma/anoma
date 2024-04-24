@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.11.0">
+    <meta name="project" content="Anoma v0.12.0">
 
 
-    <title>Anoma.Node.Pinger — Anoma v0.11.0</title>
+    <title>Anoma.Node.Pinger — Anoma v0.12.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-14FDD4DB.js"></script>
+    <script src="dist/sidebar_items-35E165F8.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.11.0
+          v0.12.0
         </div>
       </div>
     </div>
@@ -125,13 +125,20 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Pinger</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.11.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I provide periodic block execution based on submitted mempool name and time.</p>
+<p>I provide periodic block execution based on submitted mempool address
+and time by calling the execution API in the mempool engine.</p><h3 id="module-public-apis" class="section-heading">
+  <a href="#module-public-apis" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public APIs</span>
+</h3>
+<p>My public functionality include:</p><ul><li><a href="#set_timer/2"><code class="inline">set_timer/2</code></a></li><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#pinger/1"><code class="inline">pinger/1</code></a></li></ul>
   </section>
 
 
@@ -191,7 +198,9 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>I send the :execute message after specified time if ever.</p></div>
+        <div class="summary-synopsis"><p>I receive an argument which is either an integer or :no_timer.
+If it is an integer, send to self an :execute message after
+specified ammount of time. Otherwise, simply reply :ok</p></div>
 
     </div>
 
@@ -213,13 +222,8 @@ pinger.</p></div>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#state/1" translate="no">state(server)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Given a pinger address, I start up the pinger by calling the <a href="#pinger/1"><code class="inline">pinger/1</code></a>
+function feeding it the time associated to the address.</p></div>
 
     </div>
 
@@ -322,6 +326,12 @@ pinger.</p></div>
 
   <section class="docstring">
 
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(mempool: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), time: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
 
   </section>
 </section>
@@ -339,7 +349,15 @@ pinger.</p></div>
 
   <section class="docstring">
 
-<p>I send the :execute message after specified time if ever.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> pinger(:no_timer | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :ok | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">reference</a>()</pre>
+
+      </div>
+
+<p>I receive an argument which is either an integer or :no_timer.
+If it is an integer, send to self an :execute message after
+specified ammount of time. Otherwise, simply reply :ok</p>
   </section>
 </section>
 <section class="detail" id="set_timer/2">
@@ -355,6 +373,13 @@ pinger.</p></div>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> set_timer(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :no_timer) ::
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
 
 <p>Given a server S and time T I change the timer set for the struct
 connected to S setting it to T. Set T to :no_timer to stop the
@@ -377,28 +402,13 @@ pinger.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="state/1">
-
-  <div class="detail-header">
-    <a href="#state/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">state(server)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>Given a pinger address, I start up the pinger by calling the <a href="#pinger/1"><code class="inline">pinger/1</code></a>
+function feeding it the time associated to the address.</p><p>Note that if the timer specified has value :no_timer, the pinger will
+not practically start.</p>
   </section>
 </section>
 
