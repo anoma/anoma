@@ -26,23 +26,25 @@ defmodule AnomaTest.Node.Dump do
 
     node = Anoma.Node.state(nodes)
 
-    [node: node]
+    [node: node, name: name]
   end
 
-  test "loading keeps addresses", %{node: node} do
-    Anoma.Dump.dump("dump_test", :dump)
+  test "loading keeps addresses", %{node: node, name: name} do
+    Anoma.Dump.dump("dump_test.dmp", name)
 
     id = node.router.id
     sname = Anoma.Node.Router.process_name(:supervisor, id)
 
     DynamicSupervisor.stop(sname, :normal)
 
-    Anoma.Dump.launch("dump_test.txt", :dump_new)
+    Anoma.Dump.launch("dump_test.dmp", :dump_new)
 
     new_node = Anoma.Node.state(:dump_new)
 
     assert new_node == node
 
     DynamicSupervisor.stop(sname, :normal)
+
+    Anoma.Dump.remove_dump("dump_test.dmp")
   end
 end
