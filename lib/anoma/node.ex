@@ -99,7 +99,7 @@ defmodule Anoma.Node do
     if args[:new_storage] do
       snap = settings[:snapshot_path]
 
-      Storage.put_snapshot(storage, hd(snap))
+      Storage.do_put_snapshot(storage, hd(snap))
     else
       tables =
         settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
@@ -238,7 +238,7 @@ defmodule Anoma.Node do
   end
 
   defp storage_setup(storage, block_storage) do
-    Storage.ensure_new(storage)
+    Storage.do_ensure_new(storage)
     :mnesia.delete_table(block_storage)
     Anoma.Block.create_table(block_storage, false)
   end

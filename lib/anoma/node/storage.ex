@@ -214,11 +214,11 @@ defmodule Anoma.Node.Storage do
   end
 
   def handle_call(:ensure_new, _, storage) do
-    {:reply, ensure_new(storage), storage}
+    {:reply, do_ensure_new(storage), storage}
   end
 
   def handle_call({:put_snapshot, key}, _, storage) do
-    {:reply, put_snapshot(storage, key), storage}
+    {:reply, do_put_snapshot(storage, key), storage}
   end
 
   def handle_call({:put, key, value}, _, storage) do
@@ -253,8 +253,8 @@ defmodule Anoma.Node.Storage do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec ensure_new(t()) :: :ok | {:aborted, any()}
-  def ensure_new(storage = %__MODULE__{}) do
+  @spec do_ensure_new(t()) :: :ok | {:aborted, any()}
+  def do_ensure_new(storage = %__MODULE__{}) do
     # We don't care about errors that can happen here
     do_remove(storage)
     do_setup(storage)
@@ -289,8 +289,8 @@ defmodule Anoma.Node.Storage do
     end
   end
 
-  @spec put_snapshot(t(), order_key()) :: result(:ok)
-  def put_snapshot(storage = %__MODULE__{}, key) do
+  @spec do_put_snapshot(t(), order_key()) :: result(:ok)
+  def do_put_snapshot(storage = %__MODULE__{}, key) do
     with {:atomic, snapshot} <- do_snapshot_order(storage) do
       do_put(storage, key, snapshot)
     end
