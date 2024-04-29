@@ -62,16 +62,10 @@ mempool, as it orchastrates the other actors in Anoma to act
 First we will create a transaction and see how that changes the base supervision tree before executing
 
 ```elixir
-alias Anoma.Storage
 alias Anoma.Node.Ordering
 alias Anoma.Node.Mempool
 alias Anoma.Node.Router
 import TestHelper.Nock
-
-storage = %Anoma.Storage{
-  qualified: Anoma.Qualified,
-  order: Anoma.Order
-}
 
 name = :anoma
 node = Anoma.Node.state(name)
