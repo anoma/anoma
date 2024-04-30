@@ -25,6 +25,8 @@
    1. [Fema Analysis Pinger](./analysis/fema-analysis-pinger.livemd)
 7. [Vm_interface](./vm_interface.livemd)
 
-## User
+## User Guide
 
-Welcome to the Anoma User documentation.
+Welcome to the Anoma documentation for users.
+
+These documents contain pertinent information about your local Anoma node.
