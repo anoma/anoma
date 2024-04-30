@@ -5,6 +5,7 @@
 ## Index
 1. [Toc](./../../toc.livemd)
 2. [User](./../../user.livemd)
+   1. [Data](./../../user/data.livemd)
 3. [Contributing](./../../contributing.livemd)
    1. [Understanding Any Module](./../../contributing/understanding-any-module.livemd)
    2. [Writing Documents](./../../contributing/writing-documents.livemd)
