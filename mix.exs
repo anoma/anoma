@@ -22,7 +22,8 @@ defmodule Anoma.MixProject do
       # Nockma eval
       escript: escript(),
       # Burrito release
-      releases: releases()
+      releases: releases(),
+      package: package()
     ]
   end
 
@@ -92,6 +93,14 @@ defmodule Anoma.MixProject do
       groups_for_extras: group_for_extras(),
       groups_for_modules: group_for_modules(),
       before_closing_body_tag: &docs_before_closing_body_tag/1
+    ]
+  end
+
+  def package do
+    [
+      maintainers: ["Mariari", " Raymond E. Pasco"],
+      name: :anoma,
+      licenses: ["MIT"]
     ]
   end
 
