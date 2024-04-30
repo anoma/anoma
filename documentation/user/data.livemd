@@ -3,6 +3,7 @@
 # Data
 
 ## Index
+
 1. [Toc](./../toc.livemd)
 2. [User](./../user.livemd)
    1. [Data](./../user/data.livemd)
@@ -17,7 +18,7 @@
    8. [Testing](./../contributing/testing.livemd)
       1. [Running Tests](./../contributing/testing/running-tests.livemd)
       2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
-9. [Visualization](./../visualization.livemd)
+4. [Visualization](./../visualization.livemd)
    1. [Actors](./../visualization/actors.livemd)
 5. [Hoon](./../hoon.livemd)
    1. [Calling](./../hoon/calling.livemd)
@@ -60,6 +61,10 @@ Beware this will overwrite the local [Mnesia](https://en.wikipedia.org/wiki/Mnes
 The Mnesia tables are created every time one runs Anoma.
 
 These Mnesia tables contain chain information that the Anoma execution environment can query.
+
+<!-- livebook:{"break_markdown":true} -->
+
+To learn more about our data format, please checkout the developer's section on [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd).
 
 ## Launching with a given dump file
 
