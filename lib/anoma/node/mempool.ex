@@ -53,6 +53,12 @@ defmodule Anoma.Node.Mempool do
     Router.call(server, {:tx, tx_code}, 10_000)
   end
 
+  # kludge; this should be removed, and the normal tx should be made into a cast
+  @spec async_tx(Router.Addr.t(), Transaction.execution()) :: :ok
+  def async_tx(server, tx_code) do
+    Router.cast(server, {:tx, tx_code})
+  end
+
   @spec soft_reset(Router.Addr.t()) :: :ok
   def soft_reset(server) do
     Router.cast(server, :soft_reset)
@@ -93,6 +99,11 @@ defmodule Anoma.Node.Mempool do
     log_info({:pending, txs, state.logger})
 
     {:reply, txs, state}
+  end
+
+  def handle_cast({:tx, tx_code}, from, state) do
+    {:reply, _, state} = handle_call({:tx, tx_code}, from, state)
+    {:noreply, state}
   end
 
   def handle_cast(:soft_reset, _from, state) do

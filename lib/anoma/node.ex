@@ -91,26 +91,39 @@ defmodule Anoma.Node do
 
   @spec start_link(configuration()) :: GenServer.on_start()
   def start_link(args) do
-    settings = args[:settings]
-    name = args[:name]
-    {storage, block_storage} = settings[:storage]
-    storage_setup(storage, block_storage)
-
-    if args[:new_storage] do
-      snap = settings[:snapshot_path]
-
-      Anoma.Storage.put_snapshot(storage, hd(snap))
+    # strawman pending proper lockfiles
+    # also need to clean this up once we're done
+    if File.exists?(Anoma.System.Directories.data("local.sock")) do
+      {:error, :node_already_running}
     else
-      tables =
-        settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
+      settings = args[:settings]
+      name = args[:name]
+      {storage, block_storage} = settings[:storage]
+      storage_setup(storage, block_storage)
 
-      tables
-      |> Enum.map(fn x ->
-        fn -> :mnesia.write(x) end |> :mnesia.transaction()
-      end)
+      if args[:new_storage] do
+        snap = settings[:snapshot_path]
+
+        Anoma.Storage.put_snapshot(storage, hd(snap))
+      else
+        tables =
+          settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
+
+        tables
+        |> Enum.map(fn x ->
+          fn -> :mnesia.write(x) end |> :mnesia.transaction()
+        end)
+      end
+
+      res = GenServer.start_link(__MODULE__, settings, name: name)
+
+      # dump the initial state so our keys are persisted
+      with {:ok, _} <- res do
+        Anoma.Dump.dump("dump.txt", name)
+      end
+
+      res
     end
-
-    GenServer.start_link(__MODULE__, settings, name: name)
   end
 
   def init(args) do
@@ -181,20 +194,22 @@ defmodule Anoma.Node do
       })
 
     Anoma.Node.Pinger.start(pinger)
+    Anoma.Node.Transport.start_server(transport, {:unix, Anoma.System.Directories.data("local.sock")})
 
-    {:ok,
-     %Node{
-       router: router,
-       transport: transport,
-       ordering: ordering,
-       executor: executor,
-       mempool: mempool,
-       pinger: pinger,
-       clock: clock,
-       logger: logger,
-       executor_topic: executor_topic,
-       mempool_topic: mempool_topic
-     }}
+    state = %Node{
+      router: router,
+      transport: transport,
+      ordering: ordering,
+      executor: executor,
+      mempool: mempool,
+      pinger: pinger,
+      clock: clock,
+      logger: logger,
+      executor_topic: executor_topic,
+      mempool_topic: mempool_topic
+    }
+
+    {:ok, state}
   end
 
   @doc """
