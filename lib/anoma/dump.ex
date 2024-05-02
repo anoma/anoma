@@ -250,7 +250,7 @@ defmodule Anoma.Dump do
       [qual, ord, block]
       |> Enum.map(fn x ->
         with {:ok, lst} <- Mnesia.dump(x) do
-          lst
+          Enum.map(lst, fn x -> hd(x) end)
         end
       end)
       |> List.to_tuple()
