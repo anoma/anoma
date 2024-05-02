@@ -86,6 +86,7 @@ defmodule Anoma.Dump do
   relaunch the executions as well.
   """
 
+  @dialyzer {:no_return, launch: 2}
   @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
   def launch(file, name) do
     load = file |> Directories.data() |> load()
