@@ -70,6 +70,7 @@ defmodule Anoma.Node.Storage do
     field(:qualified, atom(), default: Anoma.Node.Storage.Qualified)
     field(:order, atom(), default: Anoma.Node.Storage.Order)
     field(:rm_commitments, atom(), default: Anoma.Node.Storage.RMCommitments)
+    field(:namespace, list(binary()), default: [])
   end
 
   @type result(res) :: {:atomic, res} | {:aborted, any()}
@@ -93,10 +94,13 @@ defmodule Anoma.Node.Storage do
   end
 
   def init(opts) do
+    return = %Storage{}
+
     return = %Storage{
-      qualified: opts[:qualified],
-      order: opts[:order],
-      rm_commitments: opts[:rm_commitments]
+      qualified: opts[:qualified] || return.qualified,
+      order: opts[:order] || return.order,
+      rm_commitments: opts[:rm_commitments] || return.rm_commitments,
+      namespace: opts[:namespace] || return.namespace
     }
 
     # idempotent
@@ -270,6 +274,7 @@ defmodule Anoma.Node.Storage do
 
       [_ | _] ->
         :mnesia.subscribe({:table, storage.qualified, :simple})
+        key = namespace_qualified_key(storage, key)
         tx = fn -> :mnesia.read(storage.qualified, key) end
         {:atomic, result} = :mnesia.transaction(tx)
 
@@ -339,8 +344,8 @@ defmodule Anoma.Node.Storage do
   end
 
   @spec in_snapshot(snapshot(), order_key()) :: nil | non_neg_integer()
-  def in_snapshot({_, snapshot}, key) do
-    List.keyfind(snapshot, key, 0, {nil, nil})
+  def in_snapshot({storage, snapshot}, key) do
+    List.keyfind(snapshot, namespace_key(storage, key), 0, {nil, nil})
     |> elem(1)
   end
 
@@ -361,13 +366,28 @@ defmodule Anoma.Node.Storage do
   """
   @spec read_keyspace_order(t(), list()) :: result(list(list(any())))
   def read_keyspace_order(storage = %__MODULE__{}, key_query) do
-    read_keyspace_at(storage.order, key_query)
+    lst = read_keyspace_at(storage.order, namespace_key(storage, key_query))
+
+    with {:atomic, lst} <- lst do
+      lst =
+        for [key, value | tl] <- lst do
+          {:ok, key} = denamespace_key(storage, key)
+          [key, value | tl]
+        end
+
+      {:atomic, lst}
+    end
   end
 
   @spec read_order(t(), order_key()) ::
           list({atom(), Noun.t(), non_neg_integer()})
   def read_order(storage = %__MODULE__{}, key) do
-    :mnesia.read(storage.order, key)
+    lst = :mnesia.read(storage.order, namespace_key(storage, key))
+
+    for {at, key, val} <- lst do
+      {:ok, key} = denamespace_key(storage, key)
+      {at, key, val}
+    end
   end
 
   @spec do_read_order_tx(t(), order_key()) ::
@@ -380,7 +400,16 @@ defmodule Anoma.Node.Storage do
   @spec read_at_order(t(), Noun.t(), non_neg_integer()) ::
           list({atom(), qualified_key(), qualified_value()})
   def read_at_order(storage = %__MODULE__{}, key, order) do
-    :mnesia.read(storage.qualified, qualified_key(key, order))
+    lst =
+      :mnesia.read(
+        storage.qualified,
+        namespace_qualified_key(storage, qualified_key(key, order))
+      )
+
+    for {at, key, val} <- lst do
+      {:ok, key} = denamespace_qualified_key(storage, key)
+      {at, key, val}
+    end
   end
 
   @spec read_at_order_tx(t(), Noun.t(), non_neg_integer()) ::
@@ -390,11 +419,53 @@ defmodule Anoma.Node.Storage do
     :mnesia.transaction(tx)
   end
 
+  # Drop the prefix indicated by the list from the given noun
+  @spec improper_drop(Noun.t(), maybe_improper_list()) ::
+          {:ok, maybe_improper_list()} | :error
+  defp improper_drop(lst, []), do: {:ok, lst}
+
+  defp improper_drop([hd1 | tl1], [hd2 | tl2]) when hd1 == hd2 do
+    improper_drop(tl1, tl2)
+  end
+
+  defp improper_drop(_, _), do: :error
+
+  # Add a namespace to a key
+  @spec namespace_key(t(), Noun.t()) :: Noun.t()
+  def namespace_key(storage = %__MODULE__{}, key) do
+    storage.namespace ++ key
+  end
+
+  # Remove the namespace from a key
+  @spec denamespace_key(t(), Noun.t()) :: {:ok, Noun.t()} | :error
+  def denamespace_key(storage = %__MODULE__{}, key) do
+    improper_drop(key, storage.namespace)
+  end
+
+  # Add a namespace to a qualified key
+  @spec namespace_qualified_key(t(), qualified_key()) :: qualified_key()
+  def namespace_qualified_key(storage = %__MODULE__{}, [hd, key | tl]) do
+    [hd, namespace_key(storage, key) | tl]
+  end
+
+  # Remove the namespace from a qualified key
+  @spec denamespace_qualified_key(t(), qualified_key()) ::
+          {:ok, qualified_key()} | :error
+  def denamespace_qualified_key(storage = %__MODULE__{}, [hd, key | tl]) do
+    with {:ok, key} <- denamespace_key(storage, key) do
+      {:ok, [hd, key | tl]}
+    end
+  end
+
   @spec write_at_order(t(), Noun.t(), qualified_value(), non_neg_integer()) ::
           :ok
   def write_at_order(storage = %__MODULE__{}, key, value, order) do
-    :mnesia.write({storage.order, key, order})
-    :mnesia.write({storage.qualified, qualified_key(key, order), value})
+    :mnesia.write({storage.order, namespace_key(storage, key), order})
+
+    :mnesia.write(
+      {storage.qualified,
+       namespace_qualified_key(storage, qualified_key(key, order)), value}
+    )
   end
 
   @spec do_write_at_order_tx(
