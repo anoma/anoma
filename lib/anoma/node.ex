@@ -93,6 +93,18 @@ defmodule Anoma.Node do
 
   @spec start_link(configuration()) :: GenServer.on_start()
   def start_link(args) do
+    # strawman pending proper lockfiles
+    # also need to clean this up once we're done
+    unix_path = Anoma.System.Directories.data("local.sock")
+
+    if Mix.env() in [:dev, :prod] && File.exists?(unix_path) do
+      File.rm(unix_path)
+
+      IO.puts(
+        "Node Already Running, Replacing #{unix_path} to send messages to this node"
+      )
+    end
+
     settings = args[:settings]
     name = args[:name]
     rocks = args[:use_rocks]
@@ -115,6 +127,11 @@ defmodule Anoma.Node do
 
         node = state(pid)
         Storage.put_snapshot(node.storage, hd(snap))
+      end
+
+      if Mix.env() in [:dev, :prod] do
+        # dump the initial state so our keys are persisted
+        Anoma.Dump.dump("dump.txt", name)
       end
 
       {:ok, pid}
@@ -211,6 +228,13 @@ defmodule Anoma.Node do
       )
 
     Anoma.Node.Pinger.start(pinger)
+
+    if Mix.env() in [:dev, :prod] do
+      Anoma.Node.Transport.start_server(
+        transport,
+        {:unix, Anoma.System.Directories.data("local.sock")}
+      )
+    end
 
     {:ok,
      %Node{

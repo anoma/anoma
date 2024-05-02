@@ -74,7 +74,8 @@ defmodule Anoma.Node.Ordering do
   end
 
   @spec get(Router.Addr.t(), Storage.order_key()) ::
-          :absent | {:ok, Storage.qualified_value()}
+          :absent | {:ok, Storage.qualified_value()} | {:error, :timed_out}
+  # we should automate this later for engines
   def get(ordering, key) do
     Router.call(ordering, {:get, key})
   end
