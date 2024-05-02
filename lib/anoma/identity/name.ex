@@ -15,14 +15,11 @@ defmodule Anoma.Identity.Name do
   def reserve_namespace(namespace = %__MODULE__{}, name, pub, cdata)
       when is_binary(name) do
     with true <- Verification.verify_request(cdata, name, pub),
-         :absent <- Storage.get(namespace.storage, [name_space(), name]),
-         {:atomic, :ok} <-
-           Storage.put(namespace.storage, [name_space(), name], pub) do
-      :ok
+         :absent <- Storage.get(namespace.storage, [name_space(), name]) do
+      Storage.put(namespace.storage, [name_space(), name], pub)
     else
       {:ok, _} -> :already_there
       false -> :improper_data
-      {:aborted, _} -> :failed_placement
     end
   end
 
@@ -39,13 +36,11 @@ defmodule Anoma.Identity.Name do
 
     with {:ok, pub} <- Storage.get(store, [name_space(), hd(name)]),
          true <- Verification.verify_request(sig, d, pub),
-         :absent <- Storage.get(namespace.storage, storage_space),
-         {:atomic, :ok} <- Storage.put(store, storage_space, new_key) do
-      :ok
+         :absent <- Storage.get(namespace.storage, storage_space) do
+      Storage.put(store, storage_space, new_key)
     else
       {:ok, _} -> :already_there
       :absent -> :no_namespace
-      {:aborted, _} -> :failed_placement
       false -> :improper_data
     end
   end

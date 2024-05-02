@@ -128,6 +128,7 @@ defmodule Anoma.Dump do
             router: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
+            storage_topic: Id.Extern.t(),
             logger: log_eng,
             clock: clock_eng,
             ordering: ord_eng,
@@ -162,6 +163,7 @@ defmodule Anoma.Dump do
             router: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
+            storage_topic: Id.Extern.t(),
             logger: log_eng,
             clock: clock_eng,
             ordering: ord_eng,
@@ -181,6 +183,7 @@ defmodule Anoma.Dump do
           :router,
           :mempool_topic,
           :executor_topic,
+          :storage_topic,
           :__struct__
         ]
       end)
@@ -198,7 +201,8 @@ defmodule Anoma.Dump do
       %{
         router: router.id,
         mempool_topic: state.mempool_topic.id,
-        executor_topic: state.executor_topic.id
+        executor_topic: state.executor_topic.id,
+        storage_topic: state.storage_topic.id
       },
       map
     )

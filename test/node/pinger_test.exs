@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Pinger do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Anoma.Node.{Mempool, Router, Pinger}
   alias Anoma.Node.Storage

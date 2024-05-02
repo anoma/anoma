@@ -7,19 +7,19 @@ defmodule AnomaTest.Storage do
   doctest(Anoma.Node.Storage)
 
   setup_all do
-    # base storage testing default
-    storage = %Storage{
-      qualified: AnomaTest.Storage.Qualified,
-      order: AnomaTest.Storage.Order
-    }
-
     {:ok, router} = Router.start()
 
+    {:ok, topic} = Router.new_topic(router)
+
     {:ok, storage} =
-      Router.start_engine(router, Storage, storage)
+      Router.start_engine(router, Storage, %Storage{
+        qualified: AnomaTest.Storage.Qualified,
+        order: AnomaTest.Storage.Order,
+        topic: topic
+      })
 
     Storage.ensure_new(storage)
-    [storage: storage]
+    [storage: storage, router: router, topic: topic]
   end
 
   describe "Direct API" do
@@ -28,46 +28,121 @@ defmodule AnomaTest.Storage do
       assert Storage.get(storage, testing_atom) == :absent
     end
 
-    test "Putting works", %{storage: storage} do
+    test "Putting works", %{storage: storage, router: router, topic: topic} do
       testing_atom = :QWERTZ_putting
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
+      Storage.put(storage, testing_atom, 1)
+
       assert {:ok, 1} = Storage.get(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 1, {:atomic, :ok}}}}
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
-    test "Deleting key works", %{storage: storage} do
+    test "Deleting key works", %{
+      storage: storage,
+      router: router,
+      topic: topic
+    } do
       testing_atom = :QWERTZ_delete
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 2)
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
+      Storage.put(storage, testing_atom, 1)
+      Storage.put(storage, testing_atom, 2)
+
       assert {:ok, 2} = Storage.get(storage, testing_atom)
-      assert {:atomic, :ok} = Storage.delete_key(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 1, {:atomic, :ok}}}}
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 2, {:atomic, :ok}}}}
+
+      Storage.delete_key(storage, testing_atom)
+
       assert :absent = Storage.get(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, :absent, {:atomic, :ok}}}}
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
-    test "Deleting key again", %{storage: storage} do
+    test "Deleting key again", %{
+      storage: storage,
+      router: router,
+      topic: topic
+    } do
       testing_atom = :QWERTZ_delete
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 2)
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
+      Storage.put(storage, testing_atom, 1)
+      Storage.put(storage, testing_atom, 2)
+
       assert {:ok, 2} = Storage.get(storage, testing_atom)
-      assert {:atomic, :ok} = Storage.delete_key(storage, testing_atom)
-      assert {:atomic, :ok} = Storage.delete_key(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 1, {:atomic, :ok}}}}
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 2, {:atomic, :ok}}}}
+
+      Storage.delete_key(storage, testing_atom)
+      Storage.delete_key(storage, testing_atom)
+
       assert :absent = Storage.get(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, :absent, {:atomic, :ok}}}}
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
-    test "block_reads work", %{storage: storage} do
+    test "block_reads work", %{storage: storage, router: router, topic: topic} do
       testing_atom = :QWERTZ_blocking
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
+      Storage.put(storage, testing_atom, 1)
 
       assert {:ok, block} =
                Storage.blocking_read(storage, [1, testing_atom | 0])
 
       assert {:ok, current} = Storage.get(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 1, {:atomic, :ok}}}}
+
       assert current == block
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
-    test "block_reads can read the past", %{storage: storage} do
+    test "block_reads can read the past", %{
+      storage: storage,
+      router: router,
+      topic: topic
+    } do
       testing_atom = :QWERTZ_blocking_past
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 1)
-      assert {:atomic, :ok} = Storage.put(storage, testing_atom, 2)
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
+      Storage.put(storage, testing_atom, 1)
+      Storage.put(storage, testing_atom, 2)
 
       assert {:ok, bl_1} =
                Storage.blocking_read(storage, [1, testing_atom | 0])
@@ -76,8 +151,19 @@ defmodule AnomaTest.Storage do
                Storage.blocking_read(storage, [2, testing_atom | 0])
 
       assert {:ok, curr} = Storage.get(storage, testing_atom)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 1, {:atomic, :ok}}}}
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^testing_atom, 2, {:atomic, :ok}}}}
+
       assert curr == bl_2
       assert bl_1 + 1 == bl_2
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
     test "blocking_reads must accept position indicators", %{storage: s} do
@@ -153,22 +239,54 @@ defmodule AnomaTest.Storage do
   end
 
   describe "Snapshots" do
-    test "snapshots properly put", %{storage: storage} do
+    test "snapshots properly put", %{
+      storage: storage,
+      router: router,
+      topic: topic
+    } do
       snapshot_storage = :snapshot_super_secret
-      assert {:atomic, :ok} = Storage.put_snapshot(storage, snapshot_storage)
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
+      Storage.put_snapshot(storage, snapshot_storage)
       assert {:ok, _} = Storage.get(storage, snapshot_storage)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^snapshot_storage, _, {:atomic, :ok}}}}
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
-    test "snapshots properly get the latest", %{storage: storage} do
+    test "snapshots properly get the latest", %{
+      storage: storage,
+      router: router,
+      topic: topic
+    } do
       snapshot_storage = :super_hot
       testing_atom = 111_222_333_444_555_666
+
+      :ok = Router.call(router, {:subscribe_topic, topic.id, :local})
+
       Storage.write_at_order_tx(storage, testing_atom, 10, 3)
-      assert {:atomic, :ok} = Storage.put_snapshot(storage, snapshot_storage)
+      Storage.put_snapshot(storage, snapshot_storage)
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:write, ^testing_atom, 10, 3, {:atomic, :ok}}}}
+
+      assert_receive {:"$gen_cast",
+                      {:router_cast, _,
+                       {:put, ^snapshot_storage, _, {:atomic, :ok}}}}
+
       assert {:ok, snapshot} = Storage.get(storage, snapshot_storage)
+
       assert Storage.in_snapshot(snapshot, testing_atom) == 3
 
       assert Storage.get_at_snapshot(snapshot, testing_atom) ==
                {:ok, 10}
+
+      :ok = Router.call(router, {:unsubscribe_topic, topic.id, :local})
     end
 
     test "missing key gives us nil", %{storage: storage} do

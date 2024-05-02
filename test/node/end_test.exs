@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.End do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering

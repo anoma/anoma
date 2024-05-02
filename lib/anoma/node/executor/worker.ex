@@ -123,7 +123,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   @spec snapshot(Router.addr(), Nock.t()) ::
-          {:aborted, any()} | {:atomic, :ok}
+          :ok | nil
   def snapshot(storage, env) do
     snapshot = hd(env.snapshot_path)
     log_info({:snap, {storage, snapshot}, env.logger})
