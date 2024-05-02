@@ -75,18 +75,24 @@ defmodule Anoma.Dump do
 
   All engines have info on their states and id's so that checkpointing
   the system will keep all adresses used in the previous session.
-  Note that I ensure that the apporpriate tables
-  are new.
+  Note that I ensure that the apporpriate tables are new.
+
+  Moreover, I ensure that the mempool and block storage are in sync.
+  In particular, I check that the order of the last block is less than
+  that of the mempool dumped. If not, I manually remove the last block.
 
   Check whether your transactions have had an assigned worker. If not,
-  relaunch them directly.
+  relaunch them directly. If blocks were out of sync with mempool,
+  relaunch the executions as well.
   """
 
   @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
   def launch(file, name) do
     load = file |> Directories.data() |> load()
 
-    node_settings = [new_storage: false, name: name, settings: load]
+    settings = block_check(load)
+
+    node_settings = [new_storage: false, name: name, settings: settings]
 
     Anoma.Node.start_link(node_settings)
   end
@@ -256,5 +262,29 @@ defmodule Anoma.Dump do
       |> List.to_tuple()
 
     %{storage_data: {table, block}, qualified: q, order: o, block_storage: b}
+  end
+
+  defp block_check(map) do
+    block_storage = map.block_storage
+
+    if block_storage != [] do
+      last_block_list = block_storage |> List.last()
+
+      last_block = last_block_list |> Anoma.Block.decode()
+
+      {_id, mempool} = map.mempool
+
+      if last_block.round == mempool.round do
+        Map.replace(
+          map,
+          :block_storage,
+          List.delete(block_storage, last_block_list)
+        )
+      else
+        map
+      end
+    else
+      map
+    end
   end
 end
