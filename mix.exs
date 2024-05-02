@@ -77,7 +77,8 @@ defmodule Anoma.MixProject do
       {:burrito, "~> 1.0.4"},
       {:toml, "~> 0.7"},
       {:plug_crypto, "~> 2.0"},
-      {:msgpack, "~> 0.8.1"}
+      {:msgpack, "~> 0.8.1"},
+      {:quicer, git: "https://github.com/emqx/quic/"}
     ]
   end
 
