@@ -73,6 +73,12 @@ defmodule Anoma.Node.Ordering do
     Router.call(ordering, :storage)
   end
 
+  @spec get(Router.Addr.t(), Storage.order_key()) ::
+          :absent | {:ok, Storage.qualified_value()}
+  def get(ordering, key) do
+    Router.call(ordering, {:get, key})
+  end
+
   @spec reset(Router.Addr.t()) :: :ok
   def reset(ordering) do
     Router.cast(ordering, :reset)
@@ -113,6 +119,10 @@ defmodule Anoma.Node.Ordering do
     log_info({:storage, table, state.logger})
 
     {:reply, table, state}
+  end
+
+  def handle_call({:get, key}, _from, state) do
+    {:reply, Storage.get(state.table, key), state}
   end
 
   def handle_cast(:reset, _from, state) do
