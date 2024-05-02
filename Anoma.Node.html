@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.12.0">
+    <meta name="project" content="Anoma v0.13.0">
 
 
-    <title>Anoma.Node — Anoma v0.12.0</title>
+    <title>Anoma.Node — Anoma v0.13.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-35E165F8.js"></script>
+    <script src="dist/sidebar_items-87B1BF7E.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.12.0
+          v0.13.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
 
 </h1>
 
@@ -145,7 +145,7 @@ set-up without any deletions.</p><p>For more info on format check <a href="#star
   </a>
   <span class="text">Minimal Arguments</span>
 </h2>
-<ul><li><code class="inline">name</code> - name for this process</li><li><p><code class="inline">snapshot_path</code> : [<code class="inline">atom()</code> | 0]</p><ul><li>A snapshot location for the service (used in the worker)</li></ul></li><li><code class="inline">storage</code> : <code class="inline">Anoma.Storage.t()</code> - The Storage tables to use</li><li><code class="inline">block_storage</code> - a location to store the blocks produced</li></ul><h3 id="module-created-tables" class="section-heading">
+<ul><li><code class="inline">name</code> - name for this process</li><li><p><code class="inline">snapshot_path</code> : [<code class="inline">atom()</code> | 0]</p><ul><li>A snapshot location for the service (used in the worker)</li></ul></li><li><code class="inline">storage</code> : <code class="inline">Anoma.Node.Storage.t()</code> - The Storage tables to use</li><li><code class="inline">block_storage</code> - a location to store the blocks produced</li></ul><h3 id="module-created-tables" class="section-heading">
   <a href="#module-created-tables" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -289,6 +289,7 @@ settings.</p></div>
           <pre translate="no"><span class="attribute">@type</span> configuration() :: [
   new_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
   name: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
   settings: <a href="#t:engine_configuration/0">engine_configuration</a>()
 ]</pre>
 
@@ -320,7 +321,8 @@ settings.</p></div>
   ordering: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Ordering.html#t:t/0">Anoma.Node.Ordering.t</a>()},
   executor: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Executor.html#t:t/0">Anoma.Node.Executor.t</a>()},
   mempool: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Mempool.html#t:t/0">Anoma.Node.Mempool.t</a>()},
-  storage: {<a href="Anoma.Storage.html#t:t/0">Anoma.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()},
+  storage: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()},
+  storage_data: {<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()},
   snapshot_path: <a href="Noun.html#t:t/0">Noun.t</a>()
 }</pre>
 
@@ -349,7 +351,7 @@ settings.</p></div>
   ping_time: :no_timer | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   name: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   snapshot_path: <a href="Noun.html#t:t/0">Noun.t</a>(),
-  storage: <a href="Anoma.Storage.html#t:t/0">Anoma.Storage.t</a>(),
+  storage_data: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(),
   block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()
 ]</pre>
 
@@ -383,7 +385,8 @@ settings.</p></div>
   mempool_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   ordering: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   pinger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
-  router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()
+  router: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
+  storage: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()
 }</pre>
 
       </div>

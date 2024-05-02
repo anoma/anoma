@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.12.0">
+    <meta name="project" content="Anoma v0.13.0">
 
 
-    <title>Anoma.Dump — Anoma v0.12.0</title>
+    <title>Anoma.Dump — Anoma v0.13.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-35E165F8.js"></script>
+    <script src="dist/sidebar_items-87B1BF7E.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.12.0
+          v0.13.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Dump</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
 
 </h1>
 
@@ -212,6 +212,14 @@ files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#t:storage_eng/0" translate="no">storage_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#t:stores/0" translate="no">stores()</a>
 
       </div>
@@ -231,8 +239,9 @@ files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
       </div>
 
         <div class="summary-synopsis"><p>I dump the current state with storage. I accept a string as a name,
-so that the resulting file will be created as name.txt and then a
-node whose info presented as a map I dump as a binary.</p></div>
+so that the resulting file will be created as name.txt in the
+appropriate data directory. As a second argument I accept a node
+name whose info presented as a map I dump as a binary.</p></div>
 
     </div>
 
@@ -285,6 +294,17 @@ with appropriate info in the following order</p></div>
 
         <div class="summary-synopsis"><p>I read the given file which I assume contains binary info and convert
 it to an Elixir term.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_dump/2" translate="no">remove_dump(file, env \\ Application.get_env(:anoma, :env))</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Removes the given dump files at the specified address and with the
+given configuration.</p></div>
 
     </div>
 
@@ -439,6 +459,29 @@ it to an Elixir term.</p></div>
 
   </section>
 </section>
+<section class="detail" id="t:storage_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:storage_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">storage_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> storage_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="t:stores/0">
 
   <div class="detail-header">
@@ -455,7 +498,7 @@ it to an Elixir term.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> stores() :: {<a href="Anoma.Storage.html#t:t/0">Anoma.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> stores() :: {<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()}</pre>
 
       </div>
 
@@ -490,13 +533,16 @@ it to an Elixir term.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> dump(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: {:ok, :ok} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> dump(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: {:ok, :ok} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
 <p>I dump the current state with storage. I accept a string as a name,
-so that the resulting file will be created as name.txt and then a
-node whose info presented as a map I dump as a binary.</p><p>The map typing can be seen in <code class="inline">get_all</code></p>
+so that the resulting file will be created as name.txt in the
+appropriate data directory. As a second argument I accept a node
+name whose info presented as a map I dump as a binary.</p><p>Note that if the environment is <code class="inline">test</code> we do not use the XDG format
+for storing data and instead dump the files in the immadiate app
+folder.</p><p>The map typing can be seen in <code class="inline">get_all</code></p>
   </section>
 </section>
 <section class="detail" id="get_all/1">
@@ -525,10 +571,12 @@ node whose info presented as a map I dump as a binary.</p><p>The map typing can 
   mempool: <a href="#t:mem_eng/0">mem_eng</a>(),
   pinger: <a href="#t:ping_eng/0">ping_eng</a>(),
   executor: <a href="#t:ex_eng/0">ex_eng</a>(),
-  storage: <a href="#t:stores/0">stores</a>(),
+  storage: <a href="#t:storage_eng/0">storage_eng</a>(),
+  storage_data: <a href="#t:stores/0">stores</a>(),
   qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
-  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()
+  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
 }</pre>
 
       </div>
@@ -562,7 +610,8 @@ And turn the info into a tuple</li></ul>
   ordering: <a href="#t:ord_eng/0">ord_eng</a>(),
   mempool: <a href="#t:mem_eng/0">mem_eng</a>(),
   pinger: <a href="#t:ping_eng/0">ping_eng</a>(),
-  executor: <a href="#t:ex_eng/0">ex_eng</a>()
+  executor: <a href="#t:ex_eng/0">ex_eng</a>(),
+  storage: <a href="#t:storage_eng/0">storage_eng</a>()
 }</pre>
 
       </div>
@@ -587,10 +636,11 @@ And turn the info into a tuple</li></ul>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> get_tables(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: %{
-  storage: <a href="#t:stores/0">stores</a>(),
+  storage_data: <a href="#t:stores/0">stores</a>(),
   qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
   order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
-  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()
+  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
 }</pre>
 
       </div>
@@ -625,7 +675,8 @@ And turn the info into a tuple</li></ul>
      mempool_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      pinger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     router: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+     router: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
    }}
   | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
@@ -634,9 +685,11 @@ And turn the info into a tuple</li></ul>
 <p>I launch a node given a file containing a binary version of an 12-tuple
 with appropriate info in the following order:</p><ul><li>router id</li><li>mempool topic id</li><li>executor topic id</li><li>logger</li><li>clock</li><li>ordering</li><li>mempool</li><li>pinger</li><li>executor</li><li>storage names</li><li>qualified</li><li>order</li><li>block_storage</li></ul><p>All engines have info on their states and id's so that checkpointing
 the system will keep all adresses used in the previous session.
-Note that I ensure that the apporpriate tables
-are new.</p><p>Check whether your transactions have had an assigned worker. If not,
-relaunch them directly.</p>
+Note that I ensure that the apporpriate tables are new.</p><p>Moreover, I ensure that the mempool and block storage are in sync.
+In particular, I check that the order of the last block is less than
+that of the mempool dumped. If not, I manually remove the last block.</p><p>Check whether your transactions have had an assigned worker. If not,
+relaunch them directly. If blocks were out of sync with mempool,
+relaunch the executions as well.</p>
   </section>
 </section>
 <section class="detail" id="load/1">
@@ -662,6 +715,33 @@ relaunch them directly.</p>
 <p>I read the given file which I assume contains binary info and convert
 it to an Elixir term.</p><p>As the dumped state may have extra atoms not present in the session,
 I currently allow for atom creation in the loaded term.</p>
+  </section>
+</section>
+<section class="detail" id="remove_dump/2">
+
+    <span id="remove_dump/1"></span>
+
+  <div class="detail-header">
+    <a href="#remove_dump/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">remove_dump(file, env \\ Application.get_env(:anoma, :env))</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_dump(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Removes the given dump files at the specified address and with the
+given configuration.</p><p>See <a href="Anoma.System.Directories.html"><code class="inline">Anoma.System.Directories</code></a> for more informaiton about the path
+resolution and for the second atom.</p>
   </section>
 </section>
 

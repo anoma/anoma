@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.12.0">
+    <meta name="project" content="Anoma v0.13.0">
 
 
-    <title>Anoma.Configuration — Anoma v0.12.0</title>
+    <title>Anoma.Configuration — Anoma v0.13.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-35E165F8.js"></script>
+    <script src="dist/sidebar_items-87B1BF7E.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.12.0
+          v0.13.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Configuration</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
 
 </h1>
 
@@ -139,7 +139,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
   </a>
   <span class="text">Public API</span>
 </h3>
-<ul><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><code class="inline">parse_node/1</code></li><li><a href="#parse/1"><code class="inline">parse/1</code></a></li></ul>
+<ul><li><a href="#create_min/0"><code class="inline">create_min/0</code></a></li><li><a href="#create_min/7"><code class="inline">create_min/7</code></a></li><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><code class="inline">parse_node/1</code></li><li><a href="#parse/1"><code class="inline">parse/1</code></a></li></ul>
   </section>
 
 
@@ -157,7 +157,28 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#launch_min/1" translate="no">launch_min(path)</a>
+        <a href="#create_min/0" translate="no">create_min()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create a minimal configuration file on application startup unless the
+environment is :test</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_min/7" translate="no">create_min(config_name, name, qualified, order, snap, block, timer)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create a minimal configuration file on application startup</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#launch_min/1" translate="no">launch_min(file_path)</a>
 
       </div>
 
@@ -188,6 +209,14 @@ and put it in the appropriate keyword list</p></div>
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_config/2" translate="no">remove_config(file_path, env \\ Application.get_env(:anoma, :env))</a>
+
+      </div>
+
+    </div>
+
 </div>
 
   </section>
@@ -201,6 +230,71 @@ and put it in the appropriate keyword list</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="create_min/0">
+
+  <div class="detail-header">
+    <a href="#create_min/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_min()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>I create a minimal configuration file on application startup unless the
+environment is :test</p><p>The configuration file is created with the [node] header and with keys:</p><p>name = 'name'
+qualified = 'qualified_name'
+order = 'order_name'
+snapshot_path = 'path'
+block_storage = 'block'
+ping_time = 10000</p><p>Check <a href="#parse_min/1"><code class="inline">parse_min/1</code></a> to see how these will be made into node parameters</p><p>The file is wirtten to the XDG-specified config folder unless the
+environment is :test</p>
+  </section>
+</section>
+<section class="detail" id="create_min/7">
+
+  <div class="detail-header">
+    <a href="#create_min/7" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_min(config_name, name, qualified, order, snap, block, timer)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_min(
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  :no_timer | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()
+) :: :ok</pre>
+
+      </div>
+
+<p>I create a minimal configuration file on application startup</p><p>Given arguments config_name, name, qualified, order, snap, block, timer
+in that order, the configuration file is created with the [node] header
+and with keys:</p><p>name = 'name'
+qualified = 'qualified'
+order = 'order'
+snapshot_path = 'path'
+block_storage = 'block'
+ping_time = maybe_time</p><p>where maybe_timer is time if the latter is an integer and 'no_timer'
+if time == :no_timer</p><p>Check <a href="#parse_min/1"><code class="inline">parse_min/1</code></a> to see how these will be made into node parameters</p><p>The file is wirtten to the XDG-specified config folder. If the
+environment is :test, the file is written in immediate folder with name
+config_name</p>
+  </section>
+</section>
 <section class="detail" id="launch_min/1">
 
   <div class="detail-header">
@@ -208,7 +302,7 @@ and put it in the appropriate keyword list</p></div>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">launch_min(path)</h1>
+    <h1 class="signature" translate="no">launch_min(file_path)</h1>
 
 
   </div>
@@ -253,6 +347,31 @@ unsuccesful</p>
 
 <p>Given a map, I decode all the needed info for a minimal node startup
 and put it in the appropriate keyword list</p>
+  </section>
+</section>
+<section class="detail" id="remove_config/2">
+
+    <span id="remove_config/1"></span>
+
+  <div class="detail-header">
+    <a href="#remove_config/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">remove_config(file_path, env \\ Application.get_env(:anoma, :env))</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_config(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: :ok</pre>
+
+      </div>
+
+
   </section>
 </section>
 

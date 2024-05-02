@@ -8,7 +8,7 @@
     <meta name="project" content="Anoma v0.13.0">
 
 
-    <title>Anoma.Node.Solver — Anoma v0.13.0</title>
+    <title>Anoma.System.Directories — Anoma v0.13.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
@@ -124,14 +124,15 @@ GUIDES
 
 <h1>
 
-  <span translate="no">Anoma.Node.Solver</span> 
+  <span translate="no">Anoma.System.Directories</span> 
   <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am a strawman intent solver for testing purposes.</p>
+<p>I provide out utilities for ensuring user Data, Config,
+etc. directories are properly setup for the host operating system.</p><p>Please use me when trying to write to user directories.</p>
   </section>
 
 
@@ -142,20 +143,6 @@ GUIDES
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -163,49 +150,23 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_solved/1" translate="no">get_solved(solver)</a>
+        <a href="#configuration/2" translate="no">configuration(file_path, env \\ Application.get_env(:anoma, :env))</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I provide a proper translation from a user directory to the
+corresponding system configuration directory.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_call/3" translate="no">handle_call(atom, from, s)</a>
+        <a href="#data/2" translate="no">data(file_path, env \\ Application.get_env(:anoma, :env))</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#handle_cast/3" translate="no">handle_cast(arg, arg2, s)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#init/1" translate="no">init(arg)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#mempool_send/2" translate="no">mempool_send(solver, mempool)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#solve/1" translate="no">solve(unbalanced)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I provide a proper translation from a user directory to the
+corresponding system data directory.</p></div>
 
     </div>
 
@@ -213,47 +174,6 @@ GUIDES
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Solver{
-  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  solutions_topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  solved: [<a href="Anoma.Resource.Transaction.html#t:t/0">Anoma.Resource.Transaction.t</a>()],
-  solved_set: <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(<a href="Anoma.Resource.Transaction.html#t:t/0">Anoma.Resource.Transaction.t</a>()),
-  unsolved: [<a href="Anoma.Resource.Transaction.html#t:t/0">Anoma.Resource.Transaction.t</a>()]
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -263,14 +183,16 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="get_solved/1">
+<section class="detail" id="configuration/2">
+
+    <span id="configuration/1"></span>
 
   <div class="detail-header">
-    <a href="#get_solved/1" class="detail-link" title="Link to this function">
+    <a href="#configuration/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">get_solved(solver)</h1>
+    <h1 class="signature" translate="no">configuration(file_path, env \\ Application.get_env(:anoma, :env))</h1>
 
 
   </div>
@@ -279,96 +201,66 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_solved(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: [<a href="Anoma.Resource.Transaction.html#t:t/0">Anoma.Resource.Transaction.t</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> configuration(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()</pre>
 
       </div>
 
-
+<p>I provide a proper translation from a user directory to the
+corresponding system configuration directory.</p><h3 id="configuration/2-parameters" class="section-heading">
+  <a href="#configuration/2-parameters" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Parameters</span>
+</h3>
+<ul><li><code class="inline">file_path</code> - the path given by the user</li><li><code class="inline">env</code> (optional) - the system environment. It defaults to the
+application environment. The <code class="inline">:test</code> environment uses the local
+directory instead of the system directory</li></ul><h3 id="configuration/2-returns" class="section-heading">
+  <a href="#configuration/2-returns" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Returns</span>
+</h3>
+<p>The correct environment which to save configuration details</p>
   </section>
 </section>
-<section class="detail" id="handle_call/3">
+<section class="detail" id="data/2">
+
+    <span id="data/1"></span>
 
   <div class="detail-header">
-    <a href="#handle_call/3" class="detail-link" title="Link to this function">
+    <a href="#data/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_call(atom, from, s)</h1>
+    <h1 class="signature" translate="no">data(file_path, env \\ Application.get_env(:anoma, :env))</h1>
 
 
   </div>
 
   <section class="docstring">
 
+      <div class="specs">
 
-  </section>
-</section>
-<section class="detail" id="handle_cast/3">
+          <pre translate="no"><span class="attribute">@spec</span> data(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()</pre>
 
-  <div class="detail-header">
-    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">handle_cast(arg, arg2, s)</h1>
+      </div>
 
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="init/1">
-
-  <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">init(arg)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="mempool_send/2">
-
-  <div class="detail-header">
-    <a href="#mempool_send/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">mempool_send(solver, mempool)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="solve/1">
-
-  <div class="detail-header">
-    <a href="#solve/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">solve(unbalanced)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>I provide a proper translation from a user directory to the
+corresponding system data directory.</p><h3 id="data/2-parameters" class="section-heading">
+  <a href="#data/2-parameters" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Parameters</span>
+</h3>
+<ul><li><code class="inline">file_path</code> - the path given by the user</li><li><code class="inline">env</code> (optional) - the system environment. It defaults to the
+application environment. The <code class="inline">:test</code> environment uses the local
+directory instead of the system directory</li></ul><h3 id="data/2-returns" class="section-heading">
+  <a href="#data/2-returns" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Returns</span>
+</h3>
+<p>The correct environment which to save data details</p>
   </section>
 </section>
 

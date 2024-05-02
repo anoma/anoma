@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.12.0">
+    <meta name="project" content="Anoma v0.13.0">
 
 
-    <title>Anoma.Node.Logger — Anoma v0.12.0</title>
+    <title>Anoma.Node.Logger — Anoma v0.13.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-35E165F8.js"></script>
+    <script src="dist/sidebar_items-87B1BF7E.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.12.0
+          v0.13.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Logger</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.12.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
 
 </h1>
 
@@ -259,7 +259,7 @@ engine using <code class="inline">Storage.get_keyspace/2</code></p></div>
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Logger{
   clock: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  storage: <a href="Anoma.Storage.html#t:t/0">Anoma.Storage.t</a>() | nil
+  storage: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>() | nil
 }</pre>
 
       </div>
@@ -302,7 +302,7 @@ engine using <code class="inline">Storage.get_keyspace/2</code></p></div>
 <p>I receive three arguments: an address of the logger, an atom specifying
 the urgency of the logging message and the logging message itself.</p><p>If the logger address is indeed an address, I put the info inside the
 specified storage using <code class="inline">Storage.put/3</code>.</p><p>The information is stored using a keyspace method. The message is hence
-attached to a list of 4 elements:</p><ol><li>ID of the logger calling for storage</li><li>ID of the engine whose info we log</li><li>Timestamp relative to the clock engine used</li><li>The urgency atom</li></ol><p>I then use the atom to call the Elixir logger in order to inform the
+attached to a list of 4 elements:</p><ol><li>ID of the logger calling for storage</li><li>ID of the engine whose info we log or a PID of the worker process</li><li>Timestamp relative to the clock engine used</li><li>The urgency atom</li></ol><p>I then use the atom to call the Elixir logger in order to inform the
 user of any specific major logging event such as, e.g. failing
 workers.</p>
   </section>
@@ -324,16 +324,17 @@ workers.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> get(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil) ::
-  [{[<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()], <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}] | nil</pre>
+  [{[<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()], <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}]
+  | nil</pre>
 
       </div>
 
 <p>Given a non-nil logger address, I get the entire keyspace related to the
 storage attached to the aforementioned logger ID using
 <code class="inline">Storage.get_keyspace/2</code></p><p>I return a list of 2-tuples. Its left element will be a list whose
-head is the ID of the specified logger, followed by the engine ID, the
-timestamp, and an atom specifying urgency of the logging message. Its
-right element will be the message.</p>
+head is the ID of the specified logger, followed by the engine ID (or
+worker PID), the timestamp, and an atom specifying urgency of the logging
+message. Its right element will be the message.</p>
   </section>
 </section>
 <section class="detail" id="get/2">
@@ -352,17 +353,18 @@ right element will be the message.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()) ::
-  [{[<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()], <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}] | nil</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()) ::
+  [{[<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()], <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}]
+  | nil</pre>
 
       </div>
 
 <p>Given a non-nil logger address and an engine address, I get the keyspace
 which conatins all the info stored by the logger about the supplied
 engine using <code class="inline">Storage.get_keyspace/2</code></p><p>I return a list of 2-tuples. Its left element will be a list whose
-head is the ID of the specified logger, followed by the engine ID, the
-timestamp, and an atom specifying urgency of the logging message. Its
-right element will be the message.</p>
+head is the ID of the specified logger, followed by the engine ID (or
+worker PID), the timestamp, and an atom specifying urgency of the logging
+message. Its right element will be the message.</p>
   </section>
 </section>
 <section class="detail" id="handle_call/3">
@@ -415,7 +417,8 @@ right element will be the message.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> init(storage: <a href="Anoma.Storage.html#t:t/0">Anoma.Storage.t</a>(), clock: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> init(storage: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), clock: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()) ::
+  {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 
