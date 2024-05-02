@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Dump do
   use ExUnit.Case, async: true
 
   setup_all do
-    storage = %Anoma.Storage{
+    storage = %Anoma.Node.Storage{
       qualified: AnomaTest.Dump.Qualified,
       order: AnomaTest.Dump.Order
     }
@@ -17,7 +17,7 @@ defmodule AnomaTest.Node.Dump do
         settings:
           [
             snapshot_path: snapshot_path,
-            storage: storage,
+            storage_data: storage,
             block_storage: :dump_blocks,
             ping_time: :no_timer
           ]

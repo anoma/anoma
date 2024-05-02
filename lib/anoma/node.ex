@@ -21,7 +21,7 @@ defmodule Anoma.Node do
     - `name` - name for this process
     - `snapshot_path` : [`atom()` | 0]
       - A snapshot location for the service (used in the worker)
-    - `storage` : `Anoma.Storage.t()` - The Storage tables to use
+    - `storage` : `Anoma.Node.Storage.t()` - The Storage tables to use
     - `block_storage` - a location to store the blocks produced
 
   ### Created Tables
@@ -32,8 +32,7 @@ defmodule Anoma.Node do
 
   use GenServer
   use TypedStruct
-  alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger}
-  alias Anoma.Storage
+  alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger, Storage}
   alias Anoma.Node.Ordering
   alias Anoma.Crypto.Id
   alias __MODULE__
@@ -48,6 +47,7 @@ defmodule Anoma.Node do
     field(:pinger, Router.addr())
     field(:clock, Router.addr())
     field(:logger, Router.addr())
+    field(:storage, Router.addr())
   end
 
   @type configuration() :: [
@@ -60,7 +60,7 @@ defmodule Anoma.Node do
           ping_time: :no_timer | non_neg_integer(),
           name: atom(),
           snapshot_path: Noun.t(),
-          storage: Storage.t(),
+          storage_data: Storage.t(),
           block_storage: atom()
         ]
 
@@ -71,7 +71,8 @@ defmodule Anoma.Node do
           ordering: {Router.addr() | nil, Ordering.t()},
           executor: {Router.addr() | nil, Executor.t()},
           mempool: {Router.addr() | nil, Mempool.t()},
-          storage: {Storage.t(), atom()},
+          storage: {Router.addr() | nil, Storage.t()},
+          storage_data: {Storage.t(), atom()},
           snapshot_path: Noun.t()
         }
 
@@ -92,13 +93,13 @@ defmodule Anoma.Node do
   def start_link(args) do
     settings = args[:settings]
     name = args[:name]
-    {storage, block_storage} = settings[:storage]
+    {storage, block_storage} = settings[:storage_data]
     storage_setup(storage, block_storage)
 
     if args[:new_storage] do
       snap = settings[:snapshot_path]
 
-      Anoma.Storage.put_snapshot(storage, hd(snap))
+      Storage.put_snapshot(storage, hd(snap))
     else
       tables =
         settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
@@ -119,8 +120,12 @@ defmodule Anoma.Node do
     {mem_id, mem_st} = args[:mempool]
     {ping_id, ping_st} = args[:pinger]
     {ex_id, ex_st} = args[:executor]
+    {storage_id, storage_st} = args[:storage]
 
     {:ok, router} = start_router(args[:router])
+
+    {:ok, storage} =
+      start_engine(router, Storage, storage_id, storage_st)
 
     {:ok, clock} =
       start_engine(router, Clock, clock_id,
@@ -132,7 +137,7 @@ defmodule Anoma.Node do
         router,
         Logger,
         log_id,
-        %Logger{log_st | clock: clock}
+        %Logger{log_st | clock: clock, storage: storage}
       )
 
     {:ok, ordering} =
@@ -140,7 +145,7 @@ defmodule Anoma.Node do
         router,
         Ordering,
         ord_id,
-        %Ordering{ord_st | logger: logger}
+        %Ordering{ord_st | logger: logger, table: storage}
       )
 
     {:ok, executor_topic} = new_topic(router, args[:executor_topic])
@@ -191,7 +196,8 @@ defmodule Anoma.Node do
        clock: clock,
        logger: logger,
        executor_topic: executor_topic,
-       mempool_topic: mempool_topic
+       mempool_topic: mempool_topic,
+       storage: storage
      }}
   end
 
@@ -202,17 +208,18 @@ defmodule Anoma.Node do
   @spec start_min(min_engine_configuration()) :: engine_configuration()
   def start_min(args) do
     env = Map.merge(%Nock{}, Map.intersect(%Nock{}, args |> Enum.into(%{})))
-    storage = args[:storage]
+    storage = args[:storage_data]
     block_storage = args[:block_storage]
 
     %{
       clock: {nil, %Clock{}},
-      logger: {nil, %Logger{storage: storage}},
-      ordering: {nil, %Ordering{table: storage}},
+      logger: {nil, %Logger{}},
+      ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
       pinger: {nil, %Pinger{time: args[:ping_time]}},
-      storage: {storage, block_storage},
+      storage: {nil, storage},
+      storage_data: {storage, block_storage},
       snapshot_path: args[:snapshot_path]
     }
   end
@@ -226,7 +233,7 @@ defmodule Anoma.Node do
   end
 
   defp storage_setup(storage, block_storage) do
-    Anoma.Storage.ensure_new(storage)
+    Storage.ensure_new(storage)
     :mnesia.delete_table(block_storage)
     Anoma.Block.create_table(block_storage, false)
   end

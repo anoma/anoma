@@ -1,12 +1,13 @@
 defmodule Anoma.Identity.SignsFor do
   alias Anoma.Identity.{Evidence, Verification}
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Crypto.Id
+  alias Anoma.Node.Router
 
-  @spec sign_for(Storage.t(), Evidence.name()) ::
+  @spec sign_for(Router.Addr.t(), Evidence.name()) ::
           :key_not_verified | :ok | :could_not_update_storage
   def sign_for(
-        tab = %Storage{},
+        tab = %Router.Addr{},
         ev = %Evidence{signed_data: trusted_key, signature_key: our_key}
       ) do
     if Verification.verify_request(
@@ -32,15 +33,15 @@ defmodule Anoma.Identity.SignsFor do
     end
   end
 
-  @spec known(Storage.t(), Id.Extern.t()) :: MapSet.t(Id.Extern.t())
-  def known(tab = %Storage{}, key) do
+  @spec known(Router.Addr.t(), Id.Extern.t()) :: MapSet.t(Id.Extern.t())
+  def known(tab = %Router.Addr{}, key) do
     case Storage.get(tab, [name_space(), key]) do
       {:ok, set} -> set
       :absent -> MapSet.new()
     end
   end
 
-  @spec signs_for?(Storage.t(), Id.Extern.t(), Id.Extern.t()) :: boolean
+  @spec signs_for?(Router.Addr.t(), Id.Extern.t(), Id.Extern.t()) :: boolean
   def signs_for?(tab, our_key, key_in_question) do
     known(tab, our_key)
     |> MapSet.member?(key_in_question)

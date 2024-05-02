@@ -2,9 +2,10 @@ defmodule Anoma.Node.Executor.Worker do
   @moduledoc """
   I am a Nock worker, supporting scry.
   """
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Node.Logger
+  alias Anoma.Node.Router
 
   import Nock
 
@@ -57,8 +58,8 @@ defmodule Anoma.Node.Executor.Worker do
       # the latter requires the merkle tree to be complete
       cm_tree =
         CommitmentTree.new(
-          Anoma.Storage.cm_tree_spec(),
-          storage.rm_commitments
+          Storage.cm_tree_spec(),
+          Storage.state(storage).rm_commitments
         )
 
       new_tree =
@@ -92,7 +93,7 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec rm_nullifier_check(Storage.t(), list(binary())) :: bool()
+  @spec rm_nullifier_check(Router.addr(), list(binary())) :: bool()
   def rm_nullifier_check(storage, nullifiers) do
     for nullifier <- nullifiers, reduce: true do
       acc ->
@@ -121,7 +122,8 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec snapshot(Storage.t(), Nock.t()) :: {:aborted, any()} | {:atomic, :ok}
+  @spec snapshot(Router.addr(), Nock.t()) ::
+          {:aborted, any()} | {:atomic, :ok}
   def snapshot(storage, env) do
     snapshot = hd(env.snapshot_path)
     log_info({:snap, {storage, snapshot}, env.logger})

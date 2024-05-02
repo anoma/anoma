@@ -1,9 +1,10 @@
 defmodule AnomaTest.Storage do
   use ExUnit.Case
 
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
+  alias Anoma.Node.Router
 
-  doctest(Anoma.Storage)
+  doctest(Anoma.Node.Storage)
 
   setup_all do
     # base storage testing default
@@ -11,6 +12,11 @@ defmodule AnomaTest.Storage do
       qualified: AnomaTest.Storage.Qualified,
       order: AnomaTest.Storage.Order
     }
+
+    {:ok, router} = Router.start()
+
+    {:ok, storage} =
+      Router.start_engine(router, Storage, storage)
 
     Storage.ensure_new(storage)
     [storage: storage]
@@ -103,7 +109,11 @@ defmodule AnomaTest.Storage do
       Storage.write_at_order_tx(storage, testing_atom, 10, 3)
 
       assert Storage.read_at_order_tx(storage, testing_atom, 3) ==
-               {:atomic, [{storage.qualified, [3, testing_atom | 0], 10}]}
+               {:atomic,
+                [
+                  {Storage.state(storage).qualified, [3, testing_atom | 0],
+                   10}
+                ]}
     end
 
     test "Writing at an order gives us the same testing order", %{
@@ -113,7 +123,7 @@ defmodule AnomaTest.Storage do
       Storage.write_at_order_tx(storage, testing_atom, 10, 3)
 
       assert Storage.read_order_tx(storage, testing_atom) ==
-               {:atomic, [{storage.order, testing_atom, 3}]}
+               {:atomic, [{Storage.state(storage).order, testing_atom, 3}]}
     end
   end
 

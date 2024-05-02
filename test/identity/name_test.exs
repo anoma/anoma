@@ -2,10 +2,11 @@ defmodule AnomaTest.Identity.Name do
   use ExUnit.Case, async: true
 
   alias Anoma.Crypto.Symmetric
-  alias Anoma.Storage
+  alias Anoma.Node.Storage
   alias Anoma.Identity.Backend.Memory
   alias Anoma.Identity.{Manager, Name}
   alias Anoma.Node.Identity.Commitment
+  alias Anoma.Node.Router
 
   doctest(Anoma.Identity.Name)
 
@@ -15,6 +16,11 @@ defmodule AnomaTest.Identity.Name do
       qualified: AnomaTest.Identity.Name.Qualified,
       order: AnomaTest.Identity.Name.Order
     }
+
+    {:ok, router} = Router.start()
+
+    {:ok, storage} =
+      Router.start_engine(router, Storage, storage)
 
     Storage.ensure_new(storage)
 

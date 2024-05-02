@@ -9,10 +9,15 @@ defmodule Anoma.Identity.Verification do
 
   alias Anoma.Crypto.Id
   alias Anoma.Crypto.Sign
-  alias Anoma.Storage
   alias Anoma.Identity.SignsFor
+  alias Anoma.Node.Router
 
-  @spec verify_request(binary(), term(), Id.Extern.t(), false | Storage.t()) ::
+  @spec verify_request(
+          binary(),
+          term(),
+          Id.Extern.t(),
+          false | Router.Addr.t()
+        ) ::
           boolean
   def verify_request(commitment, msg, id = %Id.Extern{}, signsFor \\ false) do
     bin_message = binary(msg)
@@ -23,7 +28,7 @@ defmodule Anoma.Identity.Verification do
 
   # this should be the real verify function, new name until specs clarify
   @spec verify_combined(binary(), Id.Extern.t()) :: false | {:ok, any()}
-  @spec verify_combined(binary(), Id.Extern.t(), false | Storage.t()) ::
+  @spec verify_combined(binary(), Id.Extern.t(), false | Router.Addr.t()) ::
           {:ok, term()} | false
   def verify_combined(commitment, id = %Id.Extern{}, signsFor \\ false) do
     {v, result} = Sign.verify(commitment, id.sign)
@@ -44,7 +49,7 @@ defmodule Anoma.Identity.Verification do
           binary(),
           binary(),
           Id.Extern.t(),
-          false | Storage.t()
+          false | Router.Addr.t()
         ) :: boolean
   defp signs_for_lookup(commitment, bin_message, id, table) do
     table &&
@@ -53,7 +58,7 @@ defmodule Anoma.Identity.Verification do
   end
 
   # This one is used when we have combined lookup only
-  @spec signs_for_lookup(binary(), Id.Extern.t(), false | Storage.t()) ::
+  @spec signs_for_lookup(binary(), Id.Extern.t(), false | Router.Addr.t()) ::
           boolean
   defp signs_for_lookup(blob, id, table) do
     table &&

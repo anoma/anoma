@@ -26,7 +26,7 @@ defmodule Anoma do
   end
 
   def start_logic(_) do
-    storage = %Anoma.Storage{
+    storage = %Anoma.Node.Storage{
       qualified: Anoma.Qualified,
       order: Anoma.Order,
       rm_commitments: Anoma.RMCommitments
@@ -38,7 +38,7 @@ defmodule Anoma do
     node_settings = [
       name: name,
       snapshot_path: snapshot_path,
-      storage: storage,
+      storage_data: storage,
       block_storage: :anoma_block
     ]
 
