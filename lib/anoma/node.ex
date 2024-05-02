@@ -53,6 +53,7 @@ defmodule Anoma.Node do
   @type configuration() :: [
           new_storage: boolean(),
           name: atom(),
+          use_rocks: boolean(),
           settings: engine_configuration()
         ]
 
@@ -93,8 +94,9 @@ defmodule Anoma.Node do
   def start_link(args) do
     settings = args[:settings]
     name = args[:name]
+    rocks = args[:use_rocks]
     {storage, block_storage} = settings[:storage_data]
-    storage_setup(storage, block_storage)
+    storage_setup(storage, block_storage, rocks)
 
     if args[:new_storage] do
       snap = settings[:snapshot_path]
@@ -237,10 +239,10 @@ defmodule Anoma.Node do
     {:reply, state, state}
   end
 
-  defp storage_setup(storage, block_storage) do
-    Storage.ensure_new(storage)
+  defp storage_setup(storage, block_storage, rocks) do
+    Storage.do_ensure_new(storage, rocks)
     :mnesia.delete_table(block_storage)
-    Anoma.Block.create_table(block_storage, false)
+    Anoma.Block.create_table(block_storage, rocks)
   end
 
   defp start_router(router) do

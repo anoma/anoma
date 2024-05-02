@@ -19,6 +19,7 @@ defmodule AnomaTest.Node.Pinger do
       Anoma.Node.start_link(
         new_storage: true,
         name: name,
+        use_rocks: false,
         settings:
           [
             snapshot_path: snapshot_path,

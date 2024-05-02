@@ -110,6 +110,7 @@ defmodule Anoma.Configuration do
     Anoma.Node.start_link(
       new_storage: true,
       name: map[:name],
+      use_rocks: false,
       settings: settings
     )
   end
