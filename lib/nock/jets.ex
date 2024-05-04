@@ -5,6 +5,17 @@ defmodule Nock.Jets do
 
   import Noun
 
+  def calculate_mug_of_core(index_in_core, parent_axis) do
+    {:ok, core} =
+      Nock.nock(Nock.logics_core(), [
+        8,
+        [9, index_in_core, 0 | Noun.index_to_offset(parent_axis)],
+        0 | 2
+      ])
+
+    Noun.mug(hd(core))
+  end
+
   # when this is called, we've already jet-matched axis 7.
   # so axis 6 exists. nevertheless, we have ok and error cases in case
   # of implementation bugs.
