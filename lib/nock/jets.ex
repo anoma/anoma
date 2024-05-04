@@ -4,6 +4,7 @@ defmodule Nock.Jets do
   """
 
   import Noun
+  alias Anoma.Crypto.Sign
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
           non_neg_integer()
@@ -229,6 +230,90 @@ defmodule Nock.Jets do
     case maybe_sample do
       {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and b != 0 ->
         {:ok, Kernel.rem(a, b)}
+
+      _ ->
+        :error
+    end
+  end
+
+  @spec verify_detatched(Nock.t()) :: :error | {:ok, 0 | 1}
+  def verify_detatched(core) do
+    maybe_sample = sample(core)
+
+    case maybe_sample do
+      {:ok, [a, b | c]}
+      when is_noun_atom(a) and is_noun_atom(b) and is_noun_atom(c) ->
+        try do
+          if Sign.verify_detached(
+               Noun.atom_integer_to_binary(a),
+               Noun.atom_integer_to_binary(b),
+               Noun.atom_integer_to_binary(c)
+             ) do
+            {:ok, 0}
+          else
+            {:ok, 1}
+          end
+        rescue
+          _ in ArgumentError -> {:ok, 1}
+        end
+
+      _ ->
+        :error
+    end
+  end
+
+  @spec verify(Nock.t()) :: :error | {:ok, binary()}
+  def verify(core) do
+    maybe_sample = sample(core)
+
+    case maybe_sample do
+      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+        try do
+          case Sign.verify(
+                 Noun.atom_integer_to_binary(a),
+                 Noun.atom_integer_to_binary(b)
+               ) do
+            {:ok, val} -> {:ok, val}
+            {:error, _} -> :error
+          end
+        rescue
+          _ in ArgumentError -> :error
+        end
+
+      _ ->
+        :error
+    end
+  end
+
+  @spec sign(Nock.t()) :: :error | {:ok, binary()}
+  def sign(core) do
+    on_binary(&Sign.sign/2, core)
+  end
+
+  @spec sign_detatched(Nock.t()) :: :error | {:ok, binary()}
+  def sign_detatched(core) do
+    on_binary(&Sign.sign_detached/2, core)
+  end
+
+  @spec on_binary(
+          (Noun.noun_atom(), Noun.noun_atom() -> Noun.noun_atom()),
+          Nock.t()
+        ) ::
+          :error | {:ok, binary()}
+  defp on_binary(sign_fn, core) do
+    maybe_sample = sample(core)
+
+    case maybe_sample do
+      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+        try do
+          {:ok,
+           sign_fn.(
+             Noun.atom_integer_to_binary(a),
+             Noun.atom_integer_to_binary(b)
+           )}
+        rescue
+          _ in ArgumentError -> :error
+        end
 
       _ ->
         :error
