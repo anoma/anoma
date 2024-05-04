@@ -39,6 +39,7 @@ defmodule Nock do
   @layers 6
 
   @layer_1_context_mug 17_654_928_022_549_292_273
+  @layer_6_context_mug 10_539_262_992_069_512_324
 
   # hardcoded jet registry
   @jet_registry %{
@@ -61,7 +62,16 @@ defmodule Nock do
     9_385_224_608_484_213_408 =>
       {"div", 7, @layer_1_context_mug, &Nock.Jets.div/1},
     9_865_107_020_110_751_778 =>
-      {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1}
+      {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1},
+    2_171_028_045_513_367_023 =>
+      {"verify", 7, @layer_6_context_mug, &Nock.Jets.verify/1},
+    11_207_087_638_603_349_387 =>
+      {"sign", 7, @layer_6_context_mug, &Nock.Jets.sign/1},
+    14_969_209_197_206_704_945 =>
+      {"verify-detatched", 7, @layer_6_context_mug,
+       &Nock.Jets.verify_detatched/1},
+    17_231_646_935_946_214_635 =>
+      {"sign-detatched", 7, @layer_6_context_mug, &Nock.Jets.sign_detatched/1}
   }
 
   @doc """
