@@ -5,11 +5,44 @@ defmodule Nock.Jets do
 
   import Noun
 
-  def calculate_mug_of_core(index_in_core, parent_axis) do
+  @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
+          non_neg_integer()
+  @doc """
+  We calculate the mug of a given core at a given gate.
+
+  ### Parameters
+
+  - `index_in_core` - the index of the gate itself
+
+  - `parent_layer` - the layer of the standard library. This should be
+    the same as the numbers found in `anoma.hoon` with `+ 3` added for
+    `@rm_core_val`, `@stdlib_core_val`, and the current index being
+    pushed
+
+  ### Example
+
+  In the Hoon repl one should write
+
+      dojo> |commit %anoma
+      >=
+      dojo> =anoma -build-file /=anoma=/lib/anoma/hoon
+      dojo> =>  anoma  !=(sub)
+      [9 47 0 31]
+
+  Now in IEX
+
+      > Nock.Jets.calculate_mug_of_core(47, 7)
+      14801825384048474882
+
+  We derived the 7 because the current top layer is 5, and dec is at
+  layer 1. So 5 - 1 + 3 = 7
+
+  """
+  def calculate_mug_of_core(index_in_core, parent_layer) do
     {:ok, core} =
       Nock.nock(Nock.logics_core(), [
         8,
-        [9, index_in_core, 0 | Noun.index_to_offset(parent_axis)],
+        [9, index_in_core, 0 | Noun.index_to_offset(parent_layer)],
         0 | 2
       ])
 
