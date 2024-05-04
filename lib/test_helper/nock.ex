@@ -13,6 +13,44 @@ defmodule TestHelper.Nock do
     [arm, sample | logics_core()]
   end
 
+  @spec using_sign_core() :: Noun.t()
+  def using_sign_core() do
+    arm =
+      Noun.Format.parse_always("[8 [9 10 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_verify_core() :: Noun.t()
+  def using_verify_core() do
+    arm =
+      Noun.Format.parse_always("[8 [9 4 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_sign_detatched_core() :: Noun.t()
+  def using_sign_detatched_core() do
+    arm =
+      Noun.Format.parse_always("[8 [9 23 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_verify_detatched_core() :: Noun.t()
+  def using_verify_detatched_core() do
+    arm =
+      Noun.Format.parse_always(
+        "[8 [9 22 0 31] 9 2 10 [6 [0 28] [0 58] 0 59] 0 2]"
+      )
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
   @spec factorial() :: Noun.t()
   def factorial() do
     arm = Noun.Format.parse_always("
