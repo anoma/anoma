@@ -36,6 +36,8 @@ defmodule Nock do
 
   @dialyzer :no_improper_lists
 
+  @layers 5
+
   @layer_1_context_mug 17_654_928_022_549_292_273
 
   # hardcoded jet registry
@@ -61,6 +63,11 @@ defmodule Nock do
     9_865_107_020_110_751_778 =>
       {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1}
   }
+
+  @doc """
+  Gives the total numbers of layers in the standard library
+  """
+  def stdlib_layers, do: @layers
 
   # temporary stub functions for jet scaffolding
   def get_jet(battery_mug) do
