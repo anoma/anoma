@@ -86,7 +86,8 @@ defmodule Anoma.Node.Mempool do
   end
 
   def handle_call(:self_id, _from, state) do
-    {:reply, {Process.get(:engine_id), Process.get(:engine_server) || self()}, state}
+    {:reply, {Process.get(:engine_id), Process.get(:engine_server) || self()},
+     state}
   end
 
   def handle_call(:execute, _from, state) do

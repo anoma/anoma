@@ -802,6 +802,8 @@ defmodule Anoma.Node.Router do
       )
     end
 
+    new_waiting = Map.put(s.waiting_engines, src_id, {s.max_call_id, dst_id})
+
     %{
       s
       | max_call_id: 1 + s.max_call_id,
@@ -828,12 +830,14 @@ defmodule Anoma.Node.Router do
   end
 
   defp send_to_transport(s, dst, src, msg) do
-    require IEx; IEx.pry
+    require IEx
+    IEx.pry()
     msg = Anoma.Serialise.pack([dst, src, msg])
     {internal_id, _} = Map.fetch!(s.local_engines, src)
     sig = Anoma.Crypto.Sign.sign_detached(msg, internal_id.internal.sign)
     encoded = :msgpack.pack(%{"data" => msg, "sig" => sig})
-    require IEx; IEx.pry()
+    require IEx
+    IEx.pry()
     Transport.send(s.transport, dst, encoded)
   end
 

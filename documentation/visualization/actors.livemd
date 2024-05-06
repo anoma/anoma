@@ -3,6 +3,7 @@
 # The Actors
 
 ## Index
+
 1. [Toc](./../toc.livemd)
 2. [Contributing](./../contributing.livemd)
    1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
@@ -10,11 +11,12 @@
    3. [Git](./../contributing/git.livemd)
    4. [Hoon](./../contributing/hoon.livemd)
    5. [Iex](./../contributing/iex.livemd)
-   6. [Observer](./../contributing/observer.livemd)
-   7. [Testing](./../contributing/testing.livemd)
+   6. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   7. [Observer](./../contributing/observer.livemd)
+   8. [Testing](./../contributing/testing.livemd)
       1. [Running Tests](./../contributing/testing/running-tests.livemd)
       2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
-8. [Visualization](./../visualization.livemd)
+3. [Visualization](./../visualization.livemd)
    1. [Actors](./../visualization/actors.livemd)
 4. [Hoon](./../hoon.livemd)
    1. [Calling](./../hoon/calling.livemd)
@@ -22,7 +24,9 @@
    3. [Setting Up](./../hoon/setting-up.livemd)
 5. [Analysis](./../analysis.livemd)
    1. [Fema Analysis Pinger](./../analysis/fema-analysis-pinger.livemd)
-6. [Vm_interface](./../vm_interface.livemd)
+6. [User](./../user.livemd)
+   1. [Data](./../user/data.livemd)
+7. [Vm_interface](./../vm_interface.livemd)
 
 ## An overview of Anoma
 
@@ -33,23 +37,270 @@ A good overview of Actors can be seen by looking at the supervision tree of Anom
 Kino.Process.render_sup_tree(pid2, direction: :left_right)
 ```
 
+```elixir
+alias Anoma.Storage
+alias Anoma.Node.Router
+alias Anoma.Node.Transport
+import TestHelper.Nock
+
+storage = %Anoma.Storage{
+  qualified: AnomaTest.Transport.Qualified,
+  order: AnomaTest.Transport.Order
+}
+
+name = :transport_test
+snapshot_path = [:my_special_nock_snaphsot | 0]
+
+{:ok, nodes} =
+  Anoma.Node.start_link(
+    new_storage: true,
+    name: name,
+    settings:
+      [
+        snapshot_path: snapshot_path,
+        storage: storage,
+        block_storage: :mempool_blocks,
+        ping_time: :no_timer
+      ]
+      |> Anoma.Node.start_min()
+  )
+
+node = Anoma.Node.state(nodes)
+```
+
 <!-- livebook:{"output":true} -->
 
-```mermaid
-graph LR;
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
-classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
-classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
+```
+%Anoma.Node{
+  logger: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Logger AZGS/QptfFddCYIY2m2/P/JsTNhri+VYLyximDgEYA4=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<203, 123, 181, 6, 177, 133, 84, 99, 131, 246, 162, 122, 148, 136, 178, 67, 234, 49,
+        239, 125, 131, 113, 228, 247, 47, 94, 155, 94, 151, 168, 114, 18>>,
+      sign: <<1, 145, 146, 253, 10, 109, 124, 87, 93, 9, 130, 24, 218, 109, 191, 63, 242, 108, 76,
+        216, 107, 139, 229, 88, 47, 44, 98, 152, 56, 4, 96, 14>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20,
+          228, 143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+        sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+          205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+      },
+      router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+    }
+  },
+  clock: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Clock FX+CGHXfVgi5Q6RNQiPUGzB3XmVf0lFtBG+TLpIZwsY=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<227, 212, 16, 92, 197, 80, 170, 20, 107, 75, 248, 121, 32, 17, 152, 185, 232, 194,
+        6, 124, 158, 215, 64, 163, 241, 27, 18, 136, 27, 1, 91, 35>>,
+      sign: <<21, 127, 130, 24, 117, 223, 86, 8, 185, 67, 164, 77, 66, 35, 212, 27, 48, 119, 94,
+        101, 95, 210, 81, 109, 4, 111, 147, 46, 146, 25, 194, 198>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20,
+          228, 143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+        sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+          205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+      },
+      router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+    }
+  },
+  pinger: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Pinger muF65NW09DZIAYeBqW+rB6f3v91SLJaCc0gCa9cI760=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<11, 194, 115, 11, 140, 24, 91, 239, 6, 252, 156, 203, 254, 191, 221, 239, 23, 136,
+        52, 186, 81, 88, 48, 252, 80, 29, 227, 42, 41, 116, 2, 76>>,
+      sign: <<154, 225, 122, 228, 213, 180, 244, 54, 72, 1, 135, 129, 169, 111, 171, 7, 167, 247,
+        191, 221, 82, 44, 150, 130, 115, 72, 2, 107, 215, 8, 239, 173>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20,
+          228, 143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+        sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+          205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+      },
+      router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+    }
+  },
+  mempool_topic: %Anoma.Node.Router.Addr{
+    server: nil,
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<100, 251, 99, 181, 71, 214, 76, 134, 11, 103, 33, 218, 44, 254, 150, 219, 173, 146,
+        55, 45, 226, 229, 115, 133, 22, 228, 177, 55, 167, 175, 22, 95>>,
+      sign: <<199, 107, 145, 156, 193, 71, 202, 123, 247, 232, 41, 242, 17, 60, 147, 154, 30, 140,
+        152, 141, 204, 212, 17, 150, 203, 136, 152, 249, 187, 198, 61, 188>>
+    },
+    router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+  },
+  mempool: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Mempool l2S5XphqFCahdgEx8ayeUl74UTEautw2S7b+cOON3oA=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<8, 93, 189, 93, 11, 12, 219, 233, 122, 95, 53, 228, 130, 57, 136, 9, 98, 27, 213,
+        211, 78, 189, 142, 62, 102, 53, 1, 34, 111, 175, 204, 47>>,
+      sign: <<151, 100, 185, 94, 152, 106, 20, 38, 161, 118, 1, 49, 241, 172, 158, 82, 94, 248, 81,
+        49, 26, 186, 220, 54, 75, 182, 254, 112, 227, 141, 222, 128>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20,
+          228, 143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+        sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+          205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+      },
+      router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+    }
+  },
+  executor_topic: %Anoma.Node.Router.Addr{
+    server: nil,
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<238, 27, 173, 226, 187, 137, 68, 208, 234, 212, 16, 13, 170, 54, 217, 53, 108, 230,
+        210, 87, 124, 226, 215, 116, 51, 238, 106, 231, 7, 142, 50, 31>>,
+      sign: <<85, 214, 24, 77, 201, 226, 34, 92, 54, 252, 209, 215, 22, 32, 146, 12, 216, 55, 158,
+        149, 92, 48, 88, 142, 245, 82, 92, 5, 140, 23, 99, 22>>
+    },
+    router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+  },
+  executor: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Executor +xJEjJBrFEZWbtfrkO1n0TmkxSkm1m50mQRxEyPyRnQ=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<3, 222, 164, 41, 70, 154, 251, 17, 106, 89, 127, 77, 123, 32, 43, 222, 172, 35, 54,
+        98, 121, 194, 203, 227, 148, 171, 62, 55, 196, 221, 156, 78>>,
+      sign: <<251, 18, 68, 140, 144, 107, 20, 70, 86, 110, 215, 235, 144, 237, 103, 209, 57, 164,
+        197, 41, 38, 214, 110, 116, 153, 4, 113, 19, 35, 242, 70, 116>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20,
+          228, 143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+        sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+          205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+      },
+      router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+    }
+  },
+  ordering: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Ordering Odz5k4qYvJyWVNUy2vNNFXvvre3lPnaXQdtbSTMXvdM=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<117, 38, 36, 192, 172, 228, 88, 17, 80, 140, 5, 165, 72, 182, 121, 97, 178, 147,
+        171, 154, 116, 236, 254, 177, 108, 251, 97, 100, 16, 112, 183, 90>>,
+      sign: <<57, 220, 249, 147, 138, 152, 188, 156, 150, 84, 213, 50, 218, 243, 77, 21, 123, 239,
+        173, 237, 229, 62, 118, 151, 65, 219, 91, 73, 51, 23, 189, 211>>
+    },
+    router: %Anoma.Node.Router.Addr{
+      server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+      id: %Anoma.Crypto.Id.Extern{
+        encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20,
+          228, 143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+        sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+          205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+      },
+      router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+    }
+  },
+  transport: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Transport L+NGx4oXJsTbtXMA9j2nBAVdQi0KQP/YyooII/43FDQ=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<12, 190, 26, 73, 146, 56, 19, 79, 28, 202, 192, 21, 135, 1, 97, 211, 177, 61, 30,
+        124, 156, 163, 37, 223, 28, 60, 185, 191, 195, 88, 47, 124>>,
+      sign: <<47, 227, 70, 199, 138, 23, 38, 196, 219, 181, 115, 0, 246, 61, 167, 4, 5, 93, 66, 45,
+        10, 64, 255, 216, 202, 138, 8, 35, 254, 55, 20, 52>>
+    },
+    router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+  },
+  router: %Anoma.Node.Router.Addr{
+    server: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY=",
+    id: %Anoma.Crypto.Id.Extern{
+      encrypt: <<196, 240, 219, 252, 87, 100, 188, 19, 12, 52, 207, 63, 243, 17, 255, 238, 20, 228,
+        143, 96, 87, 130, 44, 145, 111, 101, 13, 157, 96, 145, 50, 108>>,
+      sign: <<87, 180, 68, 200, 82, 129, 209, 153, 41, 9, 85, 107, 146, 85, 132, 78, 147, 97, 99,
+        205, 205, 33, 208, 111, 57, 152, 68, 110, 129, 16, 102, 38>>
+    },
+    router: :"Anoma.Node.Router V7REyFKB0ZkpCVVrklWETpNhY83NIdBvOZhEboEQZiY="
+  }
+}
+```
 
+```elixir
+port = 9830
+{:ok, hostname} = :inet.gethostname()
+# this node ignores the hostname
+Transport.start_server(node.transport, {:tcp, hostname, port})
+```
 
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+{:tcp, hostname, port}
+
+{:ok, router, transport} = Anoma.Node.Router.start()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ %Anoma.Node.Router.Addr{
+   server: :"Anoma.Node.Router yxeNwTWYYwsdEI+ftiRMiHBtDrY4wWZeG2oHofiJ8Ww=",
+   id: %Anoma.Crypto.Id.Extern{
+     encrypt: <<187, 27, 238, 160, 59, 31, 95, 92, 158, 223, 39, 153, 34, 64, 71, 213, 192, 54, 180,
+       18, 138, 103, 25, 91, 97, 107, 59, 74, 92, 5, 180, 92>>,
+     sign: <<203, 23, 141, 193, 53, 152, 99, 11, 29, 16, 143, 159, 182, 36, 76, 136, 112, 109, 14,
+       182, 56, 193, 102, 94, 27, 106, 7, 161, 248, 137, 241, 108>>
+   },
+   router: :"Anoma.Node.Router yxeNwTWYYwsdEI+ftiRMiHBtDrY4wWZeG2oHofiJ8Ww="
+ },
+ %Anoma.Node.Router.Addr{
+   server: :"Anoma.Node.Transport Z8WeHWNATH26H2/S/vLwFQRDNgr8GBi8IeqYlfmTqeU=",
+   id: %Anoma.Crypto.Id.Extern{
+     encrypt: <<71, 84, 104, 14, 52, 186, 244, 26, 37, 103, 26, 77, 142, 157, 155, 184, 183, 157,
+       225, 4, 46, 184, 190, 99, 179, 66, 12, 184, 81, 161, 148, 1>>,
+     sign: <<103, 197, 158, 29, 99, 64, 76, 125, 186, 31, 111, 210, 254, 242, 240, 21, 4, 67, 54,
+       10, 252, 24, 24, 188, 33, 234, 152, 149, 249, 147, 169, 229>>
+   },
+   router: :"Anoma.Node.Router yxeNwTWYYwsdEI+ftiRMiHBtDrY4wWZeG2oHofiJ8Ww="
+ }}
+```
+
+```elixir
+Kino.Process.render_seq_trace(
+  [],
+  fn ->
+    Router.start_engine(
+      router,
+      Anoma.Node.Transport.TCPConnection,
+      {:client, router, transport, {:tcp, hostname, port}}
+    )
+
+    Process.sleep(5000)
+  end,
+  message_label: &Anoma.Node.Utility.message_label/1
+)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+list: false
+binary: true
+list: false
+binary: true
+list: false
+list: false
+binary: true
+binary: true
 ```
 
 ## Mempool
@@ -62,16 +313,10 @@ mempool, as it orchastrates the other actors in Anoma to act
 First we will create a transaction and see how that changes the base supervision tree before executing
 
 ```elixir
-alias Anoma.Storage
 alias Anoma.Node.Ordering
 alias Anoma.Node.Mempool
 alias Anoma.Node.Router
 import TestHelper.Nock
-
-storage = %Anoma.Storage{
-  qualified: Anoma.Qualified,
-  order: Anoma.Order
-}
 
 name = :anoma
 node = Anoma.Node.state(name)
@@ -93,25 +338,6 @@ The previous evaluations PID can be seen in the diagram below!
 Kino.Process.render_sup_tree(pid2, direction: :left_right)
 ```
 
-<!-- livebook:{"output":true} -->
-
-```mermaid
-graph LR;
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 1(Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 2(Anoma.Node.Clock plaqCqOIQ4LLCT9MAmEMV+qkqZq4+qZV2KSpqSxRZu0=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 3(Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 4(Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 5(Anoma.Node.Executor po4ivXyVtjQ9jvTtra0D2DbKIpM8YOClCmfk8JLp31k=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 6(Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=):::worker
-0(supervisor hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=):::root ---> 7(Anoma.Node.Pinger Oc96nqV6/0FFT/JULG5Ep+Z1c62/8f1Bi0gY9CVmJhs=):::worker
-classDef root fill:#c4b5fd, stroke:#374151, stroke-width:4px;
-classDef supervisor fill:#c4b5fd, stroke:#374151, stroke-width:1px;
-classDef worker fill:#93c5fd, stroke:#374151, stroke-width:1px;
-classDef notstarted color:#777, fill:#d9d9d9, stroke:#777, stroke-width:1px;
-
-
-```
-
 Now let us see what happens between the actors when we run the mempool
 
 ```elixir
@@ -122,54 +348,6 @@ Kino.Process.render_seq_trace(
   end,
   message_label: &Anoma.Node.Utility.message_label/1
 )
-```
-
-<!-- livebook:{"output":true} -->
-
-```mermaid
-sequenceDiagram
-participant 3 AS code_server;
-participant 7 AS mnesia_locker;
-participant 6 AS mnesia_tm;
-participant 8 AS Anoma.Node.Router hWXJ+NujE76g6g4X5Bu+KH1YtSKrur7yDUfeu0JguKY=;
-participant 2 AS Anoma.Node.Logger BDTPKlJ5ubxM9NMrbgMzxE5jfKKn+qwnxISeroCw3xc=;
-participant 4 AS Anoma.Node.Ordering rVQnNBPLju9VBsHOQzAdKaEXRK2u03vF8huvKzVPyT8=;
-participant 1 AS Anoma.Node.Mempool yg3U9BqClfT+jJkwbtuYm2WCmIgR+f6ELjodD5P4eko=;
-participant 0 AS self();
-participant 5 AS #35;PID<0.438.0>;
-0->>1: CALL: execute
-1->>2: ADD LEVEL: info
-1->>3: INFO: code_call
-3->>1: INFO: code_server
-1->>3: INFO: code_call
-3->>1: INFO: code_server
-1->>3: INFO: code_call
-3->>1: INFO: code_server
-1->>3: INFO: code_call
-3->>1: INFO: code_server
-1->>4: CALL: next_order
-4->>1: INFO: tuple
-1->>3: INFO: code_call
-3->>1: INFO: code_server
-1->>3: INFO: code_call
-3->>1: INFO: code_server
-1->>2: ADD LEVEL: info
-1->>4: CALL: new_order
-4->>1: INFO: tuple
-1->>2: ADD LEVEL: info
-1->>5: INFO: write_ready
-1->>2: ADD LEVEL: info
-1->>6: INFO: tuple
-6->>1: INFO: mnesia_tm
-1->>7: INFO: tuple
-7->>1: INFO: mnesia_locker
-1->>7: INFO: release_tid
-1->>6: INFO: delete_transaction
-1->>2: ADD LEVEL: info
-1->>2: ADD LEVEL: info
-1->>8: CAST: cast
-1->>0: INFO: tuple
-
 ```
 
 <!-- livebook:{"output":true} -->
