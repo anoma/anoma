@@ -104,6 +104,14 @@ defmodule Anoma.Node.Transport.TCPConnection do
   end
 
   def handle_info({:tcp, _, data}, s) do
+    # Elixir gen_tcp.send returns a list, while our other API's use arrays
+    data =
+      if is_list(data) do
+        :binary.list_to_bin(data)
+      else
+        data
+      end
+
     Transport.receive_chunk(s.transport, data)
     {:noreply, s}
   end
