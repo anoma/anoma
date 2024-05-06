@@ -511,6 +511,9 @@ defmodule Anoma.Node.Router do
           {:ok, decoded} -> decoded
           _ -> {:error, :message_encoding}
         end
+    after
+      timeout ->
+        {:error, :timed_out, Process.info(self(), :current_stacktrace)}
     end
   end
 
@@ -791,11 +794,13 @@ defmodule Anoma.Node.Router do
       Anoma.Serialise.pack(msg)
     ])
 
-    :erlang.send_after(
-      timeout,
-      self(),
-      {:timeout_message, src_addr, s.max_call_id}
-    )
+    unless timeout == :infinity do
+      :erlang.send_after(
+        timeout,
+        self(),
+        {:timeout_message, src_addr, s.max_call_id}
+      )
+    end
 
     %{
       s
@@ -823,10 +828,12 @@ defmodule Anoma.Node.Router do
   end
 
   defp send_to_transport(s, dst, src, msg) do
+    require IEx; IEx.pry
     msg = Anoma.Serialise.pack([dst, src, msg])
     {internal_id, _} = Map.fetch!(s.local_engines, src)
     sig = Anoma.Crypto.Sign.sign_detached(msg, internal_id.internal.sign)
     encoded = :msgpack.pack(%{"data" => msg, "sig" => sig})
+    require IEx; IEx.pry()
     Transport.send(s.transport, dst, encoded)
   end
 

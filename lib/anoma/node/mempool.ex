@@ -68,6 +68,10 @@ defmodule Anoma.Node.Mempool do
     Router.call(server, :pending_txs)
   end
 
+  def self_id(server) do
+    Router.call(server, :self_id)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -79,6 +83,10 @@ defmodule Anoma.Node.Mempool do
     log_info({:tx, nstate.transactions, state.logger})
 
     {:reply, ntrans, nstate}
+  end
+
+  def handle_call(:self_id, _from, state) do
+    {:reply, {Process.get(:engine_id), Process.get(:engine_server) || self()}, state}
   end
 
   def handle_call(:execute, _from, state) do

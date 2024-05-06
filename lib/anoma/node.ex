@@ -136,6 +136,8 @@ defmodule Anoma.Node do
         %Logger{log_st | clock: clock}
       )
 
+    Anoma.Node.Transport.add_logger(transport, logger)
+
     {:ok, ordering} =
       start_engine(
         router,

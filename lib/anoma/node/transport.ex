@@ -95,6 +95,11 @@ defmodule Anoma.Node.Transport do
     Router.cast(transport, {:receive_chunk, chunk})
   end
 
+  @spec add_logger(Router.addr(), Router.addr()) :: :ok
+  def add_logger(transport, logger) do
+    Router.cast(transport, {:add_logger, logger})
+  end
+
   @doc """
   Attempt to start a new transport server listening on the specified address.
   """
@@ -150,6 +155,9 @@ defmodule Anoma.Node.Transport do
     if state == nil do
       {:noreply, s}
     else
+      IO.puts("list: #{is_list(chunk)}")
+      IO.puts("binary: #{is_binary(chunk)}")
+      # require IEx; IEx.pry
       # over-large message; drop connection
       if byte_size(state.partial_message) + byte_size(chunk) >
            @max_message_size do
@@ -186,6 +194,10 @@ defmodule Anoma.Node.Transport do
           {:noreply, handle_handshake(s, msg, state)}
       end
     end
+  end
+
+  def handle_cast({:add_logger, addr}, _from, s) do
+    {:noreply, %{s | logger: addr}}
   end
 
   def handle_cast({:new_connection, trans_type}, from, s) do
@@ -478,6 +490,7 @@ defmodule Anoma.Node.Transport do
         if addr != nil do
           conn = init_connection(s, addr)
 
+          IO.puts("HERE BABY, WE MADE IΤ PAST")
           state = %ConnectionState{
             type: transport_type(addr),
             id: node,
@@ -486,6 +499,7 @@ defmodule Anoma.Node.Transport do
 
           log_info({:queued, node, addr, s.logger})
 
+          require IEx; IEx.pry()
           %{
             s
             | connection_states: Map.put(s.connection_states, conn, state),
@@ -516,6 +530,7 @@ defmodule Anoma.Node.Transport do
   @spec init_connection(t(), transport_addr()) ::
           {Router.addr(), transport_type()} | nil
   defp init_connection(s, trans) do
+    IO.puts("HERE BABY")
     case Router.start_engine(
            s.router,
            trans_connection_mod(transport_type(trans)),
