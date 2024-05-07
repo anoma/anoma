@@ -4,6 +4,7 @@ defmodule Nock.Jets do
   """
 
   import Noun
+  import Bitwise
   alias Anoma.Crypto.Sign
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
@@ -374,5 +375,85 @@ defmodule Nock.Jets do
       _ ->
         :error
     end
+  end
+
+  @spec bex(Nock.t()) :: :error | {:ok, Noun.t()}
+  def bex(core) do
+    with {:ok, a} when is_noun_atom(a) <- sample(core) do
+      {:ok, 2 ** a}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec mix(Nock.t()) :: :error | {:ok, Noun.t()}
+  def mix(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {:ok, bxor(a, b)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec lsh(Nock.t()) :: :error | {:ok, Noun.t()}
+  def lsh(core) do
+    with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
+           sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      {:ok, val <<< (count <<< block_size)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec rsh(Nock.t()) :: :error | {:ok, Noun.t()}
+  def rsh(core) do
+    with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
+           sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      {:ok, val >>> (count <<< block_size)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec nend(Nock.t()) :: :error | {:ok, Noun.t()}
+  def nend(core) do
+    with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
+           sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      # we get #b1111, if count is 4. Since 1 <<< 4 = #b10000 - 1 = #b1111
+      # block_size just a left shift on the count
+      mask = (1 <<< (count <<< block_size)) - 1
+      {:ok, val &&& mask}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec met(Nock.t()) :: :error | {:ok, Noun.t()}
+  def met(core) do
+    with {:ok, sample} when is_noun_atom(sample) <- sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      {:ok, num_bits(sample, block_size)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec num_bits(non_neg_integer(), non_neg_integer()) :: non_neg_integer()
+  def num_bits(n, block_size) when n >= 0 do
+    num_bits(n, 1 <<< block_size, 0)
+  end
+
+  defp num_bits(0, _, acc), do: acc
+
+  defp num_bits(n, block_size, acc) do
+    num_bits(n >>> block_size, block_size, acc + 1)
   end
 end
