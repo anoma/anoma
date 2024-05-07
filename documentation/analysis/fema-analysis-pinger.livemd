@@ -62,7 +62,7 @@ node = Anoma.Node.state(name)
 :all_good
 ```
 
-The Pinger has 3 `public` methods that we can abuse `Anoma.Node.Pinger.start/1`, `Anoma.Node.Pinger.state/1`, and `Anoma.Node.Pinger.set_timer/2`.
+The Pinger has 2 `public` methods that we can abuse `Anoma.Node.Pinger.start/1` and `Anoma.Node.Pinger.set_timer/2`.
 
 Let use begin by first tracing what all these methods do in depth
 
