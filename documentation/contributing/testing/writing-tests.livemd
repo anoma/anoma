@@ -26,7 +26,7 @@
 
 ## Conventions
 
-Since the [figuring out](./understanding.livemd) page demonstrates that well laid out test files are the key to understanding how modules work, it is important to write tests so this can always be achieved.
+Since the [figuring out](./../../contributing/understanding-any-module.livemd) page demonstrates that well laid out test files are the key to understanding how modules work, it is important to write tests so this can always be achieved.
 
 The following sections will lay out how we can achieve this.
 
