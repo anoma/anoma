@@ -74,6 +74,62 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec calculate_mug_of_param_core(
+          non_neg_integer(),
+          non_neg_integer(),
+          non_neg_integer()
+        ) ::
+          non_neg_integer()
+  @doc """
+  Like `calculate_mug_of_core/2` except we work over a parameterized core.
+
+  ### Example
+
+      > Nock.Jets.calculate_mug_of_param_core(767, 10, 4)
+      12605872635346981159
+
+  For our standard library, so far only layer 4 is parameterized
+  """
+  def calculate_mug_of_param_core(index_in_core, core_index, parent_layer) do
+    with {:ok, val} <-
+           calculate_core_param(core_index, index_in_core, parent_layer) do
+      Noun.mug(hd(val))
+    end
+  end
+
+  @spec calculate_mug_of_param_layer(non_neg_integer(), non_neg_integer()) ::
+          non_neg_integer()
+  @doc """
+  Like `calculate_mug_of_layer/1` except we work over a parameterized core.
+
+  ### Example
+
+      > Nock.Jets.calculate_mug_of_param_layer(10, 4)
+      11284470320276584209
+
+  For our standard library, so far only layer 4 is parameterized
+  """
+  def calculate_mug_of_param_layer(core_index, parent_layer) do
+    with {:ok, core} <- calculate_core_param(core_index, 4, parent_layer),
+         {:ok, parent} <- Noun.axis(14, core) do
+      Noun.mug(parent)
+    end
+  end
+
+  def calculate_core_param(core_index, gate_index, parent_layer) do
+    Nock.nock(Nock.logics_core(), [
+      7,
+      [
+        9,
+        core_index,
+        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 3)
+      ],
+      9,
+      gate_index,
+      0 | 1
+    ])
+  end
+
   @spec calculate_core(non_neg_integer(), non_neg_integer()) ::
           :error | {:ok, Noun.t()}
   defp calculate_core(index_in_core, parent_layer) do
