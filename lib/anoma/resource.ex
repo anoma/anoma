@@ -49,7 +49,7 @@ defmodule Anoma.Resource do
 
   @doc "A commitment to the given resource."
   def commitment(resource = %Resource{}) do
-    "committo" <> :erlang.term_to_binary(resource)
+    jam(resource)
   end
 
   @doc """
@@ -57,7 +57,7 @@ defmodule Anoma.Resource do
   (It's up to the caller to use the right secret.)
   """
   def nullifier(resource = %Resource{}, secret) do
-    ("annullo" <> :erlang.term_to_binary(resource))
+    jam(to_noun(resource))
     |> Sign.sign(secret)
   end
 
@@ -77,12 +77,19 @@ defmodule Anoma.Resource do
   end
 
   def transparent_committed_resource(commitment) do
-    with "committo" <> committed_resource_bytes <- commitment do
-      {:ok, :erlang.binary_to_term(committed_resource_bytes)}
-    else
-      _ -> :error
-    end
+    cue(commitment)
   end
+
+  @spec jam(Nock.t()) :: {:ok, Nock.t()} | :error
+  def jam(resource) do
+    Nock.nock(TestHelper.Nock.using_jam_core(), [9, 2, 10, [6, 1 | resource], 0 | 1])
+  end
+
+  @spec cue(Nock.t()) :: Nock.t()
+  def cue(jammed) do
+    Nock.nock(TestHelper.Nock.using_cue_core(), [9, 2, 10, [6, 1 | jammed], 0 | 1])
+  end
+
 
   @doc """
   Whether a commitment commits to a given resource.
