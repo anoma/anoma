@@ -39,7 +39,10 @@ defmodule Nock do
   @layers 6
 
   @layer_1_context_mug 17_654_928_022_549_292_273
+  @layer_4_context_mug 10_859_520_857_756_426_536
+  @layer_5_context_mug 06_457_564_626_474_072_276
   @layer_6_context_mug 10_539_262_992_069_512_324
+  @layer_4_block_context_mug 11_284_470_320_276_584_209
 
   # hardcoded jet registry
   @jet_registry %{
@@ -71,7 +74,19 @@ defmodule Nock do
       {"verify-detatched", 7, @layer_6_context_mug,
        &Nock.Jets.verify_detatched/1},
     17_231_646_935_946_214_635 =>
-      {"sign-detatched", 7, @layer_6_context_mug, &Nock.Jets.sign_detatched/1}
+      {"sign-detatched", 7, @layer_6_context_mug, &Nock.Jets.sign_detatched/1},
+    18_035_336_398_045_859_425 =>
+      {"bex", 7, @layer_4_context_mug, &Nock.Jets.bex/1},
+    9_856_364_927_859_191_827 =>
+      {"mix", 7, @layer_5_context_mug, &Nock.Jets.mix/1},
+    3_043_895_017_490_773_097 =>
+      {"met", 14, @layer_4_block_context_mug, &Nock.Jets.met/1},
+    13_916_871_139_600_991_184 =>
+      {"end", 14, @layer_4_block_context_mug, &Nock.Jets.nend/1},
+    8_892_358_705_258_348_836 =>
+      {"lsh", 14, @layer_4_block_context_mug, &Nock.Jets.lsh/1},
+    12_605_872_635_346_981_159 =>
+      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1}
   }
 
   @doc """
