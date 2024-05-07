@@ -165,6 +165,53 @@ defmodule AnomaTest.Nock do
     end
   end
 
+  describe "Bitwise operations" do
+    test "end works" do
+      assert nock(using_end(), [9, 2, 10, [6, 1, 5 | 80], 0 | 1]) == {:ok, 16}
+
+      assert nock(using_end(1), [9, 2, 10, [6, 1, 3 | 80], 0 | 1]) ==
+               {:ok, 16}
+
+      assert nock(using_end(1), [9, 2, 10, [6, 1, 4 | 80], 0 | 1]) ==
+               {:ok, 80}
+    end
+
+    test "met works" do
+      assert nock(using_met(0), [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 5}
+      assert nock(using_met(1), [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 3}
+      assert nock(using_met(2), [9, 2, 10, [6, 1 | 28], 0 | 1]) == {:ok, 2}
+    end
+
+    test "lsh works" do
+      assert nock(using_lsh(), [9, 2, 10, [6, 1, 2 | 6], 0 | 1]) == {:ok, 24}
+      assert nock(using_lsh(1), [9, 2, 10, [6, 1, 2 | 6], 0 | 1]) == {:ok, 96}
+
+      assert nock(using_lsh(2), [9, 2, 10, [6, 1, 2 | 6], 0 | 1]) ==
+               {:ok, 1536}
+    end
+
+    test "rsh works" do
+      assert nock(using_rsh(0), [9, 2, 10, [6, 1, 2 | 40], 0 | 1]) ==
+               {:ok, 10}
+
+      assert nock(using_rsh(1), [9, 2, 10, [6, 1, 2 | 40], 0 | 1]) == {:ok, 2}
+      assert nock(using_rsh(2), [9, 2, 10, [6, 1, 1 | 40], 0 | 1]) == {:ok, 2}
+    end
+
+    test "bex works" do
+      assert nock(using_bex(), [9, 2, 10, [6, 1 | 2], 0 | 1]) == {:ok, 4}
+      assert nock(using_bex(), [9, 2, 10, [6, 1 | 5], 0 | 1]) == {:ok, 32}
+
+      assert nock(using_bex(), [9, 2, 10, [6, 1 | 28], 0 | 1]) ==
+               {:ok, 268_435_456}
+    end
+
+    test "mix works" do
+      assert nock(using_mix(), [9, 2, 10, [6, 1, 3 | 5], 0 | 1]) == {:ok, 6}
+      assert nock(using_mix(), [9, 2, 10, [6, 1, 11 | 11], 0 | 1]) == {:ok, 0}
+    end
+  end
+
   describe "Basic functionality" do
     test "base call" do
       assert nock(using_dec_core(), [9, 2, 0 | 1]) == {:ok, 998}
