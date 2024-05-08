@@ -41,6 +41,11 @@ defmodule AnomaTest.Nock do
     test "call with changing arguments" do
       assert nock(using_dec_core(), [9, 2, 10, [6, 1 | 5], 0 | 1]) == {:ok, 4}
     end
+
+    test "dec works on binaries" do
+      assert nock(using_dec_core(), [9, 2, 10, [6, 1 | <<22>>], 0 | 1]) ==
+               {:ok, 21}
+    end
   end
 
   describe "Standard Library" do

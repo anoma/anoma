@@ -16,99 +16,89 @@ defmodule Nock.Jets do
     :error
   end
 
+  defp an_integer(x), do: Noun.atom_binary_to_integer(x)
+
   def dec(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, sample} when is_noun_atom(sample) and sample > 0 ->
-        {:ok, sample - 1}
-
-      _ ->
-        :error
+    with {:ok, noun} when is_noun_atom(noun) <- sample(core),
+         sample when sample > 0 <- an_integer(noun) do
+      {:ok, sample - 1}
+    else
+      _ -> :error
     end
   end
 
   def add(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
-        {:ok, a + b}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {:ok, an_integer(a) + an_integer(b)}
+    else
+      _ -> :error
     end
   end
 
   def sub(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a >= b ->
-        {:ok, a - b}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} when c >= d <- {an_integer(a), an_integer(b)} do
+      {:ok, c - d}
+    else
+      _ -> :error
     end
   end
 
   def lth(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a < b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c < d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
   def lte(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a <= b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c <= d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
   def gth(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a > b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c > d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
   def gte(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a >= b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c >= d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
@@ -117,7 +107,7 @@ defmodule Nock.Jets do
 
     case maybe_sample do
       {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
-        {:ok, a * b}
+        {:ok, an_integer(a) * an_integer(b)}
 
       _ ->
         :error
@@ -125,26 +115,22 @@ defmodule Nock.Jets do
   end
 
   def div(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and b != 0 ->
-        {:ok, Kernel.div(a, b)}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} when d != 0 <- {an_integer(a), an_integer(b)} do
+      {:ok, Kernel.div(c, d)}
+    else
+      _ -> :error
     end
   end
 
   def mod(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and b != 0 ->
-        {:ok, Kernel.rem(a, b)}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} when d != 0 <- {an_integer(a), an_integer(b)} do
+      {:ok, Kernel.rem(c, d)}
+    else
+      _ -> :error
     end
   end
 end
