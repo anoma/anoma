@@ -28,7 +28,7 @@ defmodule AnomaTest.Node.End do
           [
             snapshot_path: snapshot_path,
             storage_data: storage,
-            block_storage: :mempool_blocks,
+            block_storage: :end_blocks,
             ping_time: :no_timer
           ]
           |> Anoma.Node.start_min()
@@ -70,7 +70,7 @@ defmodule AnomaTest.Node.End do
       )
 
     assert {:ok, 1} = Mempool.execute(mempool)
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}
+    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
 
     keya = Sign.new_keypair()
     keyb = Sign.new_keypair()
