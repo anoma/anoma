@@ -75,15 +75,12 @@ defmodule Anoma.Identity.Manager do
   3. One can no longer connect to the key given it does not exist in
      the system anymore
   """
-  @spec delete(Id.Extern.t(), Backend.t()) :: resp(nil)
+  @spec delete(Id.Extern.t(), Backend.t()) :: :ok | nil
   def delete(id, mem = %Backend.Memory{}) do
     salted_key = Id.salt_keys(id, mem.symmetric)
-    res = Storage.delete_key(mem.storage, storage_key(salted_key.sign))
+    key = salted_key.sign |> storage_key()
 
-    case res do
-      {:atomic, :ok} -> {:ok, nil}
-      _ -> {:error, "bad transaction, failed to delete key"}
-    end
+    mem.storage |> Storage.delete_key(key)
   end
 
   ############################################################

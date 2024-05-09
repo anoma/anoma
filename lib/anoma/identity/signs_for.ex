@@ -5,7 +5,7 @@ defmodule Anoma.Identity.SignsFor do
   alias Anoma.Node.Router
 
   @spec sign_for(Router.Addr.t(), Evidence.name()) ::
-          :key_not_verified | :ok | :could_not_update_storage
+          :key_not_verified | :ok | nil | :could_not_update_storage
   def sign_for(
         tab = %Router.Addr{},
         ev = %Evidence{signed_data: trusted_key, signature_key: our_key}
@@ -24,10 +24,7 @@ defmodule Anoma.Identity.SignsFor do
           :absent -> MapSet.new([trusted_key])
         end
 
-      case Storage.put(tab, key_space, new_set) do
-        {:atomic, :ok} -> :ok
-        _ -> :could_not_update_storage
-      end
+      Storage.put(tab, key_space, new_set)
     else
       :key_not_verified
     end
