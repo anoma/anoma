@@ -397,7 +397,7 @@ defmodule Anoma.Node.Storage do
     end
   end
 
-  @spec get_keyspace(Storage.t(), list(any())) ::
+  @spec do_get_keyspace(Storage.t(), list(any())) ::
           :absent
           | list({qualified_key(), qualified_value()})
           | {:atomic, any()}
@@ -420,14 +420,14 @@ defmodule Anoma.Node.Storage do
     end
   end
 
-  @spec read_at_order_tx(t(), Noun.t(), non_neg_integer()) ::
+  @spec do_read_at_order_tx(t(), Noun.t(), non_neg_integer()) ::
           result(list({atom(), qualified_key(), qualified_value()}))
   defp do_read_at_order_tx(storage = %__MODULE__{}, key, order) do
     tx = fn -> read_at_order(storage, key, order) end
     :mnesia.transaction(tx)
   end
 
-  @spec snapshot_order(t()) :: result(snapshot())
+  @spec do_snapshot_order(t()) :: result(snapshot())
   defp do_snapshot_order(storage = %__MODULE__{}) do
     :mnesia.transaction(fn ->
       snapshot = [{{:"$1", :"$2", :"$3"}, [], [{{:"$2", :"$3"}}]}]
