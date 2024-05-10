@@ -251,7 +251,7 @@ defmodule Anoma.Node.Storage do
   end
 
   def handle_cast({:put_snapshot, key}, _, storage) do
-    put_snapshot(storage, key)
+    do_put_snapshot(storage, key)
     {:noreply, storage}
   end
 
@@ -341,8 +341,8 @@ defmodule Anoma.Node.Storage do
     end
   end
 
-  @spec put_snapshot(t(), order_key()) :: :ok | nil
-  def put_snapshot(storage = %__MODULE__{}, key) do
+  @spec do_put_snapshot(t(), order_key()) :: :ok | nil
+  def do_put_snapshot(storage = %__MODULE__{}, key) do
     with {:atomic, snapshot} <- do_snapshot_order(storage) do
       do_put(storage, key, snapshot)
     end
