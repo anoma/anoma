@@ -59,7 +59,7 @@ defmodule Anoma.Node.Executor.Worker do
       cm_tree =
         CommitmentTree.new(
           Storage.cm_tree_spec(),
-          Storage.state(storage).rm_commitments
+          Anoma.Node.Router.Engine.get_state(storage).rm_commitments
         )
 
       new_tree =

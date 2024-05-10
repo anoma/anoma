@@ -199,8 +199,8 @@ defmodule AnomaTest.Storage do
       assert Storage.read_at_order_tx(storage, testing_atom, 3) ==
                {:atomic,
                 [
-                  {Storage.state(storage).qualified, [3, testing_atom | 0],
-                   10}
+                  {Router.Engine.get_state(storage).qualified,
+                   [3, testing_atom | 0], 10}
                 ]}
     end
 
@@ -211,7 +211,8 @@ defmodule AnomaTest.Storage do
       Storage.write_at_order_tx(storage, testing_atom, 10, 3)
 
       assert Storage.read_order_tx(storage, testing_atom) ==
-               {:atomic, [{Storage.state(storage).order, testing_atom, 3}]}
+               {:atomic,
+                [{Router.Engine.get_state(storage).order, testing_atom, 3}]}
     end
   end
 

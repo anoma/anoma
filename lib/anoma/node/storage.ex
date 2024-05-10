@@ -119,11 +119,6 @@ defmodule Anoma.Node.Storage do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec state(Router.Addr.t()) :: t()
-  def state(storage = %Router.Addr{}) do
-    Router.call(storage, :state)
-  end
-
   @spec get(Router.Addr.t(), order_key()) ::
           :absent | {:ok, qualified_value()}
   def get(storage = %Router.Addr{}, key) do
@@ -203,10 +198,6 @@ defmodule Anoma.Node.Storage do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-
-  def handle_call(:state, _from, state) do
-    {:reply, state, state}
-  end
 
   def handle_call({:get, key}, _, storage) do
     {:reply, do_get(storage, key), storage}
@@ -440,7 +431,7 @@ defmodule Anoma.Node.Storage do
   @spec blocking_read(Router.Addr.t(), qualified_key()) ::
           :error | {:ok, any()}
   def blocking_read(storage = %Router.Addr{}, key) do
-    do_blocking_read(state(storage), key)
+    do_blocking_read(Router.Engine.get_state(storage), key)
   end
 
   @spec do_blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
