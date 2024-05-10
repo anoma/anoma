@@ -17,46 +17,44 @@ defmodule Anoma.Node.Storage do
     central type
   ## API
   The important functions for this API are
-     - `setup/1`
-     - `setup/2`
-     - `ensure_new/1`
-     - `ensure_new/2`
      - `get/2`
-     - `get/3`
+     - `get_keyspace/2`
+     - `snapshot_order/1`
+     - `read_order_tx/2`
+     - `read_at_order_tx/3`
+     - `remove/1`
+     - `ensure_new/2`
      - `put/3`
-     - `put/4`
-     - `blocking_read/2`
-     - `blocking_read/3`
+     - `put_snapshot/2`
+     - `delete_key/2`
+     - `write_at_order_tx/4`
 
-  For Querying keyspace the following functions are useful
-    - `get_keyspace/2`
+  There are also explicit functions for blocking:
+
+     - `blocking_read/2`
+
+  As well as getting snapshotting info:
+
+     - `get_at_snapshot/2`
+     - `in_snapshot/2`
 
   If one wants to query the tables by hand then there are manual
   functions, but beware, this is an unintended way of using the API
-     - `query_key_space/2`
      - `read_order/2`
-     - `read_order_tx/2`
+     - `do_read_order_tx/2`
      - `read_at_order/3`
-     - `read_at_order_tx/3`
+     - `do_read_at_order_tx/3`
      - `write_at_order/4`
-     - `write_at_order_tx/4`
+     - `do_write_at_order_tx/4`
 
   If one is wanting to setup storage manually, then we expose the
   following functions used on the actor
-    - `do_ensure_new/1`
+
     - `do_ensure_new/2`
 
 
-  Please see my testing module `AnomaTest.Storage` to learn more on
-  how to use me
-
-  ### Snapshots
-  One can snapshot the keys provided in the code by running the following
-
-    - `snapshot_order/1`
-    - `put_snapshot/2`
-    - `in_snapshot/2`
-    - `get_at_snapshot/2`
+  Please see my testing module `AnomaTest.Storage` and
+  `AnomaTest.Node.Stirage` to learn more on how to use me
   """
 
   alias Anoma.Node.Router
