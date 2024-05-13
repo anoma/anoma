@@ -34,6 +34,15 @@ defmodule Anoma.Mnesia do
     Anoma.Block.create_table()
   end
 
+  @doc """
+  I ensure storage is freshly setup
+  """
+  def fresh_storage() do
+    :mnesia.stop()
+    :mnesia.delete_schema([node()])
+    init()
+  end
+
   def attach() do
     :mnesia.stop()
     :mnesia.start()

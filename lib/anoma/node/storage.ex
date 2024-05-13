@@ -318,6 +318,19 @@ defmodule Anoma.Node.Storage do
              add_rocks.(attributes: [:index, :hash])
            ) do
       CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
+    else
+      # It is a question as to if we should reset the storage
+      # schema... Instead we ask the user to do it if we notice the
+      # issue
+      {:aborted, {:already_exists, table}} ->
+        unless does_storage_actually_exist(table) do
+          instrument({:restarting_storage, table})
+        end
+
+        {:aborted, {:already_exists, table}}
+
+      error ->
+        error
     end
   end
 
@@ -598,6 +611,19 @@ defmodule Anoma.Node.Storage do
     storage.namespace ++ key
   end
 
+  @spec does_storage_actually_exist(atom()) :: boolean()
+  defp does_storage_actually_exist(table) do
+    # Just asking if the table exists doesn't ensure rocksdb tables do
+    # exist, so we try to query the table
+    case :mnesia.transaction(fn -> :mnesia.first(table) end) do
+      {:aborted, {:no_exists, _table}} ->
+        false
+
+      _ ->
+        true
+    end
+  end
+
   ############################################################
   #                          Helpers                         #
   ############################################################
@@ -699,5 +725,12 @@ defmodule Anoma.Node.Storage do
 
   defp instrument({:delete_key, key}) do
     Logger.debug("Deleting key: #{inspect(key)}")
+  end
+
+  defp instrument({:restarting_storage, table}) do
+    Logger.error(
+      "Table: #{inspect(table)} is in an inconsistent state." <>
+        "!!!ATTENTION!!! please run Anoma.Mnesia.fresh_storage() to restart storage"
+    )
   end
 end
