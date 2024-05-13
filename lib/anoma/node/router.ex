@@ -303,7 +303,12 @@ defmodule Anoma.Node.Router do
     supervisor = process_name(:supervisor, router_id.external)
 
     {:ok, _} =
-      DynamicSupervisor.start_link(name: supervisor, strategy: :one_for_one)
+      DynamicSupervisor.start_link(
+        name: supervisor,
+        strategy: :one_for_one,
+        max_restarts: 10_000_000,
+        max_seconds: 1
+      )
 
     router_name = process_name(__MODULE__, router_id.external)
 
