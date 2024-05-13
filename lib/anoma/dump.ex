@@ -96,7 +96,7 @@ defmodule Anoma.Dump do
     node_settings = [
       new_storage: false,
       name: name,
-      settings: load,
+      settings: settings,
       use_rocks: load[:use_rocks]
     ]
 
