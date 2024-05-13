@@ -22,31 +22,35 @@ defmodule Anoma.Cli do
         ]
       ],
       options: [],
-      subcommands: [
-        nockma: Nock.Cli.argument_option(),
-        submit: [
-          name: "submit",
-          about: "Submit a transaction to the local node.",
-          args: [
-            file: [
-              required: true,
-              parser: :string
-            ]
+      subcommands: client_commands()
+    )
+  end
+
+  def client_commands() do
+    [
+      nockma: Nock.Cli.argument_option(),
+      submit: [
+        name: "submit",
+        about: "Submit a transaction to the local node.",
+        args: [
+          file: [
+            required: true,
+            parser: :string
           ]
-        ],
-        get: [
-          name: "get",
-          about:
-            "Fetch the current value of the given key from the local node.",
-          args: [
-            key: [
-              required: true,
-              parser: :integer
-            ]
+        ]
+      ],
+      get: [
+        name: "get",
+        about:
+          "Fetch the current value of the given key from the local node.",
+        args: [
+          key: [
+            required: true,
+            parser: :integer
           ]
         ]
       ]
-    )
+    ]
   end
 
   @doc """
@@ -120,7 +124,7 @@ defmodule Anoma.Cli do
     IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
   end
 
-  defp run_client_command(operation) do
+  def run_client_command(operation) do
     {:ok, router, transport} = Anoma.Node.Router.start()
 
     {:ok, _} =
