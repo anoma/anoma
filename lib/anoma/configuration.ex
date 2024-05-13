@@ -11,6 +11,8 @@ defmodule Anoma.Configuration do
   - `create_min/0`
   - `create_min/7`
   - `launch_min/1`
+  - `launch_min/2`
+  - `create_dump/1`
   - `parse_node/1`
   - `parse/1`
   """
@@ -87,7 +89,7 @@ defmodule Anoma.Configuration do
     path = Directories.configuration(file_name)
 
     # Ensure the directory exists
-    File.mkdir_p!(Path.dirname(path))
+    dir_check(path)
 
     path |> File.write!("[node] \n
       name = '#{name}' \n
@@ -113,6 +115,49 @@ defmodule Anoma.Configuration do
       use_rocks: false,
       settings: settings
     )
+  end
+
+  @doc """
+  I have the same functionality as `launch_min/1` but start the node using
+  a named supervisor.
+  """
+  def launch_min(file_path, name) do
+    path = Directories.configuration(file_path)
+    map = parse(path)
+    settings = map |> parse_min() |> tl() |> Anoma.Node.start_min()
+
+    node_settings = [
+      new_storage: true,
+      name: map[:name],
+      use_rocks: false,
+      settings: settings
+    ]
+
+    [{Anoma.Node, node_settings}]
+    |> Supervisor.start_link(strategy: :one_for_one, name: name)
+  end
+
+  @doc """
+  Given a name of a `.dmp` file in our data directory, I create a
+  separate configuration file which just includes one line, namely a
+  key:
+
+  dump = dump_file_name
+
+  under the [node] header.
+
+  I store the corresponding file using the variable naming of the
+  session environment.
+  """
+  def create_dump(dump_name) do
+    path = Directories.configuration("anoma_#{Mix.env()}.toml")
+
+    dir_check(path)
+
+    if path |> File.exists?() do
+      path |> File.write("[node] \n
+    dump = '#{dump_name}'")
+    end
   end
 
   @doc """
@@ -173,5 +218,9 @@ defmodule Anoma.Configuration do
     else
       ping |> String.to_atom()
     end
+  end
+
+  defp dir_check(path) do
+    path |> Path.dirname() |> File.mkdir_p!()
   end
 end
