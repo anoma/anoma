@@ -98,11 +98,7 @@ defmodule Anoma.Node do
     {storage, block_storage} = settings[:storage_data]
     storage_setup(storage, block_storage, rocks)
 
-    if args[:new_storage] do
-      snap = settings[:snapshot_path]
-
-      Storage.put_snapshot(storage, hd(snap))
-    else
+    unless args[:new_storage] do
       tables =
         settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
 
@@ -112,7 +108,16 @@ defmodule Anoma.Node do
       end)
     end
 
-    GenServer.start_link(__MODULE__, settings, name: name)
+    with {:ok, pid} <- GenServer.start_link(__MODULE__, settings, name: name) do
+      if args[:new_storage] do
+        snap = settings[:snapshot_path]
+
+        node = state(pid)
+        Storage.put_snapshot(node.storage, hd(snap))
+      end
+
+      {:ok, pid}
+    end
   end
 
   def init(args) do
