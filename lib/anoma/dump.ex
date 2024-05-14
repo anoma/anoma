@@ -21,6 +21,7 @@ defmodule Anoma.Dump do
   I give access to following public loading functionality
 
   - `launch/2`
+  - `launch/3`
   - `load/1`
   """
 
@@ -101,6 +102,29 @@ defmodule Anoma.Dump do
     ]
 
     Anoma.Node.start_link(node_settings)
+  end
+
+  @doc """
+  I have the same functionality as `launch/2` but start the node using a
+  named supervisor.
+  """
+
+  @dialyzer {:no_return, launch: 2}
+  @spec launch(String.t(), atom(), atom()) :: {:ok, %Node{}} | any()
+  def launch(file, name, sup_name) do
+    load = file |> Directories.data() |> load()
+
+    settings = block_check(load)
+
+    node_settings = [
+      new_storage: false,
+      name: name,
+      settings: settings,
+      use_rocks: load[:use_rocks]
+    ]
+
+    [{Anoma.Node, node_settings}]
+    |> Supervisor.start_link(strategy: :one_for_one, name: sup_name)
   end
 
   @doc """
