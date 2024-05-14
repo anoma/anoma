@@ -17,6 +17,7 @@ defmodule Anoma.Configuration do
   - `parse/1`
   """
 
+  require IEx
   alias Anoma.System.Directories
 
   @doc """
@@ -37,18 +38,26 @@ defmodule Anoma.Configuration do
   The file is wirtten to the XDG-specified config folder unless the
   environment is :test
   """
-  def create_min() do
-    unless Application.get_env(:anoma, :env) == :test do
-      path = Directories.configuration("/config.toml")
+  def create_min(env) do
+    path = Directories.configuration("/anoma_#{env}.toml")
 
-      path |> File.write!("[node] \n
-        name = 'name' \n
-        qualified = 'qualified_name' \n
-        order = 'order_name' \n
-        snapshot_path = 'path' \n
-        block_storage = 'block' \n
-        ping_time = 10000")
+    dmp = "anoma_#{env}"
+    str =
+      "[node]\n" <>
+      "name = 'anoma'\n" <>
+      "qualified = 'Anoma.Qualified'\n" <>
+      "order = 'Anoma.Order'\n" <>
+      "snapshot_path = '#{Anoma.System.Directories.data(dmp, env)}.dmp'\n" <>
+      "block_storage = 'anoma_block'\n" <>
+       "ping_time = " <>
+    if env == :prod do
+      "10000"
+    else
+      ":no_timer"
     end
+
+    path
+    |> File.write!(str)
   end
 
   @doc """
@@ -132,6 +141,7 @@ defmodule Anoma.Configuration do
       use_rocks: false,
       settings: settings
     ]
+    import IEx.Pry; IEx.pry()
 
     [{Anoma.Node, node_settings}]
     |> Supervisor.start_link(strategy: :one_for_one, name: name)
@@ -167,11 +177,11 @@ defmodule Anoma.Configuration do
 
   def parse_min(map) do
     node = map["node"]
-    path = node["snapshot_path"] |> String.to_atom()
+    path = node["snapshot_path"]
 
     [
       {:name, node["name"] |> String.to_atom()},
-      {:snapshot_path, [path | 0]},
+      {:snapshot_path, path},
       {:storage_data,
        %Anoma.Node.Storage{
          qualified: node["qualified"] |> String.to_atom(),
