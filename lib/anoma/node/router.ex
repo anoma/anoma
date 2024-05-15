@@ -239,7 +239,10 @@ defmodule Anoma.Node.Router do
 
   @type addr() :: Addr.t()
 
-  @type engine_options() :: {:id, Id.t()}
+  @type engine_options() ::
+          {:id, Id.t()}
+          | {:supervisor, Supervisor.supervisor()}
+          | {:supvisor_mod, atom()}
 
   typedstruct module: Addr do
     @moduledoc """
@@ -389,13 +392,18 @@ defmodule Anoma.Node.Router do
           # if we can remove please do
           | any()
   def start_engine(router, module, arg, options \\ []) do
-    keys = Keyword.validate!(options, id: Id.new_keypair())
+    keys =
+      Keyword.validate!(options,
+        id: Id.new_keypair(),
+        supervisor: call(router, :supervisor),
+        supervisor_mod: DynamicSupervisor
+      )
 
     id = keys[:id]
 
     with {:ok, _} <-
-           DynamicSupervisor.start_child(
-             call(router, :supervisor),
+           keys[:supervisor_mod].start_child(
+             keys[:supervisor],
              {Anoma.Node.Router.Engine, {router, module, id, arg}}
            ) do
       {:ok,
