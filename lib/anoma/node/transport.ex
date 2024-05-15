@@ -44,6 +44,7 @@ defmodule Anoma.Node.Transport do
     field(:router, Router.addr())
     field(:logger, Router.addr())
     field(:node_internal_id, Id.t())
+    field(:connection_pool, Supervisor.supervisor())
 
     field(:node_connections, MapSetMap.t(Id.Extern.t(), Router.addr()),
       default: MapSetMap.new()
@@ -79,8 +80,13 @@ defmodule Anoma.Node.Transport do
     field(:known_engines, %{Id.Extern.t() => Id.Extern.t()}, default: %{})
   end
 
-  def init({router, node_internal_id}) do
-    {:ok, %Transport{router: router, node_internal_id: node_internal_id}}
+  def init({router, node_internal_id, transport_pool}) do
+    {:ok,
+     %Transport{
+       router: router,
+       node_internal_id: node_internal_id,
+       connection_pool: transport_pool
+     }}
   end
 
   @spec transport_type(transport_addr()) :: transport_type()
@@ -208,7 +214,8 @@ defmodule Anoma.Node.Transport do
      case Router.start_engine(
             s.router,
             trans_server_mod(transport_type(trans)),
-            {s.router, Router.self_addr(s.router), trans}
+            {s.router, Router.self_addr(s.router), trans, s.connection_pool},
+            supervisor: s.connection_pool
           ) do
        {:ok, server} -> %{s | servers: Map.put(s.servers, trans, server)}
        _ -> s
@@ -544,11 +551,13 @@ defmodule Anoma.Node.Transport do
 
   @spec init_connection(t(), transport_addr()) ::
           {Router.addr(), transport_type()} | nil
-  defp init_connection(s, trans) do
+  defp init_connection(s = %__MODULE__{}, trans) do
     case Router.start_engine(
            s.router,
            trans_connection_mod(transport_type(trans)),
-           {:client, s.router, Router.self_addr(s.router), trans}
+           {:client, s.router, Router.self_addr(s.router), trans,
+            s.connection_pool},
+           supervisor: s.connection_pool
          ) do
       {:ok, addr} -> {addr, transport_type(trans)}
       _ -> nil

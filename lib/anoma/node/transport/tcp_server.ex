@@ -11,10 +11,11 @@ defmodule Anoma.Node.Transport.TCPServer do
   typedstruct do
     field(:router, Router.addr())
     field(:transport, Router.addr())
+    field(:connection_pool, Supervisor.supervisor())
     field(:listener, reference())
   end
 
-  def init({router, transport, addr}) do
+  def init({router, transport, addr, connection_pool}) do
     res =
       case addr do
         {:unix, path} ->
@@ -26,8 +27,13 @@ defmodule Anoma.Node.Transport.TCPServer do
       end
 
     with {:ok, l} <- res do
-      {:ok, %TCPServer{router: router, transport: transport, listener: l},
-       {:continue, :start_listener}}
+      {:ok,
+       %TCPServer{
+         router: router,
+         transport: transport,
+         listener: l,
+         connection_pool: connection_pool
+       }, {:continue, :start_listener}}
     end
   end
 
@@ -35,7 +41,8 @@ defmodule Anoma.Node.Transport.TCPServer do
     Router.start_engine(
       s.router,
       Transport.TCPConnection,
-      {:listener, s.router, s.transport, s.listener}
+      {:listener, s.router, s.transport, s.listener, s.connection_pool},
+      supervisor: s.connection_pool
     )
 
     {:noreply, s}

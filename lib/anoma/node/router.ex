@@ -330,16 +330,17 @@ defmodule Anoma.Node.Router do
            DynamicSupervisor.start_child(
              supervisor,
              {__MODULE__, {router_id, router_addr, transport_addr}}
+           ),
+         {:ok, connection_pool} <-
+           DynamicSupervisor.start_child(supervisor, Transport.Supervisor),
+         {:ok, _} <-
+           DynamicSupervisor.start_child(
+             supervisor,
+             {Anoma.Node.Router.Engine,
+              {router_addr, Transport, transport_id,
+               {router_addr, router_id, connection_pool}}}
            ) do
-      with {:ok, _} <-
-             DynamicSupervisor.start_child(
-               supervisor,
-               {Anoma.Node.Router.Engine,
-                {router_addr, Transport, transport_id,
-                 {router_addr, router_id}}}
-             ) do
-        {:ok, router_addr, transport_addr}
-      end
+      {:ok, router_addr, transport_addr}
     end
   end
 
