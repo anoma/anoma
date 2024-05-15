@@ -10,9 +10,10 @@ defmodule Nock.Cue do
     field(:cache, %{non_neg_integer() => Noun.t()}, default: Map.new())
   end
 
+  @spec cue(Noun.noun_atom()) :: Noun.t()
   def cue(number) do
     number
-    |> integer_to_bits()
+    |> Nock.Bits.integer_to_bits()
     |> parse()
     |> elem(0)
   end
@@ -37,7 +38,7 @@ defmodule Nock.Cue do
 
     # this number is missing the MSB, so we need to or it with the mask
     length_parsed_number =
-      bit_list_to_integer(length_decode)
+      Nock.Bits.bit_list_to_integer(length_decode)
 
     masked_number = 1 <<< bit_width_left
 
@@ -46,7 +47,7 @@ defmodule Nock.Cue do
     {integer_decode, new_stream} = Enum.split(new_stream, length)
 
     atom =
-      bit_list_to_integer(integer_decode)
+      Nock.Bits.bit_list_to_integer(integer_decode)
 
     {atom, new_stream,
      %__MODULE__{env | position: env.position + length + bit_width_left}}
@@ -114,36 +115,5 @@ defmodule Nock.Cue do
     # The MSR of the length is always 1 and thus we omit that bit
     # if we start with 1, it ought to be 0
     {counter, any, %__MODULE__{env | position: env.position + counter + 1}}
-  end
-
-  ########################################
-  #               Helpers                #
-  ########################################
-
-  def integer_to_bits(number) do
-    number
-    |> Noun.atom_integer_to_binary()
-    |> :binary.bin_to_list()
-    |> Enum.flat_map(&byte_to_bits/1)
-    |> Enum.take(Nock.Jets.num_bits(number, 0))
-  end
-
-  defp byte_to_bits(byte) do
-    Enum.map(0..7, fn shift -> byte >>> shift &&& 1 end)
-  end
-
-  def bit_width(0) do
-    0
-  end
-
-  def bit_width(n) do
-    Integer.digits(n, 2)
-    |> length
-  end
-
-  def bit_list_to_integer(bits) do
-    bits
-    |> Enum.with_index()
-    |> Enum.reduce(0, fn {bit, index}, acc -> acc + (bit <<< index) end)
   end
 end
