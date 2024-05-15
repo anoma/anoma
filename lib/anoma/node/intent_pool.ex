@@ -1,6 +1,4 @@
 defmodule Anoma.Node.IntentPool do
-  use GenServer
-
   @moduledoc """
 
   """

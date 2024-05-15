@@ -7,8 +7,9 @@ defmodule Anoma.Node.Router.Engine do
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router
 
-  defmacro __using__(_) do
+  defmacro __using__(opts) do
     quote do
+      use GenServer, unquote(opts)
     end
   end
 
@@ -211,5 +212,13 @@ defmodule Anoma.Node.Router.Engine do
       err ->
         err
     end
+  end
+
+  def child_spec(argument = {_router, mod, _id, arg}) do
+    mod.child_spec(arg)
+    |> Map.merge(%{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [argument]}
+    })
   end
 end

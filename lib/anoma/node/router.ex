@@ -228,7 +228,7 @@ defmodule Anoma.Node.Router do
   indeed differ from the diagram.
 
   """
-  use GenServer
+  use Anoma.Node.Router.Engine
   use TypedStruct
   require Logger
 
