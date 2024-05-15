@@ -130,29 +130,32 @@ defmodule Anoma.Node do
       start_engine(
         router,
         Storage,
-        storage_id,
-        %Storage{storage_st | namespace: [router.id]}
+        %Storage{storage_st | namespace: [router.id]},
+        id: storage_id
       )
 
     {:ok, clock} =
-      start_engine(router, Clock, clock_id,
-        start: System.monotonic_time(:millisecond)
+      start_engine(
+        router,
+        Clock,
+        [start: System.monotonic_time(:millisecond)],
+        id: clock_id
       )
 
     {:ok, logger} =
       start_engine(
         router,
         Logger,
-        log_id,
-        %Logger{log_st | clock: clock, storage: storage}
+        %Logger{log_st | clock: clock, storage: storage},
+        id: log_id
       )
 
     {:ok, ordering} =
       start_engine(
         router,
         Ordering,
-        ord_id,
-        %Ordering{ord_st | logger: logger, table: storage}
+        %Ordering{ord_st | logger: logger, table: storage},
+        id: ord_id
       )
 
     {:ok, executor_topic} = new_topic(router, args[:executor_topic])
@@ -161,7 +164,6 @@ defmodule Anoma.Node do
       start_engine(
         router,
         Executor,
-        ex_id,
         %Executor{
           ex_st
           | logger: logger,
@@ -171,25 +173,36 @@ defmodule Anoma.Node do
               | logger: logger,
                 ordering: ordering
             }
-        }
+        },
+        id: ex_id
       )
 
     {:ok, mempool_topic} = new_topic(router, args[:mempool_topic])
 
     {:ok, mempool} =
-      start_engine(router, Mempool, mem_id, %Mempool{
-        mem_st
-        | logger: logger,
-          topic: mempool_topic,
-          ordering: ordering,
-          executor: executor
-      })
+      start_engine(
+        router,
+        Mempool,
+        %Mempool{
+          mem_st
+          | logger: logger,
+            topic: mempool_topic,
+            ordering: ordering,
+            executor: executor
+        },
+        id: mem_id
+      )
 
     {:ok, pinger} =
-      start_engine(router, Pinger, ping_id, %Pinger{
-        ping_st
-        | mempool: mempool
-      })
+      start_engine(
+        router,
+        Pinger,
+        %Pinger{
+          ping_st
+          | mempool: mempool
+        },
+        id: ping_id
+      )
 
     Anoma.Node.Pinger.start(pinger)
 
@@ -253,11 +266,16 @@ defmodule Anoma.Node do
     end
   end
 
-  defp start_engine(router, module, id, state) do
-    if id == nil do
+  # We try to make the signature the same, with minimal changes
+  @spec start_engine(Router.addr(), atom(), any(), [{:id, Id.Extern.t()}]) ::
+          any()
+  defp start_engine(router, module, state, options) do
+    if options[:id] == nil do
       Router.start_engine(router, module, state)
     else
-      Router.start_engine(router, module, %Id{external: id}, state)
+      Router.start_engine(router, module, state,
+        id: %Id{external: options[:id]}
+      )
     end
   end
 
