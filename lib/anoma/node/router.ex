@@ -407,6 +407,14 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  @spec start_supervisor(
+          Addr.t(),
+          Supervisor.child_spec() | {module(), term()}
+        ) :: Supervisor.on_start_child()
+  def start_supervisor(router, supervisor) do
+    DynamicSupervisor.start_child(call(router, :supervisor), supervisor)
+  end
+
   def stop(_router) do
   end
 
