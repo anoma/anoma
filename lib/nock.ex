@@ -79,6 +79,10 @@ defmodule Nock do
       {"bex", 7, @layer_4_context_mug, &Nock.Jets.bex/1},
     9_856_364_927_859_191_827 =>
       {"mix", 7, @layer_5_context_mug, &Nock.Jets.mix/1},
+    15_935_656_757_697_674_383 =>
+      {"jam", 7, @layer_5_context_mug, &Nock.Jets.jam/1},
+    11_639_366_709_658_810_328 =>
+      {"cue", 7, @layer_5_context_mug, &Nock.Jets.cue/1},
     3_043_895_017_490_773_097 =>
       {"met", 14, @layer_4_block_context_mug, &Nock.Jets.met/1},
     13_916_871_139_600_991_184 =>

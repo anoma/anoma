@@ -13,6 +13,20 @@ defmodule TestHelper.Nock do
     [arm, sample | logics_core()]
   end
 
+  @spec using_cue_core() :: Noun.t()
+  def using_cue_core() do
+    arm = Noun.Format.parse_always("[8 [9 94 0 63] 9 2 10 [6 0 14] 0 2]")
+    sample = 999
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_jam_core() :: Noun.t()
+  def using_jam_core() do
+    arm = Noun.Format.parse_always("[8 [9 22 0 63] 9 2 10 [6 0 14] 0 2]")
+    sample = 999
+    [arm, sample | logics_core()]
+  end
+
   @spec using_sign_core() :: Noun.t()
   def using_sign_core() do
     arm =

@@ -445,4 +445,28 @@ defmodule Nock.Jets do
       _ -> :error
     end
   end
+
+  def jam(core) do
+    maybe_sample = sample(core)
+
+    case maybe_sample do
+      {:ok, sample} ->
+        {:ok, Nock.Jam.jam(sample)}
+
+      _ ->
+        :error
+    end
+  end
+
+  def cue(core) do
+    maybe_sample = sample(core)
+
+    case maybe_sample do
+      {:ok, sample} when is_noun_atom(sample) ->
+        {:ok, Nock.Cue.cue(sample)}
+
+      _ ->
+        :error
+    end
+  end
 end
