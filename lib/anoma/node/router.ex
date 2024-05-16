@@ -658,4 +658,32 @@ defmodule Anoma.Node.Router do
       server: Process.get(:engine_server) || self()
     }
   end
+
+  defimpl Inspect, for: Addr do
+    def inspect(term, _options) do
+      id_string =
+        if term.id do
+          Inspect.Anoma.Crypto.Id.Extern.inspect(term.id, %Inspect.Opts{})
+        else
+          "%PUB{}"
+        end
+
+      if term.server do
+        server =
+          if is_pid(term.server) do
+            "TASK: " <> (term.server |> :erlang.pid_to_list() |> to_string())
+          else
+            "MOD: " <>
+              (term.server
+               |> Atom.to_string()
+               |> String.split(" ", trim: true)
+               |> hd())
+          end
+
+        "%RID{id: #{id_string} #{server}}"
+      else
+        "%RID{id: #{id_string}}"
+      end
+    end
+  end
 end
