@@ -39,6 +39,10 @@ defmodule Anoma.Cli do
           ]
         ]
       ],
+      shutdown: [
+        name: "shutdown",
+        about: "Shutdowns the server"
+      ],
       get: [
         name: "get",
         about:
@@ -99,6 +103,9 @@ defmodule Anoma.Cli do
 
       {:ok, [:get], %{args: %{key: key}}} ->
         run_client_command({:get_key, key})
+
+      {:ok, [:shutdown], %{}} ->
+        run_client_command(:shutdown)
 
       {:ok, [:nockma], parsed} ->
         Nock.Cli.main(parsed)

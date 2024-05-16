@@ -545,6 +545,17 @@ defmodule Anoma.Node.Router do
     Router.cast(router, {:send_response, dst, cookie, encoded_response})
   end
 
+  @doc """
+  Shuts down the entire router and Elixir node it's in.
+
+  We should tweak this in the future, with a mode to just shut down
+  the Anoma node itself.
+
+  """
+  def shutdown_node(router) do
+    Router.cast(router, :shutdown_everything)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -589,6 +600,21 @@ defmodule Anoma.Node.Router do
 
   def handle_cast({:router_cast, src, msg}, s) do
     {:noreply, handle_self_cast(msg, src, s)}
+  end
+
+  def handle_cast({:router_external_cast, src, msg}, s) do
+    case Anoma.Serialise.unpack(msg) do
+      {:ok, msg} ->
+        do_handle_external_cast(msg, src, s)
+
+      :error ->
+        Logger.warning("Not able to detect message")
+    end
+  end
+
+  def handle_self_cast(:shutdown_everything, _src, _s) do
+    Logger.warning("Shutting Down the system")
+    System.stop()
   end
 
   def handle_self_cast({:send_response, dst, cookie, response}, src, s) do
@@ -824,6 +850,11 @@ defmodule Anoma.Node.Router do
         waiting_engines:
           Map.put(s.waiting_engines, src_id, {s.max_call_id, dst_id})
     }
+  end
+
+  def do_handle_external_cast(:shutdown_everything, _src, _s) do
+    Logger.warning("Shutting Down the system")
+    System.stop()
   end
 
   def handle_info({:timeout_message, src_addr, call_id}, s) do
