@@ -18,6 +18,7 @@ defmodule Anoma.Node.Transport.TCPConnection do
   typedstruct do
     field(:router, Router.addr())
     field(:transport, Router.addr())
+    field(:connection_pool, Supervisor.supervisor())
     field(:mode, :client | :listener)
     # only if listener
     field(:listener, reference() | nil)
@@ -28,21 +29,23 @@ defmodule Anoma.Node.Transport.TCPConnection do
   # not clear how to cleanly abort the connection attempt
   # still, we can initiate the connection in a continue, so we don't block
   # whoever started us
-  def init({:client, router, transport, address}) do
+  def init({:client, router, transport, address, connection_pool}) do
     {:ok,
      %TCPConnection{
        router: router,
        transport: transport,
+       connection_pool: connection_pool,
        mode: :client
      }, {:continue, {:init_connection, address}}}
   end
 
   # ditto for listening
-  def init({:listener, router, transport, listener}) do
+  def init({:listener, router, transport, listener, connection_pool}) do
     {:ok,
      %TCPConnection{
        router: router,
        transport: transport,
+       connection_pool: connection_pool,
        mode: :listener,
        listener: listener
      }, {:continue, :accept_connection}}
@@ -117,7 +120,8 @@ defmodule Anoma.Node.Transport.TCPConnection do
     Router.start_engine(
       s.router,
       __MODULE__,
-      {:listener, s.router, s.transport, s.listener}
+      {:listener, s.router, s.transport, s.listener, s.connection_pool},
+      supervisor: s.connection_pool
     )
   end
 end

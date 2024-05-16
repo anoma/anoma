@@ -228,7 +228,7 @@ defmodule Anoma.Node.Router do
   indeed differ from the diagram.
 
   """
-  use GenServer
+  use Anoma.Node.Router.Engine
   use TypedStruct
   require Logger
 
@@ -238,6 +238,11 @@ defmodule Anoma.Node.Router do
   alias Anoma.Node.Transport
 
   @type addr() :: Addr.t()
+
+  @type engine_options() ::
+          {:id, Id.t()}
+          | {:supervisor, Supervisor.supervisor()}
+          | {:supvisor_mod, atom()}
 
   typedstruct module: Addr do
     @moduledoc """
@@ -325,16 +330,17 @@ defmodule Anoma.Node.Router do
            DynamicSupervisor.start_child(
              supervisor,
              {__MODULE__, {router_id, router_addr, transport_addr}}
+           ),
+         {:ok, connection_pool} <-
+           DynamicSupervisor.start_child(supervisor, Transport.Supervisor),
+         {:ok, _} <-
+           DynamicSupervisor.start_child(
+             supervisor,
+             {Anoma.Node.Router.Engine,
+              {router_addr, Transport, transport_id,
+               {router_addr, router_id, connection_pool}}}
            ) do
-      with {:ok, _} <-
-             DynamicSupervisor.start_child(
-               supervisor,
-               {Anoma.Node.Router.Engine,
-                {router_addr, Transport, transport_id,
-                 {router_addr, router_id}}}
-             ) do
-        {:ok, router_addr, transport_addr}
-      end
+      {:ok, router_addr, transport_addr}
     end
   end
 
@@ -368,18 +374,37 @@ defmodule Anoma.Node.Router do
 
   @doc """
   Starts a new Engine
+
+  ### Arguments
+  - `router` - the Router
+  - `module` - the module we wish to start as an engine
+  - `arg` - the argument to startup the engine with
+  - `options` - the Options specified by `engine_options()`
+
+  ### Options
+
+  - `id` - An already created ID for the node
   """
-  @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
+  @spec start_engine(Addr.t(), atom(), term(), [engine_options()]) ::
           {:ok, Addr.t()}
           | :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
           # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
           # if we can remove please do
           | any()
-  def start_engine(router, module, id, arg) do
+  def start_engine(router, module, arg, options \\ []) do
+    keys =
+      Keyword.validate!(options,
+        id: Id.new_keypair(),
+        supervisor: call(router, :supervisor),
+        supervisor_mod: DynamicSupervisor
+      )
+
+    id = keys[:id]
+
     with {:ok, _} <-
-           DynamicSupervisor.start_child(
-             call(router, :supervisor),
+           keys[:supervisor_mod].start_child(
+             keys[:supervisor],
              {Anoma.Node.Router.Engine, {router, module, id, arg}}
            ) do
       {:ok,
@@ -391,16 +416,12 @@ defmodule Anoma.Node.Router do
     end
   end
 
-  # start a new instance of an engine, without caring about the id
-  @spec start_engine(Addr.t(), atom(), any()) ::
-          {:ok, Addr.t()}
-          | :ignore
-          | {:error, any()}
-          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
-          # if we can remove please do
-          | any()
-  def start_engine(router, module, arg) do
-    start_engine(router, module, Id.new_keypair(), arg)
+  @spec start_supervisor(
+          Addr.t(),
+          Supervisor.child_spec() | {module(), term()}
+        ) :: Supervisor.on_start_child()
+  def start_supervisor(router, supervisor) do
+    DynamicSupervisor.start_child(call(router, :supervisor), supervisor)
   end
 
   def stop(_router) do
