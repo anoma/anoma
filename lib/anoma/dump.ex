@@ -28,7 +28,18 @@ defmodule Anoma.Dump do
   alias Anoma.Configuration
   alias Anoma.Mnesia
   alias Anoma.Node
-  alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock, Storage, Router}
+
+  alias Anoma.Node.{
+    Logger,
+    Pinger,
+    Mempool,
+    Executor,
+    Clock,
+    Storage,
+    Router,
+    Dumper
+  }
+
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
@@ -67,6 +78,8 @@ defmodule Anoma.Dump do
   - router id
   - mempool topic id
   - executor topic id
+  - dumper
+  - storage
   - logger
   - clock
   - ordering
@@ -160,6 +173,7 @@ defmodule Anoma.Dump do
     file |> Directories.data(env) |> File.rm!()
   end
 
+  @type dump_eng :: {Id.Extern.t(), Dumper.t()}
   @type log_eng :: {Id.Extern.t(), Logger.t()}
   @type clock_eng :: {Id.Extern.t(), Clock.t()}
   @type ord_eng :: {Id.Extern.t(), Ordering.t()}
@@ -186,6 +200,7 @@ defmodule Anoma.Dump do
           pinger: ping_eng,
           executor: ex_eng,
           storage: storage_eng,
+          dumper: dump_eng,
           storage_data: stores,
           qualified: list(),
           order: list(),
@@ -219,6 +234,8 @@ defmodule Anoma.Dump do
   - router
   - mempool topic
   - executor topic
+  - dumper
+  - storage
   - logger
   - clock
   - ordering
@@ -243,7 +260,8 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
-            storage: storage_eng
+            storage: storage_eng,
+            dumper: dump_eng
           }
   def get_state(node) do
     state = node |> Node.state()
