@@ -32,6 +32,9 @@ defmodule Anoma.Resource do
     field(:rseed, <<_::256>>, default: <<0::256>>)
   end
 
+  @commitment_atom Noun.atom_binary_to_integer("committo")
+  @nullifier_atom Noun.atom_binary_to_integer("annullo")
+
   @doc "New blank resource. Randomized nonce and seed."
   def new do
     nonce = :crypto.strong_rand_bytes(32)
@@ -47,17 +50,23 @@ defmodule Anoma.Resource do
     %{new() | npk: npk}
   end
 
+  @spec commitment(t()) :: binary()
   @doc "A commitment to the given resource."
   def commitment(resource = %Resource{}) do
-    "committo" <> :erlang.term_to_binary(resource)
+    [@commitment_atom | resource |> to_noun()]
+    |> Nock.Jam.jam()
+    |> Noun.atom_integer_to_binary()
   end
 
+  @spec nullifier(t(), Sign.secret()) :: binary()
   @doc """
   The nullifier of the given resource.
   (It's up to the caller to use the right secret.)
   """
   def nullifier(resource = %Resource{}, secret) do
-    ("annullo" <> :erlang.term_to_binary(resource))
+    [@nullifier_atom | to_noun(resource)]
+    |> Nock.Jam.jam()
+    |> Noun.atom_integer_to_binary()
     |> Sign.sign(secret)
   end
 
@@ -77,8 +86,9 @@ defmodule Anoma.Resource do
   end
 
   def transparent_committed_resource(commitment) do
-    with "committo" <> committed_resource_bytes <- commitment do
-      {:ok, :erlang.binary_to_term(committed_resource_bytes)}
+    with {:ok, [@commitment_atom | commitment_resource]} <-
+           Nock.Cue.cue(commitment) do
+      {:ok, from_noun(commitment_resource)}
     else
       _ -> :error
     end
@@ -105,8 +115,9 @@ defmodule Anoma.Resource do
   """
   def nullifies(nullifier, resource) do
     with {:ok, verified_nullifier} <- Sign.verify(nullifier, resource.npk),
-         "annullo" <> nullified_resource_bytes <- verified_nullifier do
-      :erlang.binary_to_term(nullified_resource_bytes) == resource
+         {:ok, [@nullifier_atom | nullified_resource]} <-
+           Nock.Cue.cue(verified_nullifier) do
+      from_noun(nullified_resource) == resource
     else
       _ -> false
     end
@@ -140,17 +151,17 @@ defmodule Anoma.Resource do
   def to_noun(resource = %Resource{}) do
     [
       resource.logic,
-      Noun.atom_binary_to_integer(resource.label),
+      resource.label,
       resource.quantity,
-      Noun.atom_binary_to_integer(resource.data),
+      resource.data,
       if resource.eph do
         0
       else
         1
       end,
-      Noun.atom_binary_to_integer(resource.nonce),
-      Noun.atom_binary_to_integer(resource.npk)
-      | Noun.atom_binary_to_integer(resource.rseed)
+      resource.nonce,
+      resource.npk
+      | resource.rseed
     ]
   end
 
