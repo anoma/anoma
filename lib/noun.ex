@@ -187,11 +187,21 @@ defmodule Noun do
     binary
   end
 
-  @spec atom_integer_to_binary(non_neg_integer(), non_neg_integer()) ::
-          binary()
+  @spec atom_integer_to_binary(noun_atom(), non_neg_integer()) :: binary()
   def atom_integer_to_binary(integer, length)
       when is_integer(integer) and integer >= 0 do
     pad_trailing(:binary.encode_unsigned(integer, :little), length)
+  end
+
+  def atom_integer_to_binary(atom, length) when is_binary(atom) do
+    if byte_size(atom) == length do
+      atom
+    else
+      # ensure the size is held
+      atom
+      |> atom_binary_to_integer()
+      |> atom_integer_to_binary(length)
+    end
   end
 
   @spec atom_binary_to_integer(noun_atom()) :: non_neg_integer()
