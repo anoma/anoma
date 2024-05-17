@@ -10,8 +10,17 @@ defmodule Nock.Cue do
     field(:cache, %{non_neg_integer() => Noun.t()}, default: Map.new())
   end
 
-  @spec cue(Noun.noun_atom()) :: Noun.t()
+  @spec cue(Noun.noun_atom()) :: {:ok, Noun.t()} | :error
   def cue(number) do
+    try do
+      {:ok, cue!(number)}
+    rescue
+      _ -> :error
+    end
+  end
+
+  @spec cue!(Noun.noun_atom()) :: Noun.t()
+  def cue!(number) do
     number
     |> Nock.Bits.integer_to_bits()
     |> parse()

@@ -329,11 +329,11 @@ defmodule AnomaTest.Nock do
     )
 
     assert using_dec_core() ==
-             using_dec_core() |> Nock.Jam.jam() |> Nock.Cue.cue()
+             using_dec_core() |> Nock.Jam.jam() |> Nock.Cue.cue!()
   end
 
   def jam_and_cue(jam_value, cue_value) do
-    assert jam_value == Nock.Cue.cue(cue_value)
+    assert jam_value == Nock.Cue.cue!(cue_value)
     assert cue_value == Nock.Jam.jam(jam_value)
   end
 end
