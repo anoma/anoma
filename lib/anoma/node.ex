@@ -55,7 +55,8 @@ defmodule Anoma.Node do
           new_storage: boolean(),
           name: atom(),
           use_rocks: boolean(),
-          settings: engine_configuration()
+          settings: engine_configuration(),
+          configuration: Anoma.Configuration.configuration_map()
         ]
 
   @type min_engine_configuration() :: [
