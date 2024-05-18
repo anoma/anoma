@@ -103,7 +103,8 @@ defmodule Anoma.Configuration do
          order: node["order"] |> String.to_atom()
        }},
       {:block_storage, node["block_storage"] |> String.to_atom()},
-      {:ping_time, node["ping_time"] |> maybe_ping()}
+      {:ping_time, node["ping_time"] |> maybe_ping()},
+      {:configuration, configuration}
     ]
   end
 

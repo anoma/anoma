@@ -49,10 +49,13 @@ defmodule Anoma.Dump do
 
   @spec dump(Path.t(), atom()) :: {:ok, :ok} | {:error, any()}
   def dump(name, node) do
+    dump_full_path(Directories.data(name), node)
+  end
+
+  def dump_full_path(name, node) do
     term = node |> get_all() |> :erlang.term_to_binary()
 
     name
-    |> Directories.data()
     |> File.open([:write], fn file ->
       file |> IO.binwrite(term)
     end)
