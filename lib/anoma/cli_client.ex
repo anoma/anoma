@@ -22,7 +22,7 @@ defmodule Anoma.Cli.Client do
     # load info of the running node, erroring if it appears not to exist, and
     # attempt to introduce ourselves to it
     # there should be a better way to find out its id(s)
-    dump_path = Anoma.System.Directories.data("dump.txt")
+    dump_path = Anoma.System.Directories.data("node_keys.dmp")
     sock_path = Anoma.System.Directories.data("local.sock")
 
     if not File.exists?(sock_path) do

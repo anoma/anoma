@@ -131,7 +131,7 @@ defmodule Anoma.Node do
 
       if Mix.env() in [:dev, :prod] do
         # dump the initial state so our keys are persisted
-        Anoma.Dump.dump("dump.txt", name)
+        Anoma.Dump.dump("node_keys.dmp", name)
       end
 
       {:ok, pid}
