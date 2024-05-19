@@ -51,6 +51,79 @@ defmodule TestHelper.Nock do
     [arm, sample | logics_core()]
   end
 
+  @spec using_end() :: Noun.t()
+  @spec using_end(Noun.t()) :: Noun.t()
+  def using_end(value \\ 0) do
+    block_calling_biop(value, 367)
+  end
+
+  @spec using_lsh() :: Noun.t()
+  @spec using_lsh(Noun.t()) :: Noun.t()
+  def using_lsh(value \\ 0) do
+    block_calling_biop(value, 90)
+  end
+
+  @spec using_rsh() :: Noun.t()
+  @spec using_rsh(Noun.t()) :: Noun.t()
+  def using_rsh(value \\ 0) do
+    block_calling_biop(value, 767)
+  end
+
+  @spec using_met() :: Noun.t()
+  @spec using_met(Noun.t()) :: Noun.t()
+  def using_met(value \\ 0) do
+    block_calling_mono(value, 190)
+  end
+
+  @spec block_calling_biop(Noun.t(), Noun.t()) :: Noun.t()
+  defp block_calling_biop(value, index) do
+    arm =
+      Noun.Format.parse_always(
+        "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 [0 28] 0 29] 0 2]"
+      )
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec block_calling_mono(Noun.t(), Noun.t()) :: Noun.t()
+  defp block_calling_mono(value, index) do
+    arm =
+      Noun.Format.parse_always(
+        "[8 [8 [9 10 0 127] 9 #{index} 10 [6 7 [0 3] 1 #{value}] 0 2] 9 2 10 [6 0 14] 0 2]"
+      )
+
+    sample = 999
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_bex() :: Noun.t()
+  def using_bex() do
+    arm =
+      Noun.Format.parse_always("[8 [9 4 0 127] 9 2 10 [6 0 14] 0 2]")
+
+    sample = 888
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_mix() :: Noun.t()
+  def using_mix() do
+    arm =
+      Noun.Format.parse_always("[8 [9 4 0 63] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [0 | 0]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_mat() :: Noun.t()
+  def using_mat() do
+    arm =
+      Noun.Format.parse_always("[8 [9 43 0 63] 9 2 10 [6 0 14] 0 2]")
+
+    sample = 0
+    [arm, sample | logics_core()]
+  end
+
   @spec factorial() :: Noun.t()
   def factorial() do
     arm = Noun.Format.parse_always("

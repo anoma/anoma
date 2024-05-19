@@ -4,6 +4,7 @@ defmodule Nock.Jets do
   """
 
   import Noun
+  import Bitwise
   alias Anoma.Crypto.Sign
 
   @spec calculate_mug_of_core(non_neg_integer(), non_neg_integer()) ::
@@ -74,6 +75,62 @@ defmodule Nock.Jets do
     end
   end
 
+  @spec calculate_mug_of_param_core(
+          non_neg_integer(),
+          non_neg_integer(),
+          non_neg_integer()
+        ) ::
+          non_neg_integer()
+  @doc """
+  Like `calculate_mug_of_core/2` except we work over a parameterized core.
+
+  ### Example
+
+      > Nock.Jets.calculate_mug_of_param_core(767, 10, 4)
+      12605872635346981159
+
+  For our standard library, so far only layer 4 is parameterized
+  """
+  def calculate_mug_of_param_core(index_in_core, core_index, parent_layer) do
+    with {:ok, val} <-
+           calculate_core_param(core_index, index_in_core, parent_layer) do
+      Noun.mug(hd(val))
+    end
+  end
+
+  @spec calculate_mug_of_param_layer(non_neg_integer(), non_neg_integer()) ::
+          non_neg_integer()
+  @doc """
+  Like `calculate_mug_of_layer/1` except we work over a parameterized core.
+
+  ### Example
+
+      > Nock.Jets.calculate_mug_of_param_layer(10, 4)
+      11284470320276584209
+
+  For our standard library, so far only layer 4 is parameterized
+  """
+  def calculate_mug_of_param_layer(core_index, parent_layer) do
+    with {:ok, core} <- calculate_core_param(core_index, 4, parent_layer),
+         {:ok, parent} <- Noun.axis(14, core) do
+      Noun.mug(parent)
+    end
+  end
+
+  def calculate_core_param(core_index, gate_index, parent_layer) do
+    Nock.nock(Nock.logics_core(), [
+      7,
+      [
+        9,
+        core_index,
+        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 3)
+      ],
+      9,
+      gate_index,
+      0 | 1
+    ])
+  end
+
   @spec calculate_core(non_neg_integer(), non_neg_integer()) ::
           :error | {:ok, Noun.t()}
   defp calculate_core(index_in_core, parent_layer) do
@@ -104,99 +161,89 @@ defmodule Nock.Jets do
     :error
   end
 
+  defp an_integer(x), do: Noun.atom_binary_to_integer(x)
+
   def dec(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, sample} when is_noun_atom(sample) and sample > 0 ->
-        {:ok, sample - 1}
-
-      _ ->
-        :error
+    with {:ok, noun} when is_noun_atom(noun) <- sample(core),
+         sample when sample > 0 <- an_integer(noun) do
+      {:ok, sample - 1}
+    else
+      _ -> :error
     end
   end
 
   def add(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
-        {:ok, a + b}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {:ok, an_integer(a) + an_integer(b)}
+    else
+      _ -> :error
     end
   end
 
   def sub(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a >= b ->
-        {:ok, a - b}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} when c >= d <- {an_integer(a), an_integer(b)} do
+      {:ok, c - d}
+    else
+      _ -> :error
     end
   end
 
   def lth(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a < b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c < d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
   def lte(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a <= b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c <= d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
   def gth(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a > b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c > d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
   def gte(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and a >= b ->
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} = {an_integer(a), an_integer(b)} do
+      if c >= d do
         {:ok, 0}
-
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
+      else
         {:ok, 1}
-
-      _ ->
-        :error
+      end
+    else
+      _ -> :error
     end
   end
 
@@ -205,7 +252,7 @@ defmodule Nock.Jets do
 
     case maybe_sample do
       {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) ->
-        {:ok, a * b}
+        {:ok, an_integer(a) * an_integer(b)}
 
       _ ->
         :error
@@ -213,26 +260,22 @@ defmodule Nock.Jets do
   end
 
   def div(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and b != 0 ->
-        {:ok, Kernel.div(a, b)}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} when d != 0 <- {an_integer(a), an_integer(b)} do
+      {:ok, Kernel.div(c, d)}
+    else
+      _ -> :error
     end
   end
 
   def mod(core) do
-    maybe_sample = sample(core)
-
-    case maybe_sample do
-      {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) and b != 0 ->
-        {:ok, Kernel.rem(a, b)}
-
-      _ ->
-        :error
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core),
+         {c, d} when d != 0 <- {an_integer(a), an_integer(b)} do
+      {:ok, Kernel.rem(c, d)}
+    else
+      _ -> :error
     end
   end
 
@@ -318,5 +361,85 @@ defmodule Nock.Jets do
       _ ->
         :error
     end
+  end
+
+  @spec bex(Nock.t()) :: :error | {:ok, Noun.t()}
+  def bex(core) do
+    with {:ok, a} when is_noun_atom(a) <- sample(core) do
+      {:ok, 2 ** a}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec mix(Nock.t()) :: :error | {:ok, Noun.t()}
+  def mix(core) do
+    with {:ok, [a | b]} when is_noun_atom(a) and is_noun_atom(b) <-
+           sample(core) do
+      {:ok, bxor(a, b)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec lsh(Nock.t()) :: :error | {:ok, Noun.t()}
+  def lsh(core) do
+    with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
+           sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      {:ok, val <<< (count <<< block_size)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec rsh(Nock.t()) :: :error | {:ok, Noun.t()}
+  def rsh(core) do
+    with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
+           sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      {:ok, val >>> (count <<< block_size)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec nend(Nock.t()) :: :error | {:ok, Noun.t()}
+  def nend(core) do
+    with {:ok, [count | val]} when is_noun_atom(count) and is_noun_atom(val) <-
+           sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      # we get #b1111, if count is 4. Since 1 <<< 4 = #b10000 - 1 = #b1111
+      # block_size just a left shift on the count
+      mask = (1 <<< (count <<< block_size)) - 1
+      {:ok, val &&& mask}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec met(Nock.t()) :: :error | {:ok, Noun.t()}
+  def met(core) do
+    with {:ok, sample} when is_noun_atom(sample) <- sample(core),
+         {:ok, block_size} when is_noun_atom(block_size) <-
+           Noun.axis(30, core) do
+      {:ok, num_bits(sample, block_size)}
+    else
+      _ -> :error
+    end
+  end
+
+  @spec num_bits(non_neg_integer(), non_neg_integer()) :: non_neg_integer()
+  def num_bits(n, block_size) when n >= 0 do
+    num_bits(n, 1 <<< block_size, 0)
+  end
+
+  defp num_bits(0, _, acc), do: acc
+
+  defp num_bits(n, block_size, acc) do
+    num_bits(n >>> block_size, block_size, acc + 1)
   end
 end
