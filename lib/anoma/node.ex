@@ -102,7 +102,7 @@ defmodule Anoma.Node do
     if args[:new_storage] do
       snap = settings[:snapshot_path]
 
-      Storage.put_snapshot(storage, hd(snap))
+      Storage.do_put_snapshot(storage, hd(snap))
     else
       tables =
         settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
