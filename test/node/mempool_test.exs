@@ -57,9 +57,9 @@ defmodule AnomaTest.Node.Mempool do
     pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
 
     Mempool.execute(node.mempool)
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_two}}}
+    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
+    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_one}}}, 5000)
+    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_two}}}, 5000)
     assert {:ok, 2} = Storage.get(storage, key)
 
     :ok =
@@ -86,8 +86,8 @@ defmodule AnomaTest.Node.Mempool do
     pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
 
     Mempool.execute(node.mempool)
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_two}}}
+    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_one}}}, 5000)
+    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_two}}}, 5000)
     assert :absent = Storage.get(storage, key)
 
     :ok =

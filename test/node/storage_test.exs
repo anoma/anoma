@@ -134,7 +134,7 @@ defmodule AnomaTest.Node.Storage do
 
       assert Process.alive?(waiting)
       Ordering.new_order(ordering, [Order.new(1, <<1>>, waiting)])
-      assert_receive {:received, 1}
+      assert_receive({:received, 1}, 5000)
     end
 
     test "properly get snapshot from id", %{ordering: ordering} do

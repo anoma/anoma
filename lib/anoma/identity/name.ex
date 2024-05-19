@@ -11,18 +11,15 @@ defmodule Anoma.Identity.Name do
   end
 
   @spec reserve_namespace(t(), binary(), Id.Extern.t(), binary()) ::
-          :already_there | :improper_data | :ok | :failed_placement
+          :already_there | :improper_data | :ok
   def reserve_namespace(namespace = %__MODULE__{}, name, pub, cdata)
       when is_binary(name) do
     with true <- Verification.verify_request(cdata, name, pub),
-         :absent <- Storage.get(namespace.storage, [name_space(), name]),
-         {:atomic, :ok} <-
-           Storage.put(namespace.storage, [name_space(), name], pub) do
-      :ok
+         :absent <- Storage.get(namespace.storage, [name_space(), name]) do
+      namespace.storage |> Storage.put([name_space(), name], pub)
     else
       {:ok, _} -> :already_there
       false -> :improper_data
-      {:aborted, _} -> :failed_placement
     end
   end
 
@@ -31,7 +28,7 @@ defmodule Anoma.Identity.Name do
   namespace must have signed.
   """
   @spec add(t(), binary(), {list(binary()), binary()}) ::
-          :ok | :no_namespace | :failed_placement | :improper_data
+          :ok | :no_namespace | :improper_data
   def add(namespace = %__MODULE__{}, sig, d = {name, new_key})
       when is_list(name) do
     store = namespace.storage
@@ -39,13 +36,11 @@ defmodule Anoma.Identity.Name do
 
     with {:ok, pub} <- Storage.get(store, [name_space(), hd(name)]),
          true <- Verification.verify_request(sig, d, pub),
-         :absent <- Storage.get(namespace.storage, storage_space),
-         {:atomic, :ok} <- Storage.put(store, storage_space, new_key) do
-      :ok
+         :absent <- Storage.get(namespace.storage, storage_space) do
+      Storage.put(store, storage_space, new_key)
     else
       {:ok, _} -> :already_there
       :absent -> :no_namespace
-      {:aborted, _} -> :failed_placement
       false -> :improper_data
     end
   end

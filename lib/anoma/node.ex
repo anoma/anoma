@@ -48,6 +48,7 @@ defmodule Anoma.Node do
     field(:clock, Router.addr())
     field(:logger, Router.addr())
     field(:storage, Router.addr())
+    field(:storage_topic, Router.addr())
   end
 
   @type configuration() :: [
@@ -126,12 +127,14 @@ defmodule Anoma.Node do
 
     {:ok, router} = start_router(args[:router])
 
+    {:ok, storage_topic} = new_topic(router, args[:storage_topic])
+
     {:ok, storage} =
       start_engine(
         router,
         Storage,
         storage_id,
-        %Storage{storage_st | namespace: [router.id]}
+        %Storage{storage_st | namespace: [router.id], topic: storage_topic}
       )
 
     {:ok, clock} =
@@ -204,7 +207,8 @@ defmodule Anoma.Node do
        logger: logger,
        executor_topic: executor_topic,
        mempool_topic: mempool_topic,
-       storage: storage
+       storage: storage,
+       storage_topic: storage_topic
      }}
   end
 
