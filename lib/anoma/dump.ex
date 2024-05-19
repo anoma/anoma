@@ -113,9 +113,8 @@ defmodule Anoma.Dump do
 
   @spec load(String.t()) :: any()
   def load(name) do
-    with {:ok, bin} <- File.read(name) do
-      Plug.Crypto.non_executable_binary_to_term(bin)
-    end
+    {:ok, bin} = File.read(name)
+    Plug.Crypto.non_executable_binary_to_term(bin)
   end
 
   @doc """

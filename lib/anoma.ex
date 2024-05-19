@@ -19,6 +19,7 @@ defmodule Anoma do
   end
 
   def start(_type, _args) do
+    Anoma.Mnesia.init()
     arguments = Burrito.Util.Args.get_arguments()
 
     # This will invoke start_logic if we want that application
