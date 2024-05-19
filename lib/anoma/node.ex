@@ -142,6 +142,7 @@ defmodule Anoma.Node do
     end
   end
 
+  @spec init(Anoma.Dump.dump()) :: any()
   def init(args) do
     {log_id, log_st} = args[:logger]
     {clock_id, _clock_st} = args[:clock]
@@ -152,7 +153,8 @@ defmodule Anoma.Node do
     {ex_id, ex_st} = args[:executor]
     {storage_id, storage_st} = args[:storage]
 
-    {:ok, router, transport} = start_router(args[:router], args[:transport])
+    {:ok, router, transport} =
+      start_router(args[:router], args[:transport], args[:router_state])
 
     {:ok, storage} =
       start_engine(
@@ -305,11 +307,11 @@ defmodule Anoma.Node do
     Anoma.Block.create_table(block_storage, rocks)
   end
 
-  defp start_router(router, transport) do
-    if router == nil || transport == nil do
+  defp start_router(router, transport, router_state) do
+    if router == nil || transport == nil || router_state == nil do
       Router.start()
     else
-      Router.start({%Id{external: router}, %Id{external: transport}})
+      Router.start({router, transport, router_state})
     end
   end
 
@@ -320,9 +322,7 @@ defmodule Anoma.Node do
     if options[:id] == nil do
       Router.start_engine(router, module, state)
     else
-      Router.start_engine(router, module, state,
-        id: %Id{external: options[:id]}
-      )
+      Router.start_engine(router, module, state, id: options[:id])
     end
   end
 

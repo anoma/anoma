@@ -33,33 +33,42 @@ defmodule Anoma.Cli.Client do
     primary = Anoma.Dump.load(dump_path)
 
     # tell our transport how to reach the node
-    Transport.learn_node(transport, primary.router, {:unix, sock_path})
+    Transport.learn_node(
+      transport,
+      primary.router.external,
+      {:unix, sock_path}
+    )
+
     # and how to reach its transport engine and mempool and storage
-    Transport.learn_engine(transport, primary.transport, primary.router)
+    Transport.learn_engine(
+      transport,
+      primary.transport_id,
+      primary.router.external
+    )
 
     Transport.learn_engine(
       transport,
       elem(primary.mempool, 0),
-      primary.router
+      primary.router.external
     )
 
     Transport.learn_engine(
       transport,
       elem(primary.ordering, 0),
-      primary.router
+      primary.router.external
     )
 
     Transport.learn_engine(
       transport,
-      primary.router,
-      primary.router
+      primary.router.external,
+      primary.router.external
     )
 
     # form an address.  this should be abstracted properly
     other_transport_addr = %{
       router
       | server: nil,
-        id: primary.transport
+        id: primary.transport_id
     }
 
     # tell the other router how to reach us
@@ -122,7 +131,7 @@ defmodule Anoma.Cli.Client do
     other_router_addr = %{
       router
       | server: nil,
-        id: primary.router
+        id: primary.router.external
     }
 
     Anoma.Node.Router.shutdown_node(other_router_addr)

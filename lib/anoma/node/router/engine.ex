@@ -39,17 +39,17 @@ defmodule Anoma.Node.Router.Engine do
               | {:stop, reason :: term, new_state}
             when new_state: term
 
-  @spec start_link({Router.addr(), atom(), Id.t(), term()}) ::
+  @spec start_link({Router.addr(), atom(), Id.t() | Id.Extern.t(), term()}) ::
           :ignore | {:error, any()} | {:ok, pid()}
   def start_link({router, mod, id, arg}) do
-    server = Router.process_name(mod, id.external)
+    server = Router.process_name(mod, Id.external_id(id))
 
     GenServer.start_link(__MODULE__, {router, mod, id, arg, server},
       name: server
     )
   end
 
-  @spec init({Router.addr(), atom(), Id.t(), term(), term()}) ::
+  @spec init({Router.addr(), atom(), Id.t() | Id.Extern.t(), term(), atom()}) ::
           :ignore
           | {:ok, t()}
           | {:ok, any(),
@@ -57,7 +57,7 @@ defmodule Anoma.Node.Router.Engine do
           | {:stop, any()}
   def init({router, mod, id, arg, server}) do
     GenServer.cast(router.router, {:init_local_engine, id, server})
-    Process.put(:engine_id, id.external)
+    Process.put(:engine_id, Id.external_id(id))
     Process.put(:engine_server, server)
 
     Process.flag(:trap_exit, true)

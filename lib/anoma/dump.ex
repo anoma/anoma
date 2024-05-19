@@ -28,7 +28,7 @@ defmodule Anoma.Dump do
   alias Anoma.Configuration
   alias Anoma.Mnesia
   alias Anoma.Node
-  alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock, Storage}
+  alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock, Storage, Router}
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
@@ -94,7 +94,7 @@ defmodule Anoma.Dump do
   @dialyzer {:no_return, launch: 2}
   @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
   def launch(file, name) do
-    load = file |> Directories.data() |> load()
+    load = file |> load()
 
     settings = block_check(load)
 
@@ -117,7 +117,7 @@ defmodule Anoma.Dump do
   @spec launch(String.t(), atom(), atom(), Configuration.configuration_map()) ::
           {:ok, %Node{}} | any()
   def launch(file, name, sup_name, config) do
-    load = file |> Directories.data() |> load()
+    load = file |> load()
 
     settings = block_check(load)
 
@@ -141,7 +141,7 @@ defmodule Anoma.Dump do
   I currently allow for atom creation in the loaded term.
   """
 
-  @spec load(String.t()) :: any()
+  @spec load(String.t()) :: any() | dump()
   def load(name) do
     {:ok, bin} = File.read(name)
     Plug.Crypto.non_executable_binary_to_term(bin)
@@ -169,6 +169,27 @@ defmodule Anoma.Dump do
   @type storage_eng :: {Id.Extern.t(), Storage.t()}
   @type stores :: {Storage.t(), atom()}
 
+  @type dump() :: %{
+          router: Id.t(),
+          transport: Id.t(),
+          router_state: Router.t(),
+          transport_id: Id.Extern.t(),
+          mempool_topic: Id.Extern.t(),
+          executor_topic: Id.Extern.t(),
+          logger: log_eng,
+          clock: clock_eng,
+          ordering: ord_eng,
+          mempool: mem_eng,
+          pinger: ping_eng,
+          executor: ex_eng,
+          storage: storage_eng,
+          storage_data: stores,
+          qualified: list(),
+          order: list(),
+          block_storage: list(),
+          use_rocks: boolean()
+        }
+
   @doc """
   I get all the info on the node tables and engines in order:
   - router
@@ -185,25 +206,7 @@ defmodule Anoma.Dump do
   And turn the info into a tuple
   """
 
-  @spec get_all(atom()) ::
-          %{
-            router: Id.Extern.t(),
-            transport: Id.Extern.t(),
-            mempool_topic: Id.Extern.t(),
-            executor_topic: Id.Extern.t(),
-            logger: log_eng,
-            clock: clock_eng,
-            ordering: ord_eng,
-            mempool: mem_eng,
-            pinger: ping_eng,
-            executor: ex_eng,
-            storage: storage_eng,
-            storage_data: stores,
-            qualified: list(),
-            order: list(),
-            block_storage: list(),
-            use_rocks: boolean()
-          }
+  @spec get_all(atom()) :: dump()
   def get_all(node) do
     Map.merge(get_state(node), get_tables(node))
   end
@@ -223,8 +226,10 @@ defmodule Anoma.Dump do
 
   @spec get_state(atom()) ::
           %{
-            router: Id.Extern.t(),
-            transport: Id.Extern.t(),
+            router: Id.t(),
+            transport: Id.t(),
+            router_state: Router.t(),
+            transport_id: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
             logger: log_eng,
@@ -237,7 +242,6 @@ defmodule Anoma.Dump do
           }
   def get_state(node) do
     state = node |> Node.state()
-    router = state.router
 
     node =
       state
@@ -260,10 +264,27 @@ defmodule Anoma.Dump do
 
     map = Enum.reduce(list, fn x, acc -> Map.merge(acc, x) end)
 
+    # EVIL, please make this not evil
+    internal_transport_id =
+      Engine.get_state(state.transport).transport_internal_id
+
+    # This is rather bad, as we are peeking at the internal state, and
+    # we are not using the engine, so it will have issues across
+    # nodes....
+
+    router_id =
+      :sys.get_state(Process.whereis(state.router.server)).internal_id
+
+    router_state = Anoma.Node.Router.dump_state(state.router.server)
+    # Back to normal work
+
     Map.merge(
       %{
-        router: router.id,
-        transport: state.transport.id,
+        router: router_id,
+        router_state: router_state,
+        transport: internal_transport_id,
+        # public facing id for other nodes to talk to
+        transport_id: state.transport.id,
         mempool_topic: state.mempool_topic.id,
         executor_topic: state.executor_topic.id
       },

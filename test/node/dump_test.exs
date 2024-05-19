@@ -3,6 +3,7 @@ defmodule AnomaTest.Node.Dump do
 
   alias Anoma.Node.Mempool
   alias Anoma.Mnesia
+  alias Anoma.System.Directories
   import TestHelper.Nock
 
   setup_all do
@@ -52,7 +53,7 @@ defmodule AnomaTest.Node.Dump do
 
     DynamicSupervisor.stop(sname, :normal)
 
-    Anoma.Dump.launch("dump_test.dmp", :dump_new)
+    Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
 
     new_node = Anoma.Node.state(:dump_new)
 
