@@ -36,5 +36,5 @@
   "telemetry": {:hex, :telemetry, "1.2.1", "68fdfe8d8f05a8428483a97d7aab2f268aaff24b49e0f599faa091f1d4e7f61c", [:rebar3], [], "hexpm", "dad9ce9d8effc621708f99eac538ef1cbe05d6a874dd741de2e689c47feafed5"},
   "toml": {:hex, :toml, "0.7.0", "fbcd773caa937d0c7a02c301a1feea25612720ac3fa1ccb8bfd9d30d822911de", [:mix], [], "hexpm", "0690246a2478c1defd100b0c9b89b4ea280a22be9a7b313a8a058a2408a2fa70"},
   "typed_struct": {:hex, :typed_struct, "0.3.0", "939789e3c1dca39d7170c87f729127469d1315dcf99fee8e152bb774b17e7ff7", [:mix], [], "hexpm", "c50bd5c3a61fe4e198a8504f939be3d3c85903b382bde4865579bc23111d1b6d"},
-  "xxhash": {:hex, :xxhash, "0.3.1", "0e978aeba3d7ea0f53b88c5c975a0bee8e873856f0daad9764f9e5e7b60c8d17", [:mix], [], "hexpm", "14fef02f550c1b393de52912f7ef4ce53b5749c63db70ffdc6582474e625513c"},
+  "xxhash": {:git, "https://github.com/htdat148/erlang-xxhash-otp-26", "8f82ed8755cc9fded88750c6d88b25d45c634012", [branch: "fix_erlang_get_path_otp26"]},
 }

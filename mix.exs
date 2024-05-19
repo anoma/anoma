@@ -22,7 +22,8 @@ defmodule Anoma.MixProject do
       # Nockma eval
       escript: escript(),
       # Burrito release
-      releases: releases()
+      releases: releases(),
+      package: package()
     ]
   end
 
@@ -65,7 +66,9 @@ defmodule Anoma.MixProject do
       {:enacl, git: "https://github.com/anoma/enacl/"},
       {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
       {:typed_struct, "~> 0.3.0"},
-      {:xxhash, "~> 0.3"},
+      {:xxhash,
+       git: "https://github.com/htdat148/erlang-xxhash-otp-26",
+       branch: "fix_erlang_get_path_otp26"},
       {:recon, "~> 2.5.4"},
       {:rexbug, ">= 2.0.0-rc1"},
       # until the next Kino release
@@ -91,6 +94,14 @@ defmodule Anoma.MixProject do
       groups_for_extras: group_for_extras(),
       groups_for_modules: group_for_modules(),
       before_closing_body_tag: &docs_before_closing_body_tag/1
+    ]
+  end
+
+  def package do
+    [
+      maintainers: ["Mariari", " Raymond E. Pasco"],
+      name: :anoma,
+      licenses: ["MIT"]
     ]
   end
 
