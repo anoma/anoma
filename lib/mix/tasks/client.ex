@@ -24,6 +24,9 @@ defmodule Mix.Tasks.Client do
 
       {[:get], %{args: %{key: key}}} ->
         run_client_command({:get_key, key})
+
+      {[:shutdown], %{}} ->
+        run_client_command(:shutdown)
     end
   end
 

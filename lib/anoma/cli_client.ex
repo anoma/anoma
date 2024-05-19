@@ -49,6 +49,12 @@ defmodule Anoma.Cli.Client do
       primary.router
     )
 
+    Transport.learn_engine(
+      transport,
+      primary.router,
+      primary.router
+    )
+
     # form an address.  this should be abstracted properly
     other_transport_addr = %{
       router
@@ -110,6 +116,16 @@ defmodule Anoma.Cli.Client do
 
         System.halt(1)
     end
+  end
+
+  defp perform(:shutdown, primary, router) do
+    other_router_addr = %{
+      router
+      | server: nil,
+        id: primary.router
+    }
+
+    Anoma.Node.Router.shutdown_node(other_router_addr)
   end
 
   defp perform({:get_key, key}, primary, router) do
