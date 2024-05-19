@@ -51,7 +51,7 @@ defmodule Anoma.Node.Configuration do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
-  def handle_cast(:snapshot, caller, config = %__MODULE__{}) do
+  def handle_cast(:snapshot, _caller, config = %__MODULE__{}) do
     configuration = config.configuration
 
     if configuration do
@@ -60,8 +60,6 @@ defmodule Anoma.Node.Configuration do
           configuration["dump"]["dump"],
           configuration["node"]["name"] |> String.to_atom()
         )
-
-        Router.cast(caller, :snapshot_done)
       end)
     else
       log_info({:no_config, config.logger})
