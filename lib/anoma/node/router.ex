@@ -228,7 +228,7 @@ defmodule Anoma.Node.Router do
   indeed differ from the diagram.
 
   """
-  use GenServer
+  use Anoma.Node.Router.Engine
   use TypedStruct
   require Logger
 
@@ -237,6 +237,8 @@ defmodule Anoma.Node.Router do
   alias Anoma.Node.Router.Addr
 
   @type addr() :: Addr.t()
+
+  @type engine_options() :: {:id, Id.t()}
 
   typedstruct module: Addr do
     @moduledoc """
@@ -342,15 +344,29 @@ defmodule Anoma.Node.Router do
 
   @doc """
   Starts a new Engine
+
+  ### Arguments
+  - `router` - the Router
+  - `module` - the module we wish to start as an engine
+  - `arg` - the argument to startup the engine with
+  - `options` - the Options specified by `engine_options()`
+
+  ### Options
+
+  - `id` - An already created ID for the node
   """
-  @spec start_engine(Addr.t(), atom(), Id.t(), term()) ::
+  @spec start_engine(Addr.t(), atom(), term(), [engine_options()]) ::
           {:ok, Addr.t()}
           | :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
           # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
           # if we can remove please do
           | any()
-  def start_engine(router, module, id, arg) do
+  def start_engine(router, module, arg, options \\ []) do
+    keys = Keyword.validate!(options, id: Id.new_keypair())
+
+    id = keys[:id]
+
     with {:ok, _} <-
            DynamicSupervisor.start_child(
              call(router, :supervisor),
@@ -363,18 +379,6 @@ defmodule Anoma.Node.Router do
          server: process_name(module, id.external)
        }}
     end
-  end
-
-  # start a new instance of an engine, without caring about the id
-  @spec start_engine(Addr.t(), atom(), any()) ::
-          {:ok, Addr.t()}
-          | :ignore
-          | {:error, any()}
-          # Otherwise start_engine gives a weird error on {:ok, Addr.t()}
-          # if we can remove please do
-          | any()
-  def start_engine(router, module, arg) do
-    start_engine(router, module, Id.new_keypair(), arg)
   end
 
   def stop(_router) do

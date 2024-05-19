@@ -61,6 +61,7 @@ defmodule Anoma.Node.Storage do
   alias __MODULE__
 
   use TypedStruct
+  use Router.Engine
 
   require Logger
 
