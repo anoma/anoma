@@ -7,6 +7,7 @@ var versionNodes = [
 {version: "v0.4.0", url: "https://anoma.github.io/anoma/v0.4.0/"},
 {version: "v0.3.0", url: "https://anoma.github.io/anoma/v0.3.0/"},
 {version: "v0.2.0", url: "https://anoma.github.io/anoma/v0.2.0/"},
+{version: "v0.14.0", url: "https://anoma.github.io/anoma/v0.14.0/"},
 {version: "v0.13.0", url: "https://anoma.github.io/anoma/v0.13.0/"},
 {version: "v0.12.0", url: "https://anoma.github.io/anoma/v0.12.0/"},
 {version: "v0.11.0", url: "https://anoma.github.io/anoma/v0.11.0/"},

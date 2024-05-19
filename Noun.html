@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>Noun — Anoma v0.13.0</title>
+    <title>Noun — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Noun</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.14.0)</small>
 
 </h1>
 
@@ -222,6 +222,16 @@ GUIDES
         <a href="#equal/2" translate="no">equal(noun_1, noun_2)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#index_to_offset/1" translate="no">index_to_offset(n)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Calculates the index from the given access offset</p></div>
 
     </div>
 
@@ -399,7 +409,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> atom_binary_to_integer(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> atom_binary_to_integer(<a href="#t:noun_atom/0">noun_atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
 
       </div>
 
@@ -422,11 +432,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> atom_integer_to_binary(0) :: &lt;&lt;_::0&gt;&gt;</pre>
-
-          <pre translate="no"><span class="attribute">@spec</span> atom_integer_to_binary(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
-
-          <pre translate="no"><span class="attribute">@spec</span> atom_integer_to_binary(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> atom_integer_to_binary(<a href="#t:noun_atom/0">noun_atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()</pre>
 
       </div>
 
@@ -523,6 +529,29 @@ GUIDES
       </div>
 
 
+  </section>
+</section>
+<section class="detail" id="index_to_offset/1">
+
+  <div class="detail-header">
+    <a href="#index_to_offset/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">index_to_offset(n)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> index_to_offset(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+<p>Calculates the index from the given access offset</p>
   </section>
 </section>
 <section class="detail" id="is_noun_atom/1">
@@ -711,6 +740,15 @@ GUIDES
 
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/lib/noun.ex">current file</a>)
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">

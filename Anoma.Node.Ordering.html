@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>Anoma.Node.Ordering — Anoma v0.13.0</title>
+    <title>Anoma.Node.Ordering — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Ordering</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.14.0)</small>
 
 </h1>
 
@@ -194,7 +194,17 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_storage/1" translate="no">get_storage(ordering)</a>
+        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get/2" translate="no">get(ordering, key)</a>
 
       </div>
 
@@ -202,7 +212,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_call/3" translate="no">handle_call(arg1, from, state)</a>
+        <a href="#get_storage/1" translate="no">get_storage(ordering)</a>
 
       </div>
 
@@ -237,6 +247,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
         <a href="#init/1" translate="no">init(state)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
 
     </div>
 
@@ -409,6 +421,47 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 <p>returns the given key at a specific value</p>
   </section>
 </section>
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="get/2">
+
+  <div class="detail-header">
+    <a href="#get/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get(ordering, key)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Node.Storage.html#t:order_key/0">Anoma.Node.Storage.order_key</a>()) ::
+  :absent | {:ok, <a href="Anoma.Node.Storage.html#t:qualified_value/0">Anoma.Node.Storage.qualified_value</a>()} | {:error, :timed_out}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="get_storage/1">
 
   <div class="detail-header">
@@ -428,23 +481,6 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
           <pre translate="no"><span class="attribute">@spec</span> get_storage(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()</pre>
 
       </div>
-
-
-  </section>
-</section>
-<section class="detail" id="handle_call/3">
-
-  <div class="detail-header">
-    <a href="#handle_call/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">handle_call(arg1, from, state)</h1>
-
-
-  </div>
-
-  <section class="docstring">
 
 
   </section>
@@ -527,7 +563,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
   <section class="docstring">
 
-
+<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="new_order/2">
@@ -629,6 +665,15 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/lib/anoma/node/ordering.ex">current file</a>)
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">

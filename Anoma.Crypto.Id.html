@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>Anoma.Crypto.Id — Anoma v0.13.0</title>
+    <title>Anoma.Crypto.Id — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Crypto.Id</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.14.0)</small>
 
 </h1>
 
@@ -171,6 +171,16 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#external_id/1" translate="no">external_id(extern)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Grabs the external id of a given key</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#new_keypair/0" translate="no">new_keypair()</a>
 
       </div>
@@ -191,6 +201,14 @@ lookup</p></div>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#seal/2" translate="no">seal(message, extern)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#truncated_key_string/1" translate="no">truncated_key_string(key)</a>
 
       </div>
 
@@ -290,6 +308,29 @@ lookup</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="external_id/1">
+
+  <div class="detail-header">
+    <a href="#external_id/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">external_id(extern)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> external_id(<a href="#t:t/0">t</a>() | <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()) :: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()</pre>
+
+      </div>
+
+<p>Grabs the external id of a given key</p><p>Useful when we want to use id and the external as interchangeable</p>
+  </section>
+</section>
 <section class="detail" id="new_keypair/0">
 
   <div class="detail-header">
@@ -360,6 +401,23 @@ lookup</p><p>I can be used on <code class="inline">t </code>, <code class="inlin
 
   </section>
 </section>
+<section class="detail" id="truncated_key_string/1">
+
+  <div class="detail-header">
+    <a href="#truncated_key_string/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">truncated_key_string(key)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="unsalt_keys/2">
 
   <div class="detail-header">
@@ -413,6 +471,15 @@ lookup</p><p>I can be used on <code class="inline">t </code>, <code class="inlin
 
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/lib/anoma/crypto/id.ex">current file</a>)
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">

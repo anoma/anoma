@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>API Reference — Anoma v0.13.0</title>
+    <title>API Reference — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
 
-  <span>API Reference <small class="app-vsn">Anoma v0.13.0</small></span>
+  <span>API Reference <small class="app-vsn">Anoma v0.14.0</small></span>
 </h1>
 
 
@@ -171,6 +171,16 @@ network.</p></div>
     <a href="Anoma.Cli.html" translate="no">Anoma.Cli</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Cli.Client.html" translate="no">Anoma.Cli.Client</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a small engine that runs in a CLI's node and connects to and talks to
+the local administration engine on another node running on the same system.</p></div>
 
 </div>
 <div class="summary-row">
@@ -406,6 +416,16 @@ information in order to choose how to verify a commitment.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.Node.Configuration.html" translate="no">Anoma.Node.Configuration</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an agent that remembers the configuration that the application
+was launched with</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.Node.Executor.html" translate="no">Anoma.Node.Executor</a>
 
   </div>
@@ -528,6 +548,68 @@ If the server is known, but the id is not, then this is a local-only
   </div>
 
     <div class="summary-synopsis"><p>I am the Anoma Storage engine, I consist of two parts</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.html" translate="no">Anoma.Node.Transport</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.Connection.html" translate="no">Anoma.Node.Transport.Connection</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an abstract interface that connections obey.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.ConnectionState.html" translate="no">Anoma.Node.Transport.ConnectionState</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.Server.html" translate="no">Anoma.Node.Transport.Server</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am an abstract interface that servers obey.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.Supervisor.html" translate="no">Anoma.Node.Transport.Supervisor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I serve as a supervision pool for various transport connections</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.TCPConnection.html" translate="no">Anoma.Node.Transport.TCPConnection</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I manage an individual TCP connection and stream.
+I can run in two modes: either I can act as a client, initiating a connection
+to a server, or as a listener, waiting to accept and then accepting a
+connection on a server.
+In the latter case, since accepting the connection marks me as its owner and
+handoff is complicated, I start up a new listener once I accept a connection.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.Node.Transport.TCPServer.html" translate="no">Anoma.Node.Transport.TCPServer</a>
+
+  </div>
 
 </div>
 <div class="summary-row">
@@ -700,7 +782,28 @@ the identity.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Nock.Bits.html" translate="no">Nock.Bits</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Nock.Cli.html" translate="no">Nock.Cli</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Cue.html" translate="no">Nock.Cue</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Nock.Jam.html" translate="no">Nock.Jam</a>
 
   </div>
 
@@ -742,6 +845,13 @@ the identity.</p></div>
 functions.</p></div>
 
 </div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TestHelper.Node.html" translate="no">TestHelper.Node</a>
+
+  </div>
+
+</div>
 
     </div>
   </section>
@@ -756,6 +866,15 @@ functions.</p></div>
 </h2>
 
     <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.Client.html" translate="no">mix client</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I generate out the TOC for each liveview doc</p></div>
+
+</div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Mix.Tasks.Toc.html" translate="no">mix toc</a>
@@ -788,6 +907,13 @@ Anoma
 </div>
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">

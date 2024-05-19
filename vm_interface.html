@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>Anoma VM interface — Anoma v0.13.0</title>
+    <title>Anoma VM interface — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -140,7 +140,7 @@ GUIDES
   </a>
   <span class="text">Index</span>
 </h2>
-<ol><li><a href="toc.html">Toc</a></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="the-executor-context" class="section-heading">
+<ol><li><a href="toc.html">Toc</a></li><li><a href="user.html">User</a><ol><li><a href="data.html">Data</a></li></ol></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="logging.html">Logging</a></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="the-executor-context" class="section-heading">
   <a href="#the-executor-context" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -150,12 +150,12 @@ GUIDES
 resource machine context.</li></ul><p>An additional mode is planned for the shielded resource machine, when
 integrated; and <code class="inline">kv</code> mode is an early prototype of what will evolve into
 the content-addressed blob storage facility.</p><p><code class="inline">kv</code> and <code class="inline">rm</code> modes share the same execution interface: they expect a Nock
-<code class="inline">gate</code>. A <code class="inline">gate</code> is a function-like object with the following form:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1477041789-1">[</span><span class="n">code</span><span class="w"> </span><span class="p" data-group-id="1477041789-2">[</span><span class="n">sample</span><span class="w"> </span><span class="n">context</span><span class="p" data-group-id="1477041789-2">]</span><span class="p" data-group-id="1477041789-1">]</span></code></pre><p><code class="inline">code</code> is a Nock formula intended to be run with the gate as subject, while
+<code class="inline">gate</code>. A <code class="inline">gate</code> is a function-like object with the following form:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7309144336-1">[</span><span class="n">code</span><span class="w"> </span><span class="p" data-group-id="7309144336-2">[</span><span class="n">sample</span><span class="w"> </span><span class="n">context</span><span class="p" data-group-id="7309144336-2">]</span><span class="p" data-group-id="7309144336-1">]</span></code></pre><p><code class="inline">code</code> is a Nock formula intended to be run with the gate as subject, while
 <code class="inline">sample</code> is a placeholder for arguments to the gate. <code class="inline">context</code> contains any
 additional code or data referenced; this includes at least the standard
 library, but may be larger than it.</p><p>In both <code class="inline">kv</code> and <code class="inline">rm</code> modes, the submitted transaction is a gate, and the
 argument placed in the sample is its opaque order ID. The output expected
-is the following tuple:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1193525116-1">[</span><span class="p" data-group-id="1193525116-2">[</span><span class="n">read</span><span class="o">-</span><span class="n">keyspaces</span><span class="w"> </span><span class="n">write</span><span class="o">-</span><span class="n">keyspaces</span><span class="p" data-group-id="1193525116-2">]</span><span class="w"> </span><span class="n">second</span><span class="o">-</span><span class="n">gate</span><span class="p" data-group-id="1193525116-1">]</span></code></pre><p>In <code class="inline">kv</code> mode, <code class="inline">read-keyspaces</code> and <code class="inline">write-keyspaces</code> are subspaces of the
+is the following tuple:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2678473260-1">[</span><span class="p" data-group-id="2678473260-2">[</span><span class="n">read</span><span class="o">-</span><span class="n">keyspaces</span><span class="w"> </span><span class="n">write</span><span class="o">-</span><span class="n">keyspaces</span><span class="p" data-group-id="2678473260-2">]</span><span class="w"> </span><span class="n">second</span><span class="o">-</span><span class="n">gate</span><span class="p" data-group-id="2678473260-1">]</span></code></pre><p>In <code class="inline">kv</code> mode, <code class="inline">read-keyspaces</code> and <code class="inline">write-keyspaces</code> are subspaces of the
 key-value store which the transaction plans to read or write, respectively.
 The VM may use this information to place locks or otherwise prepare for
 transaction execution. It is an error to read outside the declared
@@ -176,7 +176,7 @@ mode, and a resource machine transaction in <code class="inline">rm</code> mode.
 <p>When the VM's resource machine implementation processes a resource
 transaction, this includes the execution of resource logics in each
 resource. Shielded resource transactions will proceed similarly, but
-within the shielded VM rather than the Nock VM.</p><p>A resource logic is also a gate, and the arguments it takes are the tuple</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6501099870-1">[</span><span class="n">self</span><span class="w"> </span><span class="n">resource</span><span class="o">-</span><span class="n">transaction</span><span class="p" data-group-id="6501099870-1">]</span></code></pre><p>where <code class="inline">self</code> is a copy of the entire resource running the logic, and
+within the shielded VM rather than the Nock VM.</p><p>A resource logic is also a gate, and the arguments it takes are the tuple</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9353280223-1">[</span><span class="n">self</span><span class="w"> </span><span class="n">resource</span><span class="o">-</span><span class="n">transaction</span><span class="p" data-group-id="9353280223-1">]</span></code></pre><p>where <code class="inline">self</code> is a copy of the entire resource running the logic, and
 <code class="inline">resource-transaction</code> is the Nock serialization of the entire resource
 transaction (which includes all resources, in the transparent resource
 machine).</p><p>Its output is a simple boolean: <code class="inline">0</code> for success, <code class="inline">1</code> for failure.</p><h2 id="gas-metering" class="section-heading">
@@ -191,12 +191,12 @@ and incrementing by a defined per-jet constant for each jet invoked.</p>
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
-      <a href="toc.html" class="bottom-actions-button" rel="prev">
+      <a href="data.html" class="bottom-actions-button" rel="prev">
         <span class="subheader">
           ← Previous Page
         </span>
         <span class="title">
-TOC
+Data
         </span>
       </a>
 
@@ -216,6 +216,15 @@ Git
 </div>
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/documentation/vm_interface.livemd">current file</a>)
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">

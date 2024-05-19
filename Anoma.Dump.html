@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>Anoma.Dump — Anoma v0.13.0</title>
+    <title>Anoma.Dump — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Dump</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.14.0)</small>
 
 </h1>
 
@@ -146,7 +146,7 @@ files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
   </a>
   <span class="text">Loading API</span>
 </h3>
-<p>I give access to following public loading functionality</p><ul><li><a href="#launch/2"><code class="inline">launch/2</code></a></li><li><a href="#load/1"><code class="inline">load/1</code></a></li></ul>
+<p>I give access to following public loading functionality</p><ul><li><a href="#launch/2"><code class="inline">launch/2</code></a></li><li><code class="inline">launch/3</code></li><li><a href="#load/1"><code class="inline">load/1</code></a></li></ul>
   </section>
 
 
@@ -165,6 +165,22 @@ files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#t:clock_eng/0" translate="no">clock_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:configuration_eng/0" translate="no">configuration_eng()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:dump/0" translate="no">dump()</a>
 
       </div>
 
@@ -247,6 +263,14 @@ name whose info presented as a map I dump as a binary.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#dump_full_path/2" translate="no">dump_full_path(name, node)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get_all/1" translate="no">get_all(node)</a>
 
       </div>
@@ -283,6 +307,17 @@ name whose info presented as a map I dump as a binary.</p></div>
 
         <div class="summary-synopsis"><p>I launch a node given a file containing a binary version of an 12-tuple
 with appropriate info in the following order</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#launch/4" translate="no">launch(file, name, sup_name, config)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I have the same functionality as <a href="#launch/2"><code class="inline">launch/2</code></a> but start the node using a
+named supervisor.</p></div>
 
     </div>
 
@@ -338,6 +373,74 @@ given configuration.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> clock_eng() :: {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Clock.html#t:t/0">Anoma.Node.Clock.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:configuration_eng/0">
+
+  <div class="detail-header">
+    <a href="#t:configuration_eng/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">configuration_eng()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> configuration_eng() ::
+  {<a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(), <a href="Anoma.Node.Configuration.html#t:t/0">Anoma.Node.Configuration.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:dump/0">
+
+  <div class="detail-header">
+    <a href="#t:dump/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">dump()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> dump() :: %{
+  router: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>(),
+  transport: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>(),
+  router_state: <a href="Anoma.Node.Router.html#t:t/0">Anoma.Node.Router.t</a>(),
+  transport_id: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  mempool_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  executor_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  storage_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  configuration: <a href="#t:configuration_eng/0">configuration_eng</a>(),
+  logger: <a href="#t:log_eng/0">log_eng</a>(),
+  clock: <a href="#t:clock_eng/0">clock_eng</a>(),
+  ordering: <a href="#t:ord_eng/0">ord_eng</a>(),
+  mempool: <a href="#t:mem_eng/0">mem_eng</a>(),
+  pinger: <a href="#t:ping_eng/0">ping_eng</a>(),
+  executor: <a href="#t:ex_eng/0">ex_eng</a>(),
+  storage: <a href="#t:storage_eng/0">storage_eng</a>(),
+  storage_data: <a href="#t:stores/0">stores</a>(),
+  qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
+  use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
+}</pre>
 
       </div>
 
@@ -545,6 +648,23 @@ for storing data and instead dump the files in the immadiate app
 folder.</p><p>The map typing can be seen in <code class="inline">get_all</code></p>
   </section>
 </section>
+<section class="detail" id="dump_full_path/2">
+
+  <div class="detail-header">
+    <a href="#dump_full_path/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dump_full_path(name, node)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="get_all/1">
 
   <div class="detail-header">
@@ -561,23 +681,7 @@ folder.</p><p>The map typing can be seen in <code class="inline">get_all</code><
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_all(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: %{
-  router: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
-  mempool_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
-  executor_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
-  logger: <a href="#t:log_eng/0">log_eng</a>(),
-  clock: <a href="#t:clock_eng/0">clock_eng</a>(),
-  ordering: <a href="#t:ord_eng/0">ord_eng</a>(),
-  mempool: <a href="#t:mem_eng/0">mem_eng</a>(),
-  pinger: <a href="#t:ping_eng/0">ping_eng</a>(),
-  executor: <a href="#t:ex_eng/0">ex_eng</a>(),
-  storage: <a href="#t:storage_eng/0">storage_eng</a>(),
-  storage_data: <a href="#t:stores/0">stores</a>(),
-  qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
-  order: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
-  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(),
-  use_rocks: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
-}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_all(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="#t:dump/0">dump</a>()</pre>
 
       </div>
 
@@ -602,9 +706,14 @@ And turn the info into a tuple</li></ul>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> get_state(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: %{
-  router: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  router: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>(),
+  transport: <a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>(),
+  router_state: <a href="Anoma.Node.Router.html#t:t/0">Anoma.Node.Router.t</a>(),
+  transport_id: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
   mempool_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
   executor_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  storage_topic: <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>(),
+  configuration: <a href="#t:configuration_eng/0">configuration_eng</a>(),
   logger: <a href="#t:log_eng/0">log_eng</a>(),
   clock: <a href="#t:clock_eng/0">clock_eng</a>(),
   ordering: <a href="#t:ord_eng/0">ord_eng</a>(),
@@ -668,6 +777,7 @@ And turn the info into a tuple</li></ul>
   {:ok,
    %Anoma.Node{
      clock: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     configuration: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      executor: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      executor_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      logger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -676,7 +786,9 @@ And turn the info into a tuple</li></ul>
      ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      pinger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
      router: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+     storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     storage_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     transport: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
    }}
   | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
@@ -690,6 +802,47 @@ In particular, I check that the order of the last block is less than
 that of the mempool dumped. If not, I manually remove the last block.</p><p>Check whether your transactions have had an assigned worker. If not,
 relaunch them directly. If blocks were out of sync with mempool,
 relaunch the executions as well.</p>
+  </section>
+</section>
+<section class="detail" id="launch/4">
+
+  <div class="detail-header">
+    <a href="#launch/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">launch(file, name, sup_name, config)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Anoma.Configuration.html#t:configuration_map/0">Anoma.Configuration.configuration_map</a>()) ::
+  {:ok,
+   %Anoma.Node{
+     clock: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     configuration: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     executor: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     executor_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     logger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     mempool_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     pinger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     router: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     storage_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     transport: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+   }}
+  | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>I have the same functionality as <a href="#launch/2"><code class="inline">launch/2</code></a> but start the node using a
+named supervisor.</p>
   </section>
 </section>
 <section class="detail" id="load/1">
@@ -708,7 +861,7 @@ relaunch the executions as well.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> load(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> load(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>() | <a href="#t:dump/0">dump</a>()</pre>
 
       </div>
 
@@ -750,6 +903,15 @@ resolution and for the second atom.</p>
 
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/lib/anoma/dump.ex">current file</a>)
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">

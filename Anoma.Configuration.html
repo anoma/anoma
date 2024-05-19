@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.13.0">
+    <meta name="project" content="Anoma v0.14.0">
 
 
-    <title>Anoma.Configuration — Anoma v0.13.0</title>
+    <title>Anoma.Configuration — Anoma v0.14.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87B1BF7E.js"></script>
+    <script src="dist/sidebar_items-708A0CE1.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.13.0
+          v0.14.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Configuration</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.13.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.14.0)</small>
 
 </h1>
 
@@ -139,7 +139,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
   </a>
   <span class="text">Public API</span>
 </h3>
-<ul><li><a href="#create_min/0"><code class="inline">create_min/0</code></a></li><li><a href="#create_min/7"><code class="inline">create_min/7</code></a></li><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><code class="inline">parse_node/1</code></li><li><a href="#parse/1"><code class="inline">parse/1</code></a></li></ul>
+<ul><li><a href="#configuration/0"><code class="inline">configuration/0</code></a></li><li><a href="#configuration/1"><code class="inline">configuration/1</code></a></li><li><a href="#read_configuration/1"><code class="inline">read_configuration/1</code></a></li><li><a href="#node_settings/1"><code class="inline">node_settings/1</code></a></li><li><a href="#save/1"><code class="inline">save/1</code></a></li><li><a href="#save/2"><code class="inline">save/2</code></a></li><li><a href="#locate_dump_file/1"><code class="inline">locate_dump_file/1</code></a></li><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><a href="#launch_min/2"><code class="inline">launch_min/2</code></a></li><li><a href="#launch_min/3"><code class="inline">launch_min/3</code></a></li></ul>
   </section>
 
 
@@ -150,6 +150,52 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:configruation/0" translate="no">configruation()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:configuration_map/0" translate="no">configuration_map()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:node_settings/0" translate="no">node_settings()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:section_format/0" translate="no">section_format()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:section_map/0" translate="no">section_map()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -157,50 +203,77 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_min/0" translate="no">create_min()</a>
+        <a href="#configuration/1" translate="no">configuration(user_map \\ %{})</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>I create a minimal configuration file on application startup unless the
-environment is :test</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_min/7" translate="no">create_min(config_name, name, qualified, order, snap, block, timer)</a>
+        <a href="#configuration_format/0" translate="no">configuration_format()</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>I create a minimal configuration file on application startup</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#launch_min/1" translate="no">launch_min(file_path)</a>
+        <a href="#default_configuration_location/1" translate="no">default_configuration_location(env \\ Mix.env())</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Given a file path to a TOML file with minimal node startup I launch the
-node with the appopriate name</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse/1" translate="no">parse(name)</a>
+        <a href="#default_data_location/1" translate="no">default_data_location(env \\ Mix.env())</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>I decode the TOML file provided a path to it, ignoring if
-unsuccesful</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parse_min/1" translate="no">parse_min(map)</a>
+        <a href="#is_pinger/1" translate="no">is_pinger(field)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#launch_min/2" translate="no">launch_min(parsed_map, rocks_flag \\ false)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Given a parsed map with minimal node startup info I launch the node with
+the appopriate name</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#launch_min/3" translate="no">launch_min(parsed_map, rocks_flag, name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I have the same functionality as <a href="#launch_min/2"><code class="inline">launch_min/2</code></a> but start the node using
+a named supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#locate_dump_file/1" translate="no">locate_dump_file(path)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#node_settings/1" translate="no">node_settings(configuration)</a>
 
       </div>
 
@@ -211,7 +284,15 @@ and put it in the appropriate keyword list</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_config/2" translate="no">remove_config(file_path, env \\ Application.get_env(:anoma, :env))</a>
+        <a href="#read_configuration/1" translate="no">read_configuration(file)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#save/2" translate="no">save(config, file \\ default_configuration_location())</a>
 
       </div>
 
@@ -222,6 +303,133 @@ and put it in the appropriate keyword list</p></div>
   </section>
 
 
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:configruation/0">
+
+  <div class="detail-header">
+    <a href="#t:configruation/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">configruation()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> configruation() :: [{<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="#t:section_format/0">section_format</a>()}]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:configuration_map/0">
+
+  <div class="detail-header">
+    <a href="#t:configuration_map/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">configuration_map()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> configuration_map() :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="#t:section_map/0">section_map</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:node_settings/0">
+
+  <div class="detail-header">
+    <a href="#t:node_settings/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">node_settings()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> node_settings() :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:section_format/0">
+
+  <div class="detail-header">
+    <a href="#t:section_format/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">section_format()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> section_format() :: [{<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), (<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>() -&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:section_map/0">
+
+  <div class="detail-header">
+    <a href="#t:section_map/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">section_map()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> section_map() :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
   <section id="functions" class="details-list">
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
@@ -230,38 +438,16 @@ and put it in the appropriate keyword list</p></div>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="create_min/0">
+<section class="detail" id="configuration/1">
+
+    <span id="configuration/0"></span>
 
   <div class="detail-header">
-    <a href="#create_min/0" class="detail-link" title="Link to this function">
+    <a href="#configuration/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">create_min()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>I create a minimal configuration file on application startup unless the
-environment is :test</p><p>The configuration file is created with the [node] header and with keys:</p><p>name = 'name'
-qualified = 'qualified_name'
-order = 'order_name'
-snapshot_path = 'path'
-block_storage = 'block'
-ping_time = 10000</p><p>Check <a href="#parse_min/1"><code class="inline">parse_min/1</code></a> to see how these will be made into node parameters</p><p>The file is wirtten to the XDG-specified config folder unless the
-environment is :test</p>
-  </section>
-</section>
-<section class="detail" id="create_min/7">
-
-  <div class="detail-header">
-    <a href="#create_min/7" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">create_min(config_name, name, qualified, order, snap, block, timer)</h1>
+    <h1 class="signature" translate="no">configuration(user_map \\ %{})</h1>
 
 
   </div>
@@ -270,95 +456,203 @@ environment is :test</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> create_min(
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  :no_timer | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()
-) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> configuration(<a href="#t:configuration_map/0">configuration_map</a>()) :: <a href="#t:configuration_map/0">configuration_map</a>()</pre>
 
       </div>
 
-<p>I create a minimal configuration file on application startup</p><p>Given arguments config_name, name, qualified, order, snap, block, timer
-in that order, the configuration file is created with the [node] header
-and with keys:</p><p>name = 'name'
-qualified = 'qualified'
-order = 'order'
-snapshot_path = 'path'
-block_storage = 'block'
-ping_time = maybe_time</p><p>where maybe_timer is time if the latter is an integer and 'no_timer'
-if time == :no_timer</p><p>Check <a href="#parse_min/1"><code class="inline">parse_min/1</code></a> to see how these will be made into node parameters</p><p>The file is wirtten to the XDG-specified config folder. If the
-environment is :test, the file is written in immediate folder with name
-config_name</p>
+
   </section>
 </section>
-<section class="detail" id="launch_min/1">
+<section class="detail" id="configuration_format/0">
 
   <div class="detail-header">
-    <a href="#launch_min/1" class="detail-link" title="Link to this function">
+    <a href="#configuration_format/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">launch_min(file_path)</h1>
+    <h1 class="signature" translate="no">configuration_format()</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>Given a file path to a TOML file with minimal node startup I launch the
-node with the appopriate name</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> configuration_format() :: <a href="#t:configruation/0">configruation</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
-<section class="detail" id="parse/1">
+<section class="detail" id="default_configuration_location/1">
+
+    <span id="default_configuration_location/0"></span>
 
   <div class="detail-header">
-    <a href="#parse/1" class="detail-link" title="Link to this function">
+    <a href="#default_configuration_location/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">parse(name)</h1>
+    <h1 class="signature" translate="no">default_configuration_location(env \\ Mix.env())</h1>
 
 
   </div>
 
   <section class="docstring">
 
-<p>I decode the TOML file provided a path to it, ignoring if
-unsuccesful</p>
+
   </section>
 </section>
-<section class="detail" id="parse_min/1">
+<section class="detail" id="default_data_location/1">
+
+    <span id="default_data_location/0"></span>
 
   <div class="detail-header">
-    <a href="#parse_min/1" class="detail-link" title="Link to this function">
+    <a href="#default_data_location/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">parse_min(map)</h1>
+    <h1 class="signature" translate="no">default_data_location(env \\ Mix.env())</h1>
 
 
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="is_pinger/1">
+
+  <div class="detail-header">
+    <a href="#is_pinger/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">is_pinger(field)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> is_pinger(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="launch_min/2">
+
+    <span id="launch_min/1"></span>
+
+  <div class="detail-header">
+    <a href="#launch_min/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">launch_min(parsed_map, rocks_flag \\ false)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> launch_min(<a href="#t:configuration_map/0">configuration_map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
+<p>Given a parsed map with minimal node startup info I launch the node with
+the appopriate name</p>
+  </section>
+</section>
+<section class="detail" id="launch_min/3">
+
+  <div class="detail-header">
+    <a href="#launch_min/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">launch_min(parsed_map, rocks_flag, name)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> launch_min(<a href="#t:configuration_map/0">configuration_map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:name/0">Supervisor.name</a>()) ::
+  <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
+<p>I have the same functionality as <a href="#launch_min/2"><code class="inline">launch_min/2</code></a> but start the node using
+a named supervisor.</p>
+  </section>
+</section>
+<section class="detail" id="locate_dump_file/1">
+
+  <div class="detail-header">
+    <a href="#locate_dump_file/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">locate_dump_file(path)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> locate_dump_file(<a href="#t:configuration_map/0">configuration_map</a>()) :: <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="node_settings/1">
+
+  <div class="detail-header">
+    <a href="#node_settings/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">node_settings(configuration)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> node_settings(<a href="#t:configuration_map/0">configuration_map</a>()) :: <a href="Anoma.Node.html#t:min_engine_configuration/0">Anoma.Node.min_engine_configuration</a>()</pre>
+
+      </div>
 
 <p>Given a map, I decode all the needed info for a minimal node startup
 and put it in the appropriate keyword list</p>
   </section>
 </section>
-<section class="detail" id="remove_config/2">
-
-    <span id="remove_config/1"></span>
+<section class="detail" id="read_configuration/1">
 
   <div class="detail-header">
-    <a href="#remove_config/2" class="detail-link" title="Link to this function">
+    <a href="#read_configuration/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove_config(file_path, env \\ Application.get_env(:anoma, :env))</h1>
+    <h1 class="signature" translate="no">read_configuration(file)</h1>
 
 
   </div>
@@ -367,7 +661,32 @@ and put it in the appropriate keyword list</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> remove_config(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> read_configuration(<a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: <a href="#t:configuration_map/0">configuration_map</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="save/2">
+
+    <span id="save/1"></span>
+
+  <div class="detail-header">
+    <a href="#save/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">save(config, file \\ default_configuration_location())</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> save(<a href="#t:configuration_map/0">configuration_map</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()) :: <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>()</pre>
 
       </div>
 
@@ -380,6 +699,15 @@ and put it in the appropriate keyword list</p>
 
       <footer class="footer">
         <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/lib/anoma/configuration.ex">current file</a>)
+
+            </span>
 
           <span class="line">
             <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
