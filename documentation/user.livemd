@@ -1,6 +1,6 @@
 <!-- livebook:{"persist_outputs":true} -->
 
-# Analysis
+# User
 
 ## Index
 1. [Toc](./toc.livemd)
@@ -25,9 +25,10 @@
    3. [Setting Up](./hoon/setting-up.livemd)
 6. [Analysis](./analysis.livemd)
    1. [Fema Analysis Pinger](./analysis/fema-analysis-pinger.livemd)
-7. [Logging](./logging.livemd)
-8. [Vm_interface](./vm_interface.livemd)
+7. [Vm_interface](./vm_interface.livemd)
 
-## Analysis
+## User Guide
 
-Documents in this section cover analysis over the code in the repository.
+Welcome to the Anoma documentation for users.
+
+These documents contain pertinent information about your local Anoma node.

@@ -1,0 +1,71 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Data
+
+## Index
+
+1. [Toc](./../toc.livemd)
+2. [User](./../user.livemd)
+   1. [Data](./../user/data.livemd)
+3. [Contributing](./../contributing.livemd)
+   1. [Understanding Any Module](./../contributing/understanding-any-module.livemd)
+   2. [Writing Documents](./../contributing/writing-documents.livemd)
+   3. [Git](./../contributing/git.livemd)
+   4. [Hoon](./../contributing/hoon.livemd)
+   5. [Iex](./../contributing/iex.livemd)
+   6. [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd)
+   7. [Observer](./../contributing/observer.livemd)
+   8. [Testing](./../contributing/testing.livemd)
+      1. [Running Tests](./../contributing/testing/running-tests.livemd)
+      2. [Writing Tests](./../contributing/testing/writing-tests.livemd)
+4. [Visualization](./../visualization.livemd)
+   1. [Actors](./../visualization/actors.livemd)
+5. [Hoon](./../hoon.livemd)
+   1. [Calling](./../hoon/calling.livemd)
+   2. [Dumping](./../hoon/dumping.livemd)
+   3. [Setting Up](./../hoon/setting-up.livemd)
+6. [Analysis](./../analysis.livemd)
+   1. [Fema Analysis Pinger](./../analysis/fema-analysis-pinger.livemd)
+7. [Vm_interface](./../vm_interface.livemd)
+
+## Where Anoma saves State
+
+Anoma follows [XDG](https://en.wikipedia.org/wiki/Freedesktop.org) conventions for state stored on the operating system:
+
+1. Database dumps and Database tables are stored in `$XDG_DATA_HOME/anoma_env`
+2. Configuration files are stored in `$XDG_CONFIG_HOME/anoma_env`
+
+## Configuration Files
+
+Currently Anoma stores a file `config.toml` with minimal settings for your Anoma node.
+
+## Configuration Format
+
+TODO write about each field or link to a relavent section
+
+## Sending in a custom configuration file
+
+TODO explain how to do this
+
+## Data Files
+
+Anoma stores a few different files in the `$XDG_DATA_HOME`
+
+1. [Mnesia](https://en.wikipedia.org/wiki/Mnesia) tables backed by [RocksDB](https://en.wikipedia.org/wiki/RocksDB)
+2. Anoma dump files.
+
+The `dump` file contains all information necessary to restore `Anoma` to the time when the `dump` command was used on `Anoma`.
+
+Beware this will overwrite the local [Mnesia](https://en.wikipedia.org/wiki/Mnesia) tables.
+
+The Mnesia tables are created every time one runs Anoma.
+
+These Mnesia tables contain chain information that the Anoma execution environment can query.
+
+<!-- livebook:{"break_markdown":true} -->
+
+To learn more about our data format, please checkout the developer's section on [Mnesia Vs Actor State](./../contributing/mnesia-vs-actor-state.livemd).
+
+## Launching with a given dump file
+
+TODO write how to send in the CLI arguments to restore a dump

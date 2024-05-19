@@ -2,6 +2,7 @@
   {"documentation",
    [
      {"toc", []},
+     {"user", []},
      {"contributing",
       [
         {"understanding-any-module", []},
