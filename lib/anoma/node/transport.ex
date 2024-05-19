@@ -44,6 +44,7 @@ defmodule Anoma.Node.Transport do
     field(:router, Router.addr())
     field(:logger, Router.addr())
     field(:node_internal_id, Id.t())
+    field(:transport_internal_id, Id.t())
     field(:connection_pool, Supervisor.supervisor())
 
     field(:node_connections, MapSetMap.t(Id.Extern.t(), Router.addr()),
@@ -80,11 +81,12 @@ defmodule Anoma.Node.Transport do
     field(:known_engines, %{Id.Extern.t() => Id.Extern.t()}, default: %{})
   end
 
-  def init({router, node_internal_id, transport_pool}) do
+  def init({router, node_internal_id, transport_id, transport_pool}) do
     {:ok,
      %Transport{
        router: router,
        node_internal_id: node_internal_id,
+       transport_internal_id: transport_id,
        connection_pool: transport_pool
      }}
   end

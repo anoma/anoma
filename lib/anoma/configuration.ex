@@ -40,7 +40,7 @@ defmodule Anoma.Configuration do
   ############################################################
 
   @dump_format [
-    {"dump", &is_binary/1, Directories.data("anoma_#{Mix.env()}.dmp")}
+    {"dump", &is_binary/1, "anoma_#{Mix.env()}.dmp"}
   ]
   @node_format [
     {"block_storage", &is_binary/1, "anoma_block"},
@@ -57,8 +57,12 @@ defmodule Anoma.Configuration do
   def configuration_format(), do: @configuration_format
 
   @spec default_configuration_location() :: Path.t()
-  def default_configuration_location() do
-    Directories.configuration("/anoma_#{Mix.env()}.toml")
+  def default_configuration_location(env \\ Mix.env()) do
+    Directories.configuration("/anoma_#{env}.toml")
+  end
+
+  def default_data_location(env \\ Mix.env()) do
+    Directories.data("anoma_#{env}.dmp")
   end
 
   ############################################################
@@ -103,7 +107,8 @@ defmodule Anoma.Configuration do
          order: node["order"] |> String.to_atom()
        }},
       {:block_storage, node["block_storage"] |> String.to_atom()},
-      {:ping_time, node["ping_time"] |> maybe_ping()}
+      {:ping_time, node["ping_time"] |> maybe_ping()},
+      {:configuration, configuration}
     ]
   end
 
@@ -216,7 +221,8 @@ defmodule Anoma.Configuration do
       new_storage: true,
       name: Keyword.get(node_settings, :name),
       use_rocks: rocks_flag,
-      settings: settings
+      settings: settings,
+      configuration: parsed_map
     ]
   end
 

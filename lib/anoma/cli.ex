@@ -43,6 +43,15 @@ defmodule Anoma.Cli do
         name: "shutdown",
         about: "Shutdowns the server"
       ],
+      snapshot: [
+        name: "snapshot",
+        about: "Takes a snapshot of the server"
+      ],
+      delete_dump: [
+        name: "delete-dump",
+        about:
+          "Deletes the dump file of Anoma, giving a fresh slate. Works even when the node is offline."
+      ],
       get: [
         name: "get",
         about:

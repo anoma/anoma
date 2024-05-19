@@ -27,6 +27,12 @@ defmodule Mix.Tasks.Client do
 
       {[:shutdown], %{}} ->
         run_client_command(:shutdown)
+
+      {[:delete_dump], %{}} ->
+        run_client_command(:delete_dump)
+
+      {[:snapshot], %{}} ->
+        run_client_command(:snapshot)
     end
   end
 

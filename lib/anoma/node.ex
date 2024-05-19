@@ -49,6 +49,7 @@ defmodule Anoma.Node do
     field(:clock, Router.addr())
     field(:logger, Router.addr())
     field(:storage, Router.addr())
+    field(:configuration, Router.addr())
     field(:storage_topic, Router.addr())
   end
 
@@ -56,7 +57,8 @@ defmodule Anoma.Node do
           new_storage: boolean(),
           name: atom(),
           use_rocks: boolean(),
-          settings: engine_configuration()
+          settings: engine_configuration(),
+          configuration: Anoma.Configuration.configuration_map() | nil
         ]
 
   @type min_engine_configuration() :: [
@@ -64,11 +66,13 @@ defmodule Anoma.Node do
           name: atom(),
           snapshot_path: Noun.t(),
           storage_data: Storage.t(),
-          block_storage: atom()
+          block_storage: atom(),
+          configuration: Anoma.Configuration.configuration_map() | nil
         ]
 
   @type engine_configuration() :: %{
           clock: {Router.addr() | nil, Clock.t()},
+          configuration: {Router.addr() | nil, Anoma.Node.Configuration.t()},
           pinger: {Router.addr() | nil, Pinger.t()},
           logger: {Router.addr() | nil, Logger.t()},
           ordering: {Router.addr() | nil, Ordering.t()},
@@ -132,23 +136,26 @@ defmodule Anoma.Node do
 
       if Mix.env() in [:dev, :prod] do
         # dump the initial state so our keys are persisted
-        Anoma.Dump.dump("dump.txt", name)
+        Anoma.Dump.dump("node_keys.dmp", name)
       end
 
       {:ok, pid}
     end
   end
 
+  @spec init(Anoma.Dump.dump()) :: any()
   def init(args) do
     {log_id, log_st} = args[:logger]
     {clock_id, _clock_st} = args[:clock]
+    {config_id, config_st} = args[:configuration]
     {ord_id, ord_st} = args[:ordering]
     {mem_id, mem_st} = args[:mempool]
     {ping_id, ping_st} = args[:pinger]
     {ex_id, ex_st} = args[:executor]
     {storage_id, storage_st} = args[:storage]
 
-    {:ok, router, transport} = start_router(args[:router], args[:transport])
+    {:ok, router, transport} =
+      start_router(args[:router], args[:transport], args[:router_state])
 
     {:ok, storage_topic} = new_topic(router, args[:storage_topic])
 
@@ -174,6 +181,14 @@ defmodule Anoma.Node do
         Logger,
         %Logger{log_st | clock: clock, storage: storage},
         id: log_id
+      )
+
+    {:ok, configuration} =
+      start_engine(
+        router,
+        Anoma.Node.Configuration,
+        %Anoma.Node.Configuration{config_st | logger: logger},
+        id: config_id
       )
 
     {:ok, ordering} =
@@ -248,6 +263,7 @@ defmodule Anoma.Node do
        mempool: mempool,
        pinger: pinger,
        clock: clock,
+       configuration: configuration,
        logger: logger,
        executor_topic: executor_topic,
        mempool_topic: mempool_topic,
@@ -268,6 +284,8 @@ defmodule Anoma.Node do
 
     %{
       clock: {nil, %Clock{}},
+      configuration:
+        {nil, %Anoma.Node.Configuration{configuration: args[:configuration]}},
       logger: {nil, %Logger{}},
       ordering: {nil, %Ordering{}},
       executor: {nil, %Executor{ambiant_env: env}},
@@ -293,11 +311,11 @@ defmodule Anoma.Node do
     Anoma.Block.create_table(block_storage, rocks)
   end
 
-  defp start_router(router, transport) do
-    if router == nil || transport == nil do
+  defp start_router(router, transport, router_state) do
+    if router == nil || transport == nil || router_state == nil do
       Router.start()
     else
-      Router.start({%Id{external: router}, %Id{external: transport}})
+      Router.start({router, transport, router_state})
     end
   end
 
@@ -308,9 +326,7 @@ defmodule Anoma.Node do
     if options[:id] == nil do
       Router.start_engine(router, module, state)
     else
-      Router.start_engine(router, module, state,
-        id: %Id{external: options[:id]}
-      )
+      Router.start_engine(router, module, state, id: options[:id])
     end
   end
 

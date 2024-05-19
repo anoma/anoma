@@ -92,6 +92,20 @@ defmodule Anoma.Crypto.Id do
     %Extern{sign: fun.(sign), encrypt: fun.(encrypt)}
   end
 
+  @doc """
+  Grabs the external id of a given key
+
+  Useful when we want to use id and the external as interchangeable
+  """
+  @spec external_id(t() | Extern.t()) :: Extern.t()
+  def external_id(%__MODULE__{external: extern}) do
+    extern
+  end
+
+  def external_id(extern = %Extern{}) do
+    extern
+  end
+
   def truncated_key_string(key) do
     key |> Base.encode16(case: :lower) |> String.slice(0..5)
   end

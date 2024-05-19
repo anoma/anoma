@@ -22,7 +22,7 @@ defmodule Anoma.Cli.Client do
     # load info of the running node, erroring if it appears not to exist, and
     # attempt to introduce ourselves to it
     # there should be a better way to find out its id(s)
-    dump_path = Anoma.System.Directories.data("dump.txt")
+    dump_path = Anoma.System.Directories.data("node_keys.dmp")
     sock_path = Anoma.System.Directories.data("local.sock")
 
     if not File.exists?(sock_path) do
@@ -33,33 +33,48 @@ defmodule Anoma.Cli.Client do
     primary = Anoma.Dump.load(dump_path)
 
     # tell our transport how to reach the node
-    Transport.learn_node(transport, primary.router, {:unix, sock_path})
+    Transport.learn_node(
+      transport,
+      primary.router.external,
+      {:unix, sock_path}
+    )
+
     # and how to reach its transport engine and mempool and storage
-    Transport.learn_engine(transport, primary.transport, primary.router)
+    Transport.learn_engine(
+      transport,
+      primary.transport_id,
+      primary.router.external
+    )
 
     Transport.learn_engine(
       transport,
       elem(primary.mempool, 0),
-      primary.router
+      primary.router.external
     )
 
     Transport.learn_engine(
       transport,
       elem(primary.ordering, 0),
-      primary.router
+      primary.router.external
     )
 
     Transport.learn_engine(
       transport,
-      primary.router,
-      primary.router
+      elem(primary.configuration, 0),
+      primary.router.external
+    )
+
+    Transport.learn_engine(
+      transport,
+      primary.router.external,
+      primary.router.external
     )
 
     # form an address.  this should be abstracted properly
     other_transport_addr = %{
       router
       | server: nil,
-        id: primary.transport
+        id: primary.transport_id
     }
 
     # tell the other router how to reach us
@@ -76,6 +91,8 @@ defmodule Anoma.Cli.Client do
     with {:error, :timed_out} <-
            Router.call(other_transport_addr, :ping, 1000) do
       IO.puts("Unable to connect to local node")
+      IO.puts("Trying offline commands")
+      perform_offline(operation)
       System.halt(1)
     end
 
@@ -122,7 +139,7 @@ defmodule Anoma.Cli.Client do
     other_router_addr = %{
       router
       | server: nil,
-        id: primary.router
+        id: primary.router.external
     }
 
     Anoma.Node.Router.shutdown_node(other_router_addr)
@@ -145,6 +162,49 @@ defmodule Anoma.Cli.Client do
 
       {:ok, value} ->
         IO.puts(inspect(value))
+    end
+  end
+
+  defp perform(:snapshot, primary, router) do
+    other_configuration_addr = %{
+      router
+      | server: nil,
+        id: elem(primary.configuration, 0)
+    }
+
+    Anoma.Node.Configuration.snapshot(other_configuration_addr)
+  end
+
+  defp perform(:delete_dump, primary, router) do
+    other_configuration_addr = %{
+      router
+      | server: nil,
+        id: elem(primary.configuration, 0)
+    }
+
+    Anoma.Node.Configuration.delete_dump(other_configuration_addr)
+  end
+
+  def perform_offline(:delete_dump) do
+    # Assume server is running prod
+    config = Anoma.Configuration.default_configuration_location(:prod)
+
+    dump_file =
+      if File.exists?(config) do
+        config
+        |> Anoma.Configuration.read_configuration()
+        |> Anoma.Configuration.locate_dump_file()
+      else
+        Anoma.Configuration.default_data_location(:prod)
+      end
+
+    if dump_file && File.exists?(dump_file) do
+      IO.puts("Deleting dump file: #{dump_file}")
+      File.rm!(dump_file)
+    else
+      IO.puts(
+        "Can not find Dump file, please delete the dumped data yourself"
+      )
     end
   end
 end

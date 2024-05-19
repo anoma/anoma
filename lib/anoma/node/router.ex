@@ -241,6 +241,7 @@ defmodule Anoma.Node.Router do
 
   @type engine_options() ::
           {:id, Id.t()}
+          | {:id, Id.Extern.t()}
           | {:supervisor, Supervisor.supervisor()}
           | {:supvisor_mod, atom()}
 
@@ -287,8 +288,8 @@ defmodule Anoma.Node.Router do
     field(:msg_queue, map(), default: %{})
   end
 
-  @spec start_link({Id.t(), addr(), addr()}) :: GenServer.on_start()
-  def start_link(init = {_, %{server: name}, _}) do
+  @spec start_link({Id.t(), addr(), addr(), t()}) :: GenServer.on_start()
+  def start_link(init = {_, %{server: name}, _, _}) do
     GenServer.start_link(__MODULE__, init, name: name)
   end
 
@@ -300,11 +301,11 @@ defmodule Anoma.Node.Router do
   Starts a new router with the given cryptographic ID for itself, and another
   for the transport engine.  On success, returns {:ok, router_addr, transport_addr}
   """
-  @spec start({Id.t(), Id.t()}) ::
+  @spec start({Id.t(), Id.t(), Router.t()}) ::
           :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
           | {:ok, Addr.t(), Addr.t()}
-  def start({router_id, transport_id}) do
+  def start({router_id, transport_id, router_state}) do
     supervisor = process_name(:supervisor, router_id.external)
 
     {:ok, _} =
@@ -334,7 +335,8 @@ defmodule Anoma.Node.Router do
     with {:ok, _} <-
            DynamicSupervisor.start_child(
              supervisor,
-             {__MODULE__, {router_id, router_addr, transport_addr}}
+             {__MODULE__,
+              {router_id, router_addr, transport_addr, router_state}}
            ),
          {:ok, connection_pool} <-
            DynamicSupervisor.start_child(supervisor, Transport.Supervisor),
@@ -343,7 +345,7 @@ defmodule Anoma.Node.Router do
              supervisor,
              {Anoma.Node.Router.Engine,
               {router_addr, Transport, transport_id,
-               {router_addr, router_id, connection_pool}}}
+               {router_addr, router_id, transport_id, connection_pool}}}
            ) do
       {:ok, router_addr, transport_addr}
     end
@@ -354,7 +356,7 @@ defmodule Anoma.Node.Router do
   """
   @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t(), Addr.t()}
   def start() do
-    start({Id.new_keypair(), Id.new_keypair()})
+    start({Id.new_keypair(), Id.new_keypair(), %Router{}})
   end
 
   ############################################################
@@ -388,7 +390,9 @@ defmodule Anoma.Node.Router do
 
   ### Options
 
-  - `id` - An already created ID for the node
+  - `id` - An already created ID for the node. This can be an external
+  or internal ID.
+
   """
   @spec start_engine(Addr.t(), atom(), term(), [engine_options()]) ::
           {:ok, Addr.t()}
@@ -406,6 +410,7 @@ defmodule Anoma.Node.Router do
       )
 
     id = keys[:id]
+    external = Id.external_id(id)
 
     with {:ok, _} <-
            keys[:supervisor_mod].start_child(
@@ -415,8 +420,8 @@ defmodule Anoma.Node.Router do
       {:ok,
        %Addr{
          router: router,
-         id: id.external,
-         server: process_name(module, id.external)
+         id: external,
+         server: process_name(module, external)
        }}
     end
   end
@@ -561,17 +566,16 @@ defmodule Anoma.Node.Router do
     Router.cast(router, :shutdown_everything)
   end
 
+  def dump_state(router) do
+    GenServer.call(router, :dump)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
   def handle_cast({:init_local_engine, id, server}, s) do
-    s = %{
-      s
-      | local_engines: Map.put(s.local_engines, id.external, {id, server})
-    }
-
-    {:noreply, s}
+    {:noreply, handle_init_local_engine(id, server, s)}
   end
 
   def handle_cast({:cleanup_local_engine, addr}, s) do
@@ -722,6 +726,18 @@ defmodule Anoma.Node.Router do
   def handle_call({:router_call, src, msg}, _, s) do
     {res, s} = handle_self_call(msg, src, s)
     {:reply, res, s}
+  end
+
+  # TODO Find a better way of dumping
+  def handle_call(:dump, _, s) do
+    {:reply,
+     %__MODULE__{
+       s
+       | local_engine_subs: %{},
+         topic_table: %{},
+         waiting_engines: %{},
+         msg_queue: %{}
+     }, s}
   end
 
   ############################################################
@@ -891,6 +907,27 @@ defmodule Anoma.Node.Router do
   #                          Helpers                         #
   ############################################################
 
+  @spec handle_init_local_engine(
+          Id.t() | Id.Extern.t(),
+          GenServer.server(),
+          t()
+        ) :: t()
+  defp handle_init_local_engine(id = %Id{}, server, s) do
+    %{s | local_engines: Map.put(s.local_engines, id.external, {id, server})}
+  end
+
+  defp handle_init_local_engine(id = %Id.Extern{}, server, s) do
+    %{
+      s
+      | local_engines:
+          if Map.get(s.local_engines, id) do
+            s.local_engines
+          else
+            Map.put(s.local_engines, id, {%Id{external: id}, server})
+          end
+    }
+  end
+
   # A module name A.B is represented by an atom with name
   # "Elixir.A.B"; strip away the "Elixir." part
   defp atom_to_nice_string(atom) do
@@ -918,19 +955,23 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  @spec init({Id.t(), addr(), addr()}) :: {:ok, Router.t()}
-  def init({id, router_addr, transport_addr}) do
+  @spec init({Id.t(), addr(), addr(), t()}) :: {:ok, t()}
+  def init({id, router_addr, transport_addr, router_state}) do
     supervisor = process_name(:supervisor, id.external)
     server = process_name(__MODULE__, id.external)
 
     {:ok,
      %Router{
-       id: id.external,
-       internal_id: id,
-       addr: router_addr,
-       transport: transport_addr,
-       supervisor: supervisor,
-       local_engines: %{id.external => {id, server}}
+       router_state
+       | id: id.external,
+         internal_id: id,
+         addr: router_addr,
+         transport: transport_addr,
+         supervisor: supervisor,
+         local_engines:
+           Map.merge(router_state.local_engines || %{}, %{
+             id.external => {id, server}
+           })
      }}
   end
 
