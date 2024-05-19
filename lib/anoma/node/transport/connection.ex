@@ -9,7 +9,7 @@ defmodule Anoma.Node.Transport.Connection do
     quote do
       # a connection is a type of engine
       # more to come maybe?
-      use Anoma.Node.Router.Engine
+      use Anoma.Node.Router.Engine, restart: :transient
     end
   end
 
