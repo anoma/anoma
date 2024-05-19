@@ -7,7 +7,7 @@ defmodule AnomaTest.Storage do
   doctest(Anoma.Node.Storage)
 
   setup_all do
-    {:ok, router} = Router.start()
+    {:ok, router, _} = Router.start()
 
     {:ok, topic} = Router.new_topic(router)
 

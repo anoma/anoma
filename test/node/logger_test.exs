@@ -9,7 +9,7 @@ defmodule AnomaTest.Node.Logger do
       order: AnomaTest.Logger.Order
     }
 
-    {:ok, router} = Router.start()
+    {:ok, router, _} = Router.start()
 
     {:ok, storage} =
       Router.start_engine(router, Anoma.Node.Storage, storage)

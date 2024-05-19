@@ -42,21 +42,24 @@ defmodule Anoma.Node.Router.Engine do
   @spec start_link({Router.addr(), atom(), Id.t(), term()}) ::
           :ignore | {:error, any()} | {:ok, pid()}
   def start_link({router, mod, id, arg}) do
-    GenServer.start_link(__MODULE__, {router, mod, id, arg},
-      name: Router.process_name(mod, id.external)
+    server = Router.process_name(mod, id.external)
+
+    GenServer.start_link(__MODULE__, {router, mod, id, arg, server},
+      name: server
     )
   end
 
-  @spec init({Router.addr(), atom(), Id.t(), term()}) ::
+  @spec init({Router.addr(), atom(), Id.t(), term(), term()}) ::
           :ignore
           | {:ok, t()}
           | {:ok, any(),
              :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
           | {:stop, any()}
-  def init({router, mod, id, arg}) do
-    GenServer.cast(router.router, {:init_local_engine, id, self()})
+  def init({router, mod, id, arg, server}) do
+    GenServer.cast(router.router, {:init_local_engine, id, server})
     Process.put(:engine_id, id.external)
-    Process.put(:engine_addr, Router.process_name(mod, id.external))
+    Process.put(:engine_server, server)
+
     Process.flag(:trap_exit, true)
 
     postprocess(mod.init(arg), %__MODULE__{router_addr: router, module: mod})
@@ -74,6 +77,75 @@ defmodule Anoma.Node.Router.Engine do
           | {:stop, any(), any()}
   def handle_cast({:router_cast, src, msg}, state = %__MODULE__{}) do
     postprocess(state.module.handle_cast(msg, src, state.module_state), state)
+  end
+
+  def handle_cast({:router_external_cast, src, msg}, state = %__MODULE__{}) do
+    # we should have a set of expected message shapes for the engine, and
+    # discard messages which do not fit
+    case Anoma.Serialise.unpack(msg) do
+      {:ok, msg} ->
+        postprocess(
+          state.module.handle_cast(msg, src, state.module_state),
+          state
+        )
+
+      _err ->
+        # drop; should perhaps log and distrust and whatnot (is this actually
+        # good reason for distrust?)
+        {:noreply, state}
+    end
+  end
+
+  def handle_cast(
+        {:router_external_call, src, cookie, msg},
+        state = %__MODULE__{router_addr: router}
+      ) do
+    # ditto, and also the result should be postprocessed more appropriately
+    # before being sent off
+    case Anoma.Serialise.unpack(msg) do
+      {:ok, msg} ->
+        result =
+          case state.module.handle_call(msg, src, state.module_state) do
+            {:reply, res, mod_state} ->
+              Router.send_response(
+                router,
+                src,
+                cookie,
+                Anoma.Serialise.pack(res)
+              )
+
+              {:noreply, mod_state}
+
+            {:reply, res, mod_state, cont} ->
+              Router.send_response(
+                router,
+                src,
+                cookie,
+                Anoma.Serialise.pack(res)
+              )
+
+              {:noreply, mod_state, cont}
+
+            {:stop, reason, res, mod_state} ->
+              Router.send_response(
+                router,
+                src,
+                cookie,
+                Anoma.Serialise.pack(res)
+              )
+
+              {:stop, reason, mod_state}
+
+            result ->
+              result
+          end
+
+        postprocess(result, state)
+
+      _ ->
+        # drop
+        {:noreply, state}
+    end
   end
 
   @spec handle_call({any(), Router.addr(), term()}, GenServer.from(), t()) ::

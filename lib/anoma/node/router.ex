@@ -129,7 +129,7 @@ defmodule Anoma.Node.Router do
 
   And we can use this Engine like the following
 
-      iex> {:ok, router} = Router.start()
+      iex> {:ok, router, _transport} = Router.start()
       iex> {:ok, stack} = Router.start_engine(router, Stack, "hello")
       iex> Stack.pop(stack)
       "hello"
@@ -235,6 +235,7 @@ defmodule Anoma.Node.Router do
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router.Addr
+  alias Anoma.Node.Transport
 
   @type addr() :: Addr.t()
 
@@ -256,24 +257,36 @@ defmodule Anoma.Node.Router do
 
   typedstruct do
     # slightly space-inefficient (duplicates extern), but more convenient
-    field(:local_engines, %{Id.Extern.t() => Id.t()})
+    field(:local_engines, %{Id.Extern.t() => {Id.t(), GenServer.server()}})
     # mapping of TopicId -> subscriber addrs
     field(:topic_table, %{Id.Extern.t() => MapSet.t(Addr.t())}, default: %{})
+    # engine => call number, callee id it's waiting for a response on
+    field(
+      :waiting_engines,
+      %{Id.Extern.t() => {non_neg_integer(), Id.Extern.t()}},
+      default: %{}
+    )
+
+    # largest id of any outgoing call.  perhaps should be per-engine, or per
+    # caller-callee pair (TG points out that not making it per caller-callee
+    # pair leaks information; but the alternative leaks space...)
+    # perhaps it should be a uuid or some such?
+    field(:max_call_id, non_neg_integer(), default: 0)
 
     # topics to which local engines are subscribed--redundant given the above, but useful
     field(:local_engine_subs, %{addr() => Id.Extern.t()}, default: %{})
     field(:id, Id.Extern.t())
+    field(:internal_id, Id.t())
     field(:addr, addr())
     field(:supervisor, atom())
+    field(:transport, addr())
     # mapping id -> [pending messages]
     field(:msg_queue, map(), default: %{})
   end
 
-  @spec start_link(Id.t()) :: GenServer.on_start()
-  def start_link(id) do
-    GenServer.start_link(__MODULE__, id,
-      name: process_name(__MODULE__, id.external)
-    )
+  @spec start_link({Id.t(), addr(), addr()}) :: GenServer.on_start()
+  def start_link(init = {_, %{server: name}, _}) do
+    GenServer.start_link(__MODULE__, init, name: name)
   end
 
   ############################################################
@@ -281,14 +294,15 @@ defmodule Anoma.Node.Router do
   ############################################################
 
   @doc """
-  Starts a new router with a given cryptographic ID.
+  Starts a new router with the given cryptographic ID for itself, and another
+  for the transport engine.  On success, returns {:ok, router_addr, transport_addr}
   """
-  @spec start(Id.t()) ::
+  @spec start({Id.t(), Id.t()}) ::
           :ignore
           | {:error, {:already_started, pid()} | :max_children | term()}
-          | {:ok, Addr.t()}
-  def start(id) do
-    supervisor = process_name(:supervisor, id.external)
+          | {:ok, Addr.t(), Addr.t()}
+  def start({router_id, transport_id}) do
+    supervisor = process_name(:supervisor, router_id.external)
 
     {:ok, _} =
       DynamicSupervisor.start_link(
@@ -298,28 +312,45 @@ defmodule Anoma.Node.Router do
         max_seconds: 1
       )
 
-    router = process_name(__MODULE__, id.external)
+    router_name = process_name(__MODULE__, router_id.external)
 
-    case DynamicSupervisor.start_child(supervisor, {__MODULE__, id}) do
-      {:ok, _} ->
-        {:ok,
-         %Addr{
-           id: id.external,
-           server: router,
-           router: router
-         }}
+    router_addr = %Addr{
+      id: router_id.external,
+      server: router_name,
+      router: router_name
+    }
 
-      err ->
-        err
+    transport_name = process_name(Transport, transport_id.external)
+
+    transport_addr = %Addr{
+      id: transport_id.external,
+      server: transport_name,
+      router: router_name
+    }
+
+    with {:ok, _} <-
+           DynamicSupervisor.start_child(
+             supervisor,
+             {__MODULE__, {router_id, router_addr, transport_addr}}
+           ) do
+      with {:ok, _} <-
+             DynamicSupervisor.start_child(
+               supervisor,
+               {Anoma.Node.Router.Engine,
+                {router_addr, Transport, transport_id,
+                 {router_addr, router_id}}}
+             ) do
+        {:ok, router_addr, transport_addr}
+      end
     end
   end
 
   @doc """
   Starts a new router, with a random `Anoma.Crypto.Id`.
   """
-  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t()}
+  @spec start() :: :ignore | {:error, any()} | {:ok, Addr.t(), Addr.t()}
   def start() do
-    start(Id.new_keypair())
+    start({Id.new_keypair(), Id.new_keypair()})
   end
 
   ############################################################
@@ -419,6 +450,10 @@ defmodule Anoma.Node.Router do
 
   def cast(addr = %Addr{router: router, server: nil}, msg) do
     Logger.info("casting to non-local addr #{inspect(addr)}")
+
+    # todo message serialisation should happen here (but there is some subtlety
+    # because local topics also go through the router, and we don't want to
+    # bother serialising anything then)
     GenServer.cast(router, {:cast, addr, self_addr(addr), msg})
   end
 
@@ -465,19 +500,49 @@ defmodule Anoma.Node.Router do
     GenServer.call(server, {:router_call, self_addr(addr), msg}, :infinity)
   end
 
-  # in this case, rather than the router doing all the work itself, it
-  # returns a continuation so we don't bottleneck
   def call(addr = %Addr{router: router, server: nil}, msg, timeout) do
     Logger.info("calling non-local addr #{inspect(addr)}")
-    GenServer.call(router, {:call, addr, self_addr(addr), msg, timeout}).()
+    # todo message serialisation should happen here
+    GenServer.cast(router, {:call, addr, self_addr(addr), msg, timeout})
+
+    receive do
+      # {:router_call_response, err = {:error, :timed_out}} -> exit("timed out")
+      # ^^ could do the above if we wanted an out-of-band error instead
+      {:router_call_response, err = {:error, :timed_out}} ->
+        err
+
+      # todo call-in should pass a specific expected shape for the data, which
+      # we can check against
+      # and also shape for the message we send out, which we postprocess before
+      # sending (isomorphic todos in engine.ex on the other side of this)
+      {:router_call_response, res} ->
+        case Anoma.Serialise.unpack(res) do
+          {:ok, decoded} -> decoded
+          _ -> {:error, :message_encoding}
+        end
+    end
+  end
+
+  @doc """
+  Send a response to an externally received call.
+  This is a low-level routine, intended to be called only by the internals of
+  Router and Engine.
+  """
+  @spec send_response(Addr.t(), Addr.t(), non_neg_integer(), binary()) :: :ok
+  def send_response(router, dst, cookie, encoded_response) do
+    Router.cast(router, {:send_response, dst, cookie, encoded_response})
   end
 
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_cast({:init_local_engine, id, _pid}, s) do
-    s = %{s | local_engines: Map.put(s.local_engines, id.external, id)}
+  def handle_cast({:init_local_engine, id, server}, s) do
+    s = %{
+      s
+      | local_engines: Map.put(s.local_engines, id.external, {id, server})
+    }
+
     {:noreply, s}
   end
 
@@ -506,16 +571,109 @@ defmodule Anoma.Node.Router do
     {:noreply, do_cast(s, addr, src_addr, msg)}
   end
 
-  # def handle_self_cast(_, _, _) when false do
-  # end
+  def handle_cast({:call, addr, src_addr, msg, timeout}, s) do
+    {:noreply, do_call(s, addr, src_addr, msg, timeout)}
+  end
 
-  # def handle_cast({src, msg}, s) do
-  #   {:noreply, handle_self_cast(msg, src, s)}
-  # end
+  def handle_cast({:router_cast, src, msg}, s) do
+    {:noreply, handle_self_cast(msg, src, s)}
+  end
 
-  def handle_call({:call, addr, src_addr, msg, timeout}, _, s) do
-    {res, s} = do_call(s, addr, src_addr, msg, timeout)
-    {:reply, res, s}
+  def handle_self_cast({:send_response, dst, cookie, response}, src, s) do
+    send_to_transport(s, dst.id, src.id, [:response, cookie, response])
+    s
+  end
+
+  def handle_self_cast({:p2p_raw, _node_id, msg}, %{server: server}, s)
+      when server != nil do
+    case msg do
+      %{"data" => data, "sig" => sig} ->
+        case Anoma.Serialise.unpack(data) do
+          {:ok, [dst_id = %Id.Extern{}, src_id = %Id.Extern{}, msg]} ->
+            if not Anoma.Crypto.Sign.verify_detached(sig, data, src_id.sign) do
+              Logger.info("dropping message; bad signature")
+              s
+            else
+              src_addr = id_to_addr(s, src_id)
+              dst_addr = id_to_addr(s, dst_id)
+
+              if not Map.has_key?(s.local_engines, dst_id) do
+                Logger.info("dropping message; unknown engine")
+                s
+              else
+                case msg do
+                  [:response, call_id, msg] ->
+                    # is the engine waiting for a message with this id from this id (todo maybe signs for)?
+                    if Map.get(s.waiting_engines, dst_id) ===
+                         {call_id, src_id} do
+                      send(dst_addr.server, {:router_call_response, msg})
+
+                      %{
+                        s
+                        | waiting_engines:
+                            Map.delete(s.waiting_engines, dst_id)
+                      }
+                    else
+                      # timeout expired, or confused or malicious correspondant; drop
+                      Logger.info(
+                        "dropping message; response but no corresponding call"
+                      )
+
+                      s
+                    end
+
+                  [:cast, msg] ->
+                    GenServer.cast(
+                      dst_addr.server,
+                      {:router_external_cast, src_addr, msg}
+                    )
+
+                    s
+
+                  [:call, call_id, msg] ->
+                    if dst_id === s.id do
+                      # message for us? have to handle specially
+                      # todo serialisation again
+                      send_response(
+                        s.addr,
+                        src_addr,
+                        call_id,
+                        Anoma.Serialise.pack(
+                          handle_self_call(msg, src_addr, s)
+                        )
+                      )
+                    else
+                      GenServer.cast(
+                        dst_addr.server,
+                        {:router_external_call, src_addr, call_id, msg}
+                      )
+                    end
+
+                    s
+
+                  # unknown message format; drop
+                  _ ->
+                    Logger.info(
+                      "dropping message (3); invalid format #{inspect(msg)}"
+                    )
+
+                    s
+                end
+              end
+            end
+
+          _ ->
+            Logger.info(
+              "dropping message (2); invalid format #{inspect(Anoma.Serialise.unpack(data))}"
+            )
+
+            s
+        end
+
+      _ ->
+        Logger.info("dropping message (1); invalid format #{inspect(msg)}")
+        s
+    end
   end
 
   def handle_call({:router_call, src, msg}, _, s) do
@@ -610,12 +768,75 @@ defmodule Anoma.Node.Router do
     end)
   end
 
+  # send to remote address
+  defp do_cast(s, %Addr{id: dst_id}, %Addr{id: src_id}, msg) do
+    # todo: serialisation of msg should happen elsewhere
+    send_to_transport(s, dst_id, src_id, [:cast, Anoma.Serialise.pack(msg)])
+    s
+  end
+
+  @spec do_call(t(), Addr.t(), Addr.t(), term(), :erlang.timeout()) :: t()
+
   # call to an address with a known pid
-  @spec do_call(t(), Addr.t(), Addr.t(), term(), :erlang.timeout()) ::
-          {function(), t()}
-  defp do_call(s, %Addr{server: server}, src, msg, timeout)
+  defp do_call(s, %Addr{server: server}, src, msg, _timeout)
        when server != nil do
-    {fn -> GenServer.call(server, {src, msg}, timeout) end, s}
+    res = GenServer.call(server, {:router_call, src, msg}, :infinity)
+    send(src.server, {:router_call_response, res})
+    s
+  end
+
+  # call to remote address
+  defp do_call(
+         s,
+         %Addr{id: dst_id},
+         src_addr = %Addr{id: src_id},
+         msg,
+         timeout
+       ) do
+    # todo: serialisation of msg should happen elsewhere
+    send_to_transport(s, dst_id, src_id, [
+      :call,
+      s.max_call_id,
+      Anoma.Serialise.pack(msg)
+    ])
+
+    :erlang.send_after(
+      timeout,
+      self(),
+      {:timeout_message, src_addr, s.max_call_id}
+    )
+
+    %{
+      s
+      | max_call_id: 1 + s.max_call_id,
+        waiting_engines:
+          Map.put(s.waiting_engines, src_id, {s.max_call_id, dst_id})
+    }
+  end
+
+  def handle_info({:timeout_message, src_addr, call_id}, s) do
+    {
+      :noreply,
+      # we have to check the call id matches; otherwise this could spuriously
+      # fail.  there are some other potential ways of dealing with timeouts,
+      # but meh
+      case Map.get(s.waiting_engines, src_addr.id) do
+        {^call_id, _} ->
+          send(src_addr.server, {:router_call_response, {:error, :timed_out}})
+          %{s | waiting_engines: Map.delete(s.waiting_engines, src_addr.id)}
+
+        _ ->
+          s
+      end
+    }
+  end
+
+  defp send_to_transport(s, dst, src, msg) do
+    msg = Anoma.Serialise.pack([dst, src, msg])
+    {internal_id, _} = Map.fetch!(s.local_engines, src)
+    sig = Anoma.Crypto.Sign.sign_detached(msg, internal_id.internal.sign)
+    encoded = :msgpack.pack(%{"data" => msg, "sig" => sig})
+    Transport.send(s.transport, dst, encoded)
   end
 
   ############################################################
@@ -634,6 +855,14 @@ defmodule Anoma.Node.Router do
     end
   end
 
+  defp id_to_addr(s, id) do
+    %{
+      s.addr
+      | id: id,
+        server: elem(Map.get(s.local_engines, id, {nil, nil}), 1)
+    }
+  end
+
   @spec process_name(atom(), Id.Extern.t()) :: atom()
   def process_name(module, id) do
     :erlang.binary_to_atom(
@@ -641,21 +870,19 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  @spec init(Id.t()) :: {:ok, Router.t()}
-  def init(id) do
+  @spec init({Id.t(), addr(), addr()}) :: {:ok, Router.t()}
+  def init({id, router_addr, transport_addr}) do
     supervisor = process_name(:supervisor, id.external)
     server = process_name(__MODULE__, id.external)
 
     {:ok,
      %Router{
        id: id.external,
-       addr: %Addr{
-         router: server,
-         id: id.external,
-         server: server
-       },
+       internal_id: id,
+       addr: router_addr,
+       transport: transport_addr,
        supervisor: supervisor,
-       local_engines: %{id.external => id}
+       local_engines: %{id.external => {id, server}}
      }}
   end
 

@@ -39,6 +39,7 @@ defmodule Anoma.Node do
 
   typedstruct enforce: true do
     field(:router, Router.addr())
+    field(:transport, Router.addr())
     field(:ordering, Router.addr())
     field(:executor, Router.addr())
     field(:executor_topic, Router.addr())
@@ -130,7 +131,7 @@ defmodule Anoma.Node do
     {ex_id, ex_st} = args[:executor]
     {storage_id, storage_st} = args[:storage]
 
-    {:ok, router} = start_router(args[:router])
+    {:ok, router, transport} = start_router(args[:router], args[:transport])
 
     {:ok, storage_topic} = new_topic(router, args[:storage_topic])
 
@@ -217,6 +218,7 @@ defmodule Anoma.Node do
     {:ok,
      %Node{
        router: router,
+       transport: transport,
        ordering: ordering,
        executor: executor,
        mempool: mempool,
@@ -267,11 +269,11 @@ defmodule Anoma.Node do
     Anoma.Block.create_table(block_storage, rocks)
   end
 
-  defp start_router(router) do
-    if router == nil do
+  defp start_router(router, transport) do
+    if router == nil || transport == nil do
       Router.start()
     else
-      Router.start(%Id{external: router})
+      Router.start({%Id{external: router}, %Id{external: transport}})
     end
   end
 

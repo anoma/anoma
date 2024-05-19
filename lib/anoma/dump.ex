@@ -159,6 +159,7 @@ defmodule Anoma.Dump do
   @spec get_all(atom()) ::
           %{
             router: Id.Extern.t(),
+            transport: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
             storage_topic: Id.Extern.t(),
@@ -195,6 +196,7 @@ defmodule Anoma.Dump do
   @spec get_state(atom()) ::
           %{
             router: Id.Extern.t(),
+            transport: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
             storage_topic: Id.Extern.t(),
@@ -215,6 +217,7 @@ defmodule Anoma.Dump do
       |> Map.filter(fn {key, _value} ->
         key not in [
           :router,
+          :transport,
           :mempool_topic,
           :executor_topic,
           :storage_topic,
@@ -234,6 +237,7 @@ defmodule Anoma.Dump do
     Map.merge(
       %{
         router: router.id,
+        transport: state.transport.id,
         mempool_topic: state.mempool_topic.id,
         executor_topic: state.executor_topic.id,
         storage_topic: state.storage_topic.id
