@@ -117,6 +117,18 @@ defmodule Noun do
     end
   end
 
+  @spec index_to_offset(non_neg_integer()) :: non_neg_integer()
+  @doc """
+  Calculates the index from the given access offset
+  """
+  def index_to_offset(0) do
+    0
+  end
+
+  def index_to_offset(n) do
+    1 + 2 * index_to_offset(n - 1)
+  end
+
   @spec mug(t()) :: non_neg_integer()
   def mug(noun) do
     :erlang.term_to_binary(noun)
