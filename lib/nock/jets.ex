@@ -426,20 +426,33 @@ defmodule Nock.Jets do
     with {:ok, sample} when is_noun_atom(sample) <- sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
-      {:ok, num_bits(sample, block_size)}
+      {:ok, Nock.Bits.num_bits(sample, block_size)}
     else
       _ -> :error
     end
   end
 
-  @spec num_bits(non_neg_integer(), non_neg_integer()) :: non_neg_integer()
-  def num_bits(n, block_size) when n >= 0 do
-    num_bits(n, 1 <<< block_size, 0)
+  def jam(core) do
+    maybe_sample = sample(core)
+
+    case maybe_sample do
+      {:ok, sample} ->
+        {:ok, Nock.Jam.jam(sample)}
+
+      _ ->
+        :error
+    end
   end
 
-  defp num_bits(0, _, acc), do: acc
+  def cue(core) do
+    maybe_sample = sample(core)
 
-  defp num_bits(n, block_size, acc) do
-    num_bits(n >>> block_size, block_size, acc + 1)
+    case maybe_sample do
+      {:ok, sample} when is_noun_atom(sample) ->
+        Nock.Cue.cue(sample)
+
+      _ ->
+        :error
+    end
   end
 end

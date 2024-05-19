@@ -171,20 +171,18 @@ defmodule Noun do
     binary <> <<0::size((len - byte_size(binary)) * 8)>>
   end
 
-  @spec atom_integer_to_binary(0) :: <<>>
+  @spec atom_integer_to_binary(noun_atom()) :: binary()
   # special case: zero is the empty binary
   def atom_integer_to_binary(0) do
     <<>>
   end
 
-  @spec atom_integer_to_binary(pos_integer()) :: binary()
   def atom_integer_to_binary(integer)
       when is_integer(integer) and integer >= 0 do
     :binary.encode_unsigned(integer, :little)
   end
 
   # be idempotent on binaries
-  @spec atom_integer_to_binary(binary()) :: binary()
   def atom_integer_to_binary(binary) when is_binary(binary) do
     binary
   end
@@ -196,7 +194,7 @@ defmodule Noun do
     pad_trailing(:binary.encode_unsigned(integer, :little), length)
   end
 
-  @spec atom_binary_to_integer(binary()) :: non_neg_integer()
+  @spec atom_binary_to_integer(noun_atom()) :: non_neg_integer()
   def atom_binary_to_integer(binary) when is_binary(binary) do
     :binary.decode_unsigned(binary, :little)
   end
