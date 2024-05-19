@@ -293,6 +293,26 @@ defmodule Anoma.Node.Router do
     GenServer.start_link(__MODULE__, init, name: name)
   end
 
+  @spec init({Id.t(), addr(), addr(), t()}) :: {:ok, t()}
+  def init({id, router_addr, transport_addr, router_state}) do
+    supervisor = process_name(:supervisor, id.external)
+    server = process_name(__MODULE__, id.external)
+
+    {:ok,
+     %Router{
+       router_state
+       | id: id.external,
+         internal_id: id,
+         addr: router_addr,
+         transport: transport_addr,
+         supervisor: supervisor,
+         local_engines:
+           Map.merge(router_state.local_engines || %{}, %{
+             id.external => {id, server}
+           })
+     }}
+  end
+
   ############################################################
   #                        Public API                        #
   ############################################################
@@ -953,26 +973,6 @@ defmodule Anoma.Node.Router do
     :erlang.binary_to_atom(
       atom_to_nice_string(module) <> " " <> Base.encode64(id.sign)
     )
-  end
-
-  @spec init({Id.t(), addr(), addr(), t()}) :: {:ok, t()}
-  def init({id, router_addr, transport_addr, router_state}) do
-    supervisor = process_name(:supervisor, id.external)
-    server = process_name(__MODULE__, id.external)
-
-    {:ok,
-     %Router{
-       router_state
-       | id: id.external,
-         internal_id: id,
-         addr: router_addr,
-         transport: transport_addr,
-         supervisor: supervisor,
-         local_engines:
-           Map.merge(router_state.local_engines || %{}, %{
-             id.external => {id, server}
-           })
-     }}
   end
 
   @spec self_addr(Addr.t()) :: Addr.t()
