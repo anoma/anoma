@@ -25,7 +25,8 @@
    3. [Setting Up](./hoon/setting-up.livemd)
 6. [Analysis](./analysis.livemd)
    1. [Fema Analysis Pinger](./analysis/fema-analysis-pinger.livemd)
-7. [Vm_interface](./vm_interface.livemd)
+7. [Logging](./logging.livemd)
+8. [Vm_interface](./vm_interface.livemd)
 
 ## User Guide
 
