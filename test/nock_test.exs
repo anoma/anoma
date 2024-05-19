@@ -6,6 +6,7 @@ defmodule AnomaTest.Nock do
   alias Anoma.Order
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
+  alias Anoma.Crypto.Sign
 
   doctest(Nock)
 
@@ -31,6 +32,137 @@ defmodule AnomaTest.Nock do
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
     [env: env]
+  end
+
+  describe "testing jets" do
+    test "signing success" do
+      %{public: _pub, secret: sec} = Sign.new_keypair()
+
+      msg =
+        "The blood is already on my hands.
+        Right or wrong, .. I must follow the path .. to its end."
+
+      signed = Sign.sign_detached(msg, sec)
+
+      assert {:ok, signed} ==
+               nock(using_sign_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, msg | sec],
+                 0 | 1
+               ])
+    end
+
+    test "Sign wrong types error" do
+      assert :error ==
+               nock(using_sign_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, <<3>> | 5],
+                 0 | 1
+               ])
+
+      assert :error ==
+               nock(using_sign_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, 3 | <<5>>],
+                 0 | 1
+               ])
+
+      assert :error ==
+               nock(using_sign_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, <<3>> | <<5>>],
+                 0 | 1
+               ])
+    end
+
+    test "Verification works" do
+      %{public: pub, secret: sec} = Sign.new_keypair()
+      msg = "babylon 5 is no more"
+
+      assert {:ok, signed} =
+               nock(using_sign_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, msg | sec],
+                 0 | 1
+               ])
+
+      assert {:ok, 0} ==
+               nock(using_verify_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, signed, msg | pub],
+                 0 | 1
+               ])
+
+      assert {:ok, signed} =
+               nock(using_sign_core(), [9, 2, 10, [6, 1, msg | sec], 0 | 1])
+
+      assert {:ok, msg} ==
+               nock(using_verify_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, signed | pub],
+                 0 | 1
+               ])
+    end
+
+    test "Verification fails gracefully" do
+      %{public: pub, secret: sec} = Sign.new_keypair()
+
+      msg =
+        "They are alone. They are a dying people. We should let them pass."
+
+      assert {:ok, signed} =
+               nock(using_sign_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, msg | sec],
+                 0 | 1
+               ])
+
+      assert {:ok, 1} ==
+               nock(using_verify_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, signed, <<3>> | pub],
+                 0 | 1
+               ])
+
+      assert {:ok, 1} ==
+               nock(using_verify_detatched_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, <<2>>, <<3>> | <<1>>],
+                 0 | 1
+               ])
+
+      assert {:ok, signed} =
+               nock(using_sign_core(), [9, 2, 10, [6, 1, msg | sec], 0 | 1])
+
+      assert :error =
+               nock(using_verify_core(), [
+                 9,
+                 2,
+                 10,
+                 [6, 1, signed | sec],
+                 0 | 1
+               ])
+    end
   end
 
   describe "Basic functionality" do

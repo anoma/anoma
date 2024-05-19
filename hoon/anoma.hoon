@@ -340,4 +340,32 @@
   =+  w=[q.u q.v]
   [(add 2 (add p.u p.v)) w]
 --
+::  layer 6: cryptographic code
+~%  %six  +  ~
+|%
+++  sign  ::  +10 Please fill out
+  ~/  %sign
+  |=  [a=@ b=@]
+  =+  c=%sign
+  ^-  @
+  !!
+++  verify  ::  +4 Please fill out
+  ~/  %verify
+  |=  [a=@ b=@]
+  =+  c=%verify
+  ^-  @
+  !!
+++  sign-detatched  ::  +23 Please fill out
+  ~/  %sign-detatched
+  |=  [a=@ b=@]
+  =+  c=%sign-detatched
+  ^-  @
+  !!
+++  verify-detatched  ::  +22 Please fill out
+  ~/  %verify-detatched
+  |=  [a=@ b=@ c=@]
+  =+  d=%verify-detatched
+  ^-  @
+  !!
+--
 ==

@@ -8,8 +8,46 @@ defmodule TestHelper.Nock do
 
   @spec using_dec_core() :: Noun.t()
   def using_dec_core() do
-    arm = Noun.Format.parse_always("[8 [9 342 0 511] 9 2 10 [6 0 14] 0 2]")
+    arm = Noun.Format.parse_always("[8 [9 342 0 1.023] 9 2 10 [6 0 14] 0 2]")
     sample = 999
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_sign_core() :: Noun.t()
+  def using_sign_core() do
+    arm =
+      Noun.Format.parse_always("[8 [9 10 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_verify_core() :: Noun.t()
+  def using_verify_core() do
+    arm =
+      Noun.Format.parse_always("[8 [9 4 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_sign_detatched_core() :: Noun.t()
+  def using_sign_detatched_core() do
+    arm =
+      Noun.Format.parse_always("[8 [9 23 0 31] 9 2 10 [6 [0 28] 0 29] 0 2]")
+
+    sample = [999 | 888]
+    [arm, sample | logics_core()]
+  end
+
+  @spec using_verify_detatched_core() :: Noun.t()
+  def using_verify_detatched_core() do
+    arm =
+      Noun.Format.parse_always(
+        "[8 [9 22 0 31] 9 2 10 [6 [0 28] [0 58] 0 59] 0 2]"
+      )
+
+    sample = [999 | 888]
     [arm, sample | logics_core()]
   end
 
@@ -26,9 +64,9 @@ defmodule TestHelper.Nock do
         9
         2
         10
-        [30 8 [9 342 0 2.047] 9 2 10 [6 0 62] 0 2]
+        [30 8 [9 342 0 4.095] 9 2 10 [6 0 62] 0 2]
         10
-        [6 [8 [9 20 0 2.047] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
+        [6 [8 [9 20 0 4.095] 9 2 10 [6 [0 29] 0 28] 0 2] 0 12]
         0
         1
       ]
