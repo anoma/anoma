@@ -40,7 +40,7 @@ defmodule Anoma.Configuration do
   ############################################################
 
   @dump_format [
-    {"dump", &is_binary/1, Directories.data("anoma_#{Mix.env()}.dmp")}
+    {"dump", &is_binary/1, "anoma_#{Mix.env()}.dmp"}
   ]
   @node_format [
     {"block_storage", &is_binary/1, "anoma_block"},
@@ -57,8 +57,12 @@ defmodule Anoma.Configuration do
   def configuration_format(), do: @configuration_format
 
   @spec default_configuration_location() :: Path.t()
-  def default_configuration_location() do
-    Directories.configuration("/anoma_#{Mix.env()}.toml")
+  def default_configuration_location(env \\ Mix.env()) do
+    Directories.configuration("/anoma_#{env}.toml")
+  end
+
+  def default_data_location(env \\ Mix.env()) do
+    Directories.data("anoma_#{env}.dmp")
   end
 
   ############################################################

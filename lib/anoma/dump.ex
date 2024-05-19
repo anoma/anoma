@@ -167,6 +167,7 @@ defmodule Anoma.Dump do
   @type ping_eng :: {Id.Extern.t(), Pinger.t()}
   @type ex_eng :: {Id.Extern.t(), Executor.t()}
   @type storage_eng :: {Id.Extern.t(), Storage.t()}
+  @type configuration_eng :: {Id.Extern.t(), Anoma.Node.Configuration.t()}
   @type stores :: {Storage.t(), atom()}
 
   @type dump() :: %{
@@ -176,6 +177,7 @@ defmodule Anoma.Dump do
           transport_id: Id.Extern.t(),
           mempool_topic: Id.Extern.t(),
           executor_topic: Id.Extern.t(),
+          configuration: configuration_eng,
           logger: log_eng,
           clock: clock_eng,
           ordering: ord_eng,
@@ -232,6 +234,7 @@ defmodule Anoma.Dump do
             transport_id: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
+            configuration: configuration_eng,
             logger: log_eng,
             clock: clock_eng,
             ordering: ord_eng,

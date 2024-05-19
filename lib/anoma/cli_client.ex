@@ -60,6 +60,12 @@ defmodule Anoma.Cli.Client do
 
     Transport.learn_engine(
       transport,
+      elem(primary.configuration, 0),
+      primary.router.external
+    )
+
+    Transport.learn_engine(
+      transport,
       primary.router.external,
       primary.router.external
     )
@@ -85,6 +91,8 @@ defmodule Anoma.Cli.Client do
     with {:error, :timed_out} <-
            Router.call(other_transport_addr, :ping, 1000) do
       IO.puts("Unable to connect to local node")
+      IO.puts("Trying offline commands")
+      perform_offline(operation)
       System.halt(1)
     end
 
@@ -154,6 +162,49 @@ defmodule Anoma.Cli.Client do
 
       {:ok, value} ->
         IO.puts(inspect(value))
+    end
+  end
+
+  defp perform(:snapshot, primary, router) do
+    other_configuration_addr = %{
+      router
+      | server: nil,
+        id: elem(primary.configuration, 0)
+    }
+
+    Anoma.Node.Configuration.snapshot(other_configuration_addr)
+  end
+
+  defp perform(:delete_dump, primary, router) do
+    other_configuration_addr = %{
+      router
+      | server: nil,
+        id: elem(primary.configuration, 0)
+    }
+
+    Anoma.Node.Configuration.delete_dump(other_configuration_addr)
+  end
+
+  def perform_offline(:delete_dump) do
+    # Assume server is running prod
+    config = Anoma.Configuration.default_configuration_location(:prod)
+
+    dump_file =
+      if File.exists?(config) do
+        config
+        |> Anoma.Configuration.read_configuration()
+        |> Anoma.Configuration.locate_dump_file()
+      else
+        Anoma.Configuration.default_data_location(:prod)
+      end
+
+    if dump_file && File.exists?(dump_file) do
+      IO.puts("Deleting dump file: #{dump_file}")
+      File.rm!(dump_file)
+    else
+      IO.puts(
+        "Can not find Dump file, please delete the dumped data yourself"
+      )
     end
   end
 end
