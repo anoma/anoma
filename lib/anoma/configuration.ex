@@ -8,120 +8,90 @@ defmodule Anoma.Configuration do
 
   ### Public API
 
-  - `create_min/0`
-  - `create_min/7`
+  - `configuration/0`
+  - `configuration/1`
+  - `read_configuration/1`
+  - `node_settings/1`
+  - `save/1`
+  - `save/2`
+  - `locate_dump_file/1`
   - `launch_min/1`
-  - `parse_node/1`
-  - `parse/1`
+  - `launch_min/2`
+  - `launch_min/3`
   """
 
   alias Anoma.System.Directories
+  alias Anoma.Node
 
-  @doc """
-  I create a minimal configuration file on application startup unless the
-  environment is :test
+  ############################################################
+  #                          Types                           #
+  ############################################################
 
-  The configuration file is created with the [node] header and with keys:
+  @type section_format() :: [{String.t(), (term() -> boolean()), term()}]
+  @type configruation() :: [{String.t(), section_format()}]
 
-  name = 'name'
-  qualified = 'qualified_name'
-  order = 'order_name'
-  snapshot_path = 'path'
-  block_storage = 'block'
-  ping_time = 10000
+  @type section_map() :: %{String.t() => term()}
+  @type configuration_map() :: %{String.t() => section_map()}
 
-  Check `parse_min/1` to see how these will be made into node parameters
+  @type node_settings() :: Keyword.t()
 
-  The file is wirtten to the XDG-specified config folder unless the
-  environment is :test
-  """
-  def create_min() do
-    unless Application.get_env(:anoma, :env) == :test do
-      path = Directories.configuration("/config.toml")
+  ############################################################
+  #                   Default Values                         #
+  ############################################################
 
-      path |> File.write!("[node] \n
-        name = 'name' \n
-        qualified = 'qualified_name' \n
-        order = 'order_name' \n
-        snapshot_path = 'path' \n
-        block_storage = 'block' \n
-        ping_time = 10000")
-    end
+  @dump_format [
+    {"dump", &is_binary/1, Directories.data("anoma_#{Mix.env()}.dmp")}
+  ]
+  @node_format [
+    {"block_storage", &is_binary/1, "anoma_block"},
+    {"name", &is_binary/1, "anoma"},
+    {"order", &is_binary/1, "Anoma.Order"},
+    {"ping_time", &__MODULE__.is_pinger/1,
+     if(Mix.env() == :prod, do: 10000, else: "no_timer")},
+    {"qualified", &is_binary/1, "Anoma.Qualified"},
+    {"snapshot_path", &is_binary/1, "my_special_nock_snapshot"}
+  ]
+  @configuration_format [{"dump", @dump_format}, {"node", @node_format}]
+
+  @spec configuration_format() :: configruation
+  def configuration_format(), do: @configuration_format
+
+  @spec default_configuration_location() :: Path.t()
+  def default_configuration_location() do
+    Directories.configuration("/anoma_#{Mix.env()}.toml")
   end
 
-  @doc """
-  I create a minimal configuration file on application startup
+  ############################################################
+  #                  Main Functionality                      #
+  ############################################################
 
-  Given arguments config_name, name, qualified, order, snap, block, timer
-  in that order, the configuration file is created with the [node] header
-  and with keys:
-
-  name = 'name'
-  qualified = 'qualified'
-  order = 'order'
-  snapshot_path = 'path'
-  block_storage = 'block'
-  ping_time = maybe_time
-
-  where maybe_timer is time if the latter is an integer and 'no_timer'
-  if time == :no_timer
-
-  Check `parse_min/1` to see how these will be made into node parameters
-
-  The file is wirtten to the XDG-specified config folder. If the
-  environment is :test, the file is written in immediate folder with name
-  config_name
-  """
-  @spec create_min(
-          String.t(),
-          String.t(),
-          String.t(),
-          String.t(),
-          String.t(),
-          String.t(),
-          :no_timer | integer
-        ) :: :ok
-  def create_min(config_name, name, qualified, order, snap, block, timer) do
-    file_name = "/#{config_name}.toml"
-
-    path = Directories.configuration(file_name)
-
-    # Ensure the directory exists
-    File.mkdir_p!(Path.dirname(path))
-
-    path |> File.write!("[node] \n
-      name = '#{name}' \n
-      qualified = '#{qualified}' \n
-      order = '#{order}' \n
-      snapshot_path = '#{snap}' \n
-      block_storage = '#{block}' \n
-      #{time_parse(timer)}")
+  @spec configuration(configuration_map()) :: configuration_map()
+  @spec configuration() :: configuration_map()
+  def configuration(user_map \\ %{}) do
+    Enum.reduce(configuration_format(), %{}, fn {key, section}, config ->
+      user_section = Map.get(user_map, key, %{})
+      Map.put(config, key, configuration_section(section, user_section))
+    end)
   end
 
-  @doc """
-  Given a file path to a TOML file with minimal node startup I launch the
-  node with the appopriate name
-  """
-  def launch_min(file_path) do
-    path = Directories.configuration(file_path)
-    map = parse(path)
-    settings = map |> parse_min() |> tl() |> Anoma.Node.start_min()
+  @spec read_configuration(Path.t()) :: configuration_map()
+  def read_configuration(file) do
+    map =
+      case Toml.decode_file(file) do
+        {:ok, map} -> map
+        _ -> %{}
+      end
 
-    Anoma.Node.start_link(
-      new_storage: true,
-      name: map[:name],
-      use_rocks: false,
-      settings: settings
-    )
+    configuration(map)
   end
 
   @doc """
   Given a map, I decode all the needed info for a minimal node startup
   and put it in the appropriate keyword list
   """
-
-  def parse_min(map) do
-    node = map["node"]
+  @spec node_settings(configuration_map()) :: Node.min_engine_configuration()
+  def node_settings(configuration) do
+    node = configuration["node"]
     path = node["snapshot_path"] |> String.to_atom()
 
     [
@@ -137,34 +107,117 @@ defmodule Anoma.Configuration do
     ]
   end
 
-  @spec remove_config(String.t()) :: :ok
-  @spec remove_config(String.t(), atom()) :: :ok
-  def remove_config(file_path, env \\ Application.get_env(:anoma, :env)) do
-    file_path
-    |> Directories.configuration(env)
-    |> File.rm!()
+  @spec save(configuration_map()) :: Path.t()
+  @spec save(configuration_map(), Path.t()) :: Path.t()
+  def save(config, file \\ default_configuration_location()) do
+    File.write!(file, serialize_config(config))
+    file
   end
+
+  @spec locate_dump_file(configuration_map()) :: Path.t() | nil
+  def locate_dump_file(path) do
+    dump_path = path["dump"]["dump"]
+
+    if dump_path && File.exists?(dump_path) do
+      dump_path
+    else
+      nil
+    end
+  end
+
+  @doc """
+  Given a parsed map with minimal node startup info I launch the node with
+  the appopriate name
+  """
+  def launch_min(parsed_map, rocks_flag \\ false) do
+    node_configuration(parsed_map, rocks_flag) |> Anoma.Node.start_link()
+  end
+
+  @doc """
+  I have the same functionality as `launch_min/2` but start the node using
+  a named supervisor.
+  """
+  def launch_min(parsed_map, rocks_flag, name) do
+    node_settings = node_configuration(parsed_map, rocks_flag)
+
+    [{Anoma.Node, node_settings}]
+    |> Supervisor.start_link(strategy: :one_for_one, name: name)
+  end
+
+  ############################################################
+  #                 Configuration Setup                      #
+  ############################################################
+
+  @spec configuration_section(section_format(), section_map()) ::
+          section_map()
+  defp configuration_section(section, user_map) do
+    Enum.reduce(section, %{}, fn {key, predicate, default_value},
+                                 configuration_section ->
+      val = Map.get(user_map, key)
+
+      Map.put(
+        configuration_section,
+        key,
+        # we should give a warning if the predicate fails and it's not
+        # nil
+        if(predicate.(val), do: val, else: default_value)
+      )
+    end)
+  end
+
+  ############################################################
+  #                Configuration Helper                      #
+  ############################################################
+
+  @spec serialize_config(configuration_map) :: String.t()
+  defp serialize_config(config) do
+    config
+    |> Enum.to_list()
+    |> Enum.map(fn {section, fields} ->
+      ["[", section, "]", serialize_section(fields), "\n"]
+    end)
+    |> IO.chardata_to_string()
+  end
+
+  @spec serialize_section(section_map()) :: [[String.t()]]
+  defp serialize_section(section) do
+    section
+    |> Enum.to_list()
+    |> Enum.map(&serialize_pair/1)
+  end
+
+  defp serialize_pair({key, val}) do
+    strings =
+      if is_binary(val) do
+        ["'", val, "'"]
+      else
+        [to_string(val)]
+      end
+
+    ["\n", key, " = " | strings]
+  end
+
+  @spec launch_min(configuration_map()) :: GenServer.on_start()
+  @spec launch_min(configuration_map(), boolean()) :: GenServer.on_start()
+  @spec launch_min(configuration_map(), boolean(), Supervisor.name()) ::
+          GenServer.on_start()
 
   ############################################################
   #                         Helpers                          #
   ############################################################
 
-  @doc """
-  I decode the TOML file provided a path to it, ignoring if
-  unsuccesful
-  """
-  def parse(name) do
-    with {:ok, map} <- Toml.decode_file(name) do
-      map
-    end
-  end
+  @spec node_configuration(configuration_map(), boolean()) ::
+          Node.configuration()
+  defp node_configuration(parsed_map, rocks_flag) do
+    node_settings = parsed_map |> node_settings()
+    settings = Anoma.Node.start_min(node_settings)
 
-  defp time_parse(time) do
-    case time do
-      time when is_integer(time) -> "ping_time = #{time}"
-      :no_timer -> "ping_time = 'no_timer'"
-      _ -> :error
-    end
+    [
+      new_storage: true,
+      name: Keyword.get(node_settings, :name),
+      use_rocks: rocks_flag,
+      settings: settings
+    ]
   end
 
   defp maybe_ping(ping) do
@@ -173,5 +226,10 @@ defmodule Anoma.Configuration do
     else
       ping |> String.to_atom()
     end
+  end
+
+  @spec is_pinger(any()) :: boolean()
+  def is_pinger(field) do
+    is_integer(field) || field == "no_timer"
   end
 end
