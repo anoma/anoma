@@ -15,9 +15,7 @@ defmodule Nock.Jets do
   - `index_in_core` - the index of the gate itself
 
   - `parent_layer` - the layer of the standard library. This should be
-    the same as the numbers found in `anoma.hoon` with `+ 3` added for
-    `@rm_core_val`, `@stdlib_core_val`, and the current index being
-    pushed
+    the same as the layer numbers found in `anoma.hoon`
 
   ### Example
 
@@ -31,11 +29,8 @@ defmodule Nock.Jets do
 
   Now in IEX
 
-      > Nock.Jets.calculate_mug_of_core(47, 7)
+      > Nock.Jets.calculate_mug_of_core(47, 1)
       14801825384048474882
-
-  We derived the 7 because the current top layer is 5, and dec is at
-  layer 1. So 5 - 1 + 3 = 7
 
   """
   def calculate_mug_of_core(index_in_core, parent_layer) do
@@ -48,13 +43,8 @@ defmodule Nock.Jets do
 
   ### Parameters
 
-  - `index_in_core` - the index of the gate whose parents we wish to
-    learn about
-
   - `parent_layer` - the layer of the standard library. This should be
-    the same as the numbers found in `anoma.hoon` with `+ 3` added for
-    `@rm_core_val`, `@stdlib_core_val`, and the current index being
-    pushed
+    the same as the layer numbers found in `anoma.hoon`
 
   ### Example
 
@@ -68,18 +58,16 @@ defmodule Nock.Jets do
 
   Now in IEX
 
-      > Nock.Jets.calculate_mug_of_layer(47, 7)
+      > Nock.Jets.calculate_mug_of_layer(1)
       17654928022549292273
-
-  We derived the 7 because the current top layer is 5, and dec is at
-  layer 1. So 5 - 1 + 3 = 7
 
   This value should match Nock.@layer_1_contex_mug
   """
-  @spec calculate_mug_of_layer(non_neg_integer(), non_neg_integer()) ::
-          non_neg_integer()
-  def calculate_mug_of_layer(index_in_core, parent_layer) do
-    with {:ok, core} <- calculate_core(index_in_core, parent_layer),
+  @spec calculate_mug_of_layer(non_neg_integer()) :: non_neg_integer()
+  def calculate_mug_of_layer(parent_layer) do
+    # A core with a single gate will always have index 4 populated by
+    # a gate
+    with {:ok, core} <- calculate_core(4, parent_layer),
          {:ok, parent} <- Noun.axis(7, core) do
       Noun.mug(parent)
     end
@@ -90,7 +78,16 @@ defmodule Nock.Jets do
   defp calculate_core(index_in_core, parent_layer) do
     Nock.nock(Nock.logics_core(), [
       8,
-      [9, index_in_core, 0 | Noun.index_to_offset(parent_layer)],
+      # We drive `layers - parent + 3`, from how layers get pushed.
+      # Each layer pushes the previous one down by one. the + 3 is for:
+      # 0. layer 0 (I believe, Ι may be incorrect on this)
+      # 1. the rm_core
+      # 2. the logics_core
+      [
+        9,
+        index_in_core,
+        0 | Noun.index_to_offset(Nock.stdlib_layers() - parent_layer + 3)
+      ],
       0 | 2
     ])
   end
