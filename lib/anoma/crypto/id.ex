@@ -91,4 +91,24 @@ defmodule Anoma.Crypto.Id do
   defp on_keys(%Extern{sign: sign, encrypt: encrypt}, fun) do
     %Extern{sign: fun.(sign), encrypt: fun.(encrypt)}
   end
+
+  def truncated_key_string(key) do
+    key |> Base.encode16(case: :lower) |> String.slice(0..5)
+  end
+
+  defimpl Inspect, for: Extern do
+    def inspect(term, _options) do
+      e = Anoma.Crypto.Id.truncated_key_string(term.encrypt)
+      s = Anoma.Crypto.Id.truncated_key_string(term.sign)
+      "%Pub{encrypt: 0x#{e}..., sign: 0x#{s}...}"
+    end
+  end
+
+  defimpl Inspect, for: Intern do
+    def inspect(term, _options) do
+      e = Anoma.Crypto.Id.truncated_key_string(term.encrypt)
+      s = Anoma.Crypto.Id.truncated_key_string(term.sign)
+      "%Sec{encrypt: 0x#{e}..., sign: 0x#{s}...}"
+    end
+  end
 end
