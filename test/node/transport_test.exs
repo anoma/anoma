@@ -34,12 +34,17 @@ defmodule AnomaTest.Node.Transport do
 
     socket_name = :enacl.randombytes(8) |> Base.encode64()
 
-    socket_addr = {:unix, Anoma.System.Directories.data(socket_name)}
+    socket_dir = Anoma.System.Directories.data(socket_name)
+    socket_addr = {:unix, socket_dir}
 
     Transport.start_server(
       node.transport,
-      {:unix, Anoma.System.Directories.data(socket_name)}
+      {:unix, socket_dir}
     )
+
+    on_exit(fn ->
+      File.rm(socket_dir)
+    end)
 
     [
       node: node,
