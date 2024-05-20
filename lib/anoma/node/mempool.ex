@@ -209,10 +209,12 @@ defmodule Anoma.Node.Mempool do
 
   def reset_blocks(state) do
     storage = state.block_storage
+    neg_flag = :mnesia.table_info(storage, :rocksdb_copies) |> Enum.empty?()
+
     :mnesia.delete_table(storage)
     log_info({:delete_table, storage, state.logger})
-    # TODO add a flag in storage for yes if we want rocksdb copies
-    Block.create_table(storage, false)
+
+    Block.create_table(storage, not neg_flag)
   end
 
   @spec kill_transactions(Mempool.t()) :: :ok
