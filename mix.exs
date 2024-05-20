@@ -66,9 +66,7 @@ defmodule Anoma.MixProject do
       {:enacl, git: "https://github.com/anoma/enacl/"},
       {:mnesia_rocksdb, git: "https://github.com/mariari/mnesia_rocksdb"},
       {:typed_struct, "~> 0.3.0"},
-      {:xxhash,
-       git: "https://github.com/htdat148/erlang-xxhash-otp-26",
-       branch: "fix_erlang_get_path_otp26"},
+      {:xxhash, "~> 0.3"},
       {:recon, "~> 2.5.4"},
       {:rexbug, ">= 2.0.0-rc1"},
       # until the next Kino release
