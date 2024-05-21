@@ -175,6 +175,7 @@ defmodule Anoma.Dump do
           transport: Id.t(),
           router_state: Router.t(),
           transport_id: Id.Extern.t(),
+          logger_topic: Id.Extern.t(),
           mempool_topic: Id.Extern.t(),
           executor_topic: Id.Extern.t(),
           storage_topic: Id.Extern.t(),
@@ -233,6 +234,7 @@ defmodule Anoma.Dump do
             transport: Id.t(),
             router_state: Router.t(),
             transport_id: Id.Extern.t(),
+            logger_topic: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
             storage_topic: Id.Extern.t(),
@@ -254,6 +256,7 @@ defmodule Anoma.Dump do
         key not in [
           :router,
           :transport,
+          :logger_topic,
           :mempool_topic,
           :executor_topic,
           :storage_topic,
@@ -291,6 +294,7 @@ defmodule Anoma.Dump do
         transport: internal_transport_id,
         # public facing id for other nodes to talk to
         transport_id: state.transport.id,
+        logger_topic: state.logger_topic.id,
         mempool_topic: state.mempool_topic.id,
         executor_topic: state.executor_topic.id,
         storage_topic: state.storage_topic.id
