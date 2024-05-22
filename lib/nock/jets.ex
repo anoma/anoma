@@ -366,7 +366,7 @@ defmodule Nock.Jets do
   @spec bex(Nock.t()) :: :error | {:ok, Noun.t()}
   def bex(core) do
     with {:ok, a} when is_noun_atom(a) <- sample(core) do
-      {:ok, 2 ** a}
+      {:ok, 2 ** an_integer(a)}
     else
       _ -> :error
     end
@@ -388,7 +388,8 @@ defmodule Nock.Jets do
            sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
-      {:ok, val <<< (count <<< block_size)}
+      {:ok,
+       an_integer(val) <<< (an_integer(count) <<< an_integer(block_size))}
     else
       _ -> :error
     end
@@ -400,7 +401,8 @@ defmodule Nock.Jets do
            sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
-      {:ok, val >>> (count <<< block_size)}
+      {:ok,
+       an_integer(val) >>> (an_integer(count) <<< an_integer(block_size))}
     else
       _ -> :error
     end
@@ -414,8 +416,8 @@ defmodule Nock.Jets do
            Noun.axis(30, core) do
       # we get #b1111, if count is 4. Since 1 <<< 4 = #b10000 - 1 = #b1111
       # block_size just a left shift on the count
-      mask = (1 <<< (count <<< block_size)) - 1
-      {:ok, val &&& mask}
+      mask = (1 <<< (an_integer(count) <<< an_integer(block_size))) - 1
+      {:ok, an_integer(val) &&& mask}
     else
       _ -> :error
     end
@@ -426,7 +428,7 @@ defmodule Nock.Jets do
     with {:ok, sample} when is_noun_atom(sample) <- sample(core),
          {:ok, block_size} when is_noun_atom(block_size) <-
            Noun.axis(30, core) do
-      {:ok, Nock.Bits.num_bits(sample, block_size)}
+      {:ok, Nock.Bits.num_bits(an_integer(sample), an_integer(block_size))}
     else
       _ -> :error
     end
