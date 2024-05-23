@@ -24,6 +24,7 @@ defmodule Nock do
     field(:ordering, Router.Addr.t() | nil, default: nil)
     field(:snapshot_path, Noun.t() | nil, default: nil)
     field(:logger, Router.Addr.t(), enforce: false)
+    field(:meter_pid, pid() | nil, default: nil)
   end
 
   @dialyzer :no_improper_lists
@@ -43,51 +44,51 @@ defmodule Nock do
   # - :check, check that jet and naive produce the same result
   @jet_registry %{
     6_149_546_978_850_415_302 =>
-      {"dec", 7, @layer_1_context_mug, &Nock.Jets.dec/1, :enabled},
+      {"dec", 7, @layer_1_context_mug, &Nock.Jets.dec/1, :enabled, 10},
     13_456_140_584_432_748_094 =>
-      {"add", 7, @layer_1_context_mug, &Nock.Jets.add/1, :enabled},
+      {"add", 7, @layer_1_context_mug, &Nock.Jets.add/1, :enabled, 10},
     14_801_825_384_048_474_882 =>
-      {"sub", 7, @layer_1_context_mug, &Nock.Jets.sub/1, :enabled},
+      {"sub", 7, @layer_1_context_mug, &Nock.Jets.sub/1, :enabled, 10},
     16_448_669_966_680_839_947 =>
-      {"lth", 7, @layer_1_context_mug, &Nock.Jets.lth/1, :enabled},
+      {"lth", 7, @layer_1_context_mug, &Nock.Jets.lth/1, :enabled, 10},
     9_593_574_083_496_825_465 =>
-      {"lte", 7, @layer_1_context_mug, &Nock.Jets.lte/1, :enabled},
+      {"lte", 7, @layer_1_context_mug, &Nock.Jets.lte/1, :enabled, 10},
     1_289_252_054_839_247_911 =>
-      {"gth", 7, @layer_1_context_mug, &Nock.Jets.gth/1, :enabled},
+      {"gth", 7, @layer_1_context_mug, &Nock.Jets.gth/1, :enabled, 10},
     11_860_242_327_310_494_912 =>
-      {"gte", 7, @layer_1_context_mug, &Nock.Jets.gte/1, :enabled},
+      {"gte", 7, @layer_1_context_mug, &Nock.Jets.gte/1, :enabled, 10},
     1_648_022_014_956_696_243 =>
-      {"mul", 7, @layer_1_context_mug, &Nock.Jets.mul/1, :enabled},
+      {"mul", 7, @layer_1_context_mug, &Nock.Jets.mul/1, :enabled, 10},
     9_385_224_608_484_213_408 =>
-      {"div", 7, @layer_1_context_mug, &Nock.Jets.div/1, :enabled},
+      {"div", 7, @layer_1_context_mug, &Nock.Jets.div/1, :enabled, 10},
     9_865_107_020_110_751_778 =>
-      {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1, :enabled},
+      {"mod", 7, @layer_1_context_mug, &Nock.Jets.mod/1, :enabled, 10},
     2_171_028_045_513_367_023 =>
-      {"verify", 7, @layer_6_context_mug, &Nock.Jets.verify/1, :enabled},
+      {"verify", 7, @layer_6_context_mug, &Nock.Jets.verify/1, :enabled, 100},
     11_207_087_638_603_349_387 =>
-      {"sign", 7, @layer_6_context_mug, &Nock.Jets.sign/1, :enabled},
+      {"sign", 7, @layer_6_context_mug, &Nock.Jets.sign/1, :enabled, 100},
     14_969_209_197_206_704_945 =>
       {"verify-detatched", 7, @layer_6_context_mug,
-       &Nock.Jets.verify_detatched/1, :enabled},
+       &Nock.Jets.verify_detatched/1, :enabled, 100},
     17_231_646_935_946_214_635 =>
       {"sign-detatched", 7, @layer_6_context_mug, &Nock.Jets.sign_detatched/1,
-       :enabled},
+       :enabled, 100},
     18_035_336_398_045_859_425 =>
-      {"bex", 7, @layer_4_context_mug, &Nock.Jets.bex/1, :enabled},
+      {"bex", 7, @layer_4_context_mug, &Nock.Jets.bex/1, :enabled, 20},
     9_856_364_927_859_191_827 =>
-      {"mix", 7, @layer_5_context_mug, &Nock.Jets.mix/1, :enabled},
+      {"mix", 7, @layer_5_context_mug, &Nock.Jets.mix/1, :enabled, 20},
     15_935_656_757_697_674_383 =>
-      {"jam", 7, @layer_5_context_mug, &Nock.Jets.jam/1, :enabled},
+      {"jam", 7, @layer_5_context_mug, &Nock.Jets.jam/1, :enabled, 50},
     11_639_366_709_658_810_328 =>
-      {"cue", 7, @layer_5_context_mug, &Nock.Jets.cue/1, :enabled},
+      {"cue", 7, @layer_5_context_mug, &Nock.Jets.cue/1, :enabled, 50},
     3_043_895_017_490_773_097 =>
-      {"met", 14, @layer_4_block_context_mug, &Nock.Jets.met/1, :enabled},
+      {"met", 14, @layer_4_block_context_mug, &Nock.Jets.met/1, :enabled, 20},
     13_916_871_139_600_991_184 =>
-      {"end", 14, @layer_4_block_context_mug, &Nock.Jets.nend/1, :enabled},
+      {"end", 14, @layer_4_block_context_mug, &Nock.Jets.nend/1, :enabled, 20},
     8_892_358_705_258_348_836 =>
-      {"lsh", 14, @layer_4_block_context_mug, &Nock.Jets.lsh/1, :enabled},
+      {"lsh", 14, @layer_4_block_context_mug, &Nock.Jets.lsh/1, :enabled, 20},
     12_605_872_635_346_981_159 =>
-      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled}
+      {"rsh", 14, @layer_4_block_context_mug, &Nock.Jets.rsh/1, :enabled, 20}
   }
 
   @doc """
@@ -135,11 +136,14 @@ defmodule Nock do
             nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
 
           # a jet exists but it's disabled, use naive nock
-          {:ok, {_label, _parent_axis, _parent_mug, _jet_function, :disabled}} ->
+          {:ok,
+           {_label, _parent_axis, _parent_mug, _jet_function, :disabled,
+            _cost}} ->
             nock(core, [2 | [[0 | 1] | [0 | axis]]], env)
 
           # a jet exists. mug the parent too
-          {:ok, {label, parent_axis, parent_mug, jet_function, jet_mode}} ->
+          {:ok,
+           {label, parent_axis, parent_mug, jet_function, jet_mode, cost}} ->
             maybe_parent = Noun.axis(parent_axis, core)
 
             case maybe_parent do
@@ -155,6 +159,10 @@ defmodule Nock do
                   # that it's at axis 2.
                   case jet_mode do
                     :enabled ->
+                      if env.meter_pid != nil do
+                        send(env.meter_pid, {:gas, cost})
+                      end
+
                       jet_function.(core)
 
                     :check ->
@@ -226,6 +234,46 @@ defmodule Nock do
     naive_nock(subject, formula, environment)
   end
 
+  # metered nock: a hack until nock VMs become their own agents.
+  @spec metered_nock(Noun.t(), Noun.t()) ::
+          {:ok, Noun.t(), non_neg_integer()} | {:error, non_neg_integer()}
+  def metered_nock(subject, formula) do
+    metered_nock(subject, formula, %Nock{})
+  end
+
+  @spec metered_nock(Noun.t(), Noun.t(), t()) ::
+          {:ok, Noun.t(), non_neg_integer()} | {:error, non_neg_integer()}
+  def metered_nock(subject, formula, environment) do
+    meter = Task.async(Nock, :gas_meter, [])
+    result = nock(subject, formula, %{environment | meter_pid: meter.pid})
+    send(meter.pid, :done)
+    gas_cost = Task.await(meter)
+
+    case result do
+      {:ok, noun} ->
+        {:ok, noun, gas_cost}
+
+      :error ->
+        {:error, gas_cost}
+    end
+  end
+
+  @spec gas_meter() :: non_neg_integer()
+  def gas_meter() do
+    gas_meter(0)
+  end
+
+  @spec gas_meter(non_neg_integer()) :: non_neg_integer()
+  def gas_meter(gas) do
+    receive do
+      {:gas, n} ->
+        gas_meter(n + gas)
+
+      :done ->
+        gas
+    end
+  end
+
   # naive nock interpreter: reduce via the nock 4k spec rules.
   # note: this must recurse into nock/2 (or nock/3), not itself.
 
@@ -237,6 +285,10 @@ defmodule Nock do
 
   @spec naive_nock(Noun.t(), Noun.t(), t()) :: {:ok, Noun.t()} | :error
   def naive_nock(subject, formula, environment) do
+    if environment.meter_pid != nil do
+      send(environment.meter_pid, {:gas, 1})
+    end
+
     try do
       case formula do
         # autocons; a cell of formulas becomes a cell of results
