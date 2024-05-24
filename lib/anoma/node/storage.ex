@@ -57,13 +57,11 @@ defmodule Anoma.Node.Storage do
   `AnomaTest.Node.Stirage` to learn more on how to use me
   """
 
-  alias Anoma.Node.Router
+  alias Anoma.Node.{Router, Logger}
   alias __MODULE__
 
   use TypedStruct
   use Router.Engine
-
-  require Logger
 
   @typedoc """
   I represent the qualified and ordered data of storage
@@ -325,7 +323,7 @@ defmodule Anoma.Node.Storage do
       # issue
       {:aborted, {:already_exists, table}} ->
         unless does_storage_actually_exist(table) do
-          instrument({:restarting_storage, table})
+          log_info({:restarting_storage, table})
         end
 
         {:aborted, {:already_exists, table}}
@@ -353,7 +351,7 @@ defmodule Anoma.Node.Storage do
 
   @spec do_delete_key(t(), order_key()) :: :ok | nil
   defp do_delete_key(storage = %__MODULE__{}, key) do
-    instrument({:delete_key, key})
+    log_info({:delete_key, key})
     do_put(storage, key, :absent)
   end
 
@@ -363,7 +361,7 @@ defmodule Anoma.Node.Storage do
       order = read_order(storage, key)
       new_order = calculate_order(order)
       write_at_order(storage, key, value, new_order)
-      instrument({:put_order, new_order})
+      log_info({:put_order, new_order})
     end
 
     topic = storage.topic
@@ -415,7 +413,7 @@ defmodule Anoma.Node.Storage do
 
       if Enum.any?(latest_keys, absent_predicate) do
         {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
-        instrument({:error_missing, key, order})
+        log_info({:error_missing, key, order})
         :absent
       else
         latest_keys
@@ -450,7 +448,7 @@ defmodule Anoma.Node.Storage do
 
   @spec do_blocking_read(t(), qualified_key()) :: :error | {:ok, any()}
   defp do_blocking_read(storage = %__MODULE__{}, key) do
-    instrument({:read, key})
+    log_info({:read, key})
 
     case key do
       [0 | _] ->
@@ -528,7 +526,7 @@ defmodule Anoma.Node.Storage do
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
   defp checked_read_at(storage = %Storage{}, key, order) do
-    instrument({:get_order, order})
+    log_info({:get_order, order})
 
     with {:atomic, [{_, [^order, ^key | 0], value}]} <-
            do_read_at_order_tx(storage, key, order) do
@@ -663,7 +661,7 @@ defmodule Anoma.Node.Storage do
 
     if Enum.any?(latest_keys, absent_predicate) do
       {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
-      instrument({:error_missing, key, order})
+      log_info({:error_missing, key, order})
       :absent
     else
       latest_keys
@@ -678,7 +676,7 @@ defmodule Anoma.Node.Storage do
       :mnesia.select(table, [{{:_, :"$2", :"$3"}, keys, [:"$$"]}])
     end
 
-    instrument({:read_all, key_query})
+    log_info({:read_all, key_query})
     :mnesia.transaction(query_tx)
   end
 
@@ -701,35 +699,41 @@ defmodule Anoma.Node.Storage do
   end
 
   ############################################################
-  #                      Instrumentation                     #
+  #                      Logging Info                        #
   ############################################################
 
-  defp instrument({:get_order, order}) do
-    Logger.debug("Getting at order: #{inspect(order)}")
+  defp log_info({:get_order, order}) do
+    Logger.add(nil, :debug, "Getting at order: #{inspect(order)}")
   end
 
-  defp instrument({:put_order, order}) do
-    Logger.debug("Putting at order: #{inspect(order)}")
+  defp log_info({:put_order, order}) do
+    Logger.add(nil, :debug, "Putting at order: #{inspect(order)}")
   end
 
-  defp instrument({:read, key}) do
-    Logger.info("Regular blocking read at key: #{inspect(key)}")
+  defp log_info({:read, key}) do
+    Logger.add(nil, :info, "Regular blocking read at key: #{inspect(key)}")
   end
 
-  defp instrument({:read_all, keys}) do
-    Logger.info("Reading key_space at: #{inspect(keys)}")
+  defp log_info({:read_all, keys}) do
+    Logger.add(nil, :info, "Reading key_space at: #{inspect(keys)}")
   end
 
-  defp instrument({:error_missing, key, order}) do
-    Logger.error("Missing key: #{inspect(key)} at order: #{inspect(order)}")
+  defp log_info({:error_missing, key, order}) do
+    Logger.add(
+      nil,
+      :error,
+      "Missing key: #{inspect(key)} at order: #{inspect(order)}"
+    )
   end
 
-  defp instrument({:delete_key, key}) do
-    Logger.debug("Deleting key: #{inspect(key)}")
+  defp log_info({:delete_key, key}) do
+    Logger.add(nil, :debug, "Deleting key: #{inspect(key)}")
   end
 
-  defp instrument({:restarting_storage, table}) do
-    Logger.error(
+  defp log_info({:restarting_storage, table}) do
+    Logger.add(
+      nil,
+      :error,
       "Table: #{inspect(table)} is in an inconsistent state." <>
         "!!!ATTENTION!!! please run Anoma.Mnesia.fresh_storage() to restart storage"
     )
