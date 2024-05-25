@@ -34,8 +34,6 @@ defmodule Nock do
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
-  @dialyzer :no_improper_lists
-
   @layers 6
 
   @layer_1_context_mug 17_654_928_022_549_292_273

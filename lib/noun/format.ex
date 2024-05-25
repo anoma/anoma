@@ -3,8 +3,6 @@ defmodule Noun.Format do
   Parsing and printing of nouns.
   """
 
-  @dialyzer :no_improper_lists
-
   @spec parse_always(String.t()) :: Noun.t()
   def parse_always(string) do
     {:ok, parsed} = parse(string)

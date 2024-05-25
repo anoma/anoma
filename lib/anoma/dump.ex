@@ -91,7 +91,6 @@ defmodule Anoma.Dump do
   relaunch the executions as well.
   """
 
-  @dialyzer {:no_return, launch: 2}
   @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
   def launch(file, name) do
     load = file |> load()
@@ -113,7 +112,6 @@ defmodule Anoma.Dump do
   named supervisor.
   """
 
-  @dialyzer {:no_return, launch: 2}
   @spec launch(String.t(), atom(), atom(), Configuration.configuration_map()) ::
           {:ok, %Node{}} | any()
   def launch(file, name, sup_name, config) do

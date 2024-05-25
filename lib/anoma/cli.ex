@@ -134,8 +134,6 @@ defmodule Anoma.Cli do
     end
   end
 
-  # Optimus.t() is opaque so the help fails to type check, but it's OK
-  @dialyzer {:nowarn_function, top_level_help: 0}
   def top_level_help() do
     IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
   end
