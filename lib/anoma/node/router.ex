@@ -245,7 +245,7 @@ defmodule Anoma.Node.Router do
           | {:supervisor, Supervisor.supervisor()}
           | {:supvisor_mod, atom()}
 
-  typedstruct module: Addr do
+  defmodule Addr do
     @moduledoc """
     An address to which we can send a message.
     The server, if known, is a local actor which can receive it directly;
@@ -254,9 +254,26 @@ defmodule Anoma.Node.Router do
       engine, which can only talk to other local engines.
     (Hence, at least one of id and server must be known; potentially both are.)
     """
-    field(:router, Addr.t())
-    field(:id, Id.Extern.t() | nil)
-    field(:server, GenServer.server() | nil)
+    typedstruct do
+      field(:router, Addr.t())
+      field(:id, Id.Extern.t() | nil)
+      field(:server, GenServer.server() | nil)
+    end
+
+    @spec id(t()) :: Id.Extern.t() | nil
+    def id(addr) do
+      addr.id
+    end
+
+    @spec server(t()) :: GenServer.server() | nil
+    def server(addr) do
+      addr.server
+    end
+
+    @spec pid(t()) :: pid() | nil
+    def pid(addr) do
+      Process.whereis(server(addr))
+    end
   end
 
   typedstruct do
