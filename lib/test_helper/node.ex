@@ -33,6 +33,7 @@ defmodule TestHelper.Node do
 
     Process.put(:engine_id, id.external)
     Process.put(:engine_server, server_name)
+    Process.put(:engine_router, router)
 
     GenServer.cast(router.server, {:init_local_engine, id, server_name})
     %{id: id, server_name: server_name, router: router, transport: transport}

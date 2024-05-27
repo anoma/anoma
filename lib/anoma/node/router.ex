@@ -255,7 +255,6 @@ defmodule Anoma.Node.Router do
     (Hence, at least one of id and server must be known; potentially both are.)
     """
     typedstruct do
-      field(:router, Addr.t())
       field(:id, Id.Extern.t() | nil)
       field(:server, GenServer.server() | nil)
     end
@@ -357,16 +356,14 @@ defmodule Anoma.Node.Router do
 
     router_addr = %Addr{
       id: router_id.external,
-      server: router_name,
-      router: router_name
+      server: router_name
     }
 
     transport_name = process_name(Transport, transport_id.external)
 
     transport_addr = %Addr{
       id: transport_id.external,
-      server: transport_name,
-      router: router_name
+      server: transport_name
     }
 
     with {:ok, _} <-
@@ -456,7 +453,6 @@ defmodule Anoma.Node.Router do
            ) do
       {:ok,
        %Addr{
-         router: router,
          id: external,
          server: process_name(module, external)
        }}
@@ -517,13 +513,13 @@ defmodule Anoma.Node.Router do
     GenServer.cast(server, {:router_cast, self_addr(addr), msg})
   end
 
-  def cast(addr = %Addr{router: router, server: nil}, msg) do
+  def cast(addr = %Addr{server: nil}, msg) do
     Logger.info("casting to non-local addr #{inspect(addr)}")
 
     # todo message serialisation should happen here (but there is some subtlety
     # because local topics also go through the router, and we don't want to
     # bother serialising anything then)
-    GenServer.cast(router, {:cast, addr, self_addr(addr), msg})
+    GenServer.cast(Addr.server(router()), {:cast, addr, self_addr(addr), msg})
   end
 
   @doc """
@@ -569,10 +565,13 @@ defmodule Anoma.Node.Router do
     GenServer.call(server, {:router_call, self_addr(addr), msg}, :infinity)
   end
 
-  def call(addr = %Addr{router: router, server: nil}, msg, timeout) do
+  def call(addr = %Addr{server: nil}, msg, timeout) do
     Logger.info("calling non-local addr #{inspect(addr)}")
     # todo message serialisation should happen here
-    GenServer.cast(router, {:call, addr, self_addr(addr), msg, timeout})
+    GenServer.cast(
+      Addr.server(router()),
+      {:call, addr, self_addr(addr), msg, timeout}
+    )
 
     receive do
       # {:router_call_response, err = {:error, :timed_out}} -> exit("timed out")
@@ -801,7 +800,7 @@ defmodule Anoma.Node.Router do
     if Map.has_key?(s.topic_table, id) do
       {{:error, :already_exists}, s}
     else
-      {{:ok, %Addr{id: id, router: s.addr.router}},
+      {{:ok, %Addr{id: id}},
        %{s | topic_table: Map.put(s.topic_table, id, MapSet.new())}}
     end
   end
@@ -1003,12 +1002,16 @@ defmodule Anoma.Node.Router do
   end
 
   @spec self_addr(Addr.t()) :: Addr.t()
-  def self_addr(%Addr{router: router}) do
+  def self_addr(%Addr{}) do
     %Addr{
-      router: router,
       id: Process.get(:engine_id),
       server: Process.get(:engine_server) || self()
     }
+  end
+
+  @spec router() :: Addr.t()
+  def router() do
+    Process.get(:engine_router) || exit("no known router")
   end
 
   defimpl Inspect, for: Addr do

@@ -267,21 +267,23 @@ defmodule Anoma.Node.Storage do
     do_setup(storage, rocks)
   end
 
-  @spec do_remove(t()) :: [:ok] | nil
+  @spec do_remove(t()) :: :ok
   defp do_remove(storage = %__MODULE__{}) do
-    topic = storage.topic
-    del_q = :mnesia.delete_table(storage.qualified)
-    del_o = :mnesia.delete_table(storage.order)
-    del_c = :mnesia.delete_table(storage.rm_commitments)
+    _topic = storage.topic
+    _del_q = :mnesia.delete_table(storage.qualified)
+    _del_o = :mnesia.delete_table(storage.order)
+    _del_c = :mnesia.delete_table(storage.rm_commitments)
 
-    unless topic == nil do
-      [
-        {:delete_qualified, del_q},
-        {:delete_ordering, del_o},
-        {:delete_commitments, del_c}
-      ]
-      |> Enum.map(fn x -> Router.cast(topic, x) end)
-    end
+    # unless topic == nil do
+    #  [
+    #    {:delete_qualified, del_q},
+    #    {:delete_ordering, del_o},
+    #    {:delete_commitments, del_c}
+    #  ]
+    #  |> Enum.map(fn x -> Router.cast(topic, x) end)
+    # end
+
+    :ok
   end
 
   @doc """
