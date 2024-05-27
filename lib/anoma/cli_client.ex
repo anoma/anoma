@@ -80,7 +80,7 @@ defmodule Anoma.Cli.Client do
     # tell the other router how to reach us
     Transport.learn_engine(
       other_transport_addr,
-      Router.self_addr(router).id,
+      Router.Addr.id(Router.self_addr()),
       router.id
     )
 

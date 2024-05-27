@@ -549,8 +549,8 @@ defmodule Anoma.Node.Router do
 
   """
   @spec cast(Addr.t(), term()) :: :ok
-  def cast(addr = %Addr{server: server}, msg) when server != nil do
-    GenServer.cast(server, {:router_cast, self_addr(addr), msg})
+  def cast(%Addr{server: server}, msg) when server != nil do
+    GenServer.cast(server, {:router_cast, self_addr(), msg})
   end
 
   def cast(addr = %Addr{server: nil}, msg) do
@@ -559,7 +559,7 @@ defmodule Anoma.Node.Router do
     # todo message serialisation should happen here (but there is some subtlety
     # because local topics also go through the router, and we don't want to
     # bother serialising anything then)
-    GenServer.cast(Addr.server(router()), {:cast, addr, self_addr(addr), msg})
+    GenServer.cast(Addr.server(router()), {:cast, addr, self_addr(), msg})
   end
 
   @doc """
@@ -599,10 +599,10 @@ defmodule Anoma.Node.Router do
 
   """
   @spec call(Addr.t(), term(), :erlang.timeout()) :: term()
-  def call(addr = %Addr{server: server}, msg, _timeout) when server != nil do
+  def call(%Addr{server: server}, msg, _timeout) when server != nil do
     # use an infinite timeout for local calls--timeout is only
     # significant for inter-node calls
-    GenServer.call(server, {:router_call, self_addr(addr), msg}, :infinity)
+    GenServer.call(server, {:router_call, self_addr(), msg}, :infinity)
   end
 
   def call(addr = %Addr{server: nil}, msg, timeout) do
@@ -610,7 +610,7 @@ defmodule Anoma.Node.Router do
     # todo message serialisation should happen here
     GenServer.cast(
       Addr.server(router()),
-      {:call, addr, self_addr(addr), msg, timeout}
+      {:call, addr, self_addr(), msg, timeout}
     )
 
     receive do
@@ -1051,8 +1051,8 @@ defmodule Anoma.Node.Router do
     )
   end
 
-  @spec self_addr(Addr.t()) :: Addr.t()
-  def self_addr(%Addr{}) do
+  @spec self_addr() :: Addr.t()
+  def self_addr() do
     %Addr{
       id: Process.get(:engine_id),
       server: Process.get(:engine_server) || self()

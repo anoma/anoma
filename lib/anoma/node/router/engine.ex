@@ -178,7 +178,7 @@ defmodule Anoma.Node.Router.Engine do
   def terminate(reason, state = %__MODULE__{}) do
     GenServer.cast(
       Addr.server(state.router_addr),
-      {:cleanup_local_engine, Router.self_addr(state.router_addr)}
+      {:cleanup_local_engine, Router.self_addr()}
     )
 
     {:stop, reason, state}
