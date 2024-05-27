@@ -549,17 +549,19 @@ defmodule Anoma.Node.Router do
 
   """
   @spec cast(Addr.t(), term()) :: :ok
-  def cast(%Addr{server: server}, msg) when server != nil do
-    GenServer.cast(server, {:router_cast, self_addr(), msg})
-  end
+  def cast(addr, msg) do
+    case Addr.server(addr) do
+      nil ->
+        Logger.info("casting to non-local addr #{inspect(addr)}")
 
-  def cast(addr = %Addr{server: nil}, msg) do
-    Logger.info("casting to non-local addr #{inspect(addr)}")
+        # todo message serialisation should happen here (but there is some subtlety
+        # because local topics also go through the router, and we don't want to
+        # bother serialising anything then)
+        GenServer.cast(Addr.server(router()), {:cast, addr, self_addr(), msg})
 
-    # todo message serialisation should happen here (but there is some subtlety
-    # because local topics also go through the router, and we don't want to
-    # bother serialising anything then)
-    GenServer.cast(Addr.server(router()), {:cast, addr, self_addr(), msg})
+      server ->
+        GenServer.cast(server, {:router_cast, self_addr(), msg})
+    end
   end
 
   @doc """
@@ -599,13 +601,19 @@ defmodule Anoma.Node.Router do
 
   """
   @spec call(Addr.t(), term(), :erlang.timeout()) :: term()
-  def call(%Addr{server: server}, msg, _timeout) when server != nil do
-    # use an infinite timeout for local calls--timeout is only
-    # significant for inter-node calls
-    GenServer.call(server, {:router_call, self_addr(), msg}, :infinity)
+  def call(addr, msg, timeout) do
+    case Addr.server(addr) do
+      nil ->
+        call_nonlocal(addr, msg, timeout)
+
+      server ->
+        # use an infinite timeout for local calls--timeout is only
+        # significant for inter-node calls
+        GenServer.call(server, {:router_call, self_addr(), msg}, :infinity)
+    end
   end
 
-  def call(addr = %Addr{server: nil}, msg, timeout) do
+  defp call_nonlocal(addr, msg, timeout) do
     Logger.info("calling non-local addr #{inspect(addr)}")
     # todo message serialisation should happen here
     GenServer.cast(
