@@ -17,7 +17,7 @@ defmodule AnomaTest.Node.Mempool do
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
     {:ok, nodes} =
-      Anoma.Node.start_link(
+      Anoma.Node.start_link_or_find_instance(
         new_storage: true,
         name: name,
         use_rocks: false,

@@ -143,6 +143,26 @@ defmodule Anoma.Node do
     end
   end
 
+  @doc """
+
+  I work just like `start_link/1` except I give back the pid directly
+  if the node is already started.
+
+  This is preferable in tests, as we wish to have them be robust upon
+  rerunning.
+
+  """
+  @spec start_link_or_find_instance(configuration()) :: GenServer.on_start()
+  def start_link_or_find_instance(args) do
+    case start_link(args) do
+      {:error, {:already_started, pid}} ->
+        {:ok, pid}
+
+      other ->
+        other
+    end
+  end
+
   @spec init(Anoma.Dump.dump()) :: any()
   def init(args) do
     {log_id, log_st} = args[:logger]
