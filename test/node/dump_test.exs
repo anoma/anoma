@@ -30,12 +30,11 @@ defmodule AnomaTest.Node.Dump do
           |> Anoma.Node.start_min()
       )
 
-    node = Anoma.Node.state(nodes)
-
-    [node: node, name: name]
+    [nodes: nodes, name: name]
   end
 
-  test "loading keeps addresses and storage", %{node: node, name: name} do
+  test "loading keeps addresses and storage", %{nodes: nodes, name: name} do
+    node = Anoma.Node.state(nodes)
     key = 555
     zero = zero_counter(key)
     Mempool.hard_reset(node.mempool)
@@ -52,8 +51,10 @@ defmodule AnomaTest.Node.Dump do
     sname = Anoma.Node.Router.process_name(:supervisor, id)
 
     DynamicSupervisor.stop(sname, :normal)
+    GenServer.stop(nodes, :normal)
 
-    Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
+    {:ok, pid} =
+      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
 
     new_node = Anoma.Node.state(:dump_new)
 
@@ -61,6 +62,7 @@ defmodule AnomaTest.Node.Dump do
     assert Mnesia.dump(:dump_blocks) == block_store_old
 
     DynamicSupervisor.stop(sname, :normal)
+    GenServer.stop(pid, :normal)
 
     Anoma.Dump.remove_dump("dump_test.dmp")
   end
