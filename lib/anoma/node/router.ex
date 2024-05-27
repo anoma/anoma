@@ -479,6 +479,16 @@ defmodule Anoma.Node.Router do
   ############################################################
 
   @doc """
+  Send a message directly using Kernel.send/1 to the local process, assuming
+  there is one.
+  """
+  @spec send_raw(Addr.t(), term()) :: :ok
+  def send_raw(addr, msg) do
+    send(Addr.pid(addr), msg)
+    :ok
+  end
+
+  @doc """
   Makes a synchronous call to the `Server` and waits for a reply.
 
   Call has a few interesting cases we can consider
