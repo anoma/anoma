@@ -27,7 +27,7 @@ defmodule Anoma.Node.Ordering do
   @type key() :: any()
 
   typedstruct do
-    field(:table, Router.Addr.t(), default: %Router.Addr{})
+    field(:table, Router.Addr.t())
     field(:next_order, non_neg_integer(), default: 1)
     field(:hash_to_order, %{key() => non_neg_integer()}, default: %{})
     field(:logger, Router.Addr.t(), enforce: false)

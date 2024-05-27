@@ -44,7 +44,7 @@ defmodule AnomaTest.Node.Pinger do
 
     pinger = node.pinger
 
-    ex_id = node.executor_topic.id
+    ex_id = node.executor_topic
     mem_t = node.mempool_topic
 
     :ok =

@@ -55,16 +55,24 @@ defmodule TestHelper.Node do
 
     engines
     |> Enum.each(
-      &Transport.learn_engine(client_transport, &1.id, server_router)
+      &Transport.learn_engine(
+        client_transport,
+        Router.Addr.id(&1),
+        server_router
+      )
     )
   end
 
   @spec router_talking_to_client(Router.addr(), Router.addr()) :: :ok
   def router_talking_to_client(client_router, server_transport) do
-    transport_addr = %{client_router | server: nil, id: server_transport.id}
-
-    my_id = Router.self_addr().id()
-    # Tell the server Ι live on the client
-    Transport.learn_engine(transport_addr, my_id, client_router.id)
+    my_id = Router.Addr.id(Router.self_addr())
+    # Tell the server Ι live on the client (ensure we send to the id so the
+    # message is sent remotely, since the 'local' server is likely in a
+    # different image
+    Transport.learn_engine(
+      Router.Addr.id!(server_transport),
+      my_id,
+      Router.Addr.id(client_router)
+    )
   end
 end

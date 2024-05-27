@@ -334,7 +334,7 @@ defmodule Anoma.Node.Router do
     field(:max_call_id, non_neg_integer(), default: 0)
 
     # topics to which local engines are subscribed--redundant given the above, but useful
-    field(:local_engine_subs, %{addr() => Id.Extern.t()}, default: %{})
+    field(:local_engine_subs, %{Addr.t() => Id.Extern.t()}, default: %{})
     field(:id, Id.Extern.t())
     field(:internal_id, Id.t())
     field(:addr, addr())
@@ -848,25 +848,19 @@ defmodule Anoma.Node.Router do
   end
 
   # create topic.  todo non local topics.  todo the topic should get
-  # its own id so distinct topics can be dap
+  # its own engine so distinct topics can be dap
   def handle_self_call({:create_topic, id, :local}, _, s) do
     if Map.has_key?(s.topic_table, id) do
       {{:error, :already_exists}, s}
     else
-      {{:ok, %Addr{id: id}},
+      {{:ok, id},
        %{s | topic_table: Map.put(s.topic_table, id, MapSet.new())}}
     end
   end
 
-  # subscribe to topic
-  # be nice and treat an address interchangeably
-  # with an id (probably at some point this will be the only way to do
-  # node-local topics)
-  def handle_self_call({:subscribe_topic, %Addr{id: id}, scope}, addr, s) do
-    handle_self_call({:subscribe_topic, id, scope}, addr, s)
-  end
-
   def handle_self_call({:subscribe_topic, topic, :local}, addr, s) do
+    topic = Addr.id!(topic)
+
     if Map.has_key?(s.topic_table, topic) do
       s = %{
         s
@@ -886,11 +880,9 @@ defmodule Anoma.Node.Router do
 
   # unsubscribe.  todo should this error if the topic exists but
   # they're not already subscribed?
-  def handle_self_call({:unsubscribe_topic, %Addr{id: id}, scope}, addr, s) do
-    handle_self_call({:unsubscribe_topic, id, scope}, addr, s)
-  end
-
   def handle_self_call({:unsubscribe_topic, topic, :local}, addr, s) do
+    topic = Addr.id!(topic)
+
     if Map.has_key?(s.topic_table, topic) do
       s = %{
         s
@@ -910,47 +902,52 @@ defmodule Anoma.Node.Router do
     end
   end
 
-  # send to an address with a known pid
   @spec do_cast(t(), Addr.t(), Addr.t(), term()) :: t()
-  defp do_cast(s, %Addr{server: server}, src, msg) when server != nil do
-    Logger.info("cast to #{inspect(server)}")
-    GenServer.cast(server, {:router_cast, src, msg})
-    s
-  end
+  defp do_cast(s, dst, src, msg) do
+    cond do
+      # send directly to a local engine
+      Addr.server(dst) ->
+        Logger.info("cast to #{inspect(dst)}")
+        GenServer.cast(Addr.server(dst), {:router_cast, src, msg})
+        s
 
-  # send to a topic we know about
-  defp do_cast(s, %Addr{id: id}, src, msg)
-       when is_map_key(s.topic_table, id) do
-    Enum.reduce(Map.get(s.topic_table, id), s, fn recipient, s ->
-      do_cast(s, recipient, src, msg)
-    end)
-  end
+      # send to a topic we know about
+      is_map_key(s.topic_table, Addr.id!(dst)) ->
+        Enum.reduce(Map.get(s.topic_table, Addr.id!(dst)), s, fn recipient,
+                                                                 s ->
+          do_cast(s, recipient, src, msg)
+        end)
 
-  # send to remote address
-  defp do_cast(s, %Addr{id: dst_id}, %Addr{id: src_id}, msg) do
-    # todo: serialisation of msg should happen elsewhere
-    send_to_transport(s, dst_id, src_id, [:cast, Anoma.Serialise.pack(msg)])
-    s
+      # send to remote address
+      true ->
+        # todo: serialisation of msg should happen elsewhere
+        # also if there's no id we could return the error to the caller (or forge an id...)
+        send_to_transport(s, Addr.id!(dst), Addr.id!(src), [
+          :cast,
+          Anoma.Serialise.pack(msg)
+        ])
+
+        s
+    end
   end
 
   @spec do_call(t(), Addr.t(), Addr.t(), term(), :erlang.timeout()) :: t()
+  defp do_call(s, dst, src, msg, timeout) do
+    case Addr.server(dst) do
+      nil ->
+        call_remote(s, Addr.id!(dst), src, msg, timeout)
 
-  # call to an address with a known pid
-  defp do_call(s, %Addr{server: server}, src, msg, _timeout)
-       when server != nil do
-    res = GenServer.call(server, {:router_call, src, msg}, :infinity)
-    send_raw(src, {:router_call_response, res})
-    s
+      server ->
+        # call to a local engine
+        res = GenServer.call(server, {:router_call, src, msg}, :infinity)
+        send_raw(src, {:router_call_response, res})
+        s
+    end
   end
 
   # call to remote address
-  defp do_call(
-         s,
-         %Addr{id: dst_id},
-         src_addr = %Addr{id: src_id},
-         msg,
-         timeout
-       ) do
+  defp call_remote(s, dst_id, src_addr, msg, timeout) do
+    src_id = Addr.id(src_addr)
     # todo: serialisation of msg should happen elsewhere
     send_to_transport(s, dst_id, src_id, [
       :call,

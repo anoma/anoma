@@ -122,7 +122,7 @@ defmodule Anoma.Node.Storage do
 
   @spec get(Router.Addr.t(), order_key()) ::
           :absent | {:ok, qualified_value()}
-  def get(storage = %Router.Addr{}, key) do
+  def get(storage, key) do
     Router.call(storage, {:get, key})
   end
 
@@ -130,22 +130,22 @@ defmodule Anoma.Node.Storage do
           :absent
           | list({qualified_key(), qualified_value()})
           | {:atomic, any()}
-  def get_keyspace(storage = %Router.Addr{}, key_space) do
+  def get_keyspace(storage, key_space) do
     Router.call(storage, {:get_keyspace, key_space})
   end
 
   @spec snapshot_order(Router.Addr.t()) :: result(snapshot())
-  def snapshot_order(storage = %Router.Addr{}) do
+  def snapshot_order(storage) do
     Router.call(storage, :snapshot_order)
   end
 
-  def read_order_tx(storage = %Router.Addr{}, key) do
+  def read_order_tx(storage, key) do
     Router.call(storage, {:read_order_tx, key})
   end
 
   @spec read_at_order_tx(Router.Addr.t(), Noun.t(), non_neg_integer()) ::
           result(list({atom(), qualified_key(), qualified_value()}))
-  def read_at_order_tx(storage = %Router.Addr{}, key, order) do
+  def read_at_order_tx(storage, key, order) do
     Router.call(storage, {:read_at_order_tx, key, order})
   end
 
@@ -156,32 +156,32 @@ defmodule Anoma.Node.Storage do
   fails due to already being setup, we will try the others.
   """
   @spec remove(Router.Addr.t()) :: :ok
-  def remove(storage = %Router.Addr{}) do
+  def remove(storage) do
     Router.cast(storage, :remove)
   end
 
   @spec ensure_new(Router.Addr.t(), boolean()) :: :ok
-  def ensure_new(storage = %Router.Addr{}, rocks \\ false) do
+  def ensure_new(storage, rocks \\ false) do
     Router.cast(storage, {:ensure_new, rocks})
   end
 
   @spec setup(Router.Addr.t()) :: :ok
-  def setup(t = %Router.Addr{}) do
+  def setup(t) do
     Router.cast(t, :setup)
   end
 
   @spec put(Router.Addr.t(), order_key(), qualified_value()) :: :ok
-  def put(storage = %Router.Addr{}, key, value) do
+  def put(storage, key, value) do
     Router.cast(storage, {:put, key, value})
   end
 
   @spec put_snapshot(Router.addr(), order_key()) :: :ok
-  def put_snapshot(storage = %Router.Addr{}, key) do
+  def put_snapshot(storage, key) do
     Router.cast(storage, {:put_snapshot, key})
   end
 
   @spec delete_key(Router.Addr.t(), order_key()) :: :ok
-  def delete_key(storage = %Router.Addr{}, key) do
+  def delete_key(storage, key) do
     Router.cast(storage, {:delete, key})
   end
 
@@ -192,7 +192,7 @@ defmodule Anoma.Node.Storage do
           non_neg_integer()
         ) ::
           :ok
-  def write_at_order_tx(storage = %Router.Addr{}, key, value, order) do
+  def write_at_order_tx(storage, key, value, order) do
     Router.cast(storage, {:write_at_order_tx, key, value, order})
   end
 
@@ -446,7 +446,7 @@ defmodule Anoma.Node.Storage do
 
   @spec blocking_read(Router.Addr.t(), qualified_key()) ::
           :error | {:ok, any()}
-  def blocking_read(storage = %Router.Addr{}, key) do
+  def blocking_read(storage, key) do
     do_blocking_read(Router.Engine.get_state(storage), key)
   end
 

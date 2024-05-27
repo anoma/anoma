@@ -132,25 +132,18 @@ defmodule Anoma.Node.Logger do
   ############################################################
 
   def handle_cast({:add, logger, atom, msg}, addr, state) do
-    id = addr.id
-
-    address =
-      if id == nil do
-        addr.server
-      else
-        id
-      end
-
     topic = state.topic
+
+    addr = Router.Addr.id(addr) || Router.Addr.server(addr)
 
     Storage.put(
       state.storage,
-      [logger.id, address, Clock.get_time(state.clock), atom],
+      [logger.id, addr, Clock.get_time(state.clock), atom],
       msg
     )
 
     unless topic == nil do
-      Router.cast(state.topic, {:logger_add, address, msg})
+      Router.cast(state.topic, {:logger_add, addr, msg})
     end
 
     log_fun({atom, msg})
@@ -163,14 +156,11 @@ defmodule Anoma.Node.Logger do
   end
 
   def handle_call({:get, logger, engine}, _from, state) do
-    address =
-      if is_pid(engine) do
-        engine
-      else
-        engine.id
-      end
-
-    {:reply, Storage.get_keyspace(state.storage, [logger.id, address]), state}
+    {:reply,
+     Storage.get_keyspace(state.storage, [
+       logger.id,
+       Router.Addr.id(engine) || Router.Addr.server(engine)
+     ]), state}
   end
 
   ############################################################

@@ -46,7 +46,7 @@ defmodule AnomaTest.Node.Logger do
     :ok =
       Router.call(
         router,
-        {:subscribe_topic, topic.id, :local}
+        {:subscribe_topic, topic, :local}
       )
 
     Anoma.Node.Ordering.next_order(ordering)

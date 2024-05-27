@@ -46,7 +46,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:subscribe_topic, node.executor_topic.id, :local}
+        {:subscribe_topic, node.executor_topic, :local}
       )
 
     Mempool.hard_reset(node.mempool)
@@ -66,7 +66,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:unsubscribe_topic, node.executor_topic.id, :local}
+        {:unsubscribe_topic, node.executor_topic, :local}
       )
   end
 
@@ -78,7 +78,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:subscribe_topic, node.executor_topic.id, :local}
+        {:subscribe_topic, node.executor_topic, :local}
       )
 
     Mempool.hard_reset(node.mempool)
@@ -94,7 +94,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:unsubscribe_topic, node.executor_topic.id, :local}
+        {:unsubscribe_topic, node.executor_topic, :local}
       )
   end
 
@@ -120,7 +120,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:subscribe_topic, node.executor_topic.id, :local}
+        {:subscribe_topic, node.executor_topic, :local}
       )
 
     Mempool.hard_reset(node.mempool)
@@ -132,7 +132,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:unsubscribe_topic, node.executor_topic.id, :local}
+        {:unsubscribe_topic, node.executor_topic, :local}
       )
   end
 
@@ -140,7 +140,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:subscribe_topic, node.mempool_topic.id, :local}
+        {:subscribe_topic, node.mempool_topic, :local}
       )
 
     Mempool.hard_reset(node.mempool)
@@ -153,7 +153,7 @@ defmodule AnomaTest.Node.Mempool do
     :ok =
       Router.call(
         node.router,
-        {:unsubscribe_topic, node.mempool_topic.id, :local}
+        {:unsubscribe_topic, node.mempool_topic, :local}
       )
   end
 end
