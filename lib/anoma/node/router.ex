@@ -317,7 +317,7 @@ defmodule Anoma.Node.Router do
 
   typedstruct do
     # slightly space-inefficient (duplicates extern), but more convenient
-    field(:local_engines, %{Id.Extern.t() => {Id.t(), GenServer.server()}})
+    field(:local_engines, %{Id.Extern.t() => {Id.t(), Process.dest()}})
     # mapping of TopicId -> subscriber addrs
     field(:topic_table, %{Id.Extern.t() => MapSet.t(Addr.t())}, default: %{})
     # engine => call number, callee id it's waiting for a response on
@@ -667,7 +667,7 @@ defmodule Anoma.Node.Router do
   def handle_cast({:cleanup_local_engine, addr}, s) do
     s = %{
       s
-      | local_engines: Map.delete(s.local_engines, addr.id),
+      | local_engines: Map.delete(s.local_engines, Addr.id(addr)),
         # remove all this engine's registrations
         topic_table:
           Enum.reduce(
@@ -713,7 +713,12 @@ defmodule Anoma.Node.Router do
   end
 
   def handle_self_cast({:send_response, dst, cookie, response}, src, s) do
-    send_to_transport(s, dst.id, src.id, [:response, cookie, response])
+    send_to_transport(s, Addr.id(dst), Addr.id(src), [
+      :response,
+      cookie,
+      response
+    ])
+
     s
   end
 
@@ -739,7 +744,7 @@ defmodule Anoma.Node.Router do
                     # is the engine waiting for a message with this id from this id (todo maybe signs for)?
                     if Map.get(s.waiting_engines, dst_id) ===
                          {call_id, src_id} do
-                      send(dst_addr.server, {:router_call_response, msg})
+                      send_raw(dst_addr, {:router_call_response, msg})
 
                       %{
                         s
@@ -757,7 +762,7 @@ defmodule Anoma.Node.Router do
 
                   [:cast, msg] ->
                     GenServer.cast(
-                      dst_addr.server,
+                      Addr.server(dst_addr),
                       {:router_external_cast, src_addr, msg}
                     )
 
@@ -777,7 +782,7 @@ defmodule Anoma.Node.Router do
                       )
                     else
                       GenServer.cast(
-                        dst_addr.server,
+                        Addr.server(dst_addr),
                         {:router_external_call, src_addr, call_id, msg}
                       )
                     end
@@ -926,7 +931,7 @@ defmodule Anoma.Node.Router do
   defp do_call(s, %Addr{server: server}, src, msg, _timeout)
        when server != nil do
     res = GenServer.call(server, {:router_call, src, msg}, :infinity)
-    send(src.server, {:router_call_response, res})
+    send_raw(src, {:router_call_response, res})
     s
   end
 
@@ -970,10 +975,15 @@ defmodule Anoma.Node.Router do
       # we have to check the call id matches; otherwise this could spuriously
       # fail.  there are some other potential ways of dealing with timeouts,
       # but meh
-      case Map.get(s.waiting_engines, src_addr.id) do
+      case Map.get(s.waiting_engines, Addr.id(src_addr)) do
         {^call_id, _} ->
-          send(src_addr.server, {:router_call_response, {:error, :timed_out}})
-          %{s | waiting_engines: Map.delete(s.waiting_engines, src_addr.id)}
+          send_raw(src_addr, {:router_call_response, {:error, :timed_out}})
+
+          %{
+            s
+            | waiting_engines:
+                Map.delete(s.waiting_engines, Addr.id(src_addr))
+          }
 
         _ ->
           s
@@ -995,7 +1005,7 @@ defmodule Anoma.Node.Router do
 
   @spec handle_init_local_engine(
           Id.t() | Id.Extern.t(),
-          GenServer.server(),
+          Process.dest(),
           t()
         ) :: t()
   defp handle_init_local_engine(id = %Id{}, server, s) do
