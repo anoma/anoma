@@ -254,24 +254,64 @@ defmodule Anoma.Node.Router do
       engine, which can only talk to other local engines.
     (Hence, at least one of id and server must be known; potentially both are.)
     """
-    typedstruct do
-      field(:id, Id.Extern.t() | nil)
-      field(:server, GenServer.server() | nil)
-    end
+    @type t() ::
+            pid()
+            | atom()
+            | Id.Extern.t()
+            | %__MODULE__{
+                id: Id.Extern.t(),
+                server: Process.dest()
+              }
+    # uncomment the below enforce_keys once we use the accessors correctly
+    # throughout the codebase
+    # @enforce_keys [:id, :server]
+    defstruct [:id, :server]
 
     @spec id(t()) :: Id.Extern.t() | nil
-    def id(addr) do
-      addr.id
+    def id(id = %Id.Extern{}) do
+      id
     end
 
-    @spec server(t()) :: GenServer.server() | nil
-    def server(addr) do
-      addr.server
+    def id(%__MODULE__{id: id}) do
+      id
+    end
+
+    def id(x) when is_pid(x) or is_atom(x) do
+      nil
+    end
+
+    @spec server(t()) :: Process.dest() | nil
+    def server(%Id.Extern{}) do
+      nil
+    end
+
+    def server(%__MODULE__{server: server}) do
+      server
+    end
+
+    def server(x) when is_pid(x) or is_atom(x) do
+      x
     end
 
     @spec pid(t()) :: pid() | nil
     def pid(addr) do
       Process.whereis(server(addr))
+    end
+
+    # these always return or else error
+    @spec id!(t()) :: Id.Extern.t()
+    def id!(addr) do
+      id(addr) || exit("no id for #{inspect(addr)}")
+    end
+
+    @spec server!(t()) :: Process.dest()
+    def server!(addr) do
+      server(addr) || exit("no server for #{inspect(addr)}")
+    end
+
+    @spec pid!(t()) :: Process.dest()
+    def pid!(addr) do
+      pid(addr) || exit("no pid for #{inspect(addr)}")
     end
   end
 
