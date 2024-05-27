@@ -44,7 +44,7 @@ defmodule Anoma.Node.Executor.Worker do
     """
 
     field(:id, non_neg_integer())
-    field(:tx, {:kv | :rm, Noun.t()})
+    field(:tx, {:kv | :rm | :cairo, Noun.t()})
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
   end
@@ -155,6 +155,28 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
+  defp run(s = %__MODULE__{id: id, tx: {:cairo, gate}, env: env}) do
+    logger = env.logger
+
+    log_info({:dispatch, id, logger})
+    storage = Router.Engine.get_state(env.ordering).storage
+
+    with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
+         {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
+         vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
+         true <- Anoma.Resource.Transaction.verify_cairo(vm_resource_tx),
+         # TODO: add root existence check. The roots must be traceable in historical records.
+         true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
+      persist(env, id, vm_resource_tx)
+    else
+      e ->
+        log_info({:fail, e, logger})
+        wait_for_ready(s)
+        snapshot(storage, env)
+        :error
+    end
+  end
+
   @spec persist(Nock.t(), Noun.t(), Transaction.t()) :: any()
   defp persist(env, true_order, vm_resource_tx) do
     logger = env.logger
@@ -195,7 +217,6 @@ defmodule Anoma.Node.Executor.Worker do
     log_info({:success_run, logger})
     :ok
   end
-
 
   ############################################################
   #                     Conceptual Helpers                   #
