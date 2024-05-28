@@ -70,12 +70,14 @@ defmodule Anoma.Resource do
     |> Sign.sign(secret)
   end
 
+  @spec kind(t()) :: binary()
   @doc """
   The kind of the given resource (labelled logic).
   """
   def kind(resource = %Resource{}) do
-    :erlang.term_to_binary(resource.logic) <>
-      :erlang.term_to_binary(resource.label)
+    [resource.logic | resource.label]
+    |> Nock.Jam.jam()
+    |> Noun.atom_integer_to_binary()
   end
 
   @doc """
