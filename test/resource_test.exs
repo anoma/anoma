@@ -214,4 +214,18 @@ defmodule AnomaTest.Resource do
 
     assert Transaction.verify(tx)
   end
+
+  test "counter logic transaction" do
+    {:ok, contents} = File.read("CounterTransaction.nockma")
+    transactionBuilder = Noun.Format.parse_always(contents)
+
+    call = [9, 2, 0 | 1]
+    {:ok, counterTx} = Nock.nock(transactionBuilder, call)
+    :ok = File.write!("counterTx", inspect(counterTx))
+
+    # Logger.debug("resource logic nock call: #{inspect(call)}")
+    tx = Transaction.from_noun(counterTx)
+
+    assert Transaction.verify(tx)
+  end
 end
