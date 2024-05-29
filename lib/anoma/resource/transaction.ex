@@ -11,6 +11,7 @@ defmodule Anoma.Resource.Transaction do
   import Anoma.Resource
   alias Anoma.Resource.Delta
   alias Anoma.Resource.ProofRecord
+  import Noun
 
   # doesn't have all the fields yet.
   typedstruct enforce: true do
@@ -27,14 +28,15 @@ defmodule Anoma.Resource.Transaction do
   @spec to_noun(t()) :: Noun.t()
   def to_noun(transaction = %Transaction{}) do
     [
-      transaction.roots,
-      transaction.commitments,
-      transaction.nullifiers,
+      list_erlang_to_nock(transaction.roots),
+      list_erlang_to_nock(transaction.commitments),
+      list_erlang_to_nock(transaction.nullifiers),
       for proof <- transaction.proofs do
         ProofRecord.to_noun(proof)
-      end,
+      end
+      |> list_erlang_to_nock(),
       Delta.to_noun(transaction.delta),
-      transaction.extra
+      list_erlang_to_nock(transaction.extra)
       | [[1 | 0], 0 | 0]
     ]
   end
@@ -49,15 +51,15 @@ defmodule Anoma.Resource.Transaction do
         extra | _preference
       ]) do
     %Transaction{
-      roots: roots,
-      commitments: commitments,
-      nullifiers: nullifiers,
+      roots: list_nock_to_erlang(roots),
+      commitments: list_nock_to_erlang(commitments),
+      nullifiers: list_nock_to_erlang(nullifiers),
       proofs:
-        for proof <- proofs do
+        for proof <- list_nock_to_erlang(proofs) do
           ProofRecord.from_noun(proof)
         end,
       delta: Delta.from_noun(delta),
-      extra: extra,
+      extra: list_nock_to_erlang(extra),
       preference: nil
     }
   end
