@@ -21,17 +21,17 @@ defmodule AnomaTest.Node.End do
 
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
-        new_storage: true,
         name: name,
         use_rocks: true,
         settings:
-          [
-            snapshot_path: snapshot_path,
-            storage_data: storage,
-            block_storage: :end_blocks,
-            ping_time: :no_timer
-          ]
-          |> Anoma.Node.start_min()
+          {:new_storage,
+           [
+             snapshot_path: snapshot_path,
+             storage_data: storage,
+             block_storage: :end_blocks,
+             ping_time: :no_timer
+           ]
+           |> Anoma.Node.start_min()}
       )
 
     node = Anoma.Node.state(nodes)

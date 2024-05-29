@@ -17,17 +17,17 @@ defmodule AnomaTest.Node.Dump do
 
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
-        new_storage: true,
         name: name,
         use_rocks: false,
         settings:
-          [
-            snapshot_path: snapshot_path,
-            storage_data: storage,
-            block_storage: :dump_blocks,
-            ping_time: :no_timer
-          ]
-          |> Anoma.Node.start_min()
+          {:new_storage,
+           [
+             snapshot_path: snapshot_path,
+             storage_data: storage,
+             block_storage: :dump_blocks,
+             ping_time: :no_timer
+           ]
+           |> Anoma.Node.start_min()}
       )
 
     [nodes: nodes, name: name]

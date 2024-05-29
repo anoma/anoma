@@ -67,12 +67,15 @@ defmodule Anoma.Node do
   end
 
   @type configuration() :: [
-          new_storage: boolean(),
           name: atom(),
           use_rocks: boolean(),
-          settings: engine_configuration(),
+          settings: node_settings(),
           configuration: Anoma.Configuration.configuration_map() | nil
         ]
+
+  @type node_settings() ::
+          {:new_storage, engine_configuration()}
+          | {:from_dump, Anoma.Dump.dump()}
 
   @type min_engine_configuration() :: [
           ping_time: :no_timer | non_neg_integer(),
@@ -99,15 +102,17 @@ defmodule Anoma.Node do
 
   @doc """
   I assume I am fed a list with atom-value 2-tuples
-  :new_storage, :name, :settings. If :new_storage has
-  value true, I need a snapshot_path: key in the
-  settings.
+  :name, :settings, :use_rocks. The value of :settings is a 2-tuple
+  with the first component matching either :new_storage or :from_dump.
+  If the former case, I need a :snapshot_path key in the settings.
+  For the latter case, check Anoma.Dump for format descriptions of
+  the settings.
 
   I ensure that the storages are deleted and created.
   Afterwards, if the storage is truly new, I put the snapshot
   in the ordering. Otherwise, I simply repopulate the tables
   from a supplied list by the settings.
-  Check Anoma.Dump for format descriptions.
+  If :use_rocks has value true, I use rocksdb as storage backend.
   """
 
   @spec start_link(configuration()) :: GenServer.on_start()
@@ -124,31 +129,39 @@ defmodule Anoma.Node do
       )
     end
 
-    settings = args[:settings]
     name = args[:name]
     rocks = args[:use_rocks]
-    {storage, block_storage} = settings[:storage_data]
+
+    node_settings = {kind, settings} = args[:settings]
+
+    {storage, block_storage} = storage_data(node_settings)
     storage_setup(storage, block_storage, rocks)
 
-    unless args[:new_storage] do
-      tables =
-        settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
+    case kind do
+      :from_dump ->
+        tables =
+          settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
 
-      tables
-      |> Enum.map(fn x ->
-        fn -> :mnesia.write(x) end |> :mnesia.transaction()
-      end)
+        tables
+        |> Enum.map(fn x ->
+          fn -> :mnesia.write(x) end |> :mnesia.transaction()
+        end)
+
+      _ ->
+        nil
     end
 
     with {:ok, pid} <-
-           GenServer.start_link(__MODULE__, Map.put(settings, :name, name),
-             name: name
-           ) do
-      if args[:new_storage] do
-        snap = settings[:snapshot_path]
+           GenServer.start_link(__MODULE__, settings, name: name) do
+      case kind do
+        :new_storage ->
+          snap = settings[:snapshot_path]
 
-        node = state(pid)
-        Storage.put_snapshot(node.storage, hd(snap))
+          node = state(pid)
+          Storage.put_snapshot(node.storage, hd(snap))
+
+        _ ->
+          :ok
       end
 
       if Mix.env() in [:dev, :prod] do
@@ -180,7 +193,7 @@ defmodule Anoma.Node do
     end
   end
 
-  @spec init(Anoma.Dump.dump()) :: any()
+  @spec init(engine_configuration() | Anoma.Dump.dump()) :: any()
   def init(args) do
     {log_id, log_st} = args[:logger]
     {clock_id, _clock_st} = args[:clock]
@@ -363,6 +376,13 @@ defmodule Anoma.Node do
 
   def handle_call(:state, _from, state) do
     {:reply, state, state}
+  end
+
+  @spec storage_data(node_settings()) :: {Storage.t(), atom()}
+  defp storage_data(node_settings) do
+    case node_settings do
+      {_flag, settings} -> settings[:storage_data]
+    end
   end
 
   defp storage_setup(storage, block_storage, rocks) do
