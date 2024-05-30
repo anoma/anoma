@@ -10,6 +10,7 @@ defmodule Anoma.Resource.Transaction do
 
   import Anoma.Resource
   alias Anoma.Resource.Delta
+  alias Anoma.Resource.Proof
   alias Anoma.Resource.ProofRecord
 
   # doesn't have all the fields yet.
@@ -86,7 +87,8 @@ defmodule Anoma.Resource.Transaction do
     # the transparent proofs are just all the involved resources
     proved_resources =
       for proof_record <- transaction.proofs do
-        proof_record.proof.resource
+        %Proof{proof_value: {:transparent, resource}} = proof_record.proof
+        resource
       end
 
     # todo: check that this is an exact partition
