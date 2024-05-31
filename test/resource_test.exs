@@ -24,17 +24,22 @@ defmodule AnomaTest.Resource do
     ETransaction.increment_counter_transaction()
   end
 
-  test "counter logic transaction" do
-    {:ok, contents} = File.read("CounterTransaction.nockma")
+  test "Juvix counter logic transaction" do
+    # Compile
+    # https://github.com/anoma/juvix-anoma/blob/c1703f1b30417a5ff980921f948b44abc6becd26/examples/RawCounterTransaction.juvix
+    # using:
+    #
+    #   juvix compile anoma RawCounterTransaction.juvix
+    #
+    # and copy the output file `RawCounterTransaction.nockma` to the root of this project.
+    {:ok, contents} = File.read("RawCounterTransaction.nockma")
     transactionBuilder = Noun.Format.parse_always(contents)
 
     call = [9, 2, 0 | 1]
     {:ok, counterTx} = Nock.nock(transactionBuilder, call)
-    :ok = File.write!("counterTx", inspect(counterTx))
 
-    # Logger.debug("resource logic nock call: #{inspect(call)}")
     tx = Transaction.from_noun(counterTx)
 
-    assert Transaction.verify(tx)
+    assert Transaction.verify(tx), "failed to verify"
   end
 end
