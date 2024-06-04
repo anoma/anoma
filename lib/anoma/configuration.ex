@@ -40,7 +40,7 @@ defmodule Anoma.Configuration do
   ############################################################
 
   @dump_format [
-    {"dump", &is_binary/1, "anoma_#{Mix.env()}.dmp"}
+    {"dump", &is_binary/1, "anoma_#{Mix.env()}.dmp" |> Directories.data()}
   ]
   @node_format [
     {"block_storage", &is_binary/1, "anoma_block"},
