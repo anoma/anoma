@@ -219,4 +219,72 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
+
+  test "worker verifies cairo proofs", %{env: env} do
+    alias Anoma.Resource.Transaction
+
+    id = System.unique_integer([:positive])
+
+    storage = Ordering.get_storage(env.ordering)
+
+    Storage.ensure_new(storage)
+    Ordering.reset(env.ordering)
+
+    {:ok, compliance_circuit} = File.read("./params/cairo_compliance.json")
+
+    compliance_inputs = """
+    {
+    "input": {
+        "logic" : 41,
+        "label" : 12,
+        "quantity" : 13,
+        "data" : 14,
+        "eph" : 15,
+        "nonce" : 26,
+        "npk" : 37,
+        "rseed" : 48
+    },
+    "output": {
+        "logic" : 59,
+        "label" : 6432,
+        "quantity" : 711,
+        "data" : 812,
+        "eph" : 93,
+        "nonce" : 104,
+        "npk" : 195,
+        "rseed" : 16
+    },
+    "merkle_path": [{"fst": 33, "snd": true}, {"fst": 83, "snd": false}, {"fst": 73, "snd": false}, {"fst": 23, "snd": false}, {"fst": 33, "snd": false}, {"fst": 43, "snd": false}, {"fst": 53, "snd": false}, {"fst": 3, "snd": false}, {"fst": 36, "snd": false}, {"fst": 37, "snd": false}, {"fst": 118, "snd": false}, {"fst": 129, "snd": false}, {"fst": 12, "snd": true}, {"fst": 33, "snd": false}, {"fst": 43, "snd": false}, {"fst": 156, "snd": true}, {"fst": 63, "snd": false}, {"fst": 128, "snd": false}, {"fst": 32, "snd": false}, {"fst": 230, "snd": true}, {"fst": 3, "snd": false}, {"fst": 33, "snd": false}, {"fst": 223, "snd": false}, {"fst": 2032, "snd": true}, {"fst": 32, "snd": false}, {"fst": 323, "snd": false}, {"fst": 3223, "snd": false}, {"fst": 203, "snd": true}, {"fst": 31, "snd": false}, {"fst": 32, "snd": false}, {"fst": 22, "snd": false}, {"fst": 23, "snd": true}],
+    "rcv": 3,
+    "eph_root": 4
+    }
+    """
+
+    {_output, trace, memory, public_inputs} =
+      Cairo.cairo_vm_runner(
+        compliance_circuit,
+        compliance_inputs
+      )
+
+    {proof, public_input} = Cairo.prove(trace, memory, public_inputs)
+
+    compliance_proof = {proof, public_input}
+
+    rm_tx = %Transaction{
+      commitments: [],
+      nullifiers: [],
+      proofs: [],
+      compliance_proofs: [compliance_proof],
+      delta: %{}
+    }
+
+    rm_tx_noun = Transaction.to_noun(rm_tx)
+    rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
+
+    spawn = Task.async(Worker, :run, [id, {:cairo, rm_executor_tx}, env])
+    Ordering.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
+
+    send(spawn.pid, {:write_ready, 0})
+    assert :ok == Task.await(spawn)
+  end
 end
