@@ -31,16 +31,28 @@ defmodule Anoma.Node.Logger do
   typedstruct do
     field(:storage, Storage.t())
     field(:clock, Router.Addr.t())
+    field(:topic, Router.Addr.t())
   end
 
   def init(%Anoma.Node.Logger{} = state) do
     {:ok, state}
   end
 
-  @spec init(list({:storage, Storage.t()} | {:clock, Router.addr()})) ::
+  @spec init(
+          list(
+            {:storage, Storage.t()}
+            | {:clock, Router.addr()}
+            | {:topic, Router.addr()}
+          )
+        ) ::
           {:ok, Anoma.Node.Logger.t()}
   def init(args) do
-    {:ok, %Anoma.Node.Logger{storage: args[:storage], clock: args[:clock]}}
+    {:ok,
+     %Anoma.Node.Logger{
+       storage: args[:storage],
+       clock: args[:clock],
+       topic: args[:topic]
+     }}
   end
 
   ############################################################
@@ -127,11 +139,17 @@ defmodule Anoma.Node.Logger do
         id
       end
 
+    topic = state.topic
+
     Storage.put(
       state.storage,
       [logger.id, address, Clock.get_time(state.clock), atom],
       msg
     )
+
+    unless topic == nil do
+      Router.cast(state.topic, {:logger_add, address, msg})
+    end
 
     log_fun({atom, msg})
 

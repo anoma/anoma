@@ -28,7 +28,18 @@ defmodule Anoma.Dump do
   alias Anoma.Configuration
   alias Anoma.Mnesia
   alias Anoma.Node
-  alias Anoma.Node.{Logger, Pinger, Mempool, Executor, Clock, Storage, Router}
+
+  alias Anoma.Node.{
+    Logger,
+    Pinger,
+    Mempool,
+    Executor,
+    Clock,
+    Storage,
+    Router,
+    Dumper
+  }
+
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
@@ -67,6 +78,8 @@ defmodule Anoma.Dump do
   - router id
   - mempool topic id
   - executor topic id
+  - dumper
+  - storage
   - logger
   - clock
   - ordering
@@ -160,6 +173,7 @@ defmodule Anoma.Dump do
     file |> Directories.data(env) |> File.rm!()
   end
 
+  @type dump_eng :: {Id.Extern.t(), Dumper.t()}
   @type log_eng :: {Id.Extern.t(), Logger.t()}
   @type clock_eng :: {Id.Extern.t(), Clock.t()}
   @type ord_eng :: {Id.Extern.t(), Ordering.t()}
@@ -175,6 +189,7 @@ defmodule Anoma.Dump do
           transport: Id.t(),
           router_state: Router.t(),
           transport_id: Id.Extern.t(),
+          logger_topic: Id.Extern.t(),
           mempool_topic: Id.Extern.t(),
           executor_topic: Id.Extern.t(),
           storage_topic: Id.Extern.t(),
@@ -186,6 +201,7 @@ defmodule Anoma.Dump do
           pinger: ping_eng,
           executor: ex_eng,
           storage: storage_eng,
+          dumper: dump_eng,
           storage_data: stores,
           qualified: list(),
           order: list(),
@@ -219,6 +235,8 @@ defmodule Anoma.Dump do
   - router
   - mempool topic
   - executor topic
+  - dumper
+  - storage
   - logger
   - clock
   - ordering
@@ -233,6 +251,7 @@ defmodule Anoma.Dump do
             transport: Id.t(),
             router_state: Router.t(),
             transport_id: Id.Extern.t(),
+            logger_topic: Id.Extern.t(),
             mempool_topic: Id.Extern.t(),
             executor_topic: Id.Extern.t(),
             storage_topic: Id.Extern.t(),
@@ -243,7 +262,8 @@ defmodule Anoma.Dump do
             mempool: mem_eng,
             pinger: ping_eng,
             executor: ex_eng,
-            storage: storage_eng
+            storage: storage_eng,
+            dumper: dump_eng
           }
   def get_state(node) do
     state = node |> Node.state()
@@ -254,6 +274,7 @@ defmodule Anoma.Dump do
         key not in [
           :router,
           :transport,
+          :logger_topic,
           :mempool_topic,
           :executor_topic,
           :storage_topic,
@@ -291,6 +312,7 @@ defmodule Anoma.Dump do
         transport: internal_transport_id,
         # public facing id for other nodes to talk to
         transport_id: state.transport.id,
+        logger_topic: state.logger_topic.id,
         mempool_topic: state.mempool_topic.id,
         executor_topic: state.executor_topic.id,
         storage_topic: state.storage_topic.id

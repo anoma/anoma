@@ -32,7 +32,18 @@ defmodule Anoma.Node do
 
   use GenServer
   use TypedStruct
-  alias Anoma.Node.{Router, Logger, Clock, Executor, Mempool, Pinger, Storage}
+
+  alias Anoma.Node.{
+    Router,
+    Logger,
+    Clock,
+    Executor,
+    Mempool,
+    Pinger,
+    Storage,
+    Dumper
+  }
+
   alias Anoma.Node.Ordering
   alias Anoma.Crypto.Id
   alias __MODULE__
@@ -48,9 +59,11 @@ defmodule Anoma.Node do
     field(:pinger, Router.addr())
     field(:clock, Router.addr())
     field(:logger, Router.addr())
+    field(:logger_topic, Router.addr())
     field(:storage, Router.addr())
     field(:configuration, Router.addr())
     field(:storage_topic, Router.addr())
+    field(:dumper, Router.addr())
   end
 
   @type configuration() :: [
@@ -79,6 +92,7 @@ defmodule Anoma.Node do
           executor: {Router.addr() | nil, Executor.t()},
           mempool: {Router.addr() | nil, Mempool.t()},
           storage: {Router.addr() | nil, Storage.t()},
+          dumper: {Router.addr() | nil, Dumper.t()},
           storage_data: {Storage.t(), atom()},
           snapshot_path: Noun.t()
         }
@@ -126,7 +140,10 @@ defmodule Anoma.Node do
       end)
     end
 
-    with {:ok, pid} <- GenServer.start_link(__MODULE__, settings, name: name) do
+    with {:ok, pid} <-
+           GenServer.start_link(__MODULE__, Map.put(settings, :name, name),
+             name: name
+           ) do
       if args[:new_storage] do
         snap = settings[:snapshot_path]
 
@@ -153,6 +170,7 @@ defmodule Anoma.Node do
     {ping_id, ping_st} = args[:pinger]
     {ex_id, ex_st} = args[:executor]
     {storage_id, storage_st} = args[:storage]
+    {dump_id, dump_st} = args[:dumper]
 
     {:ok, router, transport} =
       start_router(args[:router], args[:transport], args[:router_state])
@@ -175,11 +193,13 @@ defmodule Anoma.Node do
         id: clock_id
       )
 
+    {:ok, logger_topic} = new_topic(router, args[:logger_topic])
+
     {:ok, logger} =
       start_engine(
         router,
         Logger,
-        %Logger{log_st | clock: clock, storage: storage},
+        %Logger{log_st | clock: clock, storage: storage, topic: logger_topic},
         id: log_id
       )
 
@@ -245,7 +265,20 @@ defmodule Anoma.Node do
         id: ping_id
       )
 
+    {:ok, dumper} =
+      start_engine(
+        router,
+        Dumper,
+        %Dumper{
+          dump_st
+          | configuration: configuration,
+            logger: logger
+        },
+        id: dump_id
+      )
+
     Anoma.Node.Pinger.start(pinger)
+    Dumper.start(dumper)
 
     if Mix.env() in [:dev, :prod] do
       Anoma.Node.Transport.start_server(
@@ -265,10 +298,12 @@ defmodule Anoma.Node do
        clock: clock,
        configuration: configuration,
        logger: logger,
+       logger_topic: logger_topic,
        executor_topic: executor_topic,
        mempool_topic: mempool_topic,
        storage: storage,
-       storage_topic: storage_topic
+       storage_topic: storage_topic,
+       dumper: dumper
      }}
   end
 
@@ -292,6 +327,11 @@ defmodule Anoma.Node do
       mempool: {nil, %Mempool{block_storage: args[:block_storage]}},
       pinger: {nil, %Pinger{time: args[:ping_time]}},
       storage: {nil, storage},
+      dumper:
+        {nil,
+         %Dumper{
+           count: args[:count]
+         }},
       storage_data: {storage, block_storage},
       snapshot_path: args[:snapshot_path]
     }

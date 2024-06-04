@@ -19,10 +19,13 @@ defmodule AnomaTest.Node.Logger do
         start: System.monotonic_time(:millisecond)
       )
 
+    {:ok, logger_topic} = Router.new_topic(router)
+
     {:ok, logger} =
       Router.start_engine(router, Anoma.Node.Logger,
         storage: storage,
-        clock: clock
+        clock: clock,
+        topic: logger_topic
       )
 
     {:ok, ordering} =
@@ -31,18 +34,36 @@ defmodule AnomaTest.Node.Logger do
         logger: logger
       )
 
-    [logger: logger, ordering: ordering]
+    [logger: logger, ordering: ordering, topic: logger_topic, router: router]
   end
 
-  test "Logging succesfull", %{logger: logger, ordering: ordering} do
+  test "Logging succesfull", %{
+    logger: logger,
+    ordering: ordering,
+    topic: topic,
+    router: router
+  } do
+    :ok =
+      Router.call(
+        router,
+        {:subscribe_topic, topic.id, :local}
+      )
+
     Anoma.Node.Ordering.next_order(ordering)
+
+    id = ordering.id
+
+    assert_receive(
+      {:"$gen_cast", {_, _, {:logger_add, ^id, _msg}}},
+      5000
+    )
 
     {list, _msg} = Anoma.Node.Logger.get(logger) |> hd()
 
     {log, ord, _time, atom} = List.to_tuple(list)
 
     assert log == logger.id
-    assert ord == ordering.id
+    assert ord == id
     assert atom == :info
   end
 end
