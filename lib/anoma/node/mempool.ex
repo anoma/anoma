@@ -131,8 +131,11 @@ defmodule Anoma.Node.Mempool do
   def handle_tx(tx_code, state) do
     random_tx_id = random_id()
     log_info({:fire, state.executor, random_tx_id, state.logger})
-    pid = Executor.fire_new_transaction(state.executor, random_tx_id, tx_code)
-    Transaction.new(random_tx_id, pid, tx_code)
+
+    addr =
+      Executor.fire_new_transaction(state.executor, random_tx_id, tx_code)
+
+    Transaction.new(random_tx_id, addr, tx_code)
   end
 
   @spec handle_execute(t()) :: {non_neg_integer(), t()}
@@ -172,7 +175,7 @@ defmodule Anoma.Node.Mempool do
     log_info({:write, length(ordered_transactions), state.logger})
 
     for ord <- ordered_transactions do
-      send(Order.pid(ord), {:write_ready, Order.index(ord)})
+      Router.send_raw(Order.addr(ord), {:write_ready, Order.index(ord)})
     end
 
     :ok
@@ -246,7 +249,7 @@ defmodule Anoma.Node.Mempool do
     Order.new(
       order,
       Transaction.id(transaction),
-      Transaction.pid(transaction)
+      Transaction.addr(transaction)
     )
   end
 

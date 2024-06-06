@@ -62,7 +62,7 @@ defmodule AnomaTest.Node.End do
 
     Mempool.hard_reset(mempool)
 
-    pid_zero = Mempool.tx(mempool, {:kv, zero}).pid
+    worker_zero = Mempool.tx(mempool, {:kv, zero})
 
     :ok =
       Router.call(
@@ -71,7 +71,7 @@ defmodule AnomaTest.Node.End do
       )
 
     assert {:ok, 1} = Mempool.execute(mempool)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
+    TestHelper.Worker.wait_for_worker(worker_zero.addr)
 
     keya = Sign.new_keypair()
     keyb = Sign.new_keypair()
@@ -103,13 +103,13 @@ defmodule AnomaTest.Node.End do
 
     Solver.mempool_send(s, mempool)
 
-    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
+    worker_one = Mempool.tx(node.mempool, {:kv, increment})
 
     assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
 
     assert {:ok, 2} = Mempool.execute(mempool)
 
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
+    TestHelper.Worker.wait_for_worker(worker_one.addr)
 
     assert {:ok, 1} = Storage.get(storage, key)
 

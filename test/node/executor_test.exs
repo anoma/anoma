@@ -26,17 +26,26 @@ defmodule AnomaTest.Node.Executor do
     snapshot_path = [:my_special_nock_snaphsot | 0]
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
+    {:ok, topic} = Router.new_topic(router)
+
     {:ok, executor} =
       Router.start_engine(
         router,
         Anoma.Node.Executor,
-        {env, Router.new_topic(router), nil}
+        {router, env, topic, nil}
       )
 
-    [env: env, executor: executor]
+    [env: env, topic: topic, executor: executor, router: router]
   end
 
-  test "successful worker pool", %{env: env, executor: executor} do
+  test "successful worker pool", %{
+    env: env,
+    executor: executor,
+    router: router,
+    topic: topic
+  } do
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
+
     # very similar to the standalone worker test, but we have pools!
     key = 555
     id_1 = System.unique_integer([:positive])
@@ -54,23 +63,26 @@ defmodule AnomaTest.Node.Executor do
     # simulate sending in 2 different orders
     ord_1 = Ordering.next_order(env.ordering)
 
-    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1)])
 
     ord_2 = Ordering.next_order(env.ordering)
 
-    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2)])
 
     # Setup default value for storage
     Storage.put(storage, key, 0)
     # Now set the snapshot up that scry expects
     Storage.put_snapshot(storage, hd(env.snapshot_path))
     # tell the first spawn it can write
-    send(spawn_1.pid, {:write_ready, 1})
-    assert :ok == Task.await(spawn_1)
+    Router.send_raw(spawn_1, {:write_ready, 1})
+    TestHelper.Worker.wait_for_worker(spawn_1, :ok)
     assert {:ok, 1} == Storage.get(storage, key)
 
-    send(spawn_2.pid, {:write_ready, 2})
-    assert :ok == Task.await(spawn_2)
+    Router.send_raw(spawn_2, {:write_ready, 2})
+    TestHelper.Worker.wait_for_worker(spawn_2, :ok)
+
     assert {:ok, 2} == Storage.get(storage, key)
+
+    :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 end

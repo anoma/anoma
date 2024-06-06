@@ -196,8 +196,8 @@ defmodule Anoma.Node.Ordering do
     log_info({:new_handle, num_txs, state.logger})
 
     for order <- ordered_transactions do
-      log_info({:ready_handle, Order.pid(order), state.logger})
-      send(Order.pid(order), {:read_ready, Order.index(order)})
+      log_info({:ready_handle, Order.addr(order), state.logger})
+      Router.send_raw(Order.addr(order), {:read_ready, Order.index(order)})
     end
 
     new_next_order = state.next_order + length(ordered_transactions)

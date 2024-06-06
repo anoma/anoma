@@ -61,16 +61,17 @@ defmodule AnomaTest.Node.Pinger do
 
     :ok = Router.call(node.router, {:subscribe_topic, mem_t, :local})
 
-    pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
+    worker_zero = Mempool.tx(node.mempool, {:kv, zero}).addr
 
     assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
 
-    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
-    pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
+    worker_one = Mempool.tx(node.mempool, {:kv, increment}).addr
+    worker_two = Mempool.tx(node.mempool, {:kv, increment}).addr
 
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_one}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_two}}}, 5000)
+    Enum.each(
+      [worker_zero, worker_one, worker_two],
+      &TestHelper.Worker.wait_for_worker/1
+    )
 
     assert {:ok, 2} = Storage.get(storage, key)
 
