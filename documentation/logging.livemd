@@ -227,7 +227,7 @@ Kino.Process.render_seq_trace(
   fn ->
     Ordering.next_order(node.ordering)
   end,
-  message_label: &Anoma.Node.Utility.message_label/1
+  message_label: &Anoma.Utility.message_label/1
 )
 ```
 
