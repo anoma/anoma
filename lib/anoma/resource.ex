@@ -129,6 +129,7 @@ defmodule Anoma.Resource do
       from_noun(nullified_resource) == resource &&
         Sign.verify_detached(
           Noun.atom_integer_to_binary(signature),
+          Noun.atom_integer_to_binary(signature, 64),
           Noun.atom_integer_to_binary(jammed_nullified_resource),
           resource.npk
         )
