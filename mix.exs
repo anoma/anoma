@@ -55,7 +55,8 @@ defmodule Anoma.MixProject do
         :wx,
         :runtime_tools,
         :debugger,
-        :enacl
+        :enacl,
+        :tools
       ]
     ]
   end
