@@ -22,6 +22,9 @@ defmodule Mix.Tasks.Client do
       {[:submit], %{args: %{file: file}}} ->
         run_client_command({:submit_tx, file})
 
+      {[:rm_submit], %{args: %{file: file}}} ->
+        run_client_command({:rm_submit_tx, file})
+
       {[:get], %{args: %{key: key}}} ->
         run_client_command({:get_key, key})
 
