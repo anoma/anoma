@@ -53,13 +53,19 @@ defmodule Anoma.Node.Configuration do
   ############################################################
   def handle_cast(:snapshot, _caller, config = %__MODULE__{}) do
     configuration = config.configuration
+    logger = config.logger
+    dump_path = configuration["dump"]["dump"]
+    node_name = configuration["node"]["name"] |> String.to_atom()
 
     if configuration do
       spawn(fn ->
-        Anoma.Dump.dump_full_path(
-          configuration["dump"]["dump"],
-          configuration["node"]["name"] |> String.to_atom()
-        )
+        case Anoma.Dump.dump_full_path(dump_path, node_name) do
+          {:ok, :ok} ->
+            log_info({:dump_ok, dump_path, node_name, logger})
+
+          {:error, reason} ->
+            log_info({:dump_error, dump_path, node_name, reason, logger})
+        end
       end)
     else
       log_info({:no_config, config.logger})
@@ -83,6 +89,23 @@ defmodule Anoma.Node.Configuration do
   ############################################################
   #                     Logging Info                         #
   ############################################################
+
+  defp log_info({:dump_ok, dump_path, node_name, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Dump succesfull. Snapshot path: #{inspect(dump_path)}. Node name: #{inspect(node_name)}"
+    )
+  end
+
+  defp log_info({:dump_error, dump_path, node_name, reason, logger}) do
+    Logger.add(
+      logger,
+      :error,
+      "Dump failed. Snapshot path: #{inspect(dump_path)}.
+      Node name: #{inspect(node_name)}. Reason: #{inspect(reason)}"
+    )
+  end
 
   defp log_info({:no_config, logger}) do
     Logger.add(
