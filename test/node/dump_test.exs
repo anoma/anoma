@@ -16,7 +16,7 @@ defmodule AnomaTest.Node.Dump do
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
     {:ok, nodes} =
-      Anoma.Node.start_link(
+      Anoma.Node.start_link_or_find_instance(
         new_storage: true,
         name: name,
         use_rocks: false,
@@ -30,12 +30,11 @@ defmodule AnomaTest.Node.Dump do
           |> Anoma.Node.start_min()
       )
 
-    node = Anoma.Node.state(nodes)
-
-    [node: node, name: name]
+    [nodes: nodes, name: name]
   end
 
-  test "loading keeps addresses and storage", %{node: node, name: name} do
+  test "loading keeps addresses and storage", %{nodes: nodes, name: name} do
+    node = Anoma.Node.state(nodes)
     key = 555
     zero = zero_counter(key)
     Mempool.hard_reset(node.mempool)
@@ -51,16 +50,25 @@ defmodule AnomaTest.Node.Dump do
     id = node.router.id
     sname = Anoma.Node.Router.process_name(:supervisor, id)
 
-    DynamicSupervisor.stop(sname, :normal)
+    assert sname |> Process.whereis() |> Process.alive?() == true
 
-    Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
+    DynamicSupervisor.stop(sname, :normal)
+    GenServer.stop(nodes, :normal)
+
+    assert Process.whereis(sname) == nil
+
+    {:ok, pid} =
+      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
 
     new_node = Anoma.Node.state(:dump_new)
 
     assert new_node == node
     assert Mnesia.dump(:dump_blocks) == block_store_old
 
+    assert sname |> Process.whereis() |> Process.alive?() == true
+
     DynamicSupervisor.stop(sname, :normal)
+    GenServer.stop(pid, :normal)
 
     Anoma.Dump.remove_dump("dump_test.dmp")
   end
