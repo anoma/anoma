@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.14.0">
+    <meta name="project" content="Anoma v0.15.0">
 
 
-    <title>Anoma.Node — Anoma v0.14.0</title>
+    <title>Anoma.Node — Anoma v0.15.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-708A0CE1.js"></script>
+    <script src="dist/sidebar_items-7C4BDF86.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.14.0
+          v0.15.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.14.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.15.0)</small>
 
 </h1>
 
@@ -240,6 +240,17 @@ settings.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#start_link_or_find_instance/1" translate="no">start_link_or_find_instance(args)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I work just like <a href="#start_link/1"><code class="inline">start_link/1</code></a> except I give back the pid directly
+if the node is already started.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#start_min/1" translate="no">start_min(args)</a>
 
       </div>
@@ -324,6 +335,7 @@ settings.</p></div>
   executor: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Executor.html#t:t/0">Anoma.Node.Executor.t</a>()},
   mempool: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Mempool.html#t:t/0">Anoma.Node.Mempool.t</a>()},
   storage: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()},
+  dumper: {<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil, <a href="Anoma.Node.Dumper.html#t:t/0">Anoma.Node.Dumper.t</a>()},
   storage_data: {<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()},
   snapshot_path: <a href="Noun.html#t:t/0">Noun.t</a>()
 }</pre>
@@ -382,9 +394,11 @@ settings.</p></div>
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node{
   clock: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   configuration: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
+  dumper: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   executor: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   executor_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   logger: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
+  logger_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   mempool: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   mempool_topic: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
   ordering: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
@@ -482,6 +496,31 @@ from a supplied list by the settings.
 Check Anoma.Dump for format descriptions.</p>
   </section>
 </section>
+<section class="detail" id="start_link_or_find_instance/1">
+
+  <div class="detail-header">
+    <a href="#start_link_or_find_instance/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">start_link_or_find_instance(args)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start_link_or_find_instance(<a href="#t:configuration/0">configuration</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+
+      </div>
+
+<p>I work just like <a href="#start_link/1"><code class="inline">start_link/1</code></a> except I give back the pid directly
+if the node is already started.</p><p>This is preferable in tests, as we wish to have them be robust upon
+rerunning.</p>
+  </section>
+</section>
 <section class="detail" id="start_min/1">
 
   <div class="detail-header">
@@ -531,11 +570,11 @@ Check Anoma.Dump for format descriptions.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.14.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.15.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.14.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.15.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.14.0/show/lib/anoma/node.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/lib/anoma/node.ex">current file</a>)
 
             </span>
 

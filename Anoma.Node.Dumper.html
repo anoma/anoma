@@ -8,7 +8,7 @@
     <meta name="project" content="Anoma v0.15.0">
 
 
-    <title>MapSetMap — Anoma v0.15.0</title>
+    <title>Anoma.Node.Dumper — Anoma v0.15.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
@@ -124,14 +124,17 @@ GUIDES
 
 <h1>
 
-  <span translate="no">MapSetMap</span> 
+  <span translate="no">Anoma.Node.Dumper</span> 
   <small class="app-vsn" translate="no">(Anoma v0.15.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>An IdentityMap where the values are MapSets, plus some convenient helper functions.</p>
+<p>I am the Dumper Engine. My role is to spawn asyncronous processes which
+listen to a specified block table announcement and await when blocks
+modulo my count have been executed, at which point I checkpoint the
+assigned node using the duping system using a file with a specified name</p>
   </section>
 
 
@@ -149,7 +152,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/2" translate="no">t(k, v)</a>
+        <a href="#t:t/0" translate="no">t()</a>
 
       </div>
 
@@ -163,7 +166,17 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add/3" translate="no">add(map, key, value)</a>
+        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#handle_cast/3" translate="no">handle_cast(arg, from, state)</a>
 
       </div>
 
@@ -171,33 +184,45 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#empty_map_p/1" translate="no">empty_map_p(x)</a>
+        <a href="#init/1" translate="no">init(state)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get/2" translate="no">get(map, key)</a>
+        <a href="#set_count/2" translate="no">set_count(server, count)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I change the count of a given dumper engine. I first shutdown the current
+task, start a new task with a changed count parameter and return and
+register both the count and the task changes.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new/0" translate="no">new()</a>
+        <a href="#start/1" translate="no">start(server)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I start a dumping loop based on the count supplied. If an old task was
+present before the start, I shut it down. If the count is nil I return
+a state with nil count and nil task.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove/3" translate="no">remove(map, key, value)</a>
+        <a href="#stop/1" translate="no">stop(server)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I shutdown the dumper task registered in the struct.</p></div>
 
     </div>
 
@@ -214,14 +239,14 @@ GUIDES
       <span class="text">Types</span>
     </h1>
     <div class="types-list">
-<section class="detail" id="t:t/2">
+<section class="detail" id="t:t/0">
 
   <div class="detail-header">
-    <a href="#t:t/2" class="detail-link" title="Link to this type">
+    <a href="#t:t/0" class="detail-link" title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
-    <h1 class="signature" translate="no">t(k, v)</h1>
+    <h1 class="signature" translate="no">t()</h1>
 
 
   </div>
@@ -230,7 +255,12 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t(k, v) :: <a href="IdentityMap.html#t:t/2">IdentityMap.t</a>(k, <a href="https://hexdocs.pm/elixir/MapSet.html#t:t/1">MapSet.t</a>(v))</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Dumper{
+  configuration: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
+  count: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
+  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
+  task: <a href="https://hexdocs.pm/elixir/Task.html#t:t/0">Task.t</a>() | nil
+}</pre>
 
       </div>
 
@@ -249,14 +279,31 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="add/3">
+<section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#add/3" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">add(map, key, value)</h1>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="handle_cast/3">
+
+  <div class="detail-header">
+    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">handle_cast(arg, from, state)</h1>
 
 
   </div>
@@ -266,72 +313,77 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="empty_map_p/1">
+<section class="detail" id="init/1">
 
   <div class="detail-header">
-    <a href="#empty_map_p/1" class="detail-link" title="Link to this function">
+    <a href="#init/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">empty_map_p(x)</h1>
+    <h1 class="signature" translate="no">init(state)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-
+<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="get/2">
+<section class="detail" id="set_count/2">
 
   <div class="detail-header">
-    <a href="#get/2" class="detail-link" title="Link to this function">
+    <a href="#set_count/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">get(map, key)</h1>
+    <h1 class="signature" translate="no">set_count(server, count)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-
+<p>I change the count of a given dumper engine. I first shutdown the current
+task, start a new task with a changed count parameter and return and
+register both the count and the task changes.</p><p>If count is a non-positive integer, I do nothing. If it is nil, I set both
+the count and the task at hand to nil.</p>
   </section>
 </section>
-<section class="detail" id="new/0">
+<section class="detail" id="start/1">
 
   <div class="detail-header">
-    <a href="#new/0" class="detail-link" title="Link to this function">
+    <a href="#start/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">new()</h1>
+    <h1 class="signature" translate="no">start(server)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-
+<p>I start a dumping loop based on the count supplied. If an old task was
+present before the start, I shut it down. If the count is nil I return
+a state with nil count and nil task.</p>
   </section>
 </section>
-<section class="detail" id="remove/3">
+<section class="detail" id="stop/1">
 
   <div class="detail-header">
-    <a href="#remove/3" class="detail-link" title="Link to this function">
+    <a href="#stop/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove(map, key, value)</h1>
+    <h1 class="signature" translate="no">stop(server)</h1>
 
 
   </div>
 
   <section class="docstring">
 
-
+<p>I shutdown the dumper task registered in the struct.</p>
   </section>
 </section>
 
@@ -346,7 +398,7 @@ GUIDES
 
               <a href="https://preview.hex.pm/preview/anoma/0.15.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/lib/mapsetmap.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/lib/anoma/node/dumper.ex">current file</a>)
 
             </span>
 

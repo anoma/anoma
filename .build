@@ -53,6 +53,7 @@ Anoma.Intent.html
 Anoma.Mnesia.html
 Anoma.Node.Clock.html
 Anoma.Node.Configuration.html
+Anoma.Node.Dumper.html
 Anoma.Node.Executor.Worker.html
 Anoma.Node.Executor.html
 Anoma.Node.Identity.Commitment.html
@@ -139,8 +140,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-32820034.js
-dist/sidebar_items-708A0CE1.js
+dist/search_data-1DD4A2E4.js
+dist/sidebar_items-7C4BDF86.js
 dumping.html
 fema-analysis-pinger.html
 git.html
