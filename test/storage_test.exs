@@ -1,5 +1,5 @@
 defmodule AnomaTest.Storage do
-  use ExUnit.Case
+  use TestHelper.TestMacro
 
   alias Anoma.Node.Storage
   alias Anoma.Node.Router

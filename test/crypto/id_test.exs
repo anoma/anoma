@@ -1,5 +1,5 @@
 defmodule AnomaTest.Crypto.Id do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Crypto.Id
   alias Anoma.Crypto.Symmetric

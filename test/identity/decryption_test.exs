@@ -1,5 +1,5 @@
 defmodule AnomaTest.Identity.Decryption do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Identity.{Encryption}
   alias Anoma.Node.Identity.Decryption

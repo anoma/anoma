@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Solver do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   test "x for y" do
     import alias Anoma.Resource

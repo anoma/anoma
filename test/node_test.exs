@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   doctest(Anoma.Node.Executor)
 

@@ -1,5 +1,5 @@
 defmodule AnomaTest.Noun do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   import Noun
 

@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Clock do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.Clock
   alias Anoma.Node.Router
