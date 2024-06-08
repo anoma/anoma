@@ -39,7 +39,7 @@ defmodule Anoma.Resource.Transaction do
         [a | b]
       end,
       Delta.to_noun(transaction.delta),
-      list_erlang_to_nock(transaction.extra)
+      transaction.extra
       | [[1 | 0], 0 | 0]
     ]
   end
@@ -67,7 +67,7 @@ defmodule Anoma.Resource.Transaction do
           {a, b}
         end,
       delta: Delta.from_noun(delta),
-      extra: list_nock_to_erlang(extra),
+      extra: extra,
       preference: nil
     }
   end
