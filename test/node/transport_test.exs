@@ -32,7 +32,7 @@ defmodule AnomaTest.Node.Transport do
 
     # Setting up the socket
 
-    socket_name = :enacl.randombytes(8) |> Base.encode64()
+    socket_name = (:enacl.randombytes(8) |> Base.encode64()) <> ".sock"
 
     socket_dir = Anoma.System.Directories.data(socket_name)
     socket_addr = {:unix, socket_dir}
