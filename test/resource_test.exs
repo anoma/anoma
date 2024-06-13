@@ -86,13 +86,13 @@ defmodule AnomaTest.Resource do
     assert old_resource != balanced_resource
 
     nf_old = nullifier(old_resource, keypair.secret)
-    pf_old = ProofRecord.prove(old_resource)
+    pf_old = ProofRecord.prove(old_resource, [], [])
 
     cm_unb = commitment(unbalanced_resource)
-    pf_unb = ProofRecord.prove(unbalanced_resource)
+    pf_unb = ProofRecord.prove(unbalanced_resource, [], [])
 
     cm_bal = commitment(balanced_resource)
-    pf_bal = ProofRecord.prove(balanced_resource)
+    pf_bal = ProofRecord.prove(balanced_resource, [], [])
 
     # the zero delta = the empty map.
     zero_delta = %{}
@@ -133,7 +133,7 @@ defmodule AnomaTest.Resource do
     tx_delta = %{kind(resource) => -10}
 
     nf_r = nullifier(resource, keypair.secret)
-    pf_r = ProofRecord.prove(resource)
+    pf_r = ProofRecord.prove(resource, [], [])
 
     transaction = %Transaction{
       nullifiers: [nf_r],
@@ -154,7 +154,7 @@ defmodule AnomaTest.Resource do
     }
 
     cm_br = commitment(balancing_resource)
-    pf_br = ProofRecord.prove(balancing_resource)
+    pf_br = ProofRecord.prove(balancing_resource, [], [])
 
     balanced_transaction = %Transaction{
       nullifiers: [nf_r],
@@ -200,10 +200,10 @@ defmodule AnomaTest.Resource do
     }
 
     nf_0 = nullifier(zeroed_counter, keypair.secret)
-    pf_0 = ProofRecord.prove(zeroed_counter)
+    pf_0 = ProofRecord.prove(zeroed_counter, [], [])
 
     cm_1 = commitment(incremented_counter)
-    pf_1 = ProofRecord.prove(incremented_counter)
+    pf_1 = ProofRecord.prove(incremented_counter, [], [])
 
     tx = %Transaction{
       commitments: [cm_1],

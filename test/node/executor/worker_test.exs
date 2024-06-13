@@ -133,7 +133,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     }
 
     nf_in = nullifier(in_resource, keypair.secret)
-    pf_in = ProofRecord.prove(in_resource)
+    pf_in = ProofRecord.prove(in_resource, [], [])
 
     out_resource = %{
       new_with_npk(keypair.public)
@@ -142,7 +142,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     }
 
     cm_out = commitment(out_resource)
-    pf_out = ProofRecord.prove(out_resource)
+    pf_out = ProofRecord.prove(out_resource, [], [])
 
     rm_tx = %Transaction{
       commitments: [cm_out],

@@ -17,13 +17,13 @@ defmodule AnomaTest.Node.Solver do
     ryb = %{new_with_npk(keyb.public) | label: "y", quantity: 1}
 
     tx1 = %Transaction{
-      proofs: [ProofRecord.prove(rxa), ProofRecord.prove(rya)],
+      proofs: [ProofRecord.prove(rxa, [], []), ProofRecord.prove(rya, [], [])],
       commitments: [commitment(rxa)],
       nullifiers: [Resource.nullifier(rya, keya.secret)]
     }
 
     tx2 = %Transaction{
-      proofs: [ProofRecord.prove(rxb), ProofRecord.prove(ryb)],
+      proofs: [ProofRecord.prove(rxb, [], []), ProofRecord.prove(ryb, [], [])],
       commitments: [commitment(ryb)],
       nullifiers: [Resource.nullifier(rxb, keyb.secret)]
     }
@@ -55,10 +55,10 @@ defmodule AnomaTest.Node.Solver do
 
         assert Enum.all?(
                  [
-                   ProofRecord.prove(rxa),
-                   ProofRecord.prove(rya),
-                   ProofRecord.prove(rxb),
-                   ProofRecord.prove(ryb)
+                   ProofRecord.prove(rxa, [], []),
+                   ProofRecord.prove(rya, [], []),
+                   ProofRecord.prove(rxb, [], []),
+                   ProofRecord.prove(ryb, [], [])
                  ],
                  fn x -> x in solution.proofs end
                )

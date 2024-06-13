@@ -24,6 +24,10 @@
 ::  just providing the resource logic is also a proof. the verification
 ::  is just executing the logic and comparing its result to true.
 +$  proof  resource
+::  a proof record allows for proof verification. so we include the
+::  transparent proof together with the commitment and nullifier sets
+::  which satisfy it.
++$  proof-record  [pf=proof cms=(list commitment) nfs=(list nullifier)]
 ::  a delta is a signed denominated amount. denom depends on logic and label
 ::  true = positive. todo: use map instead (when hashes are in)
 +$  delta  (list [denom=@ sign=? amount=@])
@@ -34,7 +38,7 @@
     roots=(list @)
     commitments=(list commitment)
     nullifiers=(list nullifier)
-    proofs=(list proof)
+    proofs=(list proof-record)
     delta=delta  ::  total tx delta
     extra=@
     preference=~ ::  nyi
