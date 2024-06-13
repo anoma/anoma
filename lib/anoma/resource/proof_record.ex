@@ -8,7 +8,7 @@ defmodule Anoma.Resource.ProofRecord do
   alias Anoma.Resource.Proof
 
   typedstruct enforce: true do
-    field(:proof, Proof.t(), default: nil)
+    field(:proof, Proof.t())
   end
 
   @spec prove(Resource.t()) :: t()
