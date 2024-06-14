@@ -67,7 +67,13 @@ defmodule Anoma.Node.Executor.Worker do
             cm_key = ["rm", "commitments", commitment]
             Storage.put(storage, cm_key, true)
             # yeah, this is not using the api right
-            CommitmentTree.add(tree, [commitment])
+            commit_hash =
+              commitment
+              |> Noun.atom_integer_to_binary()
+              |> :xxhash.hash32()
+              |> Noun.atom_integer_to_binary()
+
+            CommitmentTree.add(tree, [commit_hash])
             log_info({:put, cm_key, logger})
             tree
         end
