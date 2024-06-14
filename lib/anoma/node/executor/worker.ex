@@ -43,6 +43,13 @@ defmodule Anoma.Node.Executor.Worker do
     log_info({:dispatch, order, logger})
     storage = Ordering.get_storage(env.ordering)
 
+    gate =
+      if is_binary(gate) do
+        Nock.Cue.cue!(gate)
+      else
+        gate
+      end
+
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
          vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),

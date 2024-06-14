@@ -211,7 +211,8 @@ defmodule Anoma.Cli.Client do
 
     case Noun.Format.parse(tx) do
       {:ok, tx} ->
-        Anoma.Node.Mempool.async_tx(other_mempool_addr, {kind, tx})
+        jammed = tx |> Nock.Jam.jam() |> Noun.atom_integer_to_binary()
+        Anoma.Node.Mempool.async_tx(other_mempool_addr, {kind, jammed})
 
       :error ->
         IO.puts("Failed to parse transaction from file #{path}")
