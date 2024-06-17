@@ -128,7 +128,7 @@ defmodule Anoma.Dump do
   @dialyzer {:no_return, launch: 2}
   @spec launch(String.t(), atom(), atom(), Configuration.configuration_map()) ::
           {:ok, %Node{}} | any()
-  def launch(file, name, sup_name, config) do
+  def launch(file, name, sup_name, _config) do
     load = file |> load()
 
     settings = block_check(load)
@@ -136,8 +136,7 @@ defmodule Anoma.Dump do
     node_settings = [
       name: name,
       settings: {:from_dump, settings},
-      use_rocks: load[:use_rocks],
-      configuration: config
+      use_rocks: load[:use_rocks]
     ]
 
     [{Anoma.Node, node_settings}]
