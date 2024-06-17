@@ -84,7 +84,8 @@ defmodule Anoma.Node do
   @type configuration() :: [
           name: atom(),
           use_rocks: boolean(),
-          settings: node_settings()
+          settings: node_settings(),
+          testing: boolean() | nil
         ]
 
   @typedoc """
@@ -147,7 +148,10 @@ defmodule Anoma.Node do
     # also need to clean this up once we're done
     unix_path = Anoma.System.Directories.data("local.sock")
 
-    if Mix.env() in [:dev, :prod] && File.exists?(unix_path) do
+    testing = args[:testing] || false
+    should_socket? = Mix.env() in [:dev, :prod] and not testing
+
+    if should_socket? && File.exists?(unix_path) do
       File.rm(unix_path)
 
       IO.puts(
@@ -190,7 +194,7 @@ defmodule Anoma.Node do
           :ok
       end
 
-      if Mix.env() in [:dev, :prod] do
+      if should_socket? do
         # dump the initial state so our keys are persisted
         Anoma.Dump.dump("node_keys.dmp", name)
       end

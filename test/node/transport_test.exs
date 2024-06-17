@@ -17,6 +17,7 @@ defmodule AnomaTest.Node.Transport do
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
         name: name,
+        testing: true,
         settings:
           {:new_storage,
            [
