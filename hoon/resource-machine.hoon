@@ -45,6 +45,6 @@
   ==
 ::  a resource logic is a function from a transaction to boolean
 +$  resource-logic
-  $~  =>(~ |=(^ &))
-  $-([self=resource tx=resource-transaction] ?)
+  $~  =>(~ |=(* &))
+  $-(proof-record ?)
 --
