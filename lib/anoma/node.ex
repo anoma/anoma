@@ -66,6 +66,23 @@ defmodule Anoma.Node do
     field(:dumper, Router.addr())
   end
 
+  @typedoc """
+  I am the configuration type for the `Anoma.Node`.
+
+  Ι contain information necessary for tweaking the behavior of the
+  `Anoma.Node` application. See my `Fields` section for more
+  information on how my behavior changes the node.
+
+  ### Fields
+
+   - `:use_rocks` - determines if we wish to use rocksdb, or use mnesia
+   in memory database
+
+   - `:settings` - are the engine specific and anoma node configuration
+     settings. See `node_settings/0` for more details
+
+   - `:configuration` - the configuration map for the configuration engine to use
+  """
   @type configuration() :: [
           name: atom(),
           use_rocks: boolean(),
@@ -73,6 +90,18 @@ defmodule Anoma.Node do
           configuration: Anoma.Configuration.configuration_map() | nil
         ]
 
+  @typedoc """
+  I am the node settings
+
+  I can be resumed from two states, either from new/fresh storage in
+  which I just have a `engine_configuration/0` or from a previously
+  dumped configuration. In which case I contain `t:Anoma.Dump.dump/0`.
+
+  If the mode is in `:new_storage`, then Ι just contain `Engine`
+  specific configuration settings. However if I'm a `:from_dump` then
+  Ι have a superset of that information containing `mnesia` table
+  configuration information as well.
+  """
   @type node_settings() ::
           {:new_storage, engine_configuration()}
           | {:from_dump, Anoma.Dump.dump()}
