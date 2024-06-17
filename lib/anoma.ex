@@ -49,7 +49,10 @@ defmodule Anoma do
     if dump_path do
       Anoma.Dump.launch(dump_path, :anoma, Anoma, config)
     else
-      Configuration.launch_min(config, rocks_flag, Anoma)
+      Configuration.launch_min(config,
+        use_rocksdb: rocks_flag,
+        supervisor: [name: Anoma]
+      )
     end
   end
 end
