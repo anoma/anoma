@@ -59,7 +59,9 @@ defmodule AnomaTest.Node.Dump do
     assert Process.whereis(sname) == nil
 
     {:ok, pid} =
-      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
+      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new,
+        testing: true
+      )
 
     new_node = Anoma.Node.state(:dump_new)
 
