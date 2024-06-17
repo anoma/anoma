@@ -21,15 +21,23 @@ defmodule Nock.Jam do
 
   @spec encode(t(), Noun.t()) :: t()
   def encode(jam_env, noun) do
-    case Map.fetch(jam_env.cache, noun) do
+    case fetch_cache_noun(jam_env, noun) do
       {:ok, position} -> handle_back(jam_env, position, noun)
-      :error -> jam_env |> cache_term(noun) |> write(noun)
+      :error -> jam_env |> cache_noun(noun) |> write(noun)
     end
   end
 
-  @spec cache_term(t(), Noun.t()) :: t()
-  def cache_term(env = %__MODULE__{}, noun) do
-    %__MODULE__{env | cache: Map.put(env.cache, noun, env.position)}
+  @spec cache_noun(t(), Noun.t()) :: t()
+  def cache_noun(env = %__MODULE__{}, noun) do
+    %__MODULE__{
+      env
+      | cache: Map.put(env.cache, Noun.normalize_noun(noun), env.position)
+    }
+  end
+
+  @spec fetch_cache_noun(t(), Noun.t()) :: {:ok, non_neg_integer()} | :error
+  def fetch_cache_noun(env, noun) do
+    Map.fetch(env.cache, Noun.normalize_noun(noun))
   end
 
   @spec handle_back(t(), non_neg_integer(), Noun.t()) :: t()
