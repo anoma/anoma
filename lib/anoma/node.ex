@@ -84,15 +84,15 @@ defmodule Anoma.Node do
         ]
 
   @type engine_configuration() :: %{
-          clock: {Router.addr() | nil, Clock.t()},
-          configuration: {Router.addr() | nil, Anoma.Node.Configuration.t()},
-          pinger: {Router.addr() | nil, Pinger.t()},
-          logger: {Router.addr() | nil, Logger.t()},
-          ordering: {Router.addr() | nil, Ordering.t()},
-          executor: {Router.addr() | nil, Executor.t()},
-          mempool: {Router.addr() | nil, Mempool.t()},
-          storage: {Router.addr() | nil, Storage.t()},
-          dumper: {Router.addr() | nil, Dumper.t()},
+          clock: {Id.Extern.t() | nil, Clock.t()},
+          configuration: {Id.Extern.t() | nil, Anoma.Node.Configuration.t()},
+          pinger: {Id.Extern.t() | nil, Pinger.t()},
+          logger: {Id.Extern.t() | nil, Logger.t()},
+          ordering: {Id.Extern.t() | nil, Ordering.t()},
+          executor: {Id.Extern.t() | nil, Executor.t()},
+          mempool: {Id.Extern.t() | nil, Mempool.t()},
+          storage: {Id.Extern.t() | nil, Storage.t()},
+          dumper: {Id.Extern.t() | nil, Dumper.t()},
           storage_data: {Storage.t(), atom()},
           snapshot_path: Noun.t()
         }
