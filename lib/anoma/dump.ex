@@ -50,10 +50,17 @@ defmodule Anoma.Dump do
   ### Options
   - `:supervisor` - This flag determine if we use a supervisor and if
   so what options. See `t:Supervisor.option/0 ` for supervisor options
+
+  - `:testing` - This flag notes if we are testing the node. This gets
+    fed directly into the type `t:Anoma.Node.configuration/0` for
+    `Anoma.Node.start_link/1`. Please consult the
+    `t:Anoma.Node.configuration/0` documentation for the full effect
+    this has on the node
   """
 
   @type launch_option() ::
           {:supervisor, [Supervisor.option()]}
+          | {:testing, boolean()}
 
   @doc """
   I dump the current state with storage. I accept a string as a name,
@@ -123,14 +130,15 @@ defmodule Anoma.Dump do
   def launch(file, name, options \\ []) do
     load = file |> load()
 
-    keys = Keyword.validate!(options, supervisor: nil)
+    keys = Keyword.validate!(options, supervisor: nil, testing: false)
 
     settings = block_check(load)
 
     node_settings = [
       name: name,
       settings: {:from_dump, settings},
-      use_rocks: load[:use_rocks]
+      use_rocks: load[:use_rocks],
+      testing: keys[:testing]
     ]
 
     case keys[:supervisor] do

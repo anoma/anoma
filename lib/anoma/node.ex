@@ -80,6 +80,9 @@ defmodule Anoma.Node do
 
    - `:settings` - are the engine specific and anoma node configuration
      settings. See `node_settings/0` for more details
+   - `:testing` is a flag that specifies if the node being launched is
+     for testing purposes. Currently this just affects if we take up
+     the standard socket over the current `Anoma` instance or not.
   """
   @type configuration() :: [
           name: atom(),
