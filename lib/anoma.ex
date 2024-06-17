@@ -47,7 +47,7 @@ defmodule Anoma do
     dump_path = Configuration.locate_dump_file(config)
 
     if dump_path do
-      Anoma.Dump.launch(dump_path, :anoma, Anoma, config)
+      Anoma.Dump.launch(dump_path, :anoma, Anoma)
     else
       Configuration.launch_min(config, rocks_flag, Anoma)
     end
