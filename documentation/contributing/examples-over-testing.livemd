@@ -336,7 +336,7 @@ defmodule Example.Worker.Phase1 do
     storage = %Storage{
       qualified: AnomaTest.Worker.Qualified,
       order: AnomaTest.Worker.Order
-    } 
+    }
   end
 
   defmemo storage() do
