@@ -73,17 +73,20 @@ defmodule AnomaTest.Node.Dumper do
     assert :mnesia.unsubscribe({:table, table, :simple}) == {:ok, my_node}
 
     msg =
-      "Dumping succesful from worker."
+      "Dumping call succesful from worker."
 
     assert_receive(
       {:"$gen_cast", {_, _, {:logger_add, ^task, ^msg}}},
       5000
     )
 
-    assert Anoma.Node.Logger.get(node.logger, task)
-           |> Enum.any?(fn {_info, log} ->
-             log == msg
-           end) == true
+    msg2 =
+      "Dump succesfull. Snapshot path: #{inspect(path)}. Node name: :anoma"
+
+    assert_receive(
+      {:"$gen_cast", {_, _, {:logger_add, _task, ^msg2}}},
+      5000
+    )
 
     Dumper.set_count(node.dumper, 1)
 
