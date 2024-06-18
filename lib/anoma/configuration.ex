@@ -17,7 +17,6 @@ defmodule Anoma.Configuration do
   - `locate_dump_file/1`
   - `launch_min/1`
   - `launch_min/2`
-  - `launch_min/3`
   """
 
   alias Anoma.System.Directories
@@ -34,6 +33,21 @@ defmodule Anoma.Configuration do
   @type configuration_map() :: %{String.t() => section_map()}
 
   @type node_settings() :: Keyword.t()
+
+  @typedoc """
+  I control options for `launch_min/2`
+
+  ###Options
+
+  - `:use_rocksdb` - see `t:Anoma.Node.configuration/0` for more
+  information
+  - `:supervisor` - This flag determine if we use a supervisor and if
+  so what options. See `t:Supervisor.option/0 ` for supervisor options
+
+  """
+  @type launch_option ::
+          {:use_rocksdb, boolean()}
+          | {:supervisor, [Supervisor.option()]}
 
   ############################################################
   #                   Default Values                         #
@@ -130,23 +144,37 @@ defmodule Anoma.Configuration do
     end
   end
 
+  @spec launch_min(configuration_map()) :: GenServer.on_start()
+  @spec launch_min(configuration_map(), [launch_option()]) ::
+          GenServer.on_start()
   @doc """
   Given a parsed map with minimal node startup info I launch the node with
   the appopriate name
-  """
-  def launch_min(parsed_map, rocks_flag \\ false) do
-    node_configuration(parsed_map, rocks_flag) |> Anoma.Node.start_link()
-  end
 
-  @doc """
-  I have the same functionality as `launch_min/2` but start the node using
-  a named supervisor.
+  ### Options
+  see `t:launch_option/0` for the full list of optional arguments
   """
-  def launch_min(parsed_map, rocks_flag, name) do
-    node_settings = node_configuration(parsed_map, rocks_flag)
+  def launch_min(parsed_map, options \\ []) do
+    keys = Keyword.validate!(options, supervisor: nil, use_rocksdb: false)
 
-    [{Anoma.Node, node_settings}]
-    |> Supervisor.start_link(strategy: :one_for_one, name: name)
+    node_settings = parsed_map |> node_settings()
+    settings = Anoma.Node.start_min(node_settings)
+
+    full_node_settings =
+      [
+        name: Keyword.get(node_settings, :name),
+        use_rocks: keys[:use_rocksdb],
+        settings: {:new_storage, settings}
+      ]
+
+    case keys[:supervisor] do
+      nil ->
+        Anoma.Node.start_link(full_node_settings)
+
+      sup_settings ->
+        [{Anoma.Node, full_node_settings}]
+        |> Supervisor.start_link([{:strategy, :one_for_one} | sup_settings])
+    end
   end
 
   ############################################################
@@ -202,27 +230,9 @@ defmodule Anoma.Configuration do
     ["\n", key, " = " | strings]
   end
 
-  @spec launch_min(configuration_map()) :: GenServer.on_start()
-  @spec launch_min(configuration_map(), boolean()) :: GenServer.on_start()
-  @spec launch_min(configuration_map(), boolean(), Supervisor.name()) ::
-          GenServer.on_start()
-
   ############################################################
   #                         Helpers                          #
   ############################################################
-
-  @spec node_configuration(configuration_map(), boolean()) ::
-          Node.configuration()
-  defp node_configuration(parsed_map, rocks_flag) do
-    node_settings = parsed_map |> node_settings()
-    settings = Anoma.Node.start_min(node_settings)
-
-    [
-      name: Keyword.get(node_settings, :name),
-      use_rocks: rocks_flag,
-      settings: {:new_storage, settings}
-    ]
-  end
 
   defp maybe_ping(ping) do
     if is_integer(ping) do
