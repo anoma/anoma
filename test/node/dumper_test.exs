@@ -3,7 +3,6 @@ defmodule AnomaTest.Node.Dumper do
 
   alias Anoma.Node.{Mempool, Dumper, Router}
   alias Anoma.Node.Router.Engine
-  alias Anoma.System.Directories
   alias Anoma.Configuration
 
   setup_all do
@@ -47,7 +46,7 @@ defmodule AnomaTest.Node.Dumper do
 
     config = node.configuration |> Engine.get_state()
     state = node.dumper |> Engine.get_state()
-    path = config.configuration["dump"]["dump"] |> Directories.data()
+    path = config.configuration["dump"]["dump"]
     table = config.configuration["node"]["block_storage"] |> String.to_atom()
     task = state.task.pid
     my_node = node()
