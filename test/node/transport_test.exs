@@ -22,7 +22,7 @@ defmodule AnomaTest.Node.Transport do
           [
             snapshot_path: snapshot_path,
             storage_data: storage,
-            block_storage: :mempool_blocks,
+            block_storage: :transport_blocks,
             ping_time: :no_timer
           ]
           |> Anoma.Node.start_min()
