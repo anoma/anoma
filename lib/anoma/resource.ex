@@ -37,9 +37,14 @@ defmodule Anoma.Resource do
 
   @doc "New blank resource. Randomized nonce and seed."
   def new do
+    unique(%Resource{})
+  end
+
+  @doc "Randomizes the nonce and seed of a resource."
+  def unique(r = %Resource{}) do
     nonce = :crypto.strong_rand_bytes(32)
     rseed = :crypto.strong_rand_bytes(32)
-    %Resource{nonce: nonce, rseed: rseed}
+    %Resource{r | nonce: nonce, rseed: rseed}
   end
 
   @doc """
