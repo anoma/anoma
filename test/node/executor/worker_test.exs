@@ -112,12 +112,15 @@ defmodule AnomaTest.Node.Executor.Worker do
     assert :error == Task.await(spawn)
   end
 
-  test "worker evaluates resource transaction", %{env: env} do
+  test "worker evaluates resource transaction, no double spending", %{
+    env: env
+  } do
     import Anoma.Resource
     alias Anoma.Resource.ProofRecord
     alias Anoma.Resource.Transaction
 
     id = System.unique_integer([:positive])
+    id_2 = System.unique_integer([:positive])
 
     storage = Ordering.get_storage(env.ordering)
 
@@ -157,7 +160,15 @@ defmodule AnomaTest.Node.Executor.Worker do
     spawn = Task.async(Worker, :run, [id, {:rm, rm_executor_tx}, env])
     Ordering.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
 
+    # Please factor into a different test
+
+    spawn_1 = Task.async(Worker, :run, [id_2, {:rm, rm_executor_tx}, env])
+    Ordering.new_order(env.ordering, [Order.new(1, id_2, spawn_1.pid)])
+
     send(spawn.pid, {:write_ready, 0})
     assert :ok == Task.await(spawn)
+
+    send(spawn_1.pid, {:write_ready, 1})
+    assert :error == Task.await(spawn_1)
   end
 end
