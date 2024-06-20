@@ -5,29 +5,29 @@ defmodule Examples.EResource do
   import ExUnit.Assertions
 
   alias Anoma.Resource
-  alias Anoma.Crypto.Sign
 
-  alias Examples.ENock
-
-  # Memoize it as we want it to always be the same!
-  defmemo(keypair_a(), do: Sign.new_keypair())
-  defmemo(keypair_b(), do: Sign.new_keypair())
+  alias Examples.{ENock, ECrypto}
 
   ####################################################################
   ##                         Basic Creation                         ##
   ####################################################################
 
   # new_with_npk gives new resources, so memo again
-  defmemo(a_resource(), do: Resource.new_with_npk(keypair_a().public))
-  defmemo(b_resource(), do: Resource.new_with_npk(keypair_b().public))
-  defmemo(a2_resource(), do: Resource.new_with_npk(keypair_a().public))
+  defmemo a_resource() do
+    Resource.new_with_npk(ECrypto.alice().external.sign)
+  end
+
+  defmemo a2_resource() do
+    Resource.new_with_npk(ECrypto.alice().external.sign)
+  end
+
+  defmemo b_resource() do
+    Resource.new_with_npk(ECrypto.bertha().external.sign)
+  end
 
   defmemo a10_space_resource() do
-    %Resource{
-      Resource.new_with_npk(keypair_a().public)
-      | label: "space bucks",
-        quantity: 10
-    }
+    %Resource{a_resource() | label: "space bucks", quantity: 10}
+    |> Resource.unique()
   end
 
   defmemo a5_space_resource() do
@@ -36,11 +36,8 @@ defmodule Examples.EResource do
   end
 
   defmemo b10_space_resource() do
-    %Resource{
-      Resource.new_with_npk(keypair_b().public)
-      | label: "space bucks",
-        quantity: 10
-    }
+    %Resource{a10_space_resource() | npk: ECrypto.bertha().external.sign}
+    |> Resource.unique()
   end
 
   defmemo a10_d0_resource() do
@@ -111,7 +108,9 @@ defmodule Examples.EResource do
 
   @spec a_nullifier() :: binary()
   def a_nullifier() do
-    nullifier = Resource.nullifier(a_resource(), keypair_a().secret)
+    nullifier =
+      Resource.nullifier(a_resource(), ECrypto.alice().internal.sign)
+
     assert nullifier |> Resource.nullifies(a_resource())
     refute nullifier |> Resource.nullifies(b_resource())
     nullifier
@@ -119,7 +118,9 @@ defmodule Examples.EResource do
 
   @spec a2_nullifier() :: binary()
   def a2_nullifier() do
-    nullifier = Resource.nullifier(a2_resource(), keypair_a().secret)
+    nullifier =
+      Resource.nullifier(a2_resource(), ECrypto.alice().internal.sign)
+
     assert nullifier |> Resource.nullifies(a2_resource())
     refute nullifier |> Resource.nullifies(a_resource())
     assert nullifier != a_nullifier()
@@ -128,7 +129,9 @@ defmodule Examples.EResource do
 
   @spec b_nullifier() :: binary()
   def b_nullifier() do
-    nullifier = Resource.nullifier(b_resource(), keypair_b().secret)
+    nullifier =
+      Resource.nullifier(b_resource(), ECrypto.bertha().internal.sign)
+
     assert nullifier |> Resource.nullifies(b_resource())
     refute nullifier |> Resource.nullifies(a_resource())
     nullifier
@@ -136,31 +139,37 @@ defmodule Examples.EResource do
 
   @spec invalid_nullifier() :: binary()
   def invalid_nullifier() do
-    nullifier = Resource.nullifier(a_resource(), keypair_b().secret)
+    nullifier =
+      Resource.nullifier(a_resource(), ECrypto.bertha().internal.sign)
+
     refute nullifier |> Resource.nullifies(a_resource())
     nullifier
   end
 
   def a10_space_nullifier(),
-    do: Resource.nullifier(a10_space_resource(), keypair_a().secret)
+    do:
+      Resource.nullifier(a10_space_resource(), ECrypto.alice().internal.sign)
 
   def a5_space_nullifier(),
-    do: Resource.nullifier(a5_space_resource(), keypair_a().secret)
+    do: Resource.nullifier(a5_space_resource(), ECrypto.alice().internal.sign)
 
   def b10_space_nullifier(),
-    do: Resource.nullifier(b10_space_resource(), keypair_b().secret)
+    do:
+      Resource.nullifier(b10_space_resource(), ECrypto.bertha().internal.sign)
 
   def a10_d0_nullifier(),
-    do: Resource.nullifier(a10_d0_resource(), keypair_a().secret)
+    do: Resource.nullifier(a10_d0_resource(), ECrypto.alice().internal.sign)
 
   def b10_d0_nullifier(),
-    do: Resource.nullifier(b10_d0_resource(), keypair_b().secret)
+    do: Resource.nullifier(b10_d0_resource(), ECrypto.bertha().internal.sign)
 
   def a0_counter_nullifier(),
-    do: Resource.nullifier(a0_counter_resource(), keypair_a().secret)
+    do:
+      Resource.nullifier(a0_counter_resource(), ECrypto.alice().internal.sign)
 
   def a1_counter_nullifier(),
-    do: Resource.nullifier(a1_counter_resource(), keypair_a().secret)
+    do:
+      Resource.nullifier(a1_counter_resource(), ECrypto.alice().internal.sign)
 
   ####################################################################
   ##                             Kinds                              ##
