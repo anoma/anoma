@@ -4,6 +4,7 @@ defmodule Examples.ECrypto do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Crypto.Sign
   alias Anoma.Crypto.Symmetric
   alias Anoma.Crypto.Id
 
@@ -48,5 +49,27 @@ defmodule Examples.ECrypto do
            "decrypt · encrypt ≡ identity"
 
     sym
+  end
+
+  ####################################################################
+  ##                         Signed Messages                        ##
+  ####################################################################
+
+  def blood_msg() do
+    "The blood is already on my hands. Right or wrong, .. I must follow the path .. to its end."
+  end
+
+  @spec blood_l_signed_detached() :: binary()
+  def blood_l_signed_detached() do
+    msg = Sign.sign_detached(blood_msg(), londo().internal.sign)
+    assert Sign.verify_detached(msg, blood_msg(), londo().external.sign)
+    msg
+  end
+
+  @spec blood_l_signed() :: binary()
+  def blood_l_signed() do
+    msg = Sign.sign(blood_msg(), londo().internal.sign)
+    assert Sign.verify(msg, londo().external.sign)
+    msg
   end
 end

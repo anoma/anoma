@@ -8,5 +8,7 @@ defmodule AnomaTest.Crypto do
   test "examples" do
     ECrypto.xcc()
     ECrypto.londo()
+    ECrypto.blood_l_signed_detached()
+    ECrypto.blood_l_signed()
   end
 end
