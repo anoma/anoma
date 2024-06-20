@@ -2,7 +2,9 @@ defmodule Examples.ECrypto do
   use Memoize
 
   require ExUnit.Assertions
+  import ExUnit.Assertions
 
+  alias Anoma.Crypto.Symmetric
   alias Anoma.Crypto.Id
 
   ####################################################################
@@ -26,6 +28,25 @@ defmodule Examples.ECrypto do
 
   @spec londo() :: Id.t()
   defmemo londo() do
-    Id.new_keypair()
+    keys = Id.new_keypair()
+
+    assert keys == keys |> Id.salt_keys(xcc()) |> Id.unsalt_keys(xcc()),
+           "unsalt · salt ≡ identity"
+
+    keys
+  end
+
+  ####################################################################
+  ##                           Symmetric                            ##
+  ####################################################################
+
+  @spec xcc() :: Symmetric.t()
+  defmemo xcc() do
+    sym = Symmetric.random_xchacha()
+
+    assert 555 == Symmetric.encrypt(555, sym) |> Symmetric.decrypt(sym),
+           "decrypt · encrypt ≡ identity"
+
+    sym
   end
 end
