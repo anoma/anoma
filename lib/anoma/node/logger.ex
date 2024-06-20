@@ -81,8 +81,10 @@ defmodule Anoma.Node.Logger do
 
   @spec add(Router.addr() | nil, atom(), String.t()) :: :ok | nil
   def add(logger, atom, msg) do
-    unless logger == nil do
+    if logger do
       Router.cast(logger, {:add, logger, atom, msg})
+    else
+      log_fun({atom, msg})
     end
   end
 
