@@ -42,6 +42,10 @@ defmodule AnomaTest.Node.Transport do
       {:unix, socket_path}
     )
 
+    # Ensure the Transport has started the server
+    # Please replace this with a topic listen
+    Router.call(node.transport, :ping)
+
     on_exit(fn ->
       File.rm(socket_path)
     end)
