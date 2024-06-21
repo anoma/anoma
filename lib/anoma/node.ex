@@ -66,13 +66,46 @@ defmodule Anoma.Node do
     field(:dumper, Router.addr())
   end
 
+  @typedoc """
+  I am the configuration type for the `Anoma.Node`.
+
+  Ι contain information necessary for tweaking the behavior of the
+  `Anoma.Node` application. See my `Fields` section for more
+  information on how my behavior changes the node.
+
+  ### Fields
+
+   - `:use_rocks` - determines if we wish to use rocksdb, or use mnesia
+   in memory database
+
+   - `:settings` - are the engine specific and anoma node configuration
+     settings. See `node_settings/0` for more details
+   - `:testing` is a flag that specifies if the node being launched is
+     for testing purposes. Currently this just affects if we take up
+     the standard socket over the current `Anoma` instance or not.
+  """
   @type configuration() :: [
-          new_storage: boolean(),
           name: atom(),
           use_rocks: boolean(),
-          settings: engine_configuration(),
-          configuration: Anoma.Configuration.configuration_map() | nil
+          settings: node_settings(),
+          testing: boolean() | nil
         ]
+
+  @typedoc """
+  I am the node settings
+
+  I can be resumed from two states, either from new/fresh storage in
+  which I just have a `engine_configuration/0` or from a previously
+  dumped configuration. In which case I contain `t:Anoma.Dump.dump/0`.
+
+  If the mode is in `:new_storage`, then Ι just contain `Engine`
+  specific configuration settings. However if I'm a `:from_dump` then
+  Ι have a superset of that information containing `mnesia` table
+  configuration information as well.
+  """
+  @type node_settings() ::
+          {:new_storage, engine_configuration()}
+          | {:from_dump, Anoma.Dump.dump()}
 
   @type min_engine_configuration() :: [
           ping_time: :no_timer | non_neg_integer(),
@@ -84,30 +117,32 @@ defmodule Anoma.Node do
         ]
 
   @type engine_configuration() :: %{
-          clock: {Router.addr() | nil, Clock.t()},
-          configuration: {Router.addr() | nil, Anoma.Node.Configuration.t()},
-          pinger: {Router.addr() | nil, Pinger.t()},
-          logger: {Router.addr() | nil, Logger.t()},
-          ordering: {Router.addr() | nil, Ordering.t()},
-          executor: {Router.addr() | nil, Executor.t()},
-          mempool: {Router.addr() | nil, Mempool.t()},
-          storage: {Router.addr() | nil, Storage.t()},
-          dumper: {Router.addr() | nil, Dumper.t()},
+          clock: {Id.Extern.t() | nil, Clock.t()},
+          configuration: {Id.Extern.t() | nil, Anoma.Node.Configuration.t()},
+          pinger: {Id.Extern.t() | nil, Pinger.t()},
+          logger: {Id.Extern.t() | nil, Logger.t()},
+          ordering: {Id.Extern.t() | nil, Ordering.t()},
+          executor: {Id.Extern.t() | nil, Executor.t()},
+          mempool: {Id.Extern.t() | nil, Mempool.t()},
+          storage: {Id.Extern.t() | nil, Storage.t()},
+          dumper: {Id.Extern.t() | nil, Dumper.t()},
           storage_data: {Storage.t(), atom()},
           snapshot_path: Noun.t()
         }
 
   @doc """
   I assume I am fed a list with atom-value 2-tuples
-  :new_storage, :name, :settings. If :new_storage has
-  value true, I need a snapshot_path: key in the
-  settings.
+  :name, :settings, :use_rocks. The value of :settings is a 2-tuple
+  with the first component matching either :new_storage or :from_dump.
+  If the former case, I need a :snapshot_path key in the settings.
+  For the latter case, check Anoma.Dump for format descriptions of
+  the settings.
 
   I ensure that the storages are deleted and created.
   Afterwards, if the storage is truly new, I put the snapshot
   in the ordering. Otherwise, I simply repopulate the tables
   from a supplied list by the settings.
-  Check Anoma.Dump for format descriptions.
+  If :use_rocks has value true, I use rocksdb as storage backend.
   """
 
   @spec start_link(configuration()) :: GenServer.on_start()
@@ -116,7 +151,10 @@ defmodule Anoma.Node do
     # also need to clean this up once we're done
     unix_path = Anoma.System.Directories.data("local.sock")
 
-    if Mix.env() in [:dev, :prod] && File.exists?(unix_path) do
+    testing = args[:testing] || false
+    should_socket? = Mix.env() in [:dev, :prod] and not testing
+
+    if should_socket? && File.exists?(unix_path) do
       File.rm(unix_path)
 
       IO.puts(
@@ -124,34 +162,42 @@ defmodule Anoma.Node do
       )
     end
 
-    settings = args[:settings]
     name = args[:name]
     rocks = args[:use_rocks]
-    {storage, block_storage} = settings[:storage_data]
+
+    node_settings = {kind, settings} = args[:settings]
+
+    {storage, block_storage} = storage_data(node_settings)
     storage_setup(storage, block_storage, rocks)
 
-    unless args[:new_storage] do
-      tables =
-        settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
+    case kind do
+      :from_dump ->
+        tables =
+          settings[:qualified] ++ settings[:order] ++ settings[:block_storage]
 
-      tables
-      |> Enum.map(fn x ->
-        fn -> :mnesia.write(x) end |> :mnesia.transaction()
-      end)
+        tables
+        |> Enum.map(fn x ->
+          fn -> :mnesia.write(x) end |> :mnesia.transaction()
+        end)
+
+      _ ->
+        nil
     end
 
     with {:ok, pid} <-
-           GenServer.start_link(__MODULE__, Map.put(settings, :name, name),
-             name: name
-           ) do
-      if args[:new_storage] do
-        snap = settings[:snapshot_path]
+           GenServer.start_link(__MODULE__, settings, name: name) do
+      case kind do
+        :new_storage ->
+          snap = settings[:snapshot_path]
 
-        node = state(pid)
-        Storage.put_snapshot(node.storage, hd(snap))
+          node = state(pid)
+          Storage.put_snapshot(node.storage, hd(snap))
+
+        _ ->
+          :ok
       end
 
-      if Mix.env() in [:dev, :prod] do
+      if should_socket? do
         # dump the initial state so our keys are persisted
         Anoma.Dump.dump("node_keys.dmp", name)
       end
@@ -180,7 +226,7 @@ defmodule Anoma.Node do
     end
   end
 
-  @spec init(Anoma.Dump.dump()) :: any()
+  @spec init(engine_configuration() | Anoma.Dump.dump()) :: any()
   def init(args) do
     {log_id, log_st} = args[:logger]
     {clock_id, _clock_st} = args[:clock]
@@ -363,6 +409,13 @@ defmodule Anoma.Node do
 
   def handle_call(:state, _from, state) do
     {:reply, state, state}
+  end
+
+  @spec storage_data(node_settings()) :: {Storage.t(), atom()}
+  defp storage_data(node_settings) do
+    case node_settings do
+      {_flag, settings} -> settings[:storage_data]
+    end
   end
 
   defp storage_setup(storage, block_storage, rocks) do

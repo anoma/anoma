@@ -25,7 +25,6 @@ defmodule Anoma.Dump do
   - `load/1`
   """
 
-  alias Anoma.Configuration
   alias Anoma.Mnesia
   alias Anoma.Node
 
@@ -44,6 +43,24 @@ defmodule Anoma.Dump do
   alias Anoma.Node.Router.Engine
   alias Anoma.Crypto.Id
   alias Anoma.System.Directories
+
+  @typedoc """
+  I control launch options for `launch/2`
+
+  ### Options
+  - `:supervisor` - This flag determine if we use a supervisor and if
+  so what options. See `t:Supervisor.option/0 ` for supervisor options
+
+  - `:testing` - This flag notes if we are testing the node. This gets
+    fed directly into the type `t:Anoma.Node.configuration/0` for
+    `Anoma.Node.start_link/1`. Please consult the
+    `t:Anoma.Node.configuration/0` documentation for the full effect
+    this has on the node
+  """
+
+  @type launch_option() ::
+          {:supervisor, [Supervisor.option()]}
+          | {:testing, boolean()}
 
   @doc """
   I dump the current state with storage. I accept a string as a name,
@@ -102,48 +119,36 @@ defmodule Anoma.Dump do
   Check whether your transactions have had an assigned worker. If not,
   relaunch them directly. If blocks were out of sync with mempool,
   relaunch the executions as well.
+
+  ### Options
+  see `launch_options/0` for the full list of optional arguments
   """
 
   @dialyzer {:no_return, launch: 2}
-  @spec launch(String.t(), atom()) :: {:ok, %Node{}} | any()
-  def launch(file, name) do
-    load = file |> load()
-
-    settings = block_check(load)
-
-    node_settings = [
-      new_storage: false,
-      name: name,
-      settings: settings,
-      use_rocks: load[:use_rocks]
-    ]
-
-    Anoma.Node.start_link(node_settings)
-  end
-
-  @doc """
-  I have the same functionality as `launch/2` but start the node using a
-  named supervisor.
-  """
-
-  @dialyzer {:no_return, launch: 2}
-  @spec launch(String.t(), atom(), atom(), Configuration.configuration_map()) ::
+  @spec launch(String.t(), atom(), [launch_option()]) ::
           {:ok, %Node{}} | any()
-  def launch(file, name, sup_name, config) do
+  def launch(file, name, options \\ []) do
     load = file |> load()
+
+    keys = Keyword.validate!(options, supervisor: nil, testing: false)
 
     settings = block_check(load)
 
     node_settings = [
-      new_storage: false,
       name: name,
-      settings: settings,
+      settings: {:from_dump, settings},
       use_rocks: load[:use_rocks],
-      configuration: config
+      testing: keys[:testing]
     ]
 
-    [{Anoma.Node, node_settings}]
-    |> Supervisor.start_link(strategy: :one_for_one, name: sup_name)
+    case keys[:supervisor] do
+      nil ->
+        Anoma.Node.start_link(node_settings)
+
+      settings ->
+        [{Anoma.Node, node_settings}]
+        |> Supervisor.start_link([{:strategy, :one_for_one} | settings])
+    end
   end
 
   @doc """
@@ -368,6 +373,7 @@ defmodule Anoma.Dump do
     }
   end
 
+  @spec block_check(dump()) :: dump()
   defp block_check(map) do
     block_storage = map.block_storage
 
