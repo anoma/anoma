@@ -22,19 +22,19 @@ defmodule AnomaTest.Node.Dumper do
 
     {:ok, nodes} =
       Anoma.Node.start_link(
-        new_storage: true,
         name: node_name,
         use_rocks: false,
         settings:
-          [
-            snapshot_path: snapshot_path,
-            storage_data: storage,
-            block_storage: :dumper_blocks,
-            ping_time: :no_timer,
-            configuration: config,
-            count: 1
-          ]
-          |> Anoma.Node.start_min()
+          {:new_storage,
+           [
+             snapshot_path: snapshot_path,
+             storage_data: storage,
+             block_storage: :dumper_blocks,
+             ping_time: :no_timer,
+             configuration: config,
+             count: 1
+           ]
+           |> Anoma.Node.start_min()}
       )
 
     node = Anoma.Node.state(nodes)

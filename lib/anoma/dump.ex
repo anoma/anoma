@@ -112,9 +112,8 @@ defmodule Anoma.Dump do
     settings = block_check(load)
 
     node_settings = [
-      new_storage: false,
       name: name,
-      settings: settings,
+      settings: {:from_dump, settings},
       use_rocks: load[:use_rocks]
     ]
 
@@ -135,9 +134,8 @@ defmodule Anoma.Dump do
     settings = block_check(load)
 
     node_settings = [
-      new_storage: false,
       name: name,
-      settings: settings,
+      settings: {:from_dump, settings},
       use_rocks: load[:use_rocks],
       configuration: config
     ]
