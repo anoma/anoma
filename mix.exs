@@ -14,7 +14,7 @@ defmodule Anoma.MixProject do
         plt_local_path: "plts/anoma.plt",
         plt_core_path: "plts/core.plt",
         flags: ["-Wno_improper_lists"],
-        plt_add_apps: [:mix]
+        plt_add_apps: [:mix, :ex_unit]
       ],
       # Docs
       name: "Anoma",
@@ -81,6 +81,7 @@ defmodule Anoma.MixProject do
       {:burrito, "~> 1.0.4"},
       {:toml, "~> 0.7"},
       {:plug_crypto, "~> 2.0"},
+      {:memoize, "~> 1.4.3"},
       {:msgpack, "~> 0.8.1"}
     ]
   end
