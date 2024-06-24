@@ -118,7 +118,7 @@ defmodule Anoma.MixProject do
       "Cryptographic Primitives": [~r/^Anoma.Crypto.?/],
       Solver: [~r/^Anoma.Node.Solver.?/],
       CommitmentTree: [~r/^CommitmentTree.?/],
-      Utilities: [Anoma.Node.Utility, Anoma.Mnesia, Anoma.Communicator],
+      Utilities: [Anoma.Utility, Anoma.Mnesia, Anoma.Communicator],
       "Test Helpers": ~r/^TestHelper.?/
     ]
   end

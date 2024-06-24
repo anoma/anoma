@@ -54,7 +54,7 @@ defmodule TestHelper.Node do
 
     engines
     |> Enum.each(
-      &Transport.learn_engine(client_transport, &1.id(), server_router)
+      &Transport.learn_engine(client_transport, &1.id, server_router)
     )
   end
 
@@ -62,7 +62,7 @@ defmodule TestHelper.Node do
   def router_talking_to_client(client_router, server_transport) do
     transport_addr = %{client_router | server: nil, id: server_transport.id}
 
-    my_id = Router.self_addr(client_router).id()
+    my_id = Router.self_addr(client_router).id
     # Tell the server Ι live on the client
     Transport.learn_engine(transport_addr, my_id, client_router.id)
   end
