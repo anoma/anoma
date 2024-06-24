@@ -48,9 +48,9 @@ defmodule Anoma.Node do
   alias Anoma.Crypto.Id
   alias __MODULE__
 
-  typedstruct enforce: true do
-    field(:router, Router.addr())
-    field(:transport, Router.addr())
+  typedstruct do
+    field(:router, Router.addr(), enforce: true)
+    field(:transport, Router.addr(), enforce: true)
     field(:ordering, Router.addr())
     field(:executor, Router.addr())
     field(:executor_topic, Router.addr())
