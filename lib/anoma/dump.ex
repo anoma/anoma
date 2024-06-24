@@ -25,7 +25,6 @@ defmodule Anoma.Dump do
   - `load/1`
   """
 
-  alias Anoma.Configuration
   alias Anoma.Mnesia
   alias Anoma.Node
 
@@ -126,9 +125,9 @@ defmodule Anoma.Dump do
   """
 
   @dialyzer {:no_return, launch: 2}
-  @spec launch(String.t(), atom(), atom(), Configuration.configuration_map()) ::
+  @spec launch(String.t(), atom(), atom()) ::
           {:ok, %Node{}} | any()
-  def launch(file, name, sup_name, _config) do
+  def launch(file, name, sup_name) do
     load = file |> load()
 
     settings = block_check(load)
@@ -365,6 +364,7 @@ defmodule Anoma.Dump do
     }
   end
 
+  @spec block_check(dump()) :: dump()
   defp block_check(map) do
     block_storage = map.block_storage
 

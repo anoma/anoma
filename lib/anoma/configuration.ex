@@ -130,6 +130,8 @@ defmodule Anoma.Configuration do
     end
   end
 
+  @spec launch_min(configuration_map()) :: GenServer.on_start()
+  @spec launch_min(configuration_map(), boolean()) :: GenServer.on_start()
   @doc """
   Given a parsed map with minimal node startup info I launch the node with
   the appopriate name
@@ -138,6 +140,8 @@ defmodule Anoma.Configuration do
     node_configuration(parsed_map, rocks_flag) |> Anoma.Node.start_link()
   end
 
+  @spec launch_min(configuration_map(), boolean(), Supervisor.name()) ::
+          GenServer.on_start()
   @doc """
   I have the same functionality as `launch_min/2` but start the node using
   a named supervisor.
@@ -201,11 +205,6 @@ defmodule Anoma.Configuration do
 
     ["\n", key, " = " | strings]
   end
-
-  @spec launch_min(configuration_map()) :: GenServer.on_start()
-  @spec launch_min(configuration_map(), boolean()) :: GenServer.on_start()
-  @spec launch_min(configuration_map(), boolean(), Supervisor.name()) ::
-          GenServer.on_start()
 
   ############################################################
   #                         Helpers                          #
