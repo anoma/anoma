@@ -105,34 +105,11 @@ defmodule Anoma.Cli.Client do
   end
 
   defp perform({:submit_tx, path}, primary, router) do
-    other_mempool_addr = %{
-      router
-      | server: nil,
-        id: elem(primary.mempool, 0)
-    }
+    do_submit(path, primary, router, :kv)
+  end
 
-    tx =
-      case File.read(path) do
-        {:ok, tx} ->
-          tx
-
-        {:error, error} ->
-          IO.puts(
-            "Failed to load transaction from file #{path}: #{inspect(error)}"
-          )
-
-          System.halt(1)
-      end
-
-    case Noun.Format.parse(tx) do
-      {:ok, tx} ->
-        Anoma.Node.Mempool.async_tx(other_mempool_addr, {:kv, tx})
-
-      :error ->
-        IO.puts("Failed to parse transaction from file #{path}")
-
-        System.halt(1)
-    end
+  defp perform({:rm_submit_tx, path}, primary, router) do
+    do_submit(path, primary, router, :rm)
   end
 
   defp perform(:shutdown, primary, router) do
@@ -205,6 +182,41 @@ defmodule Anoma.Cli.Client do
       IO.puts(
         "Can not find Dump file, please delete the dumped data yourself"
       )
+    end
+  end
+
+  ############################################################
+  #                        Helper                            #
+  ############################################################
+
+  defp do_submit(path, primary, router, kind) do
+    other_mempool_addr = %{
+      router
+      | server: nil,
+        id: elem(primary.mempool, 0)
+    }
+
+    tx =
+      case File.read(path) do
+        {:ok, tx} ->
+          tx
+
+        {:error, error} ->
+          IO.puts(
+            "Failed to load transaction from file #{path}: #{inspect(error)}"
+          )
+
+          System.halt(1)
+      end
+
+    case Noun.Format.parse(tx) do
+      {:ok, tx} ->
+        Anoma.Node.Mempool.async_tx(other_mempool_addr, {kind, tx})
+
+      :error ->
+        IO.puts("Failed to parse transaction from file #{path}")
+
+        System.halt(1)
     end
   end
 end

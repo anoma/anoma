@@ -39,6 +39,16 @@ defmodule Anoma.Cli do
           ]
         ]
       ],
+      rm_submit: [
+        name: "rm-submit",
+        about: "Submit a transaction to the local node.",
+        args: [
+          file: [
+            required: true,
+            parser: :string
+          ]
+        ]
+      ],
       shutdown: [
         name: "shutdown",
         about: "Shutdowns the server"
@@ -109,6 +119,9 @@ defmodule Anoma.Cli do
 
       {:ok, [:submit], %{args: %{file: file}}} ->
         run_client_command({:submit_tx, file})
+
+      {:ok, [:rm_submit], %{args: %{file: file}}} ->
+        run_client_command({:rm_submit_tx, file})
 
       {:ok, [:get], %{args: %{key: key}}} ->
         run_client_command({:get_key, key})
