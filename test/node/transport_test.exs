@@ -32,7 +32,7 @@ defmodule AnomaTest.Node.Transport do
 
     # Setting up the socket
 
-    socket_name = (:enacl.randombytes(8) |> Base.encode64()) <> ".sock"
+    socket_name = (:enacl.randombytes(8) |> Base.encode32()) <> ".sock"
 
     socket_path = Anoma.System.Directories.data(socket_name)
     socket_addr = {:unix, socket_path}
@@ -41,6 +41,10 @@ defmodule AnomaTest.Node.Transport do
       node.transport,
       {:unix, socket_path}
     )
+
+    # Ensure the Transport has started the server
+    # Please replace this with a topic listen
+    Router.call(node.transport, :ping)
 
     on_exit(fn ->
       File.rm(socket_path)
