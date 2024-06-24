@@ -80,14 +80,11 @@ defmodule Anoma.Node do
 
    - `:settings` - are the engine specific and anoma node configuration
      settings. See `node_settings/0` for more details
-
-   - `:configuration` - the configuration map for the configuration engine to use
   """
   @type configuration() :: [
           name: atom(),
           use_rocks: boolean(),
-          settings: node_settings(),
-          configuration: Anoma.Configuration.configuration_map() | nil
+          settings: node_settings()
         ]
 
   @typedoc """

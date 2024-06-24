@@ -220,8 +220,7 @@ defmodule Anoma.Configuration do
     [
       name: Keyword.get(node_settings, :name),
       use_rocks: rocks_flag,
-      settings: {:new_storage, settings},
-      configuration: parsed_map
+      settings: {:new_storage, settings}
     ]
   end
 
