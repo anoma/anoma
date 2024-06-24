@@ -11,6 +11,7 @@ defmodule Anoma.Node.Pinger do
   - `pinger/1`
   """
   alias Anoma.Node.Router
+  alias Anoma.Node.Logger
   alias Anoma.Node.Mempool
   alias __MODULE__
 
@@ -20,21 +21,28 @@ defmodule Anoma.Node.Pinger do
   typedstruct do
     field(:mempool, Router.Addr.t())
     field(:time, non_neg_integer() | atom(), default: :no_timer)
+    field(:logger, Router.Addr.t())
   end
 
   def init(%Pinger{} = state) do
     pinger(state.time)
-
     {:ok, state}
   end
 
-  @spec init(list({:mempool, Router.Addr.t()} | {:time, non_neg_integer()})) ::
+  @spec init(
+          list(
+            {:mempool, Router.Addr.t()}
+            | {:time, non_neg_integer()}
+            | {:logger, Router.Addr.t()}
+          )
+        ) ::
           {:ok, Pinger.t()}
   def init(args) do
     time = args[:time]
     mempool = args[:mempool]
+    logger = args[:logger]
 
-    {:ok, %Pinger{mempool: mempool, time: time}}
+    {:ok, %Pinger{mempool: mempool, time: time, logger: logger}}
   end
 
   ############################################################
@@ -47,10 +55,9 @@ defmodule Anoma.Node.Pinger do
   pinger.
   """
 
-  @spec set_timer(Router.Addr.t(), non_neg_integer() | :no_timer) ::
-          String.t()
+  @spec set_timer(Router.Addr.t(), non_neg_integer() | :no_timer) :: :ok
   def set_timer(server, time) do
-    Router.call(server, {:set, time})
+    Router.cast(server, {:set, time})
   end
 
   @doc """
@@ -61,23 +68,24 @@ defmodule Anoma.Node.Pinger do
   not practically start.
   """
 
-  @spec start(Router.Addr.t()) :: String.t()
+  @spec start(Router.Addr.t()) :: :ok
   def start(server) do
-    Router.call(server, :start)
+    Router.cast(server, :start)
   end
 
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_call(:start, _from, state) do
+  def handle_cast(:start, _from, state) do
     pinger(state.time)
-
-    {:reply, "Pinger launched", state}
+    log_info({:launch, state.logger})
+    {:noreply, state}
   end
 
-  def handle_call({:set, time}, _from, state) do
-    {:reply, "Timer set to #{inspect(time)}", %Pinger{state | time: time}}
+  def handle_cast({:set, time}, _from, state) do
+    log_info({:set, time, state.logger})
+    {:noreply, %Pinger{state | time: time}}
   end
 
   def handle_info(:execute, state) do
@@ -104,5 +112,17 @@ defmodule Anoma.Node.Pinger do
     else
       Process.send_after(self(), :execute, time)
     end
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:set, time, logger}) do
+    Logger.add(logger, :info, "Timer set to #{inspect(time)}")
+  end
+
+  defp log_info({:launch, logger}) do
+    Logger.add(logger, :info, "Pinger launched")
   end
 end

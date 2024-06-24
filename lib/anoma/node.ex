@@ -293,7 +293,8 @@ defmodule Anoma.Node do
         Pinger,
         %Pinger{
           ping_st
-          | mempool: mempool
+          | mempool: mempool,
+            logger: logger
         },
         id: ping_id
       )
