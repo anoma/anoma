@@ -136,6 +136,14 @@ defmodule CommitmentTree do
 
   # cms may be longer than n; we just add the first n commitments
   # we could use take when recursing to avoid this, but that would spuriously cons a lot
+  @spec addx(
+          CommitmentTree.Spec.t(),
+          CommitmentTree.Node.t(),
+          integer(),
+          list(integer()),
+          list(binary()),
+          integer()
+        ) :: CommitmentTree.Node.t()
   defp addx(spec, node, cursor, suff_prod, cms, n) do
     children = node.children
     # no more recursion to be done; the children of this node are leaves
