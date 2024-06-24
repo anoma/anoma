@@ -131,23 +131,33 @@ defmodule Livebook do
     # FOLDS ARE BAD
     # We simply have a stack for checking to resume numbering after
     # going to a sister after nesting
-    |> Enum.reduce({[], 0, 0, []}, fn {file, depth_f},
-                                      {list, depth_prev, last, stack} ->
+    # further the number of spacing is variable and so is also counted
+    # with the stack
+    |> Enum.reduce({[], 0, 0, 0, []}, fn {file, depth_f},
+                                         {list, depth_prev, last, num_spaces,
+                                          stack} ->
       up_n = depth_prev - depth_f
       # If the previous depth agrees, increment the numbers
       cond do
         # The previous filing was our sister
         depth_f == depth_prev ->
-          {[{file, depth_f, last + 1} | list], depth_f, last + 1, stack}
+          {[{file, num_spaces, last + 1} | list], depth_f, last + 1,
+           num_spaces, stack}
 
         # The previous file is a parent
         depth_f > depth_prev ->
-          {[{file, depth_f, 1} | list], depth_f, 1, [last | stack]}
+          new_spacing = num_spaces + 2 + String.length(to_string(last))
+
+          {[{file, new_spacing, 1} | list], depth_f, 1, new_spacing,
+           [{last, num_spaces} | stack]}
 
         # The previous file is a sister of one of our ancestors
         depth_f < depth_prev ->
-          {[{file, depth_f, hd(stack) + 1} | list], depth_f,
-           Enum.at(stack, up_n - 1) + 1, Enum.drop(stack, up_n)}
+          {last_numbering, last_spaces} = Enum.at(stack, up_n - 1)
+          new_numbering = last_numbering + 1
+
+          {[{file, last_spaces, new_numbering} | list], depth_f,
+           new_numbering, last_spaces, Enum.drop(stack, up_n)}
       end
     end)
     |> elem(0)
@@ -163,7 +173,7 @@ defmodule Livebook do
           non_neg_integer()
         ) :: String.t()
   def generate_heading(path, depth, numbering, from_depth \\ 1) do
-    String.duplicate(" ", 3 * depth) <>
+    String.duplicate(" ", depth) <>
       to_string(numbering) <>
       ". " <>
       "[#{name(path)}](#{relative(path, from_depth)})"
