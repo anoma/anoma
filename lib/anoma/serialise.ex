@@ -13,8 +13,25 @@ defmodule Anoma.Serialise do
     end
   end
 
-  def to_msgpack(o) when is_integer(o) or is_binary(o) or is_boolean(o) do
+  # can't use ** in guards--that is -(2**63) <= o and o < 2**64; i.e., signed or unsigned 64-bit integer
+  def to_msgpack(o)
+      when (is_integer(o) and -9_223_372_036_854_775_808 <= o and
+              o < 18_446_744_073_709_551_616) or is_binary(o) or is_boolean(o) do
     o
+  end
+
+  # big integer
+  def to_msgpack(o) when is_integer(o) do
+    %{
+      "__tag__" => "bigint",
+      "sign" =>
+        if o < 0 do
+          1
+        else
+          0
+        end,
+      "magnitude" => Enum.reverse(Integer.digits(abs(o), 2 ** 64))
+    }
   end
 
   def to_msgpack(o) when is_list(o) do
@@ -68,6 +85,26 @@ defmodule Anoma.Serialise do
       with {:ok, xs} <- from_msgpack(xs) do
         {:ok, [x | xs]}
       end
+    end
+  end
+
+  def from_msgpack(%{
+        "__tag__" => "bigint",
+        "sign" => sign,
+        "magnitude" => magnitude = [_ | _]
+      })
+      when sign in [0, 1] do
+    if Enum.all?(magnitude, &is_integer/1) do
+      magnitude = Integer.undigits(Enum.reverse(magnitude), 2 ** 64)
+
+      {:ok,
+       if sign == 1 do
+         -magnitude
+       else
+         magnitude
+       end}
+    else
+      :error
     end
   end
 
