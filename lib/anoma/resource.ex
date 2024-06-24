@@ -64,18 +64,26 @@ defmodule Anoma.Resource do
   (It's up to the caller to use the right secret.)
   """
   def nullifier(resource = %Resource{}, secret) do
-    [@nullifier_atom | to_noun(resource)]
-    |> Nock.Jam.jam()
+    jammed_nullified_resource =
+      [@nullifier_atom | to_noun(resource)]
+      |> Nock.Jam.jam()
+      |> Noun.atom_integer_to_binary()
+
+    Nock.Jam.jam([
+      jammed_nullified_resource
+      | Sign.sign_detached(jammed_nullified_resource, secret)
+    ])
     |> Noun.atom_integer_to_binary()
-    |> Sign.sign(secret)
   end
 
+  @spec kind(t()) :: binary()
   @doc """
   The kind of the given resource (labelled logic).
   """
   def kind(resource = %Resource{}) do
-    :erlang.term_to_binary(resource.logic) <>
-      :erlang.term_to_binary(resource.label)
+    [resource.logic | resource.label]
+    |> Nock.Jam.jam()
+    |> Noun.atom_integer_to_binary()
   end
 
   @doc """
@@ -114,10 +122,16 @@ defmodule Anoma.Resource do
   Whether a nullifier nullifies a given resource.
   """
   def nullifies(nullifier, resource) do
-    with {:ok, verified_nullifier} <- Sign.verify(nullifier, resource.npk),
+    with {:ok, [jammed_nullified_resource | signature]} <-
+           Nock.Cue.cue(nullifier),
          {:ok, [@nullifier_atom | nullified_resource]} <-
-           Nock.Cue.cue(verified_nullifier) do
-      from_noun(nullified_resource) == resource
+           Nock.Cue.cue(jammed_nullified_resource) do
+      from_noun(nullified_resource) == resource &&
+        Sign.verify_detached(
+          Noun.atom_integer_to_binary(signature, 64),
+          Noun.atom_integer_to_binary(jammed_nullified_resource),
+          resource.npk
+        )
     else
       _ -> false
     end
