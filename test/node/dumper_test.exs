@@ -3,7 +3,6 @@ defmodule AnomaTest.Node.Dumper do
 
   alias Anoma.Node.{Mempool, Dumper, Router}
   alias Anoma.Node.Router.Engine
-  alias Anoma.System.Directories
   alias Anoma.Configuration
 
   setup_all do
@@ -47,7 +46,7 @@ defmodule AnomaTest.Node.Dumper do
 
     config = node.configuration |> Engine.get_state()
     state = node.dumper |> Engine.get_state()
-    path = config.configuration["dump"]["dump"] |> Directories.data()
+    path = config.configuration["dump"]["dump"]
     table = config.configuration["node"]["block_storage"] |> String.to_atom()
     task = state.task.pid
     my_node = node()
@@ -73,17 +72,20 @@ defmodule AnomaTest.Node.Dumper do
     assert :mnesia.unsubscribe({:table, table, :simple}) == {:ok, my_node}
 
     msg =
-      "Dumping succesful from worker."
+      "Dumping call succesful from worker."
 
     assert_receive(
       {:"$gen_cast", {_, _, {:logger_add, ^task, ^msg}}},
       5000
     )
 
-    assert Anoma.Node.Logger.get(node.logger, task)
-           |> Enum.any?(fn {_info, log} ->
-             log == msg
-           end) == true
+    msg2 =
+      "Dump succesfull. Snapshot path: #{inspect(path)}. Node name: :anoma"
+
+    assert_receive(
+      {:"$gen_cast", {_, _, {:logger_add, _task, ^msg2}}},
+      5000
+    )
 
     Dumper.set_count(node.dumper, 1)
 

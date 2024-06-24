@@ -216,7 +216,7 @@ defmodule Anoma.Node.Dumper do
     Logger.add(
       logger,
       :debug,
-      "Dumping succesful from worker."
+      "Dumping call succesful from worker."
     )
   end
 end
