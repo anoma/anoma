@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Transport do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.Router
   alias Anoma.Node.Transport

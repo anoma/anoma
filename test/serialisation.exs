@@ -1,5 +1,5 @@
 defmodule SerialisationTest do
-  use ExUnit.Case
+  use TestHelper.TestMacro
   doctest Anoma.Serialise
 
   test "basic" do

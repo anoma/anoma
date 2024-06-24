@@ -1,5 +1,5 @@
 defmodule AnomaTest.Block do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Block
   alias Anoma.Block.Base

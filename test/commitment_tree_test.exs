@@ -1,5 +1,5 @@
 defmodule CommitmentTreeTest do
-  use ExUnit.Case
+  use TestHelper.TestMacro
   doctest CommitmentTree
 
   test "basic" do

@@ -1,5 +1,5 @@
 defmodule AnomaTest.Nock do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   import Nock
   import TestHelper.Nock

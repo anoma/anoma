@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Dumper do
-  use ExUnit.Case
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.{Mempool, Dumper, Router}
   alias Anoma.Node.Router.Engine

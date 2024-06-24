@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Dump do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.Mempool
   alias Anoma.Mnesia

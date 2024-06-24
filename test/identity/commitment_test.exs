@@ -1,5 +1,5 @@
 defmodule AnomaTest.Identity.Commitment do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.Identity.Commitment
   alias Anoma.Crypto.Id

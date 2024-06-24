@@ -1,5 +1,5 @@
 defmodule AnomaTest.Identity.SignsFor do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.Storage
   alias Anoma.Node.Identity.Commitment

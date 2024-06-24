@@ -1,5 +1,5 @@
 defmodule AnomaTest.Node.Config do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
 
   alias Anoma.Configuration
   alias Anoma.System.Directories

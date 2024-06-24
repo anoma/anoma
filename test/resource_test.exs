@@ -1,5 +1,5 @@
 defmodule AnomaTest.Resource do
-  use ExUnit.Case, async: true
+  use TestHelper.TestMacro, async: true
   doctest Anoma.Resource
 
   import Anoma.Resource
