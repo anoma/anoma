@@ -277,6 +277,7 @@ defmodule AnomaTest.Nock do
     jam_and_cue([0 | 19], 39689)
     jam_and_cue([1 | 1], 817)
     jam_and_cue([10_000 | 10_000], 4_952_983_169)
+    jam_and_cue([65536 | <<0, 0, 1>>], 158_376_919_809)
     jam_and_cue([999_999_999 | 999_999_999], 1_301_217_674_263_809)
     jam_and_cue([222, 444 | 888], 250_038_217_192_960_129)
     jam_and_cue([[107 | 110] | [107 | 110]], 635_080_761_093)
@@ -338,7 +339,8 @@ defmodule AnomaTest.Nock do
   end
 
   def jam_and_cue(jam_value, cue_value) do
-    assert jam_value == Nock.Cue.cue!(cue_value)
+    assert Noun.equal(jam_value, Nock.Cue.cue!(cue_value))
     assert cue_value == Nock.Jam.jam(jam_value)
+    assert cue_value == Nock.Jam.jam(Noun.normalize_noun(jam_value))
   end
 end

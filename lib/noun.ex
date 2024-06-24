@@ -89,8 +89,8 @@ defmodule Noun do
   @spec equal(t(), t()) :: boolean()
   def equal(noun_1, noun_2)
       when is_noun_atom(noun_1) and is_noun_atom(noun_2) do
-    normalized_noun_1 = normalize_noun_atom(noun_1)
-    normalized_noun_2 = normalize_noun_atom(noun_2)
+    normalized_noun_1 = normalize_noun(noun_1)
+    normalized_noun_2 = normalize_noun(noun_2)
 
     normalized_noun_1 == normalized_noun_2
   end
@@ -108,13 +108,19 @@ defmodule Noun do
   end
 
   # leave binaries, which are most likely to be large, as binaries.
-  @spec normalize_noun_atom(noun_atom()) :: binary()
-  def normalize_noun_atom(atom) when is_noun_atom(atom) do
+  @spec normalize_noun(noun_atom()) :: binary()
+  def normalize_noun(atom) when is_noun_atom(atom) do
     cond do
       atom == [] -> <<>>
       is_integer(atom) -> atom_integer_to_binary(atom)
       is_binary(atom) -> atom
     end
+  end
+
+  @spec normalize_noun(noun_cell()) :: Noun.t()
+  def normalize_noun(noun) when is_noun_cell(noun) do
+    [h | t] = noun
+    [normalize_noun(h) | normalize_noun(t)]
   end
 
   @spec index_to_offset(non_neg_integer()) :: non_neg_integer()
