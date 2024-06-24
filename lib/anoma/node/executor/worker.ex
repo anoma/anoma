@@ -46,10 +46,9 @@ defmodule Anoma.Node.Executor.Worker do
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
          vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
+         true_order = wait_for_ready(env, order),
          true <- Anoma.Resource.Transaction.verify(vm_resource_tx),
          true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
-      true_order = wait_for_ready(env, order)
-
       log_info({:writing, true_order, logger})
       # this is not quite correct, but storage has to be revisited as a whole
       # for it to be made correct.
@@ -85,6 +84,14 @@ defmodule Anoma.Node.Executor.Worker do
       log_info({:success_run, logger})
       :ok
     else
+      # The failure had to be on the true match above, which is after
+      # the wait for ready
+      false ->
+        log_info({:fail, false, logger})
+        snapshot(storage, env)
+        :error
+
+      # This failed before the waiting for read as it's likely :error
       e ->
         log_info({:fail, e, logger})
         wait_for_ready(env, order)
