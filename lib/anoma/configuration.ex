@@ -43,11 +43,16 @@ defmodule Anoma.Configuration do
   information
   - `:supervisor` - This flag determine if we use a supervisor and if
   so what options. See `t:Supervisor.option/0 ` for supervisor options
-
+  - `:testing` - This flag notes if we are testing the node. This gets
+    fed directly into the type `t:Anoma.Node.configuration/0` for
+    `Anoma.Node.start_link/1`. Please consult the
+    `t:Anoma.Node.configuration/0` documentation for the full effect
+    this has on the node
   """
   @type launch_option ::
           {:use_rocksdb, boolean()}
           | {:supervisor, [Supervisor.option()]}
+          | {:testing, boolean()}
 
   ############################################################
   #                   Default Values                         #
@@ -155,7 +160,12 @@ defmodule Anoma.Configuration do
   see `t:launch_option/0` for the full list of optional arguments
   """
   def launch_min(parsed_map, options \\ []) do
-    keys = Keyword.validate!(options, supervisor: nil, use_rocksdb: false)
+    keys =
+      Keyword.validate!(options,
+        supervisor: nil,
+        use_rocksdb: false,
+        testing: false
+      )
 
     node_settings = parsed_map |> node_settings()
     settings = Anoma.Node.start_min(node_settings)
@@ -164,7 +174,8 @@ defmodule Anoma.Configuration do
       [
         name: Keyword.get(node_settings, :name),
         use_rocks: keys[:use_rocksdb],
-        settings: {:new_storage, settings}
+        settings: {:new_storage, settings},
+        testing: keys[:testing]
       ]
 
     case keys[:supervisor] do

@@ -19,6 +19,7 @@ defmodule AnomaTest.Node.Dump do
       Anoma.Node.start_link_or_find_instance(
         name: name,
         use_rocks: false,
+        testing: true,
         settings:
           {:new_storage,
            [
@@ -58,7 +59,9 @@ defmodule AnomaTest.Node.Dump do
     assert Process.whereis(sname) == nil
 
     {:ok, pid} =
-      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new)
+      Anoma.Dump.launch(Directories.data("dump_test.dmp"), :dump_new,
+        testing: true
+      )
 
     new_node = Anoma.Node.state(:dump_new)
 

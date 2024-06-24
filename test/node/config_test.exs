@@ -8,7 +8,7 @@ defmodule AnomaTest.Node.Config do
     configuration =
       Configuration.configuration(%{"node" => %{"name" => "test_node"}})
 
-    assert {:ok, pid} = Configuration.launch_min(configuration)
+    assert {:ok, pid} = Configuration.launch_min(configuration, testing: true)
 
     Supervisor.stop(pid)
   end

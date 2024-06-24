@@ -20,9 +20,10 @@ defmodule AnomaTest.Node.Dumper do
       })
 
     {:ok, nodes} =
-      Anoma.Node.start_link(
+      Anoma.Node.start_link_or_find_instance(
         name: node_name,
         use_rocks: false,
+        testing: true,
         settings:
           {:new_storage,
            [
