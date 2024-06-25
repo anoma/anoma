@@ -1,30 +1,52 @@
 defmodule Anoma.Node.Configuration do
   @moduledoc """
+  I am the implementation of the Configuration Engine.
 
-  I am an agent that remembers the configuration that the application
-  was launched with
+  I remember the configuration that the application was launched with as
+  well as call the snapshotting and snapshot-deletion functionality.
 
   ### Public API
-
   I have the following public functionality:
 
-  - `get_time/1`
-  - `get_epoch/1`
+  - `snapshot/1`
+  - `delete_dump/1`
   """
 
   alias __MODULE__
   alias Anoma.Node.Router
-  alias Anoma.Configuration
   alias Anoma.Node.Logger
 
   use TypedStruct
   use Router.Engine
 
   typedstruct do
-    field(:configuration, Configuration.configuration_map(), enforce: true)
+    @typedoc """
+    I am the type of the Configuration Engine.
+
+    ### Fields
+
+    - `:configuration` - The configuration data stored in specified format.
+                         Please consult the
+                         `t:Anoma.Configuration.configuration_map/0`.
+                         Enforced: true.
+    - `:logger` - The address of the Logger Engine. Enforced: false.
+    """
+
+    field(:configuration, Anoma.Configuration.configuration_map(),
+      enforce: true
+    )
+
     field(:logger, Router.Addr.t(), enforce: false)
   end
 
+  @doc """
+  I am the Configuration Engine initialiation function.
+
+  I receive a Configuration.t() structure and launch the engine instance
+  with the fed-in state.
+  """
+
+  @spec init(Configuration.t()) :: {:ok, Configuration.t()}
   def init(%__MODULE__{} = state) do
     {:ok, state}
   end
@@ -34,14 +56,25 @@ defmodule Anoma.Node.Configuration do
   ############################################################
 
   @doc """
-  Takes a snapshots of the current state
+  I am the snapshot function.
 
-  This topic sends back a message to the caller saying :snapshot_done
+  I take a snapshots of the current state. The topic sends back a message
+  to the caller saying `:snapshot_done`.
+
+  The path for the snapshot is taken directly from the condiguration map.
   """
+
   @spec snapshot(Router.addr()) :: :ok
   def snapshot(config) do
     Router.cast(config, :snapshot)
   end
+
+  @doc """
+  I am the function deleting the snapshot file.
+
+  I check the dump path and check whether there is any file snapsot there.
+  If so, I delete it, otherwise I do nothing.
+  """
 
   @spec delete_dump(Router.addr()) :: :ok
   def delete_dump(config) do
@@ -51,7 +84,25 @@ defmodule Anoma.Node.Configuration do
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
+
   def handle_cast(:snapshot, _caller, config = %__MODULE__{}) do
+    do_snapshot(config)
+
+    {:noreply, config}
+  end
+
+  def handle_cast(:delete_dump, _from, config = %__MODULE__{}) do
+    do_delete(config)
+
+    {:noreply, config}
+  end
+
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
+  @spec do_snapshot(Configuration.t()) :: :ok | pid()
+  defp do_snapshot(config) do
     configuration = config.configuration
     logger = config.logger
     dump_path = configuration["dump"]["dump"]
@@ -70,11 +121,10 @@ defmodule Anoma.Node.Configuration do
     else
       log_info({:no_config, config.logger})
     end
-
-    {:noreply, config}
   end
 
-  def handle_cast(:delete_dump, _from, config = %__MODULE__{}) do
+  @spec do_delete(Configuration.t()) :: :ok | {:error, atom()}
+  defp do_delete(config) do
     configuration = config.configuration
 
     if configuration do
@@ -82,8 +132,6 @@ defmodule Anoma.Node.Configuration do
     else
       log_info({:no_config, config.logger})
     end
-
-    {:noreply, config}
   end
 
   ############################################################
