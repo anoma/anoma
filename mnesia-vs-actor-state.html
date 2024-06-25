@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.15.0">
+    <meta name="project" content="Anoma v0.16.0">
 
 
-    <title>Mnesia Vs Actor State — Anoma v0.15.0</title>
+    <title>Mnesia Vs Actor State — Anoma v0.16.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7C4BDF86.js"></script>
+    <script src="dist/sidebar_items-25D9EE14.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.15.0
+          v0.16.0
         </div>
       </div>
     </div>
@@ -140,7 +140,7 @@ GUIDES
   </a>
   <span class="text">Index</span>
 </h2>
-<ol><li><a href="toc.html">Toc</a></li><li><a href="user.html">User</a><ol><li><a href="data.html">Data</a></li></ol></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="logging.html">Logging</a></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="where-should-state-be-stored" class="section-heading">
+<ol><li><a href="toc.html">Toc</a></li><li><a href="user.html">User</a><ol><li><a href="data.html">Data</a></li></ol></li><li><a href="contributing.html">Contributing</a><ol><li><a href="understanding-any-module.html">Understanding Any Module</a></li><li><a href="style-guide.html">Style Guide</a></li><li><a href="writing-documents.html">Writing Documents</a></li><li><a href="examples-over-testing.html">Examples Over Testing</a></li><li><a href="git.html">Git</a></li><li><a href="hoon.html">Hoon</a></li><li><a href="iex.html">Iex</a></li><li><a href="mnesia-vs-actor-state.html">Mnesia Vs Actor State</a></li><li><a href="observer.html">Observer</a></li><li><a href="testing.html">Testing</a><ol><li><a href="running-tests.html">Running Tests</a></li><li><a href="writing-tests.html">Writing Tests</a></li></ol></li></ol></li><li><a href="visualization.html">Visualization</a><ol><li><a href="actors.html">Actors</a></li></ol></li><li><a href="hoon.html">Hoon</a><ol><li><a href="calling.html">Calling</a></li><li><a href="dumping.html">Dumping</a></li><li><a href="setting-up.html">Setting Up</a></li></ol></li><li><a href="analysis.html">Analysis</a><ol><li><a href="fema-analysis-pinger.html">Fema Analysis Pinger</a></li></ol></li><li><a href="logging.html">Logging</a></li><li><a href="vm_interface.html">Vm_interface</a></li></ol><h2 id="where-should-state-be-stored" class="section-heading">
   <a href="#where-should-state-be-stored" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -158,12 +158,12 @@ GUIDES
   </a>
   <span class="text">Actor Storage</span>
 </h2>
-<p>Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.</p><p>A good example of this is the old ordering logic.</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="7481555387-1">do</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="7481555387-2">(</span><span class="ss">:table</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="7481555387-3">(</span><span class="p" data-group-id="7481555387-3">)</span><span class="p" data-group-id="7481555387-2">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="7481555387-4">(</span><span class="ss">:next_order</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="7481555387-5">(</span><span class="p" data-group-id="7481555387-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="7481555387-4">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="7481555387-6">(</span><span class="ss">:hash_to_order</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7481555387-7">%{</span><span class="n">key</span><span class="p" data-group-id="7481555387-8">(</span><span class="p" data-group-id="7481555387-8">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="7481555387-9">(</span><span class="p" data-group-id="7481555387-9">)</span><span class="p" data-group-id="7481555387-7">}</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7481555387-10">%{</span><span class="p" data-group-id="7481555387-10">}</span><span class="p" data-group-id="7481555387-6">)</span><span class="w">
-    </span><span class="n">field</span><span class="p" data-group-id="7481555387-11">(</span><span class="ss">:logger</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="7481555387-12">(</span><span class="p" data-group-id="7481555387-12">)</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="7481555387-11">)</span><span class="w">
-  </span><span class="k" data-group-id="7481555387-1">end</span></code></pre><p>In this example, we store things like specific order information, the live router addresses for storage and for the logger. None of this is relevant to the users and are just coincidental with how we wrote the system.</p>
+<p>Actor storage on the other hand are for things we don't wish the user to be able to query. Thus implementaiton details about the execution should be omitted from user visible storage, and would be better served stored on the Actor.</p><p>A good example of this is the old ordering logic.</p><!-- livebook:{"force_markdown":true} --><pre><code class="makeup elixir" translate="no"><span class="w">  </span><span class="n">typedstruct</span><span class="w"> </span><span class="k" data-group-id="4781454434-1">do</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="4781454434-2">(</span><span class="ss">:table</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="4781454434-3">(</span><span class="p" data-group-id="4781454434-3">)</span><span class="p" data-group-id="4781454434-2">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="4781454434-4">(</span><span class="ss">:next_order</span><span class="p">,</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="4781454434-5">(</span><span class="p" data-group-id="4781454434-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4781454434-4">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="4781454434-6">(</span><span class="ss">:hash_to_order</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4781454434-7">%{</span><span class="n">key</span><span class="p" data-group-id="4781454434-8">(</span><span class="p" data-group-id="4781454434-8">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">non_neg_integer</span><span class="p" data-group-id="4781454434-9">(</span><span class="p" data-group-id="4781454434-9">)</span><span class="p" data-group-id="4781454434-7">}</span><span class="p">,</span><span class="w"> </span><span class="ss">default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4781454434-10">%{</span><span class="p" data-group-id="4781454434-10">}</span><span class="p" data-group-id="4781454434-6">)</span><span class="w">
+    </span><span class="n">field</span><span class="p" data-group-id="4781454434-11">(</span><span class="ss">:logger</span><span class="p">,</span><span class="w"> </span><span class="nc">Router.Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="4781454434-12">(</span><span class="p" data-group-id="4781454434-12">)</span><span class="p">,</span><span class="w"> </span><span class="ss">enforce</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="4781454434-11">)</span><span class="w">
+  </span><span class="k" data-group-id="4781454434-1">end</span></code></pre><p>In this example, we store things like specific order information, the live router addresses for storage and for the logger. None of this is relevant to the users and are just coincidental with how we wrote the system.</p>
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
@@ -194,11 +194,11 @@ Observer
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.15.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.15.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/documentation/contributing/mnesia-vs-actor-state.livemd">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/documentation/contributing/mnesia-vs-actor-state.livemd">current file</a>)
 
             </span>
 

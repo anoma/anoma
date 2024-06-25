@@ -4,6 +4,7 @@
 /home/runner/work/anoma/anoma/doc/contributing.livemd
 /home/runner/work/anoma/anoma/doc/data.livemd
 /home/runner/work/anoma/anoma/doc/dumping.livemd
+/home/runner/work/anoma/anoma/doc/examples-over-testing.livemd
 /home/runner/work/anoma/anoma/doc/fema-analysis-pinger.livemd
 /home/runner/work/anoma/anoma/doc/git.livemd
 /home/runner/work/anoma/anoma/doc/hoon-1.livemd
@@ -14,6 +15,7 @@
 /home/runner/work/anoma/anoma/doc/observer.livemd
 /home/runner/work/anoma/anoma/doc/running-tests.livemd
 /home/runner/work/anoma/anoma/doc/setting-up.livemd
+/home/runner/work/anoma/anoma/doc/style-guide.livemd
 /home/runner/work/anoma/anoma/doc/testing.livemd
 /home/runner/work/anoma/anoma/doc/toc.livemd
 /home/runner/work/anoma/anoma/doc/understanding-any-module.livemd
@@ -75,7 +77,6 @@ Anoma.Node.Transport.Supervisor.html
 Anoma.Node.Transport.TCPConnection.html
 Anoma.Node.Transport.TCPServer.html
 Anoma.Node.Transport.html
-Anoma.Node.Utility.html
 Anoma.Node.html
 Anoma.Order.html
 Anoma.Resource.Delta.html
@@ -87,11 +88,18 @@ Anoma.Serialise.html
 Anoma.Serializer.html
 Anoma.System.Directories.html
 Anoma.Transaction.html
+Anoma.Utility.html
 Anoma.html
 CommitmentTree.Node.html
 CommitmentTree.Proof.html
 CommitmentTree.Spec.html
 CommitmentTree.html
+Examples.ECrypto.html
+Examples.ENock.html
+Examples.ENode.html
+Examples.EProofRecord.html
+Examples.EResource.html
+Examples.ETransaction.html
 IdentityMap.html
 Livebook.html
 MapSetMap.html
@@ -107,6 +115,7 @@ Noun.Format.html
 Noun.html
 TestHelper.Nock.html
 TestHelper.Node.html
+TestHelper.TestMacro.html
 actors.html
 analysis.html
 api-reference.html
@@ -140,9 +149,10 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-1DD4A2E4.js
-dist/sidebar_items-7C4BDF86.js
+dist/search_data-C0593043.js
+dist/sidebar_items-25D9EE14.js
 dumping.html
+examples-over-testing.html
 fema-analysis-pinger.html
 git.html
 hoon-1.html
@@ -156,6 +166,7 @@ readme.html
 running-tests.html
 search.html
 setting-up.html
+style-guide.html
 testing.html
 toc.html
 understanding-any-module.html

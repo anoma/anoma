@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.15.0">
+    <meta name="project" content="Anoma v0.16.0">
 
 
-    <title>Anoma.Node.Pinger — Anoma v0.15.0</title>
+    <title>Anoma.Node.Pinger — Anoma v0.16.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7C4BDF86.js"></script>
+    <script src="dist/sidebar_items-25D9EE14.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.15.0
+          v0.16.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Pinger</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.15.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
 
 </h1>
 
@@ -175,6 +175,14 @@ and time by calling the execution API in the mempool engine.</p><h3 id="module-p
       </div>
 
         <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#handle_cast/3" translate="no">handle_cast(arg1, from, state)</a>
+
+      </div>
 
     </div>
 
@@ -253,6 +261,7 @@ function feeding it the time associated to the address.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Pinger{
+  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
   mempool: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
   time: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()
 }</pre>
@@ -291,6 +300,23 @@ function feeding it the time associated to the address.</p></div>
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
+<section class="detail" id="handle_cast/3">
+
+  <div class="detail-header">
+    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">handle_cast(arg1, from, state)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="init/1">
 
   <div class="detail-header">
@@ -307,7 +333,11 @@ function feeding it the time associated to the address.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> init(mempool: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), time: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  mempool: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  time: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
+) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 
@@ -355,8 +385,7 @@ specified ammount of time. Otherwise, simply reply :ok</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> set_timer(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :no_timer) ::
-  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> set_timer(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :no_timer) :: :ok</pre>
 
       </div>
 
@@ -381,7 +410,7 @@ pinger.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: :ok</pre>
 
       </div>
 
@@ -398,11 +427,11 @@ not practically start.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.15.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.15.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/lib/anoma/node/pinger.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/pinger.ex">current file</a>)
 
             </span>
 

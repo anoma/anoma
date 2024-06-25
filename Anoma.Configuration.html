@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.15.0">
+    <meta name="project" content="Anoma v0.16.0">
 
 
-    <title>Anoma.Configuration — Anoma v0.15.0</title>
+    <title>Anoma.Configuration — Anoma v0.16.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7C4BDF86.js"></script>
+    <script src="dist/sidebar_items-25D9EE14.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.15.0
+          v0.16.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Configuration</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.15.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
 
 </h1>
 
@@ -139,7 +139,7 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
   </a>
   <span class="text">Public API</span>
 </h3>
-<ul><li><a href="#configuration/0"><code class="inline">configuration/0</code></a></li><li><a href="#configuration/1"><code class="inline">configuration/1</code></a></li><li><a href="#read_configuration/1"><code class="inline">read_configuration/1</code></a></li><li><a href="#node_settings/1"><code class="inline">node_settings/1</code></a></li><li><a href="#save/1"><code class="inline">save/1</code></a></li><li><a href="#save/2"><code class="inline">save/2</code></a></li><li><a href="#locate_dump_file/1"><code class="inline">locate_dump_file/1</code></a></li><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><a href="#launch_min/2"><code class="inline">launch_min/2</code></a></li><li><a href="#launch_min/3"><code class="inline">launch_min/3</code></a></li></ul>
+<ul><li><a href="#configuration/0"><code class="inline">configuration/0</code></a></li><li><a href="#configuration/1"><code class="inline">configuration/1</code></a></li><li><a href="#read_configuration/1"><code class="inline">read_configuration/1</code></a></li><li><a href="#node_settings/1"><code class="inline">node_settings/1</code></a></li><li><a href="#save/1"><code class="inline">save/1</code></a></li><li><a href="#save/2"><code class="inline">save/2</code></a></li><li><a href="#locate_dump_file/1"><code class="inline">locate_dump_file/1</code></a></li><li><a href="#launch_min/1"><code class="inline">launch_min/1</code></a></li><li><a href="#launch_min/2"><code class="inline">launch_min/2</code></a></li></ul>
   </section>
 
 
@@ -168,6 +168,16 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
         <a href="#t:configuration_map/0" translate="no">configuration_map()</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:launch_option/0" translate="no">launch_option()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I control options for <a href="#launch_min/2"><code class="inline">launch_min/2</code></a></p></div>
 
     </div>
 
@@ -243,23 +253,12 @@ format I expect.</p><h3 id="module-public-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#launch_min/2" translate="no">launch_min(parsed_map, rocks_flag \\ false)</a>
+        <a href="#launch_min/2" translate="no">launch_min(parsed_map, options \\ [])</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Given a parsed map with minimal node startup info I launch the node with
 the appopriate name</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#launch_min/3" translate="no">launch_min(parsed_map, rocks_flag, name)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I have the same functionality as <a href="#launch_min/2"><code class="inline">launch_min/2</code></a> but start the node using
-a named supervisor.</p></div>
 
     </div>
 
@@ -355,6 +354,38 @@ and put it in the appropriate keyword list</p></div>
       </div>
 
 
+  </section>
+</section>
+<section class="detail" id="t:launch_option/0">
+
+  <div class="detail-header">
+    <a href="#t:launch_option/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">launch_option()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> launch_option() ::
+  {:use_rocksdb, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()}
+  | {:supervisor, [<a href="https://hexdocs.pm/elixir/Supervisor.html#t:option/0">Supervisor.option</a>()]}
+  | {:testing, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()}</pre>
+
+      </div>
+
+<p>I control options for <a href="#launch_min/2"><code class="inline">launch_min/2</code></a></p><p>###Options</p><ul><li><code class="inline">:use_rocksdb</code> - see <a href="Anoma.Node.html#t:configuration/0"><code class="inline">Anoma.Node.configuration/0</code></a> for more
+information</li><li><code class="inline">:supervisor</code> - This flag determine if we use a supervisor and if
+so what options. See <a href="https://hexdocs.pm/elixir/Supervisor.html#t:option/0"><code class="inline">Supervisor.option/0</code></a> for supervisor options</li><li><code class="inline">:testing</code> - This flag notes if we are testing the node. This gets
+fed directly into the type <a href="Anoma.Node.html#t:configuration/0"><code class="inline">Anoma.Node.configuration/0</code></a> for
+<a href="Anoma.Node.html#start_link/1"><code class="inline">Anoma.Node.start_link/1</code></a>. Please consult the
+<a href="Anoma.Node.html#t:configuration/0"><code class="inline">Anoma.Node.configuration/0</code></a> documentation for the full effect
+this has on the node</li></ul>
   </section>
 </section>
 <section class="detail" id="t:node_settings/0">
@@ -556,7 +587,7 @@ and put it in the appropriate keyword list</p></div>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">launch_min(parsed_map, rocks_flag \\ false)</h1>
+    <h1 class="signature" translate="no">launch_min(parsed_map, options \\ [])</h1>
 
 
   </div>
@@ -565,37 +596,18 @@ and put it in the appropriate keyword list</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> launch_min(<a href="#t:configuration_map/0">configuration_map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> launch_min(<a href="#t:configuration_map/0">configuration_map</a>(), [<a href="#t:launch_option/0">launch_option</a>()]) :: <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
 
       </div>
 
 <p>Given a parsed map with minimal node startup info I launch the node with
-the appopriate name</p>
-  </section>
-</section>
-<section class="detail" id="launch_min/3">
-
-  <div class="detail-header">
-    <a href="#launch_min/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">launch_min(parsed_map, rocks_flag, name)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> launch_min(<a href="#t:configuration_map/0">configuration_map</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(), <a href="https://hexdocs.pm/elixir/Supervisor.html#t:name/0">Supervisor.name</a>()) ::
-  <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
-
-      </div>
-
-<p>I have the same functionality as <a href="#launch_min/2"><code class="inline">launch_min/2</code></a> but start the node using
-a named supervisor.</p>
+the appopriate name</p><h3 id="launch_min/2-options" class="section-heading">
+  <a href="#launch_min/2-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<p>see <a href="#t:launch_option/0"><code class="inline">launch_option/0</code></a> for the full list of optional arguments</p>
   </section>
 </section>
 <section class="detail" id="locate_dump_file/1">
@@ -701,11 +713,11 @@ and put it in the appropriate keyword list</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.15.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.15.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/lib/anoma/configuration.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/configuration.ex">current file</a>)
 
             </span>
 

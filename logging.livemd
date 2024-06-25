@@ -8,16 +8,18 @@
    1. [Data](./user/data.livemd)
 3. [Contributing](./contributing.livemd)
    1. [Understanding Any Module](./contributing/understanding-any-module.livemd)
-   2. [Writing Documents](./contributing/writing-documents.livemd)
-   3. [Git](./contributing/git.livemd)
-   4. [Hoon](./contributing/hoon.livemd)
-   5. [Iex](./contributing/iex.livemd)
-   6. [Mnesia Vs Actor State](./contributing/mnesia-vs-actor-state.livemd)
-   7. [Observer](./contributing/observer.livemd)
-   8. [Testing](./contributing/testing.livemd)
-      1. [Running Tests](./contributing/testing/running-tests.livemd)
-      2. [Writing Tests](./contributing/testing/writing-tests.livemd)
-9. [Visualization](./visualization.livemd)
+   2. [Style Guide](./contributing/style-guide.livemd)
+   3. [Writing Documents](./contributing/writing-documents.livemd)
+   4. [Examples Over Testing](./contributing/examples-over-testing.livemd)
+   5. [Git](./contributing/git.livemd)
+   6. [Hoon](./contributing/hoon.livemd)
+   7. [Iex](./contributing/iex.livemd)
+   8. [Mnesia Vs Actor State](./contributing/mnesia-vs-actor-state.livemd)
+   9. [Observer](./contributing/observer.livemd)
+   10. [Testing](./contributing/testing.livemd)
+       1. [Running Tests](./contributing/testing/running-tests.livemd)
+       2. [Writing Tests](./contributing/testing/writing-tests.livemd)
+4. [Visualization](./visualization.livemd)
    1. [Actors](./visualization/actors.livemd)
 5. [Hoon](./hoon.livemd)
    1. [Calling](./hoon/calling.livemd)
@@ -45,18 +47,18 @@ name = :loggerdoc
 snapshot_path = [:my_special_nock_snaphsot | 0]
 
 {:ok, nodes} =
-  Anoma.Node.start_link(
-    new_storage: true,
+  Anoma.Node.start_link_or_find_instance(
     name: name,
     use_rocks: false,
     settings:
-      [
-        snapshot_path: snapshot_path,
-        storage_data: storage,
-        block_storage: :loggerdoc_blocks,
-        ping_time: :no_timer
-      ]
-      |> Anoma.Node.start_min()
+      {:new_storage,
+       [
+         snapshot_path: snapshot_path,
+         storage_data: storage,
+         block_storage: :dump_blocks,
+         ping_time: :no_timer
+       ]
+       |> Anoma.Node.start_min()}
   )
 
 node = Anoma.Node.state(nodes)
@@ -227,7 +229,7 @@ Kino.Process.render_seq_trace(
   fn ->
     Ordering.next_order(node.ordering)
   end,
-  message_label: &Anoma.Node.Utility.message_label/1
+  message_label: &Anoma.Utility.message_label/1
 )
 ```
 

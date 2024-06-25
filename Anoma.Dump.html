@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.15.0">
+    <meta name="project" content="Anoma v0.16.0">
 
 
-    <title>Anoma.Dump — Anoma v0.15.0</title>
+    <title>Anoma.Dump — Anoma v0.16.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7C4BDF86.js"></script>
+    <script src="dist/sidebar_items-25D9EE14.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.15.0
+          v0.16.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Dump</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.15.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
 
 </h1>
 
@@ -146,7 +146,7 @@ files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
   </a>
   <span class="text">Loading API</span>
 </h3>
-<p>I give access to following public loading functionality</p><ul><li><a href="#launch/2"><code class="inline">launch/2</code></a></li><li><code class="inline">launch/3</code></li><li><a href="#load/1"><code class="inline">load/1</code></a></li></ul>
+<p>I give access to following public loading functionality</p><ul><li><a href="#launch/2"><code class="inline">launch/2</code></a></li><li><a href="#launch/3"><code class="inline">launch/3</code></a></li><li><a href="#load/1"><code class="inline">load/1</code></a></li></ul>
   </section>
 
 
@@ -199,6 +199,16 @@ files in binary format.</p><h3 id="module-dumping-api" class="section-heading">
         <a href="#t:ex_eng/0" translate="no">ex_eng()</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:launch_option/0" translate="no">launch_option()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I control launch options for <a href="#launch/2"><code class="inline">launch/2</code></a></p></div>
 
     </div>
 
@@ -309,23 +319,12 @@ name whose info presented as a map I dump as a binary.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#launch/2" translate="no">launch(file, name)</a>
+        <a href="#launch/3" translate="no">launch(file, name, options \\ [])</a>
 
       </div>
 
         <div class="summary-synopsis"><p>I launch a node given a file containing a binary version of an 12-tuple
 with appropriate info in the following order</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#launch/4" translate="no">launch(file, name, sup_name, config)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I have the same functionality as <a href="#launch/2"><code class="inline">launch/2</code></a> but start the node using a
-named supervisor.</p></div>
 
     </div>
 
@@ -501,6 +500,40 @@ given configuration.</p></div>
       </div>
 
 
+  </section>
+</section>
+<section class="detail" id="t:launch_option/0">
+
+  <div class="detail-header">
+    <a href="#t:launch_option/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">launch_option()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> launch_option() :: {:supervisor, [<a href="https://hexdocs.pm/elixir/Supervisor.html#t:option/0">Supervisor.option</a>()]} | {:testing, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()}</pre>
+
+      </div>
+
+<p>I control launch options for <a href="#launch/2"><code class="inline">launch/2</code></a></p><h3 id="t:launch_option/0-options" class="section-heading">
+  <a href="#t:launch_option/0-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<ul><li><p><code class="inline">:supervisor</code> - This flag determine if we use a supervisor and if
+so what options. See <a href="https://hexdocs.pm/elixir/Supervisor.html#t:option/0"><code class="inline">Supervisor.option/0</code></a> for supervisor options</p></li><li><p><code class="inline">:testing</code> - This flag notes if we are testing the node. This gets
+fed directly into the type <a href="Anoma.Node.html#t:configuration/0"><code class="inline">Anoma.Node.configuration/0</code></a> for
+<a href="Anoma.Node.html#start_link/1"><code class="inline">Anoma.Node.start_link/1</code></a>. Please consult the
+<a href="Anoma.Node.html#t:configuration/0"><code class="inline">Anoma.Node.configuration/0</code></a> documentation for the full effect
+this has on the node</p></li></ul>
   </section>
 </section>
 <section class="detail" id="t:log_eng/0">
@@ -792,14 +825,16 @@ And turn the info into a tuple</li></ul>
 <p>I get the node tables in order:</p><ul><li>storage (names)</li><li>qualified</li><li>order</li><li>block_storage</li></ul>
   </section>
 </section>
-<section class="detail" id="launch/2">
+<section class="detail" id="launch/3">
+
+    <span id="launch/2"></span>
 
   <div class="detail-header">
-    <a href="#launch/2" class="detail-link" title="Link to this function">
+    <a href="#launch/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">launch(file, name)</h1>
+    <h1 class="signature" translate="no">launch(file, name, options \\ [])</h1>
 
 
   </div>
@@ -808,7 +843,7 @@ And turn the info into a tuple</li></ul>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), [<a href="#t:launch_option/0">launch_option</a>()]) ::
   {:ok,
    %Anoma.Node{
      clock: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -838,50 +873,13 @@ Note that I ensure that the apporpriate tables are new.</p><p>Moreover, I ensure
 In particular, I check that the order of the last block is less than
 that of the mempool dumped. If not, I manually remove the last block.</p><p>Check whether your transactions have had an assigned worker. If not,
 relaunch them directly. If blocks were out of sync with mempool,
-relaunch the executions as well.</p>
-  </section>
-</section>
-<section class="detail" id="launch/4">
-
-  <div class="detail-header">
-    <a href="#launch/4" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">launch(file, name, sup_name, config)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> launch(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="Anoma.Configuration.html#t:configuration_map/0">Anoma.Configuration.configuration_map</a>()) ::
-  {:ok,
-   %Anoma.Node{
-     clock: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     configuration: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     dumper: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     executor: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     executor_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     logger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     logger_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     mempool: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     mempool_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     ordering: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     pinger: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     router: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     storage: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     storage_topic: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-     transport: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-   }}
-  | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
-
-      </div>
-
-<p>I have the same functionality as <a href="#launch/2"><code class="inline">launch/2</code></a> but start the node using a
-named supervisor.</p>
+relaunch the executions as well.</p><h3 id="launch/3-options" class="section-heading">
+  <a href="#launch/3-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<p>see <code class="inline">launch_options/0</code> for the full list of optional arguments</p>
   </section>
 </section>
 <section class="detail" id="load/1">
@@ -944,11 +942,11 @@ resolution and for the second atom.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.15.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.15.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.15.0/show/lib/anoma/dump.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/dump.ex">current file</a>)
 
             </span>
 
