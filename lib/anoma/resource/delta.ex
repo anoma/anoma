@@ -1,4 +1,6 @@
 defmodule Anoma.Resource.Delta do
+  import Noun
+
   # usually non_neg_integer, but not in execution
   @type t() :: %{binary() => integer()}
 
@@ -28,15 +30,20 @@ defmodule Anoma.Resource.Delta do
         [k, 1 | -v]
       end
     end
+    |> list_erlang_to_nock()
   end
 
   @spec from_noun(Noun.t()) :: t()
-  def from_noun(delta_list) do
+  def from_noun(delta_nock) do
+    delta_list = list_nock_to_erlang(delta_nock)
+
     for [k, v_sign | v_value] <- delta_list, into: %{} do
+      binary_k = atom_integer_to_binary(k)
+
       if v_sign == 0 do
-        {k, v_value}
+        {binary_k, v_value}
       else
-        {k, -v_value}
+        {binary_k, -v_value}
       end
     end
   end
