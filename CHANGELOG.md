@@ -1,3 +1,67 @@
+# v0.16.0
+
+## Major Features
+- [We now have a new `debug` mode that makes tests pry on failure!](https://github.com/anoma/anoma/pull/525)
+- [Resources kinds are now computed with the standard nock jam algorithm](https://github.com/anoma/anoma/pull/497)
+- [Nullifiers now use a detatched signature](https://github.com/anoma/anoma/pull/503)
+  + The format is now  `jam([jammed-nullified-resource detatched-signature])`.
+    * I.E. jamming the resource and signing over the
+      nullified-resource, and jamming both together
+- [submit-rm client command](https://github.com/anoma/anoma/pull/519)
+  + This means that RM backend submissions can be submitted via the cli!
+- [New rational on testing](https://github.com/anoma/anoma/pull/558)
+  + This means we will now focus on providing examples over future
+    tests. Later work will come to deprecate the old testing
+    documents, and write new ones about examples instead.
+    * A big thanks to [JExample](https://scg.unibe.ch/research/jexample) and [Glamorous Toolkit](https://gtoolkit.com/) for inspiration.
+- [New Style guide covering what every contirbutor must know if they want their changes accepted!!!](https://github.com/anoma/anoma/pull/575)
+- Examples are now in the codebase! [[1](https://github.com/anoma/anoma/pull/560)] [[2](https://github.com/anoma/anoma/pull/561)] [[3](https://github.com/anoma/anoma/pull/564)] [[4](https://github.com/anoma/anoma/pull/565)]
+  + Not all tests have been converted but the resource and nock files
+    have been with work started on the node as well.
+
+## Documentation
+- For the more important documentation changes see the `Major Features` section.
+- [Add documentation on some of the configuration logic](https://github.com/anoma/anoma/pull/534)
+
+## Bug Fixes
+- [Fixed random test failure](https://github.com/anoma/anoma/pull/570)
+  + This was caused by 2 issues.
+    1. The file name could contain the `\` character
+    2. The code would not properly wait for the socket file to be
+       created as it was asynchronous, this was mitigated by making
+       sure the transport responds back
+- [Fix bug where the configuration type was improperly typed, made more clear by refactoring](https://github.com/anoma/anoma/pull/501)
+- [Bignums can now successfully be sent by our serialization](https://github.com/anoma/anoma/pull/552)
+- [Fix double insertion for the same nullifier set](https://github.com/anoma/anoma/pull/559)
+  + This bug would occur when we don't scry in a resource transaction,
+    as the check happens for the nullifier doesn't want to see the
+    complete nullifier set.
+- [Fix a bug where the atom represnetation would change the specifics of jamming](https://github.com/anoma/anoma/pull/551)
+  + This would cause some issues in kind calculation depending on
+    where we ran it, [causing interesting errors](https://github.com/anoma/anoma/issues/550).
+- [Fix TOC generation](https://github.com/anoma/anoma/pull/556)
+  + There were two issues. The first being going up 2 levels caused
+    the TOC to be improperly generated. Worse is that spacing was not
+    considered for the markdown format when numbering got past 10.
+    * [Seems that this even affected livebook itself!](https://github.com/livebook-dev/livebook/issues/2659)
+
+## Internal Changes
+- Minor typing improvements [[1](https://github.com/anoma/anoma/pull/520)] [[2](https://github.com/anoma/anoma/pull/527)] [[3](https://github.com/anoma/anoma/pull/540)]
+- [Minor style improvements](https://github.com/anoma/anoma/pull/486)
+- [Freeing up unused code and cleaning out the Node folder](https://github.com/anoma/anoma/pull/516)
+- [Pinger now follows CQRS principles](https://github.com/anoma/anoma/pull/515)
+- Minor Code Improvements [[1](https://github.com/anoma/anoma/pull/535)] [[2](https://github.com/anoma/anoma/pull/573)] [[3](https://github.com/anoma/anoma/pull/544)] [[4](https://github.com/anoma/anoma/pull/541)]
+- Made functions that start the node take options instead of adhoc arguments [[1](https://github.com/anoma/anoma/pull/545)] [[2](https://github.com/anoma/anoma/pull/542)]
+- [Made tests respect that they are tests and not overwrite the sockets produced in prod or dev mode](https://github.com/anoma/anoma/pull/536)
+
+## Testing/Examples/Debugging
+- [The socket created by the network test now properly has socket in the name](https://github.com/anoma/anoma/pull/523)
+- [Logging now prints messages even without the logging engine](https://github.com/anoma/anoma/pull/568)
+- [Fixup the block name in the transport engine tests](https://github.com/anoma/anoma/pull/553)
+- [Fixup the path for the dumper in modes that aren't testing](https://github.com/anoma/anoma/pull/557)
+
+# v0.15.0
+
 # v0.14.0
 
 - [Add the Transport engine into the router](https://github.com/anoma/anoma/pull/438)
