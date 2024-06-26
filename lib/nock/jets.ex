@@ -316,11 +316,11 @@ defmodule Nock.Jets do
                  Noun.atom_integer_to_binary(a),
                  Noun.atom_integer_to_binary(b)
                ) do
-            {:ok, val} -> {:ok, val}
-            {:error, _} -> :error
+            {:ok, val} -> {:ok, [0 | val]}
+            {:error, _} -> {:ok, 0}
           end
         rescue
-          _ in ArgumentError -> :error
+          _ in ArgumentError -> {:ok, 0}
         end
 
       _ ->
