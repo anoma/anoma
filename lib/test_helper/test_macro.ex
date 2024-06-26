@@ -37,8 +37,8 @@ defmodule TestHelper.TestMacro do
 
   If the environment is :debug I pry on errors.
   """
-  defmacro assert(expr) do
-    assertion_abstract(Mix.env(), :assert, [quote(do: unquote(expr))])
+  defmacro assert(expr, msg \\ nil) do
+    message_parse(expr, :assert, msg)
   end
 
   @doc """
@@ -46,8 +46,8 @@ defmodule TestHelper.TestMacro do
 
   If the environment is :debug I pry on errors.
   """
-  defmacro refute(expr) do
-    assertion_abstract(Mix.env(), :refute, [quote(do: unquote(expr))])
+  defmacro refute(expr, msg \\ nil) do
+    message_parse(expr, :refute, msg)
   end
 
   @doc """
@@ -74,6 +74,22 @@ defmodule TestHelper.TestMacro do
       timeout,
       failure_message
     ])
+  end
+
+  @doc """
+  Depending on the given message, I call either `assert` or `refute` with
+  different arities.
+  """
+
+  def message_parse(expr, atom, msg) do
+    assert_expression =
+      unless msg do
+        [expr]
+      else
+        [expr, [message: msg]]
+      end
+
+    assertion_abstract(Mix.env(), atom, assert_expression)
   end
 
   @doc """
