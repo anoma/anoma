@@ -2,9 +2,7 @@ defmodule Anoma.Transaction do
   @moduledoc """
   I represent an Anoma Transaction
 
-  I can be viewed as a wrapper over `Anoma.Intent` where I contain the
-  intents used in a transaction
-
+  I contain the intents used in a transaction
   """
   alias __MODULE__
   use TypedStruct
