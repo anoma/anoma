@@ -57,7 +57,7 @@ defmodule TestHelper.TestMacro do
   """
   defmacro assert_receive(expr, timeout \\ nil, failure_message \\ nil) do
     assertion_abstract(Mix.env(), :assert_receive, [
-      quote(do: unquote(expr)),
+      expr,
       timeout,
       failure_message
     ])
@@ -70,7 +70,7 @@ defmodule TestHelper.TestMacro do
   """
   defmacro refute_receive(expr, timeout \\ nil, failure_message \\ nil) do
     assertion_abstract(Mix.env(), :refute_receive, [
-      quote(do: unquote(expr)),
+      expr,
       timeout,
       failure_message
     ])
