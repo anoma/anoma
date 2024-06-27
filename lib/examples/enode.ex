@@ -61,6 +61,20 @@ defmodule Examples.ENode do
     %Node{node | ordering: ordering}
   end
 
+  # TODO we should resuse `simple_storage/1`, but we need to pass in the
+  # storage at startup sadly
+  @doc """
+  Minimal node, with storage and a topic
+  """
+  @spec simple_storage_topic(Storage.t()) :: Node.t()
+  def simple_storage_topic(storage) do
+    node = simple_router()
+    assert {:ok, topic} = Router.new_topic(node.router)
+    storage = %Storage{storage | topic: topic}
+    assert {:ok, storage} = Router.start_engine(node.router, Storage, storage)
+    %Node{node | storage: storage, storage_topic: topic}
+  end
+
   @doc """
   Minimal node, with storage
   """
