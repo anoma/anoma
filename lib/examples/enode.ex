@@ -72,6 +72,18 @@ defmodule Examples.ENode do
   end
 
   @doc """
+  I am just the clock engine with router support. My time starts at 0
+  """
+  def zero_clock() do
+    node = simple_router()
+
+    assert {:ok, clock} =
+             Router.start_engine(node.router, Anoma.Node.Clock, start: 0)
+
+    %Node{node | clock: clock}
+  end
+
+  @doc """
   I am simply a node with just a router and transport
   """
   @spec simple_router() :: Node.t()
