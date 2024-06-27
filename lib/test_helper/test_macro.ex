@@ -102,11 +102,6 @@ defmodule TestHelper.TestMacro do
   If the expression is not in debug mode, I simply call the assertion on
   the expression.
   """
-  def assertion_abstract(:debug, atom, [{:=, _ctx, [_left, _right]}] = [expr]) do
-    call_assert(atom, [expr])
-    expr
-  end
-
   def assertion_abstract(:debug, atom, expr) do
     call_assert(atom, expr)
   end
@@ -118,7 +113,19 @@ defmodule TestHelper.TestMacro do
   @doc """
   I perform the try-rescue functionality, directly evaluating the assertion.
   """
+  def call_assert(atom, [{:=, ctx, [left, _]}] = expr) do
+    {:=, ctx,
+     [
+       left,
+       quote_try(atom, expr)
+     ]}
+  end
+
   def call_assert(atom, expr) do
+    quote_try(atom, expr)
+  end
+
+  def quote_try(atom, expr) do
     quote do
       try do
         unquote({assertion_alias(atom), [], expr})
