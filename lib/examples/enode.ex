@@ -18,20 +18,18 @@ defmodule Examples.ENode do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Node.Solver
+  alias Anoma.Node.IntentPool
   alias Anoma.Node
   alias Anoma.Node.{Router, Ordering, Storage}
 
   @doc """
   We give an example of the full node!
-
-  We register the name and pun it with the block name. This is done
-  for simplicity.
   """
   @spec fresh_full_node(Storage.t(), atom()) :: Node.t()
   def fresh_full_node(storage, name) do
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
-        name: name,
         testing: true,
         use_rocks: false,
         settings:
@@ -46,6 +44,33 @@ defmodule Examples.ENode do
       )
 
     Node.state(nodes)
+  end
+
+  @spec solver(Node.t()) ::
+          {Router.addr(), Router.addr(), Router.addr(), Node.t()}
+  def solver(node) do
+    {it, ip, node} = intent(node)
+
+    assert {:ok, solutions} = Router.new_topic(node.router)
+
+    assert {:ok, solver} =
+             Router.start_engine(
+               node.router,
+               Solver,
+               {node.router, nil, ip, it, solutions}
+             )
+
+    {solver, ip, solutions, node}
+  end
+
+  @spec intent(Node.t()) :: {Router.addr(), Router.addr(), Node.t()}
+  def intent(node) do
+    assert {:ok, intent_topic} = Router.new_topic(node.router)
+
+    assert {:ok, intent_pool} =
+             Router.start_engine(node.router, IntentPool, {intent_topic, nil})
+
+    {intent_topic, intent_pool, node}
   end
 
   @doc """
