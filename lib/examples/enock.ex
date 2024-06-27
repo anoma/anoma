@@ -44,6 +44,68 @@ defmodule Examples.ENock do
   end
 
   ####################################################################
+  ##                           Noun fun                             ##
+  ####################################################################
+
+  @spec one_two() :: Noun.t()
+  def one_two() do
+    assert {:ok, term = [1 | 2]} = Noun.Format.parse("[1 2]"),
+           "Noun should parse sensibly"
+
+    term
+  end
+
+  @spec nesting_noun() :: Noun.t()
+  def nesting_noun() do
+    assert {:ok, term = [1, [3 | 5] | 2]} =
+             Noun.Format.parse("[1 [[3 5] 2]]"),
+           "Basic Nouns should parse sensibly"
+
+    term
+  end
+
+  def incorrectly_nested_noun() do
+    term = Noun.Format.parse("[[[[1]]]]")
+    assert :error = term
+    term
+  end
+
+  @spec incorrectly_ending() :: :error
+  def incorrectly_ending() do
+    term = Noun.Format.parse("[[[[")
+    assert :error = term
+    term
+  end
+
+  @spec incorrectly_starting() :: :error
+  def incorrectly_starting() do
+    term = Noun.Format.parse("]]]]")
+    assert :error = term
+    term
+  end
+
+  @spec indexed_noun() :: Noun.t()
+  def indexed_noun() do
+    assert {:ok, term} = Noun.Format.parse("[[4 5] [12 13] 7]")
+    assert {:ok, term} == Noun.axis(1, term)
+    assert {:ok, [4 | 5]} == Noun.axis(2, term)
+    assert {:ok, [12 | 13]} == Noun.axis(6, term)
+    assert {:ok, 7} == Noun.axis(7, term)
+    assert {:ok, 4} == Noun.axis(4, term)
+    assert {:ok, 5} == Noun.axis(5, term)
+    assert {:ok, 12} == Noun.axis(12, term)
+    assert {:ok, 13} == Noun.axis(13, term)
+    term
+  end
+
+  @spec replacing_terms() :: Noun.t()
+  def replacing_terms() do
+    assert {:ok, term} = Noun.replace(2, 2, indexed_noun())
+    assert {:ok, 2} == Noun.axis(2, term)
+    term
+  end
+
+  ####################################################################
   ##                       Scrying: Phase 1                         ##
   ####################################################################
 

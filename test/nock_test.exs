@@ -4,6 +4,8 @@ defmodule AnomaTest.Nock do
   alias Examples.ENock
 
   doctest(Nock)
+  doctest(Noun)
+  doctest(Noun.Format)
 
   test "examples" do
     ENock.dec()
@@ -29,5 +31,11 @@ defmodule AnomaTest.Nock do
     ENock.successful_inc()
     ENock.unsuccessful_inc()
     ENock.jamming_and_cueing()
+    ENock.one_two()
+    ENock.nesting_noun()
+    ENock.incorrectly_ending()
+    ENock.incorrectly_starting()
+    ENock.indexed_noun()
+    ENock.replacing_terms()
   end
 end
