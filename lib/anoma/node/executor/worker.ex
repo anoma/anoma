@@ -283,6 +283,10 @@ defmodule Anoma.Node.Executor.Worker do
     Logger.add(logger, :error, "Worker failed! #{inspect(error)}")
   end
 
+  defp log_info({:get, value, logger}) do
+    Logger.add(logger, :info, "Getting value #{inspect(value)}")
+  end
+
   defp log_info({:put, key, logger}) do
     Logger.add(logger, :info, "Putting #{inspect(key)}")
   end
