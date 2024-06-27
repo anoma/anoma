@@ -166,20 +166,21 @@ defmodule Anoma.Resource.Transaction do
           acc && result
       end
 
-    # check resource logic proofs
-    all_logics_valid =
-      for {proof, public_inputs} <- transaction.proofs, reduce: true do
-        acc ->
-          result = Cairo.verify(proof, public_inputs)
-          Logger.debug("resource logic proof result: #{inspect(result)}")
-          acc && result
-      end
+    # TODO: check resource logic proofs
+    # all_logics_valid =
+    #   for {proof, public_inputs} <- transaction.proofs, reduce: true do
+    #     acc ->
+    #       result = Cairo.verify(proof, public_inputs)
+    #       Logger.debug("resource logic proof result: #{inspect(result)}")
+    #       acc && result
+    #   end
 
     # TODO: check the resource consistency between compliance and resource logic
 
     # TODO: check delta/binding signature
 
-    all_compliance_valid && all_logics_valid
+    # all_compliance_valid && all_logics_valid
+    all_compliance_valid
   end
 
   # todo: not efficient

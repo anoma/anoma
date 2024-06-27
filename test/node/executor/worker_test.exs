@@ -220,13 +220,15 @@ defmodule AnomaTest.Node.Executor.Worker do
     :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 
-  test "worker verifies cairo proofs", %{env: env} do
+  test "worker verifies cairo proofs", %{env: env, router: router} do
     alias Anoma.Resource.Transaction
 
     id = System.unique_integer([:positive])
 
-    storage = Ordering.get_storage(env.ordering)
+    storage = Engine.get_state(env.ordering).storage
 
+    {:ok, topic} = Router.new_topic(router)
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
@@ -281,10 +283,17 @@ defmodule AnomaTest.Node.Executor.Worker do
     rm_tx_noun = Transaction.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
-    spawn = Task.async(Worker, :run, [id, {:cairo, rm_executor_tx}, env])
-    Ordering.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
+    {:ok, spawn} =
+      Router.start_engine(
+        router,
+        Worker,
+        {id, {:cairo, rm_executor_tx}, env, topic}
+      )
 
-    send(spawn.pid, {:write_ready, 0})
-    assert :ok == Task.await(spawn)
+    Ordering.new_order(env.ordering, [Order.new(0, id, spawn)])
+
+    Router.send_raw(spawn, {:write_ready, 0})
+    TestHelper.Worker.wait_for_worker(spawn, :ok)
+    :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 end
