@@ -25,6 +25,11 @@ defmodule Examples.EProofRecord do
   def a10_d0_proof(), do: ProofRecord.prove(EResource.a10_d0_resource())
   def b10_d0_proof(), do: ProofRecord.prove(EResource.b10_d0_resource())
 
+  def ax_proof(), do: ProofRecord.prove(EResource.ax_resource())
+  def ay_proof(), do: ProofRecord.prove(EResource.ay_resource())
+  def bx_proof(), do: ProofRecord.prove(EResource.bx_resource())
+  def by_proof(), do: ProofRecord.prove(EResource.by_resource())
+
   @spec a0_counter_proof() :: ProofRecord.t()
   def a0_counter_proof(),
     do: ProofRecord.prove(EResource.a0_counter_resource())

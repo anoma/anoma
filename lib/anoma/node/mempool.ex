@@ -43,7 +43,7 @@ defmodule Anoma.Node.Mempool do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec execute(Router.Addr.t()) :: non_neg_integer()
+  @spec execute(Router.Addr.t()) :: {:ok, non_neg_integer()}
   def execute(server) do
     Router.call(server, :execute, 10_000)
   end
