@@ -4,6 +4,7 @@ defmodule Examples.ENock do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Examples.ENode.EStorage
   alias Anoma.Order
   alias Anoma.Node.Ordering
   alias Examples.ENode
@@ -109,54 +110,44 @@ defmodule Examples.ENock do
   ##                       Scrying: Phase 1                         ##
   ####################################################################
 
-  defmemo random_id() do
-    System.unique_integer([:positive])
-  end
-
-  def lucky_key(), do: 777
-  def devil_key(), do: 666
-
-  @spec successful_inc :: Node.t()
+  @spec successful_inc :: {Node.t(), Nock.t()}
   def successful_inc() do
-    node = anode()
-    Storage.ensure_new(node.storage)
+    storage = Node.raw_storage(EStorage.august_node("successful_inc"))
+    {node, env} = {anode(storage), env(storage)}
 
-    # Abstract this somehow out
-    Ordering.new_order(env().ordering, [Order.new(1, random_id(), self())])
+    node.ordering
+    |> Ordering.new_order([Order.new(1, EStorage.random_id(), self())])
 
-    Storage.put(node.storage, lucky_key(), 5)
-    Storage.put_snapshot(node.storage, hd(env().snapshot_path))
+    formula = [9, 2, 10, [6, 1 | EStorage.random_id()], 0 | 1]
 
-    formula = [9, 2, 10, [6, 1 | random_id()], 0 | 1]
-
-    assert {:ok, [lucky_key() | 6]} ==
-             Nock.nock(lucky_increment(), formula, env()),
+    assert {:ok, [EStorage.miki_key() | EStorage.lucky_value() + 1]} ==
+             Nock.nock(miki_increment(), formula, env),
            "We should be scrying the right place"
 
-    node
+    {node, env}
   end
 
   @spec unsuccessful_inc :: Node.t()
   def unsuccessful_inc() do
     # sets up the network nicely
-    node = successful_inc()
+    {node, env} = successful_inc()
     # no devil key ☹
-    formula = [9, 2, 10, [6, 1 | random_id()], 0 | 1]
+    formula = [9, 2, 10, [6, 1 | EStorage.random_id()], 0 | 1]
 
-    assert :error == Nock.nock(devil_increment(), formula, env()),
+    assert :error == Nock.nock(devil_increment(), formula, env),
            "Key ought not to be found"
 
     node
   end
 
-  def lucky_increment() do
-    luck_formula = increment_counter_val(lucky_key())
+  def miki_increment() do
+    luck_formula = increment_counter_val(EStorage.miki_key())
     assert {:ok, increment} = Nock.nock(luck_formula, [9, 2, 0 | 1], env())
     increment
   end
 
   def devil_increment() do
-    devil_formula = increment_counter_val(devil_key())
+    devil_formula = increment_counter_val(EStorage.devil_key())
     assert {:ok, increment} = Nock.nock(devil_formula, [9, 2, 0 | 1], env())
     increment
   end
@@ -604,16 +595,17 @@ defmodule Examples.ENock do
   ####################################################################
 
   @spec anode() :: Node.t()
-  defmemo anode() do
-    raw_storage()
-    |> ENode.simple_ordering()
+  @spec anode(Storage.t()) :: Node.t()
+  defmemo anode(storage \\ raw_storage()) do
+    ENode.simple_ordering(storage)
   end
 
   @spec env() :: Nock.t()
-  def env() do
+  @spec env(Storage.t()) :: Nock.t()
+  def env(storage \\ raw_storage()) do
     %Nock{
       snapshot_path: ENode.base_snapshot_path(),
-      ordering: anode().ordering
+      ordering: anode(storage).ordering
     }
   end
 
