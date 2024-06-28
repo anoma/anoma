@@ -12,6 +12,29 @@ defmodule Examples.ENode.EStorage do
   alias Anoma.Node.{Storage}
 
   ####################################################################
+  ##                Keys for All Modules: Please use me             ##
+  ##  Keys can also be found in the Noun section in the ENock file. ##
+  ####################################################################
+
+  def snapshot_point() do
+    ENode.base_snapshot_path() |> hd()
+  end
+
+  def devil_value(), do: 444
+  def lucky_value(), do: 777
+  def lucky_key(), do: 777
+  def devil_key(), do: 666
+
+  def august_space(), do: ~w"August Water"
+
+  def isuzumi_key(), do: august_space() ++ ["Izumi"]
+  def miki_key(), do: august_space() ++ ["Miki"]
+
+  defmemo random_id() do
+    System.unique_integer([:positive])
+  end
+
+  ####################################################################
   ##                 Basic operations topics and snaps              ##
   ####################################################################
 
@@ -165,12 +188,21 @@ defmodule Examples.ENode.EStorage do
     anode
   end
 
+  @doc """
+  I am the august storage, see my Keys for details on my storage setup
+
+  ### Keys:
+  - `miki_key/0` - `lucky_value/0`
+  - `isuzumi_key/0` - `devil_value/0`
+  - `Examples.ENode.base_snapshot_path/0` - snapshot of both
+  """
   @spec august_node() :: Node.t()
   @spec august_node(Symbol.s()) :: Node.t()
   def august_node(storage_name \\ "august_node") do
     anode = empty_storage(storage_name)
     Storage.put(anode.storage, miki_key(), lucky_value())
     Storage.put(anode.storage, isuzumi_key(), devil_value())
+    Storage.put_snapshot(anode.storage, snapshot_point())
 
     izumi = {isuzumi_key(), devil_value()}
     miki = {miki_key(), lucky_value()}
@@ -187,21 +219,6 @@ defmodule Examples.ENode.EStorage do
 
     anode
   end
-
-  ####################################################################
-  ##                      Some Paths and Owners                     ##
-  ####################################################################
-  def snapshot_point() do
-    ENode.base_snapshot_path() |> hd()
-  end
-
-  def devil_value(), do: 444
-  def lucky_value(), do: 777
-
-  def august_space(), do: ~w"August Water"
-
-  def isuzumi_key(), do: august_space() ++ ["Izumi"]
-  def miki_key(), do: august_space() ++ ["Miki"]
 
   ####################################################################
   ##                    Helpers please factor out                   ##
