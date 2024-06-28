@@ -33,6 +33,8 @@ defmodule Anoma.Node do
   use GenServer
   use TypedStruct
 
+  alias Anoma.Node.Router.Engine
+
   alias Anoma.Node.{
     Router,
     Logger,
@@ -402,6 +404,17 @@ defmodule Anoma.Node do
       storage_data: {storage, block_storage},
       snapshot_path: args[:snapshot_path]
     }
+  end
+
+  @doc """
+  I give the storage from a node.
+
+  This is useful when we want to bring storage to a new node.
+  """
+  @spec raw_storage(t()) :: Storage.t()
+  def raw_storage(node = %__MODULE__{storage: storage}) when storage != nil do
+    storage = node.storage |> Engine.get_state()
+    %Storage{storage | topic: nil}
   end
 
   def state(nodes) do
