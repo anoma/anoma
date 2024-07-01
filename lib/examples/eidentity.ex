@@ -6,7 +6,8 @@ defmodule Examples.EIdentity do
 
   alias Anoma.Crypto.Id
   alias Anoma.Symbol
-  alias Anoma.Identity.{Backend.Memory, Encryption, Verification, Manager}
+  alias Anoma.Identity.Backend.Memory
+  alias Anoma.Identity.{Encryption, Verification, Manager}
   alias Anoma.Node
   alias Anoma.Node.{Identity.Decryption, Identity.Commitment, Router}
 

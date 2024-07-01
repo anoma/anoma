@@ -6,6 +6,7 @@ defmodule AnomaTest.Identity do
   doctest(Anoma.Node.Identity.Commitment)
   doctest(Anoma.Identity.Encryption)
   doctest(Anoma.Node.Identity.Decryption)
+  doctest(Anoma.Identity.Name)
 
   test "examples" do
     EIdentity.alice_commits()

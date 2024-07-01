@@ -4,9 +4,16 @@ defmodule Examples.ENode.EStorage do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Examples.ECrypto
+  alias Anoma.Crypto.Id
+  alias Anoma.Identity.Backend.Memory
+  alias Anoma.Identity.Manager
+  alias Anoma.Node.Identity.Commitment
+  alias Anoma.Identity.Name
   alias Anoma.Node.Router
   alias Examples.ENock
   alias Examples.ENode
+  alias Examples.EIdentity
   alias Anoma.Symbol
   alias Anoma.Node
   alias Anoma.Node.{Storage}
@@ -26,6 +33,12 @@ defmodule Examples.ENode.EStorage do
   def devil_key(), do: 666
 
   def august_space(), do: ~w"August Water"
+  def august_namespace(), do: :august_manager_space
+
+  @spec august_subnamespace(Router.addr()) :: Name.t()
+  def august_subnamespace(storage) do
+    %Name{keyspace: august_namespace(), storage: storage}
+  end
 
   def isuzumi_key(), do: august_space() ++ ["Izumi"]
   def miki_key(), do: august_space() ++ ["Miki"]
@@ -218,6 +231,69 @@ defmodule Examples.ENode.EStorage do
              Enum.sort(Storage.get_keyspace(anode.storage, isuzumi_key()))
 
     anode
+  end
+
+  ####################################################################
+  ##                    Properly namespaced storage                 ##
+  ##   Differs from `august_node/1`: go through the name manager.   ##
+  ####################################################################
+
+  @spec reserved_august() ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  @spec reserved_august(Symbol.s()) ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  def reserved_august(storage_name \\ "reserved_august") do
+    full = {anode, _mem, eng, pub} = EIdentity.memory_storage(storage_name)
+    sub_space = august_subnamespace(anode.storage)
+
+    august = august_space() |> hd
+
+    assert {:ok, commited} = Commitment.commit(eng.commitment, august)
+
+    name = [Name.name_space(), august]
+
+    assert :ok == Name.reserve_namespace(sub_space, august, pub, commited)
+
+    assert :improper_data ==
+             Name.reserve_namespace(sub_space, "Alice", pub, commited)
+
+    assert :already_there ==
+             Name.reserve_namespace(sub_space, august, pub, commited)
+
+    assert [{name, pub}] == Storage.get_keyspace(anode.storage, name)
+
+    full
+  end
+
+  @doc """
+  I am like `august_node/1`. Except I sign the namespace reserved
+
+  Further besides the main space being owned by memory backed space,
+  we have `ECrypto.londo/0` owning the water. Thankfully we aren't on
+  Narn.
+
+  """
+  @spec august_node_proper() ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  @spec august_node_proper(Symbol.s()) ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  def august_node_proper(storage_name \\ "august_node_proper") do
+    full = {anode, _mem, eng, pub} = reserved_august(storage_name)
+    subnamespace = august_subnamespace(anode.storage)
+    londo_pub = ECrypto.londo().external
+    londo_space = {august_space(), londo_pub}
+
+    assert {:ok, attestation} = Commitment.commit(eng.commitment, londo_space)
+    assert :ok == Name.add(subnamespace, attestation, londo_space)
+    assert :already_there == Name.add(subnamespace, attestation, londo_space)
+
+    assert :no_namespace ==
+             Name.add(subnamespace, attestation, {["Foo", "Bar"], londo_pub})
+
+    assert MapSet.new([londo_pub, pub]) ==
+             Name.all_identities(subnamespace, august_space() |> hd)
+
+    full
   end
 
   ####################################################################
