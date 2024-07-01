@@ -10,5 +10,10 @@ defmodule AnomaTest.Identity do
   test "examples" do
     EIdentity.alice_commits()
     EIdentity.alice_decrypts()
+    EIdentity.failure_to_connect()
+    EIdentity.memory_storage()
+    EIdentity.memory_storage_connected_engines()
+    EIdentity.no_memory_storage()
+    EIdentity.same_id_multiple_times()
   end
 end
