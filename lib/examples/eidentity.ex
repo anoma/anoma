@@ -4,6 +4,8 @@ defmodule Examples.EIdentity do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Identity.Encryption
+  alias Anoma.Node.Identity.Decryption
   alias Anoma.Identity.Verification
   alias Anoma.Node.Identity.Commitment
   alias Examples.ECrypto
@@ -29,5 +31,18 @@ defmodule Examples.EIdentity do
            "Fails on unrelated data"
 
     cpid
+  end
+
+  @spec alice_decrypts() :: GenServer.server()
+  def alice_decrypts() do
+    akey = ECrypto.alice()
+    fields = {akey.internal.encrypt, akey.external.encrypt, akey.kind_encrypt}
+    assert {:ok, dpid} = Decryption.start_link(fields)
+
+    cipher = Encryption.seal(555, akey.external, false)
+    assert {:ok, 555} == Decryption.decrypt(dpid, cipher)
+    assert {:error, :failed_verification} == Decryption.decrypt(dpid, <<3>>)
+
+    dpid
   end
 end
