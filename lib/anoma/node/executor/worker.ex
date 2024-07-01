@@ -27,6 +27,12 @@ defmodule Anoma.Node.Executor.Worker do
 
   import Nock
 
+  @type backend() :: :kv | :rm | :cairo | :ro
+
+  # TODO :: Please replace with a verify protocol
+  @type verify_fun(trans) :: (trans -> boolean())
+  @type from_noun(trans) :: (Noun.t() -> trans)
+
   typedstruct do
     @typedoc """
     I am the type of a Worker Engine instance.
@@ -44,7 +50,7 @@ defmodule Anoma.Node.Executor.Worker do
     """
 
     field(:id, non_neg_integer())
-    field(:tx, {:kv | :rm | :cairo, Noun.t()})
+    field(:tx, {backend(), Noun.t()})
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
   end
@@ -63,7 +69,7 @@ defmodule Anoma.Node.Executor.Worker do
   """
 
   @spec init(
-          {non_neg_integer(), {:kv | :rm, Noun.t()}, Nock.t(),
+          {non_neg_integer(), {backend(), Noun.t()}, Nock.t(),
            Router.Addr.t()}
         ) :: {:ok, Worker.t()}
   def init({id, tx, env, completion_topic}) do
@@ -98,7 +104,27 @@ defmodule Anoma.Node.Executor.Worker do
   ############################################################
 
   @spec run(t()) :: :ok | :error
-  defp run(s = %__MODULE__{id: id, tx: {:kv, proto_tx}, env: env}) do
+  defp run(s = %__MODULE__{tx: {:ro, _}}) do
+    execute_key_value_tx(s, &send_value/3)
+  end
+
+  defp run(s = %__MODULE__{tx: {:kv, _}}) do
+    execute_key_value_tx(s, &store_value/3)
+  end
+
+  defp run(s = %__MODULE__{tx: {:rm, _}}) do
+    execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify/1})
+  end
+
+  defp run(s = %__MODULE__{tx: {:cairo, _}}) do
+    execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify_cairo/1})
+  end
+
+  @spec execute_key_value_tx(t(), fun()) :: :ok | :error
+  defp execute_key_value_tx(
+         s = %__MODULE__{id: id, tx: {_, proto_tx}, env: env},
+         process
+       ) do
     logger = env.logger
 
     log_info({:dispatch, id, logger})
@@ -107,12 +133,9 @@ defmodule Anoma.Node.Executor.Worker do
     with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <-
            nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
-      true_order = wait_for_ready(s)
-
-      log_info({:writing, true_order, logger})
-      Storage.put(storage, key, value)
-      log_info({:put, key, logger})
+         {:ok, result} <- nock(ordered_tx, [9, 2, 0 | 1], env),
+         :ok <-
+           process.(s, result, storage) do
       snapshot(storage, env)
       log_info({:success_run, logger})
       :ok
@@ -125,7 +148,42 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  defp run(s = %__MODULE__{id: id, tx: {:rm, gate}, env: env}) do
+  @spec send_value(t(), Noun.t(), Router.Addr.t()) :: :ok | nil
+  defp send_value(
+         %__MODULE__{tx: {:ro, _}, env: env, completion_topic: topic},
+         value,
+         _storage
+       ) do
+    Router.cast(topic, {:read_value, value})
+    log_info({:get, value, env.logger})
+  end
+
+  @spec store_value(t(), Noun.t(), Router.Addr.t()) :: any()
+  defp store_value(
+         s = %__MODULE__{tx: {:kv, _}, env: env},
+         key_value,
+         storage
+       ) do
+    with [key | value] <- key_value do
+      true_order = wait_for_ready(s)
+
+      logger = env.logger
+      log_info({:writing, true_order, logger})
+      Storage.put(storage, key, value)
+      log_info({:put, key, logger})
+      :ok
+    else
+      e -> e
+    end
+  end
+
+  @spec execute_rm_tx(t(), {verify_fun(trans), from_noun(trans)}) ::
+          :ok | :error
+        when trans: any()
+  defp execute_rm_tx(
+         s = %__MODULE__{id: id, tx: {_, gate}, env: env},
+         {from_noun, verify_fun}
+       ) do
     logger = env.logger
 
     log_info({:dispatch, id, logger})
@@ -133,9 +191,11 @@ defmodule Anoma.Node.Executor.Worker do
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
-         vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
+         vm_resource_tx <- from_noun.(resource_tx),
          true_order = wait_for_ready(s),
-         true <- Anoma.Resource.Transaction.verify(vm_resource_tx),
+         true <- verify_fun.(vm_resource_tx),
+         # TODO: add root existence check. The roots must be traceable
+         # in historical records.
          true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
       persist(env, true_order, vm_resource_tx)
     else
@@ -147,29 +207,6 @@ defmodule Anoma.Node.Executor.Worker do
         :error
 
       # This failed before the waiting for read as it's likely :error
-      e ->
-        log_info({:fail, e, logger})
-        wait_for_ready(s)
-        snapshot(storage, env)
-        :error
-    end
-  end
-
-  defp run(s = %__MODULE__{id: id, tx: {:cairo, gate}, env: env}) do
-    logger = env.logger
-
-    log_info({:dispatch, id, logger})
-    storage = Router.Engine.get_state(env.ordering).storage
-
-    with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
-         {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
-         vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
-         true_order = wait_for_ready(s),
-         true <- Anoma.Resource.Transaction.verify_cairo(vm_resource_tx),
-         # TODO: add root existence check. The roots must be traceable in historical records.
-         true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
-      persist(env, true_order, vm_resource_tx)
-    else
       e ->
         log_info({:fail, e, logger})
         wait_for_ready(s)
