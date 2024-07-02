@@ -343,10 +343,10 @@ defmodule Anoma.Dump do
         }
   def get_tables(node) do
     node = node |> Node.state()
-    table = Engine.get_state(Engine.get_state(node.ordering).table)
+    storage = Engine.get_state(Engine.get_state(node.ordering).storage)
     block = Engine.get_state(node.mempool).block_storage
-    qual = table.qualified
-    ord = table.order
+    qual = storage.qualified
+    ord = storage.order
     # TODO more robust checking here
     rocks =
       if :ram_copies == :mnesia.table_info(qual, :storage_type) do
@@ -365,7 +365,7 @@ defmodule Anoma.Dump do
       |> List.to_tuple()
 
     %{
-      storage_data: {table, block},
+      storage_data: {storage, block},
       qualified: q,
       order: o,
       block_storage: b,

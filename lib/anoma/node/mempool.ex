@@ -285,7 +285,7 @@ defmodule Anoma.Node.Mempool do
   def choose_and_execute_ordering(state, transactions) do
     # get an ordering for the transactions we are executing
     ordered_transactions =
-      order(transactions, Ordering.next_order(state.ordering))
+      order(transactions, Router.Engine.get_state(state.ordering).next_order)
 
     # send in the ordering for the write ready
     log_info({:order, state.ordering, state.logger})
