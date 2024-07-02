@@ -113,6 +113,39 @@ defmodule AnomaTest.Node.Executor.Worker do
     :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 
+  test "worker read value", %{env: env, router: router} do
+    {:ok, topic} = Router.new_topic(router)
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
+
+    key = 555
+
+    order_id = System.unique_integer([:positive])
+
+    storage = Engine.get_state(env.ordering).storage
+    plus_one = counter_val_plus_one(key)
+
+    Storage.ensure_new(storage)
+    Ordering.reset(env.ordering)
+
+    # Setup default value for storage
+    Storage.put(storage, key, 999)
+    # Now set the snapshot up that scry expects
+    Storage.put_snapshot(storage, hd(env.snapshot_path))
+
+    {:ok, worker} =
+      Router.start_engine(
+        router,
+        Worker,
+        {order_id, {:ro, plus_one}, env, topic}
+      )
+
+    idx = Engine.get_state(env.ordering).next_order
+    Ordering.new_order(env.ordering, [Order.new(idx, order_id, worker)])
+
+    TestHelper.Worker.wait_for_read_value(1000)
+    TestHelper.Worker.wait_for_worker(worker, :ok)
+  end
+
   test "failed worker waits for a snapshot before write", %{
     env: env,
     router: router

@@ -15,4 +15,9 @@ defmodule TestHelper.Worker do
                      5000
     end
   end
+
+  def wait_for_read_value(value) do
+    assert_receive {:"$gen_cast", {:router_cast, _, {:read_value, ^value}}},
+                   5000
+  end
 end
