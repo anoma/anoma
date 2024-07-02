@@ -31,7 +31,6 @@ defmodule Examples.ENode do
   def fresh_full_node(storage, name) do
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
-        name: name,
         testing: true,
         use_rocks: false,
         settings:

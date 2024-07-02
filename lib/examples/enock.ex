@@ -508,6 +508,14 @@ defmodule Examples.ENock do
     [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.logics_core()]
   end
 
+  # [%ctr 0]
+  @spec zero_counter(Noun.t()) :: Noun.t()
+  def zero_counter(val) do
+    arm = [1, val | 0]
+    sample = 0
+    [[8, [1 | sample], [1 | arm], 0 | 1] | Nock.logics_core()]
+  end
+
   ####################################################################
   ##                    Cueing to a Jam Session                     ##
   ####################################################################
