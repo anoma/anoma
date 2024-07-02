@@ -4,20 +4,14 @@ defmodule Examples.ENode.EStorage do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Examples.ECrypto
-  alias Anoma.Crypto.Id
   alias Anoma.Identity.Backend.Memory
-  alias Anoma.Identity.Manager
-  alias Anoma.Node.Identity.Commitment
-  alias Anoma.Identity.Name
-  alias Anoma.Node.Router
-  alias Examples.ENock
-  alias Examples.ENode
-  alias Examples.EIdentity
+  alias Anoma.Identity.{Manager, Name, Evidence, SignsFor, Verification}
+  alias Anoma.Crypto.Id
   alias Anoma.Symbol
   alias Anoma.Node
-  alias Anoma.Node.{Storage}
+  alias Anoma.Node.{Storage, Router, Identity.Commitment}
 
+  alias Examples.{ENock, ENode, EIdentity, ECrypto}
   ####################################################################
   ##                Keys for All Modules: Please use me             ##
   ##  Keys can also be found in the Noun section in the ENock file. ##
@@ -294,6 +288,62 @@ defmodule Examples.ENode.EStorage do
              Name.all_identities(subnamespace, august_space() |> hd)
 
     full
+  end
+
+  @spec londo_speaks_for_alice() :: Node.t()
+  @spec londo_speaks_for_alice(Symbol.s()) :: Node.t()
+  def londo_speaks_for_alice(storage_name \\ "londo_speaks") do
+    anode = empty_storage(storage_name)
+    apid = EIdentity.alice_commits()
+
+    apub = ECrypto.alice().external
+    lpub = ECrypto.londo().external
+    bpub = ECrypto.bertha().external
+
+    assert {:ok, signed_key} = Commitment.commit(apid, lpub)
+
+    assert SignsFor.sign_for(anode.storage, %Evidence{
+             signature_key: apub,
+             signed_data: lpub,
+             signature: signed_key
+           }) == :ok
+
+    assert SignsFor.sign_for(anode.storage, %Evidence{
+             signature_key: apub,
+             signed_data: bpub,
+             signature: signed_key
+           }) == :key_not_verified
+
+    assert SignsFor.known(anode.storage, apub) == MapSet.new([lpub])
+    assert SignsFor.known(anode.storage, lpub) == MapSet.new([])
+    assert SignsFor.signs_for?(anode.storage, apub, lpub)
+    refute SignsFor.signs_for?(anode.storage, apub, bpub)
+    anode
+  end
+
+  @spec bertha_speaks_for_all() :: Node.t()
+  @spec bertha_speaks_for_all(Symbol.s()) :: Node.t()
+  def bertha_speaks_for_all(storage_name \\ "bertha_speaks") do
+    anode = londo_speaks_for_alice(storage_name)
+    apub = ECrypto.alice().external
+    lpub = ECrypto.londo().external
+    bpub = ECrypto.bertha().external
+    lpid = EIdentity.londo_commits()
+    bpid = EIdentity.bertha_commits()
+
+    assert {:ok, signed_key} = Commitment.commit(lpid, bpub)
+
+    assert SignsFor.sign_for(anode.storage, %Evidence{
+             signature_key: lpub,
+             signed_data: bpub,
+             signature: signed_key
+           }) == :ok
+
+    {:ok, signed} = Commitment.commit(bpid, <<3>>)
+    {:ok, signed_blob} = Commitment.commit_combined(bpid, <<3>>)
+    assert Verification.verify_request(signed, <<3>>, apub, anode.storage)
+    assert Verification.verify_combined(signed_blob, apub, anode.storage)
+    anode
   end
 
   ####################################################################

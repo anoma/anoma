@@ -36,6 +36,21 @@ defmodule Examples.EIdentity do
     cpid
   end
 
+  def londo_commits() do
+    lkey = ECrypto.londo()
+    assert {:ok, cpid} = Commitment.start_link({lkey.internal.sign, :ed25519})
+    assert {:ok, data} = Commitment.commit(cpid, 555)
+
+    refute Verification.verify_combined(data, ECrypto.alice().external)
+    cpid
+  end
+
+  def bertha_commits() do
+    bkey = ECrypto.bertha()
+    assert {:ok, cpid} = Commitment.start_link({bkey.internal.sign, :ed25519})
+    cpid
+  end
+
   @spec alice_decrypts() :: GenServer.server()
   def alice_decrypts() do
     akey = ECrypto.alice()

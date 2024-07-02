@@ -16,5 +16,7 @@ defmodule AnomaTest.Storage do
     EStorage.august_node()
     EStorage.reserved_august()
     EStorage.august_node_proper()
+    EStorage.londo_speaks_for_alice()
+    EStorage.bertha_speaks_for_all()
   end
 end
