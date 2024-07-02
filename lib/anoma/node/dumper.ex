@@ -137,7 +137,7 @@ defmodule Anoma.Node.Dumper do
             end)
 
           log_info({:new_task, task, logger})
-          {:ok, %Dumper{state | task: task}}
+          {:ok, %Dumper{state | task: task, count: count}}
         else
           {"Bad input", state}
         end
