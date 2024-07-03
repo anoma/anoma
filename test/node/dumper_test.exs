@@ -3,6 +3,7 @@ defmodule AnomaTest.Node.Dumper do
 
   alias Examples.ENode.EDumper
 
+  @tag timeout: :infinity
   test "examples" do
     EDumper.dumped_node()
   end

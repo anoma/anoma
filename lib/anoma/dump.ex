@@ -81,8 +81,13 @@ defmodule Anoma.Dump do
   end
 
   def dump_full_path(name, node) do
+    IO.puts("Made it before term #{inspect(node)}")
+    IO.puts("Trying get_all #{inspect(node)}")
     term = node |> get_all() |> :erlang.term_to_binary()
-
+    IO.puts("Made it after term")
+    IO.puts("========================")
+    IO.puts("#{inspect(term)}")
+    IO.puts("========================")
     name
     |> File.open([:write], fn file ->
       file |> IO.binwrite(term)
@@ -232,7 +237,24 @@ defmodule Anoma.Dump do
 
   @spec get_all(atom()) :: dump()
   def get_all(node) do
-    Map.merge(get_state(node), get_tables(node))
+    # Process.flag(:trap_exit, true)
+    try do
+      Task.async(fn ->
+        IO.puts("get all")
+        state = get_state(node)
+        IO.puts("State: ---------------------------------------")
+        # IO.puts("State: #{inspect(state)}")
+        IO.puts("State: ---------------------------------------")
+        tables = get_tables(node)
+        IO.puts("TABLES: ---------------------------------------")
+        # IO.puts("TABLES: #{inspect(tables)}")
+        IO.puts("TABLES: ---------------------------------------")
+        Map.merge(state, tables)
+      end) |>Task.await(100_000)
+    rescue
+      e -> IO.puts("ERRRRORRRR: #{inspect(__STACKTRACE__)}")
+           require IEx; IEx.pry()
+    end
   end
 
   @doc """
@@ -273,6 +295,7 @@ defmodule Anoma.Dump do
   def get_state(node) do
     state = node |> Node.state()
 
+    IO.puts("1. get_state: state finished")
     node =
       state
       |> Map.filter(fn {key, _value} ->
@@ -288,28 +311,49 @@ defmodule Anoma.Dump do
       end)
       |> Map.to_list()
 
+    IO.puts("2. node #{inspect(node)}")
+    alive = Enum.map(node, fn {atom, engine} -> {atom, engine.server |> Process.whereis |> Process.alive?} end)
+    IO.puts("2.1. node #{inspect(alive)}")
     list =
       node
       |> Enum.map(fn {atom, engine} ->
-        %{atom => {engine.id, Engine.get_state(engine)}}
+        IO.puts("2.1.X Getting #{inspect(atom)}")
+        IO.puts("2.1.X ID is #{inspect(engine.id)}")
+        IO.puts("2.1.X is alive?: #{inspect(engine.server |> Process.whereis |> Process.alive?)}")
+        IO.puts("2.1.X info:  #{inspect(engine.server |> Process.whereis |> Process.info)}")
+        IO.puts("2.1.X stack: #{inspect(engine.server |> Process.whereis |> Process.info(:current_stacktrace))}")
+        IO.puts("2.1.X PID: #{inspect(engine.server |> Process.whereis)}")
+        IO.puts("-----------------------------------------------------------------------------")
+        # StringIO.flush(Process.group_leader())
+        IO.puts("-----------------------------------------------------------------------------")
+        res = %{atom => {engine.id, Engine.get_state(engine)}}
+        # StringIO.flush(Process.group_leader())
+        IO.puts("2.1.Z #{inspect(engine.id)}: giving back res")
+        res
       end)
 
+    IO.puts("3. node****************************************")
     map = Enum.reduce(list, fn x, acc -> Map.merge(acc, x) end)
 
+    IO.puts("4. node*****************************************")
     # EVIL, please make this not evil
     internal_transport_id =
       Engine.get_state(state.transport).transport_internal_id
 
+    IO.puts("5. node******************************************")
     # This is rather bad, as we are peeking at the internal state, and
     # we are not using the engine, so it will have issues across
     # nodes....
 
+    IO.puts("6. node******************************************")
     router_id =
       :sys.get_state(Process.whereis(state.router.server)).internal_id
 
+    IO.puts("7. node******************************************")
     router_state = Anoma.Node.Router.dump_state(state.router.server)
     # Back to normal work
 
+    IO.puts("8. node******************************************")
     Map.merge(
       %{
         router: router_id,
@@ -342,6 +386,7 @@ defmodule Anoma.Dump do
           use_rocks: boolean()
         }
   def get_tables(node) do
+    IO.puts("tables. ---------------------")
     node = node |> Node.state()
     table = Engine.get_state(Engine.get_state(node.ordering).table)
     block = Engine.get_state(node.mempool).block_storage

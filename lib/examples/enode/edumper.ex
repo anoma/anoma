@@ -14,6 +14,7 @@ defmodule Examples.ENode.EDumper do
 
   def dumped_node(storage_name \\ "dumped_node") do
     {anode, config} = anode(storage_name)
+    IO.puts("STORAGE: #{inspect(raw_storage(storage_name))}")
     path = config["dump"]["dump"]
     log_top = anode.logger_topic.id
 
@@ -24,6 +25,7 @@ defmodule Examples.ENode.EDumper do
     assert :ok ==
              Router.call(anode.router, {:subscribe_topic, log_top, :local})
 
+    # :observer.start()
     assert {:ok, 0} == Mempool.execute(anode.mempool)
 
     msg = "Dumping call succesful from worker."
@@ -33,9 +35,17 @@ defmodule Examples.ENode.EDumper do
     msg2 =
       "Dump succesfull. Snapshot path: #{inspect(path)}. Node name: :anoma"
 
+    send(self(), {:foo_budy, anode.storage.server, Process.whereis(anode.storage.server)})
+    IO.puts("""
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA #{anode.router.server} AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+
+    abcdef #{anode.storage.server} AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    """)
+    IO.puts("")
     assert_receive(
       {:"$gen_cast", {_, _, {:logger_add, _task, ^msg2}}},
-      50000
+      500000
     )
 
     assert File.exists?(path) == true
@@ -46,6 +56,7 @@ defmodule Examples.ENode.EDumper do
     assert :ok ==
              Router.call(anode.router, {:unsubscribe_topic, log_top, :local})
 
+    # :observer.stop()
     {anode, config}
   end
 

@@ -360,14 +360,20 @@ defmodule Anoma.Node.Storage do
   @spec do_put(t(), order_key(), qualified_value()) :: :ok | nil
   defp do_put(storage = %__MODULE__{}, key, value) do
     tx = fn ->
+      IO.puts("————————————————FAZ——————————————————")
       order = read_order(storage, key)
+      IO.puts("————————————————BAR——————————————————")
       new_order = calculate_order(order)
+      IO.puts("————————————————FOO——————————————————")
       write_at_order(storage, key, value, new_order)
+      IO.puts("————————————————PUTT——————————————————")
       instrument({:put_order, new_order})
     end
 
     topic = storage.topic
+    IO.puts("————————————————HI——————————————————")
     mtx = :mnesia.transaction(tx)
+    IO.puts("————————————————DED——————————————————")
     msg = {:put, key, value} |> Tuple.append(mtx)
 
     unless topic == nil do

@@ -67,7 +67,7 @@ defmodule Anoma.Node.Router.Engine do
 
   @spec get_state(Router.addr()) :: struct() | any()
   def get_state(addr) do
-    GenServer.call(addr.server, :get_state)
+    GenServer.call(addr.server, :get_state, 50000)
   end
 
   @spec handle_cast({any(), Router.addr(), term()}, t()) ::

@@ -59,6 +59,7 @@ defmodule Anoma.Node.Configuration do
 
     if configuration do
       spawn(fn ->
+      log_info({:start_dump, config.logger})
         case Anoma.Dump.dump_full_path(dump_path, node_name) do
           {:ok, :ok} ->
             log_info({:dump_ok, dump_path, node_name, logger})
@@ -104,6 +105,14 @@ defmodule Anoma.Node.Configuration do
       :error,
       "Dump failed. Snapshot path: #{inspect(dump_path)}.
       Node name: #{inspect(node_name)}. Reason: #{inspect(reason)}"
+    )
+  end
+
+  defp log_info({:start_dump, logger}) do
+    Logger.add(
+      logger,
+      :info,
+      "Started dump"
     )
   end
 
