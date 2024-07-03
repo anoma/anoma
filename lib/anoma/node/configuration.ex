@@ -40,7 +40,7 @@ defmodule Anoma.Node.Configuration do
   end
 
   @doc """
-  I am the Configuration Engine initialiation function.
+  I am the Configuration Engine initialization function.
 
   I receive a Configuration.t() structure and launch the engine instance
   with the fed-in state.
@@ -61,7 +61,7 @@ defmodule Anoma.Node.Configuration do
   I take a snapshots of the current state. The topic sends back a message
   to the caller saying `:snapshot_done`.
 
-  The path for the snapshot is taken directly from the condiguration map.
+  The path for the snapshot is taken directly from the configuration map.
   """
 
   @spec snapshot(Router.addr()) :: :ok
@@ -72,7 +72,7 @@ defmodule Anoma.Node.Configuration do
   @doc """
   I am the function deleting the snapshot file.
 
-  I check the dump path and check whether there is any file snapsot there.
+  I check the dump path and check whether there is any file snapshot there.
   If so, I delete it, otherwise I do nothing.
   """
 
