@@ -295,7 +295,7 @@ defmodule Anoma.Node do
           ex_st
           | router: router,
             logger: logger,
-            task_completion_topic: executor_topic,
+            topic: executor_topic,
             ambiant_env: %Nock{
               ex_st.ambiant_env
               | logger: logger,
