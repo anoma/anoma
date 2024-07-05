@@ -102,54 +102,86 @@ defmodule TestHelper.TestMacro do
   If the expression is not in debug mode, I simply call the assertion on
   the expression.
   """
-  def assertion_abstract(:debug, atom, [{:=, _ctx, [_left, _right]}] = [expr]) do
-    call_assert(atom, [expr])
-    expr
-  end
-
   def assertion_abstract(:debug, atom, expr) do
     call_assert(atom, expr)
   end
 
   def assertion_abstract(_env, atom, expr) do
-    {assertion_alias(atom), [], expr}
+    assertion_alias(atom, expr)
   end
 
   @doc """
-  I perform the try-rescue functionality, directly evaluating the assertion.
+  I call the try functionality to capture the error.
+
+  ### Pattern-Matching Variations
+
+  - `call_assert(atom, [{:=, _, [left, _]}])` - Afterwards I bind the
+                                                left side variables.
+  - `call_assert(atom, expr)` - Just call the capture.
   """
+  def call_assert(atom, [{:=, _, [left, _]}] = expr) do
+    quote do
+      unquote(left) = unquote(quote_try(atom, expr))
+    end
+  end
+
   def call_assert(atom, expr) do
+    quote_try(atom, expr)
+  end
+
+  @doc """
+  I quote the error-capturing of expressions.
+  """
+  def quote_try(atom, expr) do
     quote do
       try do
-        unquote({assertion_alias(atom), [], expr})
+        unquote(try_assert(atom, expr))
       rescue
-        _ -> unquote(trace_and_pry())
+        _ ->
+          {:current_stacktrace, list} =
+            Process.info(self(), :current_stacktrace)
+
+          IO.puts("\nAssert statement failed. Stacktrace:\n")
+          for info <- list, do: info |> inspect() |> IO.puts()
+          IO.puts("")
+          require IEx
+          IEx.pry()
       end
     end
   end
 
   @doc """
-  I print the current stacktrace for the user and pry.
+  I present a quoted expression to try depending on the input.
+
+  ### Pattern-Matching Variations
+
+  - `try_assert(atom, [{:=, _, _}])` - I use the assertion, print the
+                                       binded variables to escape
+                                       warnings and then print the
+                                       original result
+  - `try_assert(atom, expr)` - I use the assertion
   """
-  def trace_and_pry() do
+  def try_assert(atom, [{:=, _, _}] = expr) do
     quote do
-      {:current_stacktrace, list} = Process.info(self(), :current_stacktrace)
-      IO.puts("\nAssert statement failed. Stacktrace:\n")
-      for info <- list, do: info |> inspect() |> IO.puts()
-      IO.puts("")
-      require IEx
-      IEx.pry()
+      right = unquote(assertion_alias(atom, expr))
+      binding()
+      right
     end
   end
 
+  def try_assert(atom, expr) do
+    assertion_alias(atom, expr)
+  end
+
   @doc """
-  I add the ExUnit.Assertions prefix to the function call on the AST level.
+  I add the ExUnit.Assertions prefix to the function call on the AST level
+  and apply it to the expression as a quoted structure.
   """
-  def assertion_alias(atom) do
-    {:., [],
-     [
-       {:__aliases__, [alias: false], [:ExUnit, :Assertions]},
-       atom
-     ]}
+  def assertion_alias(atom, expr) do
+    {{:., [],
+      [
+        {:__aliases__, [alias: false], [:ExUnit, :Assertions]},
+        atom
+      ]}, [], expr}
   end
 end
