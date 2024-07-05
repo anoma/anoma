@@ -121,7 +121,7 @@ defmodule Anoma.Node.Storage do
   ############################################################
 
   @spec get(Router.Addr.t(), order_key()) ::
-          :absent | {:ok, qualified_value()}
+          :absent | {:ok, qualified_value()} | {:error, :timed_out}
   def get(storage, key) do
     Router.call(storage, {:get, key})
   end

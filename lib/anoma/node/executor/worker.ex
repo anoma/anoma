@@ -47,7 +47,7 @@ defmodule Anoma.Node.Executor.Worker do
     logger = env.logger
 
     log_info({:dispatch, order, logger})
-    storage = Ordering.get_storage(env.ordering)
+    storage = Router.Engine.get_state(env.ordering).storage
 
     with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <-
@@ -74,7 +74,7 @@ defmodule Anoma.Node.Executor.Worker do
     logger = env.logger
 
     log_info({:dispatch, order, logger})
-    storage = Ordering.get_storage(env.ordering)
+    storage = Router.Engine.get_state(env.ordering).storage
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),

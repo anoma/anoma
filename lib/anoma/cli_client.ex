@@ -54,7 +54,7 @@ defmodule Anoma.Cli.Client do
 
     Transport.learn_engine(
       transport,
-      elem(primary.ordering, 0),
+      elem(primary.storage, 0),
       primary.router.external
     )
 
@@ -123,13 +123,13 @@ defmodule Anoma.Cli.Client do
   end
 
   defp perform({:get_key, key}, primary, router) do
-    other_ordering_addr = %{
+    other_storage_addr = %{
       router
       | server: nil,
-        id: elem(primary.ordering, 0)
+        id: elem(primary.storage, 0)
     }
 
-    case Anoma.Node.Ordering.get(other_ordering_addr, key) do
+    case Anoma.Node.Storage.get(other_storage_addr, key) do
       {:error, :timed_out} ->
         IO.puts("Connection error")
         System.halt(1)

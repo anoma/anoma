@@ -281,7 +281,7 @@ defmodule Anoma.Node do
       start_engine(
         router,
         Ordering,
-        %Ordering{ord_st | logger: logger, table: storage},
+        %Ordering{ord_st | logger: logger, storage: storage},
         id: ord_id
       )
 

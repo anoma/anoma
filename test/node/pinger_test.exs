@@ -1,9 +1,7 @@
 defmodule AnomaTest.Node.Pinger do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Node.{Mempool, Router, Pinger}
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Ordering
+  alias Anoma.Node.{Mempool, Router, Pinger, Storage}
   import TestHelper.Nock
 
   setup_all do
@@ -38,7 +36,7 @@ defmodule AnomaTest.Node.Pinger do
 
   test "Execution is done automatically", %{node: node} do
     key = 555
-    storage = Ordering.get_storage(node.ordering)
+    storage = node.storage
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
