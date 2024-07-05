@@ -123,7 +123,7 @@ defmodule Anoma.Node.Solver do
 
     unless solved == [] do
       for tx <- solved do
-        Router.call(
+        Router.cast(
           mempool,
           {:tx,
            {:rm, [[1 | Anoma.Resource.Transaction.to_noun(hd(tx))], 0 | 0]}}

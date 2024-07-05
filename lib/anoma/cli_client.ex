@@ -211,7 +211,7 @@ defmodule Anoma.Cli.Client do
 
     case Noun.Format.parse(tx) do
       {:ok, tx} ->
-        Anoma.Node.Mempool.async_tx(other_mempool_addr, {kind, tx})
+        Anoma.Node.Mempool.tx(other_mempool_addr, {kind, tx})
 
       :error ->
         IO.puts("Failed to parse transaction from file #{path}")

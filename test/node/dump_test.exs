@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Dump do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Node.Mempool
+  alias Anoma.Node.{Mempool, Router}
   alias Anoma.Mnesia
   alias Anoma.System.Directories
   import TestHelper.Nock
@@ -38,11 +38,22 @@ defmodule AnomaTest.Node.Dump do
     node = Anoma.Node.state(nodes)
     key = 555
     zero = zero_counter(key)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic, :local}
+      )
+
     Mempool.hard_reset(node.mempool)
 
     Mempool.tx(node.mempool, {:kv, zero})
 
+    assert_receive({:"$gen_cast", {_, _, {:submitted, _}}}, 5000)
+
     Mempool.execute(node.mempool)
+
+    assert_receive {:"$gen_cast", {_, _, {:executed, {:ok, _}}}}
 
     block_store_old = Mnesia.dump(:dump_blocks)
 

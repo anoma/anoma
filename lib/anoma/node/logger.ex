@@ -1,8 +1,10 @@
 defmodule Anoma.Node.Logger do
   @moduledoc """
-  I am a logging engine. I have a storage field which accepts the
-  storage used for the logging tied to a specific node, as well as
-  the name of the clock used for timestamping.
+  I am the Logger Engine, an implementation of the Local Logging Engine.
+
+  I have a storage field which accepts the storage used for the logging
+  tied to a specific node, as well as the address of the clock used for
+  timestamping.
 
   I store and get the logging info using the keyspace method.
 
@@ -10,7 +12,12 @@ defmodule Anoma.Node.Logger do
 
   I provide the following public functionality:
 
+  #### Adding Logs
+
   - `add/3`
+
+  #### Getting Logs
+
   - `get/1`
   - `get/2`
   """
@@ -26,14 +33,37 @@ defmodule Anoma.Node.Logger do
 
   require Logger
 
-  # Maybe add timestamps from local wall clock as well?
-
   typedstruct do
-    field(:storage, Storage.t())
+    @typedoc """
+    I am the type of the Logging Engine.
+
+    I have the minimal fields required to store timestamped messages in the
+    specified storage.
+
+    ### Fields
+
+    - `:storage` - The Storage Engine address used for storing.
+    - `:clock` - The Clock Engine address used for timestamping.
+    - `:topic` - The topic address for broadcasting.
+    """
+
+    field(:storage, Router.Addr.t())
     field(:clock, Router.Addr.t())
     field(:topic, Router.Addr.t())
   end
 
+  @doc """
+  I am the Logger Engine initialization function.
+
+  ### Pattern-Matching Variations
+
+  - `init(Logger.t())` - I initialize the Engine with the given state.
+  - `init(args)` - I expect a keylist with `:storage`, `:clock`, and
+                   `:topic` keys and launch the Engine with the appropriate
+                   state.
+  """
+
+  @spec init(Anoma.Node.Logger.t()) :: {:ok, Anoma.Node.Logger.t()}
   def init(%Anoma.Node.Logger{} = state) do
     {:ok, state}
   end
@@ -60,6 +90,9 @@ defmodule Anoma.Node.Logger do
   ############################################################
 
   @doc """
+  I am the Logger add function, the implementation of LocalLoggingAppend of
+  the Local Logging Engine of the Anoma Specification.
+
   I receive three arguments: an address of the logger, an atom specifying
   the urgency of the logging message and the logging message itself.
 
@@ -89,6 +122,8 @@ defmodule Anoma.Node.Logger do
   end
 
   @doc """
+  I am the Logger get function of one argument.
+
   Given a non-nil logger address, I get the entire keyspace related to the
   storage attached to the aforementioned logger ID using
   `Storage.get_keyspace/2`
@@ -98,6 +133,7 @@ defmodule Anoma.Node.Logger do
   worker PID), the timestamp, and an atom specifying urgency of the logging
   message. Its right element will be the message.
   """
+
   @spec get(Router.addr() | nil) ::
           list({list(Id.Extern.t() | integer() | atom() | pid()), String.t()})
           | nil
@@ -108,6 +144,8 @@ defmodule Anoma.Node.Logger do
   end
 
   @doc """
+  I am the Logger get function of two arguments.
+
   Given a non-nil logger address and an engine address, I get the keyspace
   which conatins all the info stored by the logger about the supplied
   engine using `Storage.get_keyspace/2`
@@ -132,6 +170,30 @@ defmodule Anoma.Node.Logger do
   ############################################################
 
   def handle_cast({:add, logger, atom, msg}, addr, state) do
+    do_add(logger, atom, msg, addr, state)
+    {:noreply, state}
+  end
+
+  def handle_call({:get_all, logger}, _from, state) do
+    {:reply, do_get(logger.id, state.storage), state}
+  end
+
+  def handle_call({:get, logger, engine}, _from, state) do
+    {:reply, do_get(logger.id, state.storage, engine), state}
+  end
+
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
+  @spec do_add(
+          Router.Addr.t(),
+          atom(),
+          String.t(),
+          Router.Addr.t() | pid(),
+          Anoma.Node.Logger.t()
+        ) :: :ok
+  defp do_add(logger, atom, msg, addr, state) do
     topic = state.topic
 
     addr = Router.Addr.id(addr) || Router.Addr.server(addr)
@@ -147,20 +209,20 @@ defmodule Anoma.Node.Logger do
     end
 
     log_fun({atom, msg})
-
-    {:noreply, state}
   end
 
-  def handle_call({:get_all, logger}, _from, state) do
-    {:reply, Storage.get_keyspace(state.storage, [logger.id]), state}
-  end
+  @spec do_get(Id.Extern.t(), Router.Addr.t(), pid() | Router.Addr.t() | nil) ::
+          :absent
+          | list({any(), Storage.qualified_value()})
+          | {:atomic, any()}
+  defp do_get(id, storage, engine \\ nil) do
+    keyspace =
+      cond do
+        engine == nil -> [id]
+        true -> Router.Addr.id(engine) || Router.Addr.server(engine)
+      end
 
-  def handle_call({:get, logger, engine}, _from, state) do
-    {:reply,
-     Storage.get_keyspace(state.storage, [
-       logger.id,
-       Router.Addr.id(engine) || Router.Addr.server(engine)
-     ]), state}
+    Storage.get_keyspace(storage, keyspace)
   end
 
   ############################################################
