@@ -28,7 +28,7 @@ defmodule Anoma.Identity.Name do
   namespace must have signed.
   """
   @spec add(t(), binary(), {list(binary()), binary()}) ::
-          :ok | :no_namespace | :improper_data
+          :ok | :no_namespace | :improper_data | :already_there
   def add(namespace = %__MODULE__{}, sig, d = {name, new_key})
       when is_list(name) do
     store = namespace.storage
