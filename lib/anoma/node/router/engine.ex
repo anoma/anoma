@@ -72,6 +72,11 @@ defmodule Anoma.Node.Router.Engine do
     GenServer.call(addr.server, :get_state)
   end
 
+  @spec get_router(Router.addr()) :: Router.addr() | any()
+  def get_router(addr) do
+    GenServer.call(addr.server, :get_router)
+  end
+
   @spec handle_cast({any(), Router.addr(), term()}, t()) ::
           {:noreply, any()}
           | {:noreply, any(),
@@ -167,6 +172,12 @@ defmodule Anoma.Node.Router.Engine do
           struct() | any()
   def handle_call(:get_state, _, state) do
     {:reply, state.module_state, state}
+  end
+
+  @spec handle_call(:get_router, GenServer.from(), %__MODULE__{}) ::
+          Router.addr() | any()
+  def handle_call(:get_router, _, state) do
+    {:reply, state.router_addr, state}
   end
 
   @spec handle_continue(term(), t()) :: {:noreply, t()} | {:stop, term(), t()}

@@ -20,6 +20,7 @@ defmodule Anoma.Node.Mempool do
   alias Anoma.{Block, Transaction, Order, Serializer}
   alias Anoma.Block.Base
   alias Anoma.Node.{Router, Logger, Executor, Ordering}
+  alias Router.Engine
   alias __MODULE__
 
   use Router.Engine
@@ -198,17 +199,36 @@ defmodule Anoma.Node.Mempool do
   """
 
   @spec handle_tx(Transaction.execution(), t()) :: Transaction.t()
+  @dialyzer {:nowarn_function, [handle_tx: 2]}
   def handle_tx(tx_code, state) do
     random_tx_id =
       :crypto.strong_rand_bytes(16)
       |> Noun.atom_binary_to_integer()
 
-    log_info({:fire, state.executor, random_tx_id, state.logger})
+    ex = state.executor
 
-    addr =
-      Executor.fire_new_transaction(state.executor, random_tx_id, tx_code)
+    log_info({:fire, ex, random_tx_id, state.logger})
 
-    Transaction.new(random_tx_id, addr, tx_code)
+    ex_topic = Engine.get_state(ex).topic
+
+    :ok =
+      Router.call(
+        Engine.get_router(ex),
+        {:subscribe_topic, ex_topic, :local}
+      )
+
+    Executor.fire_new_transaction(ex, random_tx_id, tx_code)
+
+    receive do
+      {:"$gen_cast", {_, _, {:worker_spawned, addr}}} ->
+        :ok =
+          Router.call(
+            Engine.get_router(ex),
+            {:unsubscribe_topic, ex_topic, :local}
+          )
+
+        Transaction.new(random_tx_id, addr, tx_code)
+    end
   end
 
   @doc """
@@ -390,6 +410,7 @@ defmodule Anoma.Node.Mempool do
   #                     Logging Info                         #
   ############################################################
 
+  @dialyzer {:nowarn_function, [log_info: 1]}
   defp log_info({:tx, state, logger}) do
     Logger.add(
       logger,
