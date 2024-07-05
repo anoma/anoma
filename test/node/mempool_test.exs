@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Mempool do
   use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.{Storage, Mempool, Router}
-  import TestHelper.Nock
+  import TestHelper.{Nock, Mempool}
 
   setup_all do
     storage = %Storage{
@@ -54,25 +54,13 @@ defmodule AnomaTest.Node.Mempool do
 
     Mempool.hard_reset(node.mempool)
 
-    Mempool.tx(node.mempool, {:kv, zero})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
-
-    worker_zero = tx_zero.addr
+    worker_zero = wait_for_tx(node.mempool, {:kv, zero}, 5000).addr
 
     Mempool.execute(node.mempool)
 
-    Mempool.tx(node.mempool, {:kv, increment})
+    worker_one = wait_for_tx(node.mempool, {:kv, increment}, 5000).addr
 
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
-
-    worker_one = tx_one.addr
-
-    Mempool.tx(node.mempool, {:kv, increment})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_two}}}, 5000)
-
-    worker_two = tx_two.addr
+    worker_two = wait_for_tx(node.mempool, {:kv, increment}, 5000).addr
 
     Mempool.execute(node.mempool)
 
@@ -115,17 +103,9 @@ defmodule AnomaTest.Node.Mempool do
 
     Mempool.hard_reset(node.mempool)
 
-    Mempool.tx(node.mempool, {:kv, increment})
+    worker_one = wait_for_tx(node.mempool, {:kv, increment}, 5000).addr
 
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
-
-    worker_one = tx_one.addr
-
-    Mempool.tx(node.mempool, {:kv, increment})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_two}}}, 5000)
-
-    worker_two = tx_two.addr
+    worker_two = wait_for_tx(node.mempool, {:kv, increment}, 5000).addr
 
     Mempool.execute(node.mempool)
     Enum.each([worker_one, worker_two], &TestHelper.Worker.wait_for_worker/1)
@@ -156,11 +136,8 @@ defmodule AnomaTest.Node.Mempool do
 
     Mempool.hard_reset(node.mempool)
 
-    Mempool.tx(node.mempool, {:kv, zero_counter(key)})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
-
-    worker_zero = tx_zero.addr
+    worker_zero =
+      wait_for_tx(node.mempool, {:kv, zero_counter(key)}, 5000).addr
 
     Mempool.soft_reset(node.mempool)
 
@@ -196,9 +173,7 @@ defmodule AnomaTest.Node.Mempool do
 
     Mempool.hard_reset(node.mempool)
 
-    Mempool.tx(node.mempool, {:kv, zero_counter(key)})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, zero_tx}}}, 5000)
+    zero_tx = wait_for_tx(node.mempool, {:kv, zero_counter(key)}, 5000)
     assert Router.Engine.get_state(node.mempool).transactions == [zero_tx]
     Mempool.soft_reset(node.mempool)
 
