@@ -185,17 +185,6 @@ defmodule Anoma.Node.Storage do
     Router.cast(storage, {:delete, key})
   end
 
-  @spec write_at_order_tx(
-          Router.Addr.t(),
-          Noun.t(),
-          Noun.t(),
-          non_neg_integer()
-        ) ::
-          :ok
-  def write_at_order_tx(storage, key, value, order) do
-    Router.cast(storage, {:write_at_order_tx, key, value, order})
-  end
-
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -560,7 +549,7 @@ defmodule Anoma.Node.Storage do
 
   @spec write_at_order(t(), Noun.t(), qualified_value(), non_neg_integer()) ::
           :ok
-  def write_at_order(storage = %__MODULE__{}, key, value, order) do
+  defp write_at_order(storage = %__MODULE__{}, key, value, order) do
     :mnesia.write({storage.order, namespace_key(storage, key), order})
 
     :mnesia.write(
