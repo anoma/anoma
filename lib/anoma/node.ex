@@ -293,7 +293,8 @@ defmodule Anoma.Node do
         Executor,
         %Executor{
           ex_st
-          | logger: logger,
+          | router: router,
+            logger: logger,
             task_completion_topic: executor_topic,
             ambiant_env: %Nock{
               ex_st.ambiant_env

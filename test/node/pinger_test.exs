@@ -61,16 +61,30 @@ defmodule AnomaTest.Node.Pinger do
 
     :ok = Router.call(node.router, {:subscribe_topic, mem_t, :local})
 
-    pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
+    Mempool.tx(node.mempool, {:kv, zero})
 
-    assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
 
-    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
-    pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
+    worker_zero = tx_zero.addr
 
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_one}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_two}}}, 5000)
+    TestHelper.Worker.wait_for_worker(worker_zero)
+
+    Mempool.tx(node.mempool, {:kv, increment})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
+
+    worker_one = tx_one.addr
+
+    Mempool.tx(node.mempool, {:kv, increment})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_two}}}, 5000)
+
+    worker_two = tx_two.addr
+
+    Enum.each(
+      [worker_one, worker_two],
+      &TestHelper.Worker.wait_for_worker/1
+    )
 
     assert {:ok, 2} = Storage.get(storage, key)
 

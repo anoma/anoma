@@ -60,9 +60,11 @@ defmodule AnomaTest.Node.End do
     zero = zero_counter(key)
     increment = increment_counter_val(key)
 
-    Mempool.hard_reset(mempool)
-
-    pid_zero = Mempool.tx(mempool, {:kv, zero}).pid
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic, :local}
+      )
 
     :ok =
       Router.call(
@@ -70,8 +72,17 @@ defmodule AnomaTest.Node.End do
         {:subscribe_topic, node.executor_topic, :local}
       )
 
-    assert {:ok, 1} = Mempool.execute(mempool)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
+    Mempool.hard_reset(mempool)
+
+    Mempool.tx(mempool, {:kv, zero})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
+
+    Mempool.execute(mempool)
+
+    assert_receive {:"$gen_cast", {_, _, {:executed, {:ok, 1}}}}
+
+    TestHelper.Worker.wait_for_worker(tx_zero.addr)
 
     keya = Sign.new_keypair()
     keyb = Sign.new_keypair()
@@ -97,19 +108,21 @@ defmodule AnomaTest.Node.End do
     IntentPool.new_intent(ip, tx1)
     IntentPool.new_intent(ip, tx2)
 
-    :ok = Router.call(router, {:subscribe_topic, node.mempool_topic, :local})
-
     assert_receive {:"$gen_cast", {_, _, {:solutions, _}}}
 
     Solver.mempool_send(s, mempool)
 
-    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
+    Mempool.tx(node.mempool, {:kv, increment})
 
-    assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
 
-    assert {:ok, 2} = Mempool.execute(mempool)
+    worker_one = tx_one.addr
 
-    assert_receive {:"$gen_cast", {_, _, {:process_done, ^pid_one}}}
+    Mempool.execute(mempool)
+
+    assert_receive {:"$gen_cast", {_, _, {:executed, {:ok, 2}}}}
+
+    TestHelper.Worker.wait_for_worker(worker_one)
 
     assert {:ok, 1} = Storage.get(storage, key)
 

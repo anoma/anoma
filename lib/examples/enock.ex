@@ -5,7 +5,7 @@ defmodule Examples.ENock do
   import ExUnit.Assertions
 
   alias Anoma.Order
-  alias Anoma.Node.Ordering
+  alias Anoma.Node.{Router, Ordering}
   alias Examples.ENode
   alias Examples.ECrypto
   alias Noun.Format
@@ -60,7 +60,9 @@ defmodule Examples.ENock do
     Storage.ensure_new(node.storage)
 
     # Abstract this somehow out
-    Ordering.new_order(env().ordering, [Order.new(1, random_id(), self())])
+    Ordering.new_order(env().ordering, [
+      Order.new(1, random_id(), Router.self_addr())
+    ])
 
     Storage.put(node.storage, lucky_key(), 5)
     Storage.put_snapshot(node.storage, hd(env().snapshot_path))

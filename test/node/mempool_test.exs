@@ -49,24 +49,53 @@ defmodule AnomaTest.Node.Mempool do
         {:subscribe_topic, node.executor_topic, :local}
       )
 
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic, :local}
+      )
+
     Mempool.hard_reset(node.mempool)
 
-    pid_zero = Mempool.tx(node.mempool, {:kv, zero}).pid
+    Mempool.tx(node.mempool, {:kv, zero})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
+
+    worker_zero = tx_zero.addr
 
     Mempool.execute(node.mempool)
-    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
-    pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
+
+    Mempool.tx(node.mempool, {:kv, increment})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
+
+    worker_one = tx_one.addr
+
+    Mempool.tx(node.mempool, {:kv, increment})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_two}}}, 5000)
+
+    worker_two = tx_two.addr
 
     Mempool.execute(node.mempool)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_zero}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_one}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_two}}}, 5000)
+
+    Enum.each(
+      [worker_zero, worker_one, worker_two],
+      &TestHelper.Worker.wait_for_worker/1
+    )
+
     assert {:ok, 2} = Storage.get(storage, key)
 
     :ok =
       Router.call(
         node.router,
         {:unsubscribe_topic, node.executor_topic, :local}
+      )
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.mempool_topic, :local}
       )
   end
 
@@ -81,14 +110,28 @@ defmodule AnomaTest.Node.Mempool do
         {:subscribe_topic, node.executor_topic, :local}
       )
 
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic, :local}
+      )
+
     Mempool.hard_reset(node.mempool)
 
-    pid_one = Mempool.tx(node.mempool, {:kv, increment}).pid
-    pid_two = Mempool.tx(node.mempool, {:kv, increment}).pid
+    Mempool.tx(node.mempool, {:kv, increment})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
+
+    worker_one = tx_one.addr
+
+    Mempool.tx(node.mempool, {:kv, increment})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_two}}}, 5000)
+
+    worker_two = tx_two.addr
 
     Mempool.execute(node.mempool)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_one}}}, 5000)
-    assert_receive({:"$gen_cast", {_, _, {:process_done, ^pid_two}}}, 5000)
+    Enum.each([worker_one, worker_two], &TestHelper.Worker.wait_for_worker/1)
     assert :absent = Storage.get(storage, key)
 
     :ok =
@@ -96,22 +139,47 @@ defmodule AnomaTest.Node.Mempool do
         node.router,
         {:unsubscribe_topic, node.executor_topic, :local}
       )
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.mempool_topic, :local}
+      )
   end
 
   test "Processes gets killed", %{node: node} do
     key = 333
     storage = Ordering.get_storage(node.ordering)
 
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic, :local}
+      )
+
     Mempool.hard_reset(node.mempool)
 
-    pid_zero = Mempool.tx(node.mempool, {:kv, zero_counter(key)}).pid
+    Mempool.tx(node.mempool, {:kv, zero_counter(key)})
+
+    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
+
+    worker_zero = tx_zero.addr
 
     Mempool.soft_reset(node.mempool)
 
     Mempool.execute(node.mempool)
 
-    assert not Process.alive?(pid_zero)
+    assert_receive({:"$gen_cast", {_, _, {:executed, {:ok, 0}}}}, 5000)
+
+    pid = Router.Addr.pid(worker_zero)
+    assert pid == nil or not Process.alive?(pid)
     assert :absent = Storage.get(storage, key)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.mempool_topic, :local}
+      )
   end
 
   test "Transaction print", %{node: node} do
@@ -123,20 +191,6 @@ defmodule AnomaTest.Node.Mempool do
         {:subscribe_topic, node.executor_topic, :local}
       )
 
-    Mempool.hard_reset(node.mempool)
-
-    zero_tx = Mempool.tx(node.mempool, {:kv, zero_counter(key)})
-    assert Mempool.pending_txs(node.mempool) == [zero_tx]
-    Mempool.soft_reset(node.mempool)
-
-    :ok =
-      Router.call(
-        node.router,
-        {:unsubscribe_topic, node.executor_topic, :local}
-      )
-  end
-
-  test "Transactions broadcast", %{node: node} do
     :ok =
       Router.call(
         node.router,
@@ -145,10 +199,17 @@ defmodule AnomaTest.Node.Mempool do
 
     Mempool.hard_reset(node.mempool)
 
-    zero_tx = Mempool.tx(node.mempool, {:kv, zero_counter(777)})
+    Mempool.tx(node.mempool, {:kv, zero_counter(key)})
 
-    assert_receive {:"$gen_cast", {_, _, {:submitted, ^zero_tx}}}
+    assert_receive({:"$gen_cast", {_, _, {:submitted, zero_tx}}}, 5000)
+    assert Router.Engine.get_state(node.mempool).transactions == [zero_tx]
     Mempool.soft_reset(node.mempool)
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.executor_topic, :local}
+      )
 
     :ok =
       Router.call(

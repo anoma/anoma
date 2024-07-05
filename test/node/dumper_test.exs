@@ -59,11 +59,19 @@ defmodule AnomaTest.Node.Dumper do
         {:subscribe_topic, node.logger_topic, :local}
       )
 
+    :ok =
+      Router.call(
+        node.router,
+        {:subscribe_topic, node.mempool_topic, :local}
+      )
+
     assert File.exists?(path) == false
 
     assert :mnesia.subscribe({:table, table, :simple}) == {:ok, my_node}
 
-    assert Mempool.execute(mempool) == {:ok, 0}
+    Mempool.execute(mempool)
+
+    assert_receive {:"$gen_cast", {_, _, {:executed, {:ok, 0}}}}
 
     assert_receive(
       {:mnesia_table_event, {:write, {^table, _, _, 0, _, _}, {:tid, _, _}}},
@@ -96,5 +104,11 @@ defmodule AnomaTest.Node.Dumper do
              :ok
 
     assert (node.dumper |> Engine.get_state()).count == 1
+
+    :ok =
+      Router.call(
+        node.router,
+        {:unsubscribe_topic, node.mempool_topic, :local}
+      )
   end
 end
