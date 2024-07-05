@@ -41,6 +41,37 @@ defmodule Anoma.Utility do
   defp label_from_value(_), do: "term"
 
   @doc """
+  I am the function definition macro for debugging.
+
+  I mainly should be used on functions which satisfy:
+
+  1) Needing to be private i.e. not expose API to other Engines.
+  2) Important for core functionality and hence requiring documentation.
+
+  Given the two are satisfied, use me to define a function which becomes
+  public once in debug mode and otherwise remains private.
+
+  I am to be used alongside the `docp/1` macro to allow for good
+  documentation practices.
+  """
+
+  defmacro defbug(name, do: body) do
+    if Mix.env() == :debug do
+      quote do
+        def unquote(name) do
+          unquote(body)
+        end
+      end
+    else
+      quote do
+        defp unquote(name) do
+          unquote(body)
+        end
+      end
+    end
+  end
+
+  @doc """
   I am a macro which allows to provide documentation to possibly private
   functions.
 
