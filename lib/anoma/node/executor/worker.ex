@@ -1,11 +1,25 @@
 defmodule Anoma.Node.Executor.Worker do
   @moduledoc """
-  I am a Nock worker, supporting scry.
+  I am the Worker Engine.
+
+  My instance gets launched by the Executor and is connected to a unique
+  transaction.
+
+  I am responsible for the main work done to run a succesful transaction
+  lifecycle. This includes processing of transactions, calling for their
+  ordering via the Ordering Engine, creation and revision of commitment
+  trees, nullifier key-checking, as well as the storage of relevant data
+  for transaction completion before block-execution.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `rm_nullifier_check/2`
   """
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Ordering
-  alias Anoma.Node.Logger
-  alias Anoma.Node.Router
+
+  alias Anoma.Node.{Storage, Ordering, Logger, Router}
+  alias __MODULE__
 
   use Router.Engine, restart: :transient
   use TypedStruct
@@ -13,23 +27,59 @@ defmodule Anoma.Node.Executor.Worker do
   import Nock
 
   typedstruct do
-    field(:order, Noun.t())
+    @typedoc """
+    I am the type of a Worker Engine instance.
+
+    I contain all the info for appropriate transaction processing.
+
+    ### Fields
+
+    - `:id` - The ID of the transaction fed in.
+    - `:tx` - The transaction code.
+    - `:env` - The environment for the transaction to be evaluated in. E.g.
+               contains the Ordering engine address. See `Nock.t()`
+    - `:completion_topc` - The address of the topic connected to the
+                           relevant Executor Engine for broadcasting.
+    """
+
+    field(:id, non_neg_integer())
     field(:tx, {:kv | :rm, Noun.t()})
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
   end
 
-  def init({order, tx, env, completion_topic}) do
+  @doc """
+  I am the Worker initialization function.
+
+  I send myself a `:run` message which launches my core functionality and
+  return the appropriate state.
+
+  ### Pattern-Matching Variations
+
+  - `init({id, tx, env, completion_topic})` - I recieve a tuple with all
+                                              the specified info to launch
+                                              a Worker instance.
+  """
+
+  @spec init(
+          {non_neg_integer(), {:kv | :rm, Noun.t()}, Nock.t(),
+           Router.Addr.t()}
+        ) :: {:ok, Worker.t()}
+  def init({id, tx, env, completion_topic}) do
     send(self(), :run)
 
     {:ok,
      %__MODULE__{
-       order: order,
+       id: id,
        tx: tx,
        env: env,
        completion_topic: completion_topic
      }}
   end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
 
   def handle_info(:run, s) do
     result = run(s)
@@ -42,16 +92,20 @@ defmodule Anoma.Node.Executor.Worker do
     {:stop, :normal, s}
   end
 
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
   @spec run(t()) :: :ok | :error
-  def run(s = %__MODULE__{order: order, tx: {:kv, proto_tx}, env: env}) do
+  defp run(s = %__MODULE__{id: id, tx: {:kv, proto_tx}, env: env}) do
     logger = env.logger
 
-    log_info({:dispatch, order, logger})
+    log_info({:dispatch, id, logger})
     storage = Router.Engine.get_state(env.ordering).storage
 
     with {:ok, stage_2_tx} <- nock(proto_tx, [9, 2, 0 | 1], env),
          {:ok, ordered_tx} <-
-           nock(stage_2_tx, [10, [6, 1 | order], 0 | 1], env),
+           nock(stage_2_tx, [10, [6, 1 | id], 0 | 1], env),
          {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
       true_order = wait_for_ready(s)
 
@@ -70,13 +124,13 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  def run(s = %__MODULE__{order: order, tx: {:rm, gate}, env: env}) do
+  defp run(s = %__MODULE__{id: id, tx: {:rm, gate}, env: env}) do
     logger = env.logger
 
-    log_info({:dispatch, order, logger})
+    log_info({:dispatch, id, logger})
     storage = Router.Engine.get_state(env.ordering).storage
 
-    with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
+    with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
          vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
          true_order = wait_for_ready(s),
@@ -133,6 +187,15 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
+  ############################################################
+  #                     Conceptual Helpers                   #
+  ############################################################
+
+  @doc """
+  I perform the nullifier check for a resource machine transaction.
+
+  Given a storage and a list of nullifiers I check their placing in storage.
+  """
   @spec rm_nullifier_check(Router.addr(), list(binary())) :: bool()
   def rm_nullifier_check(storage, nullifiers) do
     for nullifier <- nullifiers, reduce: true do
@@ -143,28 +206,28 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   @spec wait_for_ready(t()) :: any()
-  def wait_for_ready(%__MODULE__{env: env, order: order}) do
+  defp wait_for_ready(%__MODULE__{env: env, id: id}) do
     logger = env.logger
 
     log_info({:ensure_read, logger})
 
     Ordering.caller_blocking_read_id(
       env.ordering,
-      [order | env.snapshot_path]
+      [id | env.snapshot_path]
     )
 
     log_info({:waiting_write_ready, logger})
 
     receive do
-      {:write_ready, order} ->
+      {:write_ready, id} ->
         log_info({:write_ready, logger})
-        order
+        id
     end
   end
 
   @spec snapshot(Router.addr(), Nock.t()) ::
           :ok | nil
-  def snapshot(storage, env) do
+  defp snapshot(storage, env) do
     snapshot = hd(env.snapshot_path)
     log_info({:snap, {storage, snapshot}, env.logger})
     Storage.put_snapshot(storage, snapshot)
@@ -174,9 +237,9 @@ defmodule Anoma.Node.Executor.Worker do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:dispatch, order, logger}) do
+  defp log_info({:dispatch, id, logger}) do
     Logger.add(logger, :info, "Worker dispatched.
-    Order id: #{inspect(order)}")
+    Order id: #{inspect(id)}")
   end
 
   defp log_info({:writing, order, logger}) do
