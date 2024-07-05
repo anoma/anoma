@@ -18,6 +18,7 @@ defmodule Anoma.Resource.Transaction do
     field(:commitments, list(binary()), default: [])
     field(:nullifiers, list(binary()), default: [])
     field(:proofs, list(ProofRecord.t()), default: [])
+    field(:compliance_proofs, list({binary(), binary()}), default: [])
     field(:delta, Delta.t(), default: %{})
     field(:extra, list(binary()), default: [])
     field(:preference, term(), default: nil)
@@ -33,6 +34,9 @@ defmodule Anoma.Resource.Transaction do
       for proof <- transaction.proofs do
         ProofRecord.to_noun(proof)
       end,
+      for {a, b} <- transaction.compliance_proofs do
+        [a | b]
+      end,
       Delta.to_noun(transaction.delta),
       transaction.extra
       | [[1 | 0], 0 | 0]
@@ -45,6 +49,7 @@ defmodule Anoma.Resource.Transaction do
         commitments,
         nullifiers,
         proofs,
+        compliance_proofs,
         delta,
         extra | _preference
       ]) do
@@ -55,6 +60,10 @@ defmodule Anoma.Resource.Transaction do
       proofs:
         for proof <- proofs do
           ProofRecord.from_noun(proof)
+        end,
+      compliance_proofs:
+        for [a | b] <- compliance_proofs do
+          {a, b}
         end,
       delta: Delta.from_noun(delta),
       extra: extra,
@@ -74,6 +83,7 @@ defmodule Anoma.Resource.Transaction do
         commitments: tx1.commitments ++ tx2.commitments,
         nullifiers: tx1.nullifiers ++ tx2.nullifiers,
         proofs: tx1.proofs ++ tx2.proofs,
+        compliance_proofs: tx1.compliance_proofs ++ tx2.compliance_proofs,
         delta: Delta.add(tx1.delta, tx2.delta),
         extra: tx1.extra ++ tx2.extra
         # preference
@@ -142,6 +152,35 @@ defmodule Anoma.Resource.Transaction do
     Logger.debug("all logics valid: #{inspect(all_logics_valid)}")
 
     resource_set_valid && delta_valid && all_logics_valid
+  end
+
+  @spec verify_cairo(t()) :: boolean()
+  def verify_cairo(transaction) do
+    # check compliance proofs
+    all_compliance_valid =
+      for {proof, public_inputs} <- transaction.compliance_proofs,
+          reduce: true do
+        acc ->
+          result = Cairo.verify(proof, public_inputs)
+          Logger.debug("compliance result: #{inspect(result)}")
+          acc && result
+      end
+
+    # TODO: check resource logic proofs
+    # all_logics_valid =
+    #   for {proof, public_inputs} <- transaction.proofs, reduce: true do
+    #     acc ->
+    #       result = Cairo.verify(proof, public_inputs)
+    #       Logger.debug("resource logic proof result: #{inspect(result)}")
+    #       acc && result
+    #   end
+
+    # TODO: check the resource consistency between compliance and resource logic
+
+    # TODO: check delta/binding signature
+
+    # all_compliance_valid && all_logics_valid
+    all_compliance_valid
   end
 
   # todo: not efficient

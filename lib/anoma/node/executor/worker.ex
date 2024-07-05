@@ -18,6 +18,7 @@ defmodule Anoma.Node.Executor.Worker do
   - `rm_nullifier_check/2`
   """
 
+  alias Anoma.Resource.Transaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
 
@@ -43,7 +44,7 @@ defmodule Anoma.Node.Executor.Worker do
     """
 
     field(:id, non_neg_integer())
-    field(:tx, {:kv | :rm, Noun.t()})
+    field(:tx, {:kv | :rm | :cairo, Noun.t()})
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
   end
@@ -136,40 +137,7 @@ defmodule Anoma.Node.Executor.Worker do
          true_order = wait_for_ready(s),
          true <- Anoma.Resource.Transaction.verify(vm_resource_tx),
          true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
-      log_info({:writing, true_order, logger})
-      # this is not quite correct, but storage has to be revisited as a whole
-      # for it to be made correct.
-      # in particular, the get/put api must be deleted, since it cannot be correct,
-      # but an append api should also be added.
-      # the latter requires the merkle tree to be complete
-      cm_tree =
-        CommitmentTree.new(
-          Storage.cm_tree_spec(),
-          Anoma.Node.Router.Engine.get_state(storage).rm_commitments
-        )
-
-      new_tree =
-        for commitment <- vm_resource_tx.commitments, reduce: cm_tree do
-          tree ->
-            cm_key = ["rm", "commitments", commitment]
-            Storage.put(storage, cm_key, true)
-            # yeah, this is not using the api right
-            CommitmentTree.add(tree, [commitment])
-            log_info({:put, cm_key, logger})
-            tree
-        end
-
-      Storage.put(storage, ["rm", "commitment_root"], new_tree.root)
-
-      for nullifier <- vm_resource_tx.nullifiers do
-        nf_key = ["rm", "nullifiers", nullifier]
-        Storage.put(storage, nf_key, true)
-        log_info({:put, nf_key, logger})
-      end
-
-      snapshot(storage, env)
-      log_info({:success_run, logger})
-      :ok
+      persist(env, true_order, vm_resource_tx)
     else
       # The failure had to be on the true match above, which is after
       # the wait for ready
@@ -185,6 +153,70 @@ defmodule Anoma.Node.Executor.Worker do
         snapshot(storage, env)
         :error
     end
+  end
+
+  defp run(s = %__MODULE__{id: id, tx: {:cairo, gate}, env: env}) do
+    logger = env.logger
+
+    log_info({:dispatch, id, logger})
+    storage = Router.Engine.get_state(env.ordering).storage
+
+    with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
+         {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
+         vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
+         true_order = wait_for_ready(s),
+         true <- Anoma.Resource.Transaction.verify_cairo(vm_resource_tx),
+         # TODO: add root existence check. The roots must be traceable in historical records.
+         true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
+      persist(env, true_order, vm_resource_tx)
+    else
+      e ->
+        log_info({:fail, e, logger})
+        wait_for_ready(s)
+        snapshot(storage, env)
+        :error
+    end
+  end
+
+  @spec persist(Nock.t(), Noun.t(), Transaction.t()) :: any()
+  defp persist(env, true_order, vm_resource_tx) do
+    logger = env.logger
+    storage = Router.Engine.get_state(env.ordering).storage
+
+    log_info({:writing, true_order, logger})
+    # this is not quite correct, but storage has to be revisited as a whole
+    # for it to be made correct.
+    # in particular, the get/put api must be deleted, since it cannot be correct,
+    # but an append api should also be added.
+    # the latter requires the merkle tree to be complete
+    cm_tree =
+      CommitmentTree.new(
+        Storage.cm_tree_spec(),
+        Anoma.Node.Router.Engine.get_state(storage).rm_commitments
+      )
+
+    new_tree =
+      for commitment <- vm_resource_tx.commitments, reduce: cm_tree do
+        tree ->
+          cm_key = ["rm", "commitments", commitment]
+          Storage.put(storage, cm_key, true)
+          # yeah, this is not using the api right
+          CommitmentTree.add(tree, [commitment])
+          log_info({:put, cm_key, logger})
+          tree
+      end
+
+    Storage.put(storage, ["rm", "commitment_root"], new_tree.root)
+
+    for nullifier <- vm_resource_tx.nullifiers do
+      nf_key = ["rm", "nullifiers", nullifier]
+      Storage.put(storage, nf_key, true)
+      log_info({:put, nf_key, logger})
+    end
+
+    snapshot(storage, env)
+    log_info({:success_run, logger})
+    :ok
   end
 
   ############################################################
