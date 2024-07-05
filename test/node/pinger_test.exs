@@ -65,11 +65,13 @@ defmodule AnomaTest.Node.Pinger do
 
     assert_receive {:"$gen_cast", {_, _, {:submitted, _}}}
 
+    TestHelper.Worker.wait_for_worker(worker_zero)
+
     worker_one = Mempool.tx(node.mempool, {:kv, increment}).addr
     worker_two = Mempool.tx(node.mempool, {:kv, increment}).addr
 
     Enum.each(
-      [worker_zero, worker_one, worker_two],
+      [worker_one, worker_two],
       &TestHelper.Worker.wait_for_worker/1
     )
 
