@@ -56,7 +56,7 @@ defmodule AnomaTest.Node.Dumper do
     :ok =
       Router.call(
         node.router,
-        {:subscribe_topic, node.logger_topic.id, :local}
+        {:subscribe_topic, node.logger_topic, :local}
       )
 
     assert File.exists?(path) == false

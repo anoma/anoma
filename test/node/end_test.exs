@@ -67,7 +67,7 @@ defmodule AnomaTest.Node.End do
     :ok =
       Router.call(
         router,
-        {:subscribe_topic, node.executor_topic.id, :local}
+        {:subscribe_topic, node.executor_topic, :local}
       )
 
     assert {:ok, 1} = Mempool.execute(mempool)
@@ -116,7 +116,7 @@ defmodule AnomaTest.Node.End do
     :ok =
       Router.call(
         node.router,
-        {:unsubscribe_topic, node.executor_topic.id, :local}
+        {:unsubscribe_topic, node.executor_topic, :local}
       )
 
     :ok =

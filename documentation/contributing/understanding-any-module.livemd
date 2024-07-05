@@ -312,7 +312,7 @@ zero = zero_counter(key)
 :ok =
   Router.call(
     node.router,
-    {:subscribe_topic, node.executor_topic.id, :local}
+    {:subscribe_topic, node.executor_topic, :local}
   )
 
 Mempool.hard_reset(node.mempool)

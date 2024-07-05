@@ -19,13 +19,13 @@ defmodule Anoma.Node.Identity.Commitment do
   #                      Public RPC API                      #
   ############################################################
 
-  @spec commit(GenServer.server(), term()) ::
+  @spec commit(Process.dest(), term()) ::
           {:ok, binary()} | {:error, String.t()}
   def commit(server, data) do
     GenServer.call(server, {:commit, data, :detached})
   end
 
-  @spec commit_combined(GenServer.server(), term()) ::
+  @spec commit_combined(Process.dest(), term()) ::
           {:ok, binary()} | {:error, String.t()}
   def commit_combined(server, data) do
     GenServer.call(server, {:commit, data, :combined})

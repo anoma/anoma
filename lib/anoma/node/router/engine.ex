@@ -6,6 +6,7 @@ defmodule Anoma.Node.Router.Engine do
 
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router
+  alias Anoma.Node.Router.Addr
 
   defmacro __using__(opts) do
     quote do
@@ -56,9 +57,10 @@ defmodule Anoma.Node.Router.Engine do
              :hibernate | :infinity | non_neg_integer() | {:continue, any()}}
           | {:stop, any()}
   def init({router, mod, id, arg, server}) do
-    GenServer.cast(router.router, {:init_local_engine, id, server})
+    GenServer.cast(Addr.server(router), {:init_local_engine, id, server})
     Process.put(:engine_id, Id.external_id(id))
     Process.put(:engine_server, server)
+    Process.put(:engine_router, router)
 
     Process.flag(:trap_exit, true)
 
@@ -175,8 +177,8 @@ defmodule Anoma.Node.Router.Engine do
   @spec terminate(reason, t()) :: {:stop, reason, t()} when reason: term()
   def terminate(reason, state = %__MODULE__{}) do
     GenServer.cast(
-      state.router_addr.router,
-      {:cleanup_local_engine, Router.self_addr(state.router_addr)}
+      Addr.server(state.router_addr),
+      {:cleanup_local_engine, Router.self_addr()}
     )
 
     {:stop, reason, state}

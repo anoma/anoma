@@ -216,7 +216,7 @@ defmodule Anoma.Node.Transport do
      case Router.start_engine(
             s.router,
             trans_server_mod(transport_type(trans)),
-            {s.router, Router.self_addr(s.router), trans, s.connection_pool},
+            {s.router, Router.self_addr(), trans, s.connection_pool},
             supervisor: s.connection_pool
           ) do
        {:ok, server} -> %{s | servers: Map.put(s.servers, trans, server)}
@@ -239,7 +239,7 @@ defmodule Anoma.Node.Transport do
       end
 
     # and, of course, a node's id is also the id of its router, so learn that
-    handle_cast({:learn_engine, node, node}, Router.self_addr(s.router), s)
+    handle_cast({:learn_engine, node, node}, Router.self_addr(), s)
   end
 
   # if an engine claims to be associated with a node, believe it (_not_ the other way around); and of course we believe local advertisements
@@ -256,7 +256,7 @@ defmodule Anoma.Node.Transport do
     {messages, pending_outgoing_engine_messages} =
       Map.pop(s.pending_outgoing_engine_messages, engine, [])
 
-    Enum.each(messages, &send(Router.self_addr(s.router), engine, &1))
+    Enum.each(messages, &send(Router.self_addr(), engine, &1))
 
     {:noreply,
      %{s | pending_outgoing_engine_messages: pending_outgoing_engine_messages}}
@@ -294,7 +294,7 @@ defmodule Anoma.Node.Transport do
         drop_connection(s, from, "msgpack encoding error #{inspect(err)}")
 
       {msg, rest} ->
-        Router.cast(Router.self_addr(s.router), {:receive_datum, from, msg})
+        Router.cast(Router.self_addr(), {:receive_datum, from, msg})
         handle_recv_chunk(s, from, rest)
     end
   end
@@ -557,8 +557,7 @@ defmodule Anoma.Node.Transport do
     case Router.start_engine(
            s.router,
            trans_connection_mod(transport_type(trans)),
-           {:client, s.router, Router.self_addr(s.router), trans,
-            s.connection_pool},
+           {:client, s.router, Router.self_addr(), trans, s.connection_pool},
            supervisor: s.connection_pool
          ) do
       {:ok, addr} -> {addr, transport_type(trans)}
