@@ -11,17 +11,17 @@ defmodule Anoma.Transaction do
 
   typedstruct enforce: true do
     field(:id, Noun.t())
-    field(:pid, pid())
+    field(:addr, Anoma.Node.Router.Addr.t())
     field(:transaction, execution())
   end
 
-  @spec new(Noun.t(), pid(), execution()) :: t()
-  def new(id, pid, transaction) do
-    %Transaction{id: id, pid: pid, transaction: transaction}
+  @spec new(Noun.t(), Anoma.Node.Router.Addr.t(), execution()) :: t()
+  def new(id, addr, transaction) do
+    %Transaction{id: id, addr: addr, transaction: transaction}
   end
 
-  @spec pid(t()) :: pid()
-  def pid(t), do: t.pid
+  @spec addr(t()) :: Anoma.Node.Router.Addr.t()
+  def addr(t), do: t.addr
 
   @spec id(t()) :: Noun.t()
   def id(t), do: t.id

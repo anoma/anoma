@@ -7,10 +7,43 @@ defmodule Anoma.Node.Executor.Worker do
   alias Anoma.Node.Logger
   alias Anoma.Node.Router
 
+  use Router.Engine, restart: :transient
+  use TypedStruct
+
   import Nock
 
-  @spec run(Noun.t(), {:kv | :rm, Noun.t()}, Nock.t()) :: :ok | :error
-  def run(order, {:kv, proto_tx}, env) do
+  typedstruct do
+    field(:order, Noun.t())
+    field(:tx, {:kv | :rm, Noun.t()})
+    field(:env, Nock.t())
+    field(:completion_topic, Router.Addr.t())
+  end
+
+  def init({order, tx, env, completion_topic}) do
+    send(self(), :run)
+
+    {:ok,
+     %__MODULE__{
+       order: order,
+       tx: tx,
+       env: env,
+       completion_topic: completion_topic
+     }}
+  end
+
+  def handle_info(:run, s) do
+    result = run(s)
+
+    Router.cast(
+      s.completion_topic,
+      {:worker_done, Router.self_addr(), result}
+    )
+
+    {:stop, :normal, s}
+  end
+
+  @spec run(t()) :: :ok | :error
+  def run(s = %__MODULE__{order: order, tx: {:kv, proto_tx}, env: env}) do
     logger = env.logger
 
     log_info({:dispatch, order, logger})
@@ -20,7 +53,7 @@ defmodule Anoma.Node.Executor.Worker do
          {:ok, ordered_tx} <-
            nock(stage_2_tx, [10, [6, 1 | order], 0 | 1], env),
          {:ok, [key | value]} <- nock(ordered_tx, [9, 2, 0 | 1], env) do
-      true_order = wait_for_ready(env, order)
+      true_order = wait_for_ready(s)
 
       log_info({:writing, true_order, logger})
       Storage.put(storage, key, value)
@@ -31,13 +64,13 @@ defmodule Anoma.Node.Executor.Worker do
     else
       e ->
         log_info({:fail, e, logger})
-        wait_for_ready(env, order)
+        wait_for_ready(s)
         snapshot(storage, env)
         :error
     end
   end
 
-  def run(order, {:rm, gate}, env) do
+  def run(s = %__MODULE__{order: order, tx: {:rm, gate}, env: env}) do
     logger = env.logger
 
     log_info({:dispatch, order, logger})
@@ -46,7 +79,7 @@ defmodule Anoma.Node.Executor.Worker do
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | order], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
          vm_resource_tx <- Anoma.Resource.Transaction.from_noun(resource_tx),
-         true_order = wait_for_ready(env, order),
+         true_order = wait_for_ready(s),
          true <- Anoma.Resource.Transaction.verify(vm_resource_tx),
          true <- rm_nullifier_check(storage, vm_resource_tx.nullifiers) do
       log_info({:writing, true_order, logger})
@@ -94,7 +127,7 @@ defmodule Anoma.Node.Executor.Worker do
       # This failed before the waiting for read as it's likely :error
       e ->
         log_info({:fail, e, logger})
-        wait_for_ready(env, order)
+        wait_for_ready(s)
         snapshot(storage, env)
         :error
     end
@@ -109,8 +142,8 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec wait_for_ready(Nock.t(), Noun.t()) :: any()
-  def wait_for_ready(env, order) do
+  @spec wait_for_ready(t()) :: any()
+  def wait_for_ready(%__MODULE__{env: env, order: order}) do
     logger = env.logger
 
     log_info({:ensure_read, logger})

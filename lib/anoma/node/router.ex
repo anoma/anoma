@@ -280,22 +280,31 @@ defmodule Anoma.Node.Router do
       nil
     end
 
+    # server, but try to canonicalise to a name if possible
     @spec server(t()) :: Process.dest() | nil
-    def server(%Id.Extern{}) do
-      nil
-    end
+    def server(addr) do
+      case noncanonical_server(addr) do
+        pid when is_pid(pid) ->
+          with {:registered_name, name} <-
+                 :erlang.process_info(pid, :registered_name) do
+            name
+          else
+            _ ->
+              pid
+          end
 
-    def server(%__MODULE__{server: server}) do
-      server
-    end
-
-    def server(x) when is_pid(x) or is_atom(x) do
-      x
+        other ->
+          other
+      end
     end
 
     @spec pid(t()) :: pid() | nil
     def pid(addr) do
-      Process.whereis(server(addr))
+      case noncanonical_server(addr) do
+        pid when is_pid(pid) -> pid
+        nil -> nil
+        name when is_atom(name) -> Process.whereis(name)
+      end
     end
 
     # these always return or else error
@@ -312,6 +321,25 @@ defmodule Anoma.Node.Router do
     @spec pid!(t()) :: Process.dest()
     def pid!(addr) do
       pid(addr) || exit("no pid for #{inspect(addr)}")
+    end
+
+    # returns some server--either a pid or a name, or nil if there is none--but
+    # does not attempt to canonicalise it
+    @spec noncanonical_server(t()) :: Process.dest() | nil
+    def noncanonical_server(%Id.Extern{}) do
+      nil
+    end
+
+    def noncanonical_server(%__MODULE__{server: server}) do
+      server
+    end
+
+    def noncanonical_server(server) when is_atom(server) do
+      server
+    end
+
+    def noncanonical_server(pid) when is_pid(pid) do
+      pid
     end
   end
 
@@ -520,7 +548,7 @@ defmodule Anoma.Node.Router do
   """
   @spec send_raw(Addr.t(), term()) :: :ok
   def send_raw(addr, msg) do
-    send(Addr.pid(addr), msg)
+    send(Addr.noncanonical_server(addr), msg)
     :ok
   end
 
@@ -550,7 +578,7 @@ defmodule Anoma.Node.Router do
   """
   @spec cast(Addr.t(), term()) :: :ok
   def cast(addr, msg) do
-    case Addr.server(addr) do
+    case Addr.noncanonical_server(addr) do
       nil ->
         Logger.info("casting to non-local addr #{inspect(addr)}")
 
@@ -602,7 +630,7 @@ defmodule Anoma.Node.Router do
   """
   @spec call(Addr.t(), term(), :erlang.timeout()) :: term()
   def call(addr, msg, timeout) do
-    case Addr.server(addr) do
+    case Addr.noncanonical_server(addr) do
       nil ->
         call_nonlocal(addr, msg, timeout)
 

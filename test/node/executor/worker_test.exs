@@ -5,6 +5,7 @@ defmodule AnomaTest.Node.Executor.Worker do
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Node.Executor.Worker
+  alias Anoma.Node.Router
   import TestHelper.Nock
 
   setup_all do
@@ -25,10 +26,13 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
 
-    [env: env]
+    [env: env, router: router]
   end
 
-  test "successful worker", %{env: env} do
+  test "successful worker", %{env: env, router: router} do
+    {:ok, topic} = Router.new_topic(router)
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
+
     key = 555
     id_1 = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
@@ -39,33 +43,49 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    spawn_1 = Task.async(Worker, :run, [id_1, {:kv, increment}, env])
-    spawn_2 = Task.async(Worker, :run, [id_2, {:kv, increment}, env])
+    {:ok, spawn_1} =
+      Router.start_engine(
+        router,
+        Worker,
+        {id_1, {:kv, increment}, env, topic}
+      )
+
+    {:ok, spawn_2} =
+      Router.start_engine(
+        router,
+        Worker,
+        {id_2, {:kv, increment}, env, topic}
+      )
 
     # simulate sending in 2 different orders
     ord_1 = Ordering.next_order(env.ordering)
 
-    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1)])
 
     ord_2 = Ordering.next_order(env.ordering)
 
-    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2.pid)])
+    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2)])
 
     # Setup default value for storage
     Storage.put(storage, key, 0)
     # Now set the snapshot up that scry expects
     Storage.put_snapshot(storage, hd(env.snapshot_path))
     # tell the first spawn it can write
-    send(spawn_1.pid, {:write_ready, 1})
-    assert :ok == Task.await(spawn_1)
+    Router.send_raw(spawn_1, {:write_ready, 1})
+    TestHelper.Worker.wait_for_worker(spawn_1, :ok)
     assert {:ok, 1} == Storage.get(storage, key)
 
-    send(spawn_2.pid, {:write_ready, 2})
-    assert :ok == Task.await(spawn_2)
+    Router.send_raw(spawn_2, {:write_ready, 2})
+    TestHelper.Worker.wait_for_worker(spawn_2, :ok)
     assert {:ok, 2} == Storage.get(storage, key)
+
+    :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 
-  test "failed worker", %{env: env} do
+  test "failed worker", %{env: env, router: router} do
+    {:ok, topic} = Router.new_topic(router)
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
+
     key = 555
     id = System.unique_integer([:positive])
 
@@ -75,22 +95,32 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    spawn = Task.async(Worker, :run, [id, {:kv, increment}, env])
-    Ordering.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
+    {:ok, spawn} =
+      Router.start_engine(router, Worker, {id, {:kv, increment}, env, topic})
+
+    Ordering.new_order(env.ordering, [Order.new(1, id, spawn)])
 
     # do not setup storage, just snapshot with our key
     Storage.put_snapshot(storage, hd(env.snapshot_path))
     # check we are alive even though we failed
-    assert Process.alive?(spawn.pid) == true
+    assert Process.alive?(Router.Addr.pid(spawn))
 
-    send(spawn.pid, {:write_ready, 1})
-    assert :error == Task.await(spawn)
+    Router.send_raw(spawn, {:write_ready, 1})
+    TestHelper.Worker.wait_for_worker(spawn, :error)
     # check that we snapshotted
     assert {:atomic, [{_, _, 2}]} =
              Storage.read_order_tx(storage, hd(env.snapshot_path))
+
+    :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 
-  test "failed worker waits for a snapshot before write", %{env: env} do
+  test "failed worker waits for a snapshot before write", %{
+    env: env,
+    router: router
+  } do
+    {:ok, topic} = Router.new_topic(router)
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
+
     id = System.unique_integer([:positive])
 
     storage = Ordering.get_storage(env.ordering)
@@ -99,25 +129,32 @@ defmodule AnomaTest.Node.Executor.Worker do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    spawn = Task.async(Worker, :run, [id, {:kv, bogus}, env])
-    Ordering.new_order(env.ordering, [Order.new(1, id, spawn.pid)])
+    {:ok, spawn} =
+      Router.start_engine(router, Worker, {id, {:kv, bogus}, env, topic})
+
+    Ordering.new_order(env.ordering, [Order.new(1, id, spawn)])
 
     # we say that it can write, however we should still be alive, due
     # to the storage snapshot not being ready for it
-    send(spawn.pid, {:write_ready, 1})
-    assert Process.alive?(spawn.pid)
+    Router.send_raw(spawn, {:write_ready, 1})
+    assert Process.alive?(Router.Addr.pid(spawn))
     # do not setup storage, just snapshot with our key
     Storage.put_snapshot(storage, hd(env.snapshot_path))
     # the storage is there we should be done now
-    assert :error == Task.await(spawn)
+    TestHelper.Worker.wait_for_worker(spawn, :error)
+    :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 
-  test "worker evaluates resource transaction, no double spending", %{
-    env: env
+  test "worker evaluates resource transaction, no duble spending", %{
+    env: env,
+    router: router
   } do
     import Anoma.Resource
     alias Anoma.Resource.ProofRecord
     alias Anoma.Resource.Transaction
+
+    {:ok, topic} = Router.new_topic(router)
+    :ok = Router.call(router, {:subscribe_topic, topic, :local})
 
     id = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
@@ -157,18 +194,30 @@ defmodule AnomaTest.Node.Executor.Worker do
     rm_tx_noun = Transaction.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
-    spawn = Task.async(Worker, :run, [id, {:rm, rm_executor_tx}, env])
-    Ordering.new_order(env.ordering, [Order.new(0, id, spawn.pid)])
+    {:ok, spawn} =
+      Router.start_engine(
+        router,
+        Worker,
+        {id, {:rm, rm_executor_tx}, env, topic}
+      )
 
-    # Please factor into a different test
+    Ordering.new_order(env.ordering, [Order.new(0, id, spawn)])
 
-    spawn_1 = Task.async(Worker, :run, [id_2, {:rm, rm_executor_tx}, env])
-    Ordering.new_order(env.ordering, [Order.new(1, id_2, spawn_1.pid)])
+    {:ok, spawn_1} =
+      Router.start_engine(
+        router,
+        Worker,
+        {id_2, {:rm, rm_executor_tx}, env, topic}
+      )
 
-    send(spawn.pid, {:write_ready, 0})
-    assert :ok == Task.await(spawn)
+    Ordering.new_order(env.ordering, [Order.new(1, id_2, spawn_1)])
 
-    send(spawn_1.pid, {:write_ready, 1})
-    assert :error == Task.await(spawn_1)
+    Router.send_raw(spawn, {:write_ready, 0})
+    TestHelper.Worker.wait_for_worker(spawn, :ok)
+
+    Router.send_raw(spawn_1, {:write_ready, 1})
+    TestHelper.Worker.wait_for_worker(spawn_1, :error)
+
+    :ok = Router.call(router, {:unsubscribe_topic, topic, :local})
   end
 end

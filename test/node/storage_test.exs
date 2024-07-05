@@ -4,6 +4,7 @@ defmodule AnomaTest.Node.Storage do
   alias Anoma.Order
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
+  alias Anoma.Node.Router
   alias Anoma.Node.Router.Engine
 
   doctest(Anoma.Node.Ordering)
@@ -26,11 +27,11 @@ defmodule AnomaTest.Node.Storage do
         table: storage
       })
 
-    [ordering: ordering]
+    [ordering: ordering, router: router]
   end
 
   test "reset works", %{ordering: ordering} do
-    Ordering.new_order(ordering, [Order.new(1, <<3>>, self())])
+    Ordering.new_order(ordering, [Order.new(1, <<3>>, Router.self_addr())])
     Ordering.reset(ordering)
     ordering = Engine.get_state(ordering)
     assert ordering.hash_to_order == %{}
@@ -42,7 +43,10 @@ defmodule AnomaTest.Node.Storage do
 
     Ordering.new_order(
       ordering,
-      [Order.new(1, <<3>>, self()), Order.new(1, <<3>>, self())]
+      [
+        Order.new(1, <<3>>, Router.self_addr()),
+        Order.new(1, <<3>>, Router.self_addr())
+      ]
     )
 
     ordering = Engine.get_state(ordering)
@@ -54,8 +58,8 @@ defmodule AnomaTest.Node.Storage do
     assert 1 == Ordering.next_order(ordering)
 
     Ordering.new_order(ordering, [
-      Order.new(1, <<3>>, self()),
-      Order.new(2, <<3>>, self())
+      Order.new(1, <<3>>, Router.self_addr()),
+      Order.new(2, <<3>>, Router.self_addr())
     ])
 
     assert 3 == Ordering.next_order(ordering)
@@ -63,8 +67,8 @@ defmodule AnomaTest.Node.Storage do
 
   test "receiving read readies", %{ordering: ordering} do
     Ordering.new_order(ordering, [
-      Order.new(3, <<3>>, self()),
-      Order.new(4, <<3>>, self())
+      Order.new(3, <<3>>, Router.self_addr()),
+      Order.new(4, <<3>>, Router.self_addr())
     ])
 
     assert_receive {:read_ready, 3}
@@ -74,7 +78,7 @@ defmodule AnomaTest.Node.Storage do
   test "we properly cache orders", %{ordering: ordering} do
     Ordering.reset(ordering)
     assert Ordering.true_order(ordering, <<3>>) == nil
-    Ordering.new_order(ordering, [Order.new(1, <<3>>, self())])
+    Ordering.new_order(ordering, [Order.new(1, <<3>>, Router.self_addr())])
     assert Ordering.true_order(ordering, <<3>>) == 1
   end
 
@@ -87,7 +91,7 @@ defmodule AnomaTest.Node.Storage do
       Ordering.reset(ordering)
       Storage.ensure_new(storage)
 
-      Ordering.new_order(ordering, [Order.new(1, <<1>>, self())])
+      Ordering.new_order(ordering, [Order.new(1, <<1>>, Router.self_addr())])
       Storage.put(storage, testing_atom, 1)
       Storage.put_snapshot(storage, sstore)
       Storage.put(storage, testing_atom, 2)
@@ -137,7 +141,9 @@ defmodule AnomaTest.Node.Storage do
       assert_receive({:received, 1}, 5000)
     end
 
-    test "properly get snapshot from id", %{ordering: ordering} do
+    test "properly get snapshot from id", %{
+      ordering: ordering
+    } do
       sstore = :babylon_4
       testing_atom = System.unique_integer()
       storage = Ordering.get_storage(ordering)
@@ -146,8 +152,8 @@ defmodule AnomaTest.Node.Storage do
       Storage.ensure_new(storage)
 
       Ordering.new_order(ordering, [
-        Order.new(1, <<1>>, self()),
-        Order.new(2, <<2>>, self())
+        Order.new(1, <<1>>, Router.self_addr()),
+        Order.new(2, <<2>>, Router.self_addr())
       ])
 
       Storage.put(storage, testing_atom, 1)

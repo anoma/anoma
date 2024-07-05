@@ -15,16 +15,16 @@ defmodule Anoma.Order do
   ### Fields
     - `index` - the ordering index to execute at
     - `id` - the identification key path of the requested key
-    - `pid` - the process identifier to message
+    - `addr` - the address of the local engine to message
   """
   typedstruct enforce: true do
     field(:index, non_neg_integer())
     field(:id, any())
-    field(:pid, pid())
+    field(:addr, Anoma.Node.Router.Addr.t())
   end
 
-  def new(index, id, pid) do
-    %Order{index: index, id: id, pid: pid}
+  def new(index, id, addr) do
+    %Order{index: index, id: id, addr: addr}
   end
 
   @spec index(t()) :: non_neg_integer()
@@ -33,6 +33,6 @@ defmodule Anoma.Order do
   @spec id(t()) :: any()
   def id(t), do: t.id
 
-  @spec pid(t()) :: pid()
-  def pid(t), do: t.pid
+  @spec addr(t()) :: Anoma.Node.Router.Addr.t()
+  def addr(t), do: t.addr
 end
