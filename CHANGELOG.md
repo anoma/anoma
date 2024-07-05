@@ -1,3 +1,66 @@
+# v0.17.0
+## Major Features
+
+- [Abstract Addresses to be opaque](https://github.com/anoma/anoma/pull/512)
+  + This makes addresses much nicer to work with and allows better
+    changes in the future
+- [Workers are engines](https://github.com/anoma/anoma/pull/513)
+
+- [Cairo backend](https://github.com/anoma/anoma/pull/496)
+  + This is a preview feature, as it does not currently check resource
+    logics, however it does include a test showing it works with a compliance circuit
+- [Read only backend](https://github.com/anoma/anoma/pull/597)
+  + This is a read only backend. This is not enabled via the CLI yet,
+    but is fully usable.
+
+- Reformatting the codebase to comply with the [style guide](https://anoma.github.io/anoma/style-guide.html)
+  + [Logger module](https://github.com/anoma/anoma/pull/580)
+  + [config module](https://github.com/anoma/anoma/pull/579)
+  + [dumper module](https://github.com/anoma/anoma/pull/578)
+  + [pinger module](https://github.com/anoma/anoma/pull/577)
+  + [mempool module](https://github.com/anoma/anoma/pull/610)
+  + [ordering module](https://github.com/anoma/anoma/pull/615)
+  + [executor module](https://github.com/anoma/anoma/pull/622)
+  + [worker module](https://github.com/anoma/anoma/pull/623)
+
+- Examplifying the codebase
+  + [Examplifying clock](https://github.com/anoma/anoma/pull/598)
+  + [Examplifying serialization](https://github.com/anoma/anoma/pull/587)
+  + [Examplifying blocks](https://github.com/anoma/anoma/pull/582)
+  + [Examplifying commitment trees](https://github.com/anoma/anoma/pull/583)
+  + [Examplifying nouns](https://github.com/anoma/anoma/pull/631)
+  + [Examplifying storage](https://github.com/anoma/anoma/pull/603)
+  + [Examplifying pinger](https://github.com/anoma/anoma/pull/611)
+  + [Examplifying intent](https://github.com/anoma/anoma/pull/605)
+  + [Examplifying the identity machine](https://github.com/anoma/anoma/pull/606)
+  + [Examplifying dumper](https://github.com/anoma/anoma/pull/613)
+
+
+
+
+## Documentation
+
+## Bug Fixes
+
+### Typing Fixes
+- [Fixing the type on getting namespace from storage](https://github.com/anoma/anoma/pull/627)
+- [Fix the typing on the identity manager](https://github.com/anoma/anoma/pull/607)
+  + They were incorrect and also overly constrained the type
+- [We did not cover the full type range of adding namespaces](https://github.com/anoma/anoma/pull/625)
+
+### Minor Bug Fixes
+- [Properly update the counter on the dumper](https://github.com/anoma/anoma/pull/626)
+- [Fix the Pinger Test Waiting](https://github.com/anoma/anoma/pull/630)
+
+## Internal Changes
+- [Pray Macro Improvements](https://github.com/anoma/anoma/pull/601)
+- [Add a symbol utility module](https://github.com/anoma/anoma/pull/588)
+- [Remove the intent module](https://github.com/anoma/anoma/pull/581)
+- [Remove the write at functionality of storage](https://github.com/anoma/anoma/pull/595)
+
+## Debugging/Helpers
+- [Add the ability to get storage from `Anoma.Node`](https://github.com/anoma/anoma/pull/603)
+
 # v0.16.0
 
 ## Major Features
