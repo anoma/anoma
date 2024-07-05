@@ -27,7 +27,7 @@ defmodule Anoma.Identity.Name do
   Adds the given key to the given namespace. The signer who owns the
   namespace must have signed.
   """
-  @spec add(t(), binary(), {list(binary()), binary()}) ::
+  @spec add(t(), binary(), {list(binary()), Id.Extern.t()}) ::
           :ok | :no_namespace | :improper_data | :already_there
   def add(namespace = %__MODULE__{}, sig, d = {name, new_key})
       when is_list(name) do

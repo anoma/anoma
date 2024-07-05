@@ -65,8 +65,46 @@ defmodule Examples.ETransaction do
   end
 
   ####################################################################
+  ##                      Partial Transactions                      ##
+  ####################################################################
+
+  def ax_for_y() do
+    trans = %Transaction{
+      nullifiers: [EResource.ax_nullifier()],
+      commitments: [EResource.ay_commit()],
+      # get proof records
+      proofs: [EProofRecord.ay_proof(), EProofRecord.ax_proof()],
+      # TODO Abstract this out
+      delta: %{EResource.y_kind() => 1, EResource.x_kind() => -1}
+    }
+
+    refute Transaction.verify(trans)
+    trans
+  end
+
+  def by_for_x() do
+    trans = %Transaction{
+      nullifiers: [EResource.by_nullifier()],
+      commitments: [EResource.bx_commit()],
+      # get proof records
+      proofs: [EProofRecord.by_proof(), EProofRecord.bx_proof()],
+      # TODO Abstract this out
+      delta: %{EResource.y_kind() => -1, EResource.x_kind() => 1}
+    }
+
+    refute Transaction.verify(trans)
+    trans
+  end
+
+  ####################################################################
   ##                     Succeeding Transactions                    ##
   ####################################################################
+
+  def full_x_for_y() do
+    trans = Transaction.compose(by_for_x(), ax_for_y())
+    assert Transaction.verify(trans)
+    trans
+  end
 
   @spec balanced_d0_logic() :: Transaction.t()
   def balanced_d0_logic() do

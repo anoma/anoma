@@ -4,13 +4,14 @@ defmodule Examples.ENode.EStorage do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Node.Router
-  alias Examples.ENock
-  alias Examples.ENode
+  alias Anoma.Identity.Backend.Memory
+  alias Anoma.Identity.{Manager, Name, Evidence, SignsFor, Verification}
+  alias Anoma.Crypto.Id
   alias Anoma.Symbol
   alias Anoma.Node
-  alias Anoma.Node.{Storage}
+  alias Anoma.Node.{Storage, Router, Identity.Commitment}
 
+  alias Examples.{ENock, ENode, EIdentity, ECrypto}
   ####################################################################
   ##                Keys for All Modules: Please use me             ##
   ##  Keys can also be found in the Noun section in the ENock file. ##
@@ -26,6 +27,12 @@ defmodule Examples.ENode.EStorage do
   def devil_key(), do: 666
 
   def august_space(), do: ~w"August Water"
+  def august_namespace(), do: :august_manager_space
+
+  @spec august_subnamespace(Router.addr()) :: Name.t()
+  def august_subnamespace(storage) do
+    %Name{keyspace: august_namespace(), storage: storage}
+  end
 
   def isuzumi_key(), do: august_space() ++ ["Izumi"]
   def miki_key(), do: august_space() ++ ["Miki"]
@@ -217,6 +224,125 @@ defmodule Examples.ENode.EStorage do
     assert [izumi] ==
              Enum.sort(Storage.get_keyspace(anode.storage, isuzumi_key()))
 
+    anode
+  end
+
+  ####################################################################
+  ##                    Properly namespaced storage                 ##
+  ##   Differs from `august_node/1`: go through the name manager.   ##
+  ####################################################################
+
+  @spec reserved_august() ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  @spec reserved_august(Symbol.s()) ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  def reserved_august(storage_name \\ "reserved_august") do
+    full = {anode, _mem, eng, pub} = EIdentity.memory_storage(storage_name)
+    sub_space = august_subnamespace(anode.storage)
+
+    august = august_space() |> hd
+
+    assert {:ok, commited} = Commitment.commit(eng.commitment, august)
+
+    name = [Name.name_space(), august]
+
+    assert :ok == Name.reserve_namespace(sub_space, august, pub, commited)
+
+    assert :improper_data ==
+             Name.reserve_namespace(sub_space, "Alice", pub, commited)
+
+    assert :already_there ==
+             Name.reserve_namespace(sub_space, august, pub, commited)
+
+    assert [{name, pub}] == Storage.get_keyspace(anode.storage, name)
+
+    full
+  end
+
+  @doc """
+  I am like `august_node/1`. Except I sign the namespace reserved
+
+  Further besides the main space being owned by memory backed space,
+  we have `ECrypto.londo/0` owning the water. Thankfully we aren't on
+  Narn.
+
+  """
+  @spec august_node_proper() ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  @spec august_node_proper(Symbol.s()) ::
+          {Node.t(), Memory.t(), Manager.instance(), Id.Extern.t()}
+  def august_node_proper(storage_name \\ "august_node_proper") do
+    full = {anode, _mem, eng, pub} = reserved_august(storage_name)
+    subnamespace = august_subnamespace(anode.storage)
+    londo_pub = ECrypto.londo().external
+    londo_space = {august_space(), londo_pub}
+
+    assert {:ok, attestation} = Commitment.commit(eng.commitment, londo_space)
+    assert :ok == Name.add(subnamespace, attestation, londo_space)
+    assert :already_there == Name.add(subnamespace, attestation, londo_space)
+
+    assert :no_namespace ==
+             Name.add(subnamespace, attestation, {["Foo", "Bar"], londo_pub})
+
+    assert MapSet.new([londo_pub, pub]) ==
+             Name.all_identities(subnamespace, august_space() |> hd)
+
+    full
+  end
+
+  @spec londo_speaks_for_alice() :: Node.t()
+  @spec londo_speaks_for_alice(Symbol.s()) :: Node.t()
+  def londo_speaks_for_alice(storage_name \\ "londo_speaks") do
+    anode = empty_storage(storage_name)
+    apid = EIdentity.alice_commits()
+
+    apub = ECrypto.alice().external
+    lpub = ECrypto.londo().external
+    bpub = ECrypto.bertha().external
+
+    assert {:ok, signed_key} = Commitment.commit(apid, lpub)
+
+    assert SignsFor.sign_for(anode.storage, %Evidence{
+             signature_key: apub,
+             signed_data: lpub,
+             signature: signed_key
+           }) == :ok
+
+    assert SignsFor.sign_for(anode.storage, %Evidence{
+             signature_key: apub,
+             signed_data: bpub,
+             signature: signed_key
+           }) == :key_not_verified
+
+    assert SignsFor.known(anode.storage, apub) == MapSet.new([lpub])
+    assert SignsFor.known(anode.storage, lpub) == MapSet.new([])
+    assert SignsFor.signs_for?(anode.storage, apub, lpub)
+    refute SignsFor.signs_for?(anode.storage, apub, bpub)
+    anode
+  end
+
+  @spec bertha_speaks_for_all() :: Node.t()
+  @spec bertha_speaks_for_all(Symbol.s()) :: Node.t()
+  def bertha_speaks_for_all(storage_name \\ "bertha_speaks") do
+    anode = londo_speaks_for_alice(storage_name)
+    apub = ECrypto.alice().external
+    lpub = ECrypto.londo().external
+    bpub = ECrypto.bertha().external
+    lpid = EIdentity.londo_commits()
+    bpid = EIdentity.bertha_commits()
+
+    assert {:ok, signed_key} = Commitment.commit(lpid, bpub)
+
+    assert SignsFor.sign_for(anode.storage, %Evidence{
+             signature_key: lpub,
+             signed_data: bpub,
+             signature: signed_key
+           }) == :ok
+
+    {:ok, signed} = Commitment.commit(bpid, <<3>>)
+    {:ok, signed_blob} = Commitment.commit_combined(bpid, <<3>>)
+    assert Verification.verify_request(signed, <<3>>, apub, anode.storage)
+    assert Verification.verify_combined(signed_blob, apub, anode.storage)
     anode
   end
 

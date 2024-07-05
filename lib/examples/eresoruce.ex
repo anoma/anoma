@@ -64,6 +64,24 @@ defmodule Examples.EResource do
     %Resource{a0_counter_resource() | quantity: 1} |> Resource.unique()
   end
 
+  defmemo ax_resource() do
+    %Resource{a10_d0_resource() | quantity: 1, label: "x"}
+    |> Resource.unique()
+  end
+
+  defmemo ay_resource() do
+    %Resource{ax_resource() | label: "y"} |> Resource.unique()
+  end
+
+  defmemo bx_resource() do
+    %Resource{b10_d0_resource() | quantity: 1, label: "x"}
+    |> Resource.unique()
+  end
+
+  defmemo by_resource() do
+    %Resource{bx_resource() | label: "y"} |> Resource.unique()
+  end
+
   ####################################################################
   ##                          Commitments                           ##
   ####################################################################
@@ -101,6 +119,11 @@ defmodule Examples.EResource do
   def b10_d0_commit(), do: Resource.commitment(b10_d0_resource())
   def a0_counter_commit(), do: Resource.commitment(a0_counter_resource())
   def a1_counter_commit(), do: Resource.commitment(a1_counter_resource())
+
+  def ax_commit(), do: Resource.commitment(ax_resource())
+  def ay_commit(), do: Resource.commitment(ay_resource())
+  def bx_commit(), do: Resource.commitment(bx_resource())
+  def by_commit(), do: Resource.commitment(by_resource())
 
   ####################################################################
   ##                          Nullifiers                            ##
@@ -171,6 +194,18 @@ defmodule Examples.EResource do
     do:
       Resource.nullifier(a1_counter_resource(), ECrypto.alice().internal.sign)
 
+  def ax_nullifier(),
+    do: Resource.nullifier(ax_resource(), ECrypto.alice().internal.sign)
+
+  def ay_nullifier(),
+    do: Resource.nullifier(ay_resource(), ECrypto.alice().internal.sign)
+
+  def bx_nullifier(),
+    do: Resource.nullifier(bx_resource(), ECrypto.bertha().internal.sign)
+
+  def by_nullifier(),
+    do: Resource.nullifier(by_resource(), ECrypto.bertha().internal.sign)
+
   ####################################################################
   ##                             Kinds                              ##
   ####################################################################
@@ -195,4 +230,10 @@ defmodule Examples.EResource do
   end
 
   def counter_kind(), do: Resource.kind(a0_counter_resource())
+
+  @spec x_kind() :: binary()
+  def x_kind(), do: Resource.kind(ax_resource())
+
+  @spec y_kind() :: binary()
+  def y_kind(), do: Resource.kind(ay_resource())
 end

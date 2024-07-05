@@ -22,5 +22,6 @@ defmodule AnomaTest.Resource do
     ETransaction.invalid_logic_check()
     ETransaction.balanced_d0_logic()
     ETransaction.increment_counter_transaction()
+    ETransaction.full_x_for_y()
   end
 end
