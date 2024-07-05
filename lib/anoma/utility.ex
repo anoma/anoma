@@ -39,4 +39,21 @@ defmodule Anoma.Utility do
   defp label_from_value(ref) when is_reference(ref), do: inspect(ref)
   defp label_from_value(tuple) when is_tuple(tuple), do: "tuple"
   defp label_from_value(_), do: "term"
+
+  @doc """
+  I am a macro which allows to provide documentation to possibly private
+  functions.
+
+  If the environment of the application is `:debug` I actually put the docs
+  into the compiled module. If not, I produce `nil`, which does not
+  interact with overall module environment.
+  """
+
+  defmacro docp(string) do
+    if Mix.env() == :debug do
+      quote do
+        @doc unquote(string)
+      end
+    end
+  end
 end
