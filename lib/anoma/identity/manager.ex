@@ -25,7 +25,10 @@ defmodule Anoma.Identity.Manager do
 
   @type resp(t) :: {:ok, t} | {:error, String.t()}
 
-  @type instance() :: %{commitment: pid(), decryption: pid()}
+  @type instance() :: %{
+          optional(:commitment) => pid(),
+          optional(:decryption) => pid()
+        }
 
   @spec generate(Backend.t(), Parameters.t(), Capabilities.t()) ::
           resp({instance(), Id.Extern.t()})
@@ -40,7 +43,7 @@ defmodule Anoma.Identity.Manager do
     )
 
     with {:ok, links} <- start_links(pair, cap) do
-      {links, pair.external}
+      {:ok, {links, pair.external}}
     end
   end
 
