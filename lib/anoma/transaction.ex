@@ -15,7 +15,7 @@ defmodule Anoma.Transaction do
     field(:transaction, execution())
   end
 
-  @spec new(Noun.t(), Anoma.Node.Router.Addr.t(), execution()) :: t()
+  @spec new(non_neg_integer(), Anoma.Node.Router.Addr.t(), execution()) :: t()
   def new(id, addr, transaction) do
     %Transaction{id: id, addr: addr, transaction: transaction}
   end

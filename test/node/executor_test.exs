@@ -4,10 +4,9 @@ defmodule AnomaTest.Node.Executor do
   alias Anoma.Order
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
-  alias Anoma.Node.Executor
   alias Anoma.Node.Router
   alias Router
-  import TestHelper.Nock
+  import TestHelper.{Nock, Executor}
 
   setup_all do
     storage = %Storage{
@@ -57,8 +56,8 @@ defmodule AnomaTest.Node.Executor do
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
 
-    spawn_1 = Executor.new_transaction(executor, id_1, {:kv, increment})
-    spawn_2 = Executor.new_transaction(executor, id_2, {:kv, increment})
+    spawn_1 = wait_for_spawn(executor, id_1, {:kv, increment}, nil, 5000)
+    spawn_2 = wait_for_spawn(executor, id_2, {:kv, increment}, nil, 5000)
 
     # simulate sending in 2 different orders
     ord_1 = Router.Engine.get_state(env.ordering).next_order
