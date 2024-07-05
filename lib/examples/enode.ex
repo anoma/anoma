@@ -20,6 +20,7 @@ defmodule Examples.ENode do
 
   alias Anoma.Node.Solver
   alias Anoma.Node.IntentPool
+  alias Anoma.Configuration
   alias Anoma.Node
   alias Anoma.Node.{Router, Ordering, Storage}
 
@@ -27,20 +28,31 @@ defmodule Examples.ENode do
   We give an example of the full node!
   """
   @spec fresh_full_node(Storage.t(), atom()) :: Node.t()
-  def fresh_full_node(storage, name) do
+  @spec fresh_full_node(
+          Storage.t(),
+          atom(),
+          Configuration.configuration_map() | nil
+        ) :: Node.t()
+  def fresh_full_node(storage, name, configuration \\ nil) do
+    config =
+      if configuration do
+        [configuration: configuration]
+      else
+        []
+      end
+
+    options = [
+      snapshot_path: base_snapshot_path(),
+      storage_data: storage,
+      block_storage: name,
+      ping_time: :no_timer
+    ]
+
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
         testing: true,
         use_rocks: false,
-        settings:
-          {:new_storage,
-           [
-             snapshot_path: base_snapshot_path(),
-             storage_data: storage,
-             block_storage: name,
-             ping_time: :no_timer
-           ]
-           |> Node.start_min()}
+        settings: {:new_storage, (options ++ config) |> Node.start_min()}
       )
 
     Node.state(nodes)
