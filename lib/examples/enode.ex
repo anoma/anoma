@@ -56,7 +56,7 @@ defmodule Examples.ENode do
     node = %Node{} = simple_storage(storage)
 
     assert {:ok, ordering} =
-             Router.start_engine(node.router, Ordering, table: node.storage)
+             Router.start_engine(node.router, Ordering, storage: node.storage)
 
     %Node{node | ordering: ordering}
   end

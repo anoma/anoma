@@ -24,7 +24,7 @@ defmodule AnomaTest.Node.Storage do
 
     {:ok, ordering} =
       Anoma.Node.Router.start_engine(router, Ordering, %{
-        table: storage
+        storage: storage
       })
 
     [ordering: ordering, router: router]
@@ -55,14 +55,14 @@ defmodule AnomaTest.Node.Storage do
 
   test "getting proper offsets", %{ordering: ordering} do
     Ordering.reset(ordering)
-    assert 1 == Ordering.next_order(ordering)
+    assert 1 == Engine.get_state(ordering).next_order
 
     Ordering.new_order(ordering, [
       Order.new(1, <<3>>, Router.self_addr()),
       Order.new(2, <<3>>, Router.self_addr())
     ])
 
-    assert 3 == Ordering.next_order(ordering)
+    assert 3 == Engine.get_state(ordering).next_order
   end
 
   test "receiving read readies", %{ordering: ordering} do
@@ -86,7 +86,7 @@ defmodule AnomaTest.Node.Storage do
     test "properly get same snapshot", %{ordering: ordering} do
       sstore = :babylon_2
       testing_atom = System.unique_integer()
-      storage = Ordering.get_storage(ordering)
+      storage = Engine.get_state(ordering).storage
 
       Ordering.reset(ordering)
       Storage.ensure_new(storage)
@@ -113,7 +113,7 @@ defmodule AnomaTest.Node.Storage do
     test "properly waits until it's turn", %{ordering: ordering} do
       sstore = :babylon_3
       testing_atom = System.unique_integer()
-      storage = Ordering.get_storage(ordering)
+      storage = Engine.get_state(ordering).storage
 
       Ordering.reset(ordering)
       Storage.ensure_new(storage)
@@ -146,7 +146,7 @@ defmodule AnomaTest.Node.Storage do
     } do
       sstore = :babylon_4
       testing_atom = System.unique_integer()
-      storage = Ordering.get_storage(ordering)
+      storage = Engine.get_state(ordering).storage
 
       Ordering.reset(ordering)
       Storage.ensure_new(storage)

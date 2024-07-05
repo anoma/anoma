@@ -30,7 +30,7 @@ defmodule AnomaTest.Node.Logger do
 
     {:ok, ordering} =
       Router.start_engine(router, Anoma.Node.Ordering,
-        table: storage,
+        storage: storage,
         logger: logger
       )
 
@@ -49,7 +49,7 @@ defmodule AnomaTest.Node.Logger do
         {:subscribe_topic, topic, :local}
       )
 
-    Anoma.Node.Ordering.next_order(ordering)
+    Anoma.Node.Ordering.reset(ordering)
 
     id = ordering.id
 
@@ -64,6 +64,6 @@ defmodule AnomaTest.Node.Logger do
 
     assert log == logger.id
     assert ord == id
-    assert atom == :info
+    assert atom == :debug
   end
 end

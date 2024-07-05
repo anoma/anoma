@@ -1,13 +1,10 @@
 defmodule AnomaTest.Node.End do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Ordering
-  alias Anoma.Node.{Router, Mempool, Solver, IntentPool}
+  alias Anoma.Node.{Router, Mempool, Solver, IntentPool, Storage}
   alias Anoma.Crypto.Sign
   import alias Anoma.Resource
-  alias Anoma.Resource.Transaction
-  alias Anoma.Resource.ProofRecord
+  alias Anoma.Resource.{Transaction, ProofRecord}
   import TestHelper.Nock
 
   setup_all do
@@ -56,7 +53,7 @@ defmodule AnomaTest.Node.End do
       )
 
     key = 555
-    storage = Ordering.get_storage(node.ordering)
+    storage = node.storage
     zero = zero_counter(key)
     increment = increment_counter_val(key)
 

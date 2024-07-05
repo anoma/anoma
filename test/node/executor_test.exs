@@ -21,7 +21,7 @@ defmodule AnomaTest.Node.Executor do
       Anoma.Node.Router.start_engine(router, Storage, storage)
 
     {:ok, ordering} =
-      Router.start_engine(router, Ordering, table: storage)
+      Router.start_engine(router, Ordering, storage: storage)
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
     env = %Nock{snapshot_path: snapshot_path, ordering: ordering}
@@ -51,7 +51,7 @@ defmodule AnomaTest.Node.Executor do
     id_1 = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
 
-    storage = Ordering.get_storage(env.ordering)
+    storage = Router.Engine.get_state(env.ordering).storage
     increment = increment_counter_val(key)
 
     Storage.ensure_new(storage)
@@ -61,11 +61,11 @@ defmodule AnomaTest.Node.Executor do
     spawn_2 = Executor.new_transaction(executor, id_2, {:kv, increment})
 
     # simulate sending in 2 different orders
-    ord_1 = Ordering.next_order(env.ordering)
+    ord_1 = Router.Engine.get_state(env.ordering).next_order
 
     Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1)])
 
-    ord_2 = Ordering.next_order(env.ordering)
+    ord_2 = Router.Engine.get_state(env.ordering).next_order
 
     Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2)])
 

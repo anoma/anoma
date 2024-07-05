@@ -1,10 +1,7 @@
 defmodule AnomaTest.Node.Mempool do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Ordering
-  alias Anoma.Node.Mempool
-  alias Anoma.Node.Router
+  alias Anoma.Node.{Storage, Mempool, Router}
   import TestHelper.Nock
 
   setup_all do
@@ -39,7 +36,7 @@ defmodule AnomaTest.Node.Mempool do
 
   test "successful process", %{node: node} do
     key = 555
-    storage = Ordering.get_storage(node.ordering)
+    storage = node.storage
     increment = increment_counter_val(key)
     zero = zero_counter(key)
 
@@ -101,7 +98,7 @@ defmodule AnomaTest.Node.Mempool do
 
   test "Processes still snapshots", %{node: node} do
     key = 555
-    storage = Ordering.get_storage(node.ordering)
+    storage = node.storage
     increment = increment_counter_val(key)
 
     :ok =
@@ -149,7 +146,7 @@ defmodule AnomaTest.Node.Mempool do
 
   test "Processes gets killed", %{node: node} do
     key = 333
-    storage = Ordering.get_storage(node.ordering)
+    storage = node.storage
 
     :ok =
       Router.call(

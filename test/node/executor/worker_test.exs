@@ -2,10 +2,9 @@ defmodule AnomaTest.Node.Executor.Worker do
   use TestHelper.TestMacro, async: true
 
   alias Anoma.Order
-  alias Anoma.Node.Storage
-  alias Anoma.Node.Ordering
+  alias Anoma.Node.{Storage, Ordering, Router}
   alias Anoma.Node.Executor.Worker
-  alias Anoma.Node.Router
+  alias Anoma.Node.Router.Engine
   import TestHelper.Nock
 
   setup_all do
@@ -20,7 +19,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       Anoma.Node.Router.start_engine(router, Storage, storage)
 
     {:ok, ordering} =
-      Anoma.Node.Router.start_engine(router, Ordering, table: storage)
+      Anoma.Node.Router.start_engine(router, Ordering, storage: storage)
 
     snapshot_path = [:my_special_nock_snaphsot | 0]
 
@@ -37,7 +36,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     id_1 = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
 
-    storage = Ordering.get_storage(env.ordering)
+    storage = Engine.get_state(env.ordering).storage
     increment = increment_counter_val(key)
 
     Storage.ensure_new(storage)
@@ -58,11 +57,11 @@ defmodule AnomaTest.Node.Executor.Worker do
       )
 
     # simulate sending in 2 different orders
-    ord_1 = Ordering.next_order(env.ordering)
+    ord_1 = Engine.get_state(env.ordering).next_order
 
     Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1)])
 
-    ord_2 = Ordering.next_order(env.ordering)
+    ord_2 = Engine.get_state(env.ordering).next_order
 
     Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2)])
 
@@ -89,7 +88,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     key = 555
     id = System.unique_integer([:positive])
 
-    storage = Ordering.get_storage(env.ordering)
+    storage = Engine.get_state(env.ordering).storage
     increment = increment_counter_val(key)
 
     Storage.ensure_new(storage)
@@ -123,7 +122,7 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     id = System.unique_integer([:positive])
 
-    storage = Ordering.get_storage(env.ordering)
+    storage = Engine.get_state(env.ordering).storage
     bogus = [0 | 1]
 
     Storage.ensure_new(storage)
@@ -159,7 +158,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     id = System.unique_integer([:positive])
     id_2 = System.unique_integer([:positive])
 
-    storage = Ordering.get_storage(env.ordering)
+    storage = Engine.get_state(env.ordering).storage
 
     Storage.ensure_new(storage)
     Ordering.reset(env.ordering)
