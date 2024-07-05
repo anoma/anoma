@@ -4,13 +4,12 @@ defmodule Anoma.Node.IntentPool do
   """
 
   alias __MODULE__
-  alias Anoma.Intent
   alias Anoma.Node.{Router, Logger}
 
   use TypedStruct
   use Router.Engine
 
-  @type intents :: MapSet.t(Intent.t())
+  @type intents :: MapSet.t(any())
   typedstruct do
     field(:intents_topic, Router.addr())
     field(:intents, intents, default: MapSet.new())
@@ -30,12 +29,12 @@ defmodule Anoma.Node.IntentPool do
     Router.call(pool, :intents)
   end
 
-  @spec new_intent(Router.addr(), Intent.t()) :: :ok
+  @spec new_intent(Router.addr(), any()) :: :ok
   def new_intent(pool, intent) do
     Router.cast(pool, {:new_intent, intent})
   end
 
-  @spec remove_intent(Router.addr(), Intent.t()) :: :ok
+  @spec remove_intent(Router.addr(), any()) :: :ok
   def remove_intent(pool, intent) do
     Router.cast(pool, {:remove_intent, intent})
   end
