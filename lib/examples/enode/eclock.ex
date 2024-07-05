@@ -4,14 +4,14 @@ defmodule Examples.ENode.EClock do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Node.Router.Engine
   alias Anoma.Node
-  alias Anoma.Node.Clock
   alias Examples.ENode
 
   @spec start_clock() :: Node.t()
   def start_clock() do
     anode = ENode.zero_clock()
-    assert 0 == Clock.get_epoch(anode.clock)
+    assert 0 == Engine.get_state(anode.clock).start
     anode
   end
 end
