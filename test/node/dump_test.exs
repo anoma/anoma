@@ -4,7 +4,7 @@ defmodule AnomaTest.Node.Dump do
   alias Anoma.Node.{Mempool, Router}
   alias Anoma.Mnesia
   alias Anoma.System.Directories
-  import TestHelper.Nock
+  import TestHelper.{Nock, Mempool}
 
   setup_all do
     storage = %Anoma.Node.Storage{
@@ -47,9 +47,7 @@ defmodule AnomaTest.Node.Dump do
 
     Mempool.hard_reset(node.mempool)
 
-    Mempool.tx(node.mempool, {:kv, zero})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, _}}}, 5000)
+    wait_for_tx(node.mempool, {:kv, zero}, 5000)
 
     Mempool.execute(node.mempool)
 

@@ -5,7 +5,7 @@ defmodule AnomaTest.Node.End do
   alias Anoma.Crypto.Sign
   import alias Anoma.Resource
   alias Anoma.Resource.{Transaction, ProofRecord}
-  import TestHelper.Nock
+  import TestHelper.{Nock, Mempool}
 
   setup_all do
     storage = %Storage{
@@ -71,15 +71,13 @@ defmodule AnomaTest.Node.End do
 
     Mempool.hard_reset(mempool)
 
-    Mempool.tx(mempool, {:kv, zero})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
+    worker_zero = wait_for_tx(mempool, {:kv, zero}, 5000).addr
 
     Mempool.execute(mempool)
 
     assert_receive {:"$gen_cast", {_, _, {:executed, {:ok, 1}}}}
 
-    TestHelper.Worker.wait_for_worker(tx_zero.addr)
+    TestHelper.Worker.wait_for_worker(worker_zero)
 
     keya = Sign.new_keypair()
     keyb = Sign.new_keypair()
@@ -109,11 +107,7 @@ defmodule AnomaTest.Node.End do
 
     Solver.mempool_send(s, mempool)
 
-    Mempool.tx(node.mempool, {:kv, increment})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
-
-    worker_one = tx_one.addr
+    worker_one = wait_for_tx(mempool, {:kv, increment}, 5000).addr
 
     Mempool.execute(mempool)
 

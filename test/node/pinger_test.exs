@@ -2,7 +2,7 @@ defmodule AnomaTest.Node.Pinger do
   use TestHelper.TestMacro, async: true
 
   alias Anoma.Node.{Mempool, Router, Pinger, Storage}
-  import TestHelper.Nock
+  import TestHelper.{Nock, Mempool}
 
   setup_all do
     storage = %Storage{
@@ -59,25 +59,13 @@ defmodule AnomaTest.Node.Pinger do
 
     :ok = Router.call(node.router, {:subscribe_topic, mem_t, :local})
 
-    Mempool.tx(node.mempool, {:kv, zero})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_zero}}}, 5000)
-
-    worker_zero = tx_zero.addr
+    worker_zero = wait_for_tx(node.mempool, {:kv, zero}, 5000).addr
 
     TestHelper.Worker.wait_for_worker(worker_zero)
 
-    Mempool.tx(node.mempool, {:kv, increment})
+    worker_one = wait_for_tx(node.mempool, {:kv, increment}, 5000).addr
 
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_one}}}, 5000)
-
-    worker_one = tx_one.addr
-
-    Mempool.tx(node.mempool, {:kv, increment})
-
-    assert_receive({:"$gen_cast", {_, _, {:submitted, tx_two}}}, 5000)
-
-    worker_two = tx_two.addr
+    worker_two = wait_for_tx(node.mempool, {:kv, increment}, 5000).addr
 
     Enum.each(
       [worker_one, worker_two],
