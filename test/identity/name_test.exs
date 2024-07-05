@@ -36,7 +36,10 @@ defmodule AnomaTest.Identity.Name do
 
   test "Properly reserve the ns", %{ns: namespace, mem: mem, st: storage} do
     Storage.ensure_new(storage)
-    {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
+
+    {:ok, {%{commitment: com}, pub}} =
+      Manager.generate(mem, :ed25519, :commit)
+
     {:ok, commited} = Commitment.commit(com, "Alice")
     name = [Name.name_space(), "Alice"]
     assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok
@@ -46,7 +49,9 @@ defmodule AnomaTest.Identity.Name do
   test "Improper placement", %{ns: namespace, mem: mem, st: storage} do
     Storage.ensure_new(storage)
     # First pass all good
-    {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
+    {:ok, {%{commitment: com}, pub}} =
+      Manager.generate(mem, :ed25519, :commit)
+
     {:ok, commited} = Commitment.commit(com, "Alice")
     assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok
     # no longer good
@@ -59,7 +64,10 @@ defmodule AnomaTest.Identity.Name do
 
   test "Adding to a namespace", %{ns: namespace, mem: mem, st: storage} do
     Storage.ensure_new(storage)
-    {%{commitment: com}, pub} = Manager.generate(mem, :ed25519, :commit)
+
+    {:ok, {%{commitment: com}, pub}} =
+      Manager.generate(mem, :ed25519, :commit)
+
     {:ok, commited} = Commitment.commit(com, "Alice")
 
     assert Name.reserve_namespace(namespace, "Alice", pub, commited) == :ok

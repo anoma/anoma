@@ -128,7 +128,7 @@ defmodule Anoma.Node.Storage do
 
   @spec get_keyspace(Router.Addr.t(), list(any())) ::
           :absent
-          | list({qualified_key(), qualified_value()})
+          | list({list(), qualified_value()})
           | {:atomic, any()}
   def get_keyspace(storage = %Router.Addr{}, key_space) do
     Router.call(storage, {:get_keyspace, key_space})
@@ -402,7 +402,7 @@ defmodule Anoma.Node.Storage do
 
   @spec do_get_keyspace(Storage.t(), list(any())) ::
           :absent
-          | list({qualified_key(), qualified_value()})
+          | list({list(), qualified_value()})
           | {:atomic, any()}
   defp do_get_keyspace(storage = %__MODULE__{}, key_space) do
     with {:atomic, orders} <- read_keyspace_order(storage, key_space) do
@@ -516,7 +516,7 @@ defmodule Anoma.Node.Storage do
 
   @spec checked_read_at_absent_details(t(), Noun.t(), non_neg_integer()) ::
           {:absent, Noun.t(), non_neg_integer()}
-          | {qualified_key(), qualified_value()}
+          | {any(), qualified_value()}
   defp checked_read_at_absent_details(storage = %__MODULE__{}, key, order) do
     with {:ok, value} <- checked_read_at(storage, key, order) do
       {key, value}
