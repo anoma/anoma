@@ -315,7 +315,10 @@ defmodule Anoma.Node.Mempool do
     log_info({:write, length(ordered_transactions), state.logger})
 
     for ord <- ordered_transactions do
-      Router.send_raw(Order.addr(ord), {:write_ready, Order.index(ord)})
+      Router.send_raw(
+        Transaction.addr(ord),
+        {:write_ready, Transaction.index(ord)}
+      )
     end
 
     :ok
@@ -390,20 +393,15 @@ defmodule Anoma.Node.Mempool do
   end
 
   @doc """
-  I place a transaction candidate in an order structure.
+  I order a transaction structure by giving it an index.
 
-  Given a transaction candidate and an order, I create a new Order
-  structure with a given order, while the ID and Worker address is taken
-  from the transaction itself.
+  Given a transaction candidate and an order, I put the index specified by
+  the input as its `:index` field value.
   """
 
-  @spec order_format(Transaction.t(), non_neg_integer()) :: Order.t()
+  @spec order_format(Transaction.t(), non_neg_integer()) :: Transaction.t()
   def order_format(transaction, order) do
-    Order.new(
-      order,
-      Transaction.id(transaction),
-      Transaction.addr(transaction)
-    )
+    %Transaction{transaction | index: order}
   end
 
   ############################################################

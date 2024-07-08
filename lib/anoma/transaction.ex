@@ -9,16 +9,20 @@ defmodule Anoma.Transaction do
 
   @type execution() :: {:kv | :rm, Noun.t()}
 
-  typedstruct enforce: true do
-    field(:id, Noun.t())
-    field(:addr, Anoma.Node.Router.Addr.t())
-    field(:transaction, execution())
+  typedstruct do
+    field(:index, non_neg_integer, enforce: false)
+    field(:id, Noun.t(), enforce: true)
+    field(:addr, Anoma.Node.Router.Addr.t(), enforce: true)
+    field(:transaction, execution(), enforce: false)
   end
 
   @spec new(non_neg_integer(), Anoma.Node.Router.Addr.t(), execution()) :: t()
   def new(id, addr, transaction) do
     %Transaction{id: id, addr: addr, transaction: transaction}
   end
+
+  @spec index(t()) :: non_neg_integer
+  def index(t), do: t.index
 
   @spec addr(t()) :: Anoma.Node.Router.Addr.t()
   def addr(t), do: t.addr
