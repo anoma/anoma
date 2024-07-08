@@ -30,7 +30,6 @@ defmodule Anoma.Resource.Delta do
         [k, 1 | -v]
       end
     end
-    |> list_erlang_to_nock()
   end
 
   @spec from_noun(Noun.t()) :: t()
