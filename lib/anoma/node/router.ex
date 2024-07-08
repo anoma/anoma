@@ -535,6 +535,39 @@ defmodule Anoma.Node.Router do
     DynamicSupervisor.start_child(call(router, :supervisor), supervisor)
   end
 
+  @doc """
+  I Forcibly stops an engine.
+
+  TODO, please try to be more friendly to the engine, try to send a
+  `:shutdown` and waiting.
+
+  ### Example
+
+  > node = ENode.fresh_full_node(...)
+  > worker_zero = wait_for_tx(node.mempool, {:kv, zero}, 5000).addr
+  > Router.stop_engine(node.router, worker_zero)
+  """
+  @spec stop_engine(Addr.t(), Addr.t(), [engine_options()]) ::
+          :ok | {:error, :not_found}
+
+  def stop_engine(router, engine, options \\ []) do
+    keys =
+      Keyword.validate!(options,
+        id: Id.new_keypair(),
+        supervisor: call(router, :supervisor),
+        supervisor_mod: DynamicSupervisor
+      )
+
+    supervisor = keys[:supervisor]
+    pid = Addr.pid(engine)
+
+    if pid do
+      keys[:supervisor_mod].terminate_child(supervisor, pid)
+    else
+      {:error, :not_found}
+    end
+  end
+
   def stop(_router) do
   end
 
