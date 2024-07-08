@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Pinger — Anoma v0.16.0</title>
+    <title>Anoma.Node.Pinger — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,20 +125,20 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Pinger</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I provide periodic block execution based on submitted mempool address
+<p>I am the Pinger Engine.</p><p>I provide periodic block execution based on submitted mempool address
 and time by calling the execution API in the mempool engine.</p><h3 id="module-public-apis" class="section-heading">
   <a href="#module-public-apis" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Public APIs</span>
 </h3>
-<p>My public functionality include:</p><ul><li><a href="#set_timer/2"><code class="inline">set_timer/2</code></a></li><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#pinger/1"><code class="inline">pinger/1</code></a></li></ul>
+<p>I have the following public functionality:</p><ul><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#pinger/1"><code class="inline">pinger/1</code></a></li><li><a href="#set_timer/2"><code class="inline">set_timer/2</code></a></li></ul>
   </section>
 
 
@@ -159,6 +159,8 @@ and time by calling the execution API in the mempool engine.</p><h3 id="module-p
         <a href="#t:t/0" translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Pinger Engine instance.</p></div>
 
     </div>
 
@@ -192,7 +194,7 @@ and time by calling the execution API in the mempool engine.</p><h3 id="module-p
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialiation function for the Pinger Engine.</p></div>
 
     </div>
 
@@ -202,9 +204,7 @@ and time by calling the execution API in the mempool engine.</p><h3 id="module-p
 
       </div>
 
-        <div class="summary-synopsis"><p>I receive an argument which is either an integer or :no_timer.
-If it is an integer, send to self an :execute message after
-specified ammount of time. Otherwise, simply reply :ok</p></div>
+        <div class="summary-synopsis"><p>I am the pinger function.</p></div>
 
     </div>
 
@@ -214,9 +214,7 @@ specified ammount of time. Otherwise, simply reply :ok</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Given a server S and time T I change the timer set for the struct
-connected to S setting it to T. Set T to :no_timer to stop the
-pinger.</p></div>
+        <div class="summary-synopsis"><p>I set the timer field for a Pinger Engine instance.</p></div>
 
     </div>
 
@@ -226,8 +224,7 @@ pinger.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Given a pinger address, I start up the pinger by calling the <a href="#pinger/1"><code class="inline">pinger/1</code></a>
-function feeding it the time associated to the address.</p></div>
+        <div class="summary-synopsis"><p>I start the Pinger Engine's execution-calling functionaluty.</p></div>
 
     </div>
 
@@ -268,7 +265,9 @@ function feeding it the time associated to the address.</p></div>
 
       </div>
 
-
+<p>I am the type of the Pinger Engine instance.</p><p>I store minimal info required to ask the mempool to execute, namely the
+mempool address and the time specified by the user.</p><ul><li><code class="inline">:mempool</code> - The Mempool Engine address which is called to execute.</li><li><code class="inline">:time</code> - The time that should be elapsed between the calls to<pre><code class="makeup elixir" translate="no"><span class="w">      </span><span class="n">execute</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">atom</span><span class="w"> </span><span class="n">saying</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="n">timer</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">set</span><span class="o">.</span><span class="w">
+      </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="ss">:no_timer</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.</li></ul>
   </section>
 </section>
 
@@ -333,6 +332,8 @@ function feeding it the time associated to the address.</p></div>
 
       <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
           <pre translate="no"><span class="attribute">@spec</span> init(
   mempool: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
   time: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
@@ -341,7 +342,14 @@ function feeding it the time associated to the address.</p></div>
 
       </div>
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the initialiation function for the Pinger Engine.</p><h3 id="init/1-patern-matching-variations" class="section-heading">
+  <a href="#init/1-patern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Patern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">init(%Pinger{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist with the <code class="inline">:mempool</code>, <code class="inline">:time</code> and<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="err">`</span><span class="ss">:logger</span><span class="err">`</span><span class="w"> </span><span class="n">keywords</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="nc">Pinger</span><span class="w"> </span><span class="nc">Engine</span><span class="w">
+           </span><span class="n">instance</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="n">state</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="pinger/1">
@@ -364,7 +372,7 @@ function feeding it the time associated to the address.</p></div>
 
       </div>
 
-<p>I receive an argument which is either an integer or :no_timer.
+<p>I am the pinger function.</p><p>I receive an argument which is either an integer or :no_timer.
 If it is an integer, send to self an :execute message after
 specified ammount of time. Otherwise, simply reply :ok</p>
   </section>
@@ -389,7 +397,7 @@ specified ammount of time. Otherwise, simply reply :ok</p>
 
       </div>
 
-<p>Given a server S and time T I change the timer set for the struct
+<p>I set the timer field for a Pinger Engine instance.</p><p>Given a server S and time T I change the timer set for the struct
 connected to S setting it to T. Set T to :no_timer to stop the
 pinger.</p>
   </section>
@@ -414,7 +422,7 @@ pinger.</p>
 
       </div>
 
-<p>Given a pinger address, I start up the pinger by calling the <a href="#pinger/1"><code class="inline">pinger/1</code></a>
+<p>I start the Pinger Engine's execution-calling functionaluty.</p><p>Given a pinger address, I start up the pinger by calling the <a href="#pinger/1"><code class="inline">pinger/1</code></a>
 function feeding it the time associated to the address.</p><p>Note that if the timer specified has value :no_timer, the pinger will
 not practically start.</p>
   </section>
@@ -427,11 +435,11 @@ not practically start.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/pinger.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/pinger.ex">current file</a>)
 
             </span>
 

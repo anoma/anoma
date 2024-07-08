@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Examples.ENock — Anoma v0.16.0</title>
+    <title>Examples.ENock — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Examples.ENock</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
@@ -146,6 +146,14 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#anode/0" translate="no">anode()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#anode/1" translate="no">anode(t1)</a>
 
       </div>
 
@@ -193,15 +201,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#devil_key/0" translate="no">devil_key()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#env/0" translate="no">env()</a>
+        <a href="#env/1" translate="no">env(storage \\ raw_storage())</a>
 
       </div>
 
@@ -217,7 +217,39 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#incorrectly_ending/0" translate="no">incorrectly_ending()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#incorrectly_nested_noun/0" translate="no">incorrectly_nested_noun()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#incorrectly_starting/0" translate="no">incorrectly_starting()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#increment_counter_val/1" translate="no">increment_counter_val(val)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#indexed_noun/0" translate="no">indexed_noun()</a>
 
       </div>
 
@@ -281,22 +313,6 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#lucky_increment/0" translate="no">lucky_increment()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#lucky_key/0" translate="no">lucky_key()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#mat/0" translate="no">mat()</a>
 
       </div>
@@ -337,6 +353,14 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#miki_increment/0" translate="no">miki_increment()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#mix/0" translate="no">mix()</a>
 
       </div>
@@ -345,7 +369,15 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#random_id/0" translate="no">random_id()</a>
+        <a href="#nesting_noun/0" translate="no">nesting_noun()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#one_two/0" translate="no">one_two()</a>
 
       </div>
 
@@ -354,6 +386,14 @@ GUIDES
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#raw_storage/0" translate="no">raw_storage()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#replacing_terms/0" translate="no">replacing_terms()</a>
 
       </div>
 
@@ -465,6 +505,14 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#zero_counter/1" translate="no">zero_counter(val)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#zero_delta_logic/0" translate="no">zero_delta_logic()</a>
 
       </div>
@@ -501,6 +549,29 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> anode() :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="anode/1">
+
+  <div class="detail-header">
+    <a href="#anode/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">anode(t1)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> anode(<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
 
       </div>
 
@@ -616,31 +687,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="devil_key/0">
+<section class="detail" id="env/1">
+
+    <span id="env/0"></span>
 
   <div class="detail-header">
-    <a href="#devil_key/0" class="detail-link" title="Link to this function">
+    <a href="#env/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">devil_key()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="env/0">
-
-  <div class="detail-header">
-    <a href="#env/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">env()</h1>
+    <h1 class="signature" translate="no">env(storage \\ raw_storage())</h1>
 
 
   </div>
@@ -649,7 +705,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> env() :: <a href="Nock.html#t:t/0">Nock.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> env(<a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()) :: <a href="Nock.html#t:t/0">Nock.t</a>()</pre>
 
       </div>
 
@@ -679,6 +735,69 @@ GUIDES
 
   </section>
 </section>
+<section class="detail" id="incorrectly_ending/0">
+
+  <div class="detail-header">
+    <a href="#incorrectly_ending/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incorrectly_ending()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> incorrectly_ending() :: :error</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="incorrectly_nested_noun/0">
+
+  <div class="detail-header">
+    <a href="#incorrectly_nested_noun/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incorrectly_nested_noun()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="incorrectly_starting/0">
+
+  <div class="detail-header">
+    <a href="#incorrectly_starting/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">incorrectly_starting()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> incorrectly_starting() :: :error</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="increment_counter_val/1">
 
   <div class="detail-header">
@@ -696,6 +815,29 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> increment_counter_val(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="indexed_noun/0">
+
+  <div class="detail-header">
+    <a href="#indexed_noun/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">indexed_noun()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> indexed_noun() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
 
       </div>
 
@@ -851,40 +993,6 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="lucky_increment/0">
-
-  <div class="detail-header">
-    <a href="#lucky_increment/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">lucky_increment()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="lucky_key/0">
-
-  <div class="detail-header">
-    <a href="#lucky_key/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">lucky_key()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="mat/0">
 
   <div class="detail-header">
@@ -1000,6 +1108,23 @@ GUIDES
 
   </section>
 </section>
+<section class="detail" id="miki_increment/0">
+
+  <div class="detail-header">
+    <a href="#miki_increment/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">miki_increment()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="mix/0">
 
   <div class="detail-header">
@@ -1023,19 +1148,48 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="random_id/0">
+<section class="detail" id="nesting_noun/0">
 
   <div class="detail-header">
-    <a href="#random_id/0" class="detail-link" title="Link to this function">
+    <a href="#nesting_noun/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">random_id()</h1>
+    <h1 class="signature" translate="no">nesting_noun()</h1>
 
 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> nesting_noun() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="one_two/0">
+
+  <div class="detail-header">
+    <a href="#one_two/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">one_two()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> one_two() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -1057,6 +1211,29 @@ GUIDES
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> raw_storage() :: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="replacing_terms/0">
+
+  <div class="detail-header">
+    <a href="#replacing_terms/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">replacing_terms()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> replacing_terms() :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
 
       </div>
 
@@ -1217,7 +1394,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> successful_inc() :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> successful_inc() :: {<a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>(), <a href="Nock.html#t:t/0">Nock.t</a>()}</pre>
 
       </div>
 
@@ -1362,6 +1539,29 @@ GUIDES
 
   </section>
 </section>
+<section class="detail" id="zero_counter/1">
+
+  <div class="detail-header">
+    <a href="#zero_counter/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">zero_counter(val)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> zero_counter(<a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="zero_delta_logic/0">
 
   <div class="detail-header">
@@ -1393,11 +1593,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/examples/enock.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/examples/enock.ex">current file</a>)
 
             </span>
 

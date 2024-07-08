@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="project" content="Anoma v0.17.0">
+
+
+    <title>Examples.ENode.EStorage — Anoma v0.17.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
+
+      <script src="./.doc-versions.js"></script>
+
+    <script async src="dist/html-CILPWI2Q.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Anoma
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.17.0
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+GUIDES
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Anoma</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
+
+<h1>
+
+  <span translate="no">Examples.ENode.EStorage</span> 
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+
+</h1>
+
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#anode/0" translate="no">anode()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#anode/1" translate="no">anode(t1)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#august_namespace/0" translate="no">august_namespace()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#august_node/1" translate="no">august_node(storage_name \\ &quot;august_node&quot;)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the august storage, see my Keys for details on my storage setup</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#august_node_proper/1" translate="no">august_node_proper(storage_name \\ &quot;august_node_proper&quot;)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am like <a href="#august_node/1"><code class="inline">august_node/1</code></a>. Except I sign the namespace reserved</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#august_space/0" translate="no">august_space()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#august_subnamespace/1" translate="no">august_subnamespace(storage)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#bertha_speaks_for_all/1" translate="no">bertha_speaks_for_all(storage_name \\ &quot;bertha_speaks&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#blocking_for_put/1" translate="no">blocking_for_put(storage_name \\ &quot;blocking_for_put&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#deleting_nothing_works_fine/1" translate="no">deleting_nothing_works_fine(stg_name \\ &quot;deleting_nothing_works_fine&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#deleting_the_put/1" translate="no">deleting_the_put(storage_name \\ &quot;deleting_the_put&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#devil_key/0" translate="no">devil_key()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#devil_value/0" translate="no">devil_value()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#empty_storage/1" translate="no">empty_storage(storage_name \\ &quot;empty_storage&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#isuzumi_key/0" translate="no">isuzumi_key()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#londo_speaks_for_alice/1" translate="no">londo_speaks_for_alice(storage_name \\ &quot;londo_speaks&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lucky_key/0" translate="no">lucky_key()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#lucky_value/0" translate="no">lucky_value()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#miki_key/0" translate="no">miki_key()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_storage/1" translate="no">put_storage(storage_name \\ &quot;put_storage&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#random_id/0" translate="no">random_id()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#raw_storage/1" translate="no">raw_storage(arg \\ &quot;none&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#reserved_august/1" translate="no">reserved_august(storage_name \\ &quot;reserved_august&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#snapshot_again/1" translate="no">snapshot_again(storage_name \\ &quot;snapshot_again&quot;)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#snapshot_point/0" translate="no">snapshot_point()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#snapshot_then_put/1" translate="no">snapshot_then_put(storage_name \\ &quot;snapshot_then_put&quot;)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I have <code class="inline">Examples.Enock.one_two/2</code> in storage twice and a snapshot!</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#sub/1" translate="no">sub(anode)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#unsub/1" translate="no">unsub(anode)</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="anode/0">
+
+  <div class="detail-header">
+    <a href="#anode/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">anode()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> anode() :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="anode/1">
+
+  <div class="detail-header">
+    <a href="#anode/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">anode(t1)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> anode(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="august_namespace/0">
+
+  <div class="detail-header">
+    <a href="#august_namespace/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">august_namespace()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="august_node/1">
+
+    <span id="august_node/0"></span>
+
+  <div class="detail-header">
+    <a href="#august_node/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">august_node(storage_name \\ &quot;august_node&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> august_node(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+<p>I am the august storage, see my Keys for details on my storage setup</p><h3 id="august_node/1-keys" class="section-heading">
+  <a href="#august_node/1-keys" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Keys:</span>
+</h3>
+<ul><li><a href="#miki_key/0"><code class="inline">miki_key/0</code></a> - <a href="#lucky_value/0"><code class="inline">lucky_value/0</code></a></li><li><a href="#isuzumi_key/0"><code class="inline">isuzumi_key/0</code></a> - <a href="#devil_value/0"><code class="inline">devil_value/0</code></a></li><li><a href="Examples.ENode.html#base_snapshot_path/0"><code class="inline">Examples.ENode.base_snapshot_path/0</code></a> - snapshot of both</li></ul>
+  </section>
+</section>
+<section class="detail" id="august_node_proper/1">
+
+    <span id="august_node_proper/0"></span>
+
+  <div class="detail-header">
+    <a href="#august_node_proper/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">august_node_proper(storage_name \\ &quot;august_node_proper&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> august_node_proper(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) ::
+  {<a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>(), <a href="Anoma.Identity.Backend.Memory.html#t:t/0">Anoma.Identity.Backend.Memory.t</a>(),
+   <a href="Anoma.Identity.Manager.html#t:instance/0">Anoma.Identity.Manager.instance</a>(), <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()}</pre>
+
+      </div>
+
+<p>I am like <a href="#august_node/1"><code class="inline">august_node/1</code></a>. Except I sign the namespace reserved</p><p>Further besides the main space being owned by memory backed space,
+we have <code class="inline">ECrypto.londo/0</code> owning the water. Thankfully we aren't on
+Narn.</p>
+  </section>
+</section>
+<section class="detail" id="august_space/0">
+
+  <div class="detail-header">
+    <a href="#august_space/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">august_space()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="august_subnamespace/1">
+
+  <div class="detail-header">
+    <a href="#august_subnamespace/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">august_subnamespace(storage)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> august_subnamespace(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>()) :: <a href="Anoma.Identity.Name.html#t:t/0">Anoma.Identity.Name.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="bertha_speaks_for_all/1">
+
+    <span id="bertha_speaks_for_all/0"></span>
+
+  <div class="detail-header">
+    <a href="#bertha_speaks_for_all/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">bertha_speaks_for_all(storage_name \\ &quot;bertha_speaks&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bertha_speaks_for_all(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="blocking_for_put/1">
+
+    <span id="blocking_for_put/0"></span>
+
+  <div class="detail-header">
+    <a href="#blocking_for_put/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">blocking_for_put(storage_name \\ &quot;blocking_for_put&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> blocking_for_put(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="deleting_nothing_works_fine/1">
+
+    <span id="deleting_nothing_works_fine/0"></span>
+
+  <div class="detail-header">
+    <a href="#deleting_nothing_works_fine/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">deleting_nothing_works_fine(stg_name \\ &quot;deleting_nothing_works_fine&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> deleting_nothing_works_fine(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="deleting_the_put/1">
+
+    <span id="deleting_the_put/0"></span>
+
+  <div class="detail-header">
+    <a href="#deleting_the_put/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">deleting_the_put(storage_name \\ &quot;deleting_the_put&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> deleting_the_put(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="devil_key/0">
+
+  <div class="detail-header">
+    <a href="#devil_key/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">devil_key()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="devil_value/0">
+
+  <div class="detail-header">
+    <a href="#devil_value/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">devil_value()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="empty_storage/1">
+
+    <span id="empty_storage/0"></span>
+
+  <div class="detail-header">
+    <a href="#empty_storage/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">empty_storage(storage_name \\ &quot;empty_storage&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> empty_storage(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="isuzumi_key/0">
+
+  <div class="detail-header">
+    <a href="#isuzumi_key/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">isuzumi_key()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="londo_speaks_for_alice/1">
+
+    <span id="londo_speaks_for_alice/0"></span>
+
+  <div class="detail-header">
+    <a href="#londo_speaks_for_alice/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">londo_speaks_for_alice(storage_name \\ &quot;londo_speaks&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> londo_speaks_for_alice(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="lucky_key/0">
+
+  <div class="detail-header">
+    <a href="#lucky_key/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lucky_key()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="lucky_value/0">
+
+  <div class="detail-header">
+    <a href="#lucky_value/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">lucky_value()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="miki_key/0">
+
+  <div class="detail-header">
+    <a href="#miki_key/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">miki_key()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="put_storage/1">
+
+    <span id="put_storage/0"></span>
+
+  <div class="detail-header">
+    <a href="#put_storage/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">put_storage(storage_name \\ &quot;put_storage&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> put_storage(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="random_id/0">
+
+  <div class="detail-header">
+    <a href="#random_id/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">random_id()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="raw_storage/1">
+
+    <span id="raw_storage/0"></span>
+
+  <div class="detail-header">
+    <a href="#raw_storage/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raw_storage(arg \\ &quot;none&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raw_storage(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="reserved_august/1">
+
+    <span id="reserved_august/0"></span>
+
+  <div class="detail-header">
+    <a href="#reserved_august/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">reserved_august(storage_name \\ &quot;reserved_august&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> reserved_august(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) ::
+  {<a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>(), <a href="Anoma.Identity.Backend.Memory.html#t:t/0">Anoma.Identity.Backend.Memory.t</a>(),
+   <a href="Anoma.Identity.Manager.html#t:instance/0">Anoma.Identity.Manager.instance</a>(), <a href="Anoma.Crypto.Id.Extern.html#t:t/0">Anoma.Crypto.Id.Extern.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="snapshot_again/1">
+
+    <span id="snapshot_again/0"></span>
+
+  <div class="detail-header">
+    <a href="#snapshot_again/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">snapshot_again(storage_name \\ &quot;snapshot_again&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> snapshot_again(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="snapshot_point/0">
+
+  <div class="detail-header">
+    <a href="#snapshot_point/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">snapshot_point()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="snapshot_then_put/1">
+
+    <span id="snapshot_then_put/0"></span>
+
+  <div class="detail-header">
+    <a href="#snapshot_then_put/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">snapshot_then_put(storage_name \\ &quot;snapshot_then_put&quot;)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> snapshot_then_put(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()</pre>
+
+      </div>
+
+<p>I have <code class="inline">Examples.Enock.one_two/2</code> in storage twice and a snapshot!</p><p>The snapshot only snapshots the first key though, keep that in mind.</p>
+  </section>
+</section>
+<section class="detail" id="sub/1">
+
+  <div class="detail-header">
+    <a href="#sub/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">sub(anode)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> sub(<a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="unsub/1">
+
+  <div class="detail-header">
+    <a href="#unsub/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unsub(anode)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> unsub(<a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/examples/enode/estorage.ex">current file</a>)
+
+            </span>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Anoma.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+mermaid.initialize({
+  startOnLoad: false,
+  theme: document.body.className.includes("dark") ? "dark" : "default"
+});
+let id = 0;
+for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+  const preEl = codeEl.parentElement;
+  const graphDefinition = codeEl.textContent;
+  const graphEl = document.createElement("div");
+  const graphId = "mermaid-graph-" + id++;
+  mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+    graphEl.innerHTML = svg;
+    bindFunctions?.(graphEl);
+    preEl.insertAdjacentElement("afterend", graphEl);
+    preEl.remove();
+  });
+}
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vega@5.20.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5.1.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6.18.2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+for (const codeEl of document.querySelectorAll("pre code.vega-lite")) {
+  try {
+    const preEl = codeEl.parentElement;
+    const spec = JSON.parse(codeEl.textContent);
+    const plotEl = document.createElement("div");
+    preEl.insertAdjacentElement("afterend", plotEl);
+    vegaEmbed(plotEl, spec);
+    preEl.remove();
+  } catch (error) {
+    console.log("Failed to render Vega-Lite plot: " + error)
+  }
+}
+});
+</script>
+
+  </body>
+</html>

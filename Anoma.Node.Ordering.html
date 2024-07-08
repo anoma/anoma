@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Ordering — Anoma v0.16.0</title>
+    <title>Anoma.Node.Ordering — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,18 +125,20 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Ordering</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am a simple mnesia-backed key-value store in an anoma node.</p><p>Currently we do not have a way of propagating what keys users want
-to store, thus we take the following approach to deterministic state
-reading:</p><ol><li><p>We keep a next_order, which represents the next_order a
-transaction will have. From here the scry reads specifically
-[next_order, :key_space | 0] to get a map of the current keys
-saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt; order mapping</p></li></ol>
+<p>I am the Ordering Engine.</p><p>My main functionality is to calculate transaction ordering and keep track
+of said odering relative to the transaction id's.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><h4>Ordering</h4><ul><li><a href="#true_order/2"><code class="inline">true_order/2</code></a></li><li><a href="#new_order/2"><code class="inline">new_order/2</code></a></li></ul><h4>Reset</h4><ul><li><a href="#reset/1"><code class="inline">reset/1</code></a></li><li><a href="#hard_reset/2"><code class="inline">hard_reset/2</code></a></li></ul><h4>Blocking</h4><ul><li><a href="#caller_blocking_read_id/2"><code class="inline">caller_blocking_read_id/2</code></a></li></ul><h4>Other</h4><ul><li><a href="#handle_new_order/2"><code class="inline">handle_new_order/2</code></a></li></ul>
   </section>
 
 
@@ -158,6 +160,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a type representing a key in a key-value map.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -166,6 +170,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a list of ordered transactions.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -173,6 +179,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
         <a href="#t:t/0" translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Ordering Engine.</p></div>
 
     </div>
 
@@ -188,7 +196,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-        <div class="summary-synopsis"><p>Translate from ids to true order</p></div>
+        <div class="summary-synopsis"><p>I call the blocking read functionality on a Worker request.</p></div>
 
     </div>
 
@@ -199,22 +207,6 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
       </div>
 
         <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get/2" translate="no">get(ordering, key)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_storage/1" translate="no">get_storage(ordering)</a>
-
-      </div>
 
     </div>
 
@@ -232,6 +224,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
+        <div class="summary-synopsis"><p>I handle the new ordered transactions comming in to the Ordering Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -239,6 +233,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
         <a href="#hard_reset/2" translate="no">hard_reset(ordering, initial_snapshot)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I hard reset the Ordering Engine.</p></div>
 
     </div>
 
@@ -248,7 +244,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for a Ordering Engine instance.</p></div>
 
     </div>
 
@@ -258,13 +254,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#next_order/1" translate="no">next_order(ordering)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the function dealing with new ordered transactions.</p></div>
 
     </div>
 
@@ -274,6 +264,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the Ordering Engine reset function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -281,6 +273,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
         <a href="#true_order/2" translate="no">true_order(ordering, id)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the true order function.</p></div>
 
     </div>
 
@@ -317,7 +311,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-
+<p>I am a type representing a key in a key-value map.</p>
   </section>
 </section>
 <section class="detail" id="t:ordered_transactions/0">
@@ -340,7 +334,7 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-
+<p>I am a list of ordered transactions.</p>
   </section>
 </section>
 <section class="detail" id="t:t/0">
@@ -363,12 +357,20 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
   hash_to_order: %{required(<a href="#t:key/0">key</a>()) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()},
   logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
   next_order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
-  table: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
+  storage: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil
 }</pre>
 
       </div>
 
-
+<p>I am the type of the Ordering Engine.</p><p>I have basic fields relating to upcoming ordering for the incoming
+transactions as well as mapping of transaction ID's to their orders.</p><h3 id="t:t/0-fileds" class="section-heading">
+  <a href="#t:t/0-fileds" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fileds</span>
+</h3>
+<ul><li><code class="inline">:storage</code> - The address of the storage engine</li><li><code class="inline">:next_order</code> - The integer referencing the order to be given to the<pre><code class="makeup elixir" translate="no"><span class="w">            </span><span class="n">next</span><span class="w"> </span><span class="n">incoming</span><span class="w"> </span><span class="n">transaction</span><span class="o">.</span><span class="w">
+            </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span></code></pre></li><li><code class="inline">:hash_to_order</code> - A map of transaction ID's and their orders.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0547953442-1">%{</span><span class="p" data-group-id="0547953442-1">}</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address.</li></ul>
   </section>
 </section>
 
@@ -404,21 +406,19 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-<p>Translate from ids to true order</p><h3 id="caller_blocking_read_id/2-parameters" class="section-heading">
-  <a href="#caller_blocking_read_id/2-parameters" class="hover-link">
+<p>I call the blocking read functionality on a Worker request.</p><p>I am called by the Worker, who sends me an Ordering Engine address and a
+list with head a transaction ID and a subkey for the storage key.</p><p>I get the orders of the transactions via checking their ID keys in the
+Ordering Engine. I then return the list by interchanging the transaction
+ID with its order and call <code class="inline">Storage.blocking_read/2</code> with the
+appropriate arguments.</p><h3 id="caller_blocking_read_id/2-pattern-matching-variations" class="section-heading">
+  <a href="#caller_blocking_read_id/2-pattern-matching-variations" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Parameters</span>
+  <span class="text">Pattern-Matching Variations</span>
 </h3>
-<ul><li><p><code class="inline">ordering</code> - the ordering process</p></li><li><p><code class="inline">[id | subkey]</code> -</p></li></ul><p>   the process identification for consistent reads, and a subkey for
-   the storage key. This is akin to the <code class="inline">Storage.qualified_key</code> in
-   <code class="inline">Storage.blocking_read/2</code></p><h3 id="caller_blocking_read_id/2-returns" class="section-heading">
-  <a href="#caller_blocking_read_id/2-returns" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Returns</span>
-</h3>
-<p>returns the given key at a specific value</p>
+<ul><li><p><code class="inline">caller_blocking_read_id(ordering, [id | subkey])</code> - I match on the</p><pre><code class="makeup elixir" translate="no"><span class="w">                                                 </span><span class="n">given</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="n">to</span><span class="w">
+                                                 </span><span class="n">check</span><span class="w"> </span><span class="n">transaction</span><span class="w">
+                                                 </span><span class="nc">ID</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -436,53 +436,6 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
   <section class="docstring">
 
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="get/2">
-
-  <div class="detail-header">
-    <a href="#get/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get(ordering, key)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Node.Storage.html#t:order_key/0">Anoma.Node.Storage.order_key</a>()) ::
-  :absent | {:ok, <a href="Anoma.Node.Storage.html#t:qualified_value/0">Anoma.Node.Storage.qualified_value</a>()} | {:error, :timed_out}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="get_storage/1">
-
-  <div class="detail-header">
-    <a href="#get_storage/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_storage(ordering)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_storage(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()</pre>
-
-      </div>
-
-
   </section>
 </section>
 <section class="detail" id="handle_cast/3">
@@ -523,7 +476,10 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-
+<p>I handle the new ordered transactions comming in to the Ordering Engine.</p><p>I send read_ready messages regarding the transaction orders, then add the
+length of the incoming transaction list to the <code class="inline">:next_order</code> value,
+finally updating the <code class="inline">:hash_to_order</code> map with new key-values.</p><p>I return a tuple where the first argument is the new proposed next order
+while the second argument is the new map of ID's to orders.</p>
   </section>
 </section>
 <section class="detail" id="hard_reset/2">
@@ -546,7 +502,9 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-
+<p>I hard reset the Ordering Engine.</p><p>Similarly to <a href="#reset/1"><code class="inline">reset/1</code></a> I get rid of all hot state fields in the Ordering
+Engine. Moreover, I ask the Storage engine to ensure that the tables are
+re-launched and put a new snapshot specified by the second argument.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -563,7 +521,28 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> init([
+  {:storage, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}
+  | {:logger, <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}
+  | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()
+]) ::
+  {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
+<p>I am the initialization function for a Ordering Engine instance.</p><h3 id="init/1-pattern-macthing-variations" class="section-heading">
+  <a href="#init/1-pattern-macthing-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Macthing Variations</span>
+</h3>
+<ul><li><code class="inline">init(%Ordering{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist with the <code class="inline">:logger</code> and <code class="inline">:storage</code><pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="n">keys</span><span class="o">.</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">ask</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Storage</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">keyword</span><span class="w">
+           </span><span class="n">to</span><span class="w"> </span><span class="n">setup</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">return</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="n">initialization</span><span class="w">
+           </span><span class="n">state</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="new_order/2">
@@ -582,35 +561,14 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> new_order(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="#t:ordered_transactions/0">ordered_transactions</a>()) ::
-  :error | {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> new_order(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="#t:ordered_transactions/0">ordered_transactions</a>()) :: :ok</pre>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="next_order/1">
-
-  <div class="detail-header">
-    <a href="#next_order/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">next_order(ordering)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> next_order(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
-
-      </div>
-
-
+<p>I am the function dealing with new ordered transactions.</p><p>Given a list of ordered transactions, I update the Ordering Engine state
+appropritaely by changing the <code class="inline">:next_order</code> field and filling in the
+<code class="inline">:hash_to_order</code> field with new key-value pairs pairing the new ID's with
+their asigned orderings.</p>
   </section>
 </section>
 <section class="detail" id="reset/1">
@@ -633,7 +591,8 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-
+<p>I am the Ordering Engine reset function.</p><p>I get rid of all hot state fields of the Ordering Engine leaving only the
+Storage and Logger address intact.</p>
   </section>
 </section>
 <section class="detail" id="true_order/2">
@@ -656,7 +615,9 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
 
       </div>
 
-
+<p>I am the true order function.</p><p>Given a transaction ID, I get the order associated with the transaction.
+I look at the map stored in the state and then check the value of said
+ID.</p>
   </section>
 </section>
 
@@ -667,11 +628,11 @@ saved for this node.</p></li><li><p>We keep a hash_to_order to cache the id =&gt
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/ordering.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/ordering.ex">current file</a>)
 
             </span>
 

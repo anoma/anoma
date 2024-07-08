@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Executor — Anoma v0.16.0</title>
+    <title>Anoma.Node.Executor — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,20 +125,21 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Executor</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I Manage the Pub Sub behavior</p><p>If new intents come in, I send it to all my subscribers.</p><p>Further I have the job of spawning Executor tasks when new
-transactions come in</p><p>Currently I only communicate:</p><ul><li>When tasks are completed</li></ul><h3 id="module-api" class="section-heading">
+<p>I am the Executor Engine.</p><p>My main responsibility is to be the intemediary between the Mempool and
+transaction spawning by launching the Worker Engines provided the pending
+transaction code.</p><h3 id="module-api" class="section-heading">
   <a href="#module-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">API</span>
 </h3>
-<p>My public facing API is</p><ul><li><a href="#new_transaction/3"><code class="inline">new_transaction/3</code></a></li><li><a href="#new_transaction/4"><code class="inline">new_transaction/4</code></a></li><li><a href="#fire_new_transaction/3"><code class="inline">fire_new_transaction/3</code></a></li><li><a href="#fire_new_transaction/4"><code class="inline">fire_new_transaction/4</code></a></li><li><a href="#snapshot/1"><code class="inline">snapshot/1</code></a></li><li><code class="inline">subscribe/2</code></li></ul>
+<p>My public facing API is</p><ul><li><a href="#snapshot/1"><code class="inline">snapshot/1</code></a></li><li><a href="#kill_transactions/2"><code class="inline">kill_transactions/2</code></a></li><li><a href="#fire_new_transaction/4"><code class="inline">fire_new_transaction/4</code></a></li></ul>
   </section>
 
 
@@ -160,6 +161,8 @@ transactions come in</p><p>Currently I only communicate:</p><ul><li>When tasks a
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Executor Engine.</p></div>
+
     </div>
 
 </div>
@@ -180,18 +183,17 @@ transactions come in</p><p>Currently I only communicate:</p><ul><li>When tasks a
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fire_new_transaction/3" translate="no">fire_new_transaction(executor, order, gate)</a>
+        <a href="#fire_new_transaction/4" translate="no">fire_new_transaction(executor, id, gate, env \\ nil)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Acts like <a href="#new_transaction/3"><code class="inline">new_transaction/3</code></a>, but the caller does not care about
-the response. Instead the response is handled by the pool.</p></div>
+        <div class="summary-synopsis"><p>I am a function spawning a new transaction.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fire_new_transaction/4" translate="no">fire_new_transaction(executor, order, gate, env)</a>
+        <a href="#handle_cast/3" translate="no">handle_cast(arg, from, state)</a>
 
       </div>
 
@@ -203,33 +205,17 @@ the response. Instead the response is handled by the pool.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p> ### Pattern-Matching Variations</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#kill_transactions/2" translate="no">kill_transactions(communicator, trans)</a>
+        <a href="#kill_transactions/2" translate="no">kill_transactions(executor, transactions)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#new_transaction/3" translate="no">new_transaction(executor, order, gate)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Spawns a new transaction, the returned task's owner is the caller.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#new_transaction/4" translate="no">new_transaction(executor, order, gate, env)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am a function killing transactions.</p></div>
 
     </div>
 
@@ -239,7 +225,7 @@ the response. Instead the response is handled by the pool.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the snapshot path, the Nock code is using</p></div>
+        <div class="summary-synopsis"><p>I return the snapshot path.</p></div>
 
     </div>
 
@@ -275,13 +261,20 @@ the response. Instead the response is handled by the pool.</p></div>
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Executor{
   ambiant_env: <a href="Nock.html#t:t/0">Nock.t</a>() | nil,
   logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  task_completion_topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  tasks: [<a href="https://hexdocs.pm/elixir/Task.html#t:t/0">Task.t</a>()]
+  router: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
+  topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
+  workers: [<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()]
 }</pre>
 
       </div>
 
-
+<p>I am the type of the Executor Engine.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:router</code> - The Router Engine address used by the Executor.</li><li><code class="inline">:topic</code> - The topic for broadcasting.</li><li><code class="inline">:ambiant_env</code> - The default environment to be fed to spawned workers.</li><li><code class="inline">:workers</code> - A list of worker addresses spawned.<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7479673560-1">[</span><span class="p" data-group-id="7479673560-1">]</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -313,14 +306,16 @@ the response. Instead the response is handled by the pool.</p></div>
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="fire_new_transaction/3">
+<section class="detail" id="fire_new_transaction/4">
+
+    <span id="fire_new_transaction/3"></span>
 
   <div class="detail-header">
-    <a href="#fire_new_transaction/3" class="detail-link" title="Link to this function">
+    <a href="#fire_new_transaction/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">fire_new_transaction(executor, order, gate)</h1>
+    <h1 class="signature" translate="no">fire_new_transaction(executor, id, gate, env \\ nil)</h1>
 
 
   </div>
@@ -331,37 +326,31 @@ the response. Instead the response is handled by the pool.</p></div>
 
           <pre translate="no"><span class="attribute">@spec</span> fire_new_transaction(
   <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   <a href="Noun.html#t:t/0">Noun.t</a>(),
-  <a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>()
-) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()</pre>
+  <a href="Nock.html#t:t/0">Nock.t</a>() | nil
+) :: :ok</pre>
 
       </div>
 
-<p>Acts like <a href="#new_transaction/3"><code class="inline">new_transaction/3</code></a>, but the caller does not care about
-the response. Instead the response is handled by the pool.</p><p>The user gets back a process so it may keep track of sending
-messages to this task or terminating the task</p>
+<p>I am a function spawning a new transaction.</p><p>I do so by spawning a new engine with the info provided. If the
+environment is left unspecified I launch the Worker with the given
+ambient environment stored in the state.</p>
   </section>
 </section>
-<section class="detail" id="fire_new_transaction/4">
+<section class="detail" id="handle_cast/3">
 
   <div class="detail-header">
-    <a href="#fire_new_transaction/4" class="detail-link" title="Link to this function">
+    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">fire_new_transaction(executor, order, gate, env)</h1>
+    <h1 class="signature" translate="no">handle_cast(arg, from, state)</h1>
 
 
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> fire_new_transaction(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Nock.html#t:t/0">Nock.t</a>()) ::
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()</pre>
-
-      </div>
 
 
   </section>
@@ -380,7 +369,18 @@ messages to this task or terminating the task</p>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  {<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Nock.html#t:t/0">Nock.t</a>(), <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+   <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}
+) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
+<p> ### Pattern-Matching Variations</p><ul><li><code class="inline">init(%Executor{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init({router, env, topic, logger})</code> - I expect a tuple with needed<pre><code class="makeup elixir" translate="no"><span class="w">                                   </span><span class="n">arguments</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">launch</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">executor</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="kill_transactions/2">
@@ -390,24 +390,7 @@ messages to this task or terminating the task</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">kill_transactions(communicator, trans)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="new_transaction/3">
-
-  <div class="detail-header">
-    <a href="#new_transaction/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">new_transaction(executor, order, gate)</h1>
+    <h1 class="signature" translate="no">kill_transactions(executor, transactions)</h1>
 
 
   </div>
@@ -416,63 +399,14 @@ messages to this task or terminating the task</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> new_transaction(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="https://hexdocs.pm/elixir/Task.html#t:t/0">Task.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> kill_transactions(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), [<a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>()]) :: :ok</pre>
 
       </div>
 
-<p>Spawns a new transaction, the returned task's owner is the caller.</p><h3 id="new_transaction/3-inputs" class="section-heading">
-  <a href="#new_transaction/3-inputs" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Inputs</span>
-</h3>
-<ul><li><code class="inline">executor</code> - the genserver to send the message to</li><li><code class="inline">order</code> - the unique ID of the transaction</li><li><code class="inline">gate</code> - a Nock function that we will spawn a task for</li></ul><h3 id="new_transaction/3-output" class="section-heading">
-  <a href="#new_transaction/3-output" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Output</span>
-</h3>
-<ul><li>a task that the caller owns</li></ul><h3 id="new_transaction/3-example" class="section-heading">
-  <a href="#new_transaction/3-example" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Example</span>
-</h3>
-<p>  we assume a running Worker, see <code class="inline">executor_test.exs</code> for a full
-  example</p><pre><code class="makeup elixir" translate="no"><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">unique_integer</span><span class="p" data-group-id="1567480851-1">(</span><span class="p" data-group-id="1567480851-2">[</span><span class="ss">:positive</span><span class="p" data-group-id="1567480851-2">]</span><span class="p" data-group-id="1567480851-1">)</span><span class="w">
-</span><span class="mi">1931</span><span class="w">
-</span><span class="o">&gt;</span><span class="w"> </span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="1567480851-3">[</span><span class="p" data-group-id="1567480851-4">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">777</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="1567480851-4">]</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Nock</span><span class="o">.</span><span class="n">stdlib_core</span><span class="p" data-group-id="1567480851-5">(</span><span class="p" data-group-id="1567480851-5">)</span><span class="p" data-group-id="1567480851-3">]</span><span class="w">
-</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Executor</span><span class="o">.</span><span class="n">new_transaction</span><span class="p" data-group-id="1567480851-6">(</span><span class="n">executor</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1567480851-7">{</span><span class="ss">:kv</span><span class="p">,</span><span class="w"> </span><span class="n">zero</span><span class="p" data-group-id="1567480851-7">}</span><span class="p" data-group-id="1567480851-6">)</span><span class="w">
-</span><span class="p" data-group-id="1567480851-8">%</span><span class="nc" data-group-id="1567480851-8">Task</span><span class="p" data-group-id="1567480851-8">{</span><span class="w">
-  </span><span class="ss">mfa</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1567480851-9">{</span><span class="nc">Anoma.Node.Executor.Worker</span><span class="p">,</span><span class="w"> </span><span class="ss">:run</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="1567480851-9">}</span><span class="p">,</span><span class="w">
-  </span><span class="ss">owner</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1567480851-10">#</span><span class="nc" data-group-id="1567480851-10">PID</span><span class="p" data-group-id="1567480851-10">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">264</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1567480851-10">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">pid</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1567480851-11">#</span><span class="nc" data-group-id="1567480851-11">PID</span><span class="p" data-group-id="1567480851-11">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">753</span><span class="o">.</span><span class="mi">0</span><span class="p" data-group-id="1567480851-11">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">ref</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1567480851-12">#</span><span class="nc" data-group-id="1567480851-12">Reference</span><span class="p" data-group-id="1567480851-12">&lt;</span><span class="mf">0.0</span><span class="o">.</span><span class="mf">33795.904691850</span><span class="o">.</span><span class="mf">4087414796.24378</span><span class="p" data-group-id="1567480851-12">&gt;</span><span class="w">
-</span><span class="p" data-group-id="1567480851-8">}</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="new_transaction/4">
-
-  <div class="detail-header">
-    <a href="#new_transaction/4" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">new_transaction(executor, order, gate, env)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> new_transaction(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="Nock.html#t:t/0">Nock.t</a>()) ::
-  <a href="https://hexdocs.pm/elixir/Task.html#t:t/0">Task.t</a>()</pre>
-
-      </div>
-
-
+<p>I am a function killing transactions.</p><p>I currently do not filter through which transactions to kill. I just go
+through the list of all Workers stored in my state and kill their
+processes one by one. The returned state will have a nil list for the
+current worker list.</p>
   </section>
 </section>
 <section class="detail" id="snapshot/1">
@@ -489,19 +423,13 @@ messages to this task or terminating the task</p>
 
   <section class="docstring">
 
-<p>Returns the snapshot path, the Nock code is using</p><h3 id="snapshot/1-example" class="section-heading">
-  <a href="#snapshot/1-example" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Example</span>
-</h3>
-<p>  iex&gt; alias Anoma.Node.{Executor, Router}
-  iex&gt; {:ok, router, _transport} = Router.start()
-  iex&gt; snap = %Nock{snapshot_path: [:a | 0], ordering: nil}
-  iex&gt; args = {snap, Router.new_topic(router), nil}
-  iex&gt; {:ok, addr} = Router.start_engine(router, Executor, args)
-  iex&gt; Executor.snapshot(addr)
-  :a</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> snapshot(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>I return the snapshot path.</p>
   </section>
 </section>
 
@@ -512,11 +440,11 @@ messages to this task or terminating the task</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/executor/executor.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/executor/executor.ex">current file</a>)
 
             </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Dumper — Anoma v0.16.0</title>
+    <title>Anoma.Node.Dumper — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,16 +125,22 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Dumper</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am the Dumper Engine. My role is to spawn asyncronous processes which
+<p>I am the Dumper Engine.</p><p>My role is to spawn asyncronous processes which
 listen to a specified block table announcement and await when blocks
 modulo my count have been executed, at which point I checkpoint the
-assigned node using the duping system using a file with a specified name</p>
+assigned node using the duping system using a file with a specified name.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I have the following public functionality:</p><ul><li><a href="#start/1"><code class="inline">start/1</code></a></li><li><a href="#stop/1"><code class="inline">stop/1</code></a></li><li><a href="#set_count/2"><code class="inline">set_count/2</code></a></li></ul>
   </section>
 
 
@@ -156,6 +162,8 @@ assigned node using the duping system using a file with a specified name</p>
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Dumper Engine.</p></div>
+
     </div>
 
 </div>
@@ -176,7 +184,7 @@ assigned node using the duping system using a file with a specified name</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_cast/3" translate="no">handle_cast(arg, from, state)</a>
+        <a href="#handle_cast/3" translate="no">handle_cast(arg1, from, state)</a>
 
       </div>
 
@@ -188,7 +196,7 @@ assigned node using the duping system using a file with a specified name</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for the Dumper Engine.</p></div>
 
     </div>
 
@@ -198,9 +206,7 @@ assigned node using the duping system using a file with a specified name</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>I change the count of a given dumper engine. I first shutdown the current
-task, start a new task with a changed count parameter and return and
-register both the count and the task changes.</p></div>
+        <div class="summary-synopsis"><p>I set the count of a Dumper Engine instance.</p></div>
 
     </div>
 
@@ -210,9 +216,7 @@ register both the count and the task changes.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>I start a dumping loop based on the count supplied. If an old task was
-present before the start, I shut it down. If the count is nil I return
-a state with nil count and nil task.</p></div>
+        <div class="summary-synopsis"><p>I am the Dumper start function.</p></div>
 
     </div>
 
@@ -222,7 +226,7 @@ a state with nil count and nil task.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>I shutdown the dumper task registered in the struct.</p></div>
+        <div class="summary-synopsis"><p>I am the Dumper stop function.</p></div>
 
     </div>
 
@@ -264,7 +268,15 @@ a state with nil count and nil task.</p></div>
 
       </div>
 
-
+<p>I am the type of the Dumper Engine.</p><p>I store the number of blocks to be passed before snapshotting, the
+Configuration Engine address, as well as the task responsible for the
+snapshotting.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:count</code> - Field specifying how many blocks ought to pass between<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="n">snapshots</span><span class="o">.</span><span class="w"> </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="o">.</span></code></pre></li><li><code class="inline">:configuration</code> - The Configuration Engine address using which the<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="n">snapshot</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">found</span><span class="o">.</span></code></pre></li><li><code class="inline">:task</code> - The field containing the task carrying out the<pre><code class="makeup elixir" translate="no"><span class="w">      </span><span class="n">snapshotting</span><span class="o">.</span><span class="w"> </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="o">.</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine. Enforced: false.</li></ul>
   </section>
 </section>
 
@@ -303,7 +315,7 @@ a state with nil count and nil task.</p></div>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_cast(arg, from, state)</h1>
+    <h1 class="signature" translate="no">handle_cast(arg1, from, state)</h1>
 
 
   </div>
@@ -327,7 +339,26 @@ a state with nil count and nil task.</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  count: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
+  configuration: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil
+) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
+<p>I am the initialization function for the Dumper Engine.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">init(%Dumper{})</code> - I initialize the Engine with given state.</li><li><code class="inline">init(opts)</code> - I expect a keylist with the <code class="inline">:count</code>, <code class="inline">:configuration</code>,<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ow">and</span><span class="w"> </span><span class="err">`</span><span class="ss">:logger</span><span class="err">`</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="n">availiable</span><span class="o">.</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">engine</span><span class="w">
+           </span><span class="n">instance</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="n">state</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="set_count/2">
@@ -344,9 +375,14 @@ a state with nil count and nil task.</p></div>
 
   <section class="docstring">
 
-<p>I change the count of a given dumper engine. I first shutdown the current
-task, start a new task with a changed count parameter and return and
-register both the count and the task changes.</p><p>If count is a non-positive integer, I do nothing. If it is nil, I set both
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> set_count(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil) :: :ok</pre>
+
+      </div>
+
+<p>I set the count of a Dumper Engine instance.</p><p>I first shutdown the current task, start a new task with a changed count
+parameter and return and register both the count and the task changes.</p><p>If count is a non-positive integer, I do nothing. If it is nil, I set both
 the count and the task at hand to nil.</p>
   </section>
 </section>
@@ -364,7 +400,13 @@ the count and the task at hand to nil.</p>
 
   <section class="docstring">
 
-<p>I start a dumping loop based on the count supplied. If an old task was
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> start(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am the Dumper start function.</p><p>I start a dumping loop based on the count supplied. If an old task was
 present before the start, I shut it down. If the count is nil I return
 a state with nil count and nil task.</p>
   </section>
@@ -383,7 +425,15 @@ a state with nil count and nil task.</p>
 
   <section class="docstring">
 
-<p>I shutdown the dumper task registered in the struct.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> stop(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>I am the Dumper stop function.</p><p>I shutdown the dumper task registered in the struct. Depending on the
+shutdown message, I provide separate logs and then set the task field to
+<code class="inline">nil</code>.</p>
   </section>
 </section>
 
@@ -394,11 +444,11 @@ a state with nil count and nil task.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/dumper.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/dumper.ex">current file</a>)
 
             </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Writing Documents — Anoma v0.16.0</title>
+    <title>Writing Documents — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -176,19 +176,19 @@ GUIDES
   </a>
   <span class="text">Controlling the index sections</span>
 </h2>
-<p>To control the order of the index, the project has a file that controls the ordering.</p><pre><code class="makeup elixir" translate="no"><span class="s">&quot;doc_order.exs&quot;</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">read!</span><span class="p" data-group-id="1244798548-1">(</span><span class="p" data-group-id="1244798548-1">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="1244798548-2">(</span><span class="p" data-group-id="1244798548-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="9302823174-1">[</span><span class="w">
-  </span><span class="p" data-group-id="9302823174-2">{</span><span class="s">&quot;documentation&quot;</span><span class="p">,</span><span class="w">
-   </span><span class="p" data-group-id="9302823174-3">[</span><span class="w">
-     </span><span class="p" data-group-id="9302823174-4">{</span><span class="s">&quot;toc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9302823174-5">[</span><span class="p" data-group-id="9302823174-5">]</span><span class="p" data-group-id="9302823174-4">}</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="9302823174-6">{</span><span class="s">&quot;contributing&quot;</span><span class="p">,</span><span class="w">
-      </span><span class="p" data-group-id="9302823174-7">[</span><span class="w">
-        </span><span class="p" data-group-id="9302823174-8">{</span><span class="s">&quot;understanding-any-module&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9302823174-9">[</span><span class="p" data-group-id="9302823174-9">]</span><span class="p" data-group-id="9302823174-8">}</span><span class="p">,</span><span class="w">
-        </span><span class="p" data-group-id="9302823174-10">{</span><span class="s">&quot;writing-documents&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9302823174-11">[</span><span class="p" data-group-id="9302823174-11">]</span><span class="p" data-group-id="9302823174-10">}</span><span class="w">
-      </span><span class="p" data-group-id="9302823174-7">]</span><span class="p" data-group-id="9302823174-6">}</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="9302823174-12">{</span><span class="s">&quot;visualization&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9302823174-13">[</span><span class="p" data-group-id="9302823174-13">]</span><span class="p" data-group-id="9302823174-12">}</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="9302823174-14">{</span><span class="s">&quot;hoon&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9302823174-15">[</span><span class="p" data-group-id="9302823174-15">]</span><span class="p" data-group-id="9302823174-14">}</span><span class="w">
-   </span><span class="p" data-group-id="9302823174-3">]</span><span class="p" data-group-id="9302823174-2">}</span><span class="w">
-</span><span class="p" data-group-id="9302823174-1">]</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>This is a priority list of documents, so the higher up a document is, the higher it will be presented in the <code class="inline">index</code>.</p><p>Running <a href="Mix.Tasks.Toc.html"><code class="inline">mix toc</code></a> takes this into account. Note that to make sure your changes are reflected, run <strong>mix clean</strong> to make sure the wanted order is generated.</p>
+<p>To control the order of the index, the project has a file that controls the ordering.</p><pre><code class="makeup elixir" translate="no"><span class="s">&quot;doc_order.exs&quot;</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">read!</span><span class="p" data-group-id="3516111070-1">(</span><span class="p" data-group-id="3516111070-1">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="3516111070-2">(</span><span class="p" data-group-id="3516111070-2">)</span></code></pre><pre><code class="makeup output" translate="no"><span class="p" data-group-id="0731208093-1">[</span><span class="w">
+  </span><span class="p" data-group-id="0731208093-2">{</span><span class="s">&quot;documentation&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="p" data-group-id="0731208093-3">[</span><span class="w">
+     </span><span class="p" data-group-id="0731208093-4">{</span><span class="s">&quot;toc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0731208093-5">[</span><span class="p" data-group-id="0731208093-5">]</span><span class="p" data-group-id="0731208093-4">}</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="0731208093-6">{</span><span class="s">&quot;contributing&quot;</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="0731208093-7">[</span><span class="w">
+        </span><span class="p" data-group-id="0731208093-8">{</span><span class="s">&quot;understanding-any-module&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0731208093-9">[</span><span class="p" data-group-id="0731208093-9">]</span><span class="p" data-group-id="0731208093-8">}</span><span class="p">,</span><span class="w">
+        </span><span class="p" data-group-id="0731208093-10">{</span><span class="s">&quot;writing-documents&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0731208093-11">[</span><span class="p" data-group-id="0731208093-11">]</span><span class="p" data-group-id="0731208093-10">}</span><span class="w">
+      </span><span class="p" data-group-id="0731208093-7">]</span><span class="p" data-group-id="0731208093-6">}</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="0731208093-12">{</span><span class="s">&quot;visualization&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0731208093-13">[</span><span class="p" data-group-id="0731208093-13">]</span><span class="p" data-group-id="0731208093-12">}</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="0731208093-14">{</span><span class="s">&quot;hoon&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0731208093-15">[</span><span class="p" data-group-id="0731208093-15">]</span><span class="p" data-group-id="0731208093-14">}</span><span class="w">
+   </span><span class="p" data-group-id="0731208093-3">]</span><span class="p" data-group-id="0731208093-2">}</span><span class="w">
+</span><span class="p" data-group-id="0731208093-1">]</span></code></pre><pre><code class="makeup output" translate="no"><span class="ss">:ok</span></code></pre><p>This is a priority list of documents, so the higher up a document is, the higher it will be presented in the <code class="inline">index</code>.</p><p>Running <a href="Mix.Tasks.Toc.html"><code class="inline">mix toc</code></a> takes this into account. Note that to make sure your changes are reflected, run <strong>mix clean</strong> to make sure the wanted order is generated.</p>
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
@@ -219,11 +219,11 @@ Visualizing Anoma
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/documentation/contributing/writing-documents.livemd">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/documentation/contributing/writing-documents.livemd">current file</a>)
 
             </span>
 

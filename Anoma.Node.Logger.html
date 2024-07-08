@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Logger — Anoma v0.16.0</title>
+    <title>Anoma.Node.Logger — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,21 +125,21 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Logger</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am a logging engine. I have a storage field which accepts the
-storage used for the logging tied to a specific node, as well as
-the name of the clock used for timestamping.</p><p>I store and get the logging info using the keyspace method.</p><h3 id="module-public-api" class="section-heading">
+<p>I am the Logger Engine, an implementation of the Local Logging Engine.</p><p>I have a storage field which accepts the storage used for the logging
+tied to a specific node, as well as the address of the clock used for
+timestamping.</p><p>I store and get the logging info using the keyspace method.</p><h3 id="module-public-api" class="section-heading">
   <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I provide the following public functionality:</p><ul><li><a href="#add/3"><code class="inline">add/3</code></a></li><li><a href="#get/1"><code class="inline">get/1</code></a></li><li><a href="#get/2"><code class="inline">get/2</code></a></li></ul>
+<p>I provide the following public functionality:</p><h4>Adding Logs</h4><ul><li><a href="#add/3"><code class="inline">add/3</code></a></li></ul><h4>Getting Logs</h4><ul><li><a href="#get/1"><code class="inline">get/1</code></a></li><li><a href="#get/2"><code class="inline">get/2</code></a></li></ul>
   </section>
 
 
@@ -161,6 +161,8 @@ the name of the clock used for timestamping.</p><p>I store and get the logging i
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Logging Engine.</p></div>
+
     </div>
 
 </div>
@@ -175,8 +177,8 @@ the name of the clock used for timestamping.</p><p>I store and get the logging i
 
       </div>
 
-        <div class="summary-synopsis"><p>I receive three arguments: an address of the logger, an atom specifying
-the urgency of the logging message and the logging message itself.</p></div>
+        <div class="summary-synopsis"><p>I am the Logger add function, the implementation of LocalLoggingAppend of
+the Local Logging Engine of the Anoma Specification.</p></div>
 
     </div>
 
@@ -196,9 +198,7 @@ the urgency of the logging message and the logging message itself.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Given a non-nil logger address, I get the entire keyspace related to the
-storage attached to the aforementioned logger ID using
-<code class="inline">Storage.get_keyspace/2</code></p></div>
+        <div class="summary-synopsis"><p>I am the Logger get function of one argument.</p></div>
 
     </div>
 
@@ -208,9 +208,7 @@ storage attached to the aforementioned logger ID using
 
       </div>
 
-        <div class="summary-synopsis"><p>Given a non-nil logger address and an engine address, I get the keyspace
-which conatins all the info stored by the logger about the supplied
-engine using <code class="inline">Storage.get_keyspace/2</code></p></div>
+        <div class="summary-synopsis"><p>I am the Logger get function of two arguments.</p></div>
 
     </div>
 
@@ -228,7 +226,7 @@ engine using <code class="inline">Storage.get_keyspace/2</code></p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the Logger Engine initialization function.</p></div>
 
     </div>
 
@@ -263,13 +261,20 @@ engine using <code class="inline">Storage.get_keyspace/2</code></p></div>
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Logger{
   clock: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
-  storage: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>() | nil,
+  storage: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
   topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil
 }</pre>
 
       </div>
 
-
+<p>I am the type of the Logging Engine.</p><p>I have the minimal fields required to store timestamped messages in the
+specified storage.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:storage</code> - The Storage Engine address used for storing.</li><li><code class="inline">:clock</code> - The Clock Engine address used for timestamping.</li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li></ul>
   </section>
 </section>
 
@@ -304,7 +309,8 @@ engine using <code class="inline">Storage.get_keyspace/2</code></p></div>
 
       </div>
 
-<p>I receive three arguments: an address of the logger, an atom specifying
+<p>I am the Logger add function, the implementation of LocalLoggingAppend of
+the Local Logging Engine of the Anoma Specification.</p><p>I receive three arguments: an address of the logger, an atom specifying
 the urgency of the logging message and the logging message itself.</p><p>If the logger address is indeed an address, I put the info inside the
 specified storage using <code class="inline">Storage.put/3</code>.</p><p>The information is stored using a keyspace method. The message is hence
 attached to a list of 4 elements:</p><ol><li>ID of the logger calling for storage</li><li>ID of the engine whose info we log or a PID of the worker process</li><li>Timestamp relative to the clock engine used</li><li>The urgency atom</li></ol><p>I then use the atom to call the Elixir logger in order to inform the
@@ -351,7 +357,7 @@ workers.</p>
 
       </div>
 
-<p>Given a non-nil logger address, I get the entire keyspace related to the
+<p>I am the Logger get function of one argument.</p><p>Given a non-nil logger address, I get the entire keyspace related to the
 storage attached to the aforementioned logger ID using
 <code class="inline">Storage.get_keyspace/2</code></p><p>I return a list of 2-tuples. Its left element will be a list whose
 head is the ID of the specified logger, followed by the engine ID (or
@@ -381,7 +387,7 @@ message. Its right element will be the message.</p>
 
       </div>
 
-<p>Given a non-nil logger address and an engine address, I get the keyspace
+<p>I am the Logger get function of two arguments.</p><p>Given a non-nil logger address and an engine address, I get the keyspace
 which conatins all the info stored by the logger about the supplied
 engine using <code class="inline">Storage.get_keyspace/2</code></p><p>I return a list of 2-tuples. Its left element will be a list whose
 head is the ID of the specified logger, followed by the engine ID (or
@@ -422,6 +428,8 @@ message. Its right element will be the message.</p>
 
       <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
           <pre translate="no"><span class="attribute">@spec</span> init(
   storage: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>(),
   clock: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(),
@@ -430,7 +438,14 @@ message. Its right element will be the message.</p>
 
       </div>
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the Logger Engine initialization function.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">init(Logger.t())</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist with <code class="inline">:storage</code>, <code class="inline">:clock</code>, and<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="err">`</span><span class="ss">:topic</span><span class="err">`</span><span class="w"> </span><span class="n">keys</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">launch</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">appropriate</span><span class="w">
+           </span><span class="n">state</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -441,11 +456,11 @@ message. Its right element will be the message.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/logger.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/logger.ex">current file</a>)
 
             </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Storage — Anoma v0.16.0</title>
+    <title>Anoma.Node.Storage — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Storage</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
@@ -147,8 +147,8 @@ value</li></ol><h2 id="module-types" class="section-heading">
   </a>
   <span class="text">API</span>
 </h2>
-<p>The important functions for this API are</p><ul><li><a href="#get/2"><code class="inline">get/2</code></a></li><li><a href="#get_keyspace/2"><code class="inline">get_keyspace/2</code></a></li><li><a href="#snapshot_order/1"><code class="inline">snapshot_order/1</code></a></li><li><a href="#read_order_tx/2"><code class="inline">read_order_tx/2</code></a></li><li><a href="#read_at_order_tx/3"><code class="inline">read_at_order_tx/3</code></a></li><li><a href="#remove/1"><code class="inline">remove/1</code></a></li><li><a href="#ensure_new/2"><code class="inline">ensure_new/2</code></a></li><li><a href="#put/3"><code class="inline">put/3</code></a></li><li><a href="#put_snapshot/2"><code class="inline">put_snapshot/2</code></a></li><li><a href="#delete_key/2"><code class="inline">delete_key/2</code></a></li><li><a href="#write_at_order_tx/4"><code class="inline">write_at_order_tx/4</code></a></li></ul><p>There are also explicit functions for blocking:</p><ul><li><a href="#blocking_read/2"><code class="inline">blocking_read/2</code></a></li></ul><p>As well as getting snapshotting info:</p><ul><li><a href="#get_at_snapshot/2"><code class="inline">get_at_snapshot/2</code></a></li><li><a href="#in_snapshot/2"><code class="inline">in_snapshot/2</code></a></li></ul><p>If one wants to query the tables by hand then there are manual
-functions, but beware, this is an unintended way of using the API</p><ul><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><code class="inline">do_read_order_tx/2</code></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><code class="inline">do_read_at_order_tx/3</code></li><li><a href="#write_at_order/4"><code class="inline">write_at_order/4</code></a></li><li><code class="inline">do_write_at_order_tx/4</code></li></ul><p>If one is wanting to setup storage manually, then we expose the
+<p>The important functions for this API are</p><ul><li><a href="#get/2"><code class="inline">get/2</code></a></li><li><a href="#get_keyspace/2"><code class="inline">get_keyspace/2</code></a></li><li><a href="#snapshot_order/1"><code class="inline">snapshot_order/1</code></a></li><li><a href="#read_order_tx/2"><code class="inline">read_order_tx/2</code></a></li><li><a href="#read_at_order_tx/3"><code class="inline">read_at_order_tx/3</code></a></li><li><a href="#remove/1"><code class="inline">remove/1</code></a></li><li><a href="#ensure_new/2"><code class="inline">ensure_new/2</code></a></li><li><a href="#put/3"><code class="inline">put/3</code></a></li><li><a href="#put_snapshot/2"><code class="inline">put_snapshot/2</code></a></li><li><a href="#delete_key/2"><code class="inline">delete_key/2</code></a></li><li><code class="inline">write_at_order_tx/4</code></li></ul><p>There are also explicit functions for blocking:</p><ul><li><a href="#blocking_read/2"><code class="inline">blocking_read/2</code></a></li></ul><p>As well as getting snapshotting info:</p><ul><li><a href="#get_at_snapshot/2"><code class="inline">get_at_snapshot/2</code></a></li><li><a href="#in_snapshot/2"><code class="inline">in_snapshot/2</code></a></li></ul><p>If one wants to query the tables by hand then there are manual
+functions, but beware, this is an unintended way of using the API</p><ul><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><code class="inline">do_read_order_tx/2</code></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><code class="inline">do_read_at_order_tx/3</code></li><li><code class="inline">write_at_order/4</code></li><li><code class="inline">do_write_at_order_tx/4</code></li></ul><p>If one is wanting to setup storage manually, then we expose the
 following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><code class="inline">do_ensure_new/2</code></a></li></ul><p>Please see my testing module <code class="inline">AnomaTest.Storage</code> and
 <code class="inline">AnomaTest.Node.Stirage</code> to learn more on how to use me</p>
   </section>
@@ -479,22 +479,6 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#snapshot_order/1" translate="no">snapshot_order(storage)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#write_at_order/4" translate="no">write_at_order(storage, key, value, order)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#write_at_order_tx/4" translate="no">write_at_order_tx(storage, key, value, order)</a>
 
       </div>
 
@@ -988,7 +972,7 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> get(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="#t:order_key/0">order_key</a>()) ::
-  :absent | {:ok, <a href="#t:qualified_value/0">qualified_value</a>()}</pre>
+  :absent | {:ok, <a href="#t:qualified_value/0">qualified_value</a>()} | {:error, :timed_out}</pre>
 
       </div>
 
@@ -1035,7 +1019,7 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> get_keyspace(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]) ::
-  :absent | [{<a href="#t:qualified_key/0">qualified_key</a>(), <a href="#t:qualified_value/0">qualified_value</a>()}] | {:atomic, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+  :absent | [{<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(), <a href="#t:qualified_value/0">qualified_value</a>()}] | {:atomic, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -1373,57 +1357,6 @@ fails due to already being setup, we will try the others.</p>
 
   </section>
 </section>
-<section class="detail" id="write_at_order/4">
-
-  <div class="detail-header">
-    <a href="#write_at_order/4" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">write_at_order(storage, key, value, order)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> write_at_order(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>(), <a href="#t:qualified_value/0">qualified_value</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: :ok</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="write_at_order_tx/4">
-
-  <div class="detail-header">
-    <a href="#write_at_order_tx/4" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">write_at_order_tx(storage, key, value, order)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> write_at_order_tx(
-  <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
-  <a href="Noun.html#t:t/0">Noun.t</a>(),
-  <a href="Noun.html#t:t/0">Noun.t</a>(),
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
-) :: :ok</pre>
-
-      </div>
-
-
-  </section>
-</section>
 
     </div>
   </section>
@@ -1432,11 +1365,11 @@ fails due to already being setup, we will try the others.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/storage.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/storage.ex">current file</a>)
 
             </span>
 

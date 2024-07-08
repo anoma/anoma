@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Configuration — Anoma v0.16.0</title>
+    <title>Anoma.Node.Configuration — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,20 +125,20 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Configuration</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am an agent that remembers the configuration that the application
-was launched with</p><h3 id="module-public-api" class="section-heading">
+<p>I am the implementation of the Configuration Engine.</p><p>I remember the configuration that the application was launched with as
+well as call the snapshotting and snapshot-deletion functionality.</p><h3 id="module-public-api" class="section-heading">
   <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I have the following public functionality:</p><ul><li><code class="inline">get_time/1</code></li><li><code class="inline">get_epoch/1</code></li></ul>
+<p>I have the following public functionality:</p><ul><li><a href="#snapshot/1"><code class="inline">snapshot/1</code></a></li><li><a href="#delete_dump/1"><code class="inline">delete_dump/1</code></a></li></ul>
   </section>
 
 
@@ -159,6 +159,8 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
         <a href="#t:t/0" translate="no">t()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of the Configuration Engine.</p></div>
 
     </div>
 
@@ -184,6 +186,8 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the function deleting the snapshot file.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -200,7 +204,7 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the Configuration Engine initialization function.</p></div>
 
     </div>
 
@@ -210,7 +214,7 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
       </div>
 
-        <div class="summary-synopsis"><p>Takes a snapshots of the current state</p></div>
+        <div class="summary-synopsis"><p>I am the snapshot function.</p></div>
 
     </div>
 
@@ -250,7 +254,15 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
       </div>
 
-
+<p>I am the type of the Configuration Engine.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:configuration</code> - The configuration data stored in specified format.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="nc">Please</span><span class="w"> </span><span class="n">consult</span><span class="w"> </span><span class="n">the</span><span class="w">
+               </span><span class="err">`</span><span class="n">t</span><span class="ss">:Anoma</span><span class="o">.</span><span class="nc">Configuration</span><span class="o">.</span><span class="n">configuration_map</span><span class="o">/</span><span class="mi">0</span><span class="err">`</span><span class="o">.</span><span class="w">
+               </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="o">.</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine. Enforced: false.</li></ul>
   </section>
 </section>
 
@@ -302,7 +314,8 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
       </div>
 
-
+<p>I am the function deleting the snapshot file.</p><p>I check the dump path and check whether there is any file snapshot there.
+If so, I delete it, otherwise I do nothing.</p>
   </section>
 </section>
 <section class="detail" id="handle_cast/3">
@@ -336,7 +349,14 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
+<p>I am the Configuration Engine initialization function.</p><p>I receive a Configuration.t() structure and launch the engine instance
+with the fed-in state.</p>
   </section>
 </section>
 <section class="detail" id="snapshot/1">
@@ -359,7 +379,8 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
 
       </div>
 
-<p>Takes a snapshots of the current state</p><p>This topic sends back a message to the caller saying :snapshot_done</p>
+<p>I am the snapshot function.</p><p>I take a snapshots of the current state. The topic sends back a message
+to the caller saying <code class="inline">:snapshot_done</code>.</p><p>The path for the snapshot is taken directly from the configuration map.</p>
   </section>
 </section>
 
@@ -370,11 +391,11 @@ was launched with</p><h3 id="module-public-api" class="section-heading">
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/configuration.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/configuration.ex">current file</a>)
 
             </span>
 

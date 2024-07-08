@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Mempool — Anoma v0.16.0</title>
+    <title>Anoma.Node.Mempool — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,10 +125,23 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Mempool</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>I am the Mempool Engine.</p><p>I provide the interface for transaction management including
+communication with the Executor engine to create transaction candidates
+with given code, executing said transactions, and creating appropriate
+blocks.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><ul><li><a href="#execute/1"><code class="inline">execute/1</code></a></li><li><a href="#soft_reset/1"><code class="inline">soft_reset/1</code></a></li><li><a href="#hard_reset/1"><code class="inline">hard_reset/1</code></a></li><li><a href="#tx/2"><code class="inline">tx/2</code></a></li></ul>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -149,6 +162,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Mempool Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -157,6 +172,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am a list of transaction candidates.</p></div>
+
     </div>
 
 </div>
@@ -164,14 +181,6 @@ GUIDES
   <h2>
     <a href="#functions">Functions</a>
   </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#async_tx/2" translate="no">async_tx(server, tx_code)</a>
-
-      </div>
-
-    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -189,6 +198,10 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I order the transactions based on the current ordering specified by the
+Ordering engine, place a new orderig, and for every ordered transaction,
+send to their appropriate Worker a <code class="inline">:write_ready</code> message.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -196,6 +209,8 @@ GUIDES
         <a href="#execute/1" translate="no">execute(server)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the execution function.</p></div>
 
     </div>
 
@@ -213,6 +228,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I handle Mempool execution.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -220,6 +237,8 @@ GUIDES
         <a href="#handle_tx/2" translate="no">handle_tx(tx_code, state)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I handle the transaction candidate creation.</p></div>
 
     </div>
 
@@ -229,6 +248,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the hard reset function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -237,7 +258,7 @@ GUIDES
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for a Mempool Engine instance.</p></div>
 
     </div>
 
@@ -247,6 +268,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I kill transactions listed in the fed-in state.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -254,6 +277,8 @@ GUIDES
         <a href="#order/2" translate="no">order(executing, next_order)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I order a list of transactions based on a given order.</p></div>
 
     </div>
 
@@ -263,13 +288,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#pending_txs/1" translate="no">pending_txs(server)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I place a transaction candidate in an order structure.</p></div>
 
     </div>
 
@@ -279,6 +298,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I give core information on a transaction candidate.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -287,13 +308,7 @@ GUIDES
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#random_id/0" translate="no">random_id()</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I produce a block with the key and round from the given state and eturn it.</p></div>
 
     </div>
 
@@ -303,6 +318,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I provide block-resetting functionality.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -310,6 +327,8 @@ GUIDES
         <a href="#reset_state/1" translate="no">reset_state(state)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I return a state with no transactions and 0 round count.</p></div>
 
     </div>
 
@@ -319,6 +338,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I save a provided block.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -327,6 +348,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the soft reset function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -334,6 +357,8 @@ GUIDES
         <a href="#tx/2" translate="no">tx(server, tx_code)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the transaction candidate creating API.</p></div>
 
     </div>
 
@@ -379,7 +404,14 @@ GUIDES
 
       </div>
 
-
+<p>I am the type of the Mempool Engine.</p><p>My fields store information necessary to succesfully call for
+transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:ordering</code> - The Ordering Engine Address.</li><li><code class="inline">:executor</code> - The Executor Engine Address.</li><li><code class="inline">:block_storage</code> - The name of the storage for created blocks.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">Anoma.Block</span><span class="err">`</span></code></pre></li><li><code class="inline">:transactions</code> - List of transaction candidates.<pre><code class="makeup elixir" translate="no"><span class="w">              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1226472928-1">[</span><span class="p" data-group-id="1226472928-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="8700277488-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8700277488-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="8700277488-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="t:transactions/0">
@@ -402,7 +434,7 @@ GUIDES
 
       </div>
 
-
+<p>I am a list of transaction candidates.</p>
   </section>
 </section>
 
@@ -417,29 +449,6 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="async_tx/2">
-
-  <div class="detail-header">
-    <a href="#async_tx/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">async_tx(server, tx_code)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> async_tx(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>()) :: :ok</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
@@ -477,7 +486,9 @@ GUIDES
 
       </div>
 
-
+<p>I order the transactions based on the current ordering specified by the
+Ordering engine, place a new orderig, and for every ordered transaction,
+send to their appropriate Worker a <code class="inline">:write_ready</code> message.</p><p>Return :ok.</p>
   </section>
 </section>
 <section class="detail" id="execute/1">
@@ -496,11 +507,12 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> execute(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> execute(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: :ok</pre>
 
       </div>
 
-
+<p>I am the execution function.</p><p>I execute the block containing top 100 transaction candidates availiable,
+ordering them using the specified Ordering Engine.</p>
   </section>
 </section>
 <section class="detail" id="handle_cast/3">
@@ -540,7 +552,9 @@ GUIDES
 
       </div>
 
-
+<p>I handle Mempool execution.</p><p>I take the top 100 transaction candidates, ask for an ordering on them,
+producing and storing an encoded block.</p><p>I return a tuple with first entry specifying how many transactions got
+into the execution and a new appropriately changed state.</p>
   </section>
 </section>
 <section class="detail" id="handle_tx/2">
@@ -563,7 +577,8 @@ GUIDES
 
       </div>
 
-
+<p>I handle the transaction candidate creation.</p><p>Given transaction code and the Mempool state, I ask the Executor to fire
+a new transaction with a randomly generated transaction ID.</p><p>I reply with a newly created transaction and specified Worker.</p>
   </section>
 </section>
 <section class="detail" id="hard_reset/1">
@@ -586,7 +601,10 @@ GUIDES
 
       </div>
 
-
+<p>I am the hard reset function.</p><p>Similar to <a href="#soft_reset/1"><code class="inline">soft_reset/1</code></a>, I kill transactions, but also call for an
+Executor snapshot, delete the block table and hard reset the Ordering
+Engine. The block table is then re-launched with the same rocks flag as
+before.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -603,7 +621,15 @@ GUIDES
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the initialization function for a Mempool Engine instance.</p><h3 id="init/1-pattern-macthing-variations" class="section-heading">
+  <a href="#init/1-pattern-macthing-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Macthing Variations</span>
+</h3>
+<ul><li><code class="inline">init(%Mempool{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist with all keys in the structure fields<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="n">listed</span><span class="w"> </span><span class="n">necessary</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Mempool</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">start</span><span class="o">.</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">then</span><span class="w">
+           </span><span class="n">create</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="err">`</span><span class="ss">:block_storage</span><span class="err">`</span><span class="w"> </span><span class="n">argument</span><span class="w">
+           </span><span class="ow">and</span><span class="w"> </span><span class="n">initialize</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">parameters</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="kill_transactions/1">
@@ -626,7 +652,8 @@ GUIDES
 
       </div>
 
-
+<p>I kill transactions listed in the fed-in state.</p><p>Given a state with a list of transaction candidates, I call for the
+Executor engine to kill each one in the list.</p>
   </section>
 </section>
 <section class="detail" id="order/2">
@@ -650,7 +677,8 @@ GUIDES
 
       </div>
 
-
+<p>I order a list of transactions based on a given order.</p><p>Given a list of transaction candidates and an order number, I shuffle the
+transactions, and index them starting with the given order number.</p>
   </section>
 </section>
 <section class="detail" id="order_format/2">
@@ -673,30 +701,9 @@ GUIDES
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="pending_txs/1">
-
-  <div class="detail-header">
-    <a href="#pending_txs/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">pending_txs(server)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> pending_txs(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="#t:transactions/0">transactions</a>()</pre>
-
-      </div>
-
-
+<p>I place a transaction candidate in an order structure.</p><p>Given a transaction candidate and an order, I create a new Order
+structure with a given order, while the ID and Worker address is taken
+from the transaction itself.</p>
   </section>
 </section>
 <section class="detail" id="persistent_transaction/1">
@@ -720,7 +727,8 @@ GUIDES
 
       </div>
 
-
+<p>I give core information on a transaction candidate.</p><p>Given a transaction candidate, I return a tuple. The first element is the
+id of the transaction. The second element is the transaction code.</p>
   </section>
 </section>
 <section class="detail" id="produce_block/2">
@@ -743,24 +751,7 @@ GUIDES
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="random_id/0">
-
-  <div class="detail-header">
-    <a href="#random_id/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">random_id()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>I produce a block with the key and round from the given state and eturn it.</p>
   </section>
 </section>
 <section class="detail" id="reset_blocks/1">
@@ -777,7 +768,13 @@ GUIDES
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> reset_blocks(<a href="#t:t/0">t</a>()) :: {:aborted, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | {:atomic, :ok}</pre>
+
+      </div>
+
+<p>I provide block-resetting functionality.</p><p>I delete the mnesia table for block storage provided in the given state.</p><p>I then create the table with the same name and rocks flag.</p>
   </section>
 </section>
 <section class="detail" id="reset_state/1">
@@ -800,7 +797,7 @@ GUIDES
 
       </div>
 
-
+<p>I return a state with no transactions and 0 round count.</p>
   </section>
 </section>
 <section class="detail" id="save_block/2">
@@ -823,7 +820,8 @@ GUIDES
 
       </div>
 
-
+<p>I save a provided block.</p><p>Given a Mempool Engine state and a block, I encode the block and write it
+at the specified mnesia table.</p>
   </section>
 </section>
 <section class="detail" id="soft_reset/1">
@@ -846,7 +844,8 @@ GUIDES
 
       </div>
 
-
+<p>I am the soft reset function.</p><p>I empty the transaction and round fields of the appropriate Mempool
+Engine, asking the linked Executor to kill relevant transaction Workers.</p>
   </section>
 </section>
 <section class="detail" id="tx/2">
@@ -865,12 +864,13 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> tx(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>()) ::
-  <a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> tx(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>()) :: :ok</pre>
 
       </div>
 
-
+<p>I am the transaction candidate creating API.</p><p>Given a Mempool Engine address and a transaction candidate code, I ask
+the Executor Engine to fire a new transaction with a random ID created in
+the process. I return the new state, adding the transaction.</p>
   </section>
 </section>
 
@@ -881,11 +881,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/mempool.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/mempool.ex">current file</a>)
 
             </span>
 

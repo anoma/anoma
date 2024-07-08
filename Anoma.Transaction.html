@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Transaction — Anoma v0.16.0</title>
+    <title>Anoma.Transaction — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,14 +125,13 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Transaction</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I represent an Anoma Transaction</p><p>I can be viewed as a wrapper over <a href="Anoma.Intent.html"><code class="inline">Anoma.Intent</code></a> where I contain the
-intents used in a transaction</p>
+<p>I represent an Anoma Transaction</p><p>I contain the intents used in a transaction</p>
   </section>
 
 
@@ -172,6 +171,14 @@ intents used in a transaction</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#addr/1" translate="no">addr(t)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#id/1" translate="no">id(t)</a>
 
       </div>
@@ -180,15 +187,7 @@ intents used in a transaction</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#new/3" translate="no">new(id, pid, transaction)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#pid/1" translate="no">pid(t)</a>
+        <a href="#new/3" translate="no">new(id, addr, transaction)</a>
 
       </div>
 
@@ -254,7 +253,11 @@ intents used in a transaction</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Transaction{id: <a href="Noun.html#t:t/0">Noun.t</a>(), pid: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(), transaction: <a href="#t:execution/0">execution</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Transaction{
+  addr: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  id: <a href="Noun.html#t:t/0">Noun.t</a>(),
+  transaction: <a href="#t:execution/0">execution</a>()
+}</pre>
 
       </div>
 
@@ -273,6 +276,29 @@ intents used in a transaction</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="addr/1">
+
+  <div class="detail-header">
+    <a href="#addr/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">addr(t)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> addr(<a href="#t:t/0">t</a>()) :: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="id/1">
 
   <div class="detail-header">
@@ -303,7 +329,7 @@ intents used in a transaction</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">new(id, pid, transaction)</h1>
+    <h1 class="signature" translate="no">new(id, addr, transaction)</h1>
 
 
   </div>
@@ -312,30 +338,7 @@ intents used in a transaction</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> new(<a href="Noun.html#t:t/0">Noun.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>(), <a href="#t:execution/0">execution</a>()) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="pid/1">
-
-  <div class="detail-header">
-    <a href="#pid/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">pid(t)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> pid(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pid</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> new(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="#t:execution/0">execution</a>()) :: <a href="#t:t/0">t</a>()</pre>
 
       </div>
 
@@ -373,11 +376,11 @@ intents used in a transaction</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/transaction.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/transaction.ex">current file</a>)
 
             </span>
 

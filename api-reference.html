@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>API Reference — Anoma v0.16.0</title>
+    <title>API Reference — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
 
-  <span>API Reference <small class="app-vsn">Anoma v0.16.0</small></span>
+  <span>API Reference <small class="app-vsn">Anoma v0.17.0</small></span>
 </h1>
 
 
@@ -380,15 +380,6 @@ information in order to choose how to verify a commitment.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Intent.html" translate="no">Anoma.Intent</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I am an Intent, I give off the behavior of how Intents can be used.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Anoma.Mnesia.html" translate="no">Anoma.Mnesia</a>
 
   </div>
@@ -420,8 +411,7 @@ information in order to choose how to verify a commitment.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am an agent that remembers the configuration that the application
-was launched with</p></div>
+    <div class="summary-synopsis"><p>I am the implementation of the Configuration Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -430,10 +420,7 @@ was launched with</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am the Dumper Engine. My role is to spawn asyncronous processes which
-listen to a specified block table announcement and await when blocks
-modulo my count have been executed, at which point I checkpoint the
-assigned node using the duping system using a file with a specified name</p></div>
+    <div class="summary-synopsis"><p>I am the Dumper Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -442,7 +429,7 @@ assigned node using the duping system using a file with a specified name</p></di
 
   </div>
 
-    <div class="summary-synopsis"><p>I Manage the Pub Sub behavior</p></div>
+    <div class="summary-synopsis"><p>I am the Executor Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -451,7 +438,7 @@ assigned node using the duping system using a file with a specified name</p></di
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a Nock worker, supporting scry.</p></div>
+    <div class="summary-synopsis"><p>I am the Worker Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -483,9 +470,7 @@ assigned node using the duping system using a file with a specified name</p></di
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a logging engine. I have a storage field which accepts the
-storage used for the logging tied to a specific node, as well as
-the name of the clock used for timestamping.</p></div>
+    <div class="summary-synopsis"><p>I am the Logger Engine, an implementation of the Local Logging Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -494,6 +479,8 @@ the name of the clock used for timestamping.</p></div>
 
   </div>
 
+    <div class="summary-synopsis"><p>I am the Mempool Engine.</p></div>
+
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -501,7 +488,7 @@ the name of the clock used for timestamping.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I am a simple mnesia-backed key-value store in an anoma node.</p></div>
+    <div class="summary-synopsis"><p>I am the Ordering Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -510,8 +497,7 @@ the name of the clock used for timestamping.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I provide periodic block execution based on submitted mempool address
-and time by calling the execution API in the mempool engine.</p></div>
+    <div class="summary-synopsis"><p>I am the Pinger Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -694,6 +680,15 @@ terms as well!</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.Symbol.html" translate="no">Anoma.Symbol</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am module that provides utilities over symbols</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.System.Directories.html" translate="no">Anoma.System.Directories</a>
 
   </div>
@@ -757,7 +752,35 @@ commitment tree.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Examples.EBlock.html" translate="no">Examples.EBlock</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ECommitmentTree.html" translate="no">Examples.ECommitmentTree</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.EConfiguration.html" translate="no">Examples.EConfiguration</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Examples.ECrypto.html" translate="no">Examples.ECrypto</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.EIdentity.html" translate="no">Examples.EIdentity</a>
 
   </div>
 
@@ -780,6 +803,41 @@ commitment tree.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Examples.ENode.EClock.html" translate="no">Examples.ENode.EClock</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ENode.EDumper.html" translate="no">Examples.ENode.EDumper</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ENode.EIntent.html" translate="no">Examples.ENode.EIntent</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ENode.EPinger.html" translate="no">Examples.ENode.EPinger</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ENode.EStorage.html" translate="no">Examples.ENode.EStorage</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Examples.EProofRecord.html" translate="no">Examples.EProofRecord</a>
 
   </div>
@@ -788,6 +846,13 @@ commitment tree.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Examples.EResource.html" translate="no">Examples.EResource</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.ESerialisation.html" translate="no">Examples.ESerialisation</a>
 
   </div>
 
@@ -893,6 +958,22 @@ the identity.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="TestHelper.Executor.html" translate="no">TestHelper.Executor</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a testing module allowing to listen to new spawned Executor workers.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TestHelper.Mempool.html" translate="no">TestHelper.Mempool</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="TestHelper.Nock.html" translate="no">TestHelper.Nock</a>
 
   </div>
@@ -915,6 +996,13 @@ functions.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>I am a module populated by macros associated to Anoma Testing.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TestHelper.Worker.html" translate="no">TestHelper.Worker</a>
+
+  </div>
 
 </div>
 
@@ -974,9 +1062,9 @@ Anoma
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
             </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.16.0">
+    <meta name="project" content="Anoma v0.17.0">
 
 
-    <title>Anoma.Node.Executor.Worker — Anoma v0.16.0</title>
+    <title>Anoma.Node.Executor.Worker — Anoma v0.17.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-25D9EE14.js"></script>
+    <script src="dist/sidebar_items-792F06B9.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.16.0
+          v0.17.0
         </div>
       </div>
     </div>
@@ -125,13 +125,24 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Executor.Worker</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.16.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am a Nock worker, supporting scry.</p>
+<p>I am the Worker Engine.</p><p>My instance gets launched by the Executor and is connected to a unique
+transaction.</p><p>I am responsible for the main work done to run a succesful transaction
+lifecycle. This includes processing of transactions, calling for their
+ordering via the Ordering Engine, creation and revision of commitment
+trees, nullifier key-checking, as well as the storage of relevant data
+for transaction completion before block-execution.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><ul><li><a href="#rm_nullifier_check/2"><code class="inline">rm_nullifier_check/2</code></a></li></ul>
   </section>
 
 
@@ -142,6 +153,46 @@ GUIDES
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:backend/0" translate="no">backend()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:from_noun/1" translate="no">from_noun(trans)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:t/0" translate="no">t()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the type of a Worker Engine instance.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:verify_fun/1" translate="no">verify_fun(trans)</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -149,33 +200,31 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#init/1" translate="no">init(arg)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the Worker initialization function.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#rm_nullifier_check/2" translate="no">rm_nullifier_check(storage, nullifiers)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#run/3" translate="no">run(order, arg, env)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#snapshot/2" translate="no">snapshot(storage, env)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#wait_for_ready/2" translate="no">wait_for_ready(env, order)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I perform the nullifier check for a resource machine transaction.</p></div>
 
     </div>
 
@@ -183,6 +232,121 @@ GUIDES
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:backend/0">
+
+  <div class="detail-header">
+    <a href="#t:backend/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">backend()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> backend() :: :kv | :rm | :cairo | :ro</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:from_noun/1">
+
+  <div class="detail-header">
+    <a href="#t:from_noun/1" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">from_noun(trans)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> from_noun(trans) :: (<a href="Noun.html#t:t/0">Noun.t</a>() -&gt; trans)</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:t/0">
+
+  <div class="detail-header">
+    <a href="#t:t/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">t()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Node.Executor.Worker{
+  completion_topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
+  env: <a href="Nock.html#t:t/0">Nock.t</a>() | nil,
+  id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
+  tx: {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()} | nil
+}</pre>
+
+      </div>
+
+<p>I am the type of a Worker Engine instance.</p><p>I contain all the info for appropriate transaction processing.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:id</code> - The ID of the transaction fed in.</li><li><code class="inline">:tx</code> - The transaction code.</li><li><code class="inline">:env</code> - The environment for the transaction to be evaluated in. E.g.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="n">contains</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">address</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="nc">Nock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="5036142451-1">(</span><span class="p" data-group-id="5036142451-1">)</span><span class="err">`</span></code></pre></li><li><code class="inline">:completion_topc</code> - The address of the topic connected to the<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">relevant</span><span class="w"> </span><span class="nc">Executor</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">broadcasting</span><span class="o">.</span></code></pre></li></ul>
+  </section>
+</section>
+<section class="detail" id="t:verify_fun/1">
+
+  <div class="detail-header">
+    <a href="#t:verify_fun/1" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">verify_fun(trans)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> verify_fun(trans) :: (trans -&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>())</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -192,6 +356,58 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="child_spec/1">
+
+  <div class="detail-header">
+    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="init/1">
+
+  <div class="detail-header">
+    <a href="#init/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init(arg)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()}, <a href="Nock.html#t:t/0">Nock.t</a>(),
+   <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}
+) ::
+  {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
+
+<p>I am the Worker initialization function.</p><p>I send myself a <code class="inline">:run</code> message which launches my core functionality and
+return the appropriate state.</p><h3 id="init/1-pattern-matching-variations" class="section-heading">
+  <a href="#init/1-pattern-matching-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Matching Variations</span>
+</h3>
+<ul><li><code class="inline">init({id, tx, env, completion_topic})</code> - I recieve a tuple with all<pre><code class="makeup elixir" translate="no"><span class="w">                                      </span><span class="n">the</span><span class="w"> </span><span class="n">specified</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">launch</span><span class="w">
+                                      </span><span class="n">a</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">instance</span><span class="o">.</span></code></pre></li></ul>
+  </section>
+</section>
 <section class="detail" id="rm_nullifier_check/2">
 
   <div class="detail-header">
@@ -212,76 +428,7 @@ GUIDES
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="run/3">
-
-  <div class="detail-header">
-    <a href="#run/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">run(order, arg, env)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> run(<a href="Noun.html#t:t/0">Noun.t</a>(), {:kv | :rm, <a href="Noun.html#t:t/0">Noun.t</a>()}, <a href="Nock.html#t:t/0">Nock.t</a>()) :: :ok | :error</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="snapshot/2">
-
-  <div class="detail-header">
-    <a href="#snapshot/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">snapshot(storage, env)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> snapshot(<a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>(), <a href="Nock.html#t:t/0">Nock.t</a>()) :: :ok | nil</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="wait_for_ready/2">
-
-  <div class="detail-header">
-    <a href="#wait_for_ready/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">wait_for_ready(env, order)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> wait_for_ready(<a href="Nock.html#t:t/0">Nock.t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
-
-      </div>
-
-
+<p>I perform the nullifier check for a resource machine transaction.</p><p>Given a storage and a list of nullifiers I check their placing in storage.</p>
   </section>
 </section>
 
@@ -292,11 +439,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.16.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.16.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.16.0/show/lib/anoma/node/executor/worker.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/executor/worker.ex">current file</a>)
 
             </span>
 
