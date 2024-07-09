@@ -140,12 +140,15 @@ defmodule AnomaTest.Node.Executor.Worker do
       Router.start_engine(
         router,
         Worker,
-        {order_id, {:ro, plus_one}, env, topic, nil}
+        {order_id, {:ro, plus_one}, env, topic, Router.self_addr()}
       )
 
     idx = Engine.get_state(env.ordering).next_order
     Ordering.new_order(env.ordering, [Order.new(idx, order_id, worker)])
 
+    # receive value from reply-to address
+    TestHelper.Worker.wait_for_read_value(1000)
+    # receive value from the worker topic subscription
     TestHelper.Worker.wait_for_read_value(1000)
     TestHelper.Worker.wait_for_worker(worker, :ok)
   end
