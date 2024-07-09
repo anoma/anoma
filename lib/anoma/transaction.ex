@@ -21,6 +21,15 @@ defmodule Anoma.Transaction do
     %Transaction{id: id, addr: addr, transaction: transaction}
   end
 
+  @spec new_with_order(
+          non_neg_integer,
+          non_neg_integer(),
+          Anoma.Node.Router.Addr.t()
+        ) :: t()
+  def new_with_order(order, id, addr) do
+    %Transaction{index: order, id: id, addr: addr}
+  end
+
   @spec index(t()) :: non_neg_integer
   def index(t), do: t.index
 

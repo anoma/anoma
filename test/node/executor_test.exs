@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Executor do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Order
+  alias Anoma.Transaction
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router
@@ -62,11 +62,15 @@ defmodule AnomaTest.Node.Executor do
     # simulate sending in 2 different orders
     ord_1 = Router.Engine.get_state(env.ordering).next_order
 
-    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1)])
+    Ordering.new_order(env.ordering, [
+      Transaction.new_with_order(ord_1, id_1, spawn_1)
+    ])
 
     ord_2 = Router.Engine.get_state(env.ordering).next_order
 
-    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2)])
+    Ordering.new_order(env.ordering, [
+      Transaction.new_with_order(ord_2, id_2, spawn_2)
+    ])
 
     # Setup default value for storage
     Storage.put(storage, key, 0)

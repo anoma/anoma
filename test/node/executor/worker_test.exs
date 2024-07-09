@@ -1,7 +1,6 @@
 defmodule AnomaTest.Node.Executor.Worker do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Order
   alias Anoma.Node.{Storage, Ordering, Router}
   alias Anoma.Node.Executor.Worker
   alias Anoma.Node.Router.Engine
@@ -59,11 +58,15 @@ defmodule AnomaTest.Node.Executor.Worker do
     # simulate sending in 2 different orders
     ord_1 = Engine.get_state(env.ordering).next_order
 
-    Ordering.new_order(env.ordering, [Order.new(ord_1, id_1, spawn_1)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(ord_1, id_1, spawn_1)
+    ])
 
     ord_2 = Engine.get_state(env.ordering).next_order
 
-    Ordering.new_order(env.ordering, [Order.new(ord_2, id_2, spawn_2)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(ord_2, id_2, spawn_2)
+    ])
 
     # Setup default value for storage
     Storage.put(storage, key, 0)
@@ -97,7 +100,9 @@ defmodule AnomaTest.Node.Executor.Worker do
     {:ok, spawn} =
       Router.start_engine(router, Worker, {id, {:kv, increment}, env, topic})
 
-    Ordering.new_order(env.ordering, [Order.new(1, id, spawn)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(1, id, spawn)
+    ])
 
     # do not setup storage, just snapshot with our key
     Storage.put_snapshot(storage, hd(env.snapshot_path))
@@ -140,7 +145,10 @@ defmodule AnomaTest.Node.Executor.Worker do
       )
 
     idx = Engine.get_state(env.ordering).next_order
-    Ordering.new_order(env.ordering, [Order.new(idx, order_id, worker)])
+
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(idx, order_id, worker)
+    ])
 
     TestHelper.Worker.wait_for_read_value(1000)
     TestHelper.Worker.wait_for_worker(worker, :ok)
@@ -164,7 +172,9 @@ defmodule AnomaTest.Node.Executor.Worker do
     {:ok, spawn} =
       Router.start_engine(router, Worker, {id, {:kv, bogus}, env, topic})
 
-    Ordering.new_order(env.ordering, [Order.new(1, id, spawn)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(1, id, spawn)
+    ])
 
     # we say that it can write, however we should still be alive, due
     # to the storage snapshot not being ready for it
@@ -233,7 +243,9 @@ defmodule AnomaTest.Node.Executor.Worker do
         {id, {:rm, rm_executor_tx}, env, topic}
       )
 
-    Ordering.new_order(env.ordering, [Order.new(0, id, spawn)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(0, id, spawn)
+    ])
 
     {:ok, spawn_1} =
       Router.start_engine(
@@ -242,7 +254,9 @@ defmodule AnomaTest.Node.Executor.Worker do
         {id_2, {:rm, rm_executor_tx}, env, topic}
       )
 
-    Ordering.new_order(env.ordering, [Order.new(1, id_2, spawn_1)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(1, id_2, spawn_1)
+    ])
 
     Router.send_raw(spawn, {:write_ready, 0})
     TestHelper.Worker.wait_for_worker(spawn, :ok)
@@ -323,7 +337,9 @@ defmodule AnomaTest.Node.Executor.Worker do
         {id, {:cairo, rm_executor_tx}, env, topic}
       )
 
-    Ordering.new_order(env.ordering, [Order.new(0, id, spawn)])
+    Ordering.new_order(env.ordering, [
+      Anoma.Transaction.new_with_order(0, id, spawn)
+    ])
 
     Router.send_raw(spawn, {:write_ready, 0})
     TestHelper.Worker.wait_for_worker(spawn, :ok)

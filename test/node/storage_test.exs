@@ -1,7 +1,7 @@
 defmodule AnomaTest.Node.Storage do
   use TestHelper.TestMacro, async: true
 
-  alias Anoma.Order
+  alias Anoma.Transaction
   alias Anoma.Node.Storage
   alias Anoma.Node.Ordering
   alias Anoma.Node.Router
@@ -31,7 +31,10 @@ defmodule AnomaTest.Node.Storage do
   end
 
   test "reset works", %{ordering: ordering} do
-    Ordering.new_order(ordering, [Order.new(1, <<3>>, Router.self_addr())])
+    Ordering.new_order(ordering, [
+      Transaction.new_with_order(1, <<3>>, Router.self_addr())
+    ])
+
     Ordering.reset(ordering)
     ordering = Engine.get_state(ordering)
     assert ordering.hash_to_order == %{}
@@ -44,8 +47,8 @@ defmodule AnomaTest.Node.Storage do
     Ordering.new_order(
       ordering,
       [
-        Order.new(1, <<3>>, Router.self_addr()),
-        Order.new(1, <<3>>, Router.self_addr())
+        Transaction.new_with_order(1, <<3>>, Router.self_addr()),
+        Transaction.new_with_order(1, <<3>>, Router.self_addr())
       ]
     )
 
@@ -58,8 +61,8 @@ defmodule AnomaTest.Node.Storage do
     assert 1 == Engine.get_state(ordering).next_order
 
     Ordering.new_order(ordering, [
-      Order.new(1, <<3>>, Router.self_addr()),
-      Order.new(2, <<3>>, Router.self_addr())
+      Transaction.new_with_order(1, <<3>>, Router.self_addr()),
+      Transaction.new_with_order(2, <<3>>, Router.self_addr())
     ])
 
     assert 3 == Engine.get_state(ordering).next_order
@@ -67,8 +70,8 @@ defmodule AnomaTest.Node.Storage do
 
   test "receiving read readies", %{ordering: ordering} do
     Ordering.new_order(ordering, [
-      Order.new(3, <<3>>, Router.self_addr()),
-      Order.new(4, <<3>>, Router.self_addr())
+      Transaction.new_with_order(3, <<3>>, Router.self_addr()),
+      Transaction.new_with_order(4, <<3>>, Router.self_addr())
     ])
 
     assert_receive {:read_ready, 3}
@@ -78,7 +81,11 @@ defmodule AnomaTest.Node.Storage do
   test "we properly cache orders", %{ordering: ordering} do
     Ordering.reset(ordering)
     assert Ordering.true_order(ordering, <<3>>) == nil
-    Ordering.new_order(ordering, [Order.new(1, <<3>>, Router.self_addr())])
+
+    Ordering.new_order(ordering, [
+      Transaction.new_with_order(1, <<3>>, Router.self_addr())
+    ])
+
     assert Ordering.true_order(ordering, <<3>>) == 1
   end
 
@@ -91,7 +98,10 @@ defmodule AnomaTest.Node.Storage do
       Ordering.reset(ordering)
       Storage.ensure_new(storage)
 
-      Ordering.new_order(ordering, [Order.new(1, <<1>>, Router.self_addr())])
+      Ordering.new_order(ordering, [
+        Transaction.new_with_order(1, <<1>>, Router.self_addr())
+      ])
+
       Storage.put(storage, testing_atom, 1)
       Storage.put_snapshot(storage, sstore)
       Storage.put(storage, testing_atom, 2)
@@ -137,7 +147,11 @@ defmodule AnomaTest.Node.Storage do
       Storage.put_snapshot(storage, sstore)
 
       assert Process.alive?(waiting)
-      Ordering.new_order(ordering, [Order.new(1, <<1>>, waiting)])
+
+      Ordering.new_order(ordering, [
+        Transaction.new_with_order(1, <<1>>, waiting)
+      ])
+
       assert_receive({:received, 1}, 5000)
     end
 
@@ -152,8 +166,8 @@ defmodule AnomaTest.Node.Storage do
       Storage.ensure_new(storage)
 
       Ordering.new_order(ordering, [
-        Order.new(1, <<1>>, Router.self_addr()),
-        Order.new(2, <<2>>, Router.self_addr())
+        Transaction.new_with_order(1, <<1>>, Router.self_addr()),
+        Transaction.new_with_order(2, <<2>>, Router.self_addr())
       ])
 
       Storage.put(storage, testing_atom, 1)
