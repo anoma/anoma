@@ -217,7 +217,7 @@ defmodule Anoma.Node.Mempool do
         {:subscribe_topic, ex_topic, :local}
       )
 
-    Executor.fire_new_transaction(ex, random_tx_id, tx_code)
+    Executor.fire_new_transaction(ex, random_tx_id, tx_code, nil)
 
     receive do
       {:"$gen_cast", {_, _, {:worker_spawned, addr}}} ->
