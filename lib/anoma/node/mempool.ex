@@ -44,7 +44,9 @@ defmodule Anoma.Node.Mempool do
     - `:executor` - The Executor Engine Address.
     - `:block_storage` - The name of the storage for created blocks.
                          Default: `Anoma.Block`
-    - `:transactions` - List of transaction candidates.
+    - `:transactions` - List of transaction candidates. Currently these do
+                        not have index info. That is handled by the
+                        Ordering engine.
                         Default: []
     - `:round` - The block round information.
                  Default: 0
