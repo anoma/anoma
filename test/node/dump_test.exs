@@ -51,7 +51,7 @@ defmodule AnomaTest.Node.Dump do
 
     Mempool.execute(node.mempool)
 
-    assert_receive {:"$gen_cast", {_, _, {:executed, {:ok, _}}}}
+    assert_receive({:"$gen_cast", {_, _, {:executed, {:ok, _}}}}, 5000)
 
     block_store_old = Mnesia.dump(:dump_blocks)
 
