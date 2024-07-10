@@ -12,8 +12,8 @@ defmodule TestHelper.Mempool do
   Afterwards I return the pending transaction structure.
   """
 
-  def wait_for_tx(mempool, tx_code, timeout \\ nil) do
-    Anoma.Node.Mempool.tx(mempool, tx_code)
+  def wait_for_tx(mempool, tx_code, timeout \\ nil, reply_to \\ nil) do
+    Anoma.Node.Mempool.tx(mempool, tx_code, reply_to)
     assert_receive({:"$gen_cast", {_, _, {:submitted, var}}}, timeout)
     var
   end
