@@ -60,13 +60,13 @@ defmodule AnomaTest.Node.Executor do
     spawn_2 = wait_for_spawn(executor, id_2, {:kv, increment}, nil, 5000)
 
     # simulate sending in 2 different orders
-    ord_1 = Router.Engine.get_state(env.ordering).next_order
+    ord_1 = Ordering.next_order(env.ordering)
 
     Ordering.new_order(env.ordering, [
       Transaction.new_with_order(ord_1, id_1, spawn_1)
     ])
 
-    ord_2 = Router.Engine.get_state(env.ordering).next_order
+    ord_2 = Ordering.next_order(env.ordering)
 
     Ordering.new_order(env.ordering, [
       Transaction.new_with_order(ord_2, id_2, spawn_2)
