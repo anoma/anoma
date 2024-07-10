@@ -56,13 +56,13 @@ defmodule AnomaTest.Node.Executor.Worker do
       )
 
     # simulate sending in 2 different orders
-    ord_1 = Engine.get_state(env.ordering).next_order
+    ord_1 = Ordering.next_order(env.ordering)
 
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(ord_1, id_1, spawn_1)
     ])
 
-    ord_2 = Engine.get_state(env.ordering).next_order
+    ord_2 = Ordering.next_order(env.ordering)
 
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(ord_2, id_2, spawn_2)
@@ -148,7 +148,7 @@ defmodule AnomaTest.Node.Executor.Worker do
         {order_id, {:ro, plus_one}, env, topic, Router.self_addr()}
       )
 
-    idx = Engine.get_state(env.ordering).next_order
+    idx = Ordering.next_order(env.ordering)
 
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(idx, order_id, worker)
