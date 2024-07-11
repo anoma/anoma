@@ -148,6 +148,10 @@ defmodule Noun do
 
   @spec atom_integer_to_binary(0) :: <<>>
   # special case: zero is the empty binary
+  def atom_integer_to_binary([]) do
+    atom_integer_to_binary(0)
+  end
+
   def atom_integer_to_binary(0) do
     <<>>
   end
@@ -173,5 +177,9 @@ defmodule Noun do
   def atom_binary_to_integer(integer)
       when is_integer(integer) and integer >= 0 do
     integer
+  end
+
+  def atom_binary_to_integer([]) do
+    atom_binary_to_integer(0)
   end
 end
