@@ -178,7 +178,7 @@ defmodule Anoma.Node.Ordering do
   ############################################################
 
   def handle_call({:true_order, id}, _from, state) do
-    log_info({true, id, state.logger})
+    log_info({:true_order, id, state.logger})
     {:reply, do_true_order(state, id), state}
   end
 
@@ -331,7 +331,7 @@ defmodule Anoma.Node.Ordering do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({true, id, logger}) do
+  defp log_info({:true_order, id, logger}) do
     Logger.add(logger, :info, "Requested true order. ID: #{inspect(id)}")
   end
 
