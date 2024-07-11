@@ -133,6 +133,19 @@ defmodule Anoma.Node.Ordering do
   end
 
   @doc """
+  I am the function showcasing all stored orders.
+
+  Given an ordering address, I get the keyspace associated to all orders
+  that got backed to the storage.
+  """
+
+  @spec all_orders(Router.Addr.t()) ::
+          list({non_neg_integer(), non_neg_integer()}) | []
+  def all_orders(ordering) do
+    Router.call(ordering, :all)
+  end
+
+  @doc """
   I am the function dealing with new ordered transactions.
 
   Given a list of ordered transactions where the transactions are indexed
@@ -187,6 +200,11 @@ defmodule Anoma.Node.Ordering do
     {:reply, do_next_order(state), state}
   end
 
+  def handle_call(:all, _from, state) do
+    log_info({:all, state.logger})
+    {:reply, do_all(state), state}
+  end
+
   def handle_cast({:new_order, trans}, _from, state) do
     handle_new_order(trans, state)
     {:noreply, state}
@@ -237,6 +255,15 @@ defmodule Anoma.Node.Ordering do
       :absent -> 1
       {:ok, value} -> value
       _ -> :error
+    end
+  end
+
+  @spec do_all(Ordering.t()) ::
+          list({non_neg_integer(), non_neg_integer()}) | []
+  defp do_all(state) do
+    case Storage.get_keyspace(state.storage, [:order]) do
+      :absent -> []
+      lst -> lst |> Enum.map(fn {[:order, id], order} -> {id, order} end)
     end
   end
 
@@ -337,6 +364,10 @@ defmodule Anoma.Node.Ordering do
 
   defp log_info({:new, logger}) do
     Logger.add(logger, :info, "Requested new order.")
+  end
+
+  defp log_info({:all, logger}) do
+    Logger.add(logger, :info, "Requested all orders.")
   end
 
   defp log_info({:reset, state, logger}) do
