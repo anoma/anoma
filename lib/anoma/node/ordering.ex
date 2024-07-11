@@ -11,8 +11,9 @@ defmodule Anoma.Node.Ordering do
 
   #### Ordering
 
+  - `all_orders/1`
+  - `new_order/1`
   - `true_order/2`
-  - `new_order/2`
 
   #### Reset
 
