@@ -66,6 +66,16 @@ defmodule Anoma.Cli do
           ]
         ]
       ],
+      ro_submit: [
+        name: "ro-submit",
+        about: "Submit a read-only transaction and print computed value.",
+        args: [
+          file: [
+            required: true,
+            parser: :string
+          ]
+        ]
+      ],
       shutdown: [
         name: "shutdown",
         about: "Shutdowns the server"
@@ -166,6 +176,10 @@ defmodule Anoma.Cli do
 
   def run_commands({[:rm_submit], %{args: %{file: file}}}, ci) do
     run_client_command({:rm_submit_tx, file}, ci)
+  end
+
+  def run_commands({[:ro_submit], %{args: %{file: file}}}, ci) do
+    run_client_command({:ro_submit_tx, file}, ci)
   end
 
   def run_commands({[:get], %{args: %{key: key}}}, ci) do

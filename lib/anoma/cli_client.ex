@@ -108,6 +108,24 @@ defmodule Anoma.Cli.Client do
     do_submit(path, server_engines, :rm)
   end
 
+  defp perform({:ro_submit_tx, path}, server_engines) do
+    client_addr = Router.Addr.id(Router.self_addr())
+
+    case do_submit(path, server_engines, :ro, client_addr) do
+      {0, _} ->
+        receive do
+          {:"$gen_cast", {:router_external_cast, _, payload}} ->
+            {:ok, {:read_value, value}} = Anoma.Serialise.unpack(payload)
+
+            IO.puts("#{inspect(value)}")
+            {0, value}
+        end
+
+      res ->
+        res
+    end
+  end
+
   defp perform(:shutdown, server_engines) do
     Anoma.Node.Router.shutdown_node(server_engines.router)
     {0, nil}
@@ -258,10 +276,10 @@ defmodule Anoma.Cli.Client do
   #                        Helper                            #
   ############################################################
 
-  defp do_submit(path, server_engines, kind) do
+  defp do_submit(path, server_engines, kind, reply_to \\ nil) do
     with {:ok, tx} <- File.read(path),
          {:ok, tx} <- Noun.Format.parse(tx) do
-      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, tx})
+      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, tx}, reply_to)
       {0, nil}
     else
       {:error, error} ->
