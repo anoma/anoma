@@ -314,7 +314,7 @@ defmodule Anoma.Node.Mempool do
 
   @doc """
   I order the transactions based on the current ordering specified by the
-  Ordering engine, place a new orderig, and for every ordered transaction,
+  Ordering engine, place a new ordering, and for every ordered transaction,
   send to their appropriate Worker a `:write_ready` message.
 
   Return :ok.

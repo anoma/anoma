@@ -51,17 +51,13 @@ defmodule Anoma.Node.Ordering do
     @typedoc """
     I am the type of the Ordering Engine.
 
-    I have basic fields relating to upcoming ordering for the incoming
-    transactions as well as mapping of transaction ID's to their orders.
+    I am an agent which has a direct access to the storage and asks it to
+    give me information on stored ordering info regarding all transactions
+    processed.
 
     ### Fileds
 
     - `:storage` - The address of the storage engine
-    - `:next_order` - The integer referencing the order to be given to the
-                      next incoming transaction.
-                      Default: 1
-    - `:hash_to_order` - A map of transaction ID's and their orders.
-                         Default: %{}
     - `:logger` - The Logger Engine address.
     """
 
@@ -112,8 +108,11 @@ defmodule Anoma.Node.Ordering do
   I am the true order function.
 
   Given a transaction ID, I get the order associated with the transaction.
-  I look at the map stored in the state and then check the value of said
-  ID.
+
+  To do this I ask storage to get the value of the appropriate keyword
+  formulated using the transaction ID.
+
+  If no order is present, I return `:absent`.
   """
 
   @spec true_order(Router.Addr.t(), any()) :: non_neg_integer() | :absent
@@ -136,10 +135,12 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I am the function dealing with new ordered transactions.
 
-  Given a list of ordered transactions, I update the Ordering Engine state
-  appropritaely by changing the `:next_order` field and filling in the
-  `:hash_to_order` field with new key-value pairs pairing the new ID's with
-  their asigned orderings.
+  Given a list of ordered transactions where the transactions are indexed
+  according to the order they are supposed to be put to, I populate the
+  storage one by one with the new orders as given in their index fields.
+
+  I then set the `:new_order` key in the storage to the index of the last
+  transaction fed-in.
   """
 
   @spec new_order(Router.Addr.t(), ordered_transactions()) ::
@@ -151,8 +152,8 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I am the Ordering Engine reset function.
 
-  I get rid of all hot state fields of the Ordering Engine leaving only the
-  Storage and Logger address intact.
+  Using storage functionality, I delete all keys that are used throughout
+  my lifecycle, including all `:order` namespace keys and `:next_order`.
   """
 
   @spec reset(Router.Addr.t()) :: :ok
@@ -163,9 +164,9 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I hard reset the Ordering Engine.
 
-  Similarly to `reset/1` I get rid of all hot state fields in the Ordering
-  Engine. Moreover, I ask the Storage engine to ensure that the tables are
-  re-launched and put a new snapshot specified by the second argument.
+  Similarly to `reset/1`, I renew the Ordering usage. However, I do that by
+  completely resetting the Storage tables used, instead of tombstoning the
+  keys using the Storage functionality.
   """
   @spec hard_reset(Router.Addr.t(), atom()) :: :ok
   def hard_reset(ordering, initial_snapshot) do
@@ -177,7 +178,7 @@ defmodule Anoma.Node.Ordering do
   ############################################################
 
   def handle_call({:true_order, id}, _from, state) do
-    log_info({:true, id, state.logger})
+    log_info({true, id, state.logger})
     {:reply, do_true_order(state, id), state}
   end
 
@@ -213,7 +214,7 @@ defmodule Anoma.Node.Ordering do
 
     log_info({:hard_reset, storage, initial_snapshot, state.logger})
 
-    {:noreply, %Ordering{storage: state.storage, logger: state.logger}}
+    {:noreply, state}
   end
 
   ############################################################
@@ -242,12 +243,12 @@ defmodule Anoma.Node.Ordering do
   @doc """
   I handle the new ordered transactions comming in to the Ordering Engine.
 
-  I send read_ready messages regarding the transaction orders, then add the
-  length of the incoming transaction list to the `:next_order` value,
-  finally updating the `:hash_to_order` map with new key-values.
+  I send read_ready messages regarding the transaction orders, putting
+  their orders alingside their id's in the Storage. Finally, after each
+  transaction is processed, I set the `:next_order` key to the index of the
+  last transaction I got.
 
-  I return a tuple where the first argument is the new proposed next order
-  while the second argument is the new map of ID's to orders.
+  If I get sent an empty list, I do nothing.
   """
 
   @spec handle_new_order(ordered_transactions(), t()) ::
@@ -330,7 +331,7 @@ defmodule Anoma.Node.Ordering do
   #                     Logging Info                         #
   ############################################################
 
-  defp log_info({:true, id, logger}) do
+  defp log_info({true, id, logger}) do
     Logger.add(logger, :info, "Requested true order. ID: #{inspect(id)}")
   end
 
