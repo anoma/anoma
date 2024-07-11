@@ -26,6 +26,9 @@ defmodule Examples.ENode do
 
   @doc """
   We give an example of the full node!
+
+  We reuse the storage given in, so please keep the snapshot names
+  properly.
   """
   @spec fresh_full_node(Storage.t(), atom()) :: Node.t()
   @spec fresh_full_node(
@@ -52,7 +55,7 @@ defmodule Examples.ENode do
       Anoma.Node.start_link_or_find_instance(
         testing: true,
         use_rocks: false,
-        settings: {:new_storage, (options ++ config) |> Node.start_min()}
+        settings: {:existing_storage, (options ++ config) |> Node.start_min()}
       )
 
     Node.state(nodes)

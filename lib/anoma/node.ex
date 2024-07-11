@@ -104,9 +104,14 @@ defmodule Anoma.Node do
   specific configuration settings. However if I'm a `:from_dump` then
   Ι have a superset of that information containing `mnesia` table
   configuration information as well.
+
+  If the mode is in `:existing_storage`, then Ι do nothing with the
+  given storage. I assume that the snapshot path is consistent between
+  this version of storage and what is configured in the node.
   """
   @type node_settings() ::
           {:new_storage, engine_configuration()}
+          | {:existing_storage, engine_configuration()}
           | {:from_dump, Anoma.Dump.dump()}
 
   @type min_engine_configuration() :: [
@@ -170,7 +175,18 @@ defmodule Anoma.Node do
     node_settings = {kind, settings} = args[:settings]
 
     {storage, block_storage} = storage_data(node_settings)
-    storage_setup(storage, block_storage, rocks)
+
+    # Clear out storage if the settings allow it
+    case kind do
+      :from_dump ->
+        storage_setup(storage, block_storage, rocks)
+
+      :new_storage ->
+        storage_setup(storage, block_storage, rocks)
+
+      :existing_storage ->
+        nil
+    end
 
     case kind do
       :from_dump ->
