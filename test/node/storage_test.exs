@@ -36,9 +36,8 @@ defmodule AnomaTest.Node.Storage do
     ])
 
     Ordering.reset(ordering)
-    storage = Engine.get_state(ordering).storage
 
-    assert Storage.get_keyspace(storage, [:order]) == :absent
+    assert Ordering.all_orders(ordering) == []
     assert Ordering.next_order(ordering) == 1
   end
 
@@ -53,9 +52,7 @@ defmodule AnomaTest.Node.Storage do
       ]
     )
 
-    storage = Engine.get_state(ordering).storage
-
-    assert Storage.get_keyspace(storage, [:order]) == [{[:order, <<3>>], 1}]
+    assert Ordering.all_orders(ordering) == [{<<3>>, 1}]
     assert Ordering.true_order(ordering, <<3>>) == 1
   end
 
