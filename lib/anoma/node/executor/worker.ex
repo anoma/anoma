@@ -5,11 +5,26 @@ defmodule Anoma.Node.Executor.Worker do
   My instance gets launched by the Executor and is connected to a unique
   transaction.
 
-  I am responsible for the main work done to run a succesful transaction
+  I am responsible for the main work done to run a successful transaction
   lifecycle. This includes processing of transactions, calling for their
   ordering via the Ordering Engine, creation and revision of commitment
   trees, nullifier key-checking, as well as the storage of relevant data
   for transaction completion before block-execution.
+
+  ### How I Run Transactions at a High Level
+
+  Transactions from user come in the following format `{backend,
+  noun}`:
+
+     - The `backend` can be one of many options found in
+       `t:backend/0`. These backends dramatically affect how
+       transactions actually run. It is best to read the documentation
+       found in `t:backend/0` to understand the totality of changes
+       and properties each backend possesses
+
+     - The `noun` on the other-hand is a
+       `Glossary.transaction_candidate/0` that hopefully produces
+       valid `nock` for the given `t:backend/0`.
 
   ### Public API
 
@@ -18,15 +33,47 @@ defmodule Anoma.Node.Executor.Worker do
   - `rm_nullifier_check/2`
   """
 
+  alias Anoma.Resource
   alias Anoma.Resource.Transaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
 
   use Router.Engine, restart: :transient
   use TypedStruct
+  require Anoma.Utility
+  import Anoma.Utility
 
   import Nock
 
+  @typedoc """
+  I may be one of many backends!
+
+  ### Options
+
+     - `:rm` - the Nock resource machine backend
+     - `:kv` - the key value backend
+     - `:ro` - the read only backend
+     - `:cairo` - the [Cairo](https://www.cairo-lang.org/) backend
+
+  ### Resource Machine
+  I am represented by the `:rm` variant.
+
+  The precise specification of my abstraction semantics can be found:
+  [here](https://zenodo.org/records/10689620)
+
+  I implement this report with the following choices:
+
+    1. I am a transparent resource machine implementation. Meaning no
+       values are truly private.
+    2. To see the format of my commitments please read `Resource.commitment/1`
+    3. Likewise with my nullifiers please read `Resource.nullifier/2`
+
+  ### Key Value
+
+  ### Read Only
+
+  ### Cairo
+  """
   @type backend() :: :kv | :rm | :cairo | :ro
 
   # TODO :: Please replace with a verify protocol
@@ -103,20 +150,62 @@ defmodule Anoma.Node.Executor.Worker do
   #                  Genserver Implementation                #
   ############################################################
 
+  docp("""
+  I am the main functionality and the entry point of the worker.
+
+  I simply run the given transaction in one of our many backends. To
+  see the full list of our backends please read my
+  `t:backend/0`. Further the primary argument I operate on is the
+  `:tx` field within my environment.
+
+  ## How We Run Transactions
+
+  See my module documentation, where we outline the process of running
+  a transaction.
+
+  For more detail please read these following functions which
+  implement the general strategy:
+
+  - `persist/3`
+  - `execute_key_value_tx/2`
+  - `execute_rm_tx/2`
+  - `snapshot/2`
+  - `send_value/3`
+  - `store_value/3`
+
+  ## Examples
+
+  For example, one ought to call me from spawning the engine.
+
+  So under normal use I'm ran like the following
+
+      > {:ok, spawn} =
+      Router.start_engine(router, Worker, {id, {:rm, rm_executor_tx}, env, topic})
+
+  The `{id, {:rm, ...}, env, topic}` correspond to the fields in the `t:t/0`.
+
+  Thus if you wanted to call me by hand you could write instead:
+
+      > run(%Worker{ id: id_1
+                   , tx: {:rm, rm_executor_tx}
+                   , env: env
+                   , completion_topic: topic})
+  """)
+
   @spec run(t()) :: :ok | :error
-  defp run(s = %__MODULE__{tx: {:ro, _}}) do
+  defbug run(s = %__MODULE__{tx: {:ro, _}}) do
     execute_key_value_tx(s, &send_value/3)
   end
 
-  defp run(s = %__MODULE__{tx: {:kv, _}}) do
+  defbug run(s = %__MODULE__{tx: {:kv, _}}) do
     execute_key_value_tx(s, &store_value/3)
   end
 
-  defp run(s = %__MODULE__{tx: {:rm, _}}) do
+  defbug run(s = %__MODULE__{tx: {:rm, _}}) do
     execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify/1})
   end
 
-  defp run(s = %__MODULE__{tx: {:cairo, _}}) do
+  defbug run(s = %__MODULE__{tx: {:cairo, _}}) do
     execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify_cairo/1})
   end
 
@@ -216,7 +305,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   @spec persist(Nock.t(), Noun.t(), Transaction.t()) :: any()
-  defp persist(env, true_order, vm_resource_tx) do
+  def persist(env, true_order, vm_resource_tx) do
     logger = env.logger
     storage = Router.Engine.get_state(env.ordering).storage
 
