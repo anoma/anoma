@@ -1,8 +1,14 @@
 defmodule AnomaTest.Node.Mempool do
   use TestHelper.TestMacro, async: true
 
+  alias Examples.ENode.EMempool
   alias Anoma.Node.{Storage, Mempool, Router}
   import TestHelper.{Nock, Mempool}
+
+  test "examples" do
+    EMempool.increment_pool()
+    EMempool.incremented_lucky_one_jam()
+  end
 
   setup_all do
     storage = %Storage{
