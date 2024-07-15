@@ -18,6 +18,7 @@ defmodule Anoma.Node.Executor.Worker do
   - `rm_nullifier_check/2`
   """
 
+  alias Anoma.Resource
   alias Anoma.Resource.Transaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
@@ -251,10 +252,11 @@ defmodule Anoma.Node.Executor.Worker do
     new_tree =
       for commitment <- vm_resource_tx.commitments, reduce: cm_tree do
         tree ->
-          cm_key = ["rm", "commitments", commitment]
+          commit_hash = Resource.commitment_hash(commitment)
+          cm_key = ["rm", "commitments", commit_hash]
+
           Storage.put(storage, cm_key, true)
-          # yeah, this is not using the api right
-          CommitmentTree.add(tree, [commitment])
+          CommitmentTree.add(tree, [commit_hash])
           log_info({:put, cm_key, logger})
           tree
       end
@@ -262,7 +264,8 @@ defmodule Anoma.Node.Executor.Worker do
     Storage.put(storage, ["rm", "commitment_root"], new_tree.root)
 
     for nullifier <- vm_resource_tx.nullifiers do
-      nf_key = ["rm", "nullifiers", nullifier]
+      nullifier_hash = Resource.nullifier_hash(nullifier)
+      nf_key = ["rm", "nullifiers", nullifier_hash]
       Storage.put(storage, nf_key, true)
       log_info({:put, nf_key, logger})
     end
@@ -285,7 +288,7 @@ defmodule Anoma.Node.Executor.Worker do
   def rm_nullifier_check(storage, nullifiers) do
     for nullifier <- nullifiers, reduce: true do
       acc ->
-        nf_key = ["rm", "nullifiers", nullifier]
+        nf_key = ["rm", "nullifiers", Resource.nullifier_hash(nullifier)]
         acc && Storage.get(storage, nf_key) == :absent
     end
   end

@@ -4,6 +4,7 @@ defmodule Examples.ENode.EIntent do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Resource
   alias Examples.{ETransaction, ENode, ENode.EStorage, EResource}
   alias Anoma.Symbol
   alias Anoma.Node
@@ -70,8 +71,18 @@ defmodule Examples.ENode.EIntent do
 
     [EResource.ax_nullifier(), EResource.by_nullifier()]
     |> Enum.each(fn null ->
+      hash = Resource.nullifier_hash(null)
+
       assert {:ok, true} =
-               Storage.get(anode.storage, ["rm", "nullifiers", null])
+               Storage.get(anode.storage, ["rm", "nullifiers", hash])
+    end)
+
+    [EResource.ay_commit(), EResource.bx_commit()]
+    |> Enum.each(fn commit ->
+      hash = Resource.commitment_hash(commit)
+
+      assert {:ok, true} =
+               Storage.get(anode.storage, ["rm", "commitments", hash])
     end)
 
     anode
