@@ -141,6 +141,11 @@ defmodule Noun do
     []
   end
 
+  @spec list_nock_to_erlang([]) :: []
+  def list_nock_to_erlang([]) do
+    []
+  end
+
   @spec list_nock_to_erlang(nonempty_improper_list(t(), t())) :: list(t())
   def list_nock_to_erlang([h | t]) do
     [h | list_nock_to_erlang(t)]
