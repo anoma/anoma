@@ -26,8 +26,11 @@ defmodule Anoma.Node.Executor.Worker do
   use TypedStruct
 
   import Nock
+  require Noun
 
   @type backend() :: :kv | :rm | :cairo | :ro
+
+  @type transaction() :: {backend(), Noun.t() | binary()}
 
   # TODO :: Please replace with a verify protocol
   @type verify_fun(trans) :: (trans -> boolean())
@@ -50,7 +53,7 @@ defmodule Anoma.Node.Executor.Worker do
     """
 
     field(:id, non_neg_integer())
-    field(:tx, {backend(), Noun.t()})
+    field(:tx, transaction())
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
   end
@@ -68,10 +71,8 @@ defmodule Anoma.Node.Executor.Worker do
                                               a Worker instance.
   """
 
-  @spec init(
-          {non_neg_integer(), {backend(), Noun.t()}, Nock.t(),
-           Router.Addr.t()}
-        ) :: {:ok, Worker.t()}
+  @spec init({non_neg_integer(), transaction(), Nock.t(), Router.Addr.t()}) ::
+          {:ok, Worker.t()}
   def init({id, tx, env, completion_topic}) do
     send(self(), :run)
 
@@ -104,6 +105,21 @@ defmodule Anoma.Node.Executor.Worker do
   ############################################################
 
   @spec run(t()) :: :ok | :error
+  defp run(s = %__MODULE__{tx: {backend, tx}, env: env})
+       when Noun.is_noun_atom(tx) do
+    case Nock.Cue.cue(tx) do
+      {:ok, tx} ->
+        run(%__MODULE__{s | tx: {backend, tx}})
+
+      :error ->
+        storage = Router.Engine.get_state(env.ordering).storage
+        log_info({:fail, "failed to cue!", env.logger})
+        wait_for_ready(s)
+        snapshot(storage, env)
+        :error
+    end
+  end
+
   defp run(s = %__MODULE__{tx: {:ro, _}}) do
     execute_key_value_tx(s, &send_value/3)
   end
