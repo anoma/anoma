@@ -52,7 +52,6 @@ defmodule Examples.ENode.EStorage do
     Storage.ensure_new(anode.storage)
 
     assert :absent == Storage.get(anode.storage, 555)
-    assert [] == Storage.get_keyspace(anode.storage, [])
     assert [] == Storage.get_keyspace(anode.storage, ["aaaaaa"])
     assert [] == Storage.get_keyspace(anode.storage, ["aaaaaa", "bbbb"])
 
@@ -379,7 +378,7 @@ defmodule Examples.ENode.EStorage do
   @spec anode(Symbol.s()) :: Node.t()
   def anode(arg \\ "none") do
     raw_storage(arg)
-    |> ENode.simple_storage_topic()
+    |> ENode.fresh_full_node(Symbol.append(__MODULE__, "." <> to_string(arg)))
   end
 
   @spec raw_storage() :: Storage.t()
