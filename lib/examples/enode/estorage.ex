@@ -83,6 +83,11 @@ defmodule Examples.ENode.EStorage do
   I have `Examples.Enock.one_two/2` in storage twice and a snapshot!
 
   The snapshot only snapshots the first key though, keep that in mind.
+
+  ### Keys:
+   - `Examples.ENock.one_two/0` - latest value is `lucky_value/0`
+   - `Examples.ENode.base_snapshot_path/0` - snapshot with
+     `Examples.ENock.one_two/0` being 1
   """
   @spec snapshot_then_put() :: Node.t()
   @spec snapshot_then_put(Symbol.s()) :: Node.t()
@@ -372,7 +377,7 @@ defmodule Examples.ENode.EStorage do
 
   @spec anode() :: Node.t()
   @spec anode(Symbol.s()) :: Node.t()
-  defmemo anode(arg \\ "none") do
+  def anode(arg \\ "none") do
     raw_storage(arg)
     |> ENode.simple_storage_topic()
   end
