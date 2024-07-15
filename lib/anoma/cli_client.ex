@@ -211,7 +211,8 @@ defmodule Anoma.Cli.Client do
 
     case Noun.Format.parse(tx) do
       {:ok, tx} ->
-        Anoma.Node.Mempool.tx(other_mempool_addr, {kind, tx})
+        jammed = Nock.Jam.jam(tx)
+        Anoma.Node.Mempool.tx(other_mempool_addr, {kind, jammed})
 
       :error ->
         IO.puts("Failed to parse transaction from file #{path}")
