@@ -78,6 +78,18 @@ defmodule Anoma.Cli do
           ]
         ]
       ],
+      check_commitment: [
+        name: "check-commitment",
+        about:
+          "Checks whether a commitment is in storage or not. Takes a Base64 key",
+        args: [
+          commitment: [
+            required: true,
+            parser: :string,
+            help: "The commitment Key encoded in Base64"
+          ]
+        ]
+      ],
       shutdown: [
         name: "shutdown",
         about: "Shutdowns the server"
@@ -178,6 +190,10 @@ defmodule Anoma.Cli do
 
   def run_commands({[:rm_submit], %{args: %{file: file}}}, ci) do
     run_client_command({:rm_submit_tx, file}, ci)
+  end
+
+  def run_commands({[:check_commitment], %{args: %{commitment: comm}}}, ci) do
+    run_client_command({:check_commitment, comm}, ci)
   end
 
   def run_commands({[:check_nullifier], %{args: %{nullifier: null}}}, ci) do

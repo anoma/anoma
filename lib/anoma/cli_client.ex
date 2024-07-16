@@ -108,16 +108,14 @@ defmodule Anoma.Cli.Client do
     do_submit(path, server_engines, :rm)
   end
 
-  defp perform({:check_nulifier, null}, server_engines) do
-    case Base.decode64(null) do
-      {:ok, decoded_nullifier} ->
-        nullifier_path = ["rm", "nullifiers", decoded_nullifier]
-        perform({:get_key, nullifier_path}, server_engines)
+  defp perform({:check_commitment, comm}, server_engines) do
+    ["rm", "commitments"]
+    |> base64_storage_check(comm, server_engines)
+  end
 
-      :error ->
-        IO.puts("Error decoding key")
-        {1, nil}
-    end
+  defp perform({:check_nulifier, null}, server_engines) do
+    ["rm", "nullifiers"]
+    |> base64_storage_check(null, server_engines)
   end
 
   defp perform(:shutdown, server_engines) do
@@ -269,6 +267,18 @@ defmodule Anoma.Cli.Client do
   ############################################################
   #                        Helper                            #
   ############################################################
+
+  defp base64_storage_check(path_prefix, base64_path_suffix, server_engines) do
+    case Base.decode64(base64_path_suffix) do
+      {:ok, decoded_suffix} ->
+        full_path = path_prefix ++ [decoded_suffix]
+        perform({:get_key, full_path}, server_engines)
+
+      :error ->
+        IO.puts("Error decoding key")
+        1
+    end
+  end
 
   defp do_submit(path, server_engines, kind) do
     with {:ok, tx} <- File.read(path),
