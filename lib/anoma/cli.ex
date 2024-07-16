@@ -66,6 +66,18 @@ defmodule Anoma.Cli do
           ]
         ]
       ],
+      check_nullifier: [
+        name: "check-nullifier",
+        about:
+          "Checks whether a nullifier is in storage or not. Takes a Base64 key",
+        args: [
+          nullifier: [
+            required: true,
+            parser: :string,
+            help: "The Nullifier Key encoded in Base64"
+          ]
+        ]
+      ],
       shutdown: [
         name: "shutdown",
         about: "Shutdowns the server"
@@ -166,6 +178,10 @@ defmodule Anoma.Cli do
 
   def run_commands({[:rm_submit], %{args: %{file: file}}}, ci) do
     run_client_command({:rm_submit_tx, file}, ci)
+  end
+
+  def run_commands({[:check_nullifier], %{args: %{nullifier: null}}}, ci) do
+    run_client_command({:check_nulifier, null}, ci)
   end
 
   def run_commands({[:get], %{args: %{key: key}}}, ci) do
