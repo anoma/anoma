@@ -108,6 +108,18 @@ defmodule Anoma.Cli.Client do
     do_submit(path, server_engines, :rm)
   end
 
+  defp perform({:check_nulifier, null}, server_engines) do
+    case Base.decode64(null) do
+      {:ok, decoded_nullifier} ->
+        nullifier_path = ["rm", "nullifiers", decoded_nullifier]
+        perform({:get_key, nullifier_path}, server_engines)
+
+      :error ->
+        IO.puts("Error decoding key")
+        {1, nil}
+    end
+  end
+
   defp perform(:shutdown, server_engines) do
     Anoma.Node.Router.shutdown_node(server_engines.router)
     {0, nil}
