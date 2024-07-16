@@ -206,8 +206,9 @@ defmodule Anoma.Node.Logger do
       msg
     )
 
-    unless topic == nil do
-      Router.cast(state.topic, {:logger_add, addr, msg})
+    if logger != nil and
+         logger |> Router.Addr.pid() |> Process.alive?() do
+      Router.cast(topic, {:logger_add, addr, msg})
     end
 
     log_fun({atom, msg})
