@@ -230,12 +230,11 @@ defmodule Anoma.Node.Router do
   """
   use GenServer
   use TypedStruct
-  require Logger
 
   alias __MODULE__
   alias Anoma.Crypto.Id
   alias Anoma.Node.Router.Addr
-  alias Anoma.Node.Transport
+  alias Anoma.Node.{Transport, Logger}
 
   @type addr() :: Addr.t()
 
@@ -370,6 +369,7 @@ defmodule Anoma.Node.Router do
     field(:transport, addr())
     # mapping id -> [pending messages]
     field(:msg_queue, map(), default: %{})
+    field(:logger, Addr.t(), enforce: false)
   end
 
   @spec start_link({Id.t(), addr(), addr(), t()}) :: GenServer.on_start()
@@ -580,7 +580,7 @@ defmodule Anoma.Node.Router do
   def cast(addr, msg) do
     case Addr.noncanonical_server(addr) do
       nil ->
-        Logger.info("casting to non-local addr #{inspect(addr)}")
+        log_info({:casting, addr})
 
         # todo message serialisation should happen here (but there is some subtlety
         # because local topics also go through the router, and we don't want to
@@ -642,7 +642,7 @@ defmodule Anoma.Node.Router do
   end
 
   defp call_nonlocal(addr, msg, timeout) do
-    Logger.info("calling non-local addr #{inspect(addr)}")
+    log_info({:calling, addr})
     # todo message serialisation should happen here
     GenServer.cast(
       Addr.server(router()),
@@ -739,12 +739,12 @@ defmodule Anoma.Node.Router do
         do_handle_external_cast(msg, src, s)
 
       :error ->
-        Logger.warning("Not able to detect message")
+        log_info({:message_detect, s.logger})
     end
   end
 
-  def handle_self_cast(:shutdown_everything, _src, _s) do
-    Logger.warning("Shutting Down the system")
+  def handle_self_cast(:shutdown_everything, _src, s) do
+    log_info({:shutdown, s.logger})
     System.stop()
   end
 
@@ -760,19 +760,21 @@ defmodule Anoma.Node.Router do
 
   def handle_self_cast({:p2p_raw, _node_id, msg}, %{server: server}, s)
       when server != nil do
+    logger = s.logger
+
     case msg do
       %{"data" => data, "sig" => sig} ->
         case Anoma.Serialise.unpack(data) do
           {:ok, [dst_id = %Id.Extern{}, src_id = %Id.Extern{}, msg]} ->
             if not Anoma.Crypto.Sign.verify_detached(sig, data, src_id.sign) do
-              Logger.info("dropping message; bad signature")
+              log_info({:drop_sig, logger})
               s
             else
               src_addr = id_to_addr(s, src_id)
               dst_addr = id_to_addr(s, dst_id)
 
               if not Map.has_key?(s.local_engines, dst_id) do
-                Logger.info("dropping message; unknown engine")
+                log_info({:drop_eng, logger})
                 s
               else
                 case msg do
@@ -789,9 +791,7 @@ defmodule Anoma.Node.Router do
                       }
                     else
                       # timeout expired, or confused or malicious correspondant; drop
-                      Logger.info(
-                        "dropping message; response but no corresponding call"
-                      )
+                      log_info({:drop_call, logger})
 
                       s
                     end
@@ -827,9 +827,7 @@ defmodule Anoma.Node.Router do
 
                   # unknown message format; drop
                   _ ->
-                    Logger.info(
-                      "dropping message (3); invalid format #{inspect(msg)}"
-                    )
+                    log_info({:drop_form_3, logger, msg})
 
                     s
                 end
@@ -837,15 +835,13 @@ defmodule Anoma.Node.Router do
             end
 
           _ ->
-            Logger.info(
-              "dropping message (2); invalid format #{inspect(Anoma.Serialise.unpack(data))}"
-            )
+            log_info({:drop_form_2, logger, Anoma.Serialise.unpack(data)})
 
             s
         end
 
       _ ->
-        Logger.info("dropping message (1); invalid format #{inspect(msg)}")
+        log_info({:drop_form_1, logger, msg})
         s
     end
   end
@@ -935,7 +931,7 @@ defmodule Anoma.Node.Router do
     cond do
       # send directly to a local engine
       Addr.server(dst) ->
-        Logger.info("cast to #{inspect(dst)}")
+        log_info({:dir_cast, dst})
         GenServer.cast(Addr.server(dst), {:router_cast, src, msg})
         s
 
@@ -997,8 +993,8 @@ defmodule Anoma.Node.Router do
     }
   end
 
-  def do_handle_external_cast(:shutdown_everything, _src, _s) do
-    Logger.warning("Shutting Down the system")
+  def do_handle_external_cast(:shutdown_everything, _src, s) do
+    log_info({:shutdown, s.logger})
     System.stop()
   end
 
@@ -1123,5 +1119,69 @@ defmodule Anoma.Node.Router do
         "%RID{id: #{id_string}}"
       end
     end
+  end
+
+  ############################################################
+  #                     Logging Info                         #
+  ############################################################
+
+  defp log_info({:casting, addr}) do
+    Logger.add(nil, :info, "Casting to non-local addr #{inspect(addr)}")
+  end
+
+  defp log_info({:calling, addr}) do
+    Logger.add(nil, :info, "Calling non-local addr #{inspect(addr)}")
+  end
+
+  defp log_info({:message_detect, logger}) do
+    Logger.add(logger, :debug, "Not able to detect message")
+  end
+
+  defp log_info({:shutdown, logger}) do
+    Logger.add(logger, :info, "Shutting down the system")
+  end
+
+  defp log_info({:drop_sig, logger}) do
+    Logger.add(logger, :debug, "Dropping message; bad signature")
+  end
+
+  defp log_info({:drop_eng, logger}) do
+    Logger.add(logger, :debug, "Dropping message; unknown engine")
+  end
+
+  defp log_info({:drop_call, logger}) do
+    Logger.add(
+      logger,
+      :debug,
+      "Dropping message; response but no corresponding call"
+    )
+  end
+
+  defp log_info({:drop_form_1, logger, msg}) do
+    Logger.add(
+      logger,
+      :debug,
+      "Dropping message (1); invalid format #{inspect(msg)}"
+    )
+  end
+
+  defp log_info({:drop_form_2, logger, data}) do
+    Logger.add(
+      logger,
+      :debug,
+      "Dropping message (2); invalid format #{inspect(data)}"
+    )
+  end
+
+  defp log_info({:drop_form_3, logger, msg}) do
+    Logger.add(
+      logger,
+      :debug,
+      "Dropping message (3); invalid format #{inspect(msg)}"
+    )
+  end
+
+  defp log_info({:dir_cast, dst}) do
+    Logger.add(nil, :info, "Cast to #{inspect(dst)}")
   end
 end
