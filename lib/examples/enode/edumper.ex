@@ -22,6 +22,10 @@ defmodule Examples.ENode.EDumper do
     Dumper.start(anode.dumper)
     assert File.exists?(path) == false
 
+    # Enforce the wait for task-spawn
+    # should be replaced when topics become a thing
+    Anoma.Node.Router.Engine.get_state(anode.dumper)
+
     assert :ok ==
              Router.call(anode.router, {:subscribe_topic, log_top, :local})
 
