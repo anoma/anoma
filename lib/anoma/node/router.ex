@@ -538,6 +538,10 @@ defmodule Anoma.Node.Router do
   def stop(_router) do
   end
 
+  def set_logger(router, logger) do
+    Router.cast(router, {:set_logger, logger})
+  end
+
   ############################################################
   #                     Public Server API                    #
   ############################################################
@@ -741,6 +745,10 @@ defmodule Anoma.Node.Router do
       :error ->
         log_info({:message_detect, s.logger})
     end
+  end
+
+  def handle_self_cast({:set_logger, logger}, _src, s) do
+    %Router{s | logger: logger}
   end
 
   def handle_self_cast(:shutdown_everything, _src, s) do
