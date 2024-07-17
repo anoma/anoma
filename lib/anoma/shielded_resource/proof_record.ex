@@ -25,4 +25,6 @@ defmodule Anoma.ShieldedResource.ProofRecord do
       public_inputs: public_inputs
     }
   end
+
+  # TODO: add prover API
 end

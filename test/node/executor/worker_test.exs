@@ -254,7 +254,9 @@ defmodule AnomaTest.Node.Executor.Worker do
   end
 
   test "worker verifies cairo proofs", %{env: env, router: router} do
-    alias Anoma.Resource.Transaction
+    alias Anoma.ShieldedResource.ShieldedTransaction
+    alias Anoma.ShieldedResource.PartialTransaction
+    alias Anoma.ShieldedResource.ProofRecord
 
     id = System.unique_integer([:positive])
 
@@ -301,19 +303,24 @@ defmodule AnomaTest.Node.Executor.Worker do
         compliance_inputs
       )
 
-    {proof, public_input} = Cairo.prove(trace, memory, public_inputs)
+    {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
 
-    compliance_proof = {proof, public_input}
-
-    rm_tx = %Transaction{
-      commitments: [],
-      nullifiers: [],
-      proofs: [],
-      compliance_proofs: [compliance_proof],
-      delta: %{}
+    compliance_proof = %ProofRecord{
+      proof: proof,
+      public_inputs: public_inputs
     }
 
-    rm_tx_noun = Transaction.to_noun(rm_tx)
+    ptx = %PartialTransaction{
+      # TODO: make up a real logic proof later
+      logic_proofs: [compliance_proof],
+      compliance_proofs: [compliance_proof]
+    }
+
+    rm_tx = %ShieldedTransaction{
+      partial_transactions: [ptx]
+    }
+
+    rm_tx_noun = ShieldedTransaction.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
 
     {:ok, spawn} =
