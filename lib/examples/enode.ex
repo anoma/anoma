@@ -44,12 +44,13 @@ defmodule Examples.ENode do
     options = [
       snapshot_path: base_snapshot_path(),
       storage_data: storage,
-      block_storage: name,
+      block_storage: Anoma.Symbol.append(name, "_blocks"),
       ping_time: :no_timer
     ]
 
     {:ok, nodes} =
       Anoma.Node.start_link_or_find_instance(
+        name: name,
         testing: true,
         use_rocks: false,
         settings: {:new_storage, (options ++ config) |> Node.start_min()}
