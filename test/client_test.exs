@@ -7,5 +7,6 @@ defmodule AnomaTest.Client do
 
   test "examples" do
     EClient.get_from_other()
+    EClient.storage_423_from_cli()
   end
 end
