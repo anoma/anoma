@@ -114,6 +114,25 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     delta_valid =
       Cairo.sig_verify(binding_pub_keys, binding_messages, list_delta)
 
-    all_proofs_valid && delta_valid
+    # Collect resource logics from compliance proofs
+    resource_logics_from_compliance =
+      compliance_outputs
+      |> Enum.reduce([], &[&1.output_label | [&1.input_label | &2]])
+      |> Enum.reverse()
+
+    # Compute the program hash of resource logic proofs
+    resource_logic_from_program =
+      transaction.partial_transactions
+      |> Enum.flat_map(fn ptx ->
+        ptx.logic_proofs
+        |> Enum.map(fn proof_record ->
+          Cairo.get_program_hash(proof_record.public_inputs)
+        end)
+      end)
+
+    resource_logic_valid =
+      resource_logics_from_compliance == resource_logic_from_program
+
+    all_proofs_valid && delta_valid && resource_logic_valid
   end
 end
