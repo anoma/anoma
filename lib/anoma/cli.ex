@@ -1,4 +1,6 @@
 defmodule Anoma.Cli do
+  alias Anoma.Node.Router
+
   @type client_commands() ::
           :delete_dump
           | :get
@@ -128,8 +130,11 @@ defmodule Anoma.Cli do
         end
 
       {:ok, command, args} ->
-        run_commands({command, args})
-        System.halt(0)
+        {:ok, client} = run_commands({command, args})
+
+        client
+        |> Anoma.Cli.Client.error_code()
+        |> System.halt()
 
       :help ->
         # The default parse! will quit
@@ -145,7 +150,8 @@ defmodule Anoma.Cli do
     end
   end
 
-  @spec run_commands({[client_commands(), ...], map()}) :: :ok | {:ok, any()}
+  @spec run_commands({[client_commands(), ...], map()}) ::
+          :ok | {:ok, Router.addr()}
   @doc """
   Runs the given client command
   """
@@ -183,6 +189,7 @@ defmodule Anoma.Cli do
     IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
   end
 
+  @spec run_client_command(any()) :: {:ok, Router.addr()}
   def run_client_command(operation) do
     {:ok, router, transport} = Anoma.Node.Router.start()
 
@@ -193,14 +200,13 @@ defmodule Anoma.Cli do
     sock_path = Anoma.System.Directories.data("local.sock")
     server = Anoma.Dump.load(dump_path)
 
-    {:ok, _} =
+    {:ok, addr} =
       Anoma.Node.Router.start_engine(
         router,
         Anoma.Cli.Client,
         {router, transport, server, {:unix, sock_path}, operation}
       )
 
-    # Cli.Client is reponsible for shutting down the system once it's done
-    # whatever it want to do, so we have no more to do here
+    {:ok, addr}
   end
 end

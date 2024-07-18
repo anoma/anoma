@@ -18,49 +18,74 @@ defmodule Anoma.Cli.Client do
     {:ok, nil, {:continue, operation}}
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  @doc """
+  I get the error code from the ran client function
+  """
+  @spec error_code(Router.Addr.t()) :: integer() | nil
+  def error_code(server) do
+    Router.call(server, :error_code)
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
+  def handle_call(:error_code, _, state) do
+    {:reply, state, state}
+  end
+
   @spec handle_continue(
           {Router.addr(), Router.addr(), Anoma.Node.t() | Dump.dump(),
            Transport.transport_addr(), any()},
           any()
         ) ::
-          no_return()
+          {:noreply, 0 | 1}
   def handle_continue({router, transport, server, sock_addr, operation}, _) do
     if not File.exists?(elem(sock_addr, 1)) do
-      IO.puts("Local node configuration socket #{sock_addr} not found")
-      IO.puts("Unable to connect to local node")
-      IO.puts("Trying offline commands")
-      perform_offline(operation)
+      {:noreply, try_offline(operation)}
+    else
+      learn_about_the_server(server, transport, sock_addr)
+
+      server_engines = server_engines(server, router)
+
+      # tell the other router how to reach us
+      Transport.learn_engine(
+        server_engines.transport,
+        Router.Addr.id(Router.self_addr()),
+        router.id
+      )
+
+      # ensure we have a connection (there should be a better way to do
+      # this--connection establishment should have its own timeouts built-in, and
+      # we should get notified when connection establishment succeeds/fails)
+      # use a shorter timeout because--come on
+      with :pong <- Router.call(server_engines.transport, :ping, 1000) do
+        error_code = perform(operation, server_engines)
+
+        # synchronise--make sure the queues get flushed properly before we exit
+        Router.call(server_engines.transport, :ping)
+
+        {:noreply, error_code}
+      else
+        _ ->
+          {:noreply, try_offline(operation)}
+      end
     end
+  end
 
-    learn_about_the_server(server, transport, sock_addr)
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
 
-    server_engines = server_engines(server, router)
-
-    # tell the other router how to reach us
-    Transport.learn_engine(
-      server_engines.transport,
-      Router.Addr.id(Router.self_addr()),
-      router.id
-    )
-
-    # ensure we have a connection (there should be a better way to do
-    # this--connection establishment should have its own timeouts built-in, and
-    # we should get notified when connection establishment succeeds/fails)
-    # use a shorter timeout because--come on
-    with {:error, :timed_out} <-
-           Router.call(server_engines.transport, :ping, 1000) do
-      IO.puts("Unable to connect to local node")
-      IO.puts("Trying offline commands")
-      perform_offline(operation)
-      System.halt(1)
-    end
-
-    perform(operation, server_engines)
-
-    # synchronise--make sure the queues get flushed properly before we exit
-    Router.call(server_engines.transport, :ping)
-
-    System.halt(0)
+  @spec try_offline(any()) :: 0 | 1
+  defp try_offline(operation) do
+    IO.puts("Unable to connect to local node")
+    IO.puts("Trying offline commands")
+    perform_offline(operation)
   end
 
   defp perform({:submit_tx, path}, server_engines) do
@@ -73,19 +98,22 @@ defmodule Anoma.Cli.Client do
 
   defp perform(:shutdown, server_engines) do
     Anoma.Node.Router.shutdown_node(server_engines.router)
+    0
   end
 
   defp perform({:get_key, key}, server_engines) do
     case Anoma.Node.Storage.get(server_engines.storage, key) do
       {:error, :timed_out} ->
         IO.puts("Connection error")
-        System.halt(1)
+        1
 
       :absent ->
         IO.puts("no such key")
+        0
 
       {:ok, value} ->
         IO.puts(inspect(value))
+        0
     end
   end
 
@@ -97,7 +125,12 @@ defmodule Anoma.Cli.Client do
     Anoma.Node.Configuration.delete_dump(server_engines.configuration)
   end
 
-  def perform_offline(:delete_dump) do
+  defp perform(_, _) do
+    1
+  end
+
+  @spec perform_offline(any()) :: 0 | 1
+  defp perform_offline(:delete_dump) do
     # Assume server is running prod
     config = Anoma.Configuration.default_configuration_location(:prod)
 
@@ -113,11 +146,18 @@ defmodule Anoma.Cli.Client do
     if dump_file && File.exists?(dump_file) do
       IO.puts("Deleting dump file: #{dump_file}")
       File.rm!(dump_file)
+      0
     else
       IO.puts(
         "Can not find Dump file, please delete the dumped data yourself"
       )
+
+      1
     end
+  end
+
+  defp perform_offline(_) do
+    1
   end
 
   ############################################################
@@ -207,27 +247,21 @@ defmodule Anoma.Cli.Client do
   ############################################################
 
   defp do_submit(path, server_engines, kind) do
-    tx =
-      case File.read(path) do
-        {:ok, tx} ->
-          tx
+    with {:ok, tx} <- File.read(path),
+         {:ok, tx} <- Noun.Format.parse(tx) do
+      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, tx})
+      0
+    else
+      {:error, error} ->
+        IO.puts(
+          "Failed to load transaction from file #{path}: #{inspect(error)}"
+        )
 
-        {:error, error} ->
-          IO.puts(
-            "Failed to load transaction from file #{path}: #{inspect(error)}"
-          )
-
-          System.halt(1)
-      end
-
-    case Noun.Format.parse(tx) do
-      {:ok, tx} ->
-        Anoma.Node.Mempool.tx(server_engines.mempool, {kind, tx})
+        1
 
       :error ->
         IO.puts("Failed to parse transaction from file #{path}")
-
-        System.halt(1)
+        1
     end
   end
 end
