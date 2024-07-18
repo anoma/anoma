@@ -30,12 +30,24 @@ defmodule Anoma.Cli.Client do
     Router.call(server, :error_code)
   end
 
+  @doc """
+  I get the error code from the ran client function
+  """
+  @spec return_value(Router.Addr.t()) :: any()
+  def return_value(server) do
+    Router.call(server, :return_value)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
-  def handle_call(:error_code, _, state) do
-    {:reply, state, state}
+  def handle_call(:error_code, _, state = {return_code, _}) do
+    {:reply, return_code, state}
+  end
+
+  def handle_call(:return_value, _, state = {_, return_value}) do
+    {:reply, return_value, state}
   end
 
   @spec handle_continue(
@@ -43,7 +55,7 @@ defmodule Anoma.Cli.Client do
            Transport.transport_addr(), any()},
           any()
         ) ::
-          {:noreply, 0 | 1}
+          {:noreply, {0 | 1, any()}}
   def handle_continue({router, transport, server, sock_addr, operation}, _) do
     if not File.exists?(elem(sock_addr, 1)) do
       {:noreply, try_offline(operation)}
@@ -64,12 +76,12 @@ defmodule Anoma.Cli.Client do
       # we should get notified when connection establishment succeeds/fails)
       # use a shorter timeout because--come on
       with :pong <- Router.call(server_engines.transport, :ping, 1000) do
-        error_code = perform(operation, server_engines)
+        results = perform(operation, server_engines)
 
         # synchronise--make sure the queues get flushed properly before we exit
         Router.call(server_engines.transport, :ping)
 
-        {:noreply, error_code}
+        {:noreply, results}
       else
         _ ->
           {:noreply, try_offline(operation)}
@@ -81,7 +93,7 @@ defmodule Anoma.Cli.Client do
   #                  Genserver Implementation                #
   ############################################################
 
-  @spec try_offline(any()) :: 0 | 1
+  @spec try_offline(any()) :: {0 | 1, any()}
   defp try_offline(operation) do
     IO.puts("Unable to connect to local node")
     IO.puts("Trying offline commands")
@@ -98,22 +110,22 @@ defmodule Anoma.Cli.Client do
 
   defp perform(:shutdown, server_engines) do
     Anoma.Node.Router.shutdown_node(server_engines.router)
-    0
+    {0, nil}
   end
 
   defp perform({:get_key, key}, server_engines) do
     case Anoma.Node.Storage.get(server_engines.storage, key) do
       {:error, :timed_out} ->
         IO.puts("Connection error")
-        1
+        {1, :timed_out}
 
       :absent ->
         IO.puts("no such key")
-        0
+        {0, :absent}
 
       {:ok, value} ->
         IO.puts(inspect(value))
-        0
+        {0, value}
     end
   end
 
@@ -126,10 +138,10 @@ defmodule Anoma.Cli.Client do
   end
 
   defp perform(_, _) do
-    1
+    {1, nil}
   end
 
-  @spec perform_offline(any()) :: 0 | 1
+  @spec perform_offline(any()) :: {0 | 1, any()}
   defp perform_offline(:delete_dump) do
     # Assume server is running prod
     config = Anoma.Configuration.default_configuration_location(:prod)
@@ -146,18 +158,18 @@ defmodule Anoma.Cli.Client do
     if dump_file && File.exists?(dump_file) do
       IO.puts("Deleting dump file: #{dump_file}")
       File.rm!(dump_file)
-      0
+      {0, nil}
     else
       IO.puts(
         "Can not find Dump file, please delete the dumped data yourself"
       )
 
-      1
+      {1, nil}
     end
   end
 
   defp perform_offline(_) do
-    1
+    {1, nil}
   end
 
   ############################################################
@@ -250,18 +262,18 @@ defmodule Anoma.Cli.Client do
     with {:ok, tx} <- File.read(path),
          {:ok, tx} <- Noun.Format.parse(tx) do
       Anoma.Node.Mempool.tx(server_engines.mempool, {kind, tx})
-      0
+      {0, nil}
     else
       {:error, error} ->
         IO.puts(
           "Failed to load transaction from file #{path}: #{inspect(error)}"
         )
 
-        1
+        {1, nil}
 
       :error ->
         IO.puts("Failed to parse transaction from file #{path}")
-        1
+        {1, nil}
     end
   end
 end
