@@ -17,23 +17,21 @@ defmodule Anoma.Cli.Client do
     {:ok, nil, {:continue, operation}}
   end
 
-  @spec handle_continue({Router.addr(), Router.addr(), any()}, any()) ::
+  @spec handle_continue(
+          {Router.addr(), Router.addr(), Anoma.Node.t() | Dump.dump(),
+           Transport.transport_addr(), any()},
+          any()
+        ) ::
           no_return()
-  def handle_continue({router, transport, operation}, _) do
-    # load info of the running node, erroring if it appears not to exist, and
-    # attempt to introduce ourselves to it
-    # there should be a better way to find out its id(s)
-    dump_path = Anoma.System.Directories.data("node_keys.dmp")
-    sock_path = Anoma.System.Directories.data("local.sock")
-
-    if not File.exists?(sock_path) do
-      IO.puts("Local node configuration socket #{sock_path} not found")
-      System.halt(1)
+  def handle_continue({router, transport, server, sock_addr, operation}, _) do
+    if not File.exists?(elem(sock_addr, 1)) do
+      IO.puts("Local node configuration socket #{sock_addr} not found")
+      IO.puts("Unable to connect to local node")
+      IO.puts("Trying offline commands")
+      perform_offline(operation)
     end
 
-    server = Anoma.Dump.load(dump_path)
-
-    learn_about_the_server(server, transport, sock_path)
+    learn_about_the_server(server, transport, sock_addr)
 
     server_engines = server_engines(server, router)
 
@@ -125,7 +123,11 @@ defmodule Anoma.Cli.Client do
   #                    Server Abstractions                   #
   ############################################################
 
-  @spec learn_about_the_server(Anoma.Node.t() | Dump.dump(), Router.addr(), any()) ::
+  @spec learn_about_the_server(
+          Anoma.Node.t() | Dump.dump(),
+          Router.addr(),
+          any()
+        ) ::
           any()
   defp learn_about_the_server(_server = %Anoma.Node{}, _transport, _sock_path) do
   end
@@ -135,7 +137,7 @@ defmodule Anoma.Cli.Client do
     Transport.learn_node(
       transport,
       server.router.external,
-      {:unix, sock_path}
+      sock_path
     )
 
     # and how to reach its transport engine and mempool and storage

@@ -186,11 +186,18 @@ defmodule Anoma.Cli do
   def run_client_command(operation) do
     {:ok, router, transport} = Anoma.Node.Router.start()
 
+    # load info of the running node, erroring if it appears not to exist, and
+    # attempt to introduce ourselves to it
+    # there should be a better way to find out its id(s)
+    dump_path = Anoma.System.Directories.data("node_keys.dmp")
+    sock_path = Anoma.System.Directories.data("local.sock")
+    server = Anoma.Dump.load(dump_path)
+
     {:ok, _} =
       Anoma.Node.Router.start_engine(
         router,
         Anoma.Cli.Client,
-        {router, transport, operation}
+        {router, transport, server, {:unix, sock_path}, operation}
       )
 
     # Cli.Client is reponsible for shutting down the system once it's done
