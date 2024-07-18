@@ -1,4 +1,13 @@
 defmodule Anoma.Cli do
+  @type client_commands() ::
+          :delete_dump
+          | :get
+          | :nockma
+          | :rm_submit
+          | :shutdown
+          | :snapshot
+          | :submit
+
   @spec argument_parser() :: Optimus.t()
   def argument_parser() do
     Optimus.new!(
@@ -26,6 +35,7 @@ defmodule Anoma.Cli do
     )
   end
 
+  @spec client_commands() :: [{client_commands(), [{any(), any()}, ...]}, ...]
   def client_commands() do
     [
       nockma: Nock.Cli.argument_option(),
