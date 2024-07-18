@@ -7,7 +7,7 @@ defmodule Examples.ENode.EPinger do
   alias Examples.{ENock, ENode, ENode.EStorage}
   alias Anoma.Symbol
   alias Anoma.Node
-  alias Anoma.Node.{Router, Storage, Mempool, Pinger}
+  alias Anoma.Node.{Router, Storage, Pinger}
 
   @spec pinger_run() :: Node.t()
   @spec pinger_run(Symbol.s()) :: Node.t()
