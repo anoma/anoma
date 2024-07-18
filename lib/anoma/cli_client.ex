@@ -30,51 +30,51 @@ defmodule Anoma.Cli.Client do
       System.halt(1)
     end
 
-    primary = Anoma.Dump.load(dump_path)
+    server = Anoma.Dump.load(dump_path)
 
     # tell our transport how to reach the node
     Transport.learn_node(
       transport,
-      primary.router.external,
+      server.router.external,
       {:unix, sock_path}
     )
 
     # and how to reach its transport engine and mempool and storage
     Transport.learn_engine(
       transport,
-      primary.transport_id,
-      primary.router.external
+      server.transport_id,
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      elem(primary.mempool, 0),
-      primary.router.external
+      elem(server.mempool, 0),
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      elem(primary.storage, 0),
-      primary.router.external
+      elem(server.storage, 0),
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      elem(primary.configuration, 0),
-      primary.router.external
+      elem(server.configuration, 0),
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      primary.router.external,
-      primary.router.external
+      server.router.external,
+      server.router.external
     )
 
     # form an address.  this should be abstracted properly
     other_transport_addr = %{
       router
       | server: nil,
-        id: primary.transport_id
+        id: server.transport_id
     }
 
     # tell the other router how to reach us
@@ -96,7 +96,7 @@ defmodule Anoma.Cli.Client do
       System.halt(1)
     end
 
-    perform(operation, primary, router)
+    perform(operation, server, router)
 
     # synchronise--make sure the queues get flushed properly before we exit
     Router.call(other_transport_addr, :ping)
@@ -104,29 +104,29 @@ defmodule Anoma.Cli.Client do
     System.halt(0)
   end
 
-  defp perform({:submit_tx, path}, primary, router) do
-    do_submit(path, primary, router, :kv)
+  defp perform({:submit_tx, path}, server, router) do
+    do_submit(path, server, router, :kv)
   end
 
-  defp perform({:rm_submit_tx, path}, primary, router) do
-    do_submit(path, primary, router, :rm)
+  defp perform({:rm_submit_tx, path}, server, router) do
+    do_submit(path, server, router, :rm)
   end
 
-  defp perform(:shutdown, primary, router) do
+  defp perform(:shutdown, server, router) do
     other_router_addr = %{
       router
       | server: nil,
-        id: primary.router.external
+        id: server.router.external
     }
 
     Anoma.Node.Router.shutdown_node(other_router_addr)
   end
 
-  defp perform({:get_key, key}, primary, router) do
+  defp perform({:get_key, key}, server, router) do
     other_storage_addr = %{
       router
       | server: nil,
-        id: elem(primary.storage, 0)
+        id: elem(server.storage, 0)
     }
 
     case Anoma.Node.Storage.get(other_storage_addr, key) do
@@ -142,21 +142,21 @@ defmodule Anoma.Cli.Client do
     end
   end
 
-  defp perform(:snapshot, primary, router) do
+  defp perform(:snapshot, server, router) do
     other_configuration_addr = %{
       router
       | server: nil,
-        id: elem(primary.configuration, 0)
+        id: elem(server.configuration, 0)
     }
 
     Anoma.Node.Configuration.snapshot(other_configuration_addr)
   end
 
-  defp perform(:delete_dump, primary, router) do
+  defp perform(:delete_dump, server, router) do
     other_configuration_addr = %{
       router
       | server: nil,
-        id: elem(primary.configuration, 0)
+        id: elem(server.configuration, 0)
     }
 
     Anoma.Node.Configuration.delete_dump(other_configuration_addr)
@@ -189,11 +189,11 @@ defmodule Anoma.Cli.Client do
   #                        Helper                            #
   ############################################################
 
-  defp do_submit(path, primary, router, kind) do
+  defp do_submit(path, server, router, kind) do
     other_mempool_addr = %{
       router
       | server: nil,
-        id: elem(primary.mempool, 0)
+        id: elem(server.mempool, 0)
     }
 
     tx =
