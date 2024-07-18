@@ -21,8 +21,8 @@ defmodule Anoma.Resource do
     field(:label, binary(), default: <<>>)
     # quantity
     field(:quantity, non_neg_integer(), default: 0)
-    # arbitrary data
-    field(:data, binary(), default: <<>>)
+    # arbitrary value
+    field(:value, binary(), default: <<>>)
     # ephemerality flag
     field(:eph, bool(), default: false)
     # resource nonce
@@ -185,7 +185,7 @@ defmodule Anoma.Resource do
       resource.logic,
       resource.label,
       resource.quantity,
-      resource.data,
+      resource.value,
       if resource.eph do
         0
       else
@@ -197,12 +197,12 @@ defmodule Anoma.Resource do
     ]
   end
 
-  def from_noun([logic, label, quantity, data, eph, nonce, npk | rseed]) do
+  def from_noun([logic, label, quantity, value, eph, nonce, npk | rseed]) do
     %Resource{
       logic: logic,
       label: Noun.atom_integer_to_binary(label),
       quantity: quantity,
-      data: Noun.atom_integer_to_binary(data),
+      value: Noun.atom_integer_to_binary(value),
       eph:
         case eph do
           0 -> true
