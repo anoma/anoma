@@ -1,4 +1,13 @@
 defmodule Anoma.Cli do
+  @type client_commands() ::
+          :delete_dump
+          | :get
+          | :nockma
+          | :rm_submit
+          | :shutdown
+          | :snapshot
+          | :submit
+
   @spec argument_parser() :: Optimus.t()
   def argument_parser() do
     Optimus.new!(
@@ -26,6 +35,7 @@ defmodule Anoma.Cli do
     )
   end
 
+  @spec client_commands() :: [{client_commands(), [{any(), any()}, ...]}, ...]
   def client_commands() do
     [
       nockma: Nock.Cli.argument_option(),
@@ -117,20 +127,8 @@ defmodule Anoma.Cli do
           System.halt(1)
         end
 
-      {:ok, [:submit], %{args: %{file: file}}} ->
-        run_client_command({:submit_tx, file})
-
-      {:ok, [:rm_submit], %{args: %{file: file}}} ->
-        run_client_command({:rm_submit_tx, file})
-
-      {:ok, [:get], %{args: %{key: key}}} ->
-        run_client_command({:get_key, key})
-
-      {:ok, [:shutdown], %{}} ->
-        run_client_command(:shutdown)
-
-      {:ok, [:nockma], parsed} ->
-        Nock.Cli.main(parsed)
+      {:ok, command, args} ->
+        run_commands({command, args})
         System.halt(0)
 
       :help ->
@@ -145,6 +143,38 @@ defmodule Anoma.Cli do
         top_level_help()
         System.halt(1)
     end
+  end
+
+  @spec run_commands({[client_commands(), ...], map()}) :: :ok | {:ok, any()}
+  @doc """
+  Runs the given client command
+  """
+  def run_commands({[:submit], %{args: %{file: file}}}) do
+    run_client_command({:submit_tx, file})
+  end
+
+  def run_commands({[:rm_submit], %{args: %{file: file}}}) do
+    run_client_command({:rm_submit_tx, file})
+  end
+
+  def run_commands({[:get], %{args: %{key: key}}}) do
+    run_client_command({:get_key, key})
+  end
+
+  def run_commands({[:shutdown], %{}}) do
+    run_client_command(:shutdown)
+  end
+
+  def run_commands({[:delete_dump], %{}}) do
+    run_client_command(:delete_dump)
+  end
+
+  def run_commands({[:snapshot], %{}}) do
+    run_client_command(:snapshot)
+  end
+
+  def run_commands({[:nockma], parsed}) do
+    Nock.Cli.main(parsed)
   end
 
   # Optimus.t() is opaque so the help fails to type check, but it's OK
