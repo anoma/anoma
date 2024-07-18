@@ -18,6 +18,7 @@ defmodule Examples.ENode do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Node.Transport
   alias Anoma.Node.Solver
   alias Anoma.Node.IntentPool
   alias Anoma.Configuration
@@ -56,6 +57,28 @@ defmodule Examples.ENode do
       )
 
     Node.state(nodes)
+  end
+
+  @spec attach_socks(Node.t()) :: {Node.t(), Transport.transport_addr()}
+  @spec attach_socks(Node.t(), Keyword.t()) ::
+          {Node.t(), Transport.transport_addr()}
+  def attach_socks(node, options \\ []) do
+    assert {:ok, keys} = Keyword.validate(options, cleanup: true)
+
+    socket_name = (:enacl.randombytes(8) |> Base.encode32()) <> ".sock"
+
+    socket_path = Anoma.System.Directories.data(socket_name)
+    socket_addr = {:unix, socket_path}
+
+    Transport.start_server(node.transport, socket_addr)
+
+    assert :pong == Router.call(node.transport, :ping)
+
+    if keys[:cleanup] do
+      File.rm(socket_path)
+    end
+
+    {node, socket_addr}
   end
 
   @spec solver(Node.t()) ::
