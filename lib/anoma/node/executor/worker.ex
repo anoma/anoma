@@ -228,7 +228,7 @@ defmodule Anoma.Node.Executor.Worker do
     # the latter requires the merkle tree to be complete
     cm_tree =
       CommitmentTree.new(
-        Storage.cm_tree_spec(),
+        CommitmentTree.Spec.cm_tree_spec(),
         Anoma.Node.Router.Engine.get_state(storage).rm_commitments
       )
 

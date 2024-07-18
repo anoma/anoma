@@ -8,10 +8,7 @@ defmodule Examples.ECommitmentTree do
 
   @spec sha256_32_spec() :: CommitmentTree.Spec.t()
   def sha256_32_spec() do
-    tree =
-      CommitmentTree.Spec.new(32, 2, 256, fn {x, y} ->
-        :crypto.hash(:sha256, x <> y)
-      end)
+    tree = CommitmentTree.Spec.cm_tree_spec()
 
     assert tree.key_size == 256
     assert tree.depth == 32

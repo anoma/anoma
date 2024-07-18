@@ -31,4 +31,12 @@ defmodule CommitmentTree.Spec do
       splay_suff_prod: Enum.map((depth - 1)..1, fn i -> splay ** i end)
     }
   end
+
+  # It's a sha256 tree spec by default
+  @spec cm_tree_spec() :: CommitmentTree.Spec.t()
+  def cm_tree_spec() do
+    new(32, 2, 256, fn {x, y} ->
+      :crypto.hash(:sha256, x <> y)
+    end)
+  end
 end
