@@ -8,6 +8,7 @@ defmodule Anoma.Cli.Client do
   changes may obviate this in the future.)
   """
 
+  alias Anoma.Dump
   alias Anoma.Node.Router
   alias Anoma.Node.Transport
   use Router.Engine
@@ -32,43 +33,7 @@ defmodule Anoma.Cli.Client do
 
     server = Anoma.Dump.load(dump_path)
 
-    # tell our transport how to reach the node
-    Transport.learn_node(
-      transport,
-      server.router.external,
-      {:unix, sock_path}
-    )
-
-    # and how to reach its transport engine and mempool and storage
-    Transport.learn_engine(
-      transport,
-      server.transport_id,
-      server.router.external
-    )
-
-    Transport.learn_engine(
-      transport,
-      elem(server.mempool, 0),
-      server.router.external
-    )
-
-    Transport.learn_engine(
-      transport,
-      elem(server.storage, 0),
-      server.router.external
-    )
-
-    Transport.learn_engine(
-      transport,
-      elem(server.configuration, 0),
-      server.router.external
-    )
-
-    Transport.learn_engine(
-      transport,
-      server.router.external,
-      server.router.external
-    )
+    learn_about_the_server(server, transport, sock_path)
 
     # form an address.  this should be abstracted properly
     server_transport_addr = %{
@@ -183,6 +148,55 @@ defmodule Anoma.Cli.Client do
         "Can not find Dump file, please delete the dumped data yourself"
       )
     end
+  end
+
+  ############################################################
+  #                    Server Abstractions                   #
+  ############################################################
+
+  @spec learn_about_the_server(Anoma.Node.t() | Dump.dump(), Router.addr(), any()) ::
+          any()
+  defp learn_about_the_server(_server = %Anoma.Node{}, _transport, _sock_path) do
+  end
+
+  defp learn_about_the_server(server = %{}, transport, sock_path) do
+    # tell our transport how to reach the node
+    Transport.learn_node(
+      transport,
+      server.router.external,
+      {:unix, sock_path}
+    )
+
+    # and how to reach its transport engine and mempool and storage
+    Transport.learn_engine(
+      transport,
+      server.transport_id,
+      server.router.external
+    )
+
+    Transport.learn_engine(
+      transport,
+      elem(server.mempool, 0),
+      server.router.external
+    )
+
+    Transport.learn_engine(
+      transport,
+      elem(server.storage, 0),
+      server.router.external
+    )
+
+    Transport.learn_engine(
+      transport,
+      elem(server.configuration, 0),
+      server.router.external
+    )
+
+    Transport.learn_engine(
+      transport,
+      server.router.external,
+      server.router.external
+    )
   end
 
   ############################################################
