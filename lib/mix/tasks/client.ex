@@ -18,30 +18,11 @@ defmodule Mix.Tasks.Client do
   end
 
   def run(args) do
-    case Optimus.parse!(argument_parser(), args) do
-      {[:submit], %{args: %{file: file}}} ->
-        run_client_command({:submit_tx, file})
-
-      {[:rm_submit], %{args: %{file: file}}} ->
-        run_client_command({:rm_submit_tx, file})
-
-      {[:get], %{args: %{key: key}}} ->
-        run_client_command({:get_key, key})
-
-      {[:shutdown], %{}} ->
-        run_client_command(:shutdown)
-
-      {[:delete_dump], %{}} ->
-        run_client_command(:delete_dump)
-
-      {[:snapshot], %{}} ->
-        run_client_command(:snapshot)
-    end
-  end
-
-  defp run_client_command(operation) do
     Logger.configure(level: :error)
-    Anoma.Cli.run_client_command(operation)
+
+    Optimus.parse!(argument_parser(), args)
+    |> Anoma.Cli.run_commands()
+
     # We sleep as this does not wait for the client to finish, it'll
     # auto exit for us.
     Process.sleep(10_000_000)
