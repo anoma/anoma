@@ -249,7 +249,11 @@ defmodule Anoma.Node do
       start_engine(
         router,
         Storage,
-        %Storage{storage_st | namespace: [router.id], topic: storage_topic},
+        %Storage{
+          storage_st
+          | namespace: [router.id.encrypt],
+            topic: storage_topic
+        },
         id: storage_id
       )
 

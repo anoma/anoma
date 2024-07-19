@@ -135,7 +135,7 @@ defmodule Anoma.Node.Logger do
   """
 
   @spec get(Router.addr() | nil) ::
-          list({list(Id.Extern.t() | integer() | atom() | pid()), String.t()})
+          list({list(Id.Extern.t() | integer() | atom()), String.t()})
           | nil
   def get(logger) do
     unless logger == nil do
@@ -190,13 +190,15 @@ defmodule Anoma.Node.Logger do
           Router.Addr.t(),
           atom(),
           String.t(),
-          Router.Addr.t() | pid(),
+          Router.Addr.t(),
           Anoma.Node.Logger.t()
         ) :: :ok
   defp do_add(logger, atom, msg, addr, state) do
     topic = state.topic
 
-    addr = Router.Addr.id(addr) || Router.Addr.server(addr)
+    id = Router.Addr.id(addr)
+
+    addr = encrypt_or_server(id)
 
     Storage.put(
       state.storage,
@@ -211,7 +213,7 @@ defmodule Anoma.Node.Logger do
     log_fun({atom, msg})
   end
 
-  @spec do_get(Id.Extern.t(), Router.Addr.t(), pid() | Router.Addr.t() | nil) ::
+  @spec do_get(binary(), Router.Addr.t(), pid() | Router.Addr.t() | nil) ::
           :absent
           | list({any(), Storage.qualified_value()})
           | {:atomic, any()}
@@ -219,7 +221,7 @@ defmodule Anoma.Node.Logger do
     keyspace =
       cond do
         engine == nil -> [id]
-        true -> Router.Addr.id(engine) || Router.Addr.server(engine)
+        true -> [id, encrypt_or_server(engine)]
       end
 
     Storage.get_keyspace(storage, keyspace)
@@ -228,6 +230,13 @@ defmodule Anoma.Node.Logger do
   ############################################################
   #                          Helpers                         #
   ############################################################
+
+  @spec encrypt_or_server(Id.Extern.t()) :: binary()
+  defp encrypt_or_server(id) do
+    if id do
+      id.encrypt
+    end || id |> Router.Addr.server() |> Atom.to_string()
+  end
 
   defp log_fun({:debug, msg}), do: Logger.debug(msg)
 
