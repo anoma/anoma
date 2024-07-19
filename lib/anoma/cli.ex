@@ -1,4 +1,20 @@
 defmodule Anoma.Cli do
+  alias Anoma.Node.Transport
+  alias Anoma.Node.Router
+
+  @type client_commands() ::
+          :delete_dump
+          | :get
+          | :nockma
+          | :rm_submit
+          | :shutdown
+          | :snapshot
+          | :submit
+
+  @type client_info() ::
+          {Router.addr(), Router.addr(), Anoma.Dump.dump() | any(),
+           Transport.transport_addr()}
+
   @spec argument_parser() :: Optimus.t()
   def argument_parser() do
     Optimus.new!(
@@ -26,6 +42,7 @@ defmodule Anoma.Cli do
     )
   end
 
+  @spec client_commands() :: [{client_commands(), [{any(), any()}, ...]}, ...]
   def client_commands() do
     [
       nockma: Nock.Cli.argument_option(),
@@ -46,6 +63,30 @@ defmodule Anoma.Cli do
           file: [
             required: true,
             parser: :string
+          ]
+        ]
+      ],
+      check_nullifier: [
+        name: "check-nullifier",
+        about:
+          "Checks whether a nullifier is in storage or not. Takes a Base64 key",
+        args: [
+          nullifier: [
+            required: true,
+            parser: :string,
+            help: "The Nullifier Key encoded in Base64"
+          ]
+        ]
+      ],
+      check_commitment: [
+        name: "check-commitment",
+        about:
+          "Checks whether a commitment is in storage or not. Takes a Base64 key",
+        args: [
+          commitment: [
+            required: true,
+            parser: :string,
+            help: "The commitment Key encoded in Base64"
           ]
         ]
       ],
@@ -117,21 +158,12 @@ defmodule Anoma.Cli do
           System.halt(1)
         end
 
-      {:ok, [:submit], %{args: %{file: file}}} ->
-        run_client_command({:submit_tx, file})
+      {:ok, command, args} ->
+        {:ok, client} = run_commands({command, args}, server_anoma_node())
 
-      {:ok, [:rm_submit], %{args: %{file: file}}} ->
-        run_client_command({:rm_submit_tx, file})
-
-      {:ok, [:get], %{args: %{key: key}}} ->
-        run_client_command({:get_key, key})
-
-      {:ok, [:shutdown], %{}} ->
-        run_client_command(:shutdown)
-
-      {:ok, [:nockma], parsed} ->
-        Nock.Cli.main(parsed)
-        System.halt(0)
+        client
+        |> Anoma.Cli.Client.error_code()
+        |> System.halt()
 
       :help ->
         # The default parse! will quit
@@ -147,23 +179,75 @@ defmodule Anoma.Cli do
     end
   end
 
+  @spec run_commands({[client_commands(), ...], map()}, client_info()) ::
+          :ok | {:ok, Router.addr()}
+  @doc """
+  Runs the given client command
+  """
+  def run_commands({[:submit], %{args: %{file: file}}}, ci) do
+    run_client_command({:submit_tx, file}, ci)
+  end
+
+  def run_commands({[:rm_submit], %{args: %{file: file}}}, ci) do
+    run_client_command({:rm_submit_tx, file}, ci)
+  end
+
+  def run_commands({[:check_commitment], %{args: %{commitment: comm}}}, ci) do
+    run_client_command({:check_commitment, comm}, ci)
+  end
+
+  def run_commands({[:check_nullifier], %{args: %{nullifier: null}}}, ci) do
+    run_client_command({:check_nulifier, null}, ci)
+  end
+
+  def run_commands({[:get], %{args: %{key: key}}}, ci) do
+    run_client_command({:get_key, key}, ci)
+  end
+
+  def run_commands({[:shutdown], %{}}, ci) do
+    run_client_command(:shutdown, ci)
+  end
+
+  def run_commands({[:delete_dump], %{}}, ci) do
+    run_client_command(:delete_dump, ci)
+  end
+
+  def run_commands({[:snapshot], %{}}, ci) do
+    run_client_command(:snapshot, ci)
+  end
+
+  def run_commands({[:nockma], parsed}, _ci) do
+    Nock.Cli.main(parsed)
+  end
+
+  @spec server_anoma_node() :: client_info()
+  def server_anoma_node() do
+    {:ok, router, transport} = Anoma.Node.Router.start()
+
+    # load info of the running node, erroring if it appears not to exist, and
+    # attempt to introduce ourselves to it
+    # there should be a better way to find out its id(s)
+    dump_path = Anoma.System.Directories.data("node_keys.dmp")
+    sock_path = Anoma.System.Directories.data("local.sock")
+    server = Anoma.Dump.load(dump_path)
+    {router, transport, server, {:unix, sock_path}}
+  end
+
   # Optimus.t() is opaque so the help fails to type check, but it's OK
   @dialyzer {:nowarn_function, top_level_help: 0}
   def top_level_help() do
     IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
   end
 
-  def run_client_command(operation) do
-    {:ok, router, transport} = Anoma.Node.Router.start()
-
-    {:ok, _} =
+  @spec run_client_command(any(), client_info()) :: {:ok, Router.addr()}
+  def run_client_command(operation, {router, transport, server, sock}) do
+    {:ok, addr} =
       Anoma.Node.Router.start_engine(
         router,
         Anoma.Cli.Client,
-        {router, transport, operation}
+        {router, transport, server, sock, operation}
       )
 
-    # Cli.Client is reponsible for shutting down the system once it's done
-    # whatever it want to do, so we have no more to do here
+    {:ok, addr}
   end
 end
