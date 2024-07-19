@@ -213,7 +213,7 @@ defmodule Anoma.Node.Logger do
     log_fun({atom, msg})
   end
 
-  @spec do_get(Id.Extern.t(), Router.Addr.t(), pid() | Router.Addr.t() | nil) ::
+  @spec do_get(binary(), Router.Addr.t(), pid() | Router.Addr.t() | nil) ::
           :absent
           | list({any(), Storage.qualified_value()})
           | {:atomic, any()}
@@ -221,7 +221,7 @@ defmodule Anoma.Node.Logger do
     keyspace =
       cond do
         engine == nil -> [id]
-        true -> encrypt_or_server(engine)
+        true -> [id, encrypt_or_server(engine)]
       end
 
     Storage.get_keyspace(storage, keyspace)
