@@ -913,18 +913,6 @@ defmodule Anoma.Node.Storage do
   @spec qualified_key(Noun.t(), non_neg_integer()) :: qualified_key()
   defp qualified_key(key, order), do: [order, key | 0]
 
-  defp check_if_any_absent(latest_keys) do
-    absent_predicate = &(elem(&1, 0) == :absent)
-
-    if Enum.any?(latest_keys, absent_predicate) do
-      {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
-      instrument({:error_missing, key, order})
-      :absent
-    else
-      latest_keys
-    end
-  end
-
   @spec read_keyspace_at(any(), list()) :: result(list(list(any())))
   defp read_keyspace_at(table, key_query) do
     keys = create_equality_query(key_query)
