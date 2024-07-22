@@ -52,12 +52,15 @@ defmodule Anoma.Node.Executor.Worker do
                contains the Ordering engine address. See `Nock.t()`
     - `:completion_topc` - The address of the topic connected to the
                            relevant Executor Engine for broadcasting.
+    - `:reply_to` - The address that the computed value (for read-only
+                    transaction) is sent to.
     """
 
     field(:id, non_neg_integer())
     field(:tx, transaction())
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
+    field(:reply_to, Router.addr())
   end
 
   @doc """
@@ -68,14 +71,17 @@ defmodule Anoma.Node.Executor.Worker do
 
   ### Pattern-Matching Variations
 
-  - `init({id, tx, env, completion_topic})` - I recieve a tuple with all
-                                              the specified info to launch
-                                              a Worker instance.
+  - `init({id, tx, env, completion_topic, reply_to})` - I receive a tuple with all
+                                                        the specified info to launch
+                                                        a Worker instance.
   """
 
-  @spec init({non_neg_integer(), transaction(), Nock.t(), Router.Addr.t()}) ::
+  @spec init(
+          {non_neg_integer(), transaction(), Nock.t(), Router.Addr.t(),
+           Router.addr() | nil}
+        ) ::
           {:ok, Worker.t()}
-  def init({id, tx, env, completion_topic}) do
+  def init({id, tx, env, completion_topic, reply_to}) do
     send(self(), :run)
 
     {:ok,
@@ -83,7 +89,8 @@ defmodule Anoma.Node.Executor.Worker do
        id: id,
        tx: tx,
        env: env,
-       completion_topic: completion_topic
+       completion_topic: completion_topic,
+       reply_to: reply_to
      }}
   end
 
@@ -169,17 +176,31 @@ defmodule Anoma.Node.Executor.Worker do
     end
   end
 
-  @spec send_value(t(), Noun.t(), Router.Addr.t()) :: :ok | nil
+  @spec send_value(t(), Noun.t(), Router.addr()) :: :ok | nil
   defp send_value(
-         %__MODULE__{tx: {:ro, _}, env: env, completion_topic: topic},
+         %__MODULE__{
+           tx: {:ro, _},
+           env: env,
+           completion_topic: topic,
+           reply_to: reply_to
+         },
          value,
          _storage
        ) do
-    Router.cast(topic, {:read_value, value})
+    reply_msg = {:read_value, value}
+
+    # send the value to reply-to address
+    if reply_to != nil do
+      Router.cast(reply_to, reply_msg)
+    end
+
+    # send the value to the worker topic
+    Router.cast(topic, reply_msg)
+
     log_info({:get, value, env.logger})
   end
 
-  @spec store_value(t(), Noun.t(), Router.Addr.t()) :: any()
+  @spec store_value(t(), Noun.t(), Router.addr()) :: any()
   defp store_value(
          s = %__MODULE__{tx: {:kv, _}, env: env},
          key_value,

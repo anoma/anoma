@@ -14,7 +14,7 @@ defmodule TestHelper.Executor do
   """
 
   def wait_for_spawn(executor, id, tx_code, env \\ nil, timeout \\ nil) do
-    Anoma.Node.Executor.fire_new_transaction(executor, id, tx_code, env)
+    Anoma.Node.Executor.fire_new_transaction(executor, id, tx_code, env, nil)
     assert_receive({:"$gen_cast", {_, _, {:worker_spawned, var}}}, timeout)
     var
   end

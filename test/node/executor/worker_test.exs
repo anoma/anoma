@@ -45,14 +45,14 @@ defmodule AnomaTest.Node.Executor.Worker do
       Router.start_engine(
         router,
         Worker,
-        {id_1, {:kv, increment}, env, topic}
+        {id_1, {:kv, increment}, env, topic, nil}
       )
 
     {:ok, spawn_2} =
       Router.start_engine(
         router,
         Worker,
-        {id_2, {:kv, increment}, env, topic}
+        {id_2, {:kv, increment}, env, topic, nil}
       )
 
     # simulate sending in 2 different orders
@@ -98,7 +98,11 @@ defmodule AnomaTest.Node.Executor.Worker do
     Ordering.reset(env.ordering)
 
     {:ok, spawn} =
-      Router.start_engine(router, Worker, {id, {:kv, increment}, env, topic})
+      Router.start_engine(
+        router,
+        Worker,
+        {id, {:kv, increment}, env, topic, nil}
+      )
 
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(1, id, spawn)
@@ -141,7 +145,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       Router.start_engine(
         router,
         Worker,
-        {order_id, {:ro, plus_one}, env, topic}
+        {order_id, {:ro, plus_one}, env, topic, Router.self_addr()}
       )
 
     idx = Engine.get_state(env.ordering).next_order
@@ -150,6 +154,9 @@ defmodule AnomaTest.Node.Executor.Worker do
       Anoma.Transaction.new_with_order(idx, order_id, worker)
     ])
 
+    # receive value from reply-to address
+    TestHelper.Worker.wait_for_read_value(1000)
+    # receive value from the worker topic subscription
     TestHelper.Worker.wait_for_read_value(1000)
     TestHelper.Worker.wait_for_worker(worker, :ok)
   end
@@ -170,7 +177,7 @@ defmodule AnomaTest.Node.Executor.Worker do
     Ordering.reset(env.ordering)
 
     {:ok, spawn} =
-      Router.start_engine(router, Worker, {id, {:kv, bogus}, env, topic})
+      Router.start_engine(router, Worker, {id, {:kv, bogus}, env, topic, nil})
 
     Ordering.new_order(env.ordering, [
       Anoma.Transaction.new_with_order(1, id, spawn)
@@ -240,7 +247,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       Router.start_engine(
         router,
         Worker,
-        {id, {:rm, rm_executor_tx}, env, topic}
+        {id, {:rm, rm_executor_tx}, env, topic, nil}
       )
 
     Ordering.new_order(env.ordering, [
@@ -251,7 +258,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       Router.start_engine(
         router,
         Worker,
-        {id_2, {:rm, rm_executor_tx}, env, topic}
+        {id_2, {:rm, rm_executor_tx}, env, topic, nil}
       )
 
     Ordering.new_order(env.ordering, [
@@ -404,7 +411,7 @@ defmodule AnomaTest.Node.Executor.Worker do
       Router.start_engine(
         router,
         Worker,
-        {id, {:cairo, rm_executor_tx}, env, topic}
+        {id, {:cairo, rm_executor_tx}, env, topic, nil}
       )
 
     Ordering.new_order(env.ordering, [

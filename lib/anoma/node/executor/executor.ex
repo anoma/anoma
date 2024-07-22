@@ -80,16 +80,18 @@ defmodule Anoma.Node.Executor do
   I do so by spawning a new engine with the info provided. If the
   environment is left unspecified I launch the Worker with the given
   ambient environment stored in the state.
+  The computed value will be sent to the specified reply-to address.
   """
   @spec fire_new_transaction(
           Router.Addr.t(),
           non_neg_integer(),
           Noun.t(),
-          Nock.t() | nil
+          Nock.t() | nil,
+          Router.addr() | nil
         ) ::
           :ok
-  def fire_new_transaction(executor, id, gate, env \\ nil) do
-    Router.cast(executor, {:transaction, id, gate, env})
+  def fire_new_transaction(executor, id, gate, env \\ nil, reply_to) do
+    Router.cast(executor, {:transaction, id, gate, env, reply_to})
   end
 
   @doc """
@@ -125,14 +127,19 @@ defmodule Anoma.Node.Executor do
     {:reply, hd, state}
   end
 
-  def handle_cast({:transaction, order, gate, env}, _from, state) do
+  def handle_cast({:transaction, order, gate, env, reply_to}, _from, state) do
     logger = state.logger
 
     worker_addr =
       unless env do
-        spawn_transactions(order, gate, state)
+        spawn_transactions(order, gate, state, reply_to)
       else
-        spawn_transactions(order, gate, %__MODULE__{state | ambiant_env: env})
+        spawn_transactions(
+          order,
+          gate,
+          %__MODULE__{state | ambiant_env: env},
+          reply_to
+        )
       end
 
     log_info({:tx_call_addr, worker_addr, logger})
@@ -152,15 +159,16 @@ defmodule Anoma.Node.Executor do
   ############################################################
 
   # make this more interesting later
-  @spec spawn_transactions(Noun.t(), Noun.t(), t()) :: Router.Addr.t()
-  defp spawn_transactions(order, gate, state) do
+  @spec spawn_transactions(Noun.t(), Noun.t(), t(), Router.addr() | nil) ::
+          Router.addr()
+  defp spawn_transactions(order, gate, state, reply_to) do
     log_info({:spawn, order, state.logger})
 
     {:ok, addr} =
       Router.start_engine(
         state.router,
         Worker,
-        {order, gate, state.ambiant_env, state.topic}
+        {order, gate, state.ambiant_env, state.topic, reply_to}
       )
 
     addr
