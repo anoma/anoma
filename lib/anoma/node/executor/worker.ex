@@ -20,6 +20,7 @@ defmodule Anoma.Node.Executor.Worker do
 
   alias Anoma.Resource
   alias Anoma.Resource.Transaction
+  alias Anoma.ShieldedResource.ShieldedTransaction
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
 
@@ -134,7 +135,10 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp run(s = %__MODULE__{tx: {:cairo, _}}) do
-    execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify_cairo/1})
+    execute_rm_tx(
+      s,
+      {&ShieldedTransaction.from_noun/1, &ShieldedTransaction.verify/1}
+    )
   end
 
   @spec execute_key_value_tx(t(), fun()) :: :ok | :error
