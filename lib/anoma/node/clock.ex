@@ -14,7 +14,6 @@ defmodule Anoma.Node.Clock do
   I have the following public functionality:
 
   - `get_time/1`
-  - `get_epoch/1`
   """
 
   alias __MODULE__
@@ -24,9 +23,30 @@ defmodule Anoma.Node.Clock do
   use Router.Engine
 
   typedstruct do
+    @typedoc """
+    I am the type of the Clock Engine.
+
+    I currently just store the start-up info, recording when the system was
+    launched.
+
+    ### Fields
+
+    - `:start` - Integer vallue corresponding to the system start timing
+                 provided by the internal erlang functionality.
+    """
+
     field(:start, integer())
   end
 
+  @doc """
+  I am the initialization function for a Clock Engine instance.
+
+   ### Pattern-Matching Variations
+
+  - `init(%Clock{})` - I initialize the Engine with the given state.
+  - `init(args)` - I expect a keylist with a `:start` key and return the
+                   appropriate state.
+  """
   def init(%Clock{} = state) do
     {:ok, state}
   end
@@ -51,26 +71,20 @@ defmodule Anoma.Node.Clock do
     Router.call(clock, :get_time)
   end
 
-  @doc """
-  I get the epoch attached to a clock address. This is usually
-  the system monotonic time as recorder at the start of the
-  node to which the apporproaite clock engine is related.
-  """
-
-  @spec get_epoch(Router.Addr.t()) :: integer()
-  def get_epoch(clock) do
-    Router.call(clock, :get_epoch)
-  end
-
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
 
   def handle_call(:get_time, _from, clock) do
-    {:reply, System.monotonic_time(:millisecond) - clock.start, clock}
+    {:reply, do_get_time(clock), clock}
   end
 
-  def handle_call(:get_epoch, _from, clock) do
-    {:reply, clock.start, clock}
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
+  @spec do_get_time(Clock.t()) :: integer()
+  defp do_get_time(clock) do
+    System.monotonic_time(:millisecond) - clock.start
   end
 end
