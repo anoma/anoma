@@ -8,6 +8,8 @@ defmodule Anoma.Cli.Client do
   changes may obviate this in the future.)
   """
 
+  alias Anoma.Resource
+  alias Anoma.Resource.Transaction
   alias Anoma.Dump
   alias Anoma.Node.Router
   alias Anoma.Node.Transport
@@ -283,7 +285,32 @@ defmodule Anoma.Cli.Client do
   defp do_submit(path, server_engines, kind) do
     with {:ok, tx} <- File.read(path),
          {:ok, tx} <- Noun.Format.parse(tx) do
-      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, tx})
+      jammed = Nock.Jam.jam(tx)
+
+      case kind do
+        :rm ->
+          # We don't want to be proving online so this shouldn't be
+          # scrying. We should design something better for V2
+          {:ok, tx} = Nock.nock(tx, [9, 2, 0 | 1])
+          tx_proper = Transaction.from_noun(tx)
+
+          for commitment <- tx_proper.commitments do
+            IO.puts(
+              "commitment: #{Resource.commitment_hash(commitment) |> Base.encode64()}"
+            )
+          end
+
+          for nullifier <- tx_proper.nullifiers do
+            IO.puts(
+              "nullifier: #{Resource.commitment_hash(nullifier) |> Base.encode64()}"
+            )
+          end
+
+        _ ->
+          nil
+      end
+
+      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, jammed})
       {0, nil}
     else
       {:error, error} ->
