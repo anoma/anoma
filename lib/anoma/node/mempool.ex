@@ -129,12 +129,15 @@ defmodule Anoma.Node.Mempool do
 
   Given a Mempool Engine address and a transaction candidate code, I ask
   the Executor Engine to fire a new transaction with a random ID created in
-  the process. I return the new state, adding the transaction.
+  the process. The value computed by the transactions (for read-only
+  transactions) will be sent to reply_to address. I return the new state,
+  adding the transaction.
   """
 
-  @spec tx(Router.Addr.t(), Transaction.execution()) :: :ok
-  def tx(server, tx_code) do
-    Router.cast(server, {:tx, tx_code})
+  @spec tx(Router.Addr.t(), Transaction.execution(), Router.addr() | nil) ::
+          :ok
+  def tx(server, tx_code, reply_to \\ nil) do
+    Router.cast(server, {:tx, tx_code, reply_to})
   end
 
   @doc """
@@ -174,8 +177,8 @@ defmodule Anoma.Node.Mempool do
     {:noreply, new_state}
   end
 
-  def handle_cast({:tx, tx_code}, _from, state) do
-    ntrans = handle_tx(tx_code, state)
+  def handle_cast({:tx, tx_code, reply_to}, _from, state) do
+    ntrans = handle_tx(tx_code, state, reply_to)
     nstate = %Mempool{state | transactions: [ntrans | state.transactions]}
     Router.cast(state.topic, {:submitted, ntrans})
     log_info({:tx, nstate.transactions, state.logger})
@@ -212,9 +215,10 @@ defmodule Anoma.Node.Mempool do
   I reply with a newly created transaction and specified Worker.
   """
 
-  @spec handle_tx(Transaction.execution(), t()) :: Transaction.t()
-  @dialyzer {:nowarn_function, [handle_tx: 2]}
-  def handle_tx(tx_code, state) do
+  @spec handle_tx(Transaction.execution(), t(), Router.addr() | nil) ::
+          Transaction.t()
+  @dialyzer {:nowarn_function, [handle_tx: 3]}
+  def handle_tx(tx_code, state, reply_to) do
     random_tx_id =
       :crypto.strong_rand_bytes(16)
       |> Noun.atom_binary_to_integer()
@@ -231,7 +235,7 @@ defmodule Anoma.Node.Mempool do
         {:subscribe_topic, ex_topic, :local}
       )
 
-    Executor.fire_new_transaction(ex, random_tx_id, tx_code, nil)
+    Executor.fire_new_transaction(ex, random_tx_id, tx_code, reply_to)
 
     receive do
       {:"$gen_cast", {_, _, {:worker_spawned, addr}}} ->

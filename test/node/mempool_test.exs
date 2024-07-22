@@ -42,9 +42,9 @@ defmodule AnomaTest.Node.Mempool do
 
   test "successful process", %{node: node} do
     key = 555
-    storage = node.storage
     increment = increment_counter_val(key)
     zero = zero_counter(key)
+    plus_one = counter_val_plus_one(key)
 
     :ok =
       Router.call(
@@ -75,7 +75,13 @@ defmodule AnomaTest.Node.Mempool do
       &TestHelper.Worker.wait_for_worker/1
     )
 
-    assert {:ok, 2} = Storage.get(storage, key)
+    worker_three =
+      wait_for_tx(node.mempool, {:ro, plus_one}, 5000, Router.self_addr()).addr
+
+    Mempool.execute(node.mempool)
+
+    TestHelper.Worker.wait_for_read_value(3)
+    TestHelper.Worker.wait_for_worker(worker_three)
 
     :ok =
       Router.call(
