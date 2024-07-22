@@ -110,6 +110,24 @@ defmodule Anoma.Cli.Client do
     do_submit(path, server_engines, :rm)
   end
 
+  defp perform({:ro_submit_tx, path}, server_engines) do
+    client_addr = Router.Addr.id(Router.self_addr())
+
+    case do_submit(path, server_engines, :ro, client_addr) do
+      {0, _} ->
+        receive do
+          {:"$gen_cast", {:router_external_cast, _, payload}} ->
+            {:ok, {:read_value, value}} = Anoma.Serialise.unpack(payload)
+
+            IO.puts("#{inspect(value)}")
+            {0, value}
+        end
+
+      res ->
+        res
+    end
+  end
+
   defp perform({:check_commitment, comm}, server_engines) do
     ["rm", "commitments"]
     |> base64_storage_check(comm, server_engines)
@@ -282,7 +300,7 @@ defmodule Anoma.Cli.Client do
     end
   end
 
-  defp do_submit(path, server_engines, kind) do
+  defp do_submit(path, server_engines, kind, reply_to \\ nil) do
     with {:ok, tx} <- File.read(path),
          {:ok, tx} <- Noun.Format.parse(tx) do
       jammed = Nock.Jam.jam(tx)
@@ -310,7 +328,7 @@ defmodule Anoma.Cli.Client do
           nil
       end
 
-      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, jammed})
+      Anoma.Node.Mempool.tx(server_engines.mempool, {kind, jammed}, reply_to)
       {0, nil}
     else
       {:error, error} ->
