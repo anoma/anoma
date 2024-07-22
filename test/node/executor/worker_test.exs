@@ -283,11 +283,12 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     {:ok, compliance_circuit} = File.read("./params/cairo_compliance.json")
 
+    # The inputs are in big-int formats.
     compliance_inputs = """
     {
     "input": {
-        "logic" : 41,
-        "label" : 12,
+        "logic" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
+        "label" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
         "quantity" : 13,
         "data" : 14,
         "eph" : 15,
@@ -296,8 +297,8 @@ defmodule AnomaTest.Node.Executor.Worker do
         "rseed" : 48
     },
     "output": {
-        "logic" : 41,
-        "label" : 12,
+        "logic" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
+        "label" : 2377229611309868107108938255682430113398371484321807491305813521724764405791,
         "quantity" : 13,
         "data" : 812,
         "eph" : 93,
@@ -324,9 +325,12 @@ defmodule AnomaTest.Node.Executor.Worker do
       public_inputs: public_inputs
     }
 
+    # TODO: make up real logic proofs when building a client
+    input_resource_logic = compliance_proof
+    output_resource_logic = compliance_proof
+
     ptx = %PartialTransaction{
-      # TODO: make up a real logic proof later
-      logic_proofs: [compliance_proof],
+      logic_proofs: [input_resource_logic, output_resource_logic],
       compliance_proofs: [compliance_proof]
     }
 
