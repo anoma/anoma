@@ -2,6 +2,8 @@ defmodule Mix.Tasks.Client do
   @moduledoc "I generate out the TOC for each liveview doc"
 
   @shortdoc "Simply adds a TOC to each liveview doc"
+
+  alias Anoma.Cli.Client
   use Mix.Task
 
   def argument_parser() do
@@ -17,14 +19,15 @@ defmodule Mix.Tasks.Client do
     )
   end
 
+  @spec run(any()) :: no_return()
   def run(args) do
     Logger.configure(level: :error)
 
-    Optimus.parse!(argument_parser(), args)
-    |> Anoma.Cli.run_commands()
+    {:ok, client} =
+      argument_parser()
+      |> Optimus.parse!(args)
+      |> Anoma.Cli.run_commands()
 
-    # We sleep as this does not wait for the client to finish, it'll
-    # auto exit for us.
-    Process.sleep(10_000_000)
+    System.halt(Client.error_code(client))
   end
 end
