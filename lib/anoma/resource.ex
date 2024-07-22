@@ -87,6 +87,13 @@ defmodule Anoma.Resource do
     |> Noun.atom_integer_to_binary()
   end
 
+  # Note only for transparent case, please abstract this out later
+  # better!!!
+  @spec nullifier_hash(Noun.noun_atom()) :: binary()
+  def nullifier_hash(nullifier) when Noun.is_noun_atom(nullifier) do
+    commitment_hash(nullifier)
+  end
+
   @spec kind(t()) :: binary()
   @doc """
   The kind of the given resource (labelled logic).

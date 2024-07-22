@@ -71,8 +71,10 @@ defmodule Examples.ENode.EIntent do
 
     [EResource.ax_nullifier(), EResource.by_nullifier()]
     |> Enum.each(fn null ->
+      hash = Resource.nullifier_hash(null)
+
       assert {:ok, true} =
-               Storage.get(anode.storage, ["rm", "nullifiers", null])
+               Storage.get(anode.storage, ["rm", "nullifiers", hash])
     end)
 
     [EResource.ay_commit(), EResource.bx_commit()]
