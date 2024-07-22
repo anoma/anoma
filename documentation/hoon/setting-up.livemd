@@ -98,7 +98,7 @@ Now we can mount our anoma code into hoon
 ```hoon
 > |commit %anoma
 >=
-> =anoma /=anoma=/lib/anoma/hoon
+> =anoma -build-file /=anoma=/lib/anoma/hoon
 > =resource-machine -build-file /=anoma=/lib/resource-machine/hoon
 > =logics -build-file /=anoma=/lib/logics/hoon
 > =tests -build-file /=anoma=/lib/tests/hoon

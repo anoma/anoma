@@ -353,7 +353,7 @@
   ~/  %verify
   |=  [a=@ b=@]
   =+  c=%verify
-  ^-  @
+  ^-  ?(~ [~ @])
   !!
 ++  sign-detatched  ::  +23 Please fill out
   ~/  %sign-detatched
