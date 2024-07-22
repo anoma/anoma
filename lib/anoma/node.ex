@@ -353,6 +353,7 @@ defmodule Anoma.Node do
 
     Anoma.Node.Pinger.start(pinger)
     Dumper.start(dumper)
+    Anoma.Node.Router.set_logger(router, logger)
 
     if Mix.env() in [:dev, :prod] do
       Anoma.Node.Transport.start_server(
