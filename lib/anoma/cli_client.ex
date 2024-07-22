@@ -117,10 +117,19 @@ defmodule Anoma.Cli.Client do
       {0, _} ->
         receive do
           {:"$gen_cast", {:router_external_cast, _, payload}} ->
-            {:ok, {:read_value, value}} = Anoma.Serialise.unpack(payload)
+            case Anoma.Serialise.unpack(payload) do
+              {:ok, {:read_value, value}} ->
+                IO.puts("#{inspect(value)}")
+                {0, value}
 
-            IO.puts("#{inspect(value)}")
-            {0, value}
+              {:ok, {:worker_error}} ->
+                IO.puts("Execution error")
+                {0, nil}
+
+              _ ->
+                IO.puts("Unexpected response")
+                {0, nil}
+            end
         end
 
       res ->
