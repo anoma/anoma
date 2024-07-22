@@ -1,3 +1,57 @@
+# v0.18.0
+## Major Features
+## Execution Environments
+- [Add the Poseidon merkle tree specification to our merkle tree](https://github.com/anoma/anoma/pull/677)
+- [Add binding signature verification in Cairo backend](https://github.com/anoma/anoma/pull/695)
+- [Resource logic check in the Cairo backend](https://github.com/anoma/anoma/pull/696)
+## CLI Changes
+- [When submitting a resource machine transaction, nullifiers and commitments are printed](https://github.com/anoma/anoma/pull/641)
+- [Add the ability to check for commitments in the CLi](https://github.com/anoma/anoma/pull/674)
+  + Note that one could do this via the RO backend, but that is not ready yet.
+- [Add the ability to check for nullifiers in the CLi](https://github.com/anoma/anoma/pull/675)
+- [Read Only Cli Command](https://github.com/anoma/anoma/pull/681)
+## Documentation
+- [Add a glossary index for our codebase](https://github.com/anoma/anoma/pull/659)
+## Bug Fixes
+- [Fixed a bug where trying to use Juvix transactions would cause nock translation to fail](https://github.com/anoma/anoma/pull/500)
+- [Made workers temporary rather than transient](https://github.com/anoma/anoma/pull/640)
+  + this keeps the worker from spewing lots of noise on death or
+    trying a restart loop.
+- [Fixed the encoding of the empty to be 0 in atom transformation](https://github.com/anoma/anoma/pull/656)
+  + This causes the failure of jamming transactions typically as [] is
+    typically sent via the round-trip and fail.
+- [Fix List Nock to Erlang to encode the empty list properly](https://github.com/anoma/anoma/pull/666)
+- [Transactions via the CLI are now jammed before being sent over](https://github.com/anoma/anoma/pull/669)
+  + This fixes a bug for larger contracts as they would hit the 1 MB
+    transaction limit.
+## Storage Changes
+- [Add the hash(sha256) of the transparent commitment to storage](https://github.com/anoma/anoma/pull/634)
+- [Add the hash(sha256) of the transparent nullifer to storage](https://github.com/anoma/anoma/pull/668)
+- [Store the binary representation of the ID in storage](https://github.com/anoma/anoma/pull/658)
+  + This is a nock compatible format, and useful when we completely
+    normalize storage
+## Debugging/Examples
+- [Made Example Storage not cache](https://github.com/anoma/anoma/pull/662)
+- [Fix the Dumper Example randomly dying due to trying to dump the wrong node](https://github.com/anoma/anoma/pull/680)
+- A number of changes were had to make our CLI logic into examples
+  + [Abstract out the CLI run dispatch logic](https://github.com/anoma/anoma/pull/682)
+  + [Rename variables to be more sensible in the CLI](https://github.com/anoma/anoma/pull/683)
+  + [Make the CLI runnable from IEX without exiting](https://github.com/anoma/anoma/pull/684)
+  + [Add CLI examples](https://github.com/anoma/anoma/pull/689)
+- [Use the Logging Engine in Router and Storage Engines](https://github.com/anoma/anoma/pull/687)
+- [Add logging to the TCP Server](https://github.com/anoma/anoma/pull/692)
+## Internal Changes
+- [Added the ability to kill an engine](https://github.com/anoma/anoma/pull/639)
+- [Adding type signatures to the mempool initiating](https://github.com/anoma/anoma/pull/642)
+- [Add a custom transaction data types](https://github.com/anoma/anoma/pull/664)
+- [Remove the order data structure](https://github.com/anoma/anoma/pull/648)
+- [Added the ability to process jammed transactions](https://github.com/anoma/anoma/pull/665)
+- [Reformat the Clock Engine to fit the style guide](https://github.com/anoma/anoma/pull/633)
+- Added a reply to address for workers[[1]](https://github.com/anoma/anoma/pull/650)[[2]](https://github.com/anoma/anoma/pull/653)
+- [Add a shielded transaction data structure](https://github.com/anoma/anoma/pull/678)
+- [Moved commitment tree specs out of storage](https://github.com/anoma/anoma/pull/686)
+- [better docs path creation](https://github.com/anoma/anoma/pull/693)
+
 # v0.17.0
 ## Major Features
 
