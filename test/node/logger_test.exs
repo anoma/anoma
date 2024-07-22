@@ -51,7 +51,7 @@ defmodule AnomaTest.Node.Logger do
 
     Anoma.Node.Ordering.reset(ordering)
 
-    id = ordering.id
+    id = ordering.id.encrypt
 
     assert_receive(
       {:"$gen_cast", {_, _, {:logger_add, ^id, _msg}}},
