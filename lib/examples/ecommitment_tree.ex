@@ -17,9 +17,20 @@ defmodule Examples.ECommitmentTree do
     tree
   end
 
-  @spec memory_backed_ct() :: CommitmentTree.t()
-  def memory_backed_ct() do
-    tree = CommitmentTree.new(sha256_32_spec(), nil)
+  @spec cairo_poseidon_spec() :: CommitmentTree.Spec.t()
+  def cairo_poseidon_spec() do
+    tree = CommitmentTree.Spec.cairo_poseidon_cm_tree_spec()
+
+    assert tree.key_size == 256
+    assert tree.depth == 32
+    assert tree.splay == 2
+
+    tree
+  end
+
+  @spec memory_backed_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def memory_backed_ct(spec \\ sha256_32_spec()) do
+    tree = CommitmentTree.new(spec, nil)
 
     assert tree.size == 0
     assert tree.table == nil
@@ -27,12 +38,12 @@ defmodule Examples.ECommitmentTree do
     tree
   end
 
-  @spec empty_mnesia_backed_ct() :: CommitmentTree.t()
-  def empty_mnesia_backed_ct() do
+  @spec empty_mnesia_backed_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def empty_mnesia_backed_ct(spec \\ sha256_32_spec()) do
     # Ensure it's really empty
     :mnesia.delete_table(tree_storage())
     CommitmentTree.init_storage(tree_storage())
-    tree = CommitmentTree.new(sha256_32_spec(), tree_storage())
+    tree = CommitmentTree.new(spec, tree_storage())
 
     assert tree.size == 0
     assert tree.table == tree_storage()
@@ -46,21 +57,22 @@ defmodule Examples.ECommitmentTree do
   This value is expected to differ, and will be a fixture for other
   tests to assert about.
   """
-  @spec current_tree_mnesia_ct() :: CommitmentTree.t()
-  def current_tree_mnesia_ct() do
-    tree = CommitmentTree.new(sha256_32_spec(), tree_storage())
+  @spec current_tree_mnesia_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def current_tree_mnesia_ct(spec \\ sha256_32_spec()) do
+    tree = CommitmentTree.new(spec, tree_storage())
 
     assert :mnesia.table_info(tree_storage(), :size) == tree.size
 
     tree
   end
 
-  @spec babylon_mnesia_ct() :: CommitmentTree.t()
-  def babylon_mnesia_ct() do
+  @spec babylon_mnesia_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def babylon_mnesia_ct(spec \\ sha256_32_spec()) do
     # This resets the table, this binding is important!
-    empty_ct = empty_mnesia_backed_ct()
-    spec = sha256_32_spec()
+    empty_ct = empty_mnesia_backed_ct(spec)
 
+    # It's fine the adding hashes come from sha256. Cuz Cairo poseidon hash also
+    # returns 256bits.
     hashes =
       Enum.map(["Londo", "G'kar", "Kosh", "Sinclair", "Ivanova"], fn x ->
         :crypto.hash(:sha256, x)
@@ -70,7 +82,7 @@ defmodule Examples.ECommitmentTree do
 
     assert length(hashes) == ct.size
 
-    restored_tc = current_tree_mnesia_ct()
+    restored_tc = current_tree_mnesia_ct(spec)
 
     assert ct == restored_tc, "Restoring from storage gives the same tree"
 
@@ -85,9 +97,9 @@ defmodule Examples.ECommitmentTree do
     ct
   end
 
-  @spec lots_of_inserts_ct() :: CommitmentTree.t()
-  def lots_of_inserts_ct() do
-    ct = memory_backed_ct()
+  @spec lots_of_inserts_ct(CommitmentTree.Spec.t()) :: CommitmentTree.t()
+  def lots_of_inserts_ct(spec \\ sha256_32_spec()) do
+    ct = memory_backed_ct(spec)
 
     {ct_batches, keys} =
       Enum.reduce(1..100, {ct, []}, fn _, {ct, keys} ->
