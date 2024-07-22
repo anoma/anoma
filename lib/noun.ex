@@ -184,6 +184,10 @@ defmodule Noun do
 
   @spec atom_integer_to_binary(noun_atom()) :: binary()
   # special case: zero is the empty binary
+  def atom_integer_to_binary([]) do
+    atom_integer_to_binary(0)
+  end
+
   def atom_integer_to_binary(0) do
     <<>>
   end
@@ -199,6 +203,10 @@ defmodule Noun do
   end
 
   @spec atom_integer_to_binary(noun_atom(), non_neg_integer()) :: binary()
+  def atom_integer_to_binary([], length) do
+    atom_integer_to_binary(0, length)
+  end
+
   def atom_integer_to_binary(integer, length)
       when is_integer(integer) and integer >= 0 do
     pad_trailing(:binary.encode_unsigned(integer, :little), length)
@@ -224,6 +232,10 @@ defmodule Noun do
   def atom_binary_to_integer(integer)
       when is_integer(integer) and integer >= 0 do
     integer
+  end
+
+  def atom_binary_to_integer([]) do
+    atom_binary_to_integer(0)
   end
 
   @spec condensed_print(t()) :: String.t()
