@@ -83,10 +83,22 @@ defmodule Anoma.Node.Mempool do
                    and initialize an instance with given parameters.
   """
 
+  @spec init(Mempool.t()) :: {:ok, Mempool.t()}
   def init(%Mempool{} = state) do
     {:ok, state}
   end
 
+  @spec init(
+          list(
+            {:ordering, Router.Addr.t()}
+            | {:executor, Router.Addr.t()}
+            | {:block_storage, atom()}
+            | {:round, non_neg_integer()}
+            | {:topic, Router.Addr.t()}
+            | {:key, {Serializer.public_key(), Serializer.private_key()}}
+            | {:logger, Router.Addr.t()}
+          )
+        ) :: {:ok, Mempool.t()}
   def init(args) do
     primary =
       Map.merge(%Mempool{}, args |> Enum.into(%{}))

@@ -29,6 +29,7 @@ To have a working Anoma Node the following dependencies are required:
 2. `Erlang`
 3. `Elixir`
 4. `zig`
+5. `rust`
 
 ### OSX
 
