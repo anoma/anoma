@@ -4,10 +4,11 @@ defmodule Anoma.Transaction do
 
   I contain the intents used in a transaction
   """
+  alias Anoma.Node.Executor.Worker
   alias __MODULE__
   use TypedStruct
 
-  @type execution() :: {:kv | :rm, Noun.t()}
+  @type execution() :: Worker.transaction()
 
   typedstruct enforce: true do
     field(:id, Noun.t())

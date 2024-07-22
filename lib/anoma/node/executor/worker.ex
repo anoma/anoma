@@ -29,6 +29,8 @@ defmodule Anoma.Node.Executor.Worker do
 
   @type backend() :: :kv | :rm | :cairo | :ro
 
+  @type transaction() :: {backend(), Noun.t()}
+
   # TODO :: Please replace with a verify protocol
   @type verify_fun(trans) :: (trans -> boolean())
   @type from_noun(trans) :: (Noun.t() -> trans)
@@ -52,7 +54,7 @@ defmodule Anoma.Node.Executor.Worker do
     """
 
     field(:id, non_neg_integer())
-    field(:tx, {backend(), Noun.t()})
+    field(:tx, transaction())
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
     field(:reply_to, Router.addr())
@@ -72,9 +74,10 @@ defmodule Anoma.Node.Executor.Worker do
   """
 
   @spec init(
-          {non_neg_integer(), {backend(), Noun.t()}, Nock.t(), Router.addr(),
+          {non_neg_integer(), transaction(), Nock.t(), Router.Addr.t(),
            Router.addr() | nil}
-        ) :: {:ok, Worker.t()}
+        ) ::
+          {:ok, Worker.t()}
   def init({id, tx, env, completion_topic, reply_to}) do
     send(self(), :run)
 
