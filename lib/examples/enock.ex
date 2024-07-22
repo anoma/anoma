@@ -146,9 +146,14 @@ defmodule Examples.ENock do
     node
   end
 
+  def miki_increment_candidate() do
+    increment_counter_val(EStorage.miki_key())
+  end
+
   def miki_increment() do
-    luck_formula = increment_counter_val(EStorage.miki_key())
-    assert {:ok, increment} = Nock.nock(luck_formula, [9, 2, 0 | 1], env())
+    assert {:ok, increment} =
+             Nock.nock(miki_increment_candidate(), [9, 2, 0 | 1], env())
+
     increment
   end
 

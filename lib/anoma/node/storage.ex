@@ -309,7 +309,7 @@ defmodule Anoma.Node.Storage do
              t.rm_commitments,
              add_rocks.(attributes: [:index, :hash])
            ) do
-      CommitmentTree.new(cm_tree_spec(), t.rm_commitments)
+      CommitmentTree.new(CommitmentTree.Spec.cm_tree_spec(), t.rm_commitments)
     else
       # It is a question as to if we should reset the storage
       # schema... Instead we ask the user to do it if we notice the
@@ -492,14 +492,6 @@ defmodule Anoma.Node.Storage do
   ############################################################
   #                     Conceptual Helpers                   #
   ############################################################
-
-  # hardcoded cm tree spec for now
-  @spec cm_tree_spec() :: CommitmentTree.Spec.t()
-  def cm_tree_spec() do
-    CommitmentTree.Spec.new(32, 2, 256, fn {x, y} ->
-      :crypto.hash(:sha256, x <> y)
-    end)
-  end
 
   @spec calculate_order([{any(), any(), number()}]) :: number()
   def calculate_order([{_, _, order}]), do: order + 1

@@ -216,7 +216,8 @@ defmodule Anoma.Node.Transport do
      case Router.start_engine(
             s.router,
             trans_server_mod(transport_type(trans)),
-            {s.router, Router.self_addr(), trans, s.connection_pool},
+            {s.router, Router.self_addr(), trans, s.connection_pool,
+             s.logger},
             supervisor: s.connection_pool
           ) do
        {:ok, server} -> %{s | servers: Map.put(s.servers, trans, server)}

@@ -29,6 +29,8 @@ defmodule Anoma.Node.Executor.Worker do
 
   @type backend() :: :kv | :rm | :cairo | :ro
 
+  @type transaction() :: {backend(), Noun.t()}
+
   # TODO :: Please replace with a verify protocol
   @type verify_fun(trans) :: (trans -> boolean())
   @type from_noun(trans) :: (Noun.t() -> trans)
@@ -50,7 +52,7 @@ defmodule Anoma.Node.Executor.Worker do
     """
 
     field(:id, non_neg_integer())
-    field(:tx, {backend(), Noun.t()})
+    field(:tx, transaction())
     field(:env, Nock.t())
     field(:completion_topic, Router.Addr.t())
   end
@@ -68,10 +70,8 @@ defmodule Anoma.Node.Executor.Worker do
                                               a Worker instance.
   """
 
-  @spec init(
-          {non_neg_integer(), {backend(), Noun.t()}, Nock.t(),
-           Router.Addr.t()}
-        ) :: {:ok, Worker.t()}
+  @spec init({non_neg_integer(), transaction(), Nock.t(), Router.Addr.t()}) ::
+          {:ok, Worker.t()}
   def init({id, tx, env, completion_topic}) do
     send(self(), :run)
 
@@ -228,7 +228,7 @@ defmodule Anoma.Node.Executor.Worker do
     # the latter requires the merkle tree to be complete
     cm_tree =
       CommitmentTree.new(
-        Storage.cm_tree_spec(),
+        CommitmentTree.Spec.cm_tree_spec(),
         Anoma.Node.Router.Engine.get_state(storage).rm_commitments
       )
 

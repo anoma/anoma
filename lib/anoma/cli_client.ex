@@ -30,56 +30,56 @@ defmodule Anoma.Cli.Client do
       System.halt(1)
     end
 
-    primary = Anoma.Dump.load(dump_path)
+    server = Anoma.Dump.load(dump_path)
 
     # tell our transport how to reach the node
     Transport.learn_node(
       transport,
-      primary.router.external,
+      server.router.external,
       {:unix, sock_path}
     )
 
     # and how to reach its transport engine and mempool and storage
     Transport.learn_engine(
       transport,
-      primary.transport_id,
-      primary.router.external
+      server.transport_id,
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      elem(primary.mempool, 0),
-      primary.router.external
+      elem(server.mempool, 0),
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      elem(primary.storage, 0),
-      primary.router.external
+      elem(server.storage, 0),
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      elem(primary.configuration, 0),
-      primary.router.external
+      elem(server.configuration, 0),
+      server.router.external
     )
 
     Transport.learn_engine(
       transport,
-      primary.router.external,
-      primary.router.external
+      server.router.external,
+      server.router.external
     )
 
     # form an address.  this should be abstracted properly
-    other_transport_addr = %{
+    server_transport_addr = %{
       router
       | server: nil,
-        id: primary.transport_id
+        id: server.transport_id
     }
 
     # tell the other router how to reach us
     Transport.learn_engine(
-      other_transport_addr,
+      server_transport_addr,
       Router.Addr.id(Router.self_addr()),
       router.id
     )
@@ -89,47 +89,47 @@ defmodule Anoma.Cli.Client do
     # we should get notified when connection establishment succeeds/fails)
     # use a shorter timeout because--come on
     with {:error, :timed_out} <-
-           Router.call(other_transport_addr, :ping, 1000) do
+           Router.call(server_transport_addr, :ping, 1000) do
       IO.puts("Unable to connect to local node")
       IO.puts("Trying offline commands")
       perform_offline(operation)
       System.halt(1)
     end
 
-    perform(operation, primary, router)
+    perform(operation, server, router)
 
     # synchronise--make sure the queues get flushed properly before we exit
-    Router.call(other_transport_addr, :ping)
+    Router.call(server_transport_addr, :ping)
 
     System.halt(0)
   end
 
-  defp perform({:submit_tx, path}, primary, router) do
-    do_submit(path, primary, router, :kv)
+  defp perform({:submit_tx, path}, server, router) do
+    do_submit(path, server, router, :kv)
   end
 
-  defp perform({:rm_submit_tx, path}, primary, router) do
-    do_submit(path, primary, router, :rm)
+  defp perform({:rm_submit_tx, path}, server, router) do
+    do_submit(path, server, router, :rm)
   end
 
-  defp perform(:shutdown, primary, router) do
-    other_router_addr = %{
+  defp perform(:shutdown, server, router) do
+    server_router_addr = %{
       router
       | server: nil,
-        id: primary.router.external
+        id: server.router.external
     }
 
-    Anoma.Node.Router.shutdown_node(other_router_addr)
+    Anoma.Node.Router.shutdown_node(server_router_addr)
   end
 
-  defp perform({:get_key, key}, primary, router) do
-    other_storage_addr = %{
+  defp perform({:get_key, key}, server, router) do
+    server_storage_addr = %{
       router
       | server: nil,
-        id: elem(primary.storage, 0)
+        id: elem(server.storage, 0)
     }
 
-    case Anoma.Node.Storage.get(other_storage_addr, key) do
+    case Anoma.Node.Storage.get(server_storage_addr, key) do
       {:error, :timed_out} ->
         IO.puts("Connection error")
         System.halt(1)
@@ -142,24 +142,24 @@ defmodule Anoma.Cli.Client do
     end
   end
 
-  defp perform(:snapshot, primary, router) do
-    other_configuration_addr = %{
+  defp perform(:snapshot, server, router) do
+    server_configuration_addr = %{
       router
       | server: nil,
-        id: elem(primary.configuration, 0)
+        id: elem(server.configuration, 0)
     }
 
-    Anoma.Node.Configuration.snapshot(other_configuration_addr)
+    Anoma.Node.Configuration.snapshot(server_configuration_addr)
   end
 
-  defp perform(:delete_dump, primary, router) do
-    other_configuration_addr = %{
+  defp perform(:delete_dump, server, router) do
+    server_configuration_addr = %{
       router
       | server: nil,
-        id: elem(primary.configuration, 0)
+        id: elem(server.configuration, 0)
     }
 
-    Anoma.Node.Configuration.delete_dump(other_configuration_addr)
+    Anoma.Node.Configuration.delete_dump(server_configuration_addr)
   end
 
   def perform_offline(:delete_dump) do
@@ -189,11 +189,11 @@ defmodule Anoma.Cli.Client do
   #                        Helper                            #
   ############################################################
 
-  defp do_submit(path, primary, router, kind) do
-    other_mempool_addr = %{
+  defp do_submit(path, server, router, kind) do
+    server_mempool_addr = %{
       router
       | server: nil,
-        id: elem(primary.mempool, 0)
+        id: elem(server.mempool, 0)
     }
 
     tx =
@@ -211,7 +211,7 @@ defmodule Anoma.Cli.Client do
 
     case Noun.Format.parse(tx) do
       {:ok, tx} ->
-        Anoma.Node.Mempool.tx(other_mempool_addr, {kind, tx})
+        Anoma.Node.Mempool.tx(server_mempool_addr, {kind, tx})
 
       :error ->
         IO.puts("Failed to parse transaction from file #{path}")
