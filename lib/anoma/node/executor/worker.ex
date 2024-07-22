@@ -150,7 +150,13 @@ defmodule Anoma.Node.Executor.Worker do
 
   @spec execute_key_value_tx(t(), fun()) :: :ok | :error
   defp execute_key_value_tx(
-         s = %__MODULE__{id: id, tx: {_, proto_tx}, env: env},
+         s = %__MODULE__{
+           id: id,
+           tx: {_, proto_tx},
+           env: env,
+           completion_topic: topic,
+           reply_to: reply_to
+         },
          process
        ) do
     logger = env.logger
@@ -170,6 +176,16 @@ defmodule Anoma.Node.Executor.Worker do
     else
       e ->
         log_info({:fail, e, logger})
+
+        # notify the topic and reply-to address about the error
+        err_msg = {:worker_error}
+
+        if reply_to != nil do
+          Router.cast(reply_to, err_msg)
+        end
+
+        Router.cast(topic, err_msg)
+
         wait_for_ready(s)
         snapshot(storage, env)
         :error
