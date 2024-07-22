@@ -87,8 +87,33 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
           acc && result
       end
 
-    # TODO: other checks
+    # Decode the compliance_output
+    compliance_outputs =
+      transaction.partial_transactions
+      |> Enum.flat_map(fn ptx ->
+        ptx.compliance_proofs
+        |> Enum.map(fn proof_record ->
+          Anoma.SheildedResource.ComplianceOutput.from_public_input(
+            proof_record.public_inputs
+          )
+        end)
+      end)
 
-    all_proofs_valid
+    # Collect binding public keys
+    binding_pub_keys =
+      compliance_outputs |> Enum.reduce([], &[&1.delta_x ++ &1.delta_y | &2])
+
+    # Collect binding signature msgs
+    binding_messages =
+      compliance_outputs
+      |> Enum.reduce([], &[&1.nullifier | [&1.output_cm | &2]])
+
+    # delta check(verify the binding signature)
+    list_delta = :binary.bin_to_list(transaction.delta)
+
+    delta_valid =
+      Cairo.sig_verify(binding_pub_keys, binding_messages, list_delta)
+
+    all_proofs_valid && delta_valid
   end
 end
