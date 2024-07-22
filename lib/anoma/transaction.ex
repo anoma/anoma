@@ -6,10 +6,11 @@ defmodule Anoma.Transaction do
   engine level. See `Resource.Transaction` for the transaction
   specification at the level of the Resource Machine.
   """
+  alias Anoma.Node.Executor.Worker
   alias __MODULE__
   use TypedStruct
 
-  @type execution() :: {:kv | :rm, Noun.t()}
+  @type execution() :: Worker.transaction()
 
   typedstruct do
     @typedoc """

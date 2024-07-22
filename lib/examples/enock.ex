@@ -233,10 +233,10 @@ defmodule Examples.ENock do
     valid_args = [ECrypto.blood_l_signed() | ECrypto.londo().external.sign]
     invalid_args = [ECrypto.blood_msg() | ECrypto.londo().internal.sign]
 
-    assert {:ok, ECrypto.blood_msg()} ==
+    assert {:ok, [0 | ECrypto.blood_msg()]} ==
              Nock.nock(core, [9, 2, 10, [6, 1 | valid_args], 0 | 1])
 
-    assert :error ==
+    assert {:ok, 0} ==
              Nock.nock(core, [9, 2, 10, [6, 1 | invalid_args], 0 | 1]),
            "Can't verify with someone's private key"
 
