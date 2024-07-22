@@ -27,10 +27,11 @@ defmodule Anoma.Node.Executor.Worker do
   use TypedStruct
 
   import Nock
+  require Noun
 
   @type backend() :: :kv | :rm | :cairo | :ro
 
-  @type transaction() :: {backend(), Noun.t()}
+  @type transaction() :: {backend(), Noun.t() | binary()}
 
   # TODO :: Please replace with a verify protocol
   @type verify_fun(trans) :: (trans -> boolean())
@@ -105,6 +106,21 @@ defmodule Anoma.Node.Executor.Worker do
   ############################################################
 
   @spec run(t()) :: :ok | :error
+  defp run(s = %__MODULE__{tx: {backend, tx}, env: env})
+       when Noun.is_noun_atom(tx) do
+    case Nock.Cue.cue(tx) do
+      {:ok, tx} ->
+        run(%__MODULE__{s | tx: {backend, tx}})
+
+      :error ->
+        storage = Router.Engine.get_state(env.ordering).storage
+        log_info({:fail, "failed to cue!", env.logger})
+        wait_for_ready(s)
+        snapshot(storage, env)
+        :error
+    end
+  end
+
   defp run(s = %__MODULE__{tx: {:ro, _}}) do
     execute_key_value_tx(s, &send_value/3)
   end
