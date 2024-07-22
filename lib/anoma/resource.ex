@@ -12,6 +12,7 @@ defmodule Anoma.Resource do
   use TypedStruct
 
   alias Anoma.Crypto.Sign
+  require Noun
 
   typedstruct enforce: true do
     # resource logic
@@ -61,6 +62,11 @@ defmodule Anoma.Resource do
     [@commitment_atom | resource |> to_noun()]
     |> Nock.Jam.jam()
     |> Noun.atom_integer_to_binary()
+  end
+
+  @spec commitment_hash(Noun.noun_atom()) :: binary()
+  def commitment_hash(commitment) when Noun.is_noun_atom(commitment) do
+    :crypto.hash(:sha256, Noun.atom_integer_to_binary(commitment))
   end
 
   @spec nullifier(t(), Sign.secret()) :: binary()
