@@ -1,4 +1,5 @@
 defmodule Anoma.Cli do
+  alias Anoma.Node.Transport
   alias Anoma.Node.Router
 
   @type client_commands() ::
@@ -9,6 +10,10 @@ defmodule Anoma.Cli do
           | :shutdown
           | :snapshot
           | :submit
+
+  @type client_info() ::
+          {Router.addr(), Router.addr(), Anoma.Dump.dump() | any(),
+           Transport.transport_addr()}
 
   @spec argument_parser() :: Optimus.t()
   def argument_parser() do
@@ -130,7 +135,7 @@ defmodule Anoma.Cli do
         end
 
       {:ok, command, args} ->
-        {:ok, client} = run_commands({command, args})
+        {:ok, client} = run_commands({command, args}, server_anoma_node())
 
         client
         |> Anoma.Cli.Client.error_code()
@@ -150,47 +155,41 @@ defmodule Anoma.Cli do
     end
   end
 
-  @spec run_commands({[client_commands(), ...], map()}) ::
+  @spec run_commands({[client_commands(), ...], map()}, client_info()) ::
           :ok | {:ok, Router.addr()}
   @doc """
   Runs the given client command
   """
-  def run_commands({[:submit], %{args: %{file: file}}}) do
-    run_client_command({:submit_tx, file})
+  def run_commands({[:submit], %{args: %{file: file}}}, ci) do
+    run_client_command({:submit_tx, file}, ci)
   end
 
-  def run_commands({[:rm_submit], %{args: %{file: file}}}) do
-    run_client_command({:rm_submit_tx, file})
+  def run_commands({[:rm_submit], %{args: %{file: file}}}, ci) do
+    run_client_command({:rm_submit_tx, file}, ci)
   end
 
-  def run_commands({[:get], %{args: %{key: key}}}) do
-    run_client_command({:get_key, key})
+  def run_commands({[:get], %{args: %{key: key}}}, ci) do
+    run_client_command({:get_key, key}, ci)
   end
 
-  def run_commands({[:shutdown], %{}}) do
-    run_client_command(:shutdown)
+  def run_commands({[:shutdown], %{}}, ci) do
+    run_client_command(:shutdown, ci)
   end
 
-  def run_commands({[:delete_dump], %{}}) do
-    run_client_command(:delete_dump)
+  def run_commands({[:delete_dump], %{}}, ci) do
+    run_client_command(:delete_dump, ci)
   end
 
-  def run_commands({[:snapshot], %{}}) do
-    run_client_command(:snapshot)
+  def run_commands({[:snapshot], %{}}, ci) do
+    run_client_command(:snapshot, ci)
   end
 
-  def run_commands({[:nockma], parsed}) do
+  def run_commands({[:nockma], parsed}, _ci) do
     Nock.Cli.main(parsed)
   end
 
-  # Optimus.t() is opaque so the help fails to type check, but it's OK
-  @dialyzer {:nowarn_function, top_level_help: 0}
-  def top_level_help() do
-    IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
-  end
-
-  @spec run_client_command(any()) :: {:ok, Router.addr()}
-  def run_client_command(operation) do
+  @spec server_anoma_node() :: client_info()
+  def server_anoma_node() do
     {:ok, router, transport} = Anoma.Node.Router.start()
 
     # load info of the running node, erroring if it appears not to exist, and
@@ -199,12 +198,22 @@ defmodule Anoma.Cli do
     dump_path = Anoma.System.Directories.data("node_keys.dmp")
     sock_path = Anoma.System.Directories.data("local.sock")
     server = Anoma.Dump.load(dump_path)
+    {router, transport, server, {:unix, sock_path}}
+  end
 
+  # Optimus.t() is opaque so the help fails to type check, but it's OK
+  @dialyzer {:nowarn_function, top_level_help: 0}
+  def top_level_help() do
+    IO.puts(Optimus.help(Anoma.Cli.argument_parser()))
+  end
+
+  @spec run_client_command(any(), client_info()) :: {:ok, Router.addr()}
+  def run_client_command(operation, {router, transport, server, sock}) do
     {:ok, addr} =
       Anoma.Node.Router.start_engine(
         router,
         Anoma.Cli.Client,
-        {router, transport, server, {:unix, sock_path}, operation}
+        {router, transport, server, sock, operation}
       )
 
     {:ok, addr}

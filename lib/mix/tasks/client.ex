@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Client do
     {:ok, client} =
       argument_parser()
       |> Optimus.parse!(args)
-      |> Anoma.Cli.run_commands()
+      |> Anoma.Cli.run_commands(Anoma.Cli.server_anoma_node())
 
     System.halt(Client.error_code(client))
   end
