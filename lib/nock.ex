@@ -2479,6 +2479,15 @@ defmodule Nock do
   # evaluated at compile time.
   @logics_core_val [Noun.Format.parse_always(logics_string) | @rm_core_val]
 
+  def normalize_key(key) when Noun.is_noun_atom(key) do
+    Noun.normalize_noun(key)
+  end
+
+  def normalize_key(key) when Noun.is_noun_cell(key) do
+    Noun.list_nock_to_erlang(key) |> Enum.map(fn x -> Noun.normalize_noun(x) end)
+  end
+
+
   @spec logics_core :: Noun.t()
   def logics_core do
     @logics_core_val
@@ -2497,7 +2506,7 @@ defmodule Nock do
            snap_id = [id | env.snapshot_path],
            {:ok, snap} <- Ordering.caller_blocking_read_id(ordering, snap_id),
            instrument({:snapshot, snap}),
-           {:ok, value} <- Storage.get_at_snapshot(snap, key) do
+           {:ok, value} <- Storage.get_at_snapshot(snap, normalize_key(key)) do
         instrument({:got_value, value})
         {:ok, value}
       else

@@ -126,9 +126,10 @@ defmodule Examples.ENock do
 
     formula = [9, 2, 10, [6, 1 | EStorage.random_id()], 0 | 1]
 
-    assert {:ok, [EStorage.miki_key() | EStorage.lucky_value() + 1]} ==
-             Nock.nock(miki_increment(), formula, env),
-           "We should be scrying the right place"
+    assert {:ok, [nockKey | newValue]}  = Nock.nock(miki_increment_juvix(), formula, env)
+
+    assert EStorage.lucky_value() + 1 == newValue, "Value is incorrect #{inspect(newValue)}"
+    assert EStorage.miki_key() == Nock.normalize_key(nockKey), "Key is incorrect #{inspect(nockKey)}"
 
     {node, env}
   end
@@ -155,6 +156,12 @@ defmodule Examples.ENock do
              Nock.nock(miki_increment_candidate(), [9, 2, 0 | 1], env())
 
     increment
+  end
+
+  def miki_increment_juvix() do
+    {:ok, contents} = File.read("IncrementMiki.nockma")
+    assert {:ok, formula} = Noun.Format.parse(contents)
+    formula
   end
 
   def devil_increment() do
