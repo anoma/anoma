@@ -5,7 +5,7 @@ defmodule Examples.ENock do
   import ExUnit.Assertions
 
   alias Examples.ENode.EStorage
-  alias Anoma.Order
+  alias Anoma.Transaction
   alias Anoma.Node.{Router, Ordering}
   alias Examples.ENode
   alias Examples.ECrypto
@@ -117,7 +117,11 @@ defmodule Examples.ENock do
 
     node.ordering
     |> Ordering.new_order([
-      Order.new(1, EStorage.random_id(), Router.self_addr())
+      %Transaction{
+        index: 1,
+        id: EStorage.random_id(),
+        addr: Router.self_addr()
+      }
     ])
 
     formula = [9, 2, 10, [6, 1 | EStorage.random_id()], 0 | 1]

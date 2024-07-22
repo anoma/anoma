@@ -17,7 +17,7 @@ defmodule Anoma.Node.Mempool do
   - `tx/2`
   """
 
-  alias Anoma.{Block, Transaction, Order, Serializer}
+  alias Anoma.{Block, Transaction, Serializer}
   alias Anoma.Block.Base
   alias Anoma.Node.{Router, Logger, Executor, Ordering}
   alias Router.Engine
@@ -44,7 +44,9 @@ defmodule Anoma.Node.Mempool do
     - `:executor` - The Executor Engine Address.
     - `:block_storage` - The name of the storage for created blocks.
                          Default: `Anoma.Block`
-    - `:transactions` - List of transaction candidates.
+    - `:transactions` - List of transaction candidates. Currently these do
+                        not have index info. That is handled by the
+                        Ordering engine.
                         Default: []
     - `:round` - The block round information.
                  Default: 0
@@ -315,7 +317,10 @@ defmodule Anoma.Node.Mempool do
     log_info({:write, length(ordered_transactions), state.logger})
 
     for ord <- ordered_transactions do
-      Router.send_raw(Order.addr(ord), {:write_ready, Order.index(ord)})
+      Router.send_raw(
+        Transaction.addr(ord),
+        {:write_ready, Transaction.index(ord)}
+      )
     end
 
     :ok
@@ -390,20 +395,15 @@ defmodule Anoma.Node.Mempool do
   end
 
   @doc """
-  I place a transaction candidate in an order structure.
+  I order a transaction structure by giving it an index.
 
-  Given a transaction candidate and an order, I create a new Order
-  structure with a given order, while the ID and Worker address is taken
-  from the transaction itself.
+  Given a transaction candidate and an order, I put the index specified by
+  the input as its `:index` field value.
   """
 
-  @spec order_format(Transaction.t(), non_neg_integer()) :: Order.t()
+  @spec order_format(Transaction.t(), non_neg_integer()) :: Transaction.t()
   def order_format(transaction, order) do
-    Order.new(
-      order,
-      Transaction.id(transaction),
-      Transaction.addr(transaction)
-    )
+    %Transaction{transaction | index: order}
   end
 
   ############################################################

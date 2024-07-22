@@ -29,7 +29,7 @@ defmodule Anoma.Node.Ordering do
   """
 
   alias Anoma.Node.{Router, Logger, Storage}
-  alias Anoma.Order
+  alias Anoma.Transaction
   alias __MODULE__
 
   use TypedStruct
@@ -39,7 +39,7 @@ defmodule Anoma.Node.Ordering do
   I am a list of ordered transactions.
   """
   @type ordered_transactions() ::
-          list(Order.t())
+          list(Transaction.t())
 
   @typedoc """
   I am a type representing a key in a key-value map.
@@ -225,14 +225,21 @@ defmodule Anoma.Node.Ordering do
     log_info({:new_handle, num_txs, state.logger})
 
     for order <- ordered_transactions do
-      log_info({:ready_handle, Order.addr(order), state.logger})
-      Router.send_raw(Order.addr(order), {:read_ready, Order.index(order)})
+      log_info({:ready_handle, Transaction.addr(order), state.logger})
+
+      Router.send_raw(
+        Transaction.addr(order),
+        {:read_ready, Transaction.index(order)}
+      )
     end
 
     new_next_order = state.next_order + length(ordered_transactions)
 
     new_map_elements =
-      Map.new(ordered_transactions, &{Order.id(&1), Order.index(&1)})
+      Map.new(
+        ordered_transactions,
+        &{Transaction.id(&1), Transaction.index(&1)}
+      )
 
     new_map = Map.merge(state.hash_to_order, new_map_elements)
     {new_next_order, new_map}
