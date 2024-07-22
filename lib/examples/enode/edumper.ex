@@ -36,7 +36,7 @@ defmodule Examples.ENode.EDumper do
     assert_receive({:"$gen_cast", {_, _, {:logger_add, _, ^msg}}}, 5000)
 
     msg2 =
-      "Dump succesfull. Snapshot path: #{inspect(path)}. Node name: #{inspect(node_name)}"
+      "Dump successful. Snapshot path: #{inspect(path)}. Node name: #{inspect(node_name)}"
 
     assert_receive(
       {:"$gen_cast", {_, _, {:logger_add, _task, ^msg2}}},

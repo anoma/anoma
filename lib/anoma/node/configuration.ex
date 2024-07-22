@@ -142,7 +142,7 @@ defmodule Anoma.Node.Configuration do
     Logger.add(
       logger,
       :info,
-      "Dump succesfull. Snapshot path: #{inspect(dump_path)}. Node name: #{inspect(node_name)}"
+      "Dump successful. Snapshot path: #{inspect(dump_path)}. Node name: #{inspect(node_name)}"
     )
   end
 

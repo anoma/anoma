@@ -329,7 +329,7 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp log_info({:success_run, logger}) do
-    Logger.add(logger, :info, "Run succesfull!")
+    Logger.add(logger, :info, "Run successful!")
   end
 
   defp log_info({:ensure_read, logger}) do
