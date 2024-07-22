@@ -22,7 +22,7 @@ defmodule Anoma.Node.Executor.Worker do
   alias Anoma.Node.{Storage, Ordering, Logger, Router}
   alias __MODULE__
 
-  use Router.Engine, restart: :transient
+  use Router.Engine, restart: :temporary
   use TypedStruct
 
   import Nock
