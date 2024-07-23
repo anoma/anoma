@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Node.Executor — Anoma v0.17.0</title>
+    <title>Anoma.Node.Executor — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Executor</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -183,7 +183,7 @@ transaction code.</p><h3 id="module-api" class="section-heading">
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fire_new_transaction/4" translate="no">fire_new_transaction(executor, id, gate, env \\ nil)</a>
+        <a href="#fire_new_transaction/5" translate="no">fire_new_transaction(executor, id, gate, env \\ nil, reply_to)</a>
 
       </div>
 
@@ -274,7 +274,7 @@ transaction code.</p><h3 id="module-api" class="section-heading">
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:router</code> - The Router Engine address used by the Executor.</li><li><code class="inline">:topic</code> - The topic for broadcasting.</li><li><code class="inline">:ambiant_env</code> - The default environment to be fed to spawned workers.</li><li><code class="inline">:workers</code> - A list of worker addresses spawned.<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3607555496-1">[</span><span class="p" data-group-id="3607555496-1">]</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
+<ul><li><code class="inline">:router</code> - The Router Engine address used by the Executor.</li><li><code class="inline">:topic</code> - The topic for broadcasting.</li><li><code class="inline">:ambiant_env</code> - The default environment to be fed to spawned workers.</li><li><code class="inline">:workers</code> - A list of worker addresses spawned.<pre><code class="makeup elixir" translate="no"><span class="w">         </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1258852121-1">[</span><span class="p" data-group-id="1258852121-1">]</span></code></pre></li><li><code class="inline">:logger</code> - The Logger Engine address.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -306,16 +306,16 @@ transaction code.</p><h3 id="module-api" class="section-heading">
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="fire_new_transaction/4">
+<section class="detail" id="fire_new_transaction/5">
 
-    <span id="fire_new_transaction/3"></span>
+    <span id="fire_new_transaction/4"></span>
 
   <div class="detail-header">
-    <a href="#fire_new_transaction/4" class="detail-link" title="Link to this function">
+    <a href="#fire_new_transaction/5" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">fire_new_transaction(executor, id, gate, env \\ nil)</h1>
+    <h1 class="signature" translate="no">fire_new_transaction(executor, id, gate, env \\ nil, reply_to)</h1>
 
 
   </div>
@@ -328,14 +328,16 @@ transaction code.</p><h3 id="module-api" class="section-heading">
   <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   <a href="Noun.html#t:t/0">Noun.t</a>(),
-  <a href="Nock.html#t:t/0">Nock.t</a>() | nil
+  <a href="Nock.html#t:t/0">Nock.t</a>() | nil,
+  <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil
 ) :: :ok</pre>
 
       </div>
 
 <p>I am a function spawning a new transaction.</p><p>I do so by spawning a new engine with the info provided. If the
 environment is left unspecified I launch the Worker with the given
-ambient environment stored in the state.</p>
+ambient environment stored in the state.
+The computed value will be sent to the specified reply-to address.</p>
   </section>
 </section>
 <section class="detail" id="handle_cast/3">
@@ -440,11 +442,11 @@ current worker list.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/executor/executor.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/executor/executor.ex">current file</a>)
 
             </span>
 

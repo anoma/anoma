@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>API Reference — Anoma v0.17.0</title>
+    <title>API Reference — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
 
-  <span>API Reference <small class="app-vsn">Anoma v0.17.0</small></span>
+  <span>API Reference <small class="app-vsn">Anoma v0.18.0</small></span>
 </h1>
 
 
@@ -517,9 +517,9 @@ information in order to choose how to verify a commitment.</p></div>
 
     <div class="summary-synopsis"><p>An address to which we can send a message.
 The server, if known, is a local actor which can receive it directly;
-  otherwise, the mssage will be sent via the central router.
+otherwise, the mssage will be sent via the central router.
 If the server is known, but the id is not, then this is a local-only
-  engine, which can only talk to other local engines.
+engine, which can only talk to other local engines.
 (Hence, at least one of id and server must be known; potentially both are.)</p></div>
 
 </div>
@@ -545,7 +545,7 @@ If the server is known, but the id is not, then this is a local-only
 
   </div>
 
-    <div class="summary-synopsis"><p>I am the Anoma Storage engine, I consist of two parts</p></div>
+    <div class="summary-synopsis"><p>I am the Anoma Storage Engine.</p></div>
 
 </div>
 <div class="summary-row">
@@ -612,17 +612,6 @@ handoff is complicated, I start up a new listener once I accept a connection.</p
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Anoma.Order.html" translate="no">Anoma.Order</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>I am the Order module, I am the format responsible for making sure
-that the given process is told that it can be read or executed at
-the given index</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Anoma.Resource.html" translate="no">Anoma.Resource</a>
 
   </div>
@@ -680,6 +669,51 @@ terms as well!</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Anoma.SheildedResource.ComplianceOutput.html" translate="no">Anoma.SheildedResource.ComplianceOutput</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I represent a resource's output.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.html" translate="no">Anoma.ShieldedResource</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a placeholder, but will represent a shielded resource in the future.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.PartialTransaction.html" translate="no">Anoma.ShieldedResource.PartialTransaction</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a shielded resource machine partial transaction.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ProofRecord.html" translate="no">Anoma.ShieldedResource.ProofRecord</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a proof record for a shielded resource.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Anoma.ShieldedResource.ShieldedTransaction.html" translate="no">Anoma.ShieldedResource.ShieldedTransaction</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>I am a shielded resource machine transaction.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Anoma.Symbol.html" translate="no">Anoma.Symbol</a>
 
   </div>
@@ -703,7 +737,7 @@ etc. directories are properly setup for the host operating system.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>I represent an Anoma Transaction</p></div>
+    <div class="summary-synopsis"><p>I represent an Anoma Transaction at the execution level.</p></div>
 
 </div>
 <div class="summary-row">
@@ -753,6 +787,13 @@ commitment tree.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Examples.EBlock.html" translate="no">Examples.EBlock</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.EClient.html" translate="no">Examples.EClient</a>
 
   </div>
 
@@ -824,6 +865,13 @@ commitment tree.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Examples.ENode.EMempool.html" translate="no">Examples.ENode.EMempool</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Examples.ENode.EPinger.html" translate="no">Examples.ENode.EPinger</a>
 
   </div>
@@ -832,6 +880,13 @@ commitment tree.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Examples.ENode.EStorage.html" translate="no">Examples.ENode.EStorage</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Examples.EParser.html" translate="no">Examples.EParser</a>
 
   </div>
 
@@ -860,6 +915,13 @@ commitment tree.</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Examples.ETransaction.html" translate="no">Examples.ETransaction</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Glossary.html" translate="no">Glossary</a>
 
   </div>
 
@@ -1062,9 +1124,9 @@ Anoma
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
             </span>
 

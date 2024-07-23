@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Examples.ENode.EDumper — Anoma v0.17.0</title>
+    <title>Examples.ENode.EDumper — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Examples.ENode.EDumper</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -153,7 +153,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#anode/2" translate="no">anode(arg, storage)</a>
+        <a href="#dumped_node/1" translate="no">dumped_node(name \\ &quot;dumped_node&quot;)</a>
 
       </div>
 
@@ -161,7 +161,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dumped_node/1" translate="no">dumped_node(storage_name \\ &quot;dumped_node&quot;)</a>
+        <a href="#node_name/1" translate="no">node_name(arg \\ &quot;none&quot;)</a>
 
       </div>
 
@@ -169,7 +169,7 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#raw_storage/1" translate="no">raw_storage(arg \\ &quot;none&quot;)</a>
+        <a href="#raw_storage/1" translate="no">raw_storage(map)</a>
 
       </div>
 
@@ -214,30 +214,6 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="anode/2">
-
-  <div class="detail-header">
-    <a href="#anode/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">anode(arg, storage)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> anode(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>(), <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()) ::
-  {<a href="Anoma.Node.html#t:t/0">Anoma.Node.t</a>(), <a href="Anoma.Configuration.html#t:configuration_map/0">Anoma.Configuration.configuration_map</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="dumped_node/1">
 
     <span id="dumped_node/0"></span>
@@ -247,7 +223,7 @@ GUIDES
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">dumped_node(storage_name \\ &quot;dumped_node&quot;)</h1>
+    <h1 class="signature" translate="no">dumped_node(name \\ &quot;dumped_node&quot;)</h1>
 
 
   </div>
@@ -257,16 +233,16 @@ GUIDES
 
   </section>
 </section>
-<section class="detail" id="raw_storage/1">
+<section class="detail" id="node_name/1">
 
-    <span id="raw_storage/0"></span>
+    <span id="node_name/0"></span>
 
   <div class="detail-header">
-    <a href="#raw_storage/1" class="detail-link" title="Link to this function">
+    <a href="#node_name/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">raw_storage(arg \\ &quot;none&quot;)</h1>
+    <h1 class="signature" translate="no">node_name(arg \\ &quot;none&quot;)</h1>
 
 
   </div>
@@ -275,7 +251,30 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> raw_storage(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> node_name(<a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()) :: <a href="Anoma.Symbol.html#t:s/0">Anoma.Symbol.s</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="raw_storage/1">
+
+  <div class="detail-header">
+    <a href="#raw_storage/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">raw_storage(map)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> raw_storage(%{}) :: <a href="Anoma.Node.Storage.html#t:t/0">Anoma.Node.Storage.t</a>()</pre>
 
       </div>
 
@@ -290,11 +289,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/examples/enode/edumper.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/examples/enode/edumper.ex">current file</a>)
 
             </span>
 

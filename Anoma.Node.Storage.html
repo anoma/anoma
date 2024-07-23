@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Node.Storage — Anoma v0.17.0</title>
+    <title>Anoma.Node.Storage — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,32 +125,25 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Storage</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I am the Anoma Storage engine, I consist of two parts:</p><ol><li>An ordering map which tells of the latest order in the
-qualification map</li><li>A qualification map which maps from a qualified key to the stored
-value</li></ol><h2 id="module-types" class="section-heading">
-  <a href="#module-types" class="hover-link">
+<p>I am the Anoma Storage Engine.</p><p>The Anoma database usage is separated into two parts:</p><ol><li><p>The Ordering table provides info on the order of appropriate keys.
+That is, it has info about how many times the key has been assigned to
+some value.</p></li><li><p>The Qualified table provides a representation of all stored key-values
+in a particular format. Each entry has inside it</p><ol><li>The table name attached</li><li>The order of the key given by the Ordering</li><li>The namespace idenifying the Storage Engine</li><li>The key itself as provided by the user.</li></ol></li></ol><p>As a Storage Engine, I provide the appropriate functionality
+to coordinate the Ordering and Qualified tables of a launched Anoma Node.</p><p>That is, I help with writing things respecting the ordering of events
+while providing appropriate reading capabilities of the tables used, so
+that the base read events read only the latest value of a given key.</p><h3 id="module-public-api" class="section-heading">
+  <a href="#module-public-api" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
-  <span class="text">Types</span>
-</h2>
-<p>  A good way to view this is that for the <code class="inline">t()</code>, the fields for what
-  is stored in mnesia, are simply the order<em>* and qualified</em>* values</p><p>  type <code class="inline">t Anoma.Node.Storage</code> to find them all.</p><p>  Please also type <code class="inline">t Anoma.Node.Storage.t()</code> to find out more about the
-  central type</p><h2 id="module-api" class="section-heading">
-  <a href="#module-api" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">API</span>
-</h2>
-<p>The important functions for this API are</p><ul><li><a href="#get/2"><code class="inline">get/2</code></a></li><li><a href="#get_keyspace/2"><code class="inline">get_keyspace/2</code></a></li><li><a href="#snapshot_order/1"><code class="inline">snapshot_order/1</code></a></li><li><a href="#read_order_tx/2"><code class="inline">read_order_tx/2</code></a></li><li><a href="#read_at_order_tx/3"><code class="inline">read_at_order_tx/3</code></a></li><li><a href="#remove/1"><code class="inline">remove/1</code></a></li><li><a href="#ensure_new/2"><code class="inline">ensure_new/2</code></a></li><li><a href="#put/3"><code class="inline">put/3</code></a></li><li><a href="#put_snapshot/2"><code class="inline">put_snapshot/2</code></a></li><li><a href="#delete_key/2"><code class="inline">delete_key/2</code></a></li><li><code class="inline">write_at_order_tx/4</code></li></ul><p>There are also explicit functions for blocking:</p><ul><li><a href="#blocking_read/2"><code class="inline">blocking_read/2</code></a></li></ul><p>As well as getting snapshotting info:</p><ul><li><a href="#get_at_snapshot/2"><code class="inline">get_at_snapshot/2</code></a></li><li><a href="#in_snapshot/2"><code class="inline">in_snapshot/2</code></a></li></ul><p>If one wants to query the tables by hand then there are manual
-functions, but beware, this is an unintended way of using the API</p><ul><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><code class="inline">do_read_order_tx/2</code></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><code class="inline">do_read_at_order_tx/3</code></li><li><code class="inline">write_at_order/4</code></li><li><code class="inline">do_write_at_order_tx/4</code></li></ul><p>If one is wanting to setup storage manually, then we expose the
-following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><code class="inline">do_ensure_new/2</code></a></li></ul><p>Please see my testing module <code class="inline">AnomaTest.Storage</code> and
-<code class="inline">AnomaTest.Node.Stirage</code> to learn more on how to use me</p>
+  <span class="text">Public API</span>
+</h3>
+<p>I provide the following public functionality:</p><h4>Setup</h4><ul><li><a href="#setup/1"><code class="inline">setup/1</code></a></li><li><a href="#remove/1"><code class="inline">remove/1</code></a></li><li><a href="#do_setup/1"><code class="inline">do_setup/1</code></a></li><li><a href="#ensure_new/2"><code class="inline">ensure_new/2</code></a></li><li><a href="#do_ensure_new/2"><code class="inline">do_ensure_new/2</code></a></li></ul><h4>Writing</h4><ul><li><a href="#put_snapshot/2"><code class="inline">put_snapshot/2</code></a></li><li><a href="#delete_key/2"><code class="inline">delete_key/2</code></a></li><li><a href="#put/3"><code class="inline">put/3</code></a></li></ul><h4>Reading</h4><ul><li><a href="#snapshot_order/1"><code class="inline">snapshot_order/1</code></a></li><li><a href="#get/2"><code class="inline">get/2</code></a></li><li><a href="#get_keyspace/2"><code class="inline">get_keyspace/2</code></a></li><li><a href="#get_at_snapshot/2"><code class="inline">get_at_snapshot/2</code></a></li><li><a href="#in_snapshot/2"><code class="inline">in_snapshot/2</code></a></li><li><a href="#read_order/2"><code class="inline">read_order/2</code></a></li><li><a href="#read_order_tx/2"><code class="inline">read_order_tx/2</code></a></li><li><a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a></li><li><a href="#read_at_order_tx/3"><code class="inline">read_at_order_tx/3</code></a></li></ul><h4>Blocking</h4><ul><li><a href="#blocking_read/2"><code class="inline">blocking_read/2</code></a></li></ul><h4>Other</h4><ul><li><code class="inline">cm_tree_spec/0</code></li></ul>
   </section>
 
 
@@ -172,7 +165,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>The key we wish to store, also used for order lookup</p></div>
+        <div class="summary-synopsis"><p>I designate the type of keys for Ordering table queries.</p></div>
 
     </div>
 
@@ -182,6 +175,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I designate the type of values of keys for Ordering table queries.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -190,7 +185,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>[non_neg_integer(), Noun.t() | non_neg_integer()]</p></div>
+        <div class="summary-synopsis"><p>I designate the type of keys for Qualified table queries.</p></div>
 
     </div>
 
@@ -200,6 +195,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I designate the type of values of Keys for Qualified table queries.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -207,6 +204,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#t:result/1" translate="no">result(res)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the type of a mensia table query result.</p></div>
 
     </div>
 
@@ -216,6 +215,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I designate the snapshot type for table queries.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -224,7 +225,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>I represent the qualified and ordered data of storage</p></div>
+        <div class="summary-synopsis"><p>I am the type of the Storage Engine.</p></div>
 
     </div>
 
@@ -240,21 +241,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#calculate_order/1" translate="no">calculate_order(list)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#check_if_any_absent/1" translate="no">check_if_any_absent(latest_keys)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I provide the final part of the blocking functionality for the Worker
+necessary for transaction-execution.</p></div>
 
     </div>
 
@@ -270,33 +258,11 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cm_tree_spec/0" translate="no">cm_tree_spec()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#delete_key/2" translate="no">delete_key(storage, key)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#denamespace_key/2" translate="no">denamespace_key(storage, key)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#denamespace_qualified_key/2" translate="no">denamespace_qualified_key(storage, list)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I provide the main tombstoning functionality for the Storage Engine.</p></div>
 
     </div>
 
@@ -306,13 +272,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#do_put_snapshot/2" translate="no">do_put_snapshot(storage, key)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I ensure that the fed in storage names correspond to completely empty new
+tables.</p></div>
 
     </div>
 
@@ -322,7 +283,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>I setup storage with the given tables: <code class="inline">t()</code>.</p></div>
+        <div class="summary-synopsis"><p>I setup storage with the given tables from the Storage Engine structure.</p></div>
 
     </div>
 
@@ -332,6 +293,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the function ensuring appropriate db functionality.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -339,6 +302,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#get/2" translate="no">get(storage, key)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the main reading function for the Storage functionality.</p></div>
 
     </div>
 
@@ -348,6 +313,9 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I provide the main functionality of rescuing latest snapshot value of a
+given key.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -355,6 +323,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#get_keyspace/2" translate="no">get_keyspace(storage, key_space)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the keyspace reading function for the Storage Engine.</p></div>
 
     </div>
 
@@ -372,6 +342,9 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the function searching for a key position inside of a given Ordering
+snapshot.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -380,23 +353,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#namespace_key/2" translate="no">namespace_key(storage, key)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#namespace_qualified_key/2" translate="no">namespace_qualified_key(storage, list)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>I am the initialization function for a Storage Engine Instance.</p></div>
 
     </div>
 
@@ -406,6 +363,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I provide the main writing functionality of the Storage Engine.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -413,6 +372,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#put_snapshot/2" translate="no">put_snapshot(storage, key)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the function responsible for writing an Ordering snapshot to our db.</p></div>
 
     </div>
 
@@ -422,6 +383,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the read_at_order function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -429,6 +392,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#read_at_order_tx/3" translate="no">read_at_order_tx(storage, key, order)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the function getting the value of a key at a particular order.</p></div>
 
     </div>
 
@@ -438,7 +403,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>Reads the given keyspace to obtain the latest orders for the keys</p></div>
+        <div class="summary-synopsis"><p>I am the read_keyspace_order function.</p></div>
 
     </div>
 
@@ -448,6 +413,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the read_order function.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -455,6 +422,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#read_order_tx/2" translate="no">read_order_tx(storage, key)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I am the main function for getting orders of keys.</p></div>
 
     </div>
 
@@ -464,7 +433,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-        <div class="summary-synopsis"><p>I setup storage with the given tables: <code class="inline">t()</code>.</p></div>
+        <div class="summary-synopsis"><p>I am the storage removal function.</p></div>
 
     </div>
 
@@ -474,6 +443,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the setup function for Storage.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -481,6 +452,8 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
         <a href="#snapshot_order/1" translate="no">snapshot_order(storage)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>I provide a snapshotting functionality for the Ordering table.</p></div>
 
     </div>
 
@@ -517,7 +490,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-<p>The key we wish to store, also used for order lookup</p>
+<p>I designate the type of keys for Ordering table queries.</p>
   </section>
 </section>
 <section class="detail" id="t:order_value/0">
@@ -540,7 +513,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
+<p>I designate the type of values of keys for Ordering table queries.</p>
   </section>
 </section>
 <section class="detail" id="t:qualified_key/0">
@@ -563,7 +536,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-<p>[non_neg_integer(), Noun.t() | non_neg_integer()]</p>
+<p>I designate the type of keys for Qualified table queries.</p>
   </section>
 </section>
 <section class="detail" id="t:qualified_value/0">
@@ -586,7 +559,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
+<p>I designate the type of values of Keys for Qualified table queries.</p>
   </section>
 </section>
 <section class="detail" id="t:result/1">
@@ -609,7 +582,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
+<p>I am the type of a mensia table query result.</p>
   </section>
 </section>
 <section class="detail" id="t:snapshot/0">
@@ -632,7 +605,7 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
+<p>I designate the snapshot type for table queries.</p>
   </section>
 </section>
 <section class="detail" id="t:t/0">
@@ -661,13 +634,14 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-<p>I represent the qualified and ordered data of storage</p><h2 id="t:t/0-fields" class="section-heading">
+<p>I am the type of the Storage Engine.</p><p>I store info on the db tables used by the Node and info for appropriate
+read/write actions.</p><h3 id="t:t/0-fields" class="section-heading">
   <a href="#t:t/0-fields" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Fields</span>
-</h2>
-<ul><li><code class="inline">:qualified</code> - The key value map into storage</li><li><code class="inline">:order</code> - A mapping from keys to the properly qualified keys</li></ul>
+</h3>
+<ul><li><code class="inline">:qualified</code> - The name of the Qualified table.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Qualified</span></code></pre></li><li><code class="inline">:order</code> - The name of the Ordering table.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.Order</span></code></pre></li><li><code class="inline">:rm_commitments</code> - The name of the Reource Machine Commitments table.<pre><code class="makeup elixir" translate="no"><span class="w">                </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="nc">Anoma.Node.Storage.RMCommitments</span></code></pre></li><li><code class="inline">:namespace</code> - The namespace used for writing functionality.<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0630315199-1">[</span><span class="p" data-group-id="0630315199-1">]</span></code></pre></li><li><code class="inline">:topic</code> - The subscription topic.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -703,47 +677,42 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="calculate_order/1">
-
-  <div class="detail-header">
-    <a href="#calculate_order/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">calculate_order(list)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> calculate_order([{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">number</a>()}]) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">number</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="check_if_any_absent/1">
-
-  <div class="detail-header">
-    <a href="#check_if_any_absent/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">check_if_any_absent(latest_keys)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>I provide the final part of the blocking functionality for the Worker
+necessary for transaction-execution.</p><h3 id="blocking_read/2-general-usage" class="section-heading">
+  <a href="#blocking_read/2-general-usage" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">General Usage</span>
+</h3>
+<p>I expect a Storage Engine address alingside with a key. Given a key which
+isn't a list, I error. Given a key which is a list starting with 0, I
+error following Nock and Ordering semantics. Given any other list, I
+subscribe to a Qualified table that is attached to the given Storage and
+read it in the Qualified table.</p><p>If the key has a non-empty value in the table, I return <code class="inline">{:ok, value}</code>
+and unsubscribe from the table.</p><p>If the key does not have a value in the table, I wait until I receive a
+<code class="inline">:write</code> message from the table, where the key written is exactlythe key
+supplied. Given the message, I return the written value as <code class="inline">{:ok, value}</code>
+and unsubscribe from the table.</p><h3 id="blocking_read/2-anoma-intended-semantics" class="section-heading">
+  <a href="#blocking_read/2-anoma-intended-semantics" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Anoma-Intended Semantics</span>
+</h3>
+<p>My intended use in the Anoma Lifecycle is as follows:</p><p>I am called by the Worker after assigning its transaction ID to the order
+assigned for block-generation. The key here is given as a cell of form
+[n | snapshot_path] where <code class="inline">n</code> is a natural number representing the <code class="inline">n</code>-th
+transaction candidate - i.e. the order of the transaction the Worker is
+occupied with - and snapshot_path is a Nock list, i.e. an improper list
+of form <code class="inline">[... | 0]</code>.</p><p>My main functionality is to make sure that the value of said transaction
+has been recorded suscessfully in the Qualified table in the following
+way:</p><p>After subscribing to the appropriate Qualified table, I first check the
+fed-in Nock noun. If it starts with 0, I produce <code class="inline">:error</code>, per standard
+semantics. Given another Nock cell, we then read it as a key inside our
+Qualified table. If the value has already been written, we return it as
+an <code class="inline">{:ok, value}</code> tuple.</p><p>Otherwise, if we read-off an empty list, i.e. if the appropriate
+transaction value has not been written, we wait for the message that the
+exact key has been written with some value in the table. Then we return
+the value written in an <code class="inline">{:ok, value}</code> tuple.</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -761,29 +730,6 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
   <section class="docstring">
 
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="cm_tree_spec/0">
-
-  <div class="detail-header">
-    <a href="#cm_tree_spec/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">cm_tree_spec()</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> cm_tree_spec() :: <a href="CommitmentTree.Spec.html#t:t/0">CommitmentTree.Spec.t</a>()</pre>
-
-      </div>
-
-
   </section>
 </section>
 <section class="detail" id="delete_key/2">
@@ -806,54 +752,11 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="denamespace_key/2">
-
-  <div class="detail-header">
-    <a href="#denamespace_key/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">denamespace_key(storage, key)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> denamespace_key(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: {:ok, <a href="Noun.html#t:t/0">Noun.t</a>()} | :error</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="denamespace_qualified_key/2">
-
-  <div class="detail-header">
-    <a href="#denamespace_qualified_key/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">denamespace_qualified_key(storage, list)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> denamespace_qualified_key(<a href="#t:t/0">t</a>(), <a href="#t:qualified_key/0">qualified_key</a>()) ::
-  {:ok, <a href="#t:qualified_key/0">qualified_key</a>()} | :error</pre>
-
-      </div>
-
-
+<p>I provide the main tombstoning functionality for the Storage Engine.</p><p>My main goal is to provide the API to make a key indistinguishable from
+being absent in the underlying table. That is, I use <a href="#put/3"><code class="inline">put/3</code></a> to make the
+latest key value <code class="inline">:absent</code>. This way, I make it impossible to distinguish
+between the given key never been put into the Qualified table and being
+deleted using the main <a href="#get/2"><code class="inline">get/2</code></a> functionality.</p>
   </section>
 </section>
 <section class="detail" id="do_ensure_new/2">
@@ -878,30 +781,9 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="do_put_snapshot/2">
-
-  <div class="detail-header">
-    <a href="#do_put_snapshot/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">do_put_snapshot(storage, key)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> do_put_snapshot(<a href="#t:t/0">t</a>(), <a href="#t:order_key/0">order_key</a>()) :: :ok | nil</pre>
-
-      </div>
-
-
+<p>I ensure that the fed in storage names correspond to completely empty new
+tables.</p><p>I first delete all tables as specified in the Storage Engine structure,
+afterwards creating the tables with given names using <a href="#do_setup/2"><code class="inline">do_setup/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="do_setup/2">
@@ -926,8 +808,9 @@ following functions used on the actor</p><ul><li><a href="#do_ensure_new/2"><cod
 
       </div>
 
-<p>I setup storage with the given tables: <code class="inline">t()</code>.</p><p>I will try to setup all values of storage, even if the first one
-fails due to already being setup, we will try the others.</p><p>Further the rocksdb flag denotes if we should back the table with rocksdb</p>
+<p>I setup storage with the given tables from the Storage Engine structure.</p><p>I will try to create all values of storage, even if the first one fails
+due to already being created, we will try the others, setting them using
+rocksdb depending on the second argument given in the argument.</p>
   </section>
 </section>
 <section class="detail" id="ensure_new/2">
@@ -952,7 +835,10 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the function ensuring appropriate db functionality.</p><p>Given a Storage address and a boolean flag, I first use <a href="#remove/1"><code class="inline">remove/1</code></a>
+functionality to delete specified tables of the Engine and then
+ask for a setup using <a href="#setup/1"><code class="inline">setup/1</code></a> functionality with an appropriate flag
+for rocksdb copies.</p>
   </section>
 </section>
 <section class="detail" id="get/2">
@@ -976,7 +862,10 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the main reading function for the Storage functionality.</p><p>Given a storage address and key name in the Order format, I look up the
+latest value of such a key in the Qualified storage and return it in the
+standard mnesia format. Otherwise, I return <code class="inline">:absent</code> if no value is
+present (or if the key is tombstoned* in the latest instance).</p><p>See <a href="#delete_key/2"><code class="inline">delete_key/2</code></a></p>
   </section>
 </section>
 <section class="detail" id="get_at_snapshot/2">
@@ -999,7 +888,11 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I provide the main functionality of rescuing latest snapshot value of a
+given key.</p><p>Given a {storage, snapshot} pair and a key, I search for the order of the
+key as captured by the snapshot using <a href="#in_snapshot/2"><code class="inline">in_snapshot/2</code></a>. Afterwards, I
+check the value of said key in said position in the provided table,
+returning said value in the standard mnesia format.</p>
   </section>
 </section>
 <section class="detail" id="get_keyspace/2">
@@ -1018,12 +911,16 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_keyspace(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]) ::
+          <pre translate="no"><span class="attribute">@spec</span> get_keyspace(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), [<a href="#t:order_key/0">order_key</a>()]) ::
   :absent | [{<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>(), <a href="#t:qualified_value/0">qualified_value</a>()}] | {:atomic, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
-
+<p>I am the keyspace reading function for the Storage Engine.</p><p>Given a storage address and a list of keys in the appropriate format, I
+first look up whether the keys appear in any qualified key in the
+Qualified table. If so, look up all apropriate latest values of all such
+keys and return them as a list of table query responses in a standard
+mnesia format. If not present, return <code class="inline">:absent</code></p>
   </section>
 </section>
 <section class="detail" id="handle_cast/3">
@@ -1063,7 +960,11 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the function searching for a key position inside of a given Ordering
+snapshot.</p><p>Given a {key, snapshot} tuple I go though the snapshot searching for the
+key in the format we store it inside the tables (i.e. namespaced). After
+which, I return the stored value, i.e. the latest Order at the point of
+snapshot-taking.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -1080,53 +981,37 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="namespace_key/2">
-
-  <div class="detail-header">
-    <a href="#namespace_key/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">namespace_key(storage, key)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> namespace_key(<a href="#t:t/0">t</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()) :: <a href="Noun.html#t:t/0">Noun.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  [
+    qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+    order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+    rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+    namespace: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()],
+    topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
+  ]
+  | %{
+      qualified: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+      order: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+      rm_commitments: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+      namespace: [<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()],
+      topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
+    }
+) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 
-
-  </section>
-</section>
-<section class="detail" id="namespace_qualified_key/2">
-
-  <div class="detail-header">
-    <a href="#namespace_qualified_key/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">namespace_qualified_key(storage, list)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> namespace_qualified_key(<a href="#t:t/0">t</a>(), <a href="#t:qualified_key/0">qualified_key</a>()) :: <a href="#t:qualified_key/0">qualified_key</a>()</pre>
-
-      </div>
-
-
+<p>I am the initialization function for a Storage Engine Instance.</p><h3 id="init/1-pattern-macthing-variations" class="section-heading">
+  <a href="#init/1-pattern-macthing-variations" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Pattern-Macthing Variations</span>
+</h3>
+<ul><li><code class="inline">init(%Storage{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist/map with all the keywords matching<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="n">the</span><span class="w"> </span><span class="nc">Storage</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="n">fields</span><span class="o">.</span><span class="w"> </span><span class="nc">I</span><span class="w"> </span><span class="n">then</span><span class="w"> </span><span class="n">setup</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">tables</span><span class="w">
+           </span><span class="ow">and</span><span class="w"> </span><span class="n">return</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">appropriate</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">startup</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="put/3">
@@ -1149,7 +1034,13 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I provide the main writing functionality of the Storage Engine.</p><p>I am responsible for assigning the given values to key while respecting
+the underlying table structure.</p><p>That is, given a key and a value, I first namespace the key getting the
+namespace info from the appropriate storage state. Secondly, I re-write
+the order-value assigned to said namespaced key, incrementing its value.
+Finally, I write the value given to me to the Qualified table, assigning
+it to the namspaced key with appropriate new order attached,
+corresponding to the one in the Ordering table.</p>
   </section>
 </section>
 <section class="detail" id="put_snapshot/2">
@@ -1172,7 +1063,9 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the function responsible for writing an Ordering snapshot to our db.</p><p>Given a Storage Address and a key, I first snapshot the appropriate
+Ordering table - similarly to <a href="#snapshot_order/1"><code class="inline">snapshot_order/1</code></a> - and then put it using
+the functionality underlying <a href="#put/3"><code class="inline">put/3</code></a> as a value for the supplied key.</p><p>Consult <a href="#put/3"><code class="inline">put/3</code></a> on the exact mechanism behind our writing.</p>
   </section>
 </section>
 <section class="detail" id="read_at_order/3">
@@ -1197,7 +1090,11 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the read_at_order function.</p><p>I provide detailed reading functionality for the qualified table. Given a
+storage structure, a key, and an order, I read the Qualified mnesia table
+at a value which on a high-level corresponds to reading the key value at
+that particular order, which is, of course, represented by the order
+being part of the searched key at the mnesia level.</p><p>I return a list of 3-tuples with elements:</p><ol><li>Name of Qualified Table</li><li>Key (note here &quot;key&quot; has different semantics than top-level API as<pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="n">noted</span><span class="w"> </span><span class="n">above</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">lot</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">extra</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="n">such</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">order</span><span class="p">)</span></code></pre></li><li>Value of the key</li></ol>
   </section>
 </section>
 <section class="detail" id="read_at_order_tx/3">
@@ -1221,7 +1118,13 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the function getting the value of a key at a particular order.</p><p>My main role is to get transactions at the order given by the Ordering
+Engine. Generally, the user is to inquire about the value of a key using
+<a href="#get/2"><code class="inline">get/2</code></a> functionality.</p><p>Given a Storage address, a key, and the order, I return the list
+containing the name of the storage, the key as given in the inputs, and
+its value at the specified order in the traditional mnesia format using
+<code class="inline">:mnesia.transaction</code> capabilities.</p><p>See <a href="#read_at_order/3"><code class="inline">read_at_order/3</code></a> for how we actually read the value from the
+Qualified table.</p>
   </section>
 </section>
 <section class="detail" id="read_keyspace_order/2">
@@ -1244,7 +1147,11 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-<p>Reads the given keyspace to obtain the latest orders for the keys</p>
+<p>I am the read_keyspace_order function.</p><p>My functionality is very similar to <a href="#read_order/2"><code class="inline">read_order/2</code></a> yet instead of using
+the mnesia <code class="inline">read</code> I use <code class="inline">select</code> and pick out any keys of list type in
+the Ordering table which might contain inside the given keylist.</p><p>I return the <code class="inline">{:atomic, lst}</code> tuple where the latter value is a list of
+lists where the head are the denamespaced keys containing our original
+query keylist and the tail being the order.</p>
   </section>
 </section>
 <section class="detail" id="read_order/2">
@@ -1267,7 +1174,9 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-
+<p>I am the read_order function.</p><p>Given a storage structure and a key, I read the order of said key
+by literally asking mnesia to read the Ordering table at the key which
+is gotten by appending the storage namespace to the initially given key.</p><p>I return a list of three-tuples with following elements:</p><ol><li>Ordering table name</li><li>Key</li><li>Order number</li></ol>
   </section>
 </section>
 <section class="detail" id="read_order_tx/2">
@@ -1284,7 +1193,15 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> read_order_tx(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="#t:order_key/0">order_key</a>()) :: <a href="#t:result/1">result</a>(<a href="#t:order_value/0">order_value</a>())</pre>
+
+      </div>
+
+<p>I am the main function for getting orders of keys.</p><p>Given a Storage address and a key, I return the key with its specified
+order in the Ordering table Storage using <code class="inline">:mnesia.transaction</code> to get
+the value in standard mnesia format.</p><p>See <a href="#read_order/2"><code class="inline">read_order/2</code></a> for the exact mechanism behind order-reading.</p>
   </section>
 </section>
 <section class="detail" id="remove/1">
@@ -1307,8 +1224,8 @@ fails due to already being setup, we will try the others.</p><p>Further the rock
 
       </div>
 
-<p>I setup storage with the given tables: <code class="inline">t()</code>.</p><p>I will try to setup all values of storage, even if the first one
-fails due to already being setup, we will try the others.</p>
+<p>I am the storage removal function.</p><p>Given a Storage Engine address, I ask mnesia to delete all tables found
+inside said Engine structure.</p>
   </section>
 </section>
 <section class="detail" id="setup/1">
@@ -1331,7 +1248,9 @@ fails due to already being setup, we will try the others.</p>
 
       </div>
 
-
+<p>I am the setup function for Storage.</p><p>Given a Storage address, I look for the tables inside its structure,
+and then try to create all mnesia tables with the given names. On
+success, I also create a new commitment tree.</p>
   </section>
 </section>
 <section class="detail" id="snapshot_order/1">
@@ -1354,7 +1273,9 @@ fails due to already being setup, we will try the others.</p>
 
       </div>
 
-
+<p>I provide a snapshotting functionality for the Ordering table.</p><p>Given a Storage address, I look up the Ordering table attached to the
+Engine and provide a snapshot of it as a list of keys with their orders
+returned in a mnesia result format and the attached storage structure.</p>
   </section>
 </section>
 
@@ -1365,11 +1286,11 @@ fails due to already being setup, we will try the others.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/storage.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/storage.ex">current file</a>)
 
             </span>
 

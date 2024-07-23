@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Transaction — Anoma v0.17.0</title>
+    <title>Anoma.Transaction — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,13 +125,15 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Transaction</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>I represent an Anoma Transaction</p><p>I contain the intents used in a transaction</p>
+<p>I represent an Anoma Transaction at the execution level.</p><p>Namely I contain the info on how the information gets processed at the
+engine level. See <code class="inline">Resource.Transaction</code> for the transaction
+specification at the level of the Resource Machine.</p>
   </section>
 
 
@@ -161,6 +163,8 @@ GUIDES
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Anoma Transaction at the Engine level.</p></div>
+
     </div>
 
 </div>
@@ -187,9 +191,28 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#index/1" translate="no">index(t)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#new/3" translate="no">new(id, addr, transaction)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new_with_order/3" translate="no">new_with_order(order, id, addr)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I create a new transaction structure with order field but no transaction
+code.</p></div>
 
     </div>
 
@@ -230,7 +253,7 @@ GUIDES
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> execution() :: {:kv | :rm, <a href="Noun.html#t:t/0">Noun.t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> execution() :: <a href="Anoma.Node.Executor.Worker.html#t:transaction/0">Anoma.Node.Executor.Worker.transaction</a>()</pre>
 
       </div>
 
@@ -256,12 +279,21 @@ GUIDES
           <pre translate="no"><span class="attribute">@type</span> t() :: %Anoma.Transaction{
   addr: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
   id: <a href="Noun.html#t:t/0">Noun.t</a>(),
-  transaction: <a href="#t:execution/0">execution</a>()
+  index: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
+  transaction: <a href="#t:execution/0">execution</a>() | nil
 }</pre>
 
       </div>
 
-
+<p>I am the type of the Anoma Transaction at the Engine level.</p><p>I contain info necessary for the Mempool, Ordering, and Workers to
+properly go through a transaction lifecycle.</p><p>A transactionstructure may not contain transaction code or
+index information.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:index</code> - An order given to the transaction by the Ordering Engine.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li><li><code class="inline">:id</code> - The ID of a transaction. Usually a random integer.</li><li><code class="inline">:addr</code> - The address of the Worker responsible for the transaction.</li><li><code class="inline">:transaction</code> - The backend transaction code the Worker uses.</li></ul>
   </section>
 </section>
 
@@ -322,6 +354,29 @@ GUIDES
 
   </section>
 </section>
+<section class="detail" id="index/1">
+
+  <div class="detail-header">
+    <a href="#index/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">index(t)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> index(<a href="#t:t/0">t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="new/3">
 
   <div class="detail-header">
@@ -343,6 +398,35 @@ GUIDES
       </div>
 
 
+  </section>
+</section>
+<section class="detail" id="new_with_order/3">
+
+  <div class="detail-header">
+    <a href="#new_with_order/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">new_with_order(order, id, addr)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new_with_order(
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
+) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
+<p>I create a new transaction structure with order field but no transaction
+code.</p><p>My main purpose is to be used for testing. Generally, the index of the
+transaction comes aded to the structure bearing trasnaction backend code.</p>
   </section>
 </section>
 <section class="detail" id="transaction/1">
@@ -376,11 +460,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/transaction.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/transaction.ex">current file</a>)
 
             </span>
 

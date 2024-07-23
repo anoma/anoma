@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Node.Router — Anoma v0.17.0</title>
+    <title>Anoma.Node.Router — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Router</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -208,43 +208,43 @@ the <strong>client API</strong>.</p><h3 id="module-examples" class="section-head
 <p>To get a good feel for writing idiomatic code using me, and how my
 API is differs from <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>, we will look at an implementation
 of a stack and see how it <a href="https://hexdocs.pm/elixir/GenServer.html#module-client-server-apis">differs from GenServer's stack
-example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="2567845231-1">do</span><span class="w">
+example</a></p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Stack</span><span class="w"> </span><span class="k" data-group-id="8293988148-1">do</span><span class="w">
   </span><span class="kn">alias</span><span class="w"> </span><span class="nc">Anoma.Node.Router</span><span class="w">
 
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Router.Engine</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="2567845231-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="2567845231-3">(</span><span class="p" data-group-id="2567845231-3">)</span><span class="p" data-group-id="2567845231-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="2567845231-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="2567845231-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="2567845231-6">(</span><span class="p" data-group-id="2567845231-6">)</span><span class="p" data-group-id="2567845231-5">)</span><span class="p" data-group-id="2567845231-4">}</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="2567845231-7">(</span><span class="n">elements</span><span class="p" data-group-id="2567845231-7">)</span><span class="w"> </span><span class="k" data-group-id="2567845231-8">do</span><span class="w">
-    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="2567845231-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="2567845231-9">)</span><span class="w">
-    </span><span class="p" data-group-id="2567845231-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="2567845231-10">}</span><span class="w">
-  </span><span class="k" data-group-id="2567845231-8">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">init</span><span class="p" data-group-id="8293988148-2">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8293988148-3">(</span><span class="p" data-group-id="8293988148-3">)</span><span class="p" data-group-id="8293988148-2">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="p" data-group-id="8293988148-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p" data-group-id="8293988148-5">(</span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8293988148-6">(</span><span class="p" data-group-id="8293988148-6">)</span><span class="p" data-group-id="8293988148-5">)</span><span class="p" data-group-id="8293988148-4">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">init</span><span class="p" data-group-id="8293988148-7">(</span><span class="n">elements</span><span class="p" data-group-id="8293988148-7">)</span><span class="w"> </span><span class="k" data-group-id="8293988148-8">do</span><span class="w">
+    </span><span class="n">initial_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">split</span><span class="p" data-group-id="8293988148-9">(</span><span class="n">elements</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">trim</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="8293988148-9">)</span><span class="w">
+    </span><span class="p" data-group-id="8293988148-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">initial_state</span><span class="p" data-group-id="8293988148-10">}</span><span class="w">
+  </span><span class="k" data-group-id="8293988148-8">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="2567845231-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="2567845231-12">(</span><span class="p" data-group-id="2567845231-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="2567845231-13">(</span><span class="p" data-group-id="2567845231-13">)</span><span class="p" data-group-id="2567845231-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="2567845231-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="2567845231-14">)</span><span class="w"> </span><span class="k" data-group-id="2567845231-15">do</span><span class="w">
-    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="2567845231-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2567845231-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="2567845231-17">}</span><span class="p" data-group-id="2567845231-16">)</span><span class="w">
-  </span><span class="k" data-group-id="2567845231-15">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">push</span><span class="p" data-group-id="8293988148-11">(</span><span class="nc">Router</span><span class="o">.</span><span class="n">addr</span><span class="p" data-group-id="8293988148-12">(</span><span class="p" data-group-id="8293988148-12">)</span><span class="p">,</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8293988148-13">(</span><span class="p" data-group-id="8293988148-13">)</span><span class="p" data-group-id="8293988148-11">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="ss">:ok</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">push</span><span class="p" data-group-id="8293988148-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="8293988148-14">)</span><span class="w"> </span><span class="k" data-group-id="8293988148-15">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">cast</span><span class="p" data-group-id="8293988148-16">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8293988148-17">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="8293988148-17">}</span><span class="p" data-group-id="8293988148-16">)</span><span class="w">
+  </span><span class="k" data-group-id="8293988148-15">end</span><span class="w">
 
-  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="2567845231-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="2567845231-19">(</span><span class="p" data-group-id="2567845231-19">)</span><span class="p" data-group-id="2567845231-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="2567845231-20">(</span><span class="p" data-group-id="2567845231-20">)</span><span class="w">
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="2567845231-21">(</span><span class="n">pid</span><span class="p" data-group-id="2567845231-21">)</span><span class="w"> </span><span class="k" data-group-id="2567845231-22">do</span><span class="w">
-    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="2567845231-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="2567845231-23">)</span><span class="w">
-  </span><span class="k" data-group-id="2567845231-22">end</span><span class="w">
+  </span><span class="na">@spec</span><span class="w"> </span><span class="n">pop</span><span class="p" data-group-id="8293988148-18">(</span><span class="nc">Addr</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8293988148-19">(</span><span class="p" data-group-id="8293988148-19">)</span><span class="p" data-group-id="8293988148-18">)</span><span class="w"> </span><span class="o">::</span><span class="w"> </span><span class="nc">String</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="8293988148-20">(</span><span class="p" data-group-id="8293988148-20">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">pop</span><span class="p" data-group-id="8293988148-21">(</span><span class="n">pid</span><span class="p" data-group-id="8293988148-21">)</span><span class="w"> </span><span class="k" data-group-id="8293988148-22">do</span><span class="w">
+    </span><span class="nc">Router</span><span class="o">.</span><span class="n">call</span><span class="p" data-group-id="8293988148-23">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:pop</span><span class="p" data-group-id="8293988148-23">)</span><span class="w">
+  </span><span class="k" data-group-id="8293988148-22">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="2567845231-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="2567845231-24">)</span><span class="w"> </span><span class="k" data-group-id="2567845231-25">do</span><span class="w">
-    </span><span class="p" data-group-id="2567845231-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="2567845231-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
-    </span><span class="p" data-group-id="2567845231-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="2567845231-27">}</span><span class="w">
-  </span><span class="k" data-group-id="2567845231-25">end</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_call</span><span class="p" data-group-id="8293988148-24">(</span><span class="ss">:pop</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="8293988148-24">)</span><span class="w"> </span><span class="k" data-group-id="8293988148-25">do</span><span class="w">
+    </span><span class="p" data-group-id="8293988148-26">[</span><span class="n">to_caller</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="8293988148-26">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">state</span><span class="w">
+    </span><span class="p" data-group-id="8293988148-27">{</span><span class="ss">:reply</span><span class="p">,</span><span class="w"> </span><span class="n">to_caller</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="8293988148-27">}</span><span class="w">
+  </span><span class="k" data-group-id="8293988148-25">end</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="2567845231-28">(</span><span class="p" data-group-id="2567845231-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="2567845231-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="2567845231-28">)</span><span class="w"> </span><span class="k" data-group-id="2567845231-30">do</span><span class="w">
-    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="2567845231-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="2567845231-31">]</span><span class="w">
-    </span><span class="p" data-group-id="2567845231-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="2567845231-32">}</span><span class="w">
-  </span><span class="k" data-group-id="2567845231-30">end</span><span class="w">
-</span><span class="k" data-group-id="2567845231-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="2623914182-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="c">_transport</span><span class="p" data-group-id="2623914182-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="2623914182-2">(</span><span class="p" data-group-id="2623914182-2">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="2623914182-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="2623914182-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="2623914182-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="2623914182-4">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="2623914182-5">(</span><span class="n">stack</span><span class="p" data-group-id="2623914182-5">)</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_cast</span><span class="p" data-group-id="8293988148-28">(</span><span class="p" data-group-id="8293988148-29">{</span><span class="ss">:push</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p" data-group-id="8293988148-29">}</span><span class="p">,</span><span class="w"> </span><span class="c">_from</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="8293988148-28">)</span><span class="w"> </span><span class="k" data-group-id="8293988148-30">do</span><span class="w">
+    </span><span class="n">new_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p" data-group-id="8293988148-31">[</span><span class="n">element</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">state</span><span class="p" data-group-id="8293988148-31">]</span><span class="w">
+    </span><span class="p" data-group-id="8293988148-32">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">new_state</span><span class="p" data-group-id="8293988148-32">}</span><span class="w">
+  </span><span class="k" data-group-id="8293988148-30">end</span><span class="w">
+</span><span class="k" data-group-id="8293988148-1">end</span></code></pre><p>And we can use this Engine like the following</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="3911988924-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="c">_transport</span><span class="p" data-group-id="3911988924-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start</span><span class="p" data-group-id="3911988924-2">(</span><span class="p" data-group-id="3911988924-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="3911988924-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">stack</span><span class="p" data-group-id="3911988924-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Router</span><span class="o">.</span><span class="n">start_engine</span><span class="p" data-group-id="3911988924-4">(</span><span class="n">router</span><span class="p">,</span><span class="w"> </span><span class="nc">Stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="3911988924-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="3911988924-5">(</span><span class="n">stack</span><span class="p" data-group-id="3911988924-5">)</span><span class="w">
 </span><span class="s">&quot;hello&quot;</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="2623914182-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="2623914182-6">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">push</span><span class="p" data-group-id="3911988924-6">(</span><span class="n">stack</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hi&quot;</span><span class="p" data-group-id="3911988924-6">)</span><span class="w">
 </span><span class="ss">:ok</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="2623914182-7">(</span><span class="n">stack</span><span class="p" data-group-id="2623914182-7">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p" data-group-id="3911988924-7">(</span><span class="n">stack</span><span class="p" data-group-id="3911988924-7">)</span><span class="w">
 </span><span class="s">&quot;hi&quot;</span></code></pre><p>Overall having both server and client functionality that is clearly
 labeled, leads to good user UI's.</p><h3 id="module-difference-in-design-from-genserver" class="section-heading">
   <a href="#module-difference-in-design-from-genserver" class="hover-link">
@@ -511,6 +511,14 @@ Router and Engine.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#set_logger/2" translate="no">set_logger(router, logger)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#shutdown_node/1" translate="no">shutdown_node(router)</a>
 
       </div>
@@ -571,6 +579,16 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
         <a href="#stop/1" translate="no">stop(router)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#stop_engine/3" translate="no">stop_engine(router, engine, options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I Forcibly stops an engine.</p></div>
 
     </div>
 
@@ -666,6 +684,7 @@ for the transport engine.  On success, returns {:ok, router_addr, transport_addr
         {<a href="Anoma.Crypto.Id.html#t:t/0">Anoma.Crypto.Id.t</a>(), <a href="https://hexdocs.pm/elixir/Process.html#t:dest/0">Process.dest</a>()}
     }
     | nil,
+  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
   max_call_id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   msg_queue: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(),
   supervisor: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil,
@@ -1063,6 +1082,23 @@ This is a low-level routine, intended to be called only by the internals of
 Router and Engine.</p>
   </section>
 </section>
+<section class="detail" id="set_logger/2">
+
+  <div class="detail-header">
+    <a href="#set_logger/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">set_logger(router, logger)</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="shutdown_node/1">
 
   <div class="detail-header">
@@ -1242,6 +1278,43 @@ or internal ID.</li></ul>
 
   </section>
 </section>
+<section class="detail" id="stop_engine/3">
+
+    <span id="stop_engine/2"></span>
+
+  <div class="detail-header">
+    <a href="#stop_engine/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">stop_engine(router, engine, options \\ [])</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> stop_engine(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), [
+  <a href="#t:engine_options/0">engine_options</a>()
+]) ::
+  :ok | {:error, :not_found}</pre>
+
+      </div>
+
+<p>I Forcibly stops an engine.</p><p>TODO, please try to be more friendly to the engine, try to send a
+<code class="inline">:shutdown</code> and waiting.</p><h3 id="stop_engine/3-example" class="section-heading">
+  <a href="#stop_engine/3-example" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Example</span>
+</h3>
+<blockquote><p>node = ENode.fresh_full_node(...)
+worker_zero = wait_for_tx(node.mempool, {:kv, zero}, 5000).addr
+Router.stop_engine(node.router, worker_zero)</p></blockquote>
+  </section>
+</section>
 
     </div>
   </section>
@@ -1250,11 +1323,11 @@ or internal ID.</li></ul>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/router.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/router.ex">current file</a>)
 
             </span>
 

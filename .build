@@ -77,7 +77,6 @@ Anoma.Node.Transport.TCPConnection.html
 Anoma.Node.Transport.TCPServer.html
 Anoma.Node.Transport.html
 Anoma.Node.html
-Anoma.Order.html
 Anoma.Resource.Delta.html
 Anoma.Resource.Proof.html
 Anoma.Resource.ProofRecord.html
@@ -85,6 +84,11 @@ Anoma.Resource.Transaction.html
 Anoma.Resource.html
 Anoma.Serialise.html
 Anoma.Serializer.html
+Anoma.SheildedResource.ComplianceOutput.html
+Anoma.ShieldedResource.PartialTransaction.html
+Anoma.ShieldedResource.ProofRecord.html
+Anoma.ShieldedResource.ShieldedTransaction.html
+Anoma.ShieldedResource.html
 Anoma.Symbol.html
 Anoma.System.Directories.html
 Anoma.Transaction.html
@@ -95,6 +99,7 @@ CommitmentTree.Proof.html
 CommitmentTree.Spec.html
 CommitmentTree.html
 Examples.EBlock.html
+Examples.EClient.html
 Examples.ECommitmentTree.html
 Examples.EConfiguration.html
 Examples.ECrypto.html
@@ -103,13 +108,16 @@ Examples.ENock.html
 Examples.ENode.EClock.html
 Examples.ENode.EDumper.html
 Examples.ENode.EIntent.html
+Examples.ENode.EMempool.html
 Examples.ENode.EPinger.html
 Examples.ENode.EStorage.html
 Examples.ENode.html
+Examples.EParser.html
 Examples.EProofRecord.html
 Examples.EResource.html
 Examples.ESerialisation.html
 Examples.ETransaction.html
+Glossary.html
 IdentityMap.html
 Livebook.html
 MapSetMap.html
@@ -162,8 +170,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-30FE8400.js
-dist/sidebar_items-792F06B9.js
+dist/search_data-5B78C021.js
+dist/sidebar_items-703F6B39.js
 dumping.html
 examples-over-testing.html
 fema-analysis-pinger.html

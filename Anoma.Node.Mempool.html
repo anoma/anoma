@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Node.Mempool — Anoma v0.17.0</title>
+    <title>Anoma.Node.Mempool — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Mempool</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -234,7 +234,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_tx/2" translate="no">handle_tx(tx_code, state)</a>
+        <a href="#handle_tx/3" translate="no">handle_tx(tx_code, state, reply_to)</a>
 
       </div>
 
@@ -288,7 +288,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
       </div>
 
-        <div class="summary-synopsis"><p>I place a transaction candidate in an order structure.</p></div>
+        <div class="summary-synopsis"><p>I order a transaction structure by giving it an index.</p></div>
 
     </div>
 
@@ -354,7 +354,7 @@ send to their appropriate Worker a <code class="inline">:write_ready</code> mess
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#tx/2" translate="no">tx(server, tx_code)</a>
+        <a href="#tx/3" translate="no">tx(server, tx_code, reply_to \\ nil)</a>
 
       </div>
 
@@ -411,7 +411,9 @@ transaction candidate creation, execution, and ordering requests.</p><h3 id="t:t
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:ordering</code> - The Ordering Engine Address.</li><li><code class="inline">:executor</code> - The Executor Engine Address.</li><li><code class="inline">:block_storage</code> - The name of the storage for created blocks.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">Anoma.Block</span><span class="err">`</span></code></pre></li><li><code class="inline">:transactions</code> - List of transaction candidates.<pre><code class="makeup elixir" translate="no"><span class="w">              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1074856789-1">[</span><span class="p" data-group-id="1074856789-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="5113596501-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5113596501-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="5113596501-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
+<ul><li><code class="inline">:ordering</code> - The Ordering Engine Address.</li><li><code class="inline">:executor</code> - The Executor Engine Address.</li><li><code class="inline">:block_storage</code> - The name of the storage for created blocks.<pre><code class="makeup elixir" translate="no"><span class="w">               </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">Anoma.Block</span><span class="err">`</span></code></pre></li><li><code class="inline">:transactions</code> - List of transaction candidates. Currently these do<pre><code class="makeup elixir" translate="no"><span class="w">              </span><span class="ow">not</span><span class="w"> </span><span class="n">have</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="n">info</span><span class="o">.</span><span class="w"> </span><span class="nc">That</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">handled</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w">
+              </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="o">.</span><span class="w">
+              </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1935708576-1">[</span><span class="p" data-group-id="1935708576-1">]</span></code></pre></li><li><code class="inline">:round</code> - The block round information.<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span></code></pre></li><li><code class="inline">:topic</code> - The topic address for broadcasting.</li><li><code class="inline">:key</code> - The key used for block creation.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="ss">Default</span><span class="p">:</span><span class="w"> </span><span class="err">`</span><span class="nc">:crypto</span><span class="o">.</span><span class="n">generate_key</span><span class="p" data-group-id="5463990675-1">(</span><span class="ss">:rsa</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5463990675-2">{</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="mi">65537</span><span class="p" data-group-id="5463990675-2">}</span><span class="err">`</span></code></pre></li><li><code class="inline">:logger</code> - The address of the Logger Engine.<pre><code class="makeup elixir" translate="no"><span class="w">        </span><span class="ss">Enforced</span><span class="p">:</span><span class="w"> </span><span class="no">false</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="t:transactions/0">
@@ -557,14 +559,14 @@ producing and storing an encoded block.</p><p>I return a tuple with first entry 
 into the execution and a new appropriately changed state.</p>
   </section>
 </section>
-<section class="detail" id="handle_tx/2">
+<section class="detail" id="handle_tx/3">
 
   <div class="detail-header">
-    <a href="#handle_tx/2" class="detail-link" title="Link to this function">
+    <a href="#handle_tx/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_tx(tx_code, state)</h1>
+    <h1 class="signature" translate="no">handle_tx(tx_code, state, reply_to)</h1>
 
 
   </div>
@@ -573,7 +575,8 @@ into the execution and a new appropriately changed state.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> handle_tx(<a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>(), <a href="#t:t/0">t</a>()) :: <a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> handle_tx(<a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>(), <a href="#t:t/0">t</a>(), <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil) ::
+  <a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>()</pre>
 
       </div>
 
@@ -620,6 +623,22 @@ before.</p>
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> init(<a href="#t:t/0">t</a>()) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> init(
+  ordering: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  executor: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  block_storage: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  round: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
+  topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  key: {<a href="Anoma.Serializer.html#t:public_key/0">Anoma.Serializer.public_key</a>(), <a href="Anoma.Serializer.html#t:private_key/0">Anoma.Serializer.private_key</a>()},
+  logger: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()
+) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
+
+      </div>
 
 <p>I am the initialization function for a Mempool Engine instance.</p><h3 id="init/1-pattern-macthing-variations" class="section-heading">
   <a href="#init/1-pattern-macthing-variations" class="hover-link">
@@ -697,13 +716,12 @@ transactions, and index them starting with the given order number.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> order_format(<a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="Anoma.Order.html#t:t/0">Anoma.Order.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> order_format(<a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="Anoma.Transaction.html#t:t/0">Anoma.Transaction.t</a>()</pre>
 
       </div>
 
-<p>I place a transaction candidate in an order structure.</p><p>Given a transaction candidate and an order, I create a new Order
-structure with a given order, while the ID and Worker address is taken
-from the transaction itself.</p>
+<p>I order a transaction structure by giving it an index.</p><p>Given a transaction candidate and an order, I put the index specified by
+the input as its <code class="inline">:index</code> field value.</p>
   </section>
 </section>
 <section class="detail" id="persistent_transaction/1">
@@ -848,14 +866,16 @@ at the specified mnesia table.</p>
 Engine, asking the linked Executor to kill relevant transaction Workers.</p>
   </section>
 </section>
-<section class="detail" id="tx/2">
+<section class="detail" id="tx/3">
+
+    <span id="tx/2"></span>
 
   <div class="detail-header">
-    <a href="#tx/2" class="detail-link" title="Link to this function">
+    <a href="#tx/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">tx(server, tx_code)</h1>
+    <h1 class="signature" translate="no">tx(server, tx_code, reply_to \\ nil)</h1>
 
 
   </div>
@@ -864,13 +884,20 @@ Engine, asking the linked Executor to kill relevant transaction Workers.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> tx(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(), <a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> tx(
+  <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+  <a href="Anoma.Transaction.html#t:execution/0">Anoma.Transaction.execution</a>(),
+  <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil
+) ::
+  :ok</pre>
 
       </div>
 
 <p>I am the transaction candidate creating API.</p><p>Given a Mempool Engine address and a transaction candidate code, I ask
 the Executor Engine to fire a new transaction with a random ID created in
-the process. I return the new state, adding the transaction.</p>
+the process. The value computed by the transactions (for read-only
+transactions) will be sent to reply_to address. I return the new state,
+adding the transaction.</p>
   </section>
 </section>
 
@@ -881,11 +908,11 @@ the process. I return the new state, adding the transaction.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/mempool.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/mempool.ex">current file</a>)
 
             </span>
 

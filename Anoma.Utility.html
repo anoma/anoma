@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Utility — Anoma v0.17.0</title>
+    <title>Anoma.Utility — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Utility</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -155,6 +155,27 @@ GUIDES
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#defbug/2" translate="no">defbug(name, list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am the function definition macro for debugging.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#docp/1" translate="no">docp(string)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>I am a macro which allows to provide documentation to possibly private
+functions.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#message_label/1" translate="no">message_label(message)</a>
 
       </div>
@@ -176,6 +197,49 @@ GUIDES
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="defbug/2">
+
+  <div class="detail-header">
+    <a href="#defbug/2" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">defbug(name, list)</h1>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+<p>I am the function definition macro for debugging.</p><p>I mainly should be used on functions which satisfy:</p><ol><li>Needing to be private i.e. not expose API to other Engines.</li><li>Important for core functionality and hence requiring documentation.</li></ol><p>Given the two are satisfied, use me to define a function which becomes
+public once in debug mode and otherwise remains private.</p><p>I am to be used alongside the <a href="#docp/1"><code class="inline">docp/1</code></a> macro to allow for good
+documentation practices.</p>
+  </section>
+</section>
+<section class="detail" id="docp/1">
+
+  <div class="detail-header">
+    <a href="#docp/1" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">docp(string)</h1>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+<p>I am a macro which allows to provide documentation to possibly private
+functions.</p><p>If the environment of the application is <code class="inline">:debug</code> I actually put the docs
+into the compiled module. If not, I produce <code class="inline">nil</code>, which does not
+interact with overall module environment.</p>
+  </section>
+</section>
 <section class="detail" id="message_label/1">
 
   <div class="detail-header">
@@ -201,11 +265,11 @@ GUIDES
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/utility.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/utility.ex">current file</a>)
 
             </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Node.Clock — Anoma v0.17.0</title>
+    <title>Anoma.Node.Clock — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Clock</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -140,7 +140,7 @@ as all my public API uses system monotonic time to give measurements.</p><h3 id=
   </a>
   <span class="text">Public API</span>
 </h3>
-<p>I have the following public functionality:</p><ul><li><a href="#get_time/1"><code class="inline">get_time/1</code></a></li><li><a href="#get_epoch/1"><code class="inline">get_epoch/1</code></a></li></ul>
+<p>I have the following public functionality:</p><ul><li><a href="#get_time/1"><code class="inline">get_time/1</code></a></li></ul>
   </section>
 
 
@@ -162,6 +162,8 @@ as all my public API uses system monotonic time to give measurements.</p><h3 id=
 
       </div>
 
+        <div class="summary-synopsis"><p>I am the type of the Clock Engine.</p></div>
+
     </div>
 
 </div>
@@ -177,18 +179,6 @@ as all my public API uses system monotonic time to give measurements.</p><h3 id=
       </div>
 
         <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_epoch/1" translate="no">get_epoch(clock)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>I get the epoch attached to a clock address. This is usually
-the system monotonic time as recorder at the start of the
-node to which the apporproaite clock engine is related.</p></div>
 
     </div>
 
@@ -210,7 +200,7 @@ and then subtracting the former from the latter.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>I am the initialization function for a Clock Engine instance.</p></div>
 
     </div>
 
@@ -247,7 +237,14 @@ and then subtracting the former from the latter.</p></div>
 
       </div>
 
-
+<p>I am the type of the Clock Engine.</p><p>I currently just store the start-up info, recording when the system was
+launched.</p><h3 id="t:t/0-fields" class="section-heading">
+  <a href="#t:t/0-fields" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Fields</span>
+</h3>
+<ul><li><code class="inline">:start</code> - Integer vallue corresponding to the system start timing<pre><code class="makeup elixir" translate="no"><span class="w">       </span><span class="n">provided</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">internal</span><span class="w"> </span><span class="n">erlang</span><span class="w"> </span><span class="n">functionality</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -277,31 +274,6 @@ and then subtracting the former from the latter.</p></div>
   <section class="docstring">
 
 <p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="get_epoch/1">
-
-  <div class="detail-header">
-    <a href="#get_epoch/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_epoch(clock)</h1>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_epoch(<a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()</pre>
-
-      </div>
-
-<p>I get the epoch attached to a clock address. This is usually
-the system monotonic time as recorder at the start of the
-node to which the apporproaite clock engine is related.</p>
   </section>
 </section>
 <section class="detail" id="get_time/1">
@@ -349,7 +321,7 @@ and then subtracting the former from the latter.</p>
 
       </div>
 
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>I am the initialization function for a Clock Engine instance.</p><p> ### Pattern-Matching Variations</p><ul><li><code class="inline">init(%Clock{})</code> - I initialize the Engine with the given state.</li><li><code class="inline">init(args)</code> - I expect a keylist with a <code class="inline">:start</code> key and return the<pre><code class="makeup elixir" translate="no"><span class="w">           </span><span class="n">appropriate</span><span class="w"> </span><span class="n">state</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 
@@ -360,11 +332,11 @@ and then subtracting the former from the latter.</p>
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/clock.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/clock.ex">current file</a>)
 
             </span>
 

@@ -5,16 +5,16 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.31.0">
-    <meta name="project" content="Anoma v0.17.0">
+    <meta name="project" content="Anoma v0.18.0">
 
 
-    <title>Anoma.Node.Executor.Worker — Anoma v0.17.0</title>
+    <title>Anoma.Node.Executor.Worker — Anoma v0.18.0</title>
     <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-792F06B9.js"></script>
+    <script src="dist/sidebar_items-703F6B39.js"></script>
 
       <script src="./.doc-versions.js"></script>
 
@@ -53,7 +53,7 @@
 Anoma
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v0.17.0
+          v0.18.0
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ GUIDES
 <h1>
 
   <span translate="no">Anoma.Node.Executor.Worker</span> 
-  <small class="app-vsn" translate="no">(Anoma v0.17.0)</small>
+  <small class="app-vsn" translate="no">(Anoma v0.18.0)</small>
 
 </h1>
 
@@ -181,6 +181,14 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
       </div>
 
         <div class="summary-synopsis"><p>I am the type of a Worker Engine instance.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:transaction/0" translate="no">transaction()</a>
+
+      </div>
 
     </div>
 
@@ -307,7 +315,8 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
   completion_topic: <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>() | nil,
   env: <a href="Nock.html#t:t/0">Nock.t</a>() | nil,
   id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil,
-  tx: {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()} | nil
+  reply_to: <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil,
+  tx: <a href="#t:transaction/0">transaction</a>() | nil
 }</pre>
 
       </div>
@@ -318,7 +327,30 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
   </a>
   <span class="text">Fields</span>
 </h3>
-<ul><li><code class="inline">:id</code> - The ID of the transaction fed in.</li><li><code class="inline">:tx</code> - The transaction code.</li><li><code class="inline">:env</code> - The environment for the transaction to be evaluated in. E.g.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="n">contains</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">address</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="nc">Nock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="7252086232-1">(</span><span class="p" data-group-id="7252086232-1">)</span><span class="err">`</span></code></pre></li><li><code class="inline">:completion_topc</code> - The address of the topic connected to the<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">relevant</span><span class="w"> </span><span class="nc">Executor</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">broadcasting</span><span class="o">.</span></code></pre></li></ul>
+<ul><li><code class="inline">:id</code> - The ID of the transaction fed in.</li><li><code class="inline">:tx</code> - The transaction code.</li><li><code class="inline">:env</code> - The environment for the transaction to be evaluated in. E.g.<pre><code class="makeup elixir" translate="no"><span class="w">     </span><span class="n">contains</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">Ordering</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="n">address</span><span class="o">.</span><span class="w"> </span><span class="nc">See</span><span class="w"> </span><span class="err">`</span><span class="nc">Nock</span><span class="o">.</span><span class="n">t</span><span class="p" data-group-id="0062605973-1">(</span><span class="p" data-group-id="0062605973-1">)</span><span class="err">`</span></code></pre></li><li><code class="inline">:completion_topc</code> - The address of the topic connected to the<pre><code class="makeup elixir" translate="no"><span class="w">                 </span><span class="n">relevant</span><span class="w"> </span><span class="nc">Executor</span><span class="w"> </span><span class="nc">Engine</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">broadcasting</span><span class="o">.</span></code></pre></li><li><code class="inline">:reply_to</code> - The address that the computed value (for read-only<pre><code class="makeup elixir" translate="no"><span class="w">          </span><span class="n">transaction</span><span class="p">)</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">sent</span><span class="w"> </span><span class="n">to</span><span class="o">.</span></code></pre></li></ul>
+  </section>
+</section>
+<section class="detail" id="t:transaction/0">
+
+  <div class="detail-header">
+    <a href="#t:transaction/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">transaction()</h1>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> transaction() :: {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()}</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="t:verify_fun/1">
@@ -390,10 +422,9 @@ for transaction completion before block-execution.</p><h3 id="module-public-api"
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> init(
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), {<a href="#t:backend/0">backend</a>(), <a href="Noun.html#t:t/0">Noun.t</a>()}, <a href="Nock.html#t:t/0">Nock.t</a>(),
-   <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>()}
-) ::
-  {:ok, <a href="#t:t/0">t</a>()}</pre>
+  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="#t:transaction/0">transaction</a>(), <a href="Nock.html#t:t/0">Nock.t</a>(), <a href="Anoma.Node.Router.Addr.html#t:t/0">Anoma.Node.Router.Addr.t</a>(),
+   <a href="Anoma.Node.Router.html#t:addr/0">Anoma.Node.Router.addr</a>() | nil}
+) :: {:ok, <a href="#t:t/0">t</a>()}</pre>
 
       </div>
 
@@ -404,8 +435,8 @@ return the appropriate state.</p><h3 id="init/1-pattern-matching-variations" cla
   </a>
   <span class="text">Pattern-Matching Variations</span>
 </h3>
-<ul><li><code class="inline">init({id, tx, env, completion_topic})</code> - I recieve a tuple with all<pre><code class="makeup elixir" translate="no"><span class="w">                                      </span><span class="n">the</span><span class="w"> </span><span class="n">specified</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">launch</span><span class="w">
-                                      </span><span class="n">a</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">instance</span><span class="o">.</span></code></pre></li></ul>
+<ul><li><code class="inline">init({id, tx, env, completion_topic, reply_to})</code> - I receive a tuple with all<pre><code class="makeup elixir" translate="no"><span class="w">                                                </span><span class="n">the</span><span class="w"> </span><span class="n">specified</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">launch</span><span class="w">
+                                                </span><span class="n">a</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="n">instance</span><span class="o">.</span></code></pre></li></ul>
   </section>
 </section>
 <section class="detail" id="rm_nullifier_check/2">
@@ -439,11 +470,11 @@ return the appropriate state.</p><h3 id="init/1-pattern-matching-variations" cla
         <p>
 
             <span class="line">
-              <a href="https://hex.pm/packages/anoma/0.17.0" class="footer-hex-package">Hex Package</a>
+              <a href="https://hex.pm/packages/anoma/0.18.0" class="footer-hex-package">Hex Package</a>
 
-              <a href="https://preview.hex.pm/preview/anoma/0.17.0">Hex Preview</a>
+              <a href="https://preview.hex.pm/preview/anoma/0.18.0">Hex Preview</a>
 
-                (<a href="https://preview.hex.pm/preview/anoma/0.17.0/show/lib/anoma/node/executor/worker.ex">current file</a>)
+                (<a href="https://preview.hex.pm/preview/anoma/0.18.0/show/lib/anoma/node/executor/worker.ex">current file</a>)
 
             </span>
 
