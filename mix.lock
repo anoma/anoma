@@ -1,6 +1,6 @@
 %{
   "burrito": {:hex, :burrito, "1.0.5", "e6254309655bc3dc7e8362a55fffb2d470c62f79fe9d81672ff46493e1e9e410", [:mix], [{:jason, "~> 1.2", [hex: :jason, repo: "hexpm", optional: false]}, {:req, "0.4.0", [hex: :req, repo: "hexpm", optional: false]}, {:typed_struct, "~> 0.2.0 or ~> 0.3.0", [hex: :typed_struct, repo: "hexpm", optional: false]}], "hexpm", "01c63f2fb7692e9bb55fb9e18b58287e57394b2d35a7b4670b3a678bde905953"},
-  "cairo": {:git, "https://github.com/anoma/aarm-cairo", "2f63e4b9a360ccbc50247c2b7d3ff88053896a5f", []},
+  "cairo": {:git, "https://github.com/anoma/aarm-cairo", "961910bfb799e25a10a8ad16c4e8e07015ba1858", []},
   "castore": {:hex, :castore, "1.0.7", "b651241514e5f6956028147fe6637f7ac13802537e895a724f90bf3e36ddd1dd", [:mix], [], "hexpm", "da7785a4b0d2a021cd1292a60875a784b6caef71e76bf4917bdee1f390455cf5"},
   "dialyxir": {:hex, :dialyxir, "1.4.1", "a22ed1e7bd3a3e3f197b68d806ef66acb61ee8f57b3ac85fc5d57354c5482a93", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "84b795d6d7796297cca5a3118444b80c7d94f7ce247d49886e7c291e1ae49801"},
   "earmark_parser": {:hex, :earmark_parser, "1.4.39", "424642f8335b05bb9eb611aa1564c148a8ee35c9c8a8bba6e129d51a3e3c6769", [:mix], [], "hexpm", "06553a88d1f1846da9ef066b87b57c6f605552cfbe40d20bd8d59cc6bde41944"},
