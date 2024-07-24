@@ -107,6 +107,11 @@ defmodule Noun do
     false
   end
 
+  @spec is_zero(t()) :: boolean()
+  def is_zero(0), do: true
+  def is_zero(<<>>), do: true
+  def is_zero(_), do: false
+
   # leave binaries, which are most likely to be large, as binaries.
   @spec normalize_noun(noun_atom()) :: binary()
   def normalize_noun(atom) when is_noun_atom(atom) do
