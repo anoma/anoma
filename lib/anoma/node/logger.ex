@@ -175,11 +175,11 @@ defmodule Anoma.Node.Logger do
   end
 
   def handle_call({:get_all, logger}, _from, state) do
-    {:reply, do_get(logger.id, state.storage), state}
+    {:reply, do_get(logger.id.encrypt, state.storage), state}
   end
 
   def handle_call({:get, logger, engine}, _from, state) do
-    {:reply, do_get(logger.id, state.storage, engine), state}
+    {:reply, do_get(logger.id.encrypt, state.storage, engine), state}
   end
 
   ############################################################
@@ -202,7 +202,7 @@ defmodule Anoma.Node.Logger do
 
     Storage.put(
       state.storage,
-      [logger.id, addr, Clock.get_time(state.clock), atom],
+      [logger.id.encrypt, addr, Clock.get_time(state.clock), atom],
       msg
     )
 

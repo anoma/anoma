@@ -62,7 +62,7 @@ defmodule AnomaTest.Node.Logger do
 
     {log, ord, _time, atom} = List.to_tuple(list)
 
-    assert log == logger.id
+    assert log == logger.id.encrypt
     assert ord == id
     assert atom == :debug
   end
