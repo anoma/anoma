@@ -5,7 +5,9 @@ defmodule Examples.EParser do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  @type get_423() :: {[Cli.client_commands(), ...], map()}
+  @type parse_result() :: Optimus.ParseResult.t()
+
+  @type get_423() :: {[Cli.client_commands(), ...], parse_result()}
   def get_423() do
     seeded_argument = ["get", "423"]
 
@@ -17,7 +19,7 @@ defmodule Examples.EParser do
     {cmd, res}
   end
 
-  @type zero_submit_423() :: {[Cli.client_commands(), ...], map()}
+  @type zero_submit_423() :: {[Cli.client_commands(), ...], parse_result()}
   def zero_submit_423() do
     file = "./test/data/zero-423.nock"
     seeded_argument = ["submit", file]
