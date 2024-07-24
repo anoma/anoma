@@ -31,6 +31,13 @@ defmodule Examples.EParser do
     submit_cmd(inc_nock, false)
   end
 
+  @type plus_one_ro_submit_423() ::
+          {[Cli.client_commands(), ...], parse_result()}
+  def plus_one_ro_submit_423() do
+    plus_one_ro_nock = "./test/data/plus-one-ro-423.nock"
+    submit_cmd(plus_one_ro_nock, true)
+  end
+
   ####################################################################
   ##                             Helpers                            ##
   ####################################################################
