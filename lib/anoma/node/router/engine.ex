@@ -1,6 +1,25 @@
-# GenServer wrapper to let us interpose some communication before the child
-# process starts, and some wrapping of message receipt
 defmodule Anoma.Node.Router.Engine do
+  @moduledoc """
+  I am the general Engine module.
+
+  I possess info on how all Engines are set up and process messages through
+  the Router. Moreover, I provide access to Engine-wide API.
+
+  Note other that the coordination info, such as a Router address and
+  module name of an engine instance, I provide an actual storage of an
+  Engine state and all state transformaations correspond to the changes one
+  can observe in my code.
+
+  ### Public API
+
+  I provide the following public functionality:
+
+  - `get_state/1`
+  - `get_router/1`
+  - `child_spec/1`
+  - `terminate/2`
+  """
+
   use GenServer
   use TypedStruct
 
@@ -15,11 +34,26 @@ defmodule Anoma.Node.Router.Engine do
   end
 
   typedstruct do
+    @typedoc """
+    I am the type of an Engine as seen from the Router on the Anoma
+    networking layer.
+
+    ### Fields
+
+    - `:router_addr` - The address of the Router that the Engine is
+                       connected to.
+    - `:module` - The module name of the Engine.
+    - `:module_state` - The current state of an Engine instance.
+    """
+
     field(:router_addr, Router.addr())
     field(:module, module())
     field(:module_state, term())
   end
 
+  @typedoc """
+  I am the type designating the Address of where the message got sent from.
+  """
   @type from() :: Router.addr()
 
   @callback handle_call(request :: term, from, state :: term) ::
@@ -40,6 +74,14 @@ defmodule Anoma.Node.Router.Engine do
               | {:stop, reason :: term, new_state}
             when new_state: term
 
+  @doc """
+  I am the starting function for an Engine instance.
+
+  I create an appropriate server name using `Router.process_name` with the
+  supplied module name and Anoma ID, launching a GenServer with said name
+  afterwards.
+  """
+
   @spec start_link({Router.addr(), atom(), Id.t() | Id.Extern.t(), term()}) ::
           :ignore | {:error, any()} | {:ok, pid()}
   def start_link({router, mod, id, arg}) do
@@ -49,6 +91,20 @@ defmodule Anoma.Node.Router.Engine do
       name: server
     )
   end
+
+  @doc """
+  I am an Engine instance initialization function. I setup the initial
+  state of an Engine structure based on the state of an actual Engine
+  instance.
+
+  I first cast a message to initialize a local engine to the connected
+  eoutwe, then store the engine ID, server, and router information in the
+  Process dictionary.
+
+  Afterwards, I call the actual (module) Engine instance initialization
+  function, and put it as the initial state alongside the router and module
+  information directly provided on startup.
+  """
 
   @spec init({Router.addr(), atom(), Id.t() | Id.Extern.t(), term(), atom()}) ::
           :ignore
@@ -67,15 +123,38 @@ defmodule Anoma.Node.Router.Engine do
     postprocess(mod.init(arg), %__MODULE__{router_addr: router, module: mod})
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  @doc """
+  I am an Engine-wide function for getting the current Engine state.
+
+  Given an address of an Engine, I simply dump the state associated with it
+  stored in the Engine structure associated with the given server name.
+  """
+
   @spec get_state(Router.addr()) :: struct() | any()
   def get_state(addr) do
     GenServer.call(addr.server, :get_state)
   end
 
+  @doc """
+  I am an Engine-wide function for getting the router address associated
+  with the given Engine.
+
+  I provide it by simply dumping the `:router` field of the asssociated
+  Engine server.
+  """
+
   @spec get_router(Router.addr()) :: Router.addr() | any()
   def get_router(addr) do
     GenServer.call(addr.server, :get_router)
   end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
 
   @spec handle_cast({any(), Router.addr(), term()}, t()) ::
           {:noreply, any()}
@@ -185,20 +264,26 @@ defmodule Anoma.Node.Router.Engine do
     postprocess(state.module.handle_continue(arg, state.module_state), state)
   end
 
-  @spec terminate(reason, t()) :: {:stop, reason, t()} when reason: term()
-  def terminate(reason, state = %__MODULE__{}) do
-    GenServer.cast(
-      Addr.server(state.router_addr),
-      {:cleanup_local_engine, Router.self_addr()}
-    )
-
-    {:stop, reason, state}
-  end
-
   def handle_info(info, state = %__MODULE__{}) do
     postprocess(state.module.handle_info(info, state.module_state), state)
   end
 
+  ############################################################
+  #                  Genserver Implementation                #
+  ############################################################
+
+  @spec postprocess(
+          any()
+          | {:ok | :noreply, struct()}
+          | {:ok | :stop | :noreply | :reply, struct() | atom() | any(),
+             any() | struct()}
+          | {:reply, any(), struct(), any()},
+          struct()
+        ) ::
+          {:ok | :noreply, %__MODULE__{}}
+          | {:ok | :noreply, %__MODULE__{}, any()}
+          | {:stop | :reply, any(), %__MODULE__{}}
+          | {:stop, :reply, any(), %__MODULE__{}, any()}
   defp postprocess(result, state) do
     case result do
       {:ok, new_state} ->
@@ -227,11 +312,48 @@ defmodule Anoma.Node.Router.Engine do
     end
   end
 
+  ############################################################
+  #                          Helpers                         #
+  ############################################################
+
+  @doc """
+  I am an Engine-wide child specification function.
+
+  Given a tuple with router, module, ID, argument information, I call the
+  `child_spec/1` function of the specified module and then merge with it
+  base information where the start info gets provided from the supplied
+  arguments.
+  """
+
+  @spec child_spec({Router.Addr.t(), module(), any(), any()}) :: %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [any()]}
+        }
   def child_spec(argument = {_router, mod, _id, arg}) do
     mod.child_spec(arg)
     |> Map.merge(%{
       id: __MODULE__,
       start: {__MODULE__, :start_link, [argument]}
     })
+  end
+
+  @doc """
+  I am an engine termination function.
+
+  I provide the main functionality to shut down an engine.
+
+  I first use the GenSercer functionality to route a message to clean up
+  the local engine info stored inside the specified Router and then stop
+  the Engine process with a given reason.
+  """
+
+  @spec terminate(reason, t()) :: {:stop, reason, t()} when reason: term()
+  def terminate(reason, state = %__MODULE__{}) do
+    GenServer.cast(
+      Addr.server(state.router_addr),
+      {:cleanup_local_engine, Router.self_addr()}
+    )
+
+    {:stop, reason, state}
   end
 end
