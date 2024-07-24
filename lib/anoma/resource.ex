@@ -8,6 +8,7 @@ defmodule Anoma.Resource do
 
   require Logger
 
+  alias Anoma.Resource.Delta
   alias __MODULE__
   use TypedStruct
 
@@ -104,11 +105,12 @@ defmodule Anoma.Resource do
     |> Noun.atom_integer_to_binary()
   end
 
+  @spec delta(t()) :: Delta.t()
   @doc """
   The delta of the given resource (kind and quantity).
   """
   def delta(resource = %Resource{}) do
-    %{kind(resource) => resource.quantity}
+    Delta.new(%{kind(resource) => resource.quantity})
   end
 
   def transparent_committed_resource(commitment) do

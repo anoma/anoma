@@ -20,7 +20,7 @@ defmodule Anoma.Resource.Transaction do
     field(:nullifiers, list(binary()), default: [])
     field(:proofs, list(ProofRecord.t()), default: [])
     field(:compliance_proofs, list({binary(), binary()}), default: [])
-    field(:delta, Delta.t(), default: %{})
+    field(:delta, Delta.t(), default: Delta.new(%{}))
     field(:extra, list(binary()), default: [])
     field(:preference, term(), default: nil)
   end
@@ -118,7 +118,7 @@ defmodule Anoma.Resource.Transaction do
     Logger.debug("resource set valid: #{inspect(resource_set_valid)}")
 
     committed_delta_sum =
-      for %{resource: r} <- committed, reduce: %{} do
+      for %{resource: r} <- committed, reduce: Delta.empty() do
         sum ->
           Logger.debug("running committed delta sum: #{inspect(sum)}")
           Delta.add(sum, delta(r))
@@ -127,7 +127,7 @@ defmodule Anoma.Resource.Transaction do
     Logger.debug("committed delta sum: #{inspect(committed_delta_sum)}")
 
     nullified_delta_sum =
-      for %{resource: r} <- nullified, reduce: %{} do
+      for %{resource: r} <- nullified, reduce: Delta.empty() do
         sum ->
           Logger.debug("running nullified delta sum: #{inspect(sum)}")
           Delta.add(sum, delta(r))

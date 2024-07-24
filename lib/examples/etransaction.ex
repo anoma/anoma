@@ -4,14 +4,14 @@ defmodule Examples.ETransaction do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
-  alias Anoma.Resource.Transaction
+  alias Anoma.Resource.{Delta, Transaction}
 
   alias Examples.{EResource, EProofRecord}
 
-  def zero_delta(), do: %{}
+  def zero_delta(), do: Delta.empty()
 
   def d0_delta(value) do
-    %{EResource.d0_kind() => value}
+    Delta.new(%{EResource.d0_kind() => value})
   end
 
   @spec empty_transaction() :: Transaction.t()
@@ -75,7 +75,7 @@ defmodule Examples.ETransaction do
       # get proof records
       proofs: [EProofRecord.ay_proof(), EProofRecord.ax_proof()],
       # TODO Abstract this out
-      delta: %{EResource.y_kind() => 1, EResource.x_kind() => -1}
+      delta: Delta.new(%{EResource.y_kind() => 1, EResource.x_kind() => -1})
     }
 
     refute Transaction.verify(trans)
@@ -89,7 +89,7 @@ defmodule Examples.ETransaction do
       # get proof records
       proofs: [EProofRecord.by_proof(), EProofRecord.bx_proof()],
       # TODO Abstract this out
-      delta: %{EResource.y_kind() => -1, EResource.x_kind() => 1}
+      delta: Delta.new(%{EResource.y_kind() => -1, EResource.x_kind() => 1})
     }
 
     refute Transaction.verify(trans)
@@ -144,7 +144,7 @@ defmodule Examples.ETransaction do
         EProofRecord.a0_counter_proof(),
         EProofRecord.a1_counter_proof()
       ],
-      delta: %{EResource.counter_kind() => 1}
+      delta: Delta.new(%{EResource.counter_kind() => 1})
     }
 
     assert Transaction.verify(trans)
