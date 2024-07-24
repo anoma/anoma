@@ -2,6 +2,8 @@ defmodule Anoma.Resource.Delta do
   import Noun
   use TypedStruct
 
+  @behaviour Noun.Nounable.Kind
+
   typedstruct enforce: true do
     # usually non_neg_integer, but not in execution
     field(:deltas, %{binary() => integer()})
@@ -32,33 +34,37 @@ defmodule Anoma.Resource.Delta do
     add(d1, negate(d2))
   end
 
-  # use nock map once it exists
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(%__MODULE__{deltas: delta}) do
-    for {k, v} <- delta do
-      if v >= 0 do
-        [k, 0 | v]
-      else
-        [k, 1 | -v]
-      end
-    end ++ 0
+  @spec from_noun(noun :: Noun.t()) :: {:ok, t()} | :error
+  def from_noun(delta_nock) do
+    with {:ok, map} <- Noun.Nounable.Map.from_noun(delta_nock) do
+      deltas =
+        Map.new(map, fn {key, [v_sign | v_value]} ->
+          binary_key = atom_integer_to_binary(key)
+
+          {binary_key,
+           if Noun.is_zero(v_sign) do
+             v_value
+           else
+             -v_value
+           end}
+        end)
+
+      {:ok, %__MODULE__{deltas: deltas}}
+    end
   end
 
-  @spec from_noun(Noun.t()) :: t()
-  def from_noun(delta_nock) do
-    delta_list = list_nock_to_erlang(delta_nock)
-
-    deltas =
-      for [k, v_sign | v_value] <- delta_list, into: %{} do
-        binary_k = atom_integer_to_binary(k)
-
-        if v_sign == 0 do
-          {binary_k, v_value}
-        else
-          {binary_k, -v_value}
-        end
-      end
-
-    %__MODULE__{deltas: deltas}
+  defimpl Noun.Nounable, for: __MODULE__ do
+    def to_noun(%Anoma.Resource.Delta{deltas: delta}) do
+      delta
+      |> Map.new(fn {k, v} ->
+        {k,
+         if v >= 0 do
+           [0 | v]
+         else
+           [1 | -v]
+         end}
+      end)
+      |> Noun.Nounable.to_noun()
+    end
   end
 end

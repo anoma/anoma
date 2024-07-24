@@ -5,6 +5,7 @@ defmodule Anoma.Resource.Transaction do
 
   require Logger
 
+  alias Noun.Nounable
   alias __MODULE__
   use TypedStruct
 
@@ -38,7 +39,7 @@ defmodule Anoma.Resource.Transaction do
       for {a, b} <- transaction.compliance_proofs do
         [a | b]
       end ++ 0,
-      Delta.to_noun(transaction.delta),
+      Nounable.to_noun(transaction.delta),
       transaction.extra
       | [[1 | 0], 0 | 0]
     ]
@@ -54,22 +55,24 @@ defmodule Anoma.Resource.Transaction do
         delta,
         extra | _preference
       ]) do
-    %Transaction{
-      roots: list_nock_to_erlang(roots),
-      commitments: list_nock_to_erlang(commitments),
-      nullifiers: list_nock_to_erlang(nullifiers),
-      proofs:
-        for proof <- list_nock_to_erlang(proofs) do
-          ProofRecord.from_noun(proof)
-        end,
-      compliance_proofs:
-        for [a | b] <- list_nock_to_erlang(compliance_proofs) do
-          {a, b}
-        end,
-      delta: Delta.from_noun(delta),
-      extra: extra,
-      preference: nil
-    }
+    with {:ok, delta} <- Delta.from_noun(delta) do
+      %Transaction{
+        roots: list_nock_to_erlang(roots),
+        commitments: list_nock_to_erlang(commitments),
+        nullifiers: list_nock_to_erlang(nullifiers),
+        proofs:
+          for proof <- list_nock_to_erlang(proofs) do
+            ProofRecord.from_noun(proof)
+          end,
+        compliance_proofs:
+          for [a | b] <- list_nock_to_erlang(compliance_proofs) do
+            {a, b}
+          end,
+        delta: delta,
+        extra: extra,
+        preference: nil
+      }
+    end
   end
 
   @spec compose(t(), t()) :: t()
