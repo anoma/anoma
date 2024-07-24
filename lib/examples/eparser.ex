@@ -25,6 +25,12 @@ defmodule Examples.EParser do
     submit_cmd(zero_nock, false)
   end
 
+  @type inc_submit_423() :: {[Cli.client_commands(), ...], parse_result()}
+  def inc_submit_423() do
+    inc_nock = "./test/data/inc-423.nock"
+    submit_cmd(inc_nock, false)
+  end
+
   ####################################################################
   ##                             Helpers                            ##
   ####################################################################
