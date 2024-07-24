@@ -8,7 +8,14 @@ defmodule Examples.ETransaction do
 
   alias Examples.{EResource, EProofRecord}
 
-  def zero_delta(), do: Delta.empty()
+  def zero_delta() do
+    delta = Delta.empty()
+
+    assert Delta.negate(delta) == delta,
+           "negation of the empty delta is itself"
+
+    delta
+  end
 
   def d0_delta(value) do
     Delta.new(%{EResource.d0_kind() => value})
