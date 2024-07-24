@@ -22,8 +22,26 @@ defimpl Nounable, for: List do
   """
   def to_noun([]), do: 0
   def to_noun([h | t]), do: [Nounable.to_noun(h) | Nounable.to_noun(t)]
+
+  @behaviour Kind
+
+  @doc """
+  I convert the given Noun into a list of nouns.
+
+  I do not recursively convert the structures in the list.
+  """
+  @spec from_noun(Noun.t()) :: {:ok, list(Noun.t())} | :error
+  def from_noun(0), do: {:ok, []}
+  def from_noun([]), do: {:ok, []}
+
+  def from_noun([h | t]) do
+    with {:ok, ts} <- from_noun(t) do
+      {:ok, [h | ts]}
+    end
   end
 
+  def from_noun(_) do
+    :error
   end
 end
 
@@ -41,6 +59,32 @@ defimpl Nounable, for: Map do
       [Nounable.to_noun(k) | Nounable.to_noun(v)]
     end ++ 0
   end
+
+  # ditto here
+  @behaviour Kind
+  @doc """
+  I convert the given Noun into a map of nouns.
+
+  I do not recursively convert the structures in the list.
+  """
+
+  @spec from_noun(Noun.t()) :: {:ok, %{Noun.t() => Noun.t()}} | :error
+  def from_noun(noun) do
+    with {:ok, value} <- from_noun_int(noun) do
+      {:ok, Map.new(value)}
+    end
+  end
+
+  defp from_noun_int(0), do: {:ok, []}
+  defp from_noun_int([]), do: {:ok, []}
+
+  defp from_noun_int([[k | v] | t]) do
+    with {:ok, ts} <- from_noun_int(t) do
+      {:ok, [{k, v} | ts]}
+    end
+  end
+
+  defp from_noun_int(_), do: :error
 end
 
 defimpl Nounable, for: BitString do
@@ -70,4 +114,20 @@ defimpl Nounable, for: Tuple do
     [Nounable.to_noun(:erlang.element(index, tuple)) | append_onto]
     |> to_noun_index(tuple, index - 1)
   end
+
+  @behaviour Kind
+
+  @doc """
+  I convert the given Noun into a list of nouns.
+
+  I do not recursively convert the structures in the list.
+
+  This can't fail, so we don't return :error
+  """
+  @spec from_noun(Noun.t()) :: {:ok, tuple()}
+  def from_noun(noun), do: :erlang.list_to_tuple(from_noun_internal(noun))
+
+  def from_noun_internal([h | t]), do: [h | from_noun_internal(t)]
+  def from_noun_internal([]), do: [0]
+  def from_noun_internal(x), do: [x]
 end
