@@ -64,6 +64,6 @@ defmodule AnomaTest.Node.Logger do
 
     assert log == logger.id
     assert ord == id
-    assert atom == :debug
+    assert atom == "debug"
   end
 end

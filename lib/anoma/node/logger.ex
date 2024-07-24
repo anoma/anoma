@@ -202,7 +202,7 @@ defmodule Anoma.Node.Logger do
 
     Storage.put(
       state.storage,
-      [logger.id, addr, Clock.get_time(state.clock), atom],
+      [logger.id, addr, Clock.get_time(state.clock), Atom.to_string(atom)],
       msg
     )
 
