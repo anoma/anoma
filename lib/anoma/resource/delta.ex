@@ -29,7 +29,7 @@ defmodule Anoma.Resource.Delta do
       else
         [k, 1 | -v]
       end
-    end
+    end ++ 0
   end
 
   @spec from_noun(Noun.t()) :: t()
