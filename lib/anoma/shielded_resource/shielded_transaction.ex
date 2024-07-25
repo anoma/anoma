@@ -51,93 +51,6 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     end
   end
 
-  @spec compose(t(), t()) :: t()
-  def compose(tx1, tx2) do
-    # I still don't know if proofs have to be unique...
-    if Enum.any?(tx1.commitments, fn x -> x in tx2.commitments end) ||
-         Enum.any?(tx1.nullifiers, fn x -> x in tx2.nullifiers end) do
-      nil
-    else
-      %ShieldedTransaction{
-        roots: tx1.roots ++ tx2.roots,
-        commitments: tx1.commitments ++ tx2.commitments,
-        nullifiers: tx1.nullifiers ++ tx2.nullifiers,
-        partial_transactions:
-          tx1.partial_transactions ++ tx2.partial_transactions,
-        # fix delta when adding binding signature
-        delta: tx1.delta
-      }
-    end
-  end
-
-  # TODO: We can return roots, commitments, and nullifiers instead of just a
-  # boolean value so that we can get rid of them in the ShieldedTransaction struct. We
-  # can apply the same improvement to the transparent Transaction.
-  @spec verify(t()) :: boolean()
-  def verify(transaction = %__MODULE__{}) do
-    # check proofs
-    all_proofs_valid =
-      for ptx <- transaction.partial_transactions,
-          reduce: true do
-        acc ->
-          result = PartialTransaction.verify(ptx)
-          Logger.debug("partial_transactions result: #{inspect(result)}")
-          acc && result
-      end
-
-    # Decode the compliance_output
-    compliance_outputs =
-      transaction.partial_transactions
-      |> Enum.flat_map(fn ptx ->
-        ptx.compliance_proofs
-        |> Enum.map(fn proof_record ->
-          Anoma.SheildedResource.ComplianceOutput.from_public_input(
-            proof_record.public_inputs
-            |> :binary.bin_to_list()
-          )
-        end)
-      end)
-
-    # Collect binding public keys
-    binding_pub_keys =
-      compliance_outputs |> Enum.reduce([], &[&1.delta_x ++ &1.delta_y | &2])
-
-    # Collect binding signature msgs
-    binding_messages =
-      compliance_outputs
-      |> Enum.reduce([], &[&1.nullifier | [&1.output_cm | &2]])
-
-    # delta check(verify the binding signature)
-    list_delta = :binary.bin_to_list(transaction.delta)
-
-    delta_valid =
-      Cairo.sig_verify(binding_pub_keys, binding_messages, list_delta)
-
-    # Collect resource logics from compliance proofs
-    resource_logics_from_compliance =
-      compliance_outputs
-      |> Enum.reduce([], &[&1.output_label | [&1.input_label | &2]])
-      |> Enum.reverse()
-
-    # Compute the program hash of resource logic proofs
-    resource_logic_from_program =
-      transaction.partial_transactions
-      |> Enum.flat_map(fn ptx ->
-        ptx.logic_proofs
-        |> Enum.map(fn proof_record ->
-          Cairo.get_program_hash(
-            proof_record.public_inputs
-            |> :binary.bin_to_list()
-          )
-        end)
-      end)
-
-    resource_logic_valid =
-      resource_logics_from_compliance == resource_logic_from_program
-
-    all_proofs_valid && delta_valid && resource_logic_valid
-  end
-
   defimpl Noun.Nounable, for: __MODULE__ do
     def to_noun(transaction = %ShieldedTransaction{}) do
       {
@@ -148,6 +61,101 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         transaction.delta
       }
       |> Noun.Nounable.to_noun()
+    end
+  end
+
+  defimpl Anoma.RM.Transaction, for: __MODULE__ do
+    def commitments(%ShieldedTransaction{commitments: cm}), do: cm
+    def nullifiers(%ShieldedTransaction{nullifiers: nf}), do: nf
+
+    def storage_commitments(tx), do: commitments(tx)
+    def storage_nullifiers(tx), do: nullifiers(tx)
+
+    def compose(tx1, tx2) do
+      # I still don't know if proofs have to be unique...
+
+      if Enum.any?(tx1.commitments, fn x -> x in tx2.commitments end) ||
+           Enum.any?(tx1.nullifiers, fn x -> x in tx2.nullifiers end) do
+        nil
+      else
+        %ShieldedTransaction{
+          roots: tx1.roots ++ tx2.roots,
+          commitments: tx1.commitments ++ tx2.commitments,
+          nullifiers: tx1.nullifiers ++ tx2.nullifiers,
+          partial_transactions:
+            tx1.partial_transactions ++ tx2.partial_transactions,
+          # fix delta when adding binding signature
+          delta: tx1.delta
+        }
+      end
+    end
+
+    # TODO: We can return roots, commitments, and nullifiers instead of just a
+    # boolean value so that we can get rid of them in the ShieldedTransaction struct. We
+    # can apply the same improvement to the transparent Transaction.
+    def verify(transaction = %ShieldedTransaction{}) do
+      # check proofs
+      all_proofs_valid =
+        for ptx <- transaction.partial_transactions,
+            reduce: true do
+          acc ->
+            result = PartialTransaction.verify(ptx)
+            Logger.debug("partial_transactions result: #{inspect(result)}")
+            acc && result
+        end
+
+      # Decode the compliance_output
+      compliance_outputs =
+        transaction.partial_transactions
+        |> Enum.flat_map(fn ptx ->
+          ptx.compliance_proofs
+          |> Enum.map(fn proof_record ->
+            Anoma.SheildedResource.ComplianceOutput.from_public_input(
+              proof_record.public_inputs
+              |> :binary.bin_to_list()
+            )
+          end)
+        end)
+
+      # Collect binding public keys
+      binding_pub_keys =
+        compliance_outputs
+        |> Enum.reduce([], &[&1.delta_x ++ &1.delta_y | &2])
+
+      # Collect binding signature msgs
+      binding_messages =
+        compliance_outputs
+        |> Enum.reduce([], &[&1.nullifier | [&1.output_cm | &2]])
+
+      # delta check(verify the binding signature)
+      list_delta = :binary.bin_to_list(transaction.delta)
+
+      delta_valid =
+        Cairo.sig_verify(binding_pub_keys, binding_messages, list_delta)
+
+      # Collect resource logics from compliance proofs
+      resource_logics_from_compliance =
+        compliance_outputs
+        |> Enum.reduce([], &[&1.output_label | [&1.input_label | &2]])
+        |> Enum.reverse()
+
+      # Compute the program hash of resource logic proofs
+      resource_logic_from_program =
+        transaction.partial_transactions
+        |> Enum.flat_map(fn ptx ->
+          ptx.logic_proofs
+          |> Enum.map(fn proof_record ->
+            Cairo.get_program_hash(
+              proof_record.public_inputs
+              |> :binary.bin_to_list()
+            )
+          end)
+        end)
+
+      resource_logic_valid =
+        resource_logics_from_compliance == resource_logic_from_program
+
+      all_proofs_valid && delta_valid && resource_logic_valid
     end
   end
 end

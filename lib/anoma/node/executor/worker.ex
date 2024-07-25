@@ -144,7 +144,7 @@ defmodule Anoma.Node.Executor.Worker do
   defp run(s = %__MODULE__{tx: {:cairo, _}}) do
     execute_rm_tx(
       s,
-      {&ShieldedTransaction.from_noun/1, &ShieldedTransaction.verify/1}
+      {&ShieldedTransaction.from_noun/1, &Anoma.RM.Transaction.verify/1}
     )
   end
 
