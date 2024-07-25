@@ -72,10 +72,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     def storage_nullifiers(tx), do: nullifiers(tx)
 
     def compose(tx1, tx2) do
-      # I still don't know if proofs have to be unique...
-
-      if Enum.any?(tx1.commitments, fn x -> x in tx2.commitments end) ||
-           Enum.any?(tx1.nullifiers, fn x -> x in tx2.nullifiers end) do
+      unless Anoma.RM.Trans.compose_pre_check(tx1, tx2) do
         nil
       else
         %ShieldedTransaction{
