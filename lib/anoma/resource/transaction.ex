@@ -34,7 +34,7 @@ defmodule Anoma.Resource.Transaction do
       transaction.commitments ++ 0,
       transaction.nullifiers ++ 0,
       for proof <- transaction.proofs do
-        ProofRecord.to_noun(proof)
+        Nounable.to_noun(proof)
       end ++ 0,
       for {a, b} <- transaction.compliance_proofs do
         [a | b]
@@ -55,15 +55,19 @@ defmodule Anoma.Resource.Transaction do
         delta,
         extra | _preference
       ]) do
-    with {:ok, delta} <- Delta.from_noun(delta) do
+    proofs =
+      for proof <- list_nock_to_erlang(proofs) do
+        ProofRecord.from_noun(proof)
+      end
+
+    with {:ok, delta} <- Delta.from_noun(delta),
+         true <- Enum.all?(proofs, &(elem(&1, 0) == :ok)),
+         proofs <- Enum.map(proofs, &elem(&1, 1)) do
       %Transaction{
         roots: list_nock_to_erlang(roots),
         commitments: list_nock_to_erlang(commitments),
         nullifiers: list_nock_to_erlang(nullifiers),
-        proofs:
-          for proof <- list_nock_to_erlang(proofs) do
-            ProofRecord.from_noun(proof)
-          end,
+        proofs: proofs,
         compliance_proofs:
           for [a | b] <- list_nock_to_erlang(compliance_proofs) do
             {a, b}
