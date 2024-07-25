@@ -17,12 +17,8 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
   @spec to_noun(t()) :: Noun.t()
   def to_noun(ptx = %PartialTransaction{}) do
     [
-      for proof <- ptx.logic_proofs do
-        ProofRecord.to_noun(proof)
-      end,
-      for proof <- ptx.compliance_proofs do
-        ProofRecord.to_noun(proof)
-      end
+      Noun.Nounable.to_noun(ptx.logic_proofs),
+      Noun.Nounable.to_noun(ptx.compliance_proofs)
     ]
   end
 
@@ -31,16 +27,22 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
         logic_proofs,
         compliance_proofs
       ]) do
-    %PartialTransaction{
-      logic_proofs:
-        for proof <- logic_proofs do
-          ProofRecord.from_noun(proof)
-        end,
-      compliance_proofs:
-        for proof <- compliance_proofs do
-          ProofRecord.from_noun(proof)
-        end
-    }
+    to_noun_list = fn xs ->
+      xs
+      |> Noun.list_nock_to_erlang()
+      |> Enum.map(&ProofRecord.from_noun/1)
+    end
+
+    logic = to_noun_list.(logic_proofs)
+    compilance = to_noun_list.(compliance_proofs)
+    checked = Enum.all?(logic ++ compilance, &(elem(&1, 0) == :ok))
+
+    with true <- checked do
+      %PartialTransaction{
+        logic_proofs: Enum.map(logic, &elem(&1, 1)),
+        compliance_proofs: Enum.map(compilance, &elem(&1, 1))
+      }
+    end
   end
 
   @spec verify(t()) :: boolean()
