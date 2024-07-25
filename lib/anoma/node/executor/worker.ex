@@ -138,7 +138,10 @@ defmodule Anoma.Node.Executor.Worker do
   end
 
   defp run(s = %__MODULE__{tx: {:rm, _}}) do
-    execute_rm_tx(s, {&Transaction.from_noun/1, &Transaction.verify/1})
+    execute_rm_tx(
+      s,
+      {&Transaction.from_noun/1, &Anoma.RM.Transaction.verify/1}
+    )
   end
 
   defp run(s = %__MODULE__{tx: {:cairo, _}}) do
