@@ -3,6 +3,8 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   I am a shielded resource machine transaction.
   """
 
+  @behaviour Noun.Nounable.Kind
+
   require Logger
 
   alias __MODULE__
@@ -20,24 +22,13 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     field(:delta, binary(), default: %{})
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(transaction = %ShieldedTransaction{}) do
-    [
-      transaction.roots,
-      transaction.commitments,
-      transaction.nullifiers,
-      Noun.Nounable.to_noun(transaction.partial_transactions),
-      transaction.delta
-    ]
-  end
-
   @spec from_noun(Noun.t()) :: {:ok, t()}
   def from_noun([
         roots,
         commitments,
         nullifiers,
-        partial_transactions,
-        delta
+        partial_transactions
+        | delta
       ]) do
     ptxs =
       partial_transactions
@@ -46,15 +37,17 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
 
     checked = Enum.all?(ptxs, &(elem(&1, 0) == :ok))
 
-    with true <- checked do
+    if checked do
       {:ok,
        %ShieldedTransaction{
          roots: roots,
-         commitments: commitments,
-         nullifiers: nullifiers,
+         commitments: commitments |> Noun.list_nock_to_erlang(),
+         nullifiers: nullifiers |> Noun.list_nock_to_erlang(),
          partial_transactions: Enum.map(ptxs, &elem(&1, 1)),
          delta: delta
        }}
+    else
+      :error
     end
   end
 
@@ -143,5 +136,18 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       resource_logics_from_compliance == resource_logic_from_program
 
     all_proofs_valid && delta_valid && resource_logic_valid
+  end
+
+  defimpl Noun.Nounable, for: __MODULE__ do
+    def to_noun(transaction = %ShieldedTransaction{}) do
+      {
+        transaction.roots,
+        transaction.commitments,
+        transaction.nullifiers,
+        transaction.partial_transactions,
+        transaction.delta
+      }
+      |> Noun.Nounable.to_noun()
+    end
   end
 end
