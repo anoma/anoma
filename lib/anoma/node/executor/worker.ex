@@ -36,7 +36,7 @@ defmodule Anoma.Node.Executor.Worker do
 
   # TODO :: Please replace with a verify protocol
   @type verify_fun(trans) :: (trans -> boolean())
-  @type from_noun(trans) :: (Noun.t() -> trans)
+  @type from_noun(trans) :: (Noun.t() -> {:ok, trans} | :error)
 
   typedstruct do
     @typedoc """
@@ -233,7 +233,7 @@ defmodule Anoma.Node.Executor.Worker do
 
     with {:ok, ordered_tx} <- nock(gate, [10, [6, 1 | id], 0 | 1], env),
          {:ok, resource_tx} <- nock(ordered_tx, [9, 2, 0 | 1], env),
-         vm_resource_tx <- from_noun.(resource_tx),
+         {:ok, vm_resource_tx} <- from_noun.(resource_tx),
          true_order = wait_for_ready(s),
          true <- verify_fun.(vm_resource_tx),
          # TODO: add root existence check. The roots must be traceable

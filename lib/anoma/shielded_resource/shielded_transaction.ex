@@ -33,7 +33,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     ]
   end
 
-  @spec from_noun(Noun.t()) :: t()
+  @spec from_noun(Noun.t()) :: {:ok, t()}
   def from_noun([
         roots,
         commitments,
@@ -41,16 +41,17 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         partial_transactions,
         delta
       ]) do
-    %ShieldedTransaction{
-      roots: roots,
-      commitments: commitments,
-      nullifiers: nullifiers,
-      partial_transactions:
-        for ptx <- partial_transactions do
-          PartialTransaction.from_noun(ptx)
-        end,
-      delta: delta
-    }
+    {:ok,
+     %ShieldedTransaction{
+       roots: roots,
+       commitments: commitments,
+       nullifiers: nullifiers,
+       partial_transactions:
+         for ptx <- partial_transactions do
+           PartialTransaction.from_noun(ptx)
+         end,
+       delta: delta
+     }}
   end
 
   @spec compose(t(), t()) :: t()

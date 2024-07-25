@@ -167,7 +167,7 @@ defmodule Anoma.Resource do
   def transparent_run_resource_logic(transaction, resource) do
     logic = resource.logic
     self = Noun.Nounable.to_noun(resource)
-    tx = Anoma.Resource.Transaction.to_noun(transaction)
+    tx = Noun.Nounable.to_noun(transaction)
     arg = [self | tx]
     result = Nock.nock(logic, [9, 2, 10, [6, 1 | arg], 0 | 1])
     Logger.debug("resource logic nock result: #{inspect(result)}")

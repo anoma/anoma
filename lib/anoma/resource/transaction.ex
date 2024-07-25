@@ -3,6 +3,8 @@ defmodule Anoma.Resource.Transaction do
   I represent a resource machine transaction
   """
 
+  @behaviour Noun.Nounable.Kind
+
   require Logger
 
   alias Noun.Nounable
@@ -26,26 +28,7 @@ defmodule Anoma.Resource.Transaction do
     field(:preference, term(), default: nil)
   end
 
-  # preference function not yet supported
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(transaction = %Transaction{}) do
-    [
-      transaction.roots ++ 0,
-      transaction.commitments ++ 0,
-      transaction.nullifiers ++ 0,
-      for proof <- transaction.proofs do
-        Nounable.to_noun(proof)
-      end ++ 0,
-      for {a, b} <- transaction.compliance_proofs do
-        [a | b]
-      end ++ 0,
-      Nounable.to_noun(transaction.delta),
-      transaction.extra
-      | [[1 | 0], 0 | 0]
-    ]
-  end
-
-  @spec from_noun(Noun.t()) :: t()
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
         roots,
         commitments,
@@ -60,22 +43,26 @@ defmodule Anoma.Resource.Transaction do
         ProofRecord.from_noun(proof)
       end
 
-    with {:ok, delta} <- Delta.from_noun(delta),
-         true <- Enum.all?(proofs, &(elem(&1, 0) == :ok)),
-         proofs <- Enum.map(proofs, &elem(&1, 1)) do
-      %Transaction{
-        roots: list_nock_to_erlang(roots),
-        commitments: list_nock_to_erlang(commitments),
-        nullifiers: list_nock_to_erlang(nullifiers),
-        proofs: proofs,
-        compliance_proofs:
-          for [a | b] <- list_nock_to_erlang(compliance_proofs) do
-            {a, b}
-          end,
-        delta: delta,
-        extra: extra,
-        preference: nil
-      }
+    if Enum.all?(proofs, &(elem(&1, 0) == :ok)) do
+      with {:ok, delta} <- Delta.from_noun(delta),
+           proofs = Enum.map(proofs, &elem(&1, 1)) do
+        {:ok,
+         %Transaction{
+           roots: list_nock_to_erlang(roots),
+           commitments: list_nock_to_erlang(commitments),
+           nullifiers: list_nock_to_erlang(nullifiers),
+           proofs: proofs,
+           compliance_proofs:
+             for [a | b] <- list_nock_to_erlang(compliance_proofs) do
+               {a, b}
+             end,
+           delta: delta,
+           extra: list_nock_to_erlang(extra),
+           preference: nil
+         }}
+      end
+    else
+      :error
     end
   end
 
@@ -192,5 +179,22 @@ defmodule Anoma.Resource.Transaction do
       end
 
     {MapSet.to_list(committed_set), MapSet.to_list(nullified_set)}
+  end
+
+  defimpl Nounable, for: __MODULE__ do
+    # preference function not yet supported
+    def to_noun(transaction = %Transaction{}) do
+      {
+        transaction.roots,
+        transaction.commitments,
+        transaction.nullifiers,
+        transaction.proofs,
+        transaction.compliance_proofs,
+        transaction.delta,
+        transaction.extra,
+        [[1 | 0], 0 | 0]
+      }
+      |> Nounable.to_noun()
+    end
   end
 end
