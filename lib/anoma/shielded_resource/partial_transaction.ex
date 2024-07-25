@@ -50,7 +50,12 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
           reduce: true do
         acc ->
           result =
-            Cairo.verify(proof_record.proof, proof_record.public_inputs)
+            proof_record.proof
+            |> :binary.bin_to_list()
+            |> Cairo.verify(
+              proof_record.public_inputs
+              |> :binary.bin_to_list()
+            )
 
           acc && result
       end
@@ -60,7 +65,12 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
           reduce: true do
         acc ->
           result =
-            Cairo.verify(proof_record.proof, proof_record.public_inputs)
+            proof_record.proof
+            |> :binary.bin_to_list()
+            |> Cairo.verify(
+              proof_record.public_inputs
+              |> :binary.bin_to_list()
+            )
 
           Logger.debug("compliance result: #{inspect(result)}")
           acc && result

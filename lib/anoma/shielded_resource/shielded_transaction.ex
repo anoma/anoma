@@ -95,6 +95,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         |> Enum.map(fn proof_record ->
           Anoma.SheildedResource.ComplianceOutput.from_public_input(
             proof_record.public_inputs
+            |> :binary.bin_to_list()
           )
         end)
       end)
@@ -126,7 +127,10 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       |> Enum.flat_map(fn ptx ->
         ptx.logic_proofs
         |> Enum.map(fn proof_record ->
-          Cairo.get_program_hash(proof_record.public_inputs)
+          Cairo.get_program_hash(
+            proof_record.public_inputs
+            |> :binary.bin_to_list()
+          )
         end)
       end)
 
