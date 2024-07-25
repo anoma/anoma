@@ -9,6 +9,7 @@ defmodule Anoma.Resource do
   require Logger
 
   alias __MODULE__
+  alias Anoma.Resource.Transaction
   use TypedStruct
 
   alias Anoma.Crypto.Sign
@@ -36,11 +37,13 @@ defmodule Anoma.Resource do
   @commitment_atom Noun.atom_binary_to_integer("committo")
   @nullifier_atom Noun.atom_binary_to_integer("annullo")
 
+  @spec new() :: t()
   @doc "New blank resource. Randomized nonce and seed."
   def new do
     unique(%Resource{})
   end
 
+  @spec unique(t()) :: t()
   @doc "Randomizes the nonce and seed of a resource."
   def unique(r = %Resource{}) do
     nonce = :crypto.strong_rand_bytes(32)
@@ -48,6 +51,7 @@ defmodule Anoma.Resource do
     %Resource{r | nonce: nonce, rseed: rseed}
   end
 
+  @spec new_with_npk(Sign.ed25519_public()) :: t()
   @doc """
   Helper to pass in the npk for initializing a valid but meaningless
   resource.
@@ -104,6 +108,7 @@ defmodule Anoma.Resource do
     |> Noun.atom_integer_to_binary()
   end
 
+  @spec delta(t()) :: Anoma.Resource.Delta.t()
   @doc """
   The delta of the given resource (kind and quantity).
   """
@@ -111,6 +116,7 @@ defmodule Anoma.Resource do
     %{kind(resource) => resource.quantity}
   end
 
+  @spec transparent_committed_resource(binary()) :: {:ok, t()} | :error
   def transparent_committed_resource(commitment) do
     with {:ok, [@commitment_atom | commitment_resource]} <-
            Nock.Cue.cue(commitment) do
@@ -120,10 +126,11 @@ defmodule Anoma.Resource do
     end
   end
 
+  @spec commits_to(binary(), t()) :: boolean()
   @doc """
   Whether a commitment commits to a given resource.
   """
-  def commits_to(commitment, resource) do
+  def commits_to(commitment, resource = %Resource{}) do
     with {:ok, committed_resource} <-
            transparent_committed_resource(commitment) do
       committed_resource == resource
@@ -132,14 +139,16 @@ defmodule Anoma.Resource do
     end
   end
 
+  @spec commits_to_any(binary(), list(t())) :: boolean()
   def commits_to_any(commitment, resources) do
     Enum.any?(resources, fn r -> commitment |> commits_to(r) end)
   end
 
+  @spec nullifies(Noun.noun_atom(), t()) :: boolean()
   @doc """
   Whether a nullifier nullifies a given resource.
   """
-  def nullifies(nullifier, resource) do
+  def nullifies(nullifier, resource = %Resource{}) do
     with {:ok, [jammed_nullified_resource | signature]} <-
            Nock.Cue.cue(nullifier),
          {:ok, [@nullifier_atom | nullified_resource]} <-
@@ -155,11 +164,13 @@ defmodule Anoma.Resource do
     end
   end
 
+  @spec nullifies_any(binary(), list(t())) :: boolean()
   def nullifies_any(nullifier, resources) do
     Enum.any?(resources, fn r -> nullifier |> nullifies(r) end)
   end
 
-  def transparent_run_resource_logic(transaction, resource) do
+  @spec transparent_run_resource_logic(Transaction.t(), t()) :: boolean
+  def transparent_run_resource_logic(transaction = %Transaction{}, resource) do
     logic = resource.logic
     self = Anoma.Resource.to_noun(resource)
     tx = Anoma.Resource.Transaction.to_noun(transaction)
