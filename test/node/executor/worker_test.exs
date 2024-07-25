@@ -329,8 +329,8 @@ defmodule AnomaTest.Node.Executor.Worker do
     {proof, public_inputs} = Cairo.prove(trace, memory, public_inputs)
 
     compliance_proof = %ProofRecord{
-      proof: proof,
-      public_inputs: public_inputs
+      proof: proof |> :binary.list_to_bin(),
+      public_inputs: public_inputs |> :binary.list_to_bin()
     }
 
     # TODO: make up real logic proofs when building a client
