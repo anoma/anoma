@@ -8,7 +8,7 @@ defmodule Anoma.Resource.Transaction do
   alias __MODULE__
   use TypedStruct
 
-  import Anoma.Resource
+  alias Anoma.Resource
   alias Anoma.Resource.Delta
   alias Anoma.Resource.ProofRecord
   import Noun
@@ -121,7 +121,7 @@ defmodule Anoma.Resource.Transaction do
       for %{resource: r} <- committed, reduce: %{} do
         sum ->
           Logger.debug("running committed delta sum: #{inspect(sum)}")
-          Delta.add(sum, delta(r))
+          Delta.add(sum, Resource.delta(r))
       end
 
     Logger.debug("committed delta sum: #{inspect(committed_delta_sum)}")
@@ -130,7 +130,7 @@ defmodule Anoma.Resource.Transaction do
       for %{resource: r} <- nullified, reduce: %{} do
         sum ->
           Logger.debug("running nullified delta sum: #{inspect(sum)}")
-          Delta.add(sum, delta(r))
+          Delta.add(sum, Resource.delta(r))
       end
 
     Logger.debug("nullified delta sum: #{inspect(nullified_delta_sum)}")
@@ -145,7 +145,9 @@ defmodule Anoma.Resource.Transaction do
     all_logics_valid =
       for resource <- proved_resources, reduce: true do
         acc ->
-          result = transparent_run_resource_logic(transaction, resource)
+          result =
+            Resource.transparent_run_resource_logic(transaction, resource)
+
           Logger.debug("resource logic result: #{inspect(result)}")
           acc && result
       end
@@ -172,11 +174,11 @@ defmodule Anoma.Resource.Transaction do
           reduce: {MapSet.new(), MapSet.new()} do
         {committed, nullified} ->
           cond do
-            c |> commits_to(r) ->
+            c |> Resource.commits_to(r) ->
               {MapSet.put(committed, %{commitment: c, resource: r}),
                nullified}
 
-            n |> nullifies(r) ->
+            n |> Resource.nullifies(r) ->
               {committed, MapSet.put(nullified, %{nullifier: n, resource: r})}
 
             true ->
