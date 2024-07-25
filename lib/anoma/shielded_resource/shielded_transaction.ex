@@ -26,9 +26,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
       transaction.roots,
       transaction.commitments,
       transaction.nullifiers,
-      for ptx <- transaction.partial_transactions do
-        PartialTransaction.to_noun(ptx)
-      end,
+      Noun.Nounable.to_noun(transaction.partial_transactions),
       transaction.delta
     ]
   end
@@ -41,17 +39,23 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         partial_transactions,
         delta
       ]) do
-    {:ok,
-     %ShieldedTransaction{
-       roots: roots,
-       commitments: commitments,
-       nullifiers: nullifiers,
-       partial_transactions:
-         for ptx <- partial_transactions do
-           PartialTransaction.from_noun(ptx)
-         end,
-       delta: delta
-     }}
+    ptxs =
+      partial_transactions
+      |> Noun.list_nock_to_erlang()
+      |> Enum.map(&PartialTransaction.from_noun/1)
+
+    checked = Enum.all?(ptxs, &(elem(&1, 0) == :ok))
+
+    with true <- checked do
+      {:ok,
+       %ShieldedTransaction{
+         roots: roots,
+         commitments: commitments,
+         nullifiers: nullifiers,
+         partial_transactions: Enum.map(ptxs, &elem(&1, 1)),
+         delta: delta
+       }}
+    end
   end
 
   @spec compose(t(), t()) :: t()
@@ -77,7 +81,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   # boolean value so that we can get rid of them in the ShieldedTransaction struct. We
   # can apply the same improvement to the transparent Transaction.
   @spec verify(t()) :: boolean()
-  def verify(transaction) do
+  def verify(transaction = %__MODULE__{}) do
     # check proofs
     all_proofs_valid =
       for ptx <- transaction.partial_transactions,

@@ -3,6 +3,8 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
   I am a shielded resource machine partial transaction.
   """
 
+  @behaviour Noun.Nounable.Kind
+
   require Logger
 
   alias __MODULE__
@@ -14,18 +16,10 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
     field(:compliance_proofs, list(ProofRecord.t()), default: [])
   end
 
-  @spec to_noun(t()) :: Noun.t()
-  def to_noun(ptx = %PartialTransaction{}) do
-    [
-      Noun.Nounable.to_noun(ptx.logic_proofs),
-      Noun.Nounable.to_noun(ptx.compliance_proofs)
-    ]
-  end
-
-  @spec from_noun(Noun.t()) :: t()
+  @spec from_noun(Noun.t()) :: {:ok, t()} | :error
   def from_noun([
-        logic_proofs,
-        compliance_proofs
+        logic_proofs
+        | compliance_proofs
       ]) do
     to_noun_list = fn xs ->
       xs
@@ -38,10 +32,13 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
     checked = Enum.all?(logic ++ compilance, &(elem(&1, 0) == :ok))
 
     with true <- checked do
-      %PartialTransaction{
-        logic_proofs: Enum.map(logic, &elem(&1, 1)),
-        compliance_proofs: Enum.map(compilance, &elem(&1, 1))
-      }
+      {:ok,
+       %PartialTransaction{
+         logic_proofs: Enum.map(logic, &elem(&1, 1)),
+         compliance_proofs: Enum.map(compilance, &elem(&1, 1))
+       }}
+    else
+      false -> :error
     end
   end
 
@@ -79,5 +76,12 @@ defmodule Anoma.ShieldedResource.PartialTransaction do
       end
 
     all_logic_proofs_valid && all_compliance_proofs_valid
+  end
+
+  defimpl Noun.Nounable, for: __MODULE__ do
+    def to_noun(ptx = %PartialTransaction{}) do
+      {ptx.logic_proofs, ptx.compliance_proofs}
+      |> Noun.Nounable.to_noun()
+    end
   end
 end
