@@ -707,17 +707,6 @@ defmodule Anoma.Node.Storage do
   defp calculate_order([{_, _, order}]), do: order + 1
   defp calculate_order([]), do: 1
 
-  @spec checked_read_at_absent_details(t(), Noun.t(), non_neg_integer()) ::
-          {:absent, Noun.t(), non_neg_integer()}
-          | {any(), qualified_value()}
-  defp checked_read_at_absent_details(storage = %__MODULE__{}, key, order) do
-    with {:ok, value} <- checked_read_at(storage, key, order) do
-      {key, value}
-    else
-      :absent -> {:absent, key, order}
-    end
-  end
-
   @spec checked_read_at(t(), Noun.t(), non_neg_integer()) ::
           :absent | {:ok, qualified_value()}
   defp checked_read_at(storage = %Storage{}, key, order) do
