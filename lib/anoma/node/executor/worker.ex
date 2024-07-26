@@ -179,11 +179,7 @@ defmodule Anoma.Node.Executor.Worker do
 
         # notify the topic and reply-to address about the error
         err_msg = {:worker_error}
-
-        if reply_to != nil do
-          Router.cast(reply_to, err_msg)
-        end
-
+        send_if_addr(reply_to, err_msg)
         Router.cast(topic, err_msg)
 
         wait_for_ready(s)
@@ -203,14 +199,9 @@ defmodule Anoma.Node.Executor.Worker do
          value,
          _storage
        ) do
+    # send the value to reply-to address and the topic
     reply_msg = {:read_value, value}
-
-    # send the value to reply-to address
-    if reply_to != nil do
-      Router.cast(reply_to, reply_msg)
-    end
-
-    # send the value to the worker topic
+    send_if_addr(reply_to, reply_msg)
     Router.cast(topic, reply_msg)
 
     log_info({:get, value, env.logger})
@@ -360,6 +351,13 @@ defmodule Anoma.Node.Executor.Worker do
     snapshot = hd(env.snapshot_path)
     log_info({:snap, {storage, snapshot}, env.logger})
     Storage.put_snapshot(storage, snapshot)
+  end
+
+  @spec send_if_addr(Router.addr() | nil, any()) :: :ok | nil
+  defp send_if_addr(addr, msg) do
+    if addr do
+      Router.cast(addr, msg)
+    end
   end
 
   ############################################################
