@@ -167,7 +167,7 @@ defmodule Anoma.Node.Ordering do
   I am the Ordering Engine reset function.
 
   Using storage functionality, I delete all keys that are used throughout
-  my lifecycle, including all `:order` namespace keys and `:next_order`.
+  my lifecycle, including all `order` namespace keys and `next_order`.
   """
 
   @spec reset(Router.Addr.t()) :: :ok
@@ -215,13 +215,10 @@ defmodule Anoma.Node.Ordering do
     storage = state.storage
     log_info({:reset, storage, state.logger})
 
-    Storage.delete_key(storage, [:next_order])
+    Storage.delete_key(storage, "next_order")
 
-    space = Storage.get_keyspace(storage, [:order])
-
-    unless space == :absent do
-      space |> Enum.map(fn {key, _} -> Storage.delete_key(storage, key) end)
-    end
+    space = Storage.get_keyspace(storage, ["order"])
+    space |> Enum.map(fn {key, _} -> Storage.delete_key(storage, key) end)
 
     {:noreply, state}
   end
@@ -243,7 +240,7 @@ defmodule Anoma.Node.Ordering do
   @spec do_true_order(Ordering.t(), non_neg_integer()) ::
           non_neg_integer() | :absent
   defp do_true_order(state, id) do
-    case Storage.get(state.storage, [:order, id]) do
+    case Storage.get(state.storage, ["order", id]) do
       {:ok, value} -> value
       :absent -> :absent
     end
@@ -252,7 +249,7 @@ defmodule Anoma.Node.Ordering do
   @spec do_next_order(Ordering.t()) ::
           non_neg_integer() | :error
   defp do_next_order(state) do
-    case Storage.get(state.storage, [:next_order]) do
+    case Storage.get(state.storage, "next_order") do
       :absent -> 1
       {:ok, value} -> value
       _ -> :error
@@ -262,10 +259,9 @@ defmodule Anoma.Node.Ordering do
   @spec do_all(Ordering.t()) ::
           list({non_neg_integer(), non_neg_integer()}) | []
   defp do_all(state) do
-    case Storage.get_keyspace(state.storage, [:order]) do
-      :absent -> []
-      lst -> lst |> Enum.map(fn {[:order, id], order} -> {id, order} end)
-    end
+    state.storage
+    |> Storage.get_keyspace(["order"])
+    |> Enum.map(fn {["order", id], order} -> {id, order} end)
   end
 
   @doc """
@@ -273,7 +269,7 @@ defmodule Anoma.Node.Ordering do
 
   I send read_ready messages regarding the transaction orders, putting
   their orders alingside their id's in the Storage. Finally, after each
-  transaction is processed, I set the `:next_order` key to the index of the
+  transaction is processed, I set the `next_order` key to the index of the
   last transaction I got.
 
   If I get sent an empty list, I do nothing.
@@ -294,7 +290,7 @@ defmodule Anoma.Node.Ordering do
 
         log_info({:ready_handle, addr, state.logger})
 
-        Storage.put(storage, [:order, tx.id], index)
+        Storage.put(storage, ["order", tx.id], index)
 
         Router.send_raw(
           addr,
@@ -304,7 +300,7 @@ defmodule Anoma.Node.Ordering do
 
       Storage.put(
         storage,
-        [:next_order],
+        "next_order",
         List.last(ordered_transactions).index + 1
       )
     end
