@@ -4,6 +4,7 @@ defmodule EventBroker.Filters.Trivial do
   """
 
   use TypedStruct
+  use EventBroker.Filter
 
   typedstruct enforce: true do
   end

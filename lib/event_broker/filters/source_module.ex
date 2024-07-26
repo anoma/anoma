@@ -4,6 +4,7 @@ defmodule EventBroker.Filters.SourceModule do
   """
 
   use TypedStruct
+  use EventBroker.Filter
 
   typedstruct enforce: true do
     field(:module, module())

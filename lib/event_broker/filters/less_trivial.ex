@@ -2,6 +2,7 @@ defmodule EventBroker.Filters.LessTrivial do
   @moduledoc false
 
   use TypedStruct
+  use EventBroker.Filter
 
   typedstruct enforce: true do
     field(:value, bool())
