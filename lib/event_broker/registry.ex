@@ -15,7 +15,7 @@ defmodule EventBroker.Registry do
   end
 
   def start_link(top_level_pid) do
-    GenServer.start_link(__MODULE__, top_level_pid)
+    GenServer.start_link(__MODULE__, top_level_pid, name: __MODULE__)
   end
 
   def init(top_level_pid) do
@@ -70,7 +70,7 @@ defmodule EventBroker.Registry do
   end
 
   def handle_call({:unsubscribe, pid, filter_spec_list}, _from, state) do
-    GenServer.cast(
+    GenServer.call(
       Map.get(state.registered_filters, filter_spec_list),
       {:unsubscribe, pid}
     )
@@ -84,5 +84,21 @@ defmodule EventBroker.Registry do
 
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
+  end
+
+  def subscribe(pid, filter_spec_list) do
+    GenServer.call(__MODULE__, {:subscribe, pid, filter_spec_list})
+  end
+
+  def subscribe_me(filter_spec_list) do
+    subscribe(self(), filter_spec_list)
+  end
+
+  def unsubscribe(pid, filter_spec_list) do
+    GenServer.call(__MODULE__, {:unsubscribe, pid, filter_spec_list})
+  end
+
+  def unsubscribe_me(filter_spec_list) do
+    unsubscribe(self(), filter_spec_list)
   end
 end

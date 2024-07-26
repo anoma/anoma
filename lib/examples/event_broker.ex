@@ -39,44 +39,44 @@ defmodule Examples.EventBroker do
   end
 
   def subscribe_and_check do
-    {:ok, %{broker: broker_pid, registry: registry_pid}} = start_broker()
+    EventBroker.Registry.subscribe_me([
+      trivial_filter_spec(),
+      this_module_filter_spec(),
+      trivial_filter_spec()
+    ])
 
-    GenServer.call(
-      registry_pid,
-      {:subscribe, self(),
-       [
-         trivial_filter_spec(),
-         this_module_filter_spec(),
-         trivial_filter_spec()
-       ]}
-    )
+    EventBroker.event(example_message_a())
+    EventBroker.event(example_message_b())
 
-    send(broker_pid, example_message_a())
-    send(broker_pid, example_message_b())
+    {:ok, event} =
+      receive do
+        event = %EventBroker.Event{} ->
+          {:ok, event}
 
-    receive do
-      event = %EventBroker.Event{} ->
-        {:ok, event}
+        _ ->
+          :error
+      end
 
-      _ ->
-        :error
-    end
+    EventBroker.Registry.unsubscribe_me([
+      trivial_filter_spec(),
+      this_module_filter_spec(),
+      trivial_filter_spec()
+    ])
+
+    {:received, event}
   end
 
   def million_messages(num_filters) do
-    {:ok, %{broker: broker_pid, registry: registry_pid}} = start_broker()
+    filter_spec_list =
+      for _ <- 1..num_filters do
+        this_module_filter_spec()
+      end
 
-    GenServer.call(
-      registry_pid,
-      {:subscribe, self(),
-       for _ <- 1..num_filters do
-         this_module_filter_spec()
-       end}
-    )
+    EventBroker.Registry.subscribe_me(filter_spec_list)
 
     f = fn ->
       for _ <- 1..1_000_000 do
-        send(broker_pid, example_message_a())
+        EventBroker.event(example_message_a())
 
         {:ok, _} =
           receive do
@@ -91,6 +91,10 @@ defmodule Examples.EventBroker do
       :success
     end
 
-    :timer.tc(f)
+    result = :timer.tc(f)
+
+    EventBroker.Registry.unsubscribe_me(filter_spec_list)
+
+    result
   end
 end

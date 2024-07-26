@@ -13,7 +13,7 @@ defmodule EventBroker do
   end
 
   def start_link() do
-    GenServer.start_link(__MODULE__, %EventBroker{})
+    GenServer.start_link(__MODULE__, %EventBroker{}, name: __MODULE__)
   end
 
   def init(_opts) do
@@ -37,6 +37,10 @@ defmodule EventBroker do
     {:reply, :ok, state}
   end
 
+  def handle_cast({:event, event}, state) do
+    handle_info(event, state)
+  end
+
   def handle_cast(_msg, state) do
     {:noreply, state}
   end
@@ -51,5 +55,9 @@ defmodule EventBroker do
 
   def handle_info(_info, state) do
     {:noreply, state}
+  end
+
+  def event(event = %EventBroker.Event{}) do
+    GenServer.cast(__MODULE__, {:event, event})
   end
 end
