@@ -543,25 +543,17 @@ defmodule Anoma.Node.Storage do
   end
 
   @spec do_get_keyspace(Storage.t(), list(any())) ::
-          :absent
+          []
           | list({list(), qualified_value()})
           | {:atomic, any()}
   defp do_get_keyspace(storage = %__MODULE__{}, key_space) do
     with {:atomic, orders} <- read_keyspace_order(storage, key_space) do
-      absent_predicate = &(elem(&1, 0) == :absent)
-
-      latest_keys =
-        Enum.map(orders, fn [key, order] ->
-          checked_read_at_absent_details(storage, key, order)
-        end)
-
-      if Enum.any?(latest_keys, absent_predicate) do
-        {:absent, key, order} = Enum.find(latest_keys, absent_predicate)
-        log_info({:error_missing, key, order})
-        :absent
-      else
-        latest_keys
-      end
+      Enum.reduce(orders, [], fn [key, order], acc ->
+        case checked_read_at(storage, key, order) do
+          {:ok, val} -> [{key, val} | acc]
+          :absent -> acc
+        end
+      end)
     end
   end
 
@@ -947,14 +939,6 @@ defmodule Anoma.Node.Storage do
 
   defp log_info({:read_all, keys}) do
     Logger.add(nil, :info, "Reading key_space at: #{inspect(keys)}")
-  end
-
-  defp log_info({:error_missing, key, order}) do
-    Logger.add(
-      nil,
-      :error,
-      "Missing key: #{inspect(key)} at order: #{inspect(order)}"
-    )
   end
 
   defp log_info({:delete_key, key}) do
