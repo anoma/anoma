@@ -41,7 +41,7 @@ defmodule Examples.EventBroker do
   def subscribe_and_check do
     {:ok, %{broker: broker_pid, registry: registry_pid}} = start_broker()
 
-    GenServer.cast(
+    GenServer.call(
       registry_pid,
       {:subscribe, self(),
        [
@@ -50,9 +50,6 @@ defmodule Examples.EventBroker do
          trivial_filter_spec()
        ]}
     )
-
-    # for dirty synchronization
-    GenServer.call(registry_pid, :dump)
 
     send(broker_pid, example_message_a())
     send(broker_pid, example_message_b())
@@ -69,15 +66,13 @@ defmodule Examples.EventBroker do
   def million_messages(num_filters) do
     {:ok, %{broker: broker_pid, registry: registry_pid}} = start_broker()
 
-    GenServer.cast(
+    GenServer.call(
       registry_pid,
       {:subscribe, self(),
        for _ <- 1..num_filters do
          this_module_filter_spec()
        end}
     )
-
-    GenServer.call(registry_pid, :dump)
 
     f = fn ->
       for _ <- 1..1_000_000 do

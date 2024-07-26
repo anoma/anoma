@@ -28,20 +28,21 @@ defmodule EventBroker.FilterAgent do
      }}
   end
 
+  def handle_call({:subscribe, pid}, _from, state) do
+    {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
+  end
+
+  def handle_call({:unsubscribe, pid}, _from, state) do
+    {:reply, :ok,
+     %{state | subscribers: MapSet.delete(state.subscribers, pid)}}
+  end
+
   def handle_call(:dump, _from, state) do
     {:reply, {:ok, state}, state}
   end
 
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
-  end
-
-  def handle_cast({:subscribe, pid}, state) do
-    {:noreply, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
-  end
-
-  def handle_cast({:unsubscribe, pid}, state) do
-    {:noreply, %{state | subscribers: MapSet.delete(state.subscribers, pid)}}
   end
 
   def handle_info(event = %EventBroker.Event{}, state) do

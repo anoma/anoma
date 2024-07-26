@@ -22,15 +22,7 @@ defmodule EventBroker.Registry do
     {:ok, %Registry{registered_filters: %{[] => top_level_pid}}}
   end
 
-  def handle_call(:dump, _from, state) do
-    {:reply, {:ok, state}, state}
-  end
-
-  def handle_call(_msg, _from, state) do
-    {:reply, :ok, state}
-  end
-
-  def handle_cast({:subscribe, pid, filter_spec_list}, state) do
+  def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
     new_state =
       unless Map.get(state.registered_filters, filter_spec_list) do
         existing_prefix =
@@ -58,7 +50,7 @@ defmodule EventBroker.Registry do
                   {f.filter_module, f.filter_params}
                 )
 
-              GenServer.cast(parent_pid, {:subscribe, new_pid})
+              GenServer.call(parent_pid, {:subscribe, new_pid})
               new_spec_list = parent_spec_list ++ [f]
               new_state = Map.put(old_state, new_spec_list, new_pid)
               {new_spec_list, new_state}
@@ -69,20 +61,28 @@ defmodule EventBroker.Registry do
         state
       end
 
-    GenServer.cast(
+    GenServer.call(
       Map.get(new_state.registered_filters, filter_spec_list),
       {:subscribe, pid}
     )
 
-    {:noreply, new_state}
+    {:reply, :ok, new_state}
   end
 
-  def handle_cast({:unsubscribe, pid, filter_spec_list}, state) do
+  def handle_call({:unsubscribe, pid, filter_spec_list}, _from, state) do
     GenServer.cast(
       Map.get(state.registered_filters, filter_spec_list),
       {:unsubscribe, pid}
     )
 
-    {:noreply, state}
+    {:reply, :ok, state}
+  end
+
+  def handle_call(:dump, _from, state) do
+    {:reply, {:ok, state}, state}
+  end
+
+  def handle_call(_msg, _from, state) do
+    {:reply, :ok, state}
   end
 end
