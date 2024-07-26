@@ -28,14 +28,6 @@ defmodule EventBroker do
     {:reply, :ok, state}
   end
 
-  def handle_cast({:message, body}, state) do
-    for pid <- state.subscribers do
-      GenServer.cast(pid, {:message, body})
-    end
-
-    {:noreply, state}
-  end
-
   def handle_cast({:subscribe, pid}, state) do
     {:noreply, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end
@@ -45,6 +37,18 @@ defmodule EventBroker do
   end
 
   def handle_cast(_msg, state) do
+    {:noreply, state}
+  end
+
+  def handle_info(event = %EventBroker.Event{}, state) do
+    for pid <- state.subscribers do
+      send(pid, event)
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info(_info, state) do
     {:noreply, state}
   end
 end

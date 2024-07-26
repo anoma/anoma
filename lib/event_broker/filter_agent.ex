@@ -36,21 +36,25 @@ defmodule EventBroker.FilterAgent do
     {:reply, :ok, state}
   end
 
-  def handle_cast({:message, msg}, state) do
-    if state.spec.filter_module.filter(msg, state.spec.filter_params) do
-      for pid <- state.subscribers do
-        GenServer.cast(pid, {:message, msg})
-      end
-    end
-
-    {:noreply, state}
-  end
-
   def handle_cast({:subscribe, pid}, state) do
     {:noreply, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end
 
   def handle_cast({:unsubscribe, pid}, state) do
     {:noreply, %{state | subscribers: MapSet.delete(state.subscribers, pid)}}
+  end
+
+  def handle_info(event = %EventBroker.Event{}, state) do
+    if state.spec.filter_module.filter(event, state.spec.filter_params) do
+      for pid <- state.subscribers do
+        send(pid, event)
+      end
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info(_info, state) do
+    {:noreply, state}
   end
 end

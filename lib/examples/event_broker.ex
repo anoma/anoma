@@ -54,12 +54,12 @@ defmodule Examples.EventBroker do
     # for dirty synchronization
     GenServer.call(registry_pid, :dump)
 
-    GenServer.cast(broker_pid, {:message, example_message_a()})
-    GenServer.cast(broker_pid, {:message, example_message_b()})
+    send(broker_pid, example_message_a())
+    send(broker_pid, example_message_b())
 
     receive do
-      {:"$gen_cast", {:message, body}} ->
-        {:ok, body}
+      event = %EventBroker.Event{} ->
+        {:ok, event}
 
       _ ->
         :error
@@ -81,12 +81,12 @@ defmodule Examples.EventBroker do
 
     f = fn ->
       for _ <- 1..1_000_000 do
-        GenServer.cast(broker_pid, {:message, example_message_a()})
+        send(broker_pid, example_message_a())
 
         {:ok, _} =
           receive do
-            {:"$gen_cast", {:message, body}} ->
-              {:ok, body}
+            event = %EventBroker.Event{} ->
+              {:ok, event}
 
             _ ->
               :error
