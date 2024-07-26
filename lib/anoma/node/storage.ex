@@ -202,11 +202,11 @@ defmodule Anoma.Node.Storage do
   first look up whether the keys appear in any qualified key in the
   Qualified table. If so, look up all apropriate latest values of all such
   keys and return them as a list of table query responses in a standard
-  mnesia format. If not present, return `:absent`
+  mnesia format. If no values are present, I return an empty list.
   """
 
   @spec get_keyspace(Router.Addr.t(), list(order_key())) ::
-          :absent
+          []
           | list({list(), qualified_value()})
           | {:atomic, any()}
   def get_keyspace(storage, key_space) do
