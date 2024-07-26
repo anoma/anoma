@@ -9,7 +9,9 @@ defmodule EventBroker.Registry do
   use TypedStruct
 
   typedstruct enforce: true do
-    field(:registered_filters, map(), default: %{})
+    field(:registered_filters, %{list(EventBroker.FilterSpec.t()) => pid()},
+      default: %{}
+    )
   end
 
   def start_link(top_level_pid) do
