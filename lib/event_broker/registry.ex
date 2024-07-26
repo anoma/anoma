@@ -9,47 +9,78 @@ defmodule EventBroker.Registry do
   use TypedStruct
 
   typedstruct enforce: true do
-    field(:registered_filters, map(list(EventBroker.FilterSpec.t()), pid()),
-      default: %{}
-    )
+    field(:registered_filters, map(), default: %{})
   end
 
-  # ["filter for Logger only", "filter for info-marked"]
-  # ["filter for Logger only", "filter for error-marked"]
-  # [["filter for Logger", "filter for Mempool"], "filter for info"]
-  # ["a", "b", "c", "d"]
-  # ["filter for Logger only"]
-  # <top level broker> <- <logger filter> <- <info filter>
-  #                        \- <error filter>
+  def start_link(top_level_pid) do
+    GenServer.start_link(__MODULE__, top_level_pid)
+  end
 
   def init(top_level_pid) do
     {:ok, %Registry{registered_filters: %{[] => top_level_pid}}}
   end
 
+  def handle_call(:dump, _from, state) do
+    {:reply, {:ok, state}, state}
+  end
+
+  def handle_call(_msg, _from, state) do
+    {:reply, :ok, state}
+  end
+
   def handle_cast({:subscribe, pid, filter_spec_list}, state) do
-    new_state = unless Map.get(state.registered_filters, filter_spec_list) do
-      existing_prefix = state.registered_filters
-                        |> Map.keys()
-                        |> Enum.filter(fn p -> List.starts_with?(filter_spec_list, p) end)
-                        |> Enum.sort(&(length(&1) > length(&2))) |> hd()
+    new_state =
+      unless Map.get(state.registered_filters, filter_spec_list) do
+        existing_prefix =
+          state.registered_filters
+          |> Map.keys()
+          |> Enum.filter(fn p -> List.starts_with?(filter_spec_list, p) end)
+          |> Enum.sort(&(length(&1) > length(&2)))
+          |> hd()
 
-      remaining_to_spawn = filter_spec_list -- existing_prefix
+        remaining_to_spawn = filter_spec_list -- existing_prefix
 
-      for f <- remaining_to_spawn, reduce: {last(existing_prefix), state} do
-        {agent, state} ->
-          new_pid = GenServer.start_link(f.filter_module, f.filter_params)
-          GenServer.cast(agent, {:subscribe, new_pid})
-          {new_pid, state}
+        # ["a", "b"] -> ["a", "b", "c", "d"]
+        # {["a", "b"], state} iterating over "c"
+        # {["a", "b", "c"], state + ["a", "b", "c"] iterating over "d"
+
+        {_, new_registered_filters} =
+          for f <- remaining_to_spawn,
+              reduce: {existing_prefix, state.registered_filters} do
+            {parent_spec_list, old_state} ->
+              parent_pid = Map.get(old_state, parent_spec_list)
+
+              {:ok, new_pid} =
+                GenServer.start_link(
+                  EventBroker.FilterAgent,
+                  {f.filter_module, f.filter_params}
+                )
+
+              GenServer.cast(parent_pid, {:subscribe, new_pid})
+              new_spec_list = parent_spec_list ++ [f]
+              new_state = Map.put(old_state, new_spec_list, new_pid)
+              {new_spec_list, new_state}
+          end
+
+        %{state | registered_filters: new_registered_filters}
+      else
+        state
       end
-    else
-      state
-    end
-    GenServer.cast(pid, {:subscribe, pid})
+
+    GenServer.cast(
+      Map.get(new_state.registered_filters, filter_spec_list),
+      {:subscribe, pid}
+    )
+
     {:noreply, new_state}
   end
 
   def handle_cast({:unsubscribe, pid, filter_spec_list}, state) do
-    GenServer.cast(Map.get(state.registered_filters, filter_spec_list), {:unsubscribe, pid})
+    GenServer.cast(
+      Map.get(state.registered_filters, filter_spec_list),
+      {:unsubscribe, pid}
+    )
+
     {:noreply, state}
   end
 end

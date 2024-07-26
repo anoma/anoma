@@ -7,7 +7,6 @@ defmodule EventBroker.Event do
 
   typedstruct enforce: true do
     field(:source_module, module())
-    field(:engine_id, Anoma.Node.Router.Addr.t())
     field(:body, term())
   end
 end

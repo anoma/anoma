@@ -4,23 +4,42 @@ defmodule EventBroker.FilterAgent do
   """
 
   alias __MODULE__
+  alias EventBroker.FilterSpec
 
   use GenServer
   use TypedStruct
 
   typedstruct enforce: true do
-    field(:spec, EventBroker.FilterSpec.t())
-    field(:subscribers, list(pid()))
+    field(:spec, FilterSpec.t())
+    field(:subscribers, MapSet.t(pid()), default: MapSet.new())
   end
 
-  def init(filter_params) do
-    {:ok, }
+  def start_link(filter_module, filter_params) do
+    GenServer.start_link(__MODULE__, {filter_module, filter_params})
+  end
+
+  def init({filter_module, filter_params}) do
+    {:ok,
+     %FilterAgent{
+       spec: %FilterSpec{
+         filter_module: filter_module,
+         filter_params: filter_params
+       }
+     }}
+  end
+
+  def handle_call(:dump, _from, state) do
+    {:reply, {:ok, state}, state}
+  end
+
+  def handle_call(_msg, _from, state) do
+    {:reply, :ok, state}
   end
 
   def handle_cast({:message, msg}, state) do
     if state.spec.filter_module.filter(msg, state.spec.filter_params) do
       for pid <- state.subscribers do
-        send(pid, msg)
+        GenServer.cast(pid, {:message, msg})
       end
     end
 
@@ -28,10 +47,10 @@ defmodule EventBroker.FilterAgent do
   end
 
   def handle_cast({:subscribe, pid}, state) do
-    {:noreply, %{state | subscribers: [pid | state.subscribers]}}
+    {:noreply, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end
 
   def handle_cast({:unsubscribe, pid}, state) do
-    {:noreply, %{state | subscribers: List.delete(state.subscribers, pid)}}
+    {:noreply, %{state | subscribers: MapSet.delete(state.subscribers, pid)}}
   end
 end
