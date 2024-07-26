@@ -4,6 +4,7 @@ defmodule Examples.ENode.EStorage do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Node.Ordering
   alias Anoma.Identity.Backend.Memory
   alias Anoma.Identity.{Manager, Name, Evidence, SignsFor, Verification}
   alias Anoma.Crypto.Id
@@ -95,6 +96,7 @@ defmodule Examples.ENode.EStorage do
     luck = lucky_value()
 
     Storage.put_snapshot(anode.storage, snapshot_point())
+    Ordering.reset(anode.ordering)
 
     assert {:ok, snap} = Storage.get(anode.storage, snapshot_point())
 
@@ -267,6 +269,7 @@ defmodule Examples.ENode.EStorage do
   def reserved_august(storage_name \\ "reserved_august") do
     full = {anode, _mem, eng, pub} = EIdentity.memory_storage(storage_name)
     sub_space = august_subnamespace(anode.storage)
+    Ordering.reset(anode.ordering)
 
     august = august_space() |> hd
 
