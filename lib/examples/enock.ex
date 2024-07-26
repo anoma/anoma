@@ -4,6 +4,7 @@ defmodule Examples.ENock do
   require ExUnit.Assertions
   import ExUnit.Assertions
 
+  alias Anoma.Node.Executor.Worker
   alias Examples.ENode.EStorage
   alias Anoma.Transaction
   alias Anoma.Node.{Router, Ordering}
@@ -144,6 +145,11 @@ defmodule Examples.ENock do
            "Key ought not to be found"
 
     node
+  end
+
+  @spec miki_increment_kv_tx() :: Worker.transaction()
+  def miki_increment_kv_tx() do
+    {:kv, miki_increment_candidate()}
   end
 
   def miki_increment_candidate() do
