@@ -21,50 +21,61 @@ defmodule EventBroker.Registry do
   end
 
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
-    new_state =
-      unless Map.get(state.registered_filters, filter_spec_list) do
-        existing_prefix =
-          state.registered_filters
-          |> Map.keys()
-          |> Enum.filter(fn p -> List.starts_with?(filter_spec_list, p) end)
-          |> Enum.sort(&(length(&1) > length(&2)))
-          |> hd()
+    list =
+      filter_spec_list
+      |> Enum.filter(fn x ->
+        not Kernel.function_exported?(x.__struct__, :filter, 2)
+      end)
+      |> Enum.map(&Map.get(&1, :__struct__))
 
-        remaining_to_spawn = filter_spec_list -- existing_prefix
+    if Enum.empty?(list) do
+      new_state =
+        unless Map.get(state.registered_filters, filter_spec_list) do
+          existing_prefix =
+            state.registered_filters
+            |> Map.keys()
+            |> Enum.filter(fn p -> List.starts_with?(filter_spec_list, p) end)
+            |> Enum.sort(&(length(&1) > length(&2)))
+            |> hd()
 
-        # ["a", "b"] -> ["a", "b", "c", "d"]
-        # {["a", "b"], state} iterating over "c"
-        # {["a", "b", "c"], state + ["a", "b", "c"] iterating over "d"
+          remaining_to_spawn = filter_spec_list -- existing_prefix
 
-        {_, new_registered_filters} =
-          for f <- remaining_to_spawn,
-              reduce: {existing_prefix, state.registered_filters} do
-            {parent_spec_list, old_state} ->
-              parent_pid = Map.get(old_state, parent_spec_list)
+          # ["a", "b"] -> ["a", "b", "c", "d"]
+          # {["a", "b"], state} iterating over "c"
+          # {["a", "b", "c"], state + ["a", "b", "c"] iterating over "d"
 
-              {:ok, new_pid} =
-                GenServer.start_link(
-                  EventBroker.FilterAgent,
-                  f
-                )
+          {_, new_registered_filters} =
+            for f <- remaining_to_spawn,
+                reduce: {existing_prefix, state.registered_filters} do
+              {parent_spec_list, old_state} ->
+                parent_pid = Map.get(old_state, parent_spec_list)
 
-              GenServer.call(parent_pid, {:subscribe, new_pid})
-              new_spec_list = parent_spec_list ++ [f]
-              new_state = Map.put(old_state, new_spec_list, new_pid)
-              {new_spec_list, new_state}
-          end
+                {:ok, new_pid} =
+                  GenServer.start_link(
+                    EventBroker.FilterAgent,
+                    f
+                  )
 
-        %{state | registered_filters: new_registered_filters}
-      else
-        state
-      end
+                GenServer.call(parent_pid, {:subscribe, new_pid})
+                new_spec_list = parent_spec_list ++ [f]
+                new_state = Map.put(old_state, new_spec_list, new_pid)
+                {new_spec_list, new_state}
+            end
 
-    GenServer.call(
-      Map.get(new_state.registered_filters, filter_spec_list),
-      {:subscribe, pid}
-    )
+          %{state | registered_filters: new_registered_filters}
+        else
+          state
+        end
 
-    {:reply, :ok, new_state}
+      GenServer.call(
+        Map.get(new_state.registered_filters, filter_spec_list),
+        {:subscribe, pid}
+      )
+
+      {:reply, :ok, new_state}
+    else
+      {:reply, "#{inspect(list)} do not export filtering functions", state}
+    end
   end
 
   def handle_call({:unsubscribe, pid, filter_spec_list}, _from, state) do
