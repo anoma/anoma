@@ -29,8 +29,18 @@ defmodule EventBroker.FilterAgent do
   end
 
   def handle_call({:unsubscribe, pid}, _from, state) do
-    {:reply, :ok,
-     %{state | subscribers: MapSet.delete(state.subscribers, pid)}}
+    new_subs = MapSet.delete(state.subscribers, pid)
+
+    new_state = %{state | subscribers: state}
+
+    if Enum.empty?(new_subs) do
+      Anoma.EventBroker.Registry
+      |> GenServer.cast({:delist, state.spec.__struct__})
+
+      {:stop, "No subscribers left, shutting down", new_state}
+    else
+      {:reply, :ok, new_state}
+    end
   end
 
   def handle_call(:dump, _from, state) do
