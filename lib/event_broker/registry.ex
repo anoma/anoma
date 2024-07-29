@@ -45,16 +45,23 @@ defmodule EventBroker.Registry do
   ############################################################
 
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
-    list =
+    invalid_filters =
       filter_spec_list
-      |> Enum.filter(fn x ->
-        not Kernel.function_exported?(x.__struct__, :filter, 2)
-      end)
-      |> Enum.map(&Map.get(&1, :__struct__))
+      |> Enum.flat_map(fn spec ->
+        struct = spec.__struct__
 
-    if Enum.empty?(list) do
+        if Kernel.function_exported?(struct, :filter, 2) do
+          []
+        else
+          [struct]
+        end
+      end)
+
+    if Enum.empty?(invalid_filters) do
       new_state =
-        unless Map.get(state.registered_filters, filter_spec_list) do
+        if Map.has_key?(state.registered_filters, filter_spec_list) do
+          state
+        else
           existing_prefix =
             state.registered_filters
             |> Map.keys()
@@ -87,8 +94,6 @@ defmodule EventBroker.Registry do
             end
 
           %{state | registered_filters: new_registered_filters}
-        else
-          state
         end
 
       GenServer.call(
@@ -98,7 +103,8 @@ defmodule EventBroker.Registry do
 
       {:reply, :ok, new_state}
     else
-      {:reply, "#{inspect(list)} do not export filtering functions", state}
+      {:reply,
+       "#{inspect(invalid_filters)} do not export filtering functions", state}
     end
   end
 
