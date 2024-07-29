@@ -118,4 +118,23 @@ defmodule EventBroker.Registry do
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
   end
+
+  def handle_cast({:delist, filter}, _from, state) do
+    filters = state.registered_filters
+
+    {spec, pid} = find_filter_info(filters, filter)
+
+    parent = spec |> List.delete(filter)
+
+    filters |> Map.get(parent) |> GenServer.call({:unsubscribe, pid})
+
+    {:noreply, %{state | subscribers: Map.delete(filters, filter)}}
+  end
+
+  def find_filter_info(filters, filter) do
+    filters
+    |> Enum.find(fn {key, _val} ->
+      List.last(key) == filter
+    end)
+  end
 end
