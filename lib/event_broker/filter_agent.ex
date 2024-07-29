@@ -51,6 +51,10 @@ defmodule EventBroker.FilterAgent do
     {:reply, :ok, state}
   end
 
+  def handle_cast(_msg, state) do
+    {:noreply, state}
+  end
+
   def handle_info(event = %EventBroker.Event{}, state) do
     if state.spec.__struct__.filter(event, state.spec) do
       for pid <- state.subscribers do

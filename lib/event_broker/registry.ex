@@ -111,6 +111,10 @@ defmodule EventBroker.Registry do
     {:noreply, %{state | registered_filters: Map.delete(filters, key)}}
   end
 
+  def handle_cast(_msg, state) do
+    {:noreply, state}
+  end
+
   ############################################################
   #                          Helpers                         #
   ############################################################
