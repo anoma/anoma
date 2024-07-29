@@ -255,11 +255,13 @@ defmodule Anoma.Cli do
 
   @spec run_client_command(any(), client_info()) :: {:ok, Router.addr()}
   def run_client_command(operation, {router, transport, server, sock}) do
+    silent = false
+
     {:ok, addr} =
       Anoma.Node.Router.start_engine(
         router,
         Anoma.Cli.Client,
-        {router, transport, server, sock, operation}
+        {router, transport, server, sock, operation, silent}
       )
 
     {:ok, addr}

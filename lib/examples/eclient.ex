@@ -26,12 +26,14 @@ defmodule Examples.EClient do
     {anode, socks} = ENode.attach_socks(anode, cleanup: false)
     client_node = ENode.simple_router()
 
+    silent = true
+
     {:ok, c_addr} =
       Router.start_engine(
         client_node.router,
         Client,
         {client_node.router, client_node.transport, anode, socks,
-         {:get_key, EStorage.miki_key()}}
+         {:get_key, EStorage.miki_key()}, silent}
       )
 
     assert 0 == Client.error_code(c_addr)
