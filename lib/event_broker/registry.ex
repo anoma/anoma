@@ -20,6 +20,30 @@ defmodule EventBroker.Registry do
     {:ok, %Registry{registered_filters: %{[] => top_level_pid}}}
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  def subscribe(pid, filter_spec_list) do
+    GenServer.call(__MODULE__, {:subscribe, pid, filter_spec_list})
+  end
+
+  def subscribe_me(filter_spec_list) do
+    subscribe(self(), filter_spec_list)
+  end
+
+  def unsubscribe(pid, filter_spec_list) do
+    GenServer.call(__MODULE__, {:unsubscribe, pid, filter_spec_list})
+  end
+
+  def unsubscribe_me(filter_spec_list) do
+    unsubscribe(self(), filter_spec_list)
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
   def handle_call({:subscribe, pid, filter_spec_list}, _from, state) do
     list =
       filter_spec_list
@@ -93,21 +117,5 @@ defmodule EventBroker.Registry do
 
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
-  end
-
-  def subscribe(pid, filter_spec_list) do
-    GenServer.call(__MODULE__, {:subscribe, pid, filter_spec_list})
-  end
-
-  def subscribe_me(filter_spec_list) do
-    subscribe(self(), filter_spec_list)
-  end
-
-  def unsubscribe(pid, filter_spec_list) do
-    GenServer.call(__MODULE__, {:unsubscribe, pid, filter_spec_list})
-  end
-
-  def unsubscribe_me(filter_spec_list) do
-    unsubscribe(self(), filter_spec_list)
   end
 end

@@ -20,6 +20,18 @@ defmodule EventBroker do
     {:ok, %EventBroker{}}
   end
 
+  ############################################################
+  #                      Public RPC API                      #
+  ############################################################
+
+  def event(event = %EventBroker.Event{}) do
+    GenServer.cast(__MODULE__, {:event, event})
+  end
+
+  ############################################################
+  #                    Genserver Behavior                    #
+  ############################################################
+
   def handle_call({:subscribe, pid}, _from, state) do
     {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, pid)}}
   end
@@ -55,9 +67,5 @@ defmodule EventBroker do
 
   def handle_info(_info, state) do
     {:noreply, state}
-  end
-
-  def event(event = %EventBroker.Event{}) do
-    GenServer.cast(__MODULE__, {:event, event})
   end
 end
