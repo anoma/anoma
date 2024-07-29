@@ -11,17 +11,11 @@ defmodule Examples.EventBroker do
   end
 
   def trivial_filter_spec do
-    %EventBroker.FilterSpec{
-      filter_module: EventBroker.Filters.Trivial,
-      filter_params: %EventBroker.Filters.Trivial{}
-    }
+    %EventBroker.Filters.Trivial{}
   end
 
   def this_module_filter_spec do
-    %EventBroker.FilterSpec{
-      filter_module: EventBroker.Filters.SourceModule,
-      filter_params: %EventBroker.Filters.SourceModule{module: __MODULE__}
-    }
+    %EventBroker.Filters.SourceModule{module: __MODULE__}
   end
 
   def example_message_a do

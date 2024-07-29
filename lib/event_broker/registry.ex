@@ -9,9 +9,7 @@ defmodule EventBroker.Registry do
   use TypedStruct
 
   typedstruct enforce: true do
-    field(:registered_filters, %{list(EventBroker.FilterSpec.t()) => pid()},
-      default: %{}
-    )
+    field(:registered_filters, %{list(struct()) => pid()}, default: %{})
   end
 
   def start_link(top_level_pid) do
@@ -47,7 +45,7 @@ defmodule EventBroker.Registry do
               {:ok, new_pid} =
                 GenServer.start_link(
                   EventBroker.FilterAgent,
-                  {f.filter_module, f.filter_params}
+                  f
                 )
 
               GenServer.call(parent_pid, {:subscribe, new_pid})

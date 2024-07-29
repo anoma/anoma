@@ -4,27 +4,23 @@ defmodule EventBroker.FilterAgent do
   """
 
   alias __MODULE__
-  alias EventBroker.FilterSpec
 
   use GenServer
   use TypedStruct
 
   typedstruct enforce: true do
-    field(:spec, FilterSpec.t())
+    field(:spec, struct())
     field(:subscribers, MapSet.t(pid()), default: MapSet.new())
   end
 
-  def start_link(filter_module, filter_params) do
-    GenServer.start_link(__MODULE__, {filter_module, filter_params})
+  def start_link(filter_params) do
+    GenServer.start_link(__MODULE__, filter_params)
   end
 
-  def init({filter_module, filter_params}) do
+  def init(filter_params) do
     {:ok,
      %FilterAgent{
-       spec: %FilterSpec{
-         filter_module: filter_module,
-         filter_params: filter_params
-       }
+       spec: filter_params
      }}
   end
 
@@ -46,7 +42,7 @@ defmodule EventBroker.FilterAgent do
   end
 
   def handle_info(event = %EventBroker.Event{}, state) do
-    if state.spec.filter_module.filter(event, state.spec.filter_params) do
+    if state.spec.__struct__.filter(event, state.spec) do
       for pid <- state.subscribers do
         send(pid, event)
       end
