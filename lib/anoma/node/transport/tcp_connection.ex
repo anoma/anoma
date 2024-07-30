@@ -61,6 +61,10 @@ defmodule Anoma.Node.Transport.TCPConnection do
   - `init({:listener, router, transport, listener, connection_pool})` -
     create a TCP connection as a listener.
   """
+  @spec init(
+          {:client, Router.addr(), Router.addr(), Transport.transport_addr(),
+           Supervisor.supervisor()}
+        ) :: {:ok, t(), {:continue, {:init_connection, any()}}}
   def init({:client, router, transport, address, connection_pool}) do
     {:ok,
      %TCPConnection{
@@ -71,6 +75,10 @@ defmodule Anoma.Node.Transport.TCPConnection do
      }, {:continue, {:init_connection, address}}}
   end
 
+  @spec init(
+          {:listener, Router.addr(), Router.addr(), reference(),
+           Supervisor.supervisor()}
+        ) :: {:ok, t(), {:continue, :accept_connection}}
   def init({:listener, router, transport, listener, connection_pool}) do
     {:ok,
      %TCPConnection{
