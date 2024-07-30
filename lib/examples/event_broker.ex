@@ -107,13 +107,19 @@ defmodule Examples.EventBroker do
     filters =
       :sys.get_state(EventBroker.Registry).registered_filters |> Map.keys()
 
-    for f <- filters do
-      EventBroker.Registry.unsubscribe_me(f)
+    for f <- Enum.reverse(filters) do
+      if :sys.get_state(EventBroker.Registry).registered_filters
+         |> Map.get(f)
+         |> Process.alive?() do
+        EventBroker.Registry.unsubscribe_me(f)
+      end
     end
 
     assert [[]] ==
              :sys.get_state(EventBroker.Registry).registered_filters
              |> Map.keys()
+
+    :sys.get_state(EventBroker.Registry)
   end
 
   def check_self_sub(list \\ []) do
@@ -207,16 +213,20 @@ defmodule Examples.EventBroker do
   end
 
   def complex_filter_message(string \\ "complex filter message") do
-    add_filter_on_top([trivial_filter_spec()], [
+    trivial = [trivial_filter_spec()]
+
+    add_filter_on_top(trivial, [
       this_module_filter_spec(),
       trivial_filter_spec()
     ])
 
-    good_msg = string <> "good"
-    bad_msg = string <> "bad"
+    good_msg = (string <> " good") |> example_message_a()
+    bad_msg = (string <> " bad") |> example_message_b()
 
-    good_msg |> example_message_a() |> EventBroker.event()
-    bad_msg |> example_message_b() |> EventBroker.event()
+    EventBroker.Registry.unsubscribe_me(trivial)
+
+    EventBroker.event(good_msg)
+    EventBroker.event(bad_msg)
 
     assert_receive ^good_msg
     refute_receive ^bad_msg
