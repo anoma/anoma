@@ -10,6 +10,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
   alias __MODULE__
   use TypedStruct
   alias Anoma.ShieldedResource.PartialTransaction
+  alias Anoma.ShieldedResource.ComplianceOutput
 
   typedstruct enforce: true do
     # TODO: The roots, commitments, and nullifiers can be eliminated. We can
@@ -19,6 +20,9 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
     field(:commitments, list(binary()), default: [])
     field(:nullifiers, list(binary()), default: [])
     field(:partial_transactions, list(PartialTransaction.t()), default: [])
+
+    # When the tx is not finalized, the delta is the collection of private keys
+    # When the tx is finalized, the delta is the binding signature
     field(:delta, binary(), default: %{})
   end
 
@@ -81,8 +85,7 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
           nullifiers: tx1.nullifiers ++ tx2.nullifiers,
           partial_transactions:
             tx1.partial_transactions ++ tx2.partial_transactions,
-          # fix delta when adding binding signature
-          delta: tx1.delta
+          delta: tx1.delta ++ tx2.delta
         }
       end
     end
@@ -107,28 +110,22 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         |> Enum.flat_map(fn ptx ->
           ptx.compliance_proofs
           |> Enum.map(fn proof_record ->
-            Anoma.SheildedResource.ComplianceOutput.from_public_input(
-              proof_record.public_inputs
-              |> :binary.bin_to_list()
-            )
+            ComplianceOutput.from_public_input(proof_record.public_inputs)
           end)
         end)
 
       # Collect binding public keys
-      binding_pub_keys =
-        compliance_outputs
-        |> Enum.reduce([], &[&1.delta_x ++ &1.delta_y | &2])
+      binding_pub_keys = get_binding_pub_keys(compliance_outputs)
 
       # Collect binding signature msgs
-      binding_messages =
-        compliance_outputs
-        |> Enum.reduce([], &[&1.nullifier | [&1.output_cm | &2]])
-
-      # delta check(verify the binding signature)
-      list_delta = :binary.bin_to_list(transaction.delta)
+      binding_messages = ShieldedTransaction.get_binding_messages(transaction)
 
       delta_valid =
-        Cairo.sig_verify(binding_pub_keys, binding_messages, list_delta)
+        Cairo.sig_verify(
+          binding_pub_keys,
+          binding_messages,
+          transaction.delta |> :binary.bin_to_list()
+        )
 
       # Collect resource logics from compliance proofs
       resource_logics_from_compliance =
@@ -142,10 +139,10 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
         |> Enum.flat_map(fn ptx ->
           ptx.logic_proofs
           |> Enum.map(fn proof_record ->
-            Cairo.get_program_hash(
-              proof_record.public_inputs
-              |> :binary.bin_to_list()
-            )
+            proof_record.public_inputs
+            |> :binary.bin_to_list()
+            |> Cairo.get_program_hash()
+            |> :binary.list_to_bin()
           end)
         end)
 
@@ -154,5 +151,62 @@ defmodule Anoma.ShieldedResource.ShieldedTransaction do
 
       all_proofs_valid && delta_valid && resource_logic_valid
     end
+
+    @spec get_binding_pub_keys(list(binary())) :: list(byte())
+    defp get_binding_pub_keys(compliance_outputs) do
+      compliance_outputs
+      |> Enum.reduce(
+        [],
+        &[:binary.bin_to_list(&1.delta_x <> &1.delta_y) | &2]
+      )
+    end
+  end
+
+  def get_compliance_outputs(transaction) do
+    transaction.partial_transactions
+    |> Enum.flat_map(fn ptx ->
+      ptx.compliance_proofs
+      |> Enum.map(fn proof_record ->
+        proof_record.public_inputs
+        |> ComplianceOutput.from_public_input()
+      end)
+    end)
+  end
+
+  @spec get_binding_messages(ShieldedTransaction.t()) :: list(byte())
+  def get_binding_messages(tx = %ShieldedTransaction{}) do
+    (tx.nullifiers ++ tx.commitments)
+    |> Enum.map(&:binary.bin_to_list/1)
+  end
+
+  # sign(binding signature) the transation when the transaction is balanced and finalized
+  @spec sign(ShieldedTransaction.t()) :: ShieldedTransaction.t()
+  defp sign(tx = %ShieldedTransaction{}) do
+    msgs = get_binding_messages(tx)
+
+    binding_signature =
+      tx.delta
+      |> :binary.bin_to_list()
+      |> Cairo.sign(msgs)
+      |> :binary.list_to_bin()
+
+    %ShieldedTransaction{tx | delta: binding_signature}
+  end
+
+  # complete and sign the tx
+  @spec finalize(ShieldedTransaction.t()) :: ShieldedTransaction.t()
+  def finalize(tx = %ShieldedTransaction{}) do
+    compliance_outputs = get_compliance_outputs(tx)
+    roots = Enum.map(compliance_outputs, & &1.root)
+    commitments = Enum.map(compliance_outputs, & &1.output_cm)
+    nullifiers = Enum.map(compliance_outputs, & &1.nullifier)
+
+    %ShieldedTransaction{
+      tx
+      | roots: roots,
+        commitments: commitments,
+        nullifiers: nullifiers
+    }
+    |> sign()
   end
 end

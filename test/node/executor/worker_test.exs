@@ -344,66 +344,14 @@ defmodule AnomaTest.Node.Executor.Worker do
 
     # Generate the binding signature
     # priv_keys are from rcvs in compliance_inputs
-    priv_keys = [
-      [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        3
-      ]
-    ]
+    priv_keys = :binary.copy(<<0>>, 31) <> <<3>>
 
-    # Collect binding signature msg
-    [
-      nullifier,
-      output_cm,
-      _root,
-      _delta_x,
-      _delta_y,
-      _input_label,
-      _output_label
-    ] =
-      Cairo.get_compliance_output(public_inputs)
-
-    messages = [
-      nullifier,
-      output_cm
-    ]
-
-    delta = :binary.list_to_bin(Cairo.sign(priv_keys, messages))
-
-    rm_tx = %ShieldedTransaction{
-      partial_transactions: [ptx],
-      delta: delta
-    }
+    rm_tx =
+      %ShieldedTransaction{
+        partial_transactions: [ptx],
+        delta: priv_keys
+      }
+      |> ShieldedTransaction.finalize()
 
     rm_tx_noun = Noun.Nounable.to_noun(rm_tx)
     rm_executor_tx = [[1 | rm_tx_noun], 0 | 0]
