@@ -43,10 +43,6 @@ defmodule EventBroker.FilterAgent do
     end
   end
 
-  def handle_call(:dump, _from, state) do
-    {:reply, {:ok, state}, state}
-  end
-
   def handle_call(_msg, _from, state) do
     {:reply, :ok, state}
   end
