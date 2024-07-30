@@ -40,7 +40,6 @@ defmodule Anoma.Node.Transport.TCPConnection do
     field(:transport, Router.addr())
     field(:connection_pool, Supervisor.supervisor())
     field(:mode, :client | :listener)
-    # only if listener
     field(:listener, reference() | nil)
     field(:conn, reference() | nil)
   end
