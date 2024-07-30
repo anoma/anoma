@@ -1,7 +1,8 @@
-defmodule Anoma.SheildedResource.ComplianceOutput do
+defmodule Anoma.ShieldedResource.ComplianceOutput do
   @moduledoc """
   I represent a resource's output.
   """
+
   use TypedStruct
 
   typedstruct enforce: true do
@@ -20,19 +21,21 @@ defmodule Anoma.SheildedResource.ComplianceOutput do
     field(:output_label, binary())
   end
 
+  @spec from_public_input(binary()) ::
+          Anoma.ShieldedResource.ComplianceOutput.t()
   def from_public_input(public_input) do
     ## call cairo api to get output bytes
     [nullifier, output_cm, root, delta_x, delta_y, input_label, output_label] =
-      Cairo.get_compliance_output(public_input)
+      public_input |> :binary.bin_to_list() |> Cairo.get_compliance_output()
 
-    %Anoma.SheildedResource.ComplianceOutput{
-      nullifier: nullifier,
-      output_cm: output_cm,
-      root: root,
-      delta_x: delta_x,
-      delta_y: delta_y,
-      input_label: input_label,
-      output_label: output_label
+    %Anoma.ShieldedResource.ComplianceOutput{
+      nullifier: nullifier |> :binary.list_to_bin(),
+      output_cm: output_cm |> :binary.list_to_bin(),
+      root: root |> :binary.list_to_bin(),
+      delta_x: delta_x |> :binary.list_to_bin(),
+      delta_y: delta_y |> :binary.list_to_bin(),
+      input_label: input_label |> :binary.list_to_bin(),
+      output_label: output_label |> :binary.list_to_bin()
     }
   end
 end
