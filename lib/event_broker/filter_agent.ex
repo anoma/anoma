@@ -31,7 +31,7 @@ defmodule EventBroker.FilterAgent do
   def handle_call({:unsubscribe, pid}, _from, state) do
     new_subs = MapSet.delete(state.subscribers, pid)
 
-    new_state = %{state | subscribers: state}
+    new_state = %{state | subscribers: new_subs}
 
     if Enum.empty?(new_subs) do
       EventBroker.Registry
