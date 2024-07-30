@@ -52,6 +52,8 @@ defmodule EventBroker.Registry do
       |> Enum.flat_map(fn spec ->
         struct = spec.__struct__
 
+        Code.ensure_loaded(struct)
+
         if Kernel.function_exported?(struct, :filter, 2) do
           []
         else
