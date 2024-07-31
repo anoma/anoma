@@ -85,7 +85,9 @@ defmodule EventBroker.Registry do
   end
 
   def handle_call({:unsubscribe, pid, filter_spec_list}, _from, state) do
-    new_registered_filters = do_unsubscribe(pid, filter_spec_list, state.registered_filters)
+    new_registered_filters =
+      do_unsubscribe(pid, filter_spec_list, state.registered_filters)
+
     {:reply, :ok, %{state | registered_filters: new_registered_filters}}
   end
 
@@ -135,13 +137,18 @@ defmodule EventBroker.Registry do
 
   defp do_unsubscribe(pid, filter_spec_list, registered_filters) do
     filter_pid = Map.get(registered_filters, filter_spec_list)
+
     case GenServer.call(filter_pid, {:unsubscribe, pid}) do
       :ok ->
         registered_filters
 
       :reap ->
-        new_registered_filters = Map.delete(registered_filters, filter_spec_list)
-        parent_spec_list = Enum.take(filter_spec_list, length(filter_spec_list) - 1)
+        new_registered_filters =
+          Map.delete(registered_filters, filter_spec_list)
+
+        parent_spec_list =
+          Enum.take(filter_spec_list, length(filter_spec_list) - 1)
+
         do_unsubscribe(filter_pid, parent_spec_list, new_registered_filters)
     end
   end
